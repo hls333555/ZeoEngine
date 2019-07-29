@@ -32,7 +32,8 @@
 *.app
 
 # Build results
-
+bin/
+bin-Intermediate/
 
 # Visual Studio cache/options directory
 .vs/
