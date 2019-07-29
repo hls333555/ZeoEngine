@@ -1,0 +1,3 @@
+[submodule "HBestEngine\\vender\\spdlog"]
+	path = HBestEngine\\vender\\spdlog
+	url = https://github.com/gabime/spdlog

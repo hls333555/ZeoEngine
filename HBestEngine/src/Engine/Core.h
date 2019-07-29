@@ -7,5 +7,5 @@
 		#define HBE_API __declspec(dllimport)
 	#endif // HBE_BUILD_DLL
 #else
-	#error HBestEngine only support Windows!
+	#error HBestEngine only supports Windows!
 #endif // HBE_PLATFORM_WINDOWS
