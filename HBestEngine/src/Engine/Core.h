@@ -9,3 +9,5 @@
 #else
 	#error HBestEngine only supports Windows!
 #endif // HBE_PLATFORM_WINDOWS
+
+#define BIT(x) (1 << x)

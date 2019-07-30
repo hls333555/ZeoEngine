@@ -4,6 +4,8 @@
 
 #include "Core.h"
 #include "spdlog/spdlog.h"
+// Support for logging for custom types
+#include "spdlog/fmt/ostr.h"
 
 namespace HBestEngine
 {

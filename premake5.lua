@@ -27,6 +27,7 @@ project "HBestEngine"
 
 	includedirs
 	{
+		"%{prj.name}/src",
 		"%{prj.name}/vender/spdlog/include"
 	}
 
