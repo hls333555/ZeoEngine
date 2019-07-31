@@ -7,14 +7,13 @@
 int main(int argc, char** argv)
 {
 	HBestEngine::Log::Init();
+	HBE_CORE_TRACE("Initializing engine...");
 	HBE_CORE_TRACE("Initialized log!");
-	int a = 5;
-	HBE_TRACE("Hello! Var={0}", a);
 
 	auto app = HBestEngine::CreateApplication();
 	app->Run();
 	delete app;
 }
 #else
-	#error HBestEngine only support Windows!
+	#error HBestEngine only supports Windows!
 #endif // HBE_PLATFORM_WINDOWS

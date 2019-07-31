@@ -11,6 +11,13 @@ workspace "HBestEngine"
 -- Debug-Windows-x64
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- Include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "HBestEngine/vendor/GLFW/include"
+
+-- Include the premake file of GLFW
+include "HBestEngine/vendor/GLFW"
+
 project "HBestEngine"
 	location "HBestEngine"
 	kind "SharedLib"
@@ -31,7 +38,14 @@ project "HBestEngine"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{IncludeDir.GLFW}"
+	}
+
+	links 
+	{ 
+		"GLFW",
+		"opengl32.lib"
 	}
 
 	filter "system:windows"

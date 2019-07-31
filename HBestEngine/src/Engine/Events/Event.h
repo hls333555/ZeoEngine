@@ -3,8 +3,8 @@
 #include "HBEpch.h"
 #include "Engine/Core.h"
 
-namespace HBestEngine {
-
+namespace HBestEngine
+{
 	// Events in HBestEngine are currently blocking, meaning when an event occurs it
 	// immediately gets dispatched and must be dealt with right then an there.
 	// For the future, a better strategy might be to buffer events in an event
@@ -61,7 +61,7 @@ namespace HBestEngine {
 		 * that event has been handled and we want to consume that event so that the layer underneath it which might be the game world
 		 * will not receive a click event.
 		 */
-		bool m_Handled = false;
+		bool m_bHandled = false;
 
 	};
 
@@ -81,7 +81,7 @@ namespace HBestEngine {
 		{
 			if (m_Event.GetEventType() == T::GetStaticType())
 			{
-				m_Event.m_Handled = func(*(T*)&m_Event);
+				m_Event.m_bHandled = func(*(T*)&m_Event);
 				return true;
 			}
 			return false;
