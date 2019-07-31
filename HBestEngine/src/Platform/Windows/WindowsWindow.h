@@ -18,7 +18,7 @@ namespace HBestEngine
 		virtual inline unsigned int GetHeight() const override { return m_Data.Height; }
 
 		// Window attributes
-		virtual inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
+		virtual inline void SetEventCallback(const EventCallbackFunc& callback) override { m_Data.EventCallback = callback; }
 		virtual void SetVSync(bool bEnabled) override;
 		virtual bool IsVSync() const override;
 
@@ -35,7 +35,7 @@ namespace HBestEngine
 			unsigned int Width, Height;
 			bool bVSync;
 
-			EventCallbackFn EventCallback;
+			EventCallbackFunc EventCallback;
 		};
 
 		WindowData m_Data;

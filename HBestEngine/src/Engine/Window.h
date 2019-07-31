@@ -26,7 +26,7 @@ namespace HBestEngine
 	class HBE_API Window
 	{
 	public:
-		using EventCallbackFn = std::function<void(Event&)>;
+		using EventCallbackFunc = std::function<void(Event&)>;
 
 		virtual ~Window() {}
 
@@ -36,7 +36,7 @@ namespace HBestEngine
 		virtual unsigned int GetHeight() const = 0;
 
 		// Window attributes
-		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
+		virtual void SetEventCallback(const EventCallbackFunc& callback) = 0;
 		virtual void SetVSync(bool bEnabled) = 0;
 		virtual bool IsVSync() const = 0;
 
