@@ -1,5 +1,6 @@
-[submodule "HBestEngine/vender/spdlog"]
+[submodule "HBestEngine/vendor/spdlog"]
+	path = HBestEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "HBestEngine/vender/GLFW"]
-	path = HBestEngine/vender/GLFW
+[submodule "HBestEngine/vendor/GLFW"]
+	path = HBestEngine/vendor/GLFW
 	url = https://github.com/hls333555/glfw

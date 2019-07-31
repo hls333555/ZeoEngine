@@ -31,7 +31,7 @@ project "HBestEngine"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vender/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include"
 	}
 
 	filter "system:windows"
@@ -73,7 +73,7 @@ project "Sandbox"
 
 	includedirs
 	{
-		"HBestEngine/vender/spdlog/include",
+		"HBestEngine/vendor/spdlog/include",
 		"HBestEngine/src"
 	}
 
