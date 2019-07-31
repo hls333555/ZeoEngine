@@ -2,8 +2,6 @@
 
 #include "Event.h"
 
-#include <sstream>
-
 namespace HBestEngine {
 
 	class HBE_API KeyEvent : public Event

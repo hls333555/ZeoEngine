@@ -19,6 +19,9 @@ project "HBestEngine"
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-Intermediate/" .. outputdir .. "/%{prj.name}")
 
+	pchheader "HBEpch.h"
+	pchsource "HBestEngine/src/HBEpch.cpp"
+
 	files
 	{
 		"%{prj.name}/src/**.h",

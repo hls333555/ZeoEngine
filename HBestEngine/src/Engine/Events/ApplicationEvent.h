@@ -2,8 +2,6 @@
 
 #include "Event.h"
 
-#include <sstream>
-
 namespace HBestEngine {
 
 	class HBE_API WindowResizeEvent : public Event
