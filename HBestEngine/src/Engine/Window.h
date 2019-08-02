@@ -2,8 +2,8 @@
 
 #include "HBEpch.h"
 
-#include "Engine/Core.h"
-#include "Engine/Events/Event.h"
+#include "Core.h"
+#include "Events/Event.h"
 
 namespace HBestEngine
 {
@@ -16,9 +16,7 @@ namespace HBestEngine
 		WindowProps(const std::string& title = "HBestEngine",
 			unsigned int width = 1280,
 			unsigned int height = 720)
-			: Title(title), Width(width), Height(height)
-		{
-		}
+			: Title(title), Width(width), Height(height) {}
 
 	};
 

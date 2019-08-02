@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HBEpch.h"
+
 #include "Engine/Core.h"
 
 namespace HBestEngine
@@ -40,8 +41,6 @@ namespace HBestEngine
 
 	class HBE_API Event
 	{
-		friend class EventDispatcher;
-
 	public:
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
@@ -53,7 +52,7 @@ namespace HBestEngine
 			return GetCategoryFlags() & category;
 		}
 
-	protected:
+	public:
 		/**
 		 * When events are dispatched to various layers, if an event is handled, it will not propagate any further.
 		 *

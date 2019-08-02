@@ -61,14 +61,20 @@ project "HBestEngine"
 
 	filter "configurations:Debug"
 		defines "HBE_DEBUG"
+		-- Multi-threaded Debug Dll
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "HBE_RELEASE"
+		-- Multi-threaded Dll
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "HBE_DIST"
+		-- Multi-threaded Dll
+		buildoptions "/MD"
 		optimize "On"
 
 project "Sandbox"
@@ -113,12 +119,18 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "HBE_DEBUG"
+		-- Multi-threaded Debug Dll
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "HBE_RELEASE"
+		-- Multi-threaded Dll
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "HBE_DIST"
+		-- Multi-threaded Dll
+		buildoptions "/MD"
 		optimize "On"
