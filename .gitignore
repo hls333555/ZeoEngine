@@ -34,6 +34,8 @@
 # Build results
 /bin/
 /bin-Intermediate/
+/HBestEngine/vendor/Glad/bin/
+/HBestEngine/vendor/Glad/bin-Intermediate/
 
 # Visual Studio cache/options directory
 .vs/

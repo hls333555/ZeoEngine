@@ -22,7 +22,7 @@ namespace HBestEngine
 	 * if you decide to handle the event and mark it "handled", 
 	 * it does not need to get propagated further down the layer stack into the other layers such as the 3D game world.
 	 *
-	 * In general, the update process is going forwards through the list to render and upate things and going backwards from the topmost to handle evnts.
+	 * In general, the update process is going forwards through the list to render and update things and going backwards from the topmost to handle events.
 	 * @see Run() and OnEvent() in Application.cpp
 	 */
 	class HBE_API Layer

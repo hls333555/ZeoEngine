@@ -14,9 +14,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["GLFW"] = "HBestEngine/vendor/GLFW/include"
+IncludeDir["Glad"] = "HBestEngine/vendor/Glad/include"
 
 -- Include the premake file of GLFW
 include "HBestEngine/vendor/GLFW"
+-- Include the premake file of Glad
+include "HBestEngine/vendor/Glad"
 
 project "HBestEngine"
 	location "HBestEngine"
@@ -39,12 +42,14 @@ project "HBestEngine"
 	{
 		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
-		"%{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.Glad}"
 	}
 
 	links 
 	{ 
 		"GLFW",
+		"Glad",
 		"opengl32.lib"
 	}
 
@@ -56,7 +61,9 @@ project "HBestEngine"
 		defines
 		{
 			"HBE_PLATFORM_WINDOWS",
-			"HBE_BUILD_DLL"
+			"HBE_BUILD_DLL",
+			-- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
+			"GLFW_INCLUDE_NONE"
 		}
 
 	filter "configurations:Debug"
