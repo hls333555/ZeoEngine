@@ -16,6 +16,9 @@ namespace HBestEngine
 		Application();
 		virtual ~Application();
 
+		inline static Application& Get() { return *s_Instance; }
+		inline Window& GetWindow() { return *m_Window; }
+
 		void Run();
 
 		void OnEvent(Event& e);
@@ -26,9 +29,11 @@ namespace HBestEngine
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 
+	private:
 		std::unique_ptr<Window> m_Window;
 		bool m_bRunning = true;
 		LayerStack m_LayerStack;
+		static Application* s_Instance;
 
 	};
 

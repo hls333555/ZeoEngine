@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HBEpch.h"
-
 #include "Engine/Core.h"
 
 namespace HBestEngine

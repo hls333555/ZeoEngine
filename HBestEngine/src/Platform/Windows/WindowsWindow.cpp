@@ -1,5 +1,4 @@
 #include "HBEpch.h"
-
 #include "WindowsWindow.h"
 
 #include "Engine/Events/ApplicationEvent.h"
@@ -53,7 +52,7 @@ namespace HBestEngine
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		int status = gladLoadGL();
 		HBE_CORE_ASSERT(status, "Failed to initialize Glad!");
 		// Pass in the window data which will be used in the following callbacks
 		// This way, we do not need to capture the m_Data for lambda functions
@@ -145,7 +144,6 @@ namespace HBestEngine
 
 	void WindowsWindow::OnUpdate()
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
 		glfwPollEvents();
 		glfwSwapBuffers(m_Window);
 	}

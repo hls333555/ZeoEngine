@@ -32,10 +32,9 @@
 *.app
 
 # Build results
-/bin/
-/bin-Intermediate/
-/HBestEngine/vendor/Glad/bin/
-/HBestEngine/vendor/Glad/bin-Intermediate/
+bin/
+bin-Intermediate/
+!/vendor/bin/
 
 # Visual Studio cache/options directory
 .vs/

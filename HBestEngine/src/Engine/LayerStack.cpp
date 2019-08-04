@@ -1,5 +1,4 @@
 #include "HBEpch.h"
-
 #include "LayerStack.h"
 
 namespace HBestEngine

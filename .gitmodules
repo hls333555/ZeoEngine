@@ -4,3 +4,6 @@
 [submodule "HBestEngine/vendor/GLFW"]
 	path = HBestEngine/vendor/GLFW
 	url = https://github.com/hls333555/glfw
+[submodule "HBestEngine/vendor/imgui"]
+	path = HBestEngine/vendor/imgui
+	url = git@github.com:hls333555/imgui.git

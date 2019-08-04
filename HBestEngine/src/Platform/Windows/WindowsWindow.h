@@ -12,10 +12,10 @@ namespace HBestEngine
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		virtual void OnUpdate() override;
-
 		virtual inline unsigned int GetWidth() const override { return m_Data.Width; }
 		virtual inline unsigned int GetHeight() const override { return m_Data.Height; }
+
+		virtual void OnUpdate() override;
 
 		// Window attributes
 		virtual inline void SetEventCallback(const EventCallbackFunc& callback) override { m_Data.EventCallback = callback; }

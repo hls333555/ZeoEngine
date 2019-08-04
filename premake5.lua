@@ -15,11 +15,14 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "HBestEngine/vendor/GLFW/include"
 IncludeDir["Glad"] = "HBestEngine/vendor/Glad/include"
+IncludeDir["ImGui"] = "HBestEngine/vendor/imgui"
 
 -- Include the premake file of GLFW
 include "HBestEngine/vendor/GLFW"
 -- Include the premake file of Glad
 include "HBestEngine/vendor/Glad"
+-- Include the premake file of ImGui
+include "HBestEngine/vendor/ImGui"
 
 project "HBestEngine"
 	location "HBestEngine"
@@ -43,13 +46,15 @@ project "HBestEngine"
 		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.Glad}"
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}"
 	}
 
 	links 
 	{ 
 		"GLFW",
 		"Glad",
+		"ImGui",
 		"opengl32.lib"
 	}
 
@@ -64,6 +69,11 @@ project "HBestEngine"
 			"HBE_BUILD_DLL",
 			-- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
 			"GLFW_INCLUDE_NONE"
+		}
+
+		postbuildcommands
+		{
+			("{COPY} ../bin/"  .. outputdir .. "/HBestEngine/HBestEngine.dll ../bin/" .. outputdir .. "/Sandbox")
 		}
 
 	filter "configurations:Debug"
@@ -117,11 +127,6 @@ project "Sandbox"
 		defines
 		{
 			"HBE_PLATFORM_WINDOWS"
-		}
-
-		postbuildcommands
-		{
-			("{COPY} ../bin/"  .. outputdir .. "/HBestEngine/HBestEngine.dll ../bin/" .. outputdir .. "/Sandbox")
 		}
 
 	filter "configurations:Debug"
