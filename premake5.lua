@@ -24,6 +24,8 @@ include "HBestEngine/vendor/Glad"
 -- Include the premake file of ImGui
 include "HBestEngine/vendor/ImGui"
 
+startproject "Sandbox"
+
 project "HBestEngine"
 	location "HBestEngine"
 	kind "SharedLib"
