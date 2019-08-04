@@ -7,8 +7,6 @@
 
 namespace HBestEngine
 {
-#define BIND_EVENT_FNUC(x) std::bind(&x, this, std::placeholders::_1)
-
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application()
@@ -16,7 +14,7 @@ namespace HBestEngine
 		HBE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
-		m_Window->SetEventCallback(BIND_EVENT_FNUC(Application::OnEvent));
+		m_Window->SetEventCallback(HBE_BIND_EVENT_FUNC(Application::OnEvent));
 	}
 
 	Application::~Application()
@@ -26,7 +24,7 @@ namespace HBestEngine
 	void Application::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FNUC(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowCloseEvent>(HBE_BIND_EVENT_FUNC(Application::OnWindowClose));
 
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )

@@ -19,3 +19,5 @@
 #endif // HZ_ENABLE_ASSERTS
 
 #define BIT(x) (1 << x)
+
+#define HBE_BIND_EVENT_FUNC(func) std::bind(&func, this, std::placeholders::_1)
