@@ -7,3 +7,6 @@
 [submodule "HBestEngine/vendor/imgui"]
 	path = HBestEngine/vendor/imgui
 	url = git@github.com:hls333555/imgui.git
+[submodule "HBestEngine/vendor/glm"]
+	path = HBestEngine/vendor/glm
+	url = https://github.com/g-truc/glm
