@@ -74,7 +74,7 @@ project "HBestEngine"
 
 		postbuildcommands
 		{
-			("{COPY} ../bin/"  .. outputdir .. "/HBestEngine/HBestEngine.dll ../bin/" .. outputdir .. "/Sandbox")
+			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
 		}
 
 	filter "configurations:Debug"
