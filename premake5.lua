@@ -115,6 +115,7 @@ project "Sandbox"
 	{
 		"HBestEngine/vendor/spdlog/include",
 		"HBestEngine/src",
+		"HBestEngine/vendor",
 		"%{IncludeDir.glm}"
 	}
 

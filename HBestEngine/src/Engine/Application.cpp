@@ -17,6 +17,10 @@ namespace HBestEngine
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(HBE_BIND_EVENT_FUNC(Application::OnEvent));
+		// m_ImGuiLayer does not need to be unique pointer
+		// since it is going to be part of the layer stack who will control its lifecycle
+		m_ImGuiLayer = new ImGuiLayer();
+		PushOverlay(m_ImGuiLayer);
 	}
 
 	Application::~Application()
@@ -56,11 +60,20 @@ namespace HBestEngine
 			//glClearColor(1, 0, 1, 1);
 			// Called before any rendering calls!
 			glClear(GL_COLOR_BUFFER_BIT);
-
+			
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
 			}
+
+			// TODO: This will eventually be in render thread
+			// Render ImGui
+			m_ImGuiLayer->Begin();
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnImGuiRender();
+			}
+			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}

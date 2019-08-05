@@ -36,6 +36,7 @@ namespace HBestEngine
 		/** Called when the layer is popped from layer stack. */
 		virtual void OnDetach() {}
 		virtual void OnUpdate() {}
+		virtual void OnImGuiRender() {}
 		/** Called when an event gets sent to the layer. */
 		virtual void OnEvent(Event& event) {}
 

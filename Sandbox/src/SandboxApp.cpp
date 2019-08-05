@@ -1,5 +1,7 @@
 #include "HBestEngine.h"
 
+#include "imgui/imgui.h"
+
 class ExampleLayer : public HBestEngine::Layer
 {
 public:
@@ -8,13 +10,20 @@ public:
 	{
 	}
 
-	void OnUpdate() override
+	virtual void OnUpdate() override
 	{
 		//HBE_INFO("ExampleLayer::Update");
 
 	}
 
-	void OnEvent(HBestEngine::Event& event) override
+	virtual void OnImGuiRender() override
+	{
+		ImGui::Begin("Test");
+		ImGui::Text("Hello World");
+		ImGui::End();
+	}
+
+	virtual void OnEvent(HBestEngine::Event& event) override
 	{
 		//HBE_TRACE("{0}", event);
 		
@@ -28,7 +37,6 @@ public:
 	SandBox()
 	{
 		PushLayer(new ExampleLayer());
-		PushOverlay(new HBestEngine::ImGuiLayer());
 	}
 
 	~SandBox()
