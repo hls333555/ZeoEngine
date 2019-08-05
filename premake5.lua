@@ -29,6 +29,7 @@ project "HBestEngine"
 	location "HBestEngine"
 	kind "SharedLib"
 	language "C++"
+	staticruntime "off"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-Intermediate/" .. outputdir .. "/%{prj.name}")
@@ -61,7 +62,6 @@ project "HBestEngine"
 
 	filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines
@@ -79,26 +79,24 @@ project "HBestEngine"
 
 	filter "configurations:Debug"
 		defines "HBE_DEBUG"
-		-- Multi-threaded Debug Dll
-		buildoptions "/MDd"
+		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "HBE_RELEASE"
-		-- Multi-threaded Dll
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "HBE_DIST"
-		-- Multi-threaded Dll
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
+	staticruntime "off"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-Intermediate/" .. outputdir .. "/%{prj.name}")
@@ -122,7 +120,6 @@ project "Sandbox"
 
 	filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines
@@ -132,18 +129,15 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "HBE_DEBUG"
-		-- Multi-threaded Debug Dll
-		buildoptions "/MDd"
+		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "HBE_RELEASE"
-		-- Multi-threaded Dll
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "HBE_DIST"
-		-- Multi-threaded Dll
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
