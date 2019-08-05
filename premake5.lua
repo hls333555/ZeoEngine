@@ -1,5 +1,6 @@
 workspace "HBestEngine"
 	architecture "x64"
+	startproject "Sandbox"
 
 	configurations
 	{
@@ -23,8 +24,6 @@ include "HBestEngine/vendor/GLFW"
 include "HBestEngine/vendor/Glad"
 -- Include the premake file of ImGui
 include "HBestEngine/vendor/ImGui"
-
-startproject "Sandbox"
 
 project "HBestEngine"
 	location "HBestEngine"
