@@ -2,6 +2,8 @@
 
 #include "Engine/Window.h"
 
+#include "Engine/Renderer/GraphicsContext.h"
+
 #include <GLFW/glfw3.h>
 
 namespace HBestEngine
@@ -30,6 +32,7 @@ namespace HBestEngine
 
 	private:
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 
 		struct WindowData
 		{

@@ -5,7 +5,7 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 
-#include <glad/glad.h>
+#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace HBestEngine
 {
@@ -51,9 +51,11 @@ namespace HBestEngine
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGL();
-		HBE_CORE_ASSERT(status, "Failed to initialize Glad!");
+		
+		// Create rendering context
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+
 		// Pass in the window data which will be used in the following callbacks
 		// This way, we do not need to capture the m_Data for lambda functions
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -151,7 +153,7 @@ namespace HBestEngine
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool bEnabled)
