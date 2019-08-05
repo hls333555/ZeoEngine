@@ -10,12 +10,14 @@ public:
 
 	void OnUpdate() override
 	{
-		HBE_INFO("ExampleLayer::Update");
+		//HBE_INFO("ExampleLayer::Update");
+
 	}
 
 	void OnEvent(HBestEngine::Event& event) override
 	{
-		HBE_TRACE("{0}", event);
+		//HBE_TRACE("{0}", event);
+		
 	}
 
 };
