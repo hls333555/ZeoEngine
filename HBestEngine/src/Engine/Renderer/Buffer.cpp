@@ -11,10 +11,10 @@ namespace HBestEngine
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::None:
+		case RendererAPI::API::None:
 			HBE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
-		case RendererAPI::OpenGL:
+		case RendererAPI::API::OpenGL:
 			return new OpenGLVertexBuffer(vertices, size);
 		default:
 			HBE_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -26,10 +26,10 @@ namespace HBestEngine
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::None:
+		case RendererAPI::API::None:
 			HBE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
-		case RendererAPI::OpenGL:
+		case RendererAPI::API::OpenGL:
 			return new OpenGLIndexBuffer(indices, count);
 		default:
 			HBE_CORE_ASSERT(false, "Unknown RendererAPI!");

@@ -6,7 +6,6 @@
 
 namespace HBestEngine
 {
-	// TODO: memory leaking?
 	Input* Input::s_Instance = new WindowsInput();
 
 	bool WindowsInput::IsKeyPressedImpl(int keycode)
