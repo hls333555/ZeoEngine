@@ -45,10 +45,11 @@ namespace HBestEngine
 			0, 1, 2
 		};
 
+		// Use shared_ptr here because VAO will reference it
 		std::shared_ptr<IndexBuffer> IBO;
 		IBO.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VAO->SetIndexBuffer(IBO);
-
+		
 
 		m_SquareVAO.reset(VertexArray::Create());
 
@@ -153,13 +154,11 @@ namespace HBestEngine
 	void Application::PushLayer(Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
-		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
 		m_LayerStack.PushOverlay(layer);
-		layer->OnAttach();
 	}
 
 	void Application::Run()
