@@ -10,6 +10,7 @@
 
 #include "ImGui/ImGuiLayer.h"
 
+#include "Renderer/Buffer.h"
 #include "Renderer/Shader.h"
 
 namespace HBestEngine
@@ -40,7 +41,9 @@ namespace HBestEngine
 		LayerStack m_LayerStack;
 		static Application* s_Instance;
 
-		unsigned int m_VAO, m_VBO, m_IBO;
+		unsigned int m_VAO;
+		std::unique_ptr<VertexBuffer> m_VBO;
+		std::unique_ptr<IndexBuffer> m_IBO;
 		std::unique_ptr<Shader> m_Shader;
 
 	};
