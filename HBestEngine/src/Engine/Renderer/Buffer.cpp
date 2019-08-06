@@ -16,10 +16,10 @@ namespace HBestEngine
 			return nullptr;
 		case RendererAPI::OpenGL:
 			return new OpenGLVertexBuffer(vertices, size);
+		default:
+			HBE_CORE_ASSERT(false, "Unknown RendererAPI!");
+			return nullptr;
 		}
-
-		HBE_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
 	}
 
 	IndexBuffer* IndexBuffer::Create(uint32_t* indices, uint32_t count)
@@ -31,9 +31,9 @@ namespace HBestEngine
 			return nullptr;
 		case RendererAPI::OpenGL:
 			return new OpenGLIndexBuffer(indices, count);
+		default:
+			HBE_CORE_ASSERT(false, "Unknown RendererAPI!");
+			return nullptr;
 		}
-
-		HBE_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
 	}
 }

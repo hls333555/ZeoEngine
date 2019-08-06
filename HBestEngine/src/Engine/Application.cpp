@@ -17,40 +17,77 @@ namespace HBestEngine
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(HBE_BIND_EVENT_FUNC(Application::OnEvent));
+		
 		// m_ImGuiLayer does not need to be unique pointer
 		// since it is going to be part of the layer stack who will control its lifecycle
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-		glGenVertexArrays(1, &m_VAO);
-		glBindVertexArray(m_VAO);
+		m_VAO.reset(VertexArray::Create());
 
 		float vertices[] = {
-			-0.5f, -0.5f, 0.f,
-			 0.5f, -0.5f, 0.f,
-			 0.f,   0.5f, 0.f
+			-0.5f, -0.5f, 0.f, 0.8f, 0.2f, 0.8f, 1.f,
+			 0.5f, -0.5f, 0.f, 0.2f, 0.3f, 0.8f, 1.f,
+			 0.f,   0.5f, 0.f, 0.8f, 0.8f, 0.2f, 1.f
 		};
 
-		m_VBO.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
+		std::shared_ptr<VertexBuffer> VBO;
+		VBO.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 		
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+		BufferLayout layout = {
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color" }
+		};
+		VBO->SetLayout(layout);
+		m_VAO->AddVertexBuffer(VBO);
 	
 		uint32_t indices[] = {
 			0, 1, 2
 		};
 
-		m_IBO.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
-	
+		std::shared_ptr<IndexBuffer> IBO;
+		IBO.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_VAO->SetIndexBuffer(IBO);
+
+
+		m_SquareVAO.reset(VertexArray::Create());
+
+		float squareVertices[] = {
+			-0.75f, -0.75f, 0.f,
+			 0.75f, -0.75f, 0.f,
+			 0.75f,  0.75f, 0.f,
+			-0.75f,  0.75f, 0.f
+		};
+
+		std::shared_ptr<VertexBuffer> squareVBO;
+		squareVBO.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+
+		BufferLayout squareLayout = {
+			{ ShaderDataType::Float3, "a_Position" },
+		};
+		squareVBO->SetLayout(squareLayout);
+		m_SquareVAO->AddVertexBuffer(squareVBO);
+
+		uint32_t squareIndices[] = {
+			0, 1, 2,
+			2, 3, 0
+		};
+
+		std::shared_ptr<IndexBuffer> squareIBO;
+		squareIBO.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+		m_SquareVAO->SetIndexBuffer(squareIBO);
+
 		const std::string vertexSrc = R"(
 			#version 330 core
 
 			layout(location = 0) in vec3 a_Position;
-			out vec3 v_Position;
+			layout(location = 1) in vec4 a_Color;
+
+			out vec4 v_Color;
 			
 			void main()
 			{
-				v_Position = a_Position;
+				v_Color = a_Color;
 				gl_Position = vec4(a_Position, 1.f);
 			}
 		)";
@@ -59,15 +96,40 @@ namespace HBestEngine
 			#version 330 core
 
 			layout(location = 0) out vec4 color;
-			in vec3 v_Position;
+			
+			in vec4 v_Color;
 			
 			void main()
 			{
-				color = vec4(v_Position + 0.5f, 1.f);
+				color = v_Color;
 			}
 		)";
 
 		m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+
+		const std::string blueShaderVertexSrc = R"(
+			#version 330 core
+
+			layout(location = 0) in vec3 a_Position;
+			
+			void main()
+			{
+				gl_Position = vec4(a_Position, 1.f);
+			}
+		)";
+
+		const std::string blueShaderFragmentSrc = R"(
+			#version 330 core
+
+			layout(location = 0) out vec4 color;
+			
+			void main()
+			{
+				color = vec4(0.2f, 0.3f, 0.6f, 1.f);
+			}
+		)";
+
+		m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
 	}
 
 	Application::~Application()
@@ -107,10 +169,14 @@ namespace HBestEngine
 			//glClearColor(1, 0, 1, 1);
 			// Called before any rendering calls!
 			glClear(GL_COLOR_BUFFER_BIT);
+			
+			m_BlueShader->Bind();
+			m_SquareVAO->Bind();
+			glDrawElements(GL_TRIANGLES, m_SquareVAO->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			m_Shader->Bind();
-			glBindVertexArray(m_VAO);
-			glDrawElements(GL_TRIANGLES, m_IBO->GetCount(), GL_UNSIGNED_INT, nullptr);
+			m_VAO->Bind();
+			glDrawElements(GL_TRIANGLES, m_VAO->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 			
 			for (Layer* layer : m_LayerStack)
 			{
