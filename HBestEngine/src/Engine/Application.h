@@ -10,6 +10,8 @@
 
 #include "ImGui/ImGuiLayer.h"
 
+#include "Renderer/Shader.h"
+
 namespace HBestEngine
 {
 	class HBE_API Application
@@ -37,6 +39,9 @@ namespace HBestEngine
 		bool m_bRunning = true;
 		LayerStack m_LayerStack;
 		static Application* s_Instance;
+
+		unsigned int m_VAO, m_VBO, m_IBO;
+		std::unique_ptr<Shader> m_Shader;
 
 	};
 
