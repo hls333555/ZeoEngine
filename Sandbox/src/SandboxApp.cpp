@@ -3,6 +3,9 @@
 #include "imgui/imgui.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "Platform/OpenGL/OpenGLShader.h"
 
 class ExampleLayer : public HBestEngine::Layer
 {
@@ -99,9 +102,9 @@ public:
 			}
 		)";
 
-		m_Shader.reset(new HBestEngine::Shader(vertexSrc, fragmentSrc));
+		m_Shader.reset(HBestEngine::Shader::Create(vertexSrc, fragmentSrc));
 
-		const std::string blueShaderVertexSrc = R"(
+		const std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
 
 			layout(location = 0) in vec3 a_Position;
@@ -115,18 +118,20 @@ public:
 			}
 		)";
 
-		const std::string blueShaderFragmentSrc = R"(
+		const std::string flatColorShaderFragmentSrc = R"(
 			#version 330 core
 
 			layout(location = 0) out vec4 color;
+
+			uniform vec4 u_Color;
 			
 			void main()
 			{
-				color = vec4(0.2f, 0.3f, 0.6f, 1.f);
+				color = u_Color;
 			}
 		)";
 
-		m_BlueShader.reset(new HBestEngine::Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+		m_flatColorShader.reset(HBestEngine::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
 	}
 
 	virtual void OnUpdate(HBestEngine::DeltaTime dt) override
@@ -168,13 +173,17 @@ public:
 		HBestEngine::Renderer::BeginScene(m_Camera);
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.f), glm::vec3(0.1f));
+
+		m_flatColorShader->Bind();
+		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(m_flatColorShader)->UploadUniformFloat4("u_Color", m_SquareColor);
+
 		for (int x = 0; x < 10; ++x)
 		{
 			for (int y = 0; y < 10; ++y)
 			{
 				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.f), pos) * scale;
-				HBestEngine::Renderer::Submit(m_BlueShader, m_SquareVAO, transform);
+				HBestEngine::Renderer::Submit(m_flatColorShader, m_SquareVAO, transform);
 			}		
 		}
 
@@ -186,7 +195,9 @@ public:
 
 	virtual void OnImGuiRender() override
 	{
-
+		ImGui::Begin("Settings");
+		ImGui::ColorEdit4("SquareColor", glm::value_ptr(m_SquareColor));
+		ImGui::End();
 	}
 
 	virtual void OnEvent(HBestEngine::Event& event) override
@@ -200,13 +211,15 @@ private:
 	std::shared_ptr<HBestEngine::Shader> m_Shader;
 
 	std::shared_ptr<HBestEngine::VertexArray> m_SquareVAO;
-	std::shared_ptr<HBestEngine::Shader> m_BlueShader;
+	std::shared_ptr<HBestEngine::Shader> m_flatColorShader;
 
 	HBestEngine::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPos;
 	float m_CameraRot = 0.f;
 	float m_CameraMoveSpeed = 5.f;
 	float m_CameraRotateSpeed = 10.f;
+
+	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.f };
 
 };
 
