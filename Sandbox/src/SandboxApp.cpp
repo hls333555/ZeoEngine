@@ -2,12 +2,15 @@
 
 #include "imgui/imgui.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 class ExampleLayer : public HBestEngine::Layer
 {
 public:
 	ExampleLayer()
 		: Layer("Example")
 		, m_Camera(-1.6f, 1.6f, -0.9f, 0.9f)
+		, m_CameraPos(0.f)
 	{
 		m_VAO.reset(HBestEngine::VertexArray::Create());
 
@@ -40,10 +43,10 @@ public:
 		m_SquareVAO.reset(HBestEngine::VertexArray::Create());
 
 		float squareVertices[] = {
-			-0.75f, -0.75f, 0.f,
-			 0.75f, -0.75f, 0.f,
-			 0.75f,  0.75f, 0.f,
-			-0.75f,  0.75f, 0.f
+			-0.5f, -0.5f, 0.f,
+			 0.5f, -0.5f, 0.f,
+			 0.5f,  0.5f, 0.f,
+			-0.5f,  0.5f, 0.f
 		};
 
 		std::shared_ptr<HBestEngine::VertexBuffer> squareVBO;
@@ -71,13 +74,14 @@ public:
 			layout(location = 1) in vec4 a_Color;
 
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 
 			out vec4 v_Color;
 			
 			void main()
 			{
 				v_Color = a_Color;
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.f);
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.f);
 
 			}
 		)";
@@ -103,10 +107,11 @@ public:
 			layout(location = 0) in vec3 a_Position;
 
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 			
 			void main()
 			{
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.f);
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.f);
 			}
 		)";
 
@@ -127,7 +132,7 @@ public:
 	virtual void OnUpdate(HBestEngine::DeltaTime dt) override
 	{
 		//HBE_INFO("ExampleLayer::Update");
-		HBE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
+		//HBE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
 
 		//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
 		HBestEngine::RenderCommand::Clear();
@@ -142,11 +147,11 @@ public:
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_W))
 		{
-			m_CameraPos.y -= m_CameraMoveSpeed * dt;
+			m_CameraPos.y += m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_S))
 		{
-			m_CameraPos.y += m_CameraMoveSpeed * dt;
+			m_CameraPos.y -= m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_Q))
 		{
@@ -162,12 +167,21 @@ public:
 
 		HBestEngine::Renderer::BeginScene(m_Camera);
 
-		m_BlueShader->Bind();
-		HBestEngine::Renderer::Submit(m_BlueShader, m_SquareVAO);
-		m_Shader->Bind();
+		static glm::mat4 scale = glm::scale(glm::mat4(1.f), glm::vec3(0.1f));
+		for (int x = 0; x < 10; ++x)
+		{
+			for (int y = 0; y < 10; ++y)
+			{
+				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.f);
+				glm::mat4 transform = glm::translate(glm::mat4(1.f), pos) * scale;
+				HBestEngine::Renderer::Submit(m_BlueShader, m_SquareVAO, transform);
+			}		
+		}
+
 		HBestEngine::Renderer::Submit(m_Shader, m_VAO);
 
 		HBestEngine::Renderer::EndScene();
+
 	}
 
 	virtual void OnImGuiRender() override
@@ -189,7 +203,7 @@ private:
 	std::shared_ptr<HBestEngine::Shader> m_BlueShader;
 
 	HBestEngine::OrthographicCamera m_Camera;
-	glm::vec3 m_CameraPos = { 0.f, 0.f, 0.f };
+	glm::vec3 m_CameraPos;
 	float m_CameraRot = 0.f;
 	float m_CameraMoveSpeed = 5.f;
 	float m_CameraRotateSpeed = 10.f;
