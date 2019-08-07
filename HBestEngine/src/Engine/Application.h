@@ -5,8 +5,9 @@
 #include "Window.h"
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
-#include "Layer.h"
 #include "LayerStack.h"
+
+#include "Core/DeltaTime.h"
 
 #include "ImGui/ImGuiLayer.h"
 
@@ -36,6 +37,8 @@ namespace HBestEngine
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_bRunning = true;
 		LayerStack m_LayerStack;
+		float m_LastFrameTime = 0.f;
+
 		static Application* s_Instance;
 
 	};

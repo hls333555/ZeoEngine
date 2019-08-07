@@ -3,6 +3,8 @@
 
 #include "Log.h"
 
+#include <GLFW/glfw3.h>
+
 namespace HBestEngine
 {
 	Application* Application::s_Instance = nullptr;
@@ -53,9 +55,14 @@ namespace HBestEngine
 	{
 		while (m_bRunning)
 		{
+			// Platform::GetTime();
+			float time = (float)glfwGetTime();
+			DeltaTime dt = time - m_LastFrameTime;
+			m_LastFrameTime = time;
+
 			for (Layer* layer : m_LayerStack)
 			{
-				layer->OnUpdate();
+				layer->OnUpdate(dt);
 			}
 
 			// TODO: This will eventually be in render thread

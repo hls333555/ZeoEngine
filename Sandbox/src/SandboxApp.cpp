@@ -124,39 +124,41 @@ public:
 		m_BlueShader.reset(new HBestEngine::Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
 	}
 
-	virtual void OnUpdate() override
+	virtual void OnUpdate(HBestEngine::DeltaTime dt) override
 	{
 		//HBE_INFO("ExampleLayer::Update");
+		HBE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
 
 		//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
 		HBestEngine::RenderCommand::Clear();
 
-		float cameraMoveSpeed = 0.01f;
-		float cameraRotationSpeed = 0.03f;
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_A))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x - cameraMoveSpeed, m_Camera.GetPosition().y, 0.f });
+			m_CameraPos.x -= m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_D))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x + cameraMoveSpeed, m_Camera.GetPosition().y, 0.f });
+			m_CameraPos.x += m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_W))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + cameraMoveSpeed, 0.f });
+			m_CameraPos.y -= m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_S))
 		{
-			m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y - cameraMoveSpeed, 0.f });
+			m_CameraPos.y += m_CameraMoveSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_Q))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() + cameraRotationSpeed);
+			m_CameraRot -= m_CameraRotateSpeed * dt;
 		}
 		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_E))
 		{
-			m_Camera.SetRotation(m_Camera.GetRotation() - cameraRotationSpeed);
+			m_CameraRot += m_CameraRotateSpeed * dt;
 		}
+
+		m_Camera.SetPosition(m_CameraPos);
+		m_Camera.SetRotation(m_CameraRot);
 
 		HBestEngine::Renderer::BeginScene(m_Camera);
 
@@ -187,6 +189,10 @@ private:
 	std::shared_ptr<HBestEngine::Shader> m_BlueShader;
 
 	HBestEngine::OrthographicCamera m_Camera;
+	glm::vec3 m_CameraPos = { 0.f, 0.f, 0.f };
+	float m_CameraRot = 0.f;
+	float m_CameraMoveSpeed = 5.f;
+	float m_CameraRotateSpeed = 10.f;
 
 };
 

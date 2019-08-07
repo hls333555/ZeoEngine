@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Core/DeltaTime.h"
 #include "Events/Event.h"
 
 namespace HBestEngine
@@ -35,7 +36,7 @@ namespace HBestEngine
 		virtual void OnAttach() {}
 		/** Called when the layer is popped from layer stack. */
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(DeltaTime dt) {}
 		virtual void OnImGuiRender() {}
 		/** Called when an event gets sent to the layer. */
 		virtual void OnEvent(Event& event) {}
