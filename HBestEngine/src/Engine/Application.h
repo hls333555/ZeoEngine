@@ -13,6 +13,7 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/Buffer.h"
 #include "Renderer/Shader.h"
+#include "Engine/Renderer/OrthographicCamera.h"
 
 namespace HBestEngine
 {
@@ -48,6 +49,7 @@ namespace HBestEngine
 		std::shared_ptr<VertexArray> m_SquareVAO;
 		std::shared_ptr<Shader> m_BlueShader;
 
+		OrthographicCamera m_Camera;
 	};
 
 	// To be defined in the CLIENT
