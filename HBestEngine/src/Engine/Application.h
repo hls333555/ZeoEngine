@@ -10,11 +10,6 @@
 
 #include "ImGui/ImGuiLayer.h"
 
-#include "Renderer/VertexArray.h"
-#include "Renderer/Buffer.h"
-#include "Renderer/Shader.h"
-#include "Engine/Renderer/OrthographicCamera.h"
-
 namespace HBestEngine
 {
 	class HBE_API Application
@@ -43,13 +38,6 @@ namespace HBestEngine
 		LayerStack m_LayerStack;
 		static Application* s_Instance;
 
-		std::shared_ptr<VertexArray> m_VAO;
-		std::shared_ptr<Shader> m_Shader;
-
-		std::shared_ptr<VertexArray> m_SquareVAO;
-		std::shared_ptr<Shader> m_BlueShader;
-
-		OrthographicCamera m_Camera;
 	};
 
 	// To be defined in the CLIENT
