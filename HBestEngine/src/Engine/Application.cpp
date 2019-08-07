@@ -3,6 +3,7 @@
 
 #include "Log.h"
 #include "Input.h"
+#include "KeyCodes.h"
 #include "Engine/Renderer/Renderer.h"
 
 namespace HBestEngine
@@ -172,8 +173,32 @@ namespace HBestEngine
 			//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
 			RenderCommand::Clear();
 
-			m_Camera.SetPosition({ 0.5f, 0.5f, 0.f });
-			m_Camera.SetRotation(45.f);
+			float cameraMoveSpeed = 0.01f;
+			float cameraRotationSpeed = 0.03f;
+			if (Input::IsKeyPressed(HBE_KEY_A))
+			{
+				m_Camera.SetPosition({ m_Camera.GetPosition().x - cameraMoveSpeed, m_Camera.GetPosition().y, 0.f });
+			}
+			if (Input::IsKeyPressed(HBE_KEY_D))
+			{
+				m_Camera.SetPosition({ m_Camera.GetPosition().x + cameraMoveSpeed, m_Camera.GetPosition().y, 0.f });
+			}
+			if (Input::IsKeyPressed(HBE_KEY_W))
+			{
+				m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y + cameraMoveSpeed, 0.f });
+			}
+			if (Input::IsKeyPressed(HBE_KEY_S))
+			{
+				m_Camera.SetPosition({ m_Camera.GetPosition().x, m_Camera.GetPosition().y - cameraMoveSpeed, 0.f });
+			}
+			if (Input::IsKeyPressed(HBE_KEY_Q))
+			{
+				m_Camera.SetRotation(m_Camera.GetRotation() + cameraRotationSpeed);
+			}
+			if (Input::IsKeyPressed(HBE_KEY_E))
+			{
+				m_Camera.SetRotation(m_Camera.GetRotation() - cameraRotationSpeed);
+			}
 
 			Renderer::BeginScene(m_Camera);
 
