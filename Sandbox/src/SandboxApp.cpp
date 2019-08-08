@@ -217,7 +217,8 @@ private:
 	glm::vec3 m_CameraPos;
 	float m_CameraRot = 0.f;
 	float m_CameraMoveSpeed = 5.f;
-	float m_CameraRotateSpeed = 10.f;
+	/** How many degrees to rotate per second */
+	float m_CameraRotateSpeed = 180.f;
 
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.f };
 
