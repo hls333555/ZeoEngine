@@ -4,8 +4,8 @@
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	VertexArray* VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())

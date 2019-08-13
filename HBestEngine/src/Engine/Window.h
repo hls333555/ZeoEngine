@@ -4,8 +4,8 @@
 #include "Core.h"
 #include "Events/Event.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	struct WindowProps
 	{
 		std::string Title;

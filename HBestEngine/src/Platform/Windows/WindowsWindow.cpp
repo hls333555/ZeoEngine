@@ -7,8 +7,8 @@
 
 #include "Platform/OpenGL/OpenGLContext.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	static bool s_bGLFWInitialized = false;
 
 	static void GLFWErrorCallback(int error_code, const char* description)

@@ -13,8 +13,8 @@
 
 const char* glsl_version = "#version 410";
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	ImGuiLayer::ImGuiLayer()
 		: Layer("ImGuiLayer")
 	{

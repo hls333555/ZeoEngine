@@ -2,8 +2,8 @@
 
 #include "Core.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class HBE_API Input
 	{
 	public:

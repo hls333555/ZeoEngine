@@ -23,7 +23,7 @@ public:
 			 0.f,   0.5f, 0.f, 0.8f, 0.8f, 0.2f, 1.f
 		};
 
-		std::shared_ptr<HBestEngine::VertexBuffer> VBO;
+		HBestEngine::Ref<HBestEngine::VertexBuffer> VBO;
 		VBO.reset(HBestEngine::VertexBuffer::Create(vertices, sizeof(vertices)));
 
 		HBestEngine::BufferLayout layout = {
@@ -38,7 +38,7 @@ public:
 		};
 
 		// Use shared_ptr here because VAO will reference it
-		std::shared_ptr<HBestEngine::IndexBuffer> IBO;
+		HBestEngine::Ref<HBestEngine::IndexBuffer> IBO;
 		IBO.reset(HBestEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VAO->SetIndexBuffer(IBO);
 
@@ -52,7 +52,7 @@ public:
 			-0.5f,  0.5f, 0.f
 		};
 
-		std::shared_ptr<HBestEngine::VertexBuffer> squareVBO;
+		HBestEngine::Ref<HBestEngine::VertexBuffer> squareVBO;
 		squareVBO.reset(HBestEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
 		HBestEngine::BufferLayout squareLayout = {
@@ -66,7 +66,7 @@ public:
 			2, 3, 0
 		};
 
-		std::shared_ptr<HBestEngine::IndexBuffer> squareIBO;
+		HBestEngine::Ref<HBestEngine::IndexBuffer> squareIBO;
 		squareIBO.reset(HBestEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 		m_SquareVAO->SetIndexBuffer(squareIBO);
 
@@ -207,11 +207,11 @@ public:
 	}
 
 private:
-	std::shared_ptr<HBestEngine::VertexArray> m_VAO;
-	std::shared_ptr<HBestEngine::Shader> m_Shader;
+	HBestEngine::Ref<HBestEngine::VertexArray> m_VAO;
+	HBestEngine::Ref<HBestEngine::Shader> m_Shader;
 
-	std::shared_ptr<HBestEngine::VertexArray> m_SquareVAO;
-	std::shared_ptr<HBestEngine::Shader> m_flatColorShader;
+	HBestEngine::Ref<HBestEngine::VertexArray> m_SquareVAO;
+	HBestEngine::Ref<HBestEngine::Shader> m_flatColorShader;
 
 	HBestEngine::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPos;

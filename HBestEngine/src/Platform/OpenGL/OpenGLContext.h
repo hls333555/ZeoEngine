@@ -4,8 +4,8 @@
 
 struct GLFWwindow;
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class OpenGLContext : public GraphicsContext
 	{
 	public:

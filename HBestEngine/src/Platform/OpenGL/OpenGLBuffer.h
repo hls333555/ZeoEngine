@@ -2,8 +2,8 @@
 
 #include "Engine/Renderer/Buffer.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:

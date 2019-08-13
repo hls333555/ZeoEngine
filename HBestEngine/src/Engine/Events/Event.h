@@ -3,8 +3,8 @@
 #include "HBEpch.h"
 #include "Engine/Core.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	// Events in HBestEngine are currently blocking, meaning when an event occurs it
 	// immediately gets dispatched and must be dealt with right then an there.
 	// For the future, a better strategy might be to buffer events in an event

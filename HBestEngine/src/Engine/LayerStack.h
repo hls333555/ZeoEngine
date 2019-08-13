@@ -3,8 +3,8 @@
 #include "Core.h"
 #include "Layer.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class HBE_API LayerStack
 	{
 	public:

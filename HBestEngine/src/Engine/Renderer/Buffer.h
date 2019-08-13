@@ -1,7 +1,7 @@
 #pragma once
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	enum class ShaderDataType
 	{
 		None = 0,

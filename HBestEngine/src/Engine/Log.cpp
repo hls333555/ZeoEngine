@@ -3,8 +3,8 @@
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	std::shared_ptr<spdlog::logger> Log::s_CoreLogger;
 	std::shared_ptr<spdlog::logger> Log::s_ClientLogger;
 

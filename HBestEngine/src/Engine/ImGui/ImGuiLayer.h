@@ -6,8 +6,8 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class HBE_API ImGuiLayer : public Layer
 	{
 	public:

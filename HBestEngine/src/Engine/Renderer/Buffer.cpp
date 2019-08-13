@@ -5,8 +5,8 @@
 
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())

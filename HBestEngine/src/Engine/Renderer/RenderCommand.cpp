@@ -3,7 +3,7 @@
 
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI();
 }

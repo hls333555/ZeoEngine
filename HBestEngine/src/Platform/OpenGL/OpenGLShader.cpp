@@ -5,8 +5,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		// Create an empty vertex shader handle

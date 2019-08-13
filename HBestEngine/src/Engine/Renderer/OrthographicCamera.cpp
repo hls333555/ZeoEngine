@@ -3,8 +3,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
 		: m_ProjectionMatrix(glm::ortho(left, right, bottom, top, -1.f, 1.f)), m_ViewMatrix(1.f)
 	{

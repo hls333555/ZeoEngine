@@ -4,8 +4,8 @@
 #include "Engine/Application.h"
 #include <GLFW/glfw3.h>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	Input* Input::s_Instance = new WindowsInput();
 
 	bool WindowsInput::IsKeyPressedImpl(int keycode)

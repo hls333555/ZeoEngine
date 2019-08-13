@@ -4,8 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	OpenGLContext::OpenGLContext(GLFWwindow* WindowHandle)
 		: m_WindowHandle(WindowHandle)
 	{

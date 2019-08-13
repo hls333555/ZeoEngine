@@ -4,8 +4,8 @@
 #include "Core/DeltaTime.h"
 #include "Events/Event.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	/**
 	 * Layers stored in an ordered list called layer stack not only determine what order thing's DRAWING,
 	 * but also are applicable to EVENTS and some update logic.

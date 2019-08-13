@@ -4,8 +4,8 @@
 
 #include <glm/glm.hpp>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class OpenGLShader : public Shader
 	{
 	public:

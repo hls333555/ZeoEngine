@@ -5,15 +5,15 @@
 
 #include <GLFW/glfw3.h>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application()
 	{
 		HBE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = Scope<Window>(Window::Create());
 		m_Window->SetEventCallback(HBE_BIND_EVENT_FUNC(Application::OnEvent));
 		
 		// m_ImGuiLayer does not need to be unique pointer

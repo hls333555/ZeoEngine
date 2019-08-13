@@ -6,8 +6,8 @@
 // Support for logging for custom types
 #include "spdlog/fmt/ostr.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class HBE_API Log
 	{
 	public:

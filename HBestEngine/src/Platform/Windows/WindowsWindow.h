@@ -6,8 +6,8 @@
 
 #include <GLFW/glfw3.h>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class WindowsWindow : public Window
 	{
 	public:

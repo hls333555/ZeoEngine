@@ -1,7 +1,7 @@
 #pragma once
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class DeltaTime
 	{
 	public:

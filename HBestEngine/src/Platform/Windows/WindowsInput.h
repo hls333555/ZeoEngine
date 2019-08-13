@@ -2,8 +2,8 @@
 
 #include "Engine/Input.h"
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class WindowsInput : public Input
 	{
 	protected:

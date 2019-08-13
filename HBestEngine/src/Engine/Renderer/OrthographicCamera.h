@@ -2,8 +2,8 @@
 
 #include <glm/glm.hpp>
 
-namespace HBestEngine
-{
+namespace HBestEngine {
+
 	class OrthographicCamera
 	{
 	public:

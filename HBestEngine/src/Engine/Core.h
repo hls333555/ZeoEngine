@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #ifdef HBE_PLATFORM_WINDOWS
 	// Static linking is used from now on!
 	#if HBE_DYNAMIC_LINK
@@ -30,3 +32,12 @@
 #define BIT(x) (1 << x)
 
 #define HBE_BIND_EVENT_FUNC(func) std::bind(&func, this, std::placeholders::_1)
+
+namespace HBestEngine {
+
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+}
