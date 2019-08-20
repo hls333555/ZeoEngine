@@ -18,6 +18,7 @@ IncludeDir["GLFW"] = "HBestEngine/vendor/GLFW/include"
 IncludeDir["Glad"] = "HBestEngine/vendor/Glad/include"
 IncludeDir["ImGui"] = "HBestEngine/vendor/imgui"
 IncludeDir["glm"] = "HBestEngine/vendor/glm"
+IncludeDir["stb_image"] = "HBestEngine/vendor/stb_image"
 
 -- Include the premake file of GLFW
 include "HBestEngine/vendor/GLFW"
@@ -43,6 +44,8 @@ project "HBestEngine"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/stb_image/**.h",
+		"%{prj.name}/vendor/stb_image/**.cpp",
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.ini"
 	}
@@ -59,7 +62,8 @@ project "HBestEngine"
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}"
 	}
 
 	links 
