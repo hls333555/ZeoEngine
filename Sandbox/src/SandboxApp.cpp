@@ -169,7 +169,8 @@ public:
 
 		m_TextureShader.reset(HBestEngine::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
 
-		m_Texture = HBestEngine::Texture2D::Create("assets/textures/Checkerboard.png");
+		m_Texture = HBestEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
+		m_LogoTexture = HBestEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
 		
 		m_TextureShader->Bind();
 		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
@@ -232,6 +233,9 @@ public:
 		m_Texture->Bind();
 		HBestEngine::Renderer::Submit(m_TextureShader, m_SquareVAO);
 
+		m_LogoTexture->Bind();
+		HBestEngine::Renderer::Submit(m_TextureShader, m_SquareVAO);
+
 		// Triangle
 		//HBestEngine::Renderer::Submit(m_Shader, m_VAO);
 
@@ -260,6 +264,7 @@ private:
 	HBestEngine::Ref<HBestEngine::Shader> m_FlatColorShader, m_TextureShader;
 
 	HBestEngine::Ref<HBestEngine::Texture2D> m_Texture;
+	HBestEngine::Ref<HBestEngine::Texture2D> m_LogoTexture;
 
 	HBestEngine::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPos;

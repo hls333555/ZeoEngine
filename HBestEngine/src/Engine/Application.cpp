@@ -3,6 +3,8 @@
 
 #include "Log.h"
 
+#include "Engine/Renderer/Renderer.h"
+
 #include <GLFW/glfw3.h>
 
 namespace HBestEngine {
@@ -15,6 +17,8 @@ namespace HBestEngine {
 		s_Instance = this;
 		m_Window = Scope<Window>(Window::Create());
 		m_Window->SetEventCallback(HBE_BIND_EVENT_FUNC(Application::OnEvent));
+
+		Renderer::Init();
 		
 		// m_ImGuiLayer does not need to be unique pointer
 		// since it is going to be part of the layer stack who will control its lifecycle
