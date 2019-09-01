@@ -134,40 +134,7 @@ public:
 
 		m_FlatColorShader.reset(HBestEngine::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
 
-		const std::string textureShaderVertexSrc = R"(
-			#version 330 core
-
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec2 a_TexCoord;
-
-			out vec2 v_TexCoord;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-			
-			void main()
-			{
-				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.f);
-				v_TexCoord = a_TexCoord;
-			}
-		)";
-
-		const std::string textureShaderFragmentSrc = R"(
-			#version 330 core
-
-			in vec2 v_TexCoord;
-
-			layout(location = 0) out vec4 color;
-
-			uniform sampler2D u_Texture;
-			
-			void main()
-			{
-				color = texture(u_Texture, v_TexCoord);
-			}
-		)";
-
-		m_TextureShader.reset(HBestEngine::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
+		m_TextureShader.reset(HBestEngine::Shader::Create("assets/shaders/Texture.glsl"));
 
 		m_Texture = HBestEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
 		m_LogoTexture = HBestEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
