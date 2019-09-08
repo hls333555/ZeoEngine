@@ -43,7 +43,7 @@ namespace HBestEngine {
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
 		std::string result;
-		std::ifstream in(filePath, std::ios::in, std::ios::binary);
+		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
@@ -77,7 +77,7 @@ namespace HBestEngine {
 			size_t typePos = typeTokenPos + typeTokenLength + 1;
 			// Get shader type
 			std::string type = src.substr(typePos, eol - typePos);
-			HBE_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type specifier!");
+			HBE_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type token!");
 
 			// Beginning of shader source: "#version..."
 			size_t shaderSrcPos = src.find_first_not_of("\r\n", eol);
@@ -94,8 +94,11 @@ namespace HBestEngine {
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSrcs)
 	{
 		GLuint program = glCreateProgram();
-		std::vector<GLuint> glShaderIds(shaderSrcs.size());
-
+		// Since std::vector is a heap-allocated array, it is not efficient enough for a game engine
+		// We prefer to use stack-allocated array like std::array
+		HBE_CORE_ASSERT(shaderSrcs.size() <= 2, "Only up to two shaders are supported for now!");
+		std::array<GLuint, 2> glShaderIds;
+		int glShaderId = 0;
 		for (auto& pair : shaderSrcs)
 		{
 			GLenum type = pair.first;
@@ -129,7 +132,7 @@ namespace HBestEngine {
 			}
 
 			glAttachShader(program, shader);
-			glShaderIds.push_back(shader);
+			glShaderIds[glShaderId++] = shader;
 		}
 
 		glLinkProgram(program);
