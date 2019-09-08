@@ -103,7 +103,7 @@ public:
 			}
 		)";
 
-		m_Shader.reset(HBestEngine::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader = HBestEngine::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
 		const std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
@@ -132,15 +132,15 @@ public:
 			}
 		)";
 
-		m_FlatColorShader.reset(HBestEngine::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+		m_FlatColorShader = HBestEngine::Shader::Create("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
-		m_TextureShader.reset(HBestEngine::Shader::Create("assets/shaders/Texture.glsl"));
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
 		m_Texture = HBestEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
 		m_LogoTexture = HBestEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
 		
-		m_TextureShader->Bind();
-		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+		textureShader->Bind();
+		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 
 	}
 
@@ -197,11 +197,13 @@ public:
 			}		
 		}
 
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+
 		m_Texture->Bind();
-		HBestEngine::Renderer::Submit(m_TextureShader, m_SquareVAO);
+		HBestEngine::Renderer::Submit(textureShader, m_SquareVAO);
 
 		m_LogoTexture->Bind();
-		HBestEngine::Renderer::Submit(m_TextureShader, m_SquareVAO);
+		HBestEngine::Renderer::Submit(textureShader, m_SquareVAO);
 
 		// Triangle
 		//HBestEngine::Renderer::Submit(m_Shader, m_VAO);
@@ -224,11 +226,13 @@ public:
 	}
 
 private:
+	HBestEngine::ShaderLibrary m_ShaderLibrary;
+
 	HBestEngine::Ref<HBestEngine::VertexArray> m_VAO;
 	HBestEngine::Ref<HBestEngine::Shader> m_Shader;
 
 	HBestEngine::Ref<HBestEngine::VertexArray> m_SquareVAO;
-	HBestEngine::Ref<HBestEngine::Shader> m_FlatColorShader, m_TextureShader;
+	HBestEngine::Ref<HBestEngine::Shader> m_FlatColorShader;
 
 	HBestEngine::Ref<HBestEngine::Texture2D> m_Texture;
 	HBestEngine::Ref<HBestEngine::Texture2D> m_LogoTexture;

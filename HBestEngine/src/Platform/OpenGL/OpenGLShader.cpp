@@ -25,9 +25,18 @@ namespace HBestEngine {
 		std::string src = ReadFile(filePath);
 		auto shaderSrcs = PreProcess(src);
 		Compile(shaderSrcs);
+
+		// Extract name from file path
+		// "assets/shaders/Texture.glsl" -> "Texture"
+		auto lastSlash = filePath.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
+		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+		auto lastDot = filePath.rfind("."); // rfind() will find EXACTLY the provided characters
+		auto count = lastDot == std::string::npos ? filePath.size() - lastSlash /** File without extension */ : lastDot - lastSlash;
+		m_Name = filePath.substr(lastSlash, count);
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: m_Name(name)
 	{
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 		shaderSrcs[GL_VERTEX_SHADER] = vertexSrc;
