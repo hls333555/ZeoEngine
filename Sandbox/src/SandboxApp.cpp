@@ -12,8 +12,7 @@ class ExampleLayer : public HBestEngine::Layer
 public:
 	ExampleLayer()
 		: Layer("Example")
-		, m_Camera(-1.6f, 1.6f, -0.9f, 0.9f)
-		, m_CameraPos(0.f)
+		, m_CameraController(1280.f / 720.f)
 	{
 		m_VAO.reset(HBestEngine::VertexArray::Create());
 
@@ -149,38 +148,14 @@ public:
 		//HBE_INFO("ExampleLayer::Update");
 		//HBE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
 
+		// Update
+		m_CameraController.OnUpdate(dt);
+
+		// Render
 		//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
 		HBestEngine::RenderCommand::Clear();
 
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_A))
-		{
-			m_CameraPos.x -= m_CameraMoveSpeed * dt;
-		}
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_D))
-		{
-			m_CameraPos.x += m_CameraMoveSpeed * dt;
-		}
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_W))
-		{
-			m_CameraPos.y += m_CameraMoveSpeed * dt;
-		}
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_S))
-		{
-			m_CameraPos.y -= m_CameraMoveSpeed * dt;
-		}
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_Q))
-		{
-			m_CameraRot -= m_CameraRotateSpeed * dt;
-		}
-		if (HBestEngine::Input::IsKeyPressed(HBE_KEY_E))
-		{
-			m_CameraRot += m_CameraRotateSpeed * dt;
-		}
-
-		m_Camera.SetPosition(m_CameraPos);
-		m_Camera.SetRotation(m_CameraRot);
-
-		HBestEngine::Renderer::BeginScene(m_Camera);
+		HBestEngine::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.f), glm::vec3(0.1f));
 
@@ -223,6 +198,7 @@ public:
 	{
 		//HBE_TRACE("{0}", event);
 		
+		m_CameraController.OnEvent(event);
 	}
 
 private:
@@ -237,12 +213,7 @@ private:
 	HBestEngine::Ref<HBestEngine::Texture2D> m_Texture;
 	HBestEngine::Ref<HBestEngine::Texture2D> m_LogoTexture;
 
-	HBestEngine::OrthographicCamera m_Camera;
-	glm::vec3 m_CameraPos;
-	float m_CameraRot = 0.f;
-	float m_CameraMoveSpeed = 5.f;
-	/** How many degrees to rotate per second */
-	float m_CameraRotateSpeed = 180.f;
+	HBestEngine::OrthographicCameraController m_CameraController;
 
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.f };
 
