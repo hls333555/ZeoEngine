@@ -1,4 +1,4 @@
-#include "HBestEngine.h"
+#include "ZeoEngine.h"
 
 #include "imgui/imgui.h"
 
@@ -7,14 +7,14 @@
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
-class ExampleLayer : public HBestEngine::Layer
+class ExampleLayer : public ZeoEngine::Layer
 {
 public:
 	ExampleLayer()
 		: Layer("Example")
 		, m_CameraController(1280.f / 720.f)
 	{
-		m_VAO.reset(HBestEngine::VertexArray::Create());
+		m_VAO.reset(ZeoEngine::VertexArray::Create());
 
 		float vertices[] = {
 			-0.5f, -0.5f, 0.f, 0.8f, 0.2f, 0.8f, 1.f,
@@ -22,12 +22,12 @@ public:
 			 0.f,   0.5f, 0.f, 0.8f, 0.8f, 0.2f, 1.f
 		};
 
-		HBestEngine::Ref<HBestEngine::VertexBuffer> VBO;
-		VBO.reset(HBestEngine::VertexBuffer::Create(vertices, sizeof(vertices)));
+		ZeoEngine::Ref<ZeoEngine::VertexBuffer> VBO;
+		VBO.reset(ZeoEngine::VertexBuffer::Create(vertices, sizeof(vertices)));
 
-		HBestEngine::BufferLayout layout = {
-			{ HBestEngine::ShaderDataType::Float3, "a_Position" },
-			{ HBestEngine::ShaderDataType::Float4, "a_Color" }
+		ZeoEngine::BufferLayout layout = {
+			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
+			{ ZeoEngine::ShaderDataType::Float4, "a_Color" }
 		};
 		VBO->SetLayout(layout);
 		m_VAO->AddVertexBuffer(VBO);
@@ -37,12 +37,12 @@ public:
 		};
 
 		// Use shared_ptr here because VAO will reference it
-		HBestEngine::Ref<HBestEngine::IndexBuffer> IBO;
-		IBO.reset(HBestEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		ZeoEngine::Ref<ZeoEngine::IndexBuffer> IBO;
+		IBO.reset(ZeoEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VAO->SetIndexBuffer(IBO);
 
 
-		m_SquareVAO.reset(HBestEngine::VertexArray::Create());
+		m_SquareVAO.reset(ZeoEngine::VertexArray::Create());
 
 		float squareVertices[] = {
 			-0.5f, -0.5f, 0.f, 0.f, 0.f,
@@ -51,12 +51,12 @@ public:
 			-0.5f,  0.5f, 0.f, 0.f, 1.f
 		};
 
-		HBestEngine::Ref<HBestEngine::VertexBuffer> squareVBO;
-		squareVBO.reset(HBestEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+		ZeoEngine::Ref<ZeoEngine::VertexBuffer> squareVBO;
+		squareVBO.reset(ZeoEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
-		HBestEngine::BufferLayout squareLayout = {
-			{ HBestEngine::ShaderDataType::Float3, "a_Position" },
-			{ HBestEngine::ShaderDataType::Float2, "a_TexCoord" },
+		ZeoEngine::BufferLayout squareLayout = {
+			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
+			{ ZeoEngine::ShaderDataType::Float2, "a_TexCoord" },
 		};
 		squareVBO->SetLayout(squareLayout);
 		m_SquareVAO->AddVertexBuffer(squareVBO);
@@ -66,8 +66,8 @@ public:
 			2, 3, 0
 		};
 
-		HBestEngine::Ref<HBestEngine::IndexBuffer> squareIBO;
-		squareIBO.reset(HBestEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+		ZeoEngine::Ref<ZeoEngine::IndexBuffer> squareIBO;
+		squareIBO.reset(ZeoEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 		m_SquareVAO->SetIndexBuffer(squareIBO);
 
 		const std::string vertexSrc = R"(
@@ -102,7 +102,7 @@ public:
 			}
 		)";
 
-		m_Shader = HBestEngine::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
+		m_Shader = ZeoEngine::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
 		const std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
@@ -131,36 +131,36 @@ public:
 			}
 		)";
 
-		m_FlatColorShader = HBestEngine::Shader::Create("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
+		m_FlatColorShader = ZeoEngine::Shader::Create("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
 		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
-		m_Texture = HBestEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
-		m_LogoTexture = HBestEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
+		m_Texture = ZeoEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
+		m_LogoTexture = ZeoEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
 		
 		textureShader->Bind();
-		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
+		std::dynamic_pointer_cast<ZeoEngine::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 
 	}
 
-	virtual void OnUpdate(HBestEngine::DeltaTime dt) override
+	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override
 	{
-		//HBE_INFO("ExampleLayer::Update");
-		//HBE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
+		//ZE_INFO("ExampleLayer::Update");
+		//ZE_INFO("Delta time: {0}s, {1}ms", dt.GetSeconds(), dt.GetMilliseconds());
 
 		// Update
 		m_CameraController.OnUpdate(dt);
 
 		// Render
 		//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
-		HBestEngine::RenderCommand::Clear();
+		ZeoEngine::RenderCommand::Clear();
 
-		HBestEngine::Renderer::BeginScene(m_CameraController.GetCamera());
+		ZeoEngine::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.f), glm::vec3(0.1f));
 
 		m_FlatColorShader->Bind();
-		std::dynamic_pointer_cast<HBestEngine::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("u_Color", m_SquareColor);
+		std::dynamic_pointer_cast<ZeoEngine::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("u_Color", m_SquareColor);
 
 		for (int x = 0; x < 10; ++x)
 		{
@@ -168,22 +168,22 @@ public:
 			{
 				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.f), pos) * scale;
-				HBestEngine::Renderer::Submit(m_FlatColorShader, m_SquareVAO, transform);
+				ZeoEngine::Renderer::Submit(m_FlatColorShader, m_SquareVAO, transform);
 			}		
 		}
 
 		auto textureShader = m_ShaderLibrary.Get("Texture");
 
 		m_Texture->Bind();
-		HBestEngine::Renderer::Submit(textureShader, m_SquareVAO);
+		ZeoEngine::Renderer::Submit(textureShader, m_SquareVAO);
 
 		m_LogoTexture->Bind();
-		HBestEngine::Renderer::Submit(textureShader, m_SquareVAO);
+		ZeoEngine::Renderer::Submit(textureShader, m_SquareVAO);
 
 		// Triangle
-		//HBestEngine::Renderer::Submit(m_Shader, m_VAO);
+		//ZeoEngine::Renderer::Submit(m_Shader, m_VAO);
 
-		HBestEngine::Renderer::EndScene();
+		ZeoEngine::Renderer::EndScene();
 
 	}
 
@@ -194,32 +194,32 @@ public:
 		ImGui::End();
 	}
 
-	virtual void OnEvent(HBestEngine::Event& event) override
+	virtual void OnEvent(ZeoEngine::Event& event) override
 	{
-		//HBE_TRACE("{0}", event);
+		//ZE_TRACE("{0}", event);
 		
 		m_CameraController.OnEvent(event);
 	}
 
 private:
-	HBestEngine::ShaderLibrary m_ShaderLibrary;
+	ZeoEngine::ShaderLibrary m_ShaderLibrary;
 
-	HBestEngine::Ref<HBestEngine::VertexArray> m_VAO;
-	HBestEngine::Ref<HBestEngine::Shader> m_Shader;
+	ZeoEngine::Ref<ZeoEngine::VertexArray> m_VAO;
+	ZeoEngine::Ref<ZeoEngine::Shader> m_Shader;
 
-	HBestEngine::Ref<HBestEngine::VertexArray> m_SquareVAO;
-	HBestEngine::Ref<HBestEngine::Shader> m_FlatColorShader;
+	ZeoEngine::Ref<ZeoEngine::VertexArray> m_SquareVAO;
+	ZeoEngine::Ref<ZeoEngine::Shader> m_FlatColorShader;
 
-	HBestEngine::Ref<HBestEngine::Texture2D> m_Texture;
-	HBestEngine::Ref<HBestEngine::Texture2D> m_LogoTexture;
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_Texture;
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_LogoTexture;
 
-	HBestEngine::OrthographicCameraController m_CameraController;
+	ZeoEngine::OrthographicCameraController m_CameraController;
 
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.f };
 
 };
 
-class SandBox : public HBestEngine::Application
+class SandBox : public ZeoEngine::Application
 {
 public:
 	SandBox()
@@ -234,7 +234,7 @@ public:
 
 };
 
-HBestEngine::Application* HBestEngine::CreateApplication()
+ZeoEngine::Application* ZeoEngine::CreateApplication()
 {
 	return new SandBox();
 }
