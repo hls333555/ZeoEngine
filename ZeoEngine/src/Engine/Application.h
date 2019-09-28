@@ -31,11 +31,13 @@ namespace ZeoEngine {
 
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
+		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_bRunning = true;
+		bool m_bMinimized = false;
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.f;
 

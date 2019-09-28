@@ -35,6 +35,7 @@ namespace ZeoEngine {
 	{
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
 
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
@@ -64,9 +65,13 @@ namespace ZeoEngine {
 			DeltaTime dt = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
-			for (Layer* layer : m_LayerStack)
+			// Stop updating layers if window is minimized
+			if (!m_bMinimized)
 			{
-				layer->OnUpdate(dt);
+				for (Layer* layer : m_LayerStack)
+				{
+					layer->OnUpdate(dt);
+				}
 			}
 
 			// TODO: This will eventually be in render thread
@@ -86,6 +91,21 @@ namespace ZeoEngine {
 	{
 		m_bRunning = false;
 		return true;
+	}
+
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		// When window is minimized...
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_bMinimized = true;
+			return false;
+		}
+
+		m_bMinimized = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
 	}
 
 }
