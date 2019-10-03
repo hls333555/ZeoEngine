@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Core.h"
-#include "Core/DeltaTime.h"
-#include "Events/Event.h"
+#include "Engine/Core/DeltaTime.h"
+#include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 

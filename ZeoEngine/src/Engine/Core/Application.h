@@ -3,13 +3,13 @@
 #include "Core.h"
 
 #include "Window.h"
-#include "Events/Event.h"
-#include "Events/ApplicationEvent.h"
+#include "Engine/Events/Event.h"
+#include "Engine/Events/ApplicationEvent.h"
 #include "LayerStack.h"
 
-#include "Core/DeltaTime.h"
+#include "Engine/Core/DeltaTime.h"
 
-#include "ImGui/ImGuiLayer.h"
+#include "Engine/ImGui/ImGuiLayer.h"
 
 namespace ZeoEngine {
 
