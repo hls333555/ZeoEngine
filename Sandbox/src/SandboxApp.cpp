@@ -7,6 +7,8 @@
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
+#include "Sandbox2D.h"
+
 class ExampleLayer : public ZeoEngine::Layer
 {
 public:
@@ -14,7 +16,7 @@ public:
 		: Layer("Example")
 		, m_CameraController(1280.f / 720.f)
 	{
-		m_VAO.reset(ZeoEngine::VertexArray::Create());
+		m_VAO = ZeoEngine::VertexArray::Create();
 
 		float vertices[] = {
 			-0.5f, -0.5f, 0.f, 0.8f, 0.2f, 0.8f, 1.f,
@@ -42,7 +44,7 @@ public:
 		m_VAO->SetIndexBuffer(IBO);
 
 
-		m_SquareVAO.reset(ZeoEngine::VertexArray::Create());
+		m_SquareVAO = ZeoEngine::VertexArray::Create();
 
 		float squareVertices[] = {
 			-0.5f, -0.5f, 0.f, 0.f, 0.f,
@@ -152,7 +154,7 @@ public:
 		m_CameraController.OnUpdate(dt);
 
 		// Render
-		//RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
+		//ZeoEngine::RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
 		ZeoEngine::RenderCommand::Clear();
 
 		ZeoEngine::Renderer::BeginScene(m_CameraController.GetCamera());
@@ -224,7 +226,8 @@ class SandBox : public ZeoEngine::Application
 public:
 	SandBox()
 	{
-		PushLayer(new ExampleLayer());
+		//PushLayer(new ExampleLayer());
+		PushLayer(new Sandbox2D());
 	}
 
 	~SandBox()
