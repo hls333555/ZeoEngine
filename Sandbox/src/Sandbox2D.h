@@ -16,6 +16,14 @@ public:
 	virtual void OnEvent(ZeoEngine::Event& event) override;
 
 private:
+	struct ProfileResult
+	{
+		const char* Name;
+		float Time;
+	};
+
+	std::vector<ProfileResult> m_ProfileResults;
+
 	ZeoEngine::OrthographicCameraController m_CameraController;
 
 	ZeoEngine::Ref<ZeoEngine::VertexArray> m_SquareVAO;

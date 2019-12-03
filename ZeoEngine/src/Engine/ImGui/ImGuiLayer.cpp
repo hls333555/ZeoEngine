@@ -67,8 +67,8 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::OnImGuiRender()
 	{
-		static bool bShow = true;
-		ImGui::ShowDemoWindow(&bShow);
+		//static bool bShow = true;
+		//ImGui::ShowDemoWindow(&bShow);
 	}
 
 	void ImGuiLayer::Begin()
