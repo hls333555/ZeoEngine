@@ -38,8 +38,8 @@ namespace ZeoEngine {
 		glm::mat4 m_ViewProjectionMatrix;
 
 		// Needs initializing manually!
-		glm::vec3 m_Position = {0.f, 0.f, 0.f};
-		float m_Rotation = 0.f;
+		glm::vec3 m_Position = {0.0f, 0.0f, 0.0f};
+		float m_Rotation = 0.0f;
 
 	};
 

@@ -13,7 +13,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLTexture2D>(width, height);
+			return CreateRef<OpenGLTexture2D>(width, height);
 		default:
 			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
@@ -28,7 +28,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLTexture2D>(path);
+			return CreateRef<OpenGLTexture2D>(path);
 		default:
 			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;

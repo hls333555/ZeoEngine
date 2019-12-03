@@ -32,7 +32,7 @@ namespace ZeoEngine {
 		};
 
 		Ref<VertexBuffer> squareVBO;
-		squareVBO.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+		squareVBO = VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
 		BufferLayout squareLayout = {
 			{ ShaderDataType::Float3, "a_Position" },
@@ -47,7 +47,7 @@ namespace ZeoEngine {
 		};
 
 		Ref<IndexBuffer> squareIBO;
-		squareIBO.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+		squareIBO = IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 		s_Data->QuadVAO->SetIndexBuffer(squareIBO);
 
 		// Generate a 1x1 white texture to be used by flat color
@@ -77,7 +77,7 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		DrawQuad({ position.x, position.y, 0.f }, size, color);
+		DrawQuad({ position.x, position.y, 0.0f }, size, color);
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -94,7 +94,7 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture)
 	{
-		DrawQuad({ position.x, position.y, 0.f }, size, texture);
+		DrawQuad({ position.x, position.y, 0.0f }, size, texture);
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)

@@ -14,7 +14,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(filePath);
+			return CreateRef<OpenGLShader>(filePath);
 		default:
 			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		default:
 			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;

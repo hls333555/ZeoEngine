@@ -14,18 +14,18 @@ class ExampleLayer : public ZeoEngine::Layer
 public:
 	ExampleLayer()
 		: Layer("Example")
-		, m_CameraController(1280.f / 720.f)
+		, m_CameraController(1280.0f / 720.0f)
 	{
 		m_VAO = ZeoEngine::VertexArray::Create();
 
 		float vertices[] = {
-			-0.5f, -0.5f, 0.f, 0.8f, 0.2f, 0.8f, 1.f,
-			 0.5f, -0.5f, 0.f, 0.2f, 0.3f, 0.8f, 1.f,
-			 0.f,   0.5f, 0.f, 0.8f, 0.8f, 0.2f, 1.f
+			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
+			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
 
 		ZeoEngine::Ref<ZeoEngine::VertexBuffer> VBO;
-		VBO.reset(ZeoEngine::VertexBuffer::Create(vertices, sizeof(vertices)));
+		VBO = ZeoEngine::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		ZeoEngine::BufferLayout layout = {
 			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
@@ -40,21 +40,21 @@ public:
 
 		// Use shared_ptr here because VAO will reference it
 		ZeoEngine::Ref<ZeoEngine::IndexBuffer> IBO;
-		IBO.reset(ZeoEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		IBO = ZeoEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 		m_VAO->SetIndexBuffer(IBO);
 
 
 		m_SquareVAO = ZeoEngine::VertexArray::Create();
 
 		float squareVertices[] = {
-			-0.5f, -0.5f, 0.f, 0.f, 0.f,
-			 0.5f, -0.5f, 0.f, 1.f, 0.f,
-			 0.5f,  0.5f, 0.f, 1.f, 1.f,
-			-0.5f,  0.5f, 0.f, 0.f, 1.f
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
 		ZeoEngine::Ref<ZeoEngine::VertexBuffer> squareVBO;
-		squareVBO.reset(ZeoEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+		squareVBO = ZeoEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
 		ZeoEngine::BufferLayout squareLayout = {
 			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
@@ -69,7 +69,7 @@ public:
 		};
 
 		ZeoEngine::Ref<ZeoEngine::IndexBuffer> squareIBO;
-		squareIBO.reset(ZeoEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+		squareIBO = ZeoEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 		m_SquareVAO->SetIndexBuffer(squareIBO);
 
 		const std::string vertexSrc = R"(
@@ -86,7 +86,7 @@ public:
 			void main()
 			{
 				v_Color = a_Color;
-				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.f);
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0f);
 
 			}
 		)";
@@ -116,7 +116,7 @@ public:
 			
 			void main()
 			{
-				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.f);
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0f);
 			}
 		)";
 
@@ -154,12 +154,12 @@ public:
 		m_CameraController.OnUpdate(dt);
 
 		// Render
-		//ZeoEngine::RenderCommand::SetClearColor({ 1.f, 0.f, 1.f, 1.f });
+		//ZeoEngine::RenderCommand::SetClearColor({ 1.0f, 0.0f, 1.0f, 1.0f });
 		ZeoEngine::RenderCommand::Clear();
 
 		ZeoEngine::Renderer::BeginScene(m_CameraController.GetCamera());
 
-		static glm::mat4 scale = glm::scale(glm::mat4(1.f), glm::vec3(0.1f));
+		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
 		m_FlatColorShader->Bind();
 		std::dynamic_pointer_cast<ZeoEngine::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("u_Color", m_SquareColor);
@@ -168,8 +168,8 @@ public:
 		{
 			for (int y = 0; y < 10; ++y)
 			{
-				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.f);
-				glm::mat4 transform = glm::translate(glm::mat4(1.f), pos) * scale;
+				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.0f);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
 				ZeoEngine::Renderer::Submit(m_FlatColorShader, m_SquareVAO, transform);
 			}		
 		}
@@ -217,7 +217,7 @@ private:
 
 	ZeoEngine::OrthographicCameraController m_CameraController;
 
-	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.f };
+	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 
 };
 

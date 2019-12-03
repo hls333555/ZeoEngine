@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		bool m_bRunning = true;
 		bool m_bMinimized = false;
 		LayerStack m_LayerStack;
-		float m_LastFrameTime = 0.f;
+		float m_LastFrameTime = 0.0f;
 
 		static Application* s_Instance;
 
