@@ -49,3 +49,4 @@ bin-Intermediate/
 # Other files
 *.user
 /Sandbox/imgui.ini
+*.json

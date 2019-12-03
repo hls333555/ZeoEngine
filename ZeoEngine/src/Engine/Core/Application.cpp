@@ -13,6 +13,8 @@ namespace ZeoEngine {
 
 	Application::Application()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		m_Window = Scope<Window>(Window::Create());
@@ -29,10 +31,14 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
+		ZE_PROFILE_FUNCTION();
+
 	}
 
 	void Application::OnEvent(Event& e)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
@@ -48,18 +54,28 @@ namespace ZeoEngine {
 
 	void Application::PushLayer(Layer* layer)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		m_LayerStack.PushOverlay(layer);
+		layer->OnAttach();
 	}
 
 	void Application::Run()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		while (m_bRunning)
 		{
+			ZE_PROFILE_SCOPE("RunLoop");
+
 			// Platform::GetTime();
 			float time = (float)glfwGetTime();
 			DeltaTime dt = time - m_LastFrameTime;
@@ -68,20 +84,28 @@ namespace ZeoEngine {
 			// Stop updating layers if window is minimized
 			if (!m_bMinimized)
 			{
-				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(dt);
-				}
-			}
+					ZE_PROFILE_SCOPE("LayerStack OnUpdate");
 
-			// TODO: This will eventually be in render thread
-			// Render ImGui
-			m_ImGuiLayer->Begin();
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnImGuiRender();
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnUpdate(dt);
+					}
+				}
+
+				// TODO: This will eventually be in render thread
+				// Render ImGui
+				m_ImGuiLayer->Begin();
+				{
+					ZE_PROFILE_SCOPE("LayerStack OnImGuiRender");
+
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnImGuiRender();
+					}
+				}
+				m_ImGuiLayer->End();
 			}
-			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}
@@ -95,6 +119,8 @@ namespace ZeoEngine {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		// When window is minimized...
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{

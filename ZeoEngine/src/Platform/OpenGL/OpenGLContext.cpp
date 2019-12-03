@@ -14,6 +14,8 @@ namespace ZeoEngine {
 
 	void OpenGLContext::Init()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGL();
 		ZE_CORE_ASSERT(status, "Failed to initialize Glad!");
@@ -25,6 +27,8 @@ namespace ZeoEngine {
 
 	void OpenGLContext::SwapBuffers()
 	{
+		ZE_PROFILE_FUNCTION();
+		
 		glfwSwapBuffers(m_WindowHandle);
 	}
 

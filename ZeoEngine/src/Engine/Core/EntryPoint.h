@@ -8,9 +8,17 @@ int main(int argc, char** argv)
 	ZE_CORE_TRACE("Initializing engine...");
 	ZE_CORE_TRACE("Initialized log!");
 
+	ZE_PROFILE_BEGIN_SESSION("Startup", "ZeoEngineProfile_Startup.json");
 	auto app = ZeoEngine::CreateApplication();
+	ZE_PROFILE_END_SESSION();
+
+	ZE_PROFILE_BEGIN_SESSION("Runtime", "ZeoEngineProfile_Runtime.json");
 	app->Run();
+	ZE_PROFILE_END_SESSION();
+
+	ZE_PROFILE_BEGIN_SESSION("Shutdown", "ZeoEngineProfile_Shutdown.json");
 	delete app;
+	ZE_PROFILE_END_SESSION();
 }
 #else
 	#error ZeoEngine only supports Windows!

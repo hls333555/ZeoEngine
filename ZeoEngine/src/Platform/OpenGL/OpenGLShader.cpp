@@ -22,6 +22,8 @@ namespace ZeoEngine {
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		std::string src = ReadFile(filePath);
 		auto shaderSrcs = PreProcess(src);
 		Compile(shaderSrcs);
@@ -38,6 +40,8 @@ namespace ZeoEngine {
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 		shaderSrcs[GL_VERTEX_SHADER] = vertexSrc;
 		shaderSrcs[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -46,11 +50,15 @@ namespace ZeoEngine {
 
 	OpenGLShader::~OpenGLShader()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glDeleteProgram(m_RendererID);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		std::string result;
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
@@ -71,6 +79,8 @@ namespace ZeoEngine {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& src)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 
 		const char* typeToken = "#type";
@@ -102,6 +112,8 @@ namespace ZeoEngine {
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSrcs)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		GLuint program = glCreateProgram();
 		// Since std::vector is a heap-allocated array, it is not efficient enough for a game engine
 		// We prefer to use stack-allocated array like std::array
@@ -184,31 +196,43 @@ namespace ZeoEngine {
 
 	void OpenGLShader::Bind() const
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glUseProgram(m_RendererID);
 	}
 
 	void OpenGLShader::Unbind() const
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		UploadUniformFloat3(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		UploadUniformMat4(name, value);
 	}
 

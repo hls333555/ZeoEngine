@@ -16,6 +16,8 @@ namespace ZeoEngine {
 
 	void OrthographicCameraController::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		// Move speed is set based on the zoom level
 		m_CameraTranslationSpeed = m_ZoomLevel;
 
@@ -54,6 +56,8 @@ namespace ZeoEngine {
 
 	void OrthographicCameraController::OnEvent(Event& e)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(OrthographicCameraController::OnMouseScrolled));
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(OrthographicCameraController::OnWindowResized));
@@ -61,6 +65,8 @@ namespace ZeoEngine {
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -70,6 +76,8 @@ namespace ZeoEngine {
 
 	bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		

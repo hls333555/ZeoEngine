@@ -10,6 +10,8 @@ namespace ZeoEngine {
 
 	void Renderer::Init()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

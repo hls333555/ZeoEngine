@@ -23,16 +23,22 @@ namespace ZeoEngine {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -42,6 +48,8 @@ namespace ZeoEngine {
 		if (!s_bGLFWInitialized)
 		{
 			// TODO: glfwTerminate on system shutdown
+			ZE_PROFILE_SCOPE("glfwInit");
+
 			int success = glfwInit();
 			ZE_CORE_ASSERT(success, "Failed to intialize GLFW!");
 			// Set the GLFW error callback
@@ -51,6 +59,11 @@ namespace ZeoEngine {
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
+		{
+			ZE_PROFILE_SCOPE("glfwCreateWindow");
+
+			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
+		}
 		
 		// TODO: memory leaking?
 		// Create rendering context
@@ -148,17 +161,23 @@ namespace ZeoEngine {
 
 	void WindowsWindow::Shutdown()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_Window);
 	}
 
 	void WindowsWindow::OnUpdate()
 	{
+		ZE_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool bEnabled)
 	{
+		ZE_PROFILE_FUNCTION();
+
 		if (bEnabled)
 		{
 			glfwSwapInterval(1);
