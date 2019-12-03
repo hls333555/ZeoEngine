@@ -1,6 +1,6 @@
 #pragma once
 
-// For use by HBsetEngine applicaions
+// For use by ZeoEngine applicaions
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Layer.h"

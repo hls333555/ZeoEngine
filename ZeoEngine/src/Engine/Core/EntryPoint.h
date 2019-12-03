@@ -1,7 +1,5 @@
 #pragma once
 
-// This entire file will be copied into ZeoEngine.h due to #include "EntryPoint.h" there
-
 #ifdef ZE_PLATFORM_WINDOWS
 //extern ZeoEngine::Application* ZeoEngine::CreateApplication();
 int main(int argc, char** argv)
