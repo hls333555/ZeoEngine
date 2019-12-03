@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RendererAPI.h"
+#include "Engine/Renderer/RendererAPI.h"
 
 namespace ZeoEngine {
 
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		}
 
 	private:
-		static RendererAPI* s_RendererAPI;
+		static Scope<RendererAPI> s_RendererAPI;
 	};
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core.h"
+#include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 	{
 	public:
 		Layer(const std::string& name = "Layer");
-		virtual ~Layer();
+		virtual ~Layer() = default;
 
 		/** Called when the layer is pushed onto layer stack. */
 		virtual void OnAttach() {}

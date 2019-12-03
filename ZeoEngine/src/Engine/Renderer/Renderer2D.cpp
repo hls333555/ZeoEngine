@@ -1,9 +1,9 @@
 #include "ZEpch.h"
-#include "Renderer2D.h"
+#include "Engine/Renderer/Renderer2D.h"
 
-#include "VertexArray.h"
-#include "Shader.h"
-#include "RenderCommand.h"
+#include "Engine/Renderer/VertexArray.h"
+#include "Engine/Renderer/Shader.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

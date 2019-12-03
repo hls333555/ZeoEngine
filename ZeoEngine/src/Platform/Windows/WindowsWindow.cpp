@@ -16,9 +16,9 @@ namespace ZeoEngine {
 		ZE_CORE_ERROR("GLFW Error ({0}): {1}", error_code, description);
 	}
 
-	Window* Window::Create(const WindowProps& props)
+	Scope<Window> Window::Create(const WindowProps& props)
 	{
-		return new WindowsWindow(props);
+		return CreateScope<WindowsWindow>(props);
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
@@ -47,7 +47,6 @@ namespace ZeoEngine {
 
 		if (!s_bGLFWInitialized)
 		{
-			// TODO: glfwTerminate on system shutdown
 			ZE_PROFILE_SCOPE("glfwInit");
 
 			int success = glfwInit();
@@ -58,16 +57,14 @@ namespace ZeoEngine {
 			s_bGLFWInitialized = true;
 		}
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
 		{
 			ZE_PROFILE_SCOPE("glfwCreateWindow");
 
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
 		}
 		
-		// TODO: memory leaking?
 		// Create rendering context
-		m_Context = new OpenGLContext(m_Window);
+		m_Context = GraphicsContext::Create(m_Window);
 		m_Context->Init();
 
 		// Pass in the window data which will be used in the following callbacks
@@ -164,6 +161,7 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		glfwDestroyWindow(m_Window);
+		glfwTerminate();
 	}
 
 	void WindowsWindow::OnUpdate()

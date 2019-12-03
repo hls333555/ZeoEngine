@@ -1,9 +1,7 @@
 #include "ZEpch.h"
-#include "RenderCommand.h"
-
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 namespace ZeoEngine {
 
-	RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI();
+	Scope<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
 }

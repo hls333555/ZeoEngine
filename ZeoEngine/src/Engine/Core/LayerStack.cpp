@@ -1,16 +1,13 @@
 #include "ZEpch.h"
-#include "LayerStack.h"
+#include "Engine/Core/LayerStack.h"
 
 namespace ZeoEngine {
-
-	LayerStack::LayerStack()
-	{
-	}
 
 	LayerStack::~LayerStack()
 	{
 		for (auto* layer : m_Layers)
 		{
+			layer->OnDetach();
 			delete layer;
 		}
 	}

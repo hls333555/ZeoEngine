@@ -1,7 +1,7 @@
 #include "ZEpch.h"
-#include "OpenGLVertexArray.h"
+#include "Platform/OpenGL/OpenGLVertexArray.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 namespace ZeoEngine {
 
@@ -9,19 +9,19 @@ namespace ZeoEngine {
 	{
 		switch (type)
 		{
-		case ZeoEngine::ShaderDataType::Float:
-		case ZeoEngine::ShaderDataType::Float2:
-		case ZeoEngine::ShaderDataType::Float3:
-		case ZeoEngine::ShaderDataType::Float4:
-		case ZeoEngine::ShaderDataType::Mat3:
-		case ZeoEngine::ShaderDataType::Mat4:
+		case ShaderDataType::Float:
+		case ShaderDataType::Float2:
+		case ShaderDataType::Float3:
+		case ShaderDataType::Float4:
+		case ShaderDataType::Mat3:
+		case ShaderDataType::Mat4:
 			return GL_FLOAT;
-		case ZeoEngine::ShaderDataType::Int:
-		case ZeoEngine::ShaderDataType::Int2:
-		case ZeoEngine::ShaderDataType::Int3:
-		case ZeoEngine::ShaderDataType::Int4:
+		case ShaderDataType::Int:
+		case ShaderDataType::Int2:
+		case ShaderDataType::Int3:
+		case ShaderDataType::Int4:
 			return GL_INT;
-		case ZeoEngine::ShaderDataType::Bool:
+		case ShaderDataType::Bool:
 			return GL_BOOL;
 		default:
 			ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
@@ -71,6 +71,7 @@ namespace ZeoEngine {
 		for (uint32_t i = 0; i < elements.size(); ++i)
 		{
 			const auto& element = elements[i];
+			// TODO: There may be a issue when adding multiple VertexBuffers. It was all adding them on top of each other instead of after each other.
 			glEnableVertexAttribArray(i);
 			glVertexAttribPointer(i,
 				element.GetComponentCount(),

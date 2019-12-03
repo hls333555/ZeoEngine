@@ -1,12 +1,12 @@
 #include "ZEpch.h"
-#include "Engine/Renderer/VertexArray.h"
+#include "Engine/Renderer/GraphicsContext.h"
 
 #include "Engine/Renderer/Renderer.h"
-#include "Platform/OpenGL/OpenGLVertexArray.h"
+#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace ZeoEngine {
 
-	Ref<VertexArray> VertexArray::Create()
+	Scope<GraphicsContext> GraphicsContext::Create(void* window)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -14,10 +14,11 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexArray>();
+			return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
 		default:
 			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
+
 }

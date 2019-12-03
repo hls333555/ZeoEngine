@@ -1,7 +1,7 @@
 #include "ZEpch.h"
-#include "Buffer.h"
+#include "Engine/Renderer/Buffer.h"
 
-#include "Renderer.h"
+#include "Engine/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLBuffer.h"
 

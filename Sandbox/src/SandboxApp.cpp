@@ -1,11 +1,9 @@
 #include "ZeoEngine.h"
 
-#include "imgui/imgui.h"
+#include <imgui/imgui.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include "Platform/OpenGL/OpenGLShader.h"
 
 #include "Sandbox2D.h"
 
@@ -24,8 +22,7 @@ public:
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
 
-		ZeoEngine::Ref<ZeoEngine::VertexBuffer> VBO;
-		VBO = ZeoEngine::VertexBuffer::Create(vertices, sizeof(vertices));
+		ZeoEngine::Ref<ZeoEngine::VertexBuffer> VBO = ZeoEngine::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		ZeoEngine::BufferLayout layout = {
 			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
@@ -39,8 +36,7 @@ public:
 		};
 
 		// Use shared_ptr here because VAO will reference it
-		ZeoEngine::Ref<ZeoEngine::IndexBuffer> IBO;
-		IBO = ZeoEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+		ZeoEngine::Ref<ZeoEngine::IndexBuffer> IBO = ZeoEngine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 		m_VAO->SetIndexBuffer(IBO);
 
 
@@ -53,8 +49,7 @@ public:
 			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
 		};
 
-		ZeoEngine::Ref<ZeoEngine::VertexBuffer> squareVBO;
-		squareVBO = ZeoEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
+		ZeoEngine::Ref<ZeoEngine::VertexBuffer> squareVBO = ZeoEngine::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
 		ZeoEngine::BufferLayout squareLayout = {
 			{ ZeoEngine::ShaderDataType::Float3, "a_Position" },
@@ -68,8 +63,7 @@ public:
 			2, 3, 0
 		};
 
-		ZeoEngine::Ref<ZeoEngine::IndexBuffer> squareIBO;
-		squareIBO = ZeoEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+		ZeoEngine::Ref<ZeoEngine::IndexBuffer> squareIBO = ZeoEngine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 		m_SquareVAO->SetIndexBuffer(squareIBO);
 
 		const std::string vertexSrc = R"(
@@ -141,7 +135,7 @@ public:
 		m_LogoTexture = ZeoEngine::Texture2D::Create("assets/textures/Logo_Trans_D.png");
 		
 		textureShader->Bind();
-		std::dynamic_pointer_cast<ZeoEngine::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
+		textureShader->SetInt("u_Texture", 0);
 
 	}
 
@@ -162,7 +156,7 @@ public:
 		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
 		m_FlatColorShader->Bind();
-		std::dynamic_pointer_cast<ZeoEngine::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat4("u_Color", m_SquareColor);
+		m_FlatColorShader->SetFloat4("u_Color", m_SquareColor);
 
 		for (int x = 0; x < 10; ++x)
 		{

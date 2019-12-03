@@ -1,7 +1,7 @@
 #include "ZEpch.h"
-#include "Application.h"
+#include "Engine/Core/Application.h"
 
-#include "Log.h"
+#include "Engine/Core/Log.h"
 
 #include "Engine/Renderer/Renderer.h"
 
@@ -17,7 +17,7 @@ namespace ZeoEngine {
 
 		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		m_Window = Scope<Window>(Window::Create());
+		m_Window = Window::Create();
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
 
 		Renderer::Init();
@@ -33,6 +33,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		Renderer::Shutdown();
 	}
 
 	void Application::OnEvent(Event& e)

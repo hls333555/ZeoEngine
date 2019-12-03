@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ZEpch.h"
-#include "Core.h"
+#include "Engine/Core/Core.h"
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
@@ -25,7 +25,7 @@ namespace ZeoEngine {
 	public:
 		using EventCallbackFunc = std::function<void(Event&)>;
 
-		virtual ~Window() {}
+		virtual ~Window() = default;
 
 		virtual void OnUpdate() = 0;
 
@@ -40,7 +40,7 @@ namespace ZeoEngine {
 		/** Returns the actual window based on the platform. */
 		virtual void* GetNativeWindow() const = 0;
 
-		static Window* Create(const WindowProps& props = WindowProps());
+		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	
 	};
 

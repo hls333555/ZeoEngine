@@ -1,14 +1,17 @@
 #pragma once
 
-#include "Core.h"
+#include "Engine/Core/Core.h"
 
 namespace ZeoEngine {
 
 	class ZE_API Input
 	{
+	protected:
+		Input() = default;
+
 	public:
-		Input() {}
-		~Input() {}
+		Input(const Input&) = delete;
+		Input& operator=(const Input&) = delete;
 
 		// Below is a good example for singleton implementation
 
@@ -28,7 +31,7 @@ namespace ZeoEngine {
 		virtual float GetMouseYImpl() = 0;
 
 	private:
-		static Input* s_Instance;
+		static Scope<Input> s_Instance;
 	
 	};
 

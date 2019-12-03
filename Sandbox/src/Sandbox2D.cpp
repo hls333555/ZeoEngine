@@ -1,8 +1,8 @@
 #include "Sandbox2D.h"
 
-#include <Engine/Core/EntryPoint.h>
+#include "Engine/Core/EntryPoint.h"
 
-#include "imgui/imgui.h"
+#include <imgui/imgui.h>
 
 #include <glm/gtc/type_ptr.hpp>
 

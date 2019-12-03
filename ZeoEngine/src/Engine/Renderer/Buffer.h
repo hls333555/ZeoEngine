@@ -15,27 +15,27 @@ namespace ZeoEngine {
 	{
 		switch (type)
 		{
-		case ZeoEngine::ShaderDataType::Float:
+		case ShaderDataType::Float:
 			return 4;
-		case ZeoEngine::ShaderDataType::Float2:
+		case ShaderDataType::Float2:
 			return 4 * 2;
-		case ZeoEngine::ShaderDataType::Float3:
+		case ShaderDataType::Float3:
 			return 4 * 3;
-		case ZeoEngine::ShaderDataType::Float4:
+		case ShaderDataType::Float4:
 			return 4 * 4;
-		case ZeoEngine::ShaderDataType::Mat3:
+		case ShaderDataType::Mat3:
 			return 4 * 3 * 3;
-		case ZeoEngine::ShaderDataType::Mat4:
+		case ShaderDataType::Mat4:
 			return 4 * 4 * 4;
-		case ZeoEngine::ShaderDataType::Int:
+		case ShaderDataType::Int:
 			return 4;
-		case ZeoEngine::ShaderDataType::Int2:
+		case ShaderDataType::Int2:
 			return 4 * 2;
-		case ZeoEngine::ShaderDataType::Int3:
+		case ShaderDataType::Int3:
 			return 4 * 3;
-		case ZeoEngine::ShaderDataType::Int4:
+		case ShaderDataType::Int4:
 			return 4 * 4;
-		case ZeoEngine::ShaderDataType::Bool:
+		case ShaderDataType::Bool:
 			return 1;
 		default:
 			ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
@@ -48,10 +48,9 @@ namespace ZeoEngine {
 		std::string Name;
 		ShaderDataType Type;
 		uint32_t Size;
-		uint32_t Offset;
+		size_t Offset;
 		bool bNormalized;
 
-		BufferElement() {}
 		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
 			: Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), bNormalized(normalized)
 		{
@@ -61,27 +60,27 @@ namespace ZeoEngine {
 		{
 			switch (Type)
 			{
-			case ZeoEngine::ShaderDataType::Float:
+			case ShaderDataType::Float:
 				return 1;
-			case ZeoEngine::ShaderDataType::Float2:
+			case ShaderDataType::Float2:
 				return 2;
-			case ZeoEngine::ShaderDataType::Float3:
+			case ShaderDataType::Float3:
 				return 3;
-			case ZeoEngine::ShaderDataType::Float4:
+			case ShaderDataType::Float4:
 				return 4;
-			case ZeoEngine::ShaderDataType::Mat3:
+			case ShaderDataType::Mat3:
 				return 3 * 3;
-			case ZeoEngine::ShaderDataType::Mat4:
+			case ShaderDataType::Mat4:
 				return 4 * 4;
-			case ZeoEngine::ShaderDataType::Int:
+			case ShaderDataType::Int:
 				return 1;
-			case ZeoEngine::ShaderDataType::Int2:
+			case ShaderDataType::Int2:
 				return 2;
-			case ZeoEngine::ShaderDataType::Int3:
+			case ShaderDataType::Int3:
 				return 3;
-			case ZeoEngine::ShaderDataType::Int4:
+			case ShaderDataType::Int4:
 				return 4;
-			case ZeoEngine::ShaderDataType::Bool:
+			case ShaderDataType::Bool:
 				return 1;
 			default:
 				ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
@@ -94,7 +93,7 @@ namespace ZeoEngine {
 	class BufferLayout
 	{
 	public:
-		BufferLayout() {}
+		BufferLayout() = default;
 		BufferLayout(const std::initializer_list<BufferElement>& elements)
 			: m_Elements(elements)
 		{
@@ -107,7 +106,7 @@ namespace ZeoEngine {
 	private:
 		void CalculateOffsetAndStride()
 		{
-			uint32_t offset = 0;
+			size_t offset = 0;
 			for (auto& element : m_Elements)
 			{
 				element.Offset = offset;

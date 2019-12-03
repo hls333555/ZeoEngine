@@ -1,9 +1,8 @@
 #include "ZEpch.h"
-#include "OrthographicCameraController.h"
+#include "Engine/Renderer/OrthographicCameraController.h"
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
-#include "glad/glad.h"
 
 namespace ZeoEngine {
 
@@ -23,19 +22,23 @@ namespace ZeoEngine {
 
 		if (Input::IsKeyPressed(ZE_KEY_A))
 		{
-			m_CameraPosition.x -= m_CameraTranslationSpeed * dt;
+			m_CameraPosition.x -= m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
+			m_CameraPosition.y -= m_CameraTranslationSpeed * sin(glm::radians(m_CameraRotation)) * dt;
 		}
 		if (Input::IsKeyPressed(ZE_KEY_D))
 		{
-			m_CameraPosition.x += m_CameraTranslationSpeed * dt;
+			m_CameraPosition.x += m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
+			m_CameraPosition.y += m_CameraTranslationSpeed * sin(glm::radians(m_CameraRotation)) * dt;
 		}
 		if (Input::IsKeyPressed(ZE_KEY_W))
 		{
-			m_CameraPosition.y += m_CameraTranslationSpeed * dt;
+			m_CameraPosition.x += m_CameraTranslationSpeed * -sin(glm::radians(m_CameraRotation)) * dt;
+			m_CameraPosition.y += m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
 		}
 		if (Input::IsKeyPressed(ZE_KEY_S))
 		{
-			m_CameraPosition.y -= m_CameraTranslationSpeed * dt;
+			m_CameraPosition.x -= m_CameraTranslationSpeed * -sin(glm::radians(m_CameraRotation)) * dt;
+			m_CameraPosition.y -= m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
 		}
 		m_Camera.SetPosition(m_CameraPosition);
 
@@ -49,6 +52,15 @@ namespace ZeoEngine {
 			{
 				m_CameraRotation += m_CameraRotationSpeed * dt;
 			}
+			if (m_CameraRotation > 180.0f)
+			{
+				m_CameraRotation -= 360.0f;
+			}
+			else if (m_CameraRotation < -180.0f)
+			{
+				m_CameraRotation += 360.0f;
+			}
+			ZE_INFO(m_CameraRotation);
 			m_Camera.SetRotation(m_CameraRotation);
 		}
 		
