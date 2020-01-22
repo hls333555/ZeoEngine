@@ -88,7 +88,7 @@ namespace ZeoEngine {
 				{
 					ZE_PROFILE_SCOPE("LayerStack OnUpdate");
 
-					for (Layer* layer : m_LayerStack)
+					for (auto* layer : m_LayerStack)
 					{
 						layer->OnUpdate(dt);
 					}
@@ -100,7 +100,7 @@ namespace ZeoEngine {
 				{
 					ZE_PROFILE_SCOPE("LayerStack OnImGuiRender");
 
-					for (Layer* layer : m_LayerStack)
+					for (auto* layer : m_LayerStack)
 					{
 						layer->OnImGuiRender();
 					}

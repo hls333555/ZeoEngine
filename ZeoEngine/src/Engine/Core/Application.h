@@ -28,6 +28,19 @@ namespace ZeoEngine {
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
+		template<typename T>
+		T* FindLayerByName(const std::string& layerName)
+		{
+			for (auto* layer : m_LayerStack)
+			{
+				if (layer->GetName() == layerName)
+				{
+					return dynamic_cast<T*>(layer);
+				}
+			}
+
+			return nullptr;
+		}
 
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);

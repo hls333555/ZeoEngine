@@ -17,6 +17,8 @@ public:
 	virtual void OnImGuiRender() override;
 	virtual void OnEvent(ZeoEngine::Event& event) override;
 
+	inline Level* GetLevel() { return &m_Level; }
+
 private:
 	bool OnWindowResized(ZeoEngine::WindowResizeEvent& e);
 	void CreateCamera(uint32_t width, uint32_t height);
@@ -27,3 +29,9 @@ private:
 	Level m_Level;
 
 };
+
+static Level* GetLevel()
+{
+	ShooterGame* gameLayer = ZeoEngine::Application::Get().FindLayerByName<ShooterGame>("Game");
+	return gameLayer ? gameLayer->GetLevel() : nullptr;
+}

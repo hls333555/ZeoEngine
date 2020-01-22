@@ -1,11 +1,7 @@
 #include "ShooterGame.h"
 
-#include <imgui/imgui.h>
-
-#include <glm/gtc/type_ptr.hpp>
-
 ShooterGame::ShooterGame()
-	: Layer("ShooterGame")
+	: Layer("Game")
 {
 	const auto& window = ZeoEngine::Application::Get().GetWindow();
 	CreateCamera(window.GetWidth(), window.GetHeight());
@@ -53,6 +49,7 @@ void ShooterGame::OnImGuiRender()
 {
 	ZE_PROFILE_FUNCTION();
 
+	m_Level.OnImGuiRender();
 }
 
 void ShooterGame::OnEvent(ZeoEngine::Event& event)
@@ -81,5 +78,5 @@ void ShooterGame::CreateCamera(uint32_t width, uint32_t height)
 	float bottom = -zoomLevel;
 	float top = zoomLevel;
 	m_Camera = ZeoEngine::CreateScope<ZeoEngine::OrthographicCamera>(left, right, bottom, top);
-	m_Level.SetLevelBounds({ left,right,bottom,top });
+	m_Level.SetLevelBounds({ left, right, bottom, top });
 }
