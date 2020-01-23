@@ -34,6 +34,12 @@ namespace ZeoEngine {
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
 
+		/** Should be called before and after drawing translucent objects. */
+		inline static void EnableDepthWriting(bool bEnable)
+		{
+			s_RendererAPI->EnableDepthWriting(bEnable);
+		}
+
 	private:
 		static Scope<RendererAPI> s_RendererAPI;
 	};

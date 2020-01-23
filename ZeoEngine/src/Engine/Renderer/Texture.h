@@ -11,6 +11,7 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+		virtual bool HasAlpha() const = 0;
 
 		/** Upload a block of memory with texture data to GPU. */
 		virtual void SetData(void* data, uint32_t size) = 0;

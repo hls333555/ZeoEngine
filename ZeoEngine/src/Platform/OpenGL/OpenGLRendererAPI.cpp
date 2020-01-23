@@ -38,4 +38,9 @@ namespace ZeoEngine {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	void OpenGLRendererAPI::EnableDepthWriting(bool bEnable)
+	{
+		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
+	}
+
 }

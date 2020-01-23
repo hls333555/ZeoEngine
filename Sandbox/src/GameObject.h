@@ -6,7 +6,7 @@
 
 struct Transform
 {
-	glm::vec2 position = { 0.0f, 0.0f };
+	glm::vec3 position = { 0.0f, 0.0f, 0.0f };
 	glm::vec2 rotation = { 0.0f, 0.0f };
 	glm::vec2 scale = { 1.0f, 1.0f };
 };
@@ -16,7 +16,7 @@ class GameObject
 public:
 	GameObject() = default;
 	GameObject(const Transform& transform);
-	GameObject(const glm::vec2& position, const glm::vec2 rotation, const glm::vec2& scale);
+	GameObject(const glm::vec3& position, const glm::vec2 rotation, const glm::vec2& scale);
 
 	virtual ~GameObject() = default;
 
@@ -26,14 +26,16 @@ public:
 	inline void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
 	inline const Transform& GetTransform() const { return m_Transform; }
 	inline void SetTransform(const Transform& transform) { m_Transform = transform; }
-	inline glm::vec2& GetPosition() { return  m_Transform.position; }
-	inline void SetPosition(const glm::vec2& position) { m_Transform.position = position; }
+	inline glm::vec3& GetPosition() { return  m_Transform.position; }
+	inline void SetPosition(const glm::vec3& position) { m_Transform.position = position; }
 	inline glm::vec2& GetRotation() { return m_Transform.rotation; }
 	inline void SetRotation(const glm::vec2& rotation) { m_Transform.rotation = rotation; }
 	inline glm::vec2& GetScale() { return m_Transform.scale; }
 	inline void SetScale(const glm::vec2& scale) { m_Transform.scale = scale; }
 	inline float GetSpeed() const { return m_Speed; }
 	inline void SetSpeed(float speed) { m_Speed = speed; }
+	inline bool IsTranslucent() const { return m_bIsTranslucent; }
+	inline void SetTranslucent(bool bIsTranslucent) { m_bIsTranslucent = bIsTranslucent; }
 
 	virtual void Init() {}
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) {}
@@ -48,4 +50,6 @@ private:
 
 	Transform m_Transform;
 	float m_Speed = 0.0f;
+
+	bool m_bIsTranslucent = false;
 };

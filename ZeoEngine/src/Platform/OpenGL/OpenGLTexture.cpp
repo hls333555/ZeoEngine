@@ -49,6 +49,7 @@ namespace ZeoEngine {
 		case 4:
 			internalFormat = GL_RGBA8;
 			dataFormat = GL_RGBA;
+			m_bHasAlpha = true;
 			break;
 		default:
 			ZE_CORE_ASSERT(internalFormat & dataFormat, "Texture format not supported!");

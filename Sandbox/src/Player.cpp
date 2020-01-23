@@ -7,7 +7,7 @@
 Player::Player()
 	: m_ShootInterval(0.25f)
 	, m_MaxHealth(100.0f)
-	, m_CurrentHealth(0.0f)
+	, m_CurrentHealth(100.0f)
 {
 	SetSpeed(5.0f);
 }
@@ -21,6 +21,8 @@ void Player::Init()
 	m_Level = GetLevel();
 
 	m_ShipTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
+	SetTranslucent(m_ShipTexture->HasAlpha());
+
 	m_BulletPool = ZeoEngine::CreateScope<ObjectPooler<Bullet, 10>>();
 }
 
@@ -85,7 +87,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 				if (bullet)
 				{
 					bullet->SetActive(true);
-					bullet->SetPosition(GetPosition() + glm::vec2({ 0.0f, 0.5f }));
+					bullet->SetPosition(GetPosition() + glm::vec3({ 0.0f, 0.5f, 0.0f }));
 				}
 			}
 		}

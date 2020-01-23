@@ -1,10 +1,14 @@
 #include "ShooterGame.h"
 
+#include "RandomEngine.h"
+
 ShooterGame::ShooterGame()
 	: Layer("Game")
 {
 	const auto& window = ZeoEngine::Application::Get().GetWindow();
 	CreateCamera(window.GetWidth(), window.GetHeight());
+
+	RandomEngine::Init();
 }
 
 void ShooterGame::OnAttach()

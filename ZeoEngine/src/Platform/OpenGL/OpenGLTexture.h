@@ -15,6 +15,7 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
+		virtual bool HasAlpha() const override { return m_bHasAlpha; }
 
 		virtual void SetData(void* data, uint32_t size) override;
 
@@ -26,6 +27,7 @@ namespace ZeoEngine {
 		uint32_t m_Width, m_Height;
 		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
+		bool m_bHasAlpha = false;
 	};
 
 }

@@ -16,6 +16,8 @@ namespace ZeoEngine {
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) override;
 
+		virtual void EnableDepthWriting(bool bEnable) override;
+
 	};
 
 }

@@ -8,7 +8,7 @@ GameObject::GameObject(const Transform& transform)
 {
 }
 
-GameObject::GameObject(const glm::vec2& position, const glm::vec2 rotation, const glm::vec2& scale)
+GameObject::GameObject(const glm::vec3& position, const glm::vec2 rotation, const glm::vec2& scale)
 {
 	m_Transform.position = position;
 	m_Transform.rotation = rotation;
@@ -17,6 +17,7 @@ GameObject::GameObject(const glm::vec2& position, const glm::vec2 rotation, cons
 
 void GameObject::Destroy()
 {
+	m_bIsActive = false;
 	Level* level = GetLevel();
 	level->DestroyGameObject(this);
 }
