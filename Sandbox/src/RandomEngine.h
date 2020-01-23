@@ -16,6 +16,10 @@ public:
 	{
 		return s_Distribution(s_RandomEngine);
 	}
+	static float RandFloatInRange(float lower, float upper)
+	{
+		return s_Distribution(s_RandomEngine) * (upper - lower) + lower;
+	}
 
 private:
 	static std::mt19937 s_RandomEngine;

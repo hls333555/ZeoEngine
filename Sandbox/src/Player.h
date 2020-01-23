@@ -18,16 +18,19 @@ public:
 	virtual void OnImGuiRender() override;
 
 private:
+	void SpawnBullet();
+
+private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ShipTexture;
 
-	float m_ShootInterval;
 	float m_MaxHealth;
 	float m_CurrentHealth;
 
-	ZeoEngine::Scope<ObjectPooler<Bullet, 10>> m_BulletPool;
+	typedef ObjectPooler<Bullet, 5> BulletPool;
+	ZeoEngine::Scope<BulletPool> m_BulletPool;
 
+	float m_ShootRate;
 	bool m_bCanShoot = true;
-	float m_Time = 0.0f, m_ShootTime = 0.0f;
 
 	Level* m_Level;
 };

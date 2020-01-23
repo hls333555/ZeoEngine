@@ -2,15 +2,14 @@
 
 #include "ZeoEngine.h"
 
-extern class Level* GetLevel();
+class Level;
 
 template<typename T, uint32_t C>
 class ObjectPooler
 {
 public:
-	ObjectPooler()
+	ObjectPooler(Level* level)
 	{
-		Level* level = GetLevel();
 		if (level)
 		{
 			for (uint32_t i = 0; i < C; ++i)

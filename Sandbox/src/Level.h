@@ -3,6 +3,8 @@
 #include "ZeoEngine.h"
 
 #include "GameObject.h"
+#include "ObjectPooler.h"
+#include "Obstacle.h"
 
 struct LevelBounds
 {
@@ -29,12 +31,11 @@ class Level
 	friend void GameObject::Destroy();
 
 public:
-	Level() = default;
 	~Level();
 
 	void Init();
 
-	void OnUpdate(ZeoEngine::DeltaTime dt) ;
+	void OnUpdate(ZeoEngine::DeltaTime dt);
 	void OnRender();
 	void OnImGuiRender();
 
@@ -64,12 +65,12 @@ public:
 		object->SetTransform(transform);
 		if (object->IsTranslucent())
 		{
-			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // SHould be put after updating position!
+			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // Should be put after updating position!
 		}
 		return object;
 	}
 	template<typename T>
-	T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, const glm::vec2& rotation = { 0.0f, 0.0f })
+	T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, float rotation = 0.0f)
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
@@ -80,7 +81,7 @@ public:
 		object->SetScale(scale);
 		if (object->IsTranslucent())
 		{
-			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // SHould be put after updating position!
+			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // Should be put after updating position!
 		}
 		return object;
 	}
@@ -107,6 +108,8 @@ private:
 
 	void DestroyGameObject(GameObject* object);
 
+	void SpawnObstacles();
+
 private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_backgroundTexture;
 
@@ -117,4 +120,8 @@ private:
 	std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 	uint32_t m_TranslucentObjectIndex = 0;
 
+	typedef ObjectPooler<Obstacle, 10> ObstaclePool;
+	ZeoEngine::Scope<ObstaclePool> m_ObstaclePool;
+
+	bool m_bShouldSpawnObstacle = true;
 };

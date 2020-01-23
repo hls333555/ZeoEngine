@@ -28,6 +28,7 @@ void ShooterGame::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	ZE_PROFILE_FUNCTION();
 
+	m_TimerManager.OnUpdate(dt);
 	m_Level.OnUpdate(dt);
 
 	// Render

@@ -2,13 +2,12 @@
 
 #include "ShooterGame.h"
 #include "Level.h"
+#include "RandomEngine.h"
 
 Obstacle::Obstacle()
 	: MaxHealth(20.0f)
 	, CurrentHealth(20.0f)
 {
-	SetScale({ 1.0f, 1.0f });
-	SetSpeed(1.0f);
 }
 
 void Obstacle::Init()
@@ -25,12 +24,14 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
+	GetRotation() += m_RotationSpeed * dt;
+
 	if (m_Level)
 	{
 		GetPosition().y -= GetSpeed() * (float)dt;
-		if (GetPosition().y < m_Level->GetLevelBounds().bottom)
+		if (GetPosition().y < m_Level->GetLevelBounds().bottom - 0.5f)
 		{
-			Destroy();
+			SetActive(false);
 		}
 	}
 }
@@ -39,5 +40,5 @@ void Obstacle::OnRender()
 {
 	Super::OnRender();
 
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), m_ObstacleTexture);
+	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(), m_ObstacleTexture);
 }

@@ -3,8 +3,8 @@
 #include <imgui/imgui.h>
 
 #include "Player.h"
-#include "Obstacle.h"
 #include "RandomEngine.h"
+#include "ShooterGame.h"
 
 Level::~Level()
 {
@@ -17,6 +17,8 @@ Level::~Level()
 void Level::Init()
 {
 	m_backgroundTexture = ZeoEngine::Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
+
+	m_ObstaclePool = ZeoEngine::CreateScope<ObstaclePool>(this);
 
 	// Spawn player ship
 	SpawnGameObject<Player>({ 0.0f, m_LevelBounds.bottom + 1.0f, 0.1f });
@@ -32,11 +34,43 @@ void Level::OnUpdate(ZeoEngine::DeltaTime dt)
 			m_GameObjects[i]->OnUpdate(dt);
 		}
 	}
+
+	// Spawn obstacles every random intervals
+	if (m_bShouldSpawnObstacle)
+	{
+		m_bShouldSpawnObstacle = false;
+		float obstacleSpawnRate = RandomEngine::RandFloatInRange(1.0f, 4.0f);
+		GetTimerManager()->SetTimer(obstacleSpawnRate, [&]() {
+			m_bShouldSpawnObstacle = true;
+		});
+		
+		SpawnObstacles();
+	}
+}
+
+void Level::SpawnObstacles()
+{
+	float randomXPos = RandomEngine::RandFloatInRange(m_LevelBounds.right - 0.5f, m_LevelBounds.left + 0.5f);
+	float randomScale = RandomEngine::RandFloatInRange(0.75f, 1.8f);
+	float randomRot = RandomEngine::RandFloatInRange(0.0f, 360.0f);
+	float randomSpd = RandomEngine::RandFloatInRange(0.5f, 1.5f);
+	float randomRotSpd = RandomEngine::RandFloatInRange(-0.5f, 0.5f);
+	// "Spawn" an obstacle from pool
+	Obstacle* obstacle = m_ObstaclePool->GetNextPooledObject();
+	if (obstacle)
+	{
+		obstacle->SetActive(true);
+		obstacle->SetPosition({ randomXPos, m_LevelBounds.top, 0.0f });
+		obstacle->SetRotation(randomRot);
+		obstacle->SetScale(randomScale);
+		obstacle->SetSpeed(randomSpd);
+		obstacle->SetRotationSpeed(randomRotSpd);
+	}
 }
 
 void Level::OnRender()
 {
-	ZeoEngine::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 100.0f, 100.0f }, m_backgroundTexture, 50.f);
+	ZeoEngine::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 100.0f, 100.0f }, m_backgroundTexture, 50.0f);
 
 	for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 	{

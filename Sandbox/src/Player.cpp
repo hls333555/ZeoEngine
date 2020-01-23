@@ -5,7 +5,7 @@
 #include "ShooterGame.h"
 
 Player::Player()
-	: m_ShootInterval(0.25f)
+	: m_ShootRate(0.25f)
 	, m_MaxHealth(100.0f)
 	, m_CurrentHealth(100.0f)
 {
@@ -23,14 +23,12 @@ void Player::Init()
 	m_ShipTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_ShipTexture->HasAlpha());
 
-	m_BulletPool = ZeoEngine::CreateScope<ObjectPooler<Bullet, 10>>();
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level);
 }
 
 void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
-
-	m_Time += dt;
 
 	// Movement control
 	if (m_Level)
@@ -71,26 +69,29 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 
 	// Shoot bullets
 	{
-		if (!m_bCanShoot && m_Time - m_ShootTime > m_ShootInterval)
-		{
-			m_bCanShoot = true;
-		}
 		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_SPACE))
 		{
 			if (m_bCanShoot)
 			{
 				m_bCanShoot = false;
-				m_ShootTime = m_Time;
+				GetTimerManager()->SetTimer(m_ShootRate, [&]() {
+					m_bCanShoot = true;
+				});
 
-				// "Spawn" a bullet from pool
-				Bullet* bullet = m_BulletPool->GetNextPooledObject();
-				if (bullet)
-				{
-					bullet->SetActive(true);
-					bullet->SetPosition(GetPosition() + glm::vec3({ 0.0f, 0.5f, 0.0f }));
-				}
+				SpawnBullet();
 			}
 		}
+	}
+}
+
+void Player::SpawnBullet()
+{
+	// "Spawn" a bullet from pool
+	Bullet* bullet = m_BulletPool->GetNextPooledObject();
+	if (bullet)
+	{
+		bullet->SetActive(true);
+		bullet->SetPosition(GetPosition() + glm::vec3({ 0.0f, 0.5f, 0.0f }));
 	}
 }
 

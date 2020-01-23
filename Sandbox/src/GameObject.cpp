@@ -8,7 +8,7 @@ GameObject::GameObject(const Transform& transform)
 {
 }
 
-GameObject::GameObject(const glm::vec3& position, const glm::vec2 rotation, const glm::vec2& scale)
+GameObject::GameObject(const glm::vec3& position, float rotation, const glm::vec2& scale)
 {
 	m_Transform.position = position;
 	m_Transform.rotation = rotation;
