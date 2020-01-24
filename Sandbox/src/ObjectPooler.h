@@ -29,6 +29,8 @@ public:
 		{
 			if (!object->IsActive())
 			{
+				object->Reset();
+				object->SetActive(true);
 				return object;
 			}
 		}

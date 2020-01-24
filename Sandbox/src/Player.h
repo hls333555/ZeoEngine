@@ -17,6 +17,8 @@ public:
 	virtual void OnRender() override;
 	virtual void OnImGuiRender() override;
 
+	virtual void TakeDamage(GameObject* source, float damage) override;
+
 private:
 	void SpawnBullet();
 

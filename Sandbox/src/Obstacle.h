@@ -13,6 +13,12 @@ public:
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 	virtual void OnRender() override;
 
+	virtual void Reset() override;
+
+	virtual void TakeDamage(GameObject* source, float damage) override;
+
+	virtual void OnOverlap(GameObject* other) override;
+
 	inline void SetRotationSpeed(float rotationSpeed) { m_RotationSpeed = rotationSpeed; }
 
 private:
@@ -20,8 +26,9 @@ private:
 
 	float m_RotationSpeed = 0.0f;
 
-	float MaxHealth;
-	float CurrentHealth;
+	float m_MaxHealth;
+	float m_CurrentHealth;
+	float m_Damage;
 
 	Level* m_Level;
 

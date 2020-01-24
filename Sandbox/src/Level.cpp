@@ -31,6 +31,12 @@ void Level::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		if (m_GameObjects[i]->IsActive())
 		{
+			// Collision detection
+			if (m_GameObjects[i]->IsCollisionEnabled() && m_GameObjects[i]->ShouldGenerateOverlapEvent())
+			{
+				m_GameObjects[i]->DoCollisionTest(m_GameObjects);
+			}
+
 			m_GameObjects[i]->OnUpdate(dt);
 		}
 	}
@@ -50,22 +56,8 @@ void Level::OnUpdate(ZeoEngine::DeltaTime dt)
 
 void Level::SpawnObstacles()
 {
-	float randomXPos = RandomEngine::RandFloatInRange(m_LevelBounds.right - 0.5f, m_LevelBounds.left + 0.5f);
-	float randomScale = RandomEngine::RandFloatInRange(0.75f, 1.8f);
-	float randomRot = RandomEngine::RandFloatInRange(0.0f, 360.0f);
-	float randomSpd = RandomEngine::RandFloatInRange(0.5f, 1.5f);
-	float randomRotSpd = RandomEngine::RandFloatInRange(-0.5f, 0.5f);
 	// "Spawn" an obstacle from pool
 	Obstacle* obstacle = m_ObstaclePool->GetNextPooledObject();
-	if (obstacle)
-	{
-		obstacle->SetActive(true);
-		obstacle->SetPosition({ randomXPos, m_LevelBounds.top, 0.0f });
-		obstacle->SetRotation(randomRot);
-		obstacle->SetScale(randomScale);
-		obstacle->SetSpeed(randomSpd);
-		obstacle->SetRotationSpeed(randomRotSpd);
-	}
 }
 
 void Level::OnRender()
