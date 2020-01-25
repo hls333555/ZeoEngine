@@ -25,11 +25,11 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	SetRotation(GetRotation() + m_RotationSpeed * dt);
+	SetRotation(GetRotation(false) + m_RotationSpeed * dt);
 
 	if (m_Level)
 	{
-		SetPosition({ GetPosition().x, GetPosition().y - GetSpeed() * dt, GetPosition().z });
+		SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
 		if (GetPosition().y < m_Level->GetLevelBounds().bottom - 0.5f)
 		{
 			SetActive(false);
@@ -41,7 +41,7 @@ void Obstacle::OnRender()
 {
 	Super::OnRender();
 
-	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(), m_ObstacleTexture);
+	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_ObstacleTexture);
 }
 
 void Obstacle::Reset()
@@ -50,12 +50,12 @@ void Obstacle::Reset()
 
 	m_MaxHealth = RandomEngine::RandFloatInRange(10.0f, 50.0f);
 	m_CurrentHealth = m_MaxHealth;
-	m_Damage = RandomEngine::RandFloatInRange(5.0f, 20.0f);
-	SetPosition({ RandomEngine::RandFloatInRange(m_Level->GetLevelBounds().right - 0.5f, m_Level->GetLevelBounds().left + 0.5f), m_Level->GetLevelBounds().top, 0.0f });
-	SetRotation(RandomEngine::RandFloatInRange(0.0f, 360.0f));
+	m_ExplosionDamage = RandomEngine::RandFloatInRange(5.0f, 20.0f);
+	m_RotationSpeed = RandomEngine::RandFloatInRange(-10.0f, 10.0f);
+	SetPosition2D({ RandomEngine::RandFloatInRange(m_Level->GetLevelBounds().right - 0.5f, m_Level->GetLevelBounds().left + 0.5f), m_Level->GetLevelBounds().top });
+	SetRotation(RandomEngine::RandFloatInRange(0.0f, 180.0f));
 	SetScale(RandomEngine::RandFloatInRange(0.75f, 1.8f));
 	SetSpeed(RandomEngine::RandFloatInRange(0.5f, 1.5f));
-	SetRotationSpeed(RandomEngine::RandFloatInRange(-0.5f, 0.5f));
 }
 
 void Obstacle::TakeDamage(GameObject* source, float damage)
@@ -75,7 +75,7 @@ void Obstacle::OnOverlap(GameObject* other)
 
 	if (dynamic_cast<Player*>(other))
 	{
-		ApplyDamage(other, m_Damage);
+		ApplyDamage(other, m_ExplosionDamage);
 		SetActive(false);
 	}
 }

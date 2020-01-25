@@ -28,7 +28,7 @@ private:
 
 	float m_MaxHealth;
 	float m_CurrentHealth;
-	float m_Damage;
+	float m_ExplosionDamage;
 
 	Level* m_Level;
 

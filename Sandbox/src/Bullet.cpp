@@ -2,10 +2,11 @@
 
 #include "ShooterGame.h"
 #include "Level.h"
+#include "Enemy.h"
+#include "Player.h"
 
 Bullet::Bullet()
-	: m_Damage(10.0f)
-	, m_bCanPenetrate(false)
+	: m_bCanPenetrate(false)
 {
 	SetScale({ 0.075f, 0.2f });
 	SetSpeed(10.0f);
@@ -20,13 +21,18 @@ void Bullet::Init()
 	m_Level = GetLevel();
 }
 
-void Bullet::OnUpdate(ZeoEngine::DeltaTime dt)
+PlayerBullet::PlayerBullet()
+{
+	m_Damage = 10.0f;
+}
+
+void PlayerBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
 	if (m_Level)
 	{
-		SetPosition({ GetPosition().x, GetPosition().y + GetSpeed() * dt, GetPosition().z });
+		SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
 		if (GetPosition().y > m_Level->GetLevelBounds().top)
 		{
 			SetActive(false);
@@ -34,18 +40,58 @@ void Bullet::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 }
 
-void Bullet::OnRender()
+void PlayerBullet::OnRender()
 {
 	Super::OnRender();
 
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), { 1.0f, 0.5f, 0.0f, 1.0f });
+	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), { 0.0f, 0.5f, 1.0f, 1.0f });
 }
 
-void Bullet::OnOverlap(GameObject* other)
+void PlayerBullet::OnOverlap(GameObject* other)
 {
 	Super::OnOverlap(other);
 
-	if (dynamic_cast<Obstacle*>(other))
+	if (dynamic_cast<Obstacle*>(other) || dynamic_cast<Enemy*>(other))
+	{
+		ApplyDamage(other, m_Damage);
+		if (!m_bCanPenetrate)
+		{
+			SetActive(false);
+		}
+	}
+}
+
+EnemyBullet::EnemyBullet()
+{
+	m_Damage = 5.0f;
+}
+
+void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
+{
+	Super::OnUpdate(dt);
+
+	if (m_Level)
+	{
+		SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
+		if (GetPosition().y < m_Level->GetLevelBounds().bottom)
+		{
+			SetActive(false);
+		}
+	}
+}
+
+void EnemyBullet::OnRender()
+{
+	Super::OnRender();
+
+	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), { 1.0f, 0.0f, 0.0f, 1.0f });
+}
+
+void EnemyBullet::OnOverlap(GameObject* other)
+{
+	Super::OnOverlap(other);
+
+	if (dynamic_cast<Player*>(other))
 	{
 		ApplyDamage(other, m_Damage);
 		if (!m_bCanPenetrate)

@@ -1,7 +1,10 @@
 #include "GameObject.h"
 
+#include <glm/gtx/compatibility.hpp>
+
 #include "ShooterGame.h"
 #include "Level.h"
+#include "RandomEngine.h"
 
 void BoxCollisionData::UpdateData()
 {
@@ -41,9 +44,78 @@ GameObject::~GameObject()
 
 void GameObject::Destroy()
 {
-	m_bIsActive = false;
+	if (!bPendingDestroy)
+	{
+		bPendingDestroy = true;
+		m_bIsActive = false;
+		OnDestroyed();
+		Level* level = GetLevel();
+		level->DestroyGameObject(this);
+	}
+	
+}
+
+void GameObject::OnUpdate(ZeoEngine::DeltaTime dt)
+{
+	// Moving to target position
+	{
+		if (m_bStartMoving)
+		{
+			m_MovingAlpha += GetSpeed() / m_MovingDistance * dt;
+			SetPosition2D(glm::lerp(m_SourcePosition, m_TargetPosition, m_MovingAlpha));
+			if (m_MovingAlpha >= 1.0f)
+			{
+				m_bStartMoving = false;
+			}
+		}
+		else
+		{
+			m_MovingAlpha = 0.0f;
+		}
+	}
+}
+
+const glm::vec2 GameObject::GetForwardVector() const
+{
+	return { sin(glm::radians(m_Transform.rotation)), cos(glm::radians(m_Transform.rotation)) };
+}
+
+const glm::vec2 GameObject::GetRightVector() const
+{
+	const glm::vec3 zVector({ 0.0f, 0.0f, -1.0f });
+	const glm::vec3 forwardVector(sin(glm::radians(m_Transform.rotation)), cos(glm::radians(m_Transform.rotation)), 0.0f);
+	const glm::vec3 rightVector = glm::cross(zVector, forwardVector);
+	return { rightVector.x, rightVector.y };
+}
+
+float GameObject::FindLookAtRotation(const glm::vec2& sourcePosition, const glm::vec2& targetPosition)
+{
+	float deltaX = targetPosition.x - sourcePosition.x;
+	float deltaY = targetPosition.y - sourcePosition.y;
+	return atanf(deltaX / deltaY);
+}
+
+void GameObject::TranslateTo(const glm::vec2& targetPosition)
+{
+	if (!m_bStartMoving)
+	{
+		m_SourcePosition = GetPosition2D();
+		m_TargetPosition = targetPosition;
+		m_MovingDistance = glm::length(m_SourcePosition - m_TargetPosition);
+		m_bStartMoving = true;
+	}
+}
+
+glm::vec2 GameObject::GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents)
+{
 	Level* level = GetLevel();
-	level->DestroyGameObject(this);
+	float lowerX = std::max(center.x - extents.x, level->GetLevelBounds().left + 0.5f);
+	float upperX = std::min(center.x + extents.x, level->GetLevelBounds().right - 0.5f);
+	float lowerY = std::max(center.y - extents.y, level->GetLevelBounds().bottom + 0.5f);
+	float upperY = std::min(center.y + extents.y, level->GetLevelBounds().top - 0.5f);
+	float randomX = RandomEngine::RandFloatInRange(lowerX, upperX);
+	float randomY = RandomEngine::RandFloatInRange(lowerY, upperY);
+	return { randomX, randomY };
 }
 
 void GameObject::Reset()
@@ -79,6 +151,9 @@ void GameObject::DoCollisionTest(const std::vector<GameObject*>& objects)
 {
 	for (uint32_t i = 0; i < objects.size(); ++i)
 	{
+		if (!m_bIsActive)
+			return;
+
 		if (objects[i] == this)
 			continue;
 

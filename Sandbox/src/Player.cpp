@@ -23,8 +23,8 @@ void Player::Init()
 
 	m_Level = GetLevel();
 
-	m_ShipTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
-	SetTranslucent(m_ShipTexture->HasAlpha());
+	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
+	SetTranslucent(m_PlayerTexture->HasAlpha());
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level);
 }
@@ -38,34 +38,34 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
 		{
-			SetPosition({ GetPosition().x, GetPosition().y + GetSpeed() * dt, GetPosition().z });
+			SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
 			if (GetPosition().y > m_Level->GetLevelBounds().top - 0.5f)
 			{
-				SetPosition({ GetPosition().x, m_Level->GetLevelBounds().top - 0.5f, GetPosition().z });
+				SetPosition2D({ GetPosition().x, m_Level->GetLevelBounds().top - 0.5f });
 			}
 		}
 		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
 		{
-			SetPosition({ GetPosition().x - GetSpeed() * dt, GetPosition().y, GetPosition().z });
+			SetPosition2D(GetPosition2D() - GetRightVector() * GetSpeed() * (float)dt);
 			if (GetPosition().x < m_Level->GetLevelBounds().left + 0.5f)
 			{
-				SetPosition({ m_Level->GetLevelBounds().left + 0.5f, GetPosition().y, GetPosition().z });
+				SetPosition2D({ m_Level->GetLevelBounds().left + 0.5f, GetPosition().y });
 			}
 		}
 		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
 		{
-			SetPosition({ GetPosition().x, GetPosition().y - GetSpeed() * dt, GetPosition().z });
+			SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
 			if (GetPosition().y < m_Level->GetLevelBounds().bottom + 0.5f)
 			{
-				SetPosition({ GetPosition().x, m_Level->GetLevelBounds().bottom + 0.5f, GetPosition().z });
+				SetPosition2D({ GetPosition().x, m_Level->GetLevelBounds().bottom + 0.5f });
 			}
 		}
 		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
 		{
-			SetPosition({ GetPosition().x + GetSpeed() * dt, GetPosition().y, GetPosition().z });
+			SetPosition2D(GetPosition2D() + GetRightVector() * GetSpeed() * (float)dt);
 			if (GetPosition().x > m_Level->GetLevelBounds().right - 0.5f)
 			{
-				SetPosition({ m_Level->GetLevelBounds().right - 0.5f, GetPosition().y, GetPosition().z });
+				SetPosition2D({ m_Level->GetLevelBounds().right - 0.5f, GetPosition().y });
 			}
 		}
 	}
@@ -87,21 +87,11 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 }
 
-void Player::SpawnBullet()
-{
-	// "Spawn" a bullet from pool
-	Bullet* bullet = m_BulletPool->GetNextPooledObject();
-	if (bullet)
-	{
-		bullet->SetPosition(GetPosition() + glm::vec3({ 0.0f, 0.5f, 0.0f }));
-	}
-}
-
 void Player::OnRender()
 {
 	Super::OnRender();
 
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), m_ShipTexture);
+	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), m_PlayerTexture);
 }
 
 void Player::OnImGuiRender()
@@ -113,6 +103,16 @@ void Player::OnImGuiRender()
 	ImGui::Text("Health: %.f / %.f", m_CurrentHealth, m_MaxHealth);
 
 	ImGui::End();
+}
+
+void Player::SpawnBullet()
+{
+	// "Spawn" a bullet from pool
+	PlayerBullet* bullet = m_BulletPool->GetNextPooledObject();
+	if (bullet)
+	{
+		bullet->SetPosition2D(GetPosition2D() + glm::vec2({ 0.0f, 0.5f }));
+	}
 }
 
 void Player::TakeDamage(GameObject* source, float damage)

@@ -1,16 +1,18 @@
 #include "TimerManager.h"
 
-Timer::Timer(float startTime, float duration, std::function<void()> callback, int loopCount)
+Timer::Timer(float startTime, float duration, std::function<void()> callback, int loopCount, float firstDelay)
 	: m_StartTime(startTime)
 	, m_Duration(duration)
 	, m_Callback(callback)
 	, m_LoopCount(loopCount)
+	, m_FirstDelay(firstDelay)
 {
 }
 
 TimerState Timer::OnUpdate(float currentTime)
 {
-	if (currentTime - m_StartTime > m_Duration)
+	float duration = m_bFirstLoop ? (m_FirstDelay >= 0.0f ? m_FirstDelay : m_Duration) : m_Duration;
+	if (currentTime - m_StartTime >= duration)
 	{
 		// If callback function is called inside this method,
 		// for situations where there is another looping SetTimer() in the callback,
@@ -18,20 +20,23 @@ TimerState Timer::OnUpdate(float currentTime)
 		--m_LoopCount;
 		if (m_LoopCount == 0)
 		{
+			m_bFirstLoop = false;
 			return TimerState::Finished;
 		}
 		else
 		{
+			m_bFirstLoop = false;
 			return TimerState::StartNextLoop;
 		}
 	}
+	m_bFirstLoop = false;
 	return TimerState::Running;
 }
 
-void TimerManager::SetTimer(float duration, std::function<void()> callback, int loopCount)
+void TimerManager::SetTimer(float duration, std::function<void()> callback, int loopCount, float firstDelay)
 {
 	//ZE_TRACE("Creating new timer...");
-	m_Timers.emplace_back(m_Time, duration, callback, loopCount);
+	m_Timers.emplace_back(m_Time, duration, callback, loopCount, firstDelay);
 }
 
 void TimerManager::OnUpdate(ZeoEngine::DeltaTime dt)

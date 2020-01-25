@@ -47,12 +47,13 @@ public:
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
+		object->Init();
 		m_GameObjects.push_back(object);
-		object->Init(); // Should be put after pushing back to m_GameObjects!
 		if (object->IsTranslucent())
 		{
 			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 		}
+		object->BeginPlay();
 		return object;
 	}
 	template<typename T>
@@ -60,13 +61,14 @@ public:
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
-		m_GameObjects.push_back(object);
-		object->Init(); // Should be put after pushing back to m_GameObjects!
 		object->SetTransform(transform);
+		object->Init();
+		m_GameObjects.push_back(object);
 		if (object->IsTranslucent())
 		{
-			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // Should be put after updating position!
+			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 		}
+		object->BeginPlay();
 		return object;
 	}
 	template<typename T>
@@ -74,17 +76,20 @@ public:
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
-		m_GameObjects.push_back(object);
-		object->Init(); // Should be put after pushing back to m_GameObjects!
 		object->SetPosition(position);
 		object->SetRotation(rotation);
 		object->SetScale(scale);
+		object->Init();
+		m_GameObjects.push_back(object);
 		if (object->IsTranslucent())
 		{
-			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object; // Should be put after updating position!
+			m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 		}
+		object->BeginPlay();
 		return object;
 	}
+
+	void DelaySpawnEnemy(float delay);
 
 private:
 	template<typename T>
@@ -108,7 +113,7 @@ private:
 
 	void DestroyGameObject(GameObject* object);
 
-	void SpawnObstacles();
+	void SpawnObstacle();
 
 private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_backgroundTexture;
@@ -124,4 +129,5 @@ private:
 	ZeoEngine::Scope<ObstaclePool> m_ObstaclePool;
 
 	bool m_bShouldSpawnObstacle = true;
+
 };

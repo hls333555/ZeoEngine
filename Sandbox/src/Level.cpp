@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "RandomEngine.h"
 #include "ShooterGame.h"
+#include "Enemy.h"
 
 Level::~Level()
 {
@@ -23,6 +24,9 @@ void Level::Init()
 	// Spawn player ship
 	SpawnGameObject<Player>({ 0.0f, m_LevelBounds.bottom + 1.0f, 0.1f });
 
+	// Spawn enemy ship
+	DelaySpawnEnemy(5.0f);
+
 }
 
 void Level::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -37,11 +41,15 @@ void Level::OnUpdate(ZeoEngine::DeltaTime dt)
 				m_GameObjects[i]->DoCollisionTest(m_GameObjects);
 			}
 
-			m_GameObjects[i]->OnUpdate(dt);
+			// Out of range error may occur
+			if (i < m_GameObjects.size())
+			{
+				m_GameObjects[i]->OnUpdate(dt);
+			}
 		}
 	}
 
-	// Spawn obstacles every random intervals
+	// Spawn an obstacle every random intervals
 	if (m_bShouldSpawnObstacle)
 	{
 		m_bShouldSpawnObstacle = false;
@@ -50,14 +58,9 @@ void Level::OnUpdate(ZeoEngine::DeltaTime dt)
 			m_bShouldSpawnObstacle = true;
 		});
 		
-		SpawnObstacles();
+		SpawnObstacle();
 	}
-}
 
-void Level::SpawnObstacles()
-{
-	// "Spawn" an obstacle from pool
-	Obstacle* obstacle = m_ObstaclePool->GetNextPooledObject();
 }
 
 void Level::OnRender()
@@ -97,6 +100,7 @@ void Level::OnImGuiRender()
 		}
 	}
 
+	// TODO: This will eventually be in EditorLayer
 	ImGui::Begin("Level Outline");
 
 	ImGui::Text("(%d objects total)", m_GameObjects.size());
@@ -130,12 +134,34 @@ void Level::OnImGuiRender()
 void Level::DestroyGameObject(GameObject* object)
 {
 	auto it = std::find(m_GameObjects.begin(), m_GameObjects.end(), object);
-	m_GameObjects.erase(it);
+	if (it != m_GameObjects.end())
+	{
+		m_GameObjects.erase(it);
+	}
 
 	auto it2 = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
 		return objectPair.second == object;
 	});
-	m_TranslucentObjects.erase(it2);
+	if (it2 != m_TranslucentObjects.end())
+	{
+		m_TranslucentObjects.erase(it2);
+	}
 	
 	delete object;
+}
+
+void Level::DelaySpawnEnemy(float delay)
+{
+	GetTimerManager()->SetTimer(delay, [&]() {
+		glm::vec3 pos({ RandomEngine::RandFloatInRange(m_LevelBounds.right - 1.5f, m_LevelBounds.left + 1.5f), m_LevelBounds.top, 0.0f });
+		glm::vec2 scale({ 1.0f, 1.0f });
+		float rot = 180.0f;
+		SpawnGameObject<Enemy>(pos, scale, rot);
+	});
+}
+
+void Level::SpawnObstacle()
+{
+	// "Spawn" an obstacle from pool
+	Obstacle* obstacle = m_ObstaclePool->GetNextPooledObject();
 }

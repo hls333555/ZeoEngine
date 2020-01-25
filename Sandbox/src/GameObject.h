@@ -4,6 +4,9 @@
 
 #define Super __super
 
+#define WORLD_UP_VECTOR glm::vec2({ 0.0f, 1.0f })
+#define WORLD_RIGHT_VECTOR glm::vec2({ 1.0f, 0.0f })
+
 struct Transform
 {
 	glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -45,7 +48,6 @@ public:
 private:
 	glm::vec2 centerOffset;
 	glm::vec2 extentsMultiplier;
-	
 };
 
 struct SphereCollisionData : public CollisionData
@@ -83,7 +85,18 @@ public:
 	inline void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
 	inline const Transform& GetTransform() const { return m_Transform; }
 	inline void SetTransform(const Transform& transform) { m_Transform = transform; }
+	inline const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }
 	inline const glm::vec3& GetPosition() const { return  m_Transform.position; }
+	inline void SetPosition2D(const glm::vec2& position)
+	{
+		m_Transform.position.x = position.x;
+		m_Transform.position.y = position.y;
+		if (m_CollisionData)
+		{
+			m_CollisionData->UpdateData();
+		}
+	}
+	/** FOr most cases, you should use SetPosition2D() for 2D rendering instead. */
 	inline void SetPosition(const glm::vec3& position)
 	{
 		m_Transform.position = position;
@@ -92,7 +105,8 @@ public:
 			m_CollisionData->UpdateData();
 		}
 	}
-	inline const float GetRotation() const { return m_Transform.rotation; }
+	/** For draw command, you should use radians as rotation. */
+	inline const float GetRotation(bool bInRadians) const { return bInRadians ? glm::radians(m_Transform.rotation) : m_Transform.rotation; }
 	inline void SetRotation(float rotation) { m_Transform.rotation = rotation; }
 	inline const glm::vec2& GetScale() const { return m_Transform.scale; }
 	inline void SetScale(const glm::vec2& scale)
@@ -112,10 +126,32 @@ public:
 	inline bool IsTranslucent() const { return m_bIsTranslucent; }
 	inline void SetTranslucent(bool bIsTranslucent) { m_bIsTranslucent = bIsTranslucent; }
 
+	/**
+	 * You should do initialization stuff here including loading the texture and updating IsTranslucent variable.
+	 * Putting other gameplay related code here is not recommended.
+	 */
 	virtual void Init() {}
-	virtual void OnUpdate(ZeoEngine::DeltaTime dt) {}
+	virtual void BeginPlay() {}
+	virtual void OnUpdate(ZeoEngine::DeltaTime dt);
 	virtual void OnRender() {}
 	virtual void OnImGuiRender() {}
+
+	/**
+	 * Get forward vector based on this object's rotation.
+	 * @see WORLD_UP_VECTOR
+	 */
+	const glm::vec2 GetForwardVector() const;
+	/**
+	 * Get right vector based on this object's rotation.
+	 * @see WORLD_RIGHT_VECTOR
+	 */
+	const glm::vec2 GetRightVector() const;
+
+	float FindLookAtRotation(const glm::vec2& sourcePosition, const glm::vec2& targetPosition);
+
+	void TranslateTo(const glm::vec2& targetPosition);
+
+	glm::vec2 GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents);
 
 	/** Reset necessary data, mostly used by ObjectPooler. */
 	virtual void Reset();
@@ -133,6 +169,7 @@ public:
 	virtual void TakeDamage(GameObject* source, float damage) {}
 
 	void Destroy();
+	virtual void OnDestroyed() {}
 
 private:
 	bool CheckCollision(GameObject* other);
@@ -149,7 +186,12 @@ private:
 	CollisionData* m_CollisionData = nullptr;
 	bool m_bGenerateOverlapEvent = false;
 
+	bool bPendingDestroy = false;
 	GameObject* OverlappedObject = nullptr;
+	bool m_bStartMoving = false;
+	glm::vec2 m_SourcePosition = { 0.0f, 0.0f }, m_TargetPosition = { 0.0f, 0.0f };
+	float m_MovingDistance = 0.0f;
+	float m_MovingAlpha = 0.0f;
 
 	bool m_bIsTranslucent = false;
 };

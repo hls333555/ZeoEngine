@@ -10,14 +10,32 @@ public:
 	Bullet();
 
 	virtual void Init() override;
+
+protected:
+	Level* m_Level;
+
+	float m_Damage = 0.0f;
+	bool m_bCanPenetrate;
+};
+
+class PlayerBullet : public Bullet
+{
+public:
+	PlayerBullet();
+
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 	virtual void OnRender() override;
 
 	virtual void OnOverlap(GameObject* other) override;
+};
 
-private:
-	Level* m_Level;
+class EnemyBullet : public Bullet
+{
+public:
+	EnemyBullet();
 
-	float m_Damage;
-	bool m_bCanPenetrate;
+	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
+	virtual void OnRender() override;
+
+	virtual void OnOverlap(GameObject* other) override;
 };

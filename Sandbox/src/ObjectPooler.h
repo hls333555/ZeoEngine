@@ -21,6 +21,14 @@ public:
 		}
 	}
 
+	~ObjectPooler()
+	{
+		for (T* object : m_Objects)
+		{
+			object->Destroy();
+		}
+	}
+
 	inline const std::vector<T*>& GetPooledObjects() const { return m_Objects; }
 
 	T* GetNextPooledObject() const
