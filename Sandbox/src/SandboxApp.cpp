@@ -159,9 +159,9 @@ public:
 		m_FlatColorShader->Bind();
 		m_FlatColorShader->SetFloat4("u_Color", m_SquareColor);
 
-		for (int x = 0; x < 10; ++x)
+		for (int32_t x = 0; x < 10; ++x)
 		{
-			for (int y = 0; y < 10; ++y)
+			for (int32_t y = 0; y < 10; ++y)
 			{
 				glm::vec3 pos(x * 0.11f - 5 * 0.11f + 0.055f, y * 0.11f - 5 * 0.11f + 0.055f, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;

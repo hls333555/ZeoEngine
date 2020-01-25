@@ -10,6 +10,7 @@ Enemy::Enemy()
 	: m_MaxHealth(RandomEngine::RandFloatInRange(30.0f, 80.0f))
 	, m_CurrentHealth(m_MaxHealth)
 	, m_ExplosionDamage(RandomEngine::RandFloatInRange(5.0f, 20.0f))
+	, m_ScoreAmount(3)
 	, m_ShootRate(0.75f)
 {
 	SetSpeed(2.0f);
@@ -28,7 +29,7 @@ void Enemy::Init()
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 	SetTranslucent(m_EnemyTexture->HasAlpha());
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level);
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 
 }
 
@@ -69,13 +70,18 @@ void Enemy::OnRender()
 	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_EnemyTexture);
 }
 
-void Enemy::TakeDamage(GameObject* source, float damage)
+void Enemy::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
 {
-	Super::TakeDamage(source, damage);
+	Super::TakeDamage(damage, causer, instigator);
 
 	m_CurrentHealth -= damage;
 	if (m_CurrentHealth <= 0.0f)
 	{
+		Player* player = dynamic_cast<Player*>(instigator);
+		if (player)
+		{
+			player->AddScore(m_ScoreAmount);
+		}
 		Destroy();
 	}
 }
@@ -92,9 +98,13 @@ void Enemy::OnOverlap(GameObject* other)
 {
 	Super::OnOverlap(other);
 
-	if (dynamic_cast<Player*>(other))
+	if (Player* player = dynamic_cast<Player*>(other))
 	{
-		ApplyDamage(other, m_ExplosionDamage);
+		ApplyDamage(m_ExplosionDamage, other, this, this);
+		if (player)
+		{
+			player->AddScore(-m_ScoreAmount);
+		}
 		Destroy();
 	}
 }

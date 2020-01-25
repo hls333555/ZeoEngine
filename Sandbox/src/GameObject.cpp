@@ -240,10 +240,10 @@ bool GameObject::CheckCollision_SS(GameObject* other)
 	return deltaX * deltaX + deltaY * deltaY <= (radius + otherRadius) * (radius + otherRadius);
 }
 
-void GameObject::ApplyDamage(GameObject* target, float damage)
+void GameObject::ApplyDamage(float damage, GameObject* target, GameObject* causer, GameObject* instigator)
 {
 	if (target)
 	{
-		target->TakeDamage(this, damage);
+		target->TakeDamage(damage, causer, instigator);
 	}
 }

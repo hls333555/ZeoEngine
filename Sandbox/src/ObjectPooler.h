@@ -8,13 +8,13 @@ template<typename T, uint32_t C>
 class ObjectPooler
 {
 public:
-	ObjectPooler(Level* level)
+	ObjectPooler(Level* level, GameObject* owner = nullptr)
 	{
 		if (level)
 		{
 			for (uint32_t i = 0; i < C; ++i)
 			{
-				T* object = level->SpawnGameObject<T>();
+				T* object = level->SpawnGameObject<T>(owner);
 				object->SetActive(false);
 				m_Objects.push_back(object);
 			}

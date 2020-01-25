@@ -1,6 +1,6 @@
 #include "TimerManager.h"
 
-Timer::Timer(float startTime, float duration, std::function<void()> callback, int loopCount, float firstDelay)
+Timer::Timer(float startTime, float duration, std::function<void()> callback, int32_t loopCount, float firstDelay)
 	: m_StartTime(startTime)
 	, m_Duration(duration)
 	, m_Callback(callback)
@@ -33,7 +33,7 @@ TimerState Timer::OnUpdate(float currentTime)
 	return TimerState::Running;
 }
 
-void TimerManager::SetTimer(float duration, std::function<void()> callback, int loopCount, float firstDelay)
+void TimerManager::SetTimer(float duration, std::function<void()> callback, int32_t loopCount, float firstDelay)
 {
 	//ZE_TRACE("Creating new timer...");
 	m_Timers.emplace_back(m_Time, duration, callback, loopCount, firstDelay);

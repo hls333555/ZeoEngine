@@ -15,7 +15,7 @@ public:
 
 	virtual void Reset() override;
 
-	virtual void TakeDamage(GameObject* source, float damage) override;
+	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
 
 	virtual void OnOverlap(GameObject* other) override;
 
@@ -29,6 +29,7 @@ private:
 	float m_MaxHealth;
 	float m_CurrentHealth;
 	float m_ExplosionDamage;
+	int32_t m_ScoreAmount;
 
 	Level* m_Level;
 

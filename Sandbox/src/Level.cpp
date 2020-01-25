@@ -117,7 +117,6 @@ void Level::OnImGuiRender()
 			// Inactive objects are marked darker
 			color = m_GameObjects[i]->IsTranslucent() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 		}
-		
 		ImGui::TextColored(color, "%s", m_GameObjects[i]->GetName().c_str());
 	}
 

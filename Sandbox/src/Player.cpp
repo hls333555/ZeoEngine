@@ -10,6 +10,7 @@ Player::Player()
 	: m_ShootRate(0.25f)
 	, m_MaxHealth(100.0f)
 	, m_CurrentHealth(m_MaxHealth)
+	, m_Score(0)
 {
 	SetSpeed(5.0f);
 	SetSphereCollisionData(0.75f);
@@ -26,7 +27,7 @@ void Player::Init()
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level);
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 }
 
 void Player::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -101,6 +102,7 @@ void Player::OnImGuiRender()
 	ImGui::Begin("Player Stats");
 
 	ImGui::Text("Health: %.f / %.f", m_CurrentHealth, m_MaxHealth);
+	ImGui::Text("Score: %d", m_Score);
 
 	ImGui::End();
 }
@@ -115,9 +117,9 @@ void Player::SpawnBullet()
 	}
 }
 
-void Player::TakeDamage(GameObject* source, float damage)
+void Player::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
 {
-	Super::TakeDamage(source, damage);
+	Super::TakeDamage(damage, causer, instigator);
 
 	m_CurrentHealth -= damage;
 	if (m_CurrentHealth <= 0.0f)

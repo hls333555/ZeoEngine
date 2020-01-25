@@ -53,7 +53,7 @@ void PlayerBullet::OnOverlap(GameObject* other)
 
 	if (dynamic_cast<Obstacle*>(other) || dynamic_cast<Enemy*>(other))
 	{
-		ApplyDamage(other, m_Damage);
+		ApplyDamage(m_Damage, other, this, GetOwner());
 		if (!m_bCanPenetrate)
 		{
 			SetActive(false);
@@ -93,7 +93,7 @@ void EnemyBullet::OnOverlap(GameObject* other)
 
 	if (dynamic_cast<Player*>(other))
 	{
-		ApplyDamage(other, m_Damage);
+		ApplyDamage(m_Damage, other, this, GetOwner());
 		if (!m_bCanPenetrate)
 		{
 			SetActive(false);

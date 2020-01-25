@@ -81,6 +81,8 @@ public:
 
 	inline const std::string& GetName() const { return m_Name; }
 	inline void SetName(const std::string& name) { m_Name = name; }
+	inline GameObject* GetOwner() const { return m_Owner; }
+	inline void SetOwner(GameObject* owner) { m_Owner = owner; }
 	inline bool IsActive() const { return m_bIsActive; }
 	inline void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
 	inline const Transform& GetTransform() const { return m_Transform; }
@@ -165,8 +167,8 @@ public:
 
 	virtual void OnOverlap(GameObject* other) {}
 
-	virtual void ApplyDamage(GameObject* target, float damage);
-	virtual void TakeDamage(GameObject* source, float damage) {}
+	virtual void ApplyDamage(float damage, GameObject* target, GameObject* causer, GameObject* instigator);
+	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) {}
 
 	void Destroy();
 	virtual void OnDestroyed() {}
@@ -179,6 +181,7 @@ private:
 
 private:
 	std::string m_Name;
+	GameObject* m_Owner;
 	bool m_bIsActive = true;
 
 	Transform m_Transform;

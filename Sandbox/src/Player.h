@@ -17,7 +17,9 @@ public:
 	virtual void OnRender() override;
 	virtual void OnImGuiRender() override;
 
-	virtual void TakeDamage(GameObject* source, float damage) override;
+	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
+
+	void AddScore(int32_t deltaScore) { m_Score = glm::clamp((int32_t)m_Score + deltaScore, 0, INT_MAX); }
 
 private:
 	void SpawnBullet();
@@ -27,6 +29,7 @@ private:
 
 	float m_MaxHealth;
 	float m_CurrentHealth;
+	uint32_t m_Score;
 
 	typedef ObjectPooler<PlayerBullet, 5> BulletPool;
 	ZeoEngine::Scope<BulletPool> m_BulletPool;

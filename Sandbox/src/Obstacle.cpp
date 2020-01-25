@@ -6,6 +6,7 @@
 #include "Player.h"
 
 Obstacle::Obstacle()
+	: m_ScoreAmount(1)
 {
 	SetSphereCollisionData(0.75f);
 	SetGenerateOverlapEvent(true);
@@ -58,13 +59,18 @@ void Obstacle::Reset()
 	SetSpeed(RandomEngine::RandFloatInRange(0.5f, 1.5f));
 }
 
-void Obstacle::TakeDamage(GameObject* source, float damage)
+void Obstacle::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
 {
-	Super::TakeDamage(source, damage);
+	Super::TakeDamage(damage, causer, instigator);
 
 	m_CurrentHealth -= damage;
 	if (m_CurrentHealth <= 0.0f)
 	{
+		Player* player = dynamic_cast<Player*>(instigator);
+		if (player)
+		{
+			player->AddScore(m_ScoreAmount);
+		}
 		SetActive(false);
 	}
 }
@@ -73,9 +79,13 @@ void Obstacle::OnOverlap(GameObject* other)
 {
 	Super::OnOverlap(other);
 
-	if (dynamic_cast<Player*>(other))
+	if (Player* player = dynamic_cast<Player*>(other))
 	{
-		ApplyDamage(other, m_ExplosionDamage);
+		ApplyDamage(m_ExplosionDamage, other, this, this);
+		if (player)
+		{
+			player->AddScore(-m_ScoreAmount);
+		}
 		SetActive(false);
 	}
 }

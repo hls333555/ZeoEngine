@@ -43,10 +43,11 @@ public:
 	void SetLevelBounds(const LevelBounds& levelBounds) { m_LevelBounds = levelBounds; }
 
 	template<typename T>
-	T* SpawnGameObject()
+	T* SpawnGameObject(GameObject* owner = nullptr)
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
+		object->SetOwner(owner);
 		object->Init();
 		m_GameObjects.push_back(object);
 		if (object->IsTranslucent())
@@ -57,10 +58,11 @@ public:
 		return object;
 	}
 	template<typename T>
-	T* SpawnGameObject(const Transform& transform)
+	T* SpawnGameObject(const Transform& transform, GameObject* owner = nullptr)
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
+		object->SetOwner(owner);
 		object->SetTransform(transform);
 		object->Init();
 		m_GameObjects.push_back(object);
@@ -72,10 +74,11 @@ public:
 		return object;
 	}
 	template<typename T>
-	T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, float rotation = 0.0f)
+	T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, float rotation = 0.0f, GameObject* owner = nullptr)
 	{
 		T* object = new T();
 		object->SetName(ConstructObjectName<T>());
+		object->SetOwner(owner);
 		object->SetPosition(position);
 		object->SetRotation(rotation);
 		object->SetScale(scale);

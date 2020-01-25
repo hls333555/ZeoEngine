@@ -15,7 +15,7 @@ class Timer
 
 public:
 	Timer() = default;
-	Timer(float startTime, float duration, std::function<void()> callback, int loopCount, float firstDelay);
+	Timer(float startTime, float duration, std::function<void()> callback, int32_t loopCount, float firstDelay);
 
 	void SetStartTime(float startTime) { m_StartTime = startTime; }
 
@@ -25,7 +25,7 @@ private:
 	float m_StartTime = 0.0f;
 	float m_Duration = 0.0f;
 	std::function<void()> m_Callback;
-	int m_LoopCount = 0;
+	int32_t m_LoopCount = 0;
 	float m_FirstDelay;
 	bool m_bFirstLoop = true;
 };
@@ -38,7 +38,7 @@ public:
 	 * @param loopCount - <= 0: loop infinitely, 1: loop once
 	 * @param bFirstDelay - Time before invoking callback for the first time. If < 0.0, duration will be used.
 	 */
-	void SetTimer(float duration, std::function<void()> callback, int loopCount = 1, float firstDelay = -1.0f);
+	void SetTimer(float duration, std::function<void()> callback, int32_t loopCount = 1, float firstDelay = -1.0f);
 
 	void OnUpdate(ZeoEngine::DeltaTime dt);
 

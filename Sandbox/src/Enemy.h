@@ -17,7 +17,7 @@ public:
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 	virtual void OnRender() override;
 
-	virtual void TakeDamage(GameObject* source, float damage) override;
+	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
 
 	virtual void OnDestroyed() override;
 
@@ -34,6 +34,7 @@ private:
 	float m_MaxHealth;
 	float m_CurrentHealth;
 	float m_ExplosionDamage;
+	int32_t m_ScoreAmount;
 
 	typedef ObjectPooler<EnemyBullet, 3> BulletPool;
 	ZeoEngine::Scope<BulletPool> m_BulletPool;
