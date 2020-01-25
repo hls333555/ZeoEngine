@@ -6,6 +6,8 @@
 #include "ObjectPooler.h"
 #include "Obstacle.h"
 
+class Player;
+
 struct LevelBounds
 {
 	float left, right, bottom, top;
@@ -39,8 +41,9 @@ public:
 	void OnRender();
 	void OnImGuiRender();
 
-	const LevelBounds& GetLevelBounds() const { return m_LevelBounds; }
-	void SetLevelBounds(const LevelBounds& levelBounds) { m_LevelBounds = levelBounds; }
+	inline const LevelBounds& GetLevelBounds() const { return m_LevelBounds; }
+	inline void SetLevelBounds(const LevelBounds& levelBounds) { m_LevelBounds = levelBounds; }
+	inline Player* GetPlayer() { return m_Player; }
 
 	template<typename T>
 	T* SpawnGameObject(GameObject* owner = nullptr)
@@ -127,6 +130,8 @@ private:
 	std::unordered_map<std::string, uint32_t> m_ObjectNames;
 	std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 	uint32_t m_TranslucentObjectIndex = 0;
+
+	Player* m_Player;
 
 	typedef ObjectPooler<Obstacle, 10> ObstaclePool;
 	ZeoEngine::Scope<ObstaclePool> m_ObstaclePool;

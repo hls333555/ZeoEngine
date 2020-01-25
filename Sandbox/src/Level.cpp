@@ -22,7 +22,7 @@ void Level::Init()
 	m_ObstaclePool = ZeoEngine::CreateScope<ObstaclePool>(this);
 
 	// Spawn player ship
-	SpawnGameObject<Player>({ 0.0f, m_LevelBounds.bottom + 1.0f, 0.1f });
+	m_Player = SpawnGameObject<Player>({ 0.0f, m_LevelBounds.bottom + 1.0f, 0.1f });
 
 	// Spawn enemy ship
 	DelaySpawnEnemy(5.0f);

@@ -1,5 +1,7 @@
 #include "ShooterGame.h"
 
+#include <imgui/imgui.h>
+
 #include "RandomEngine.h"
 
 ShooterGame::ShooterGame()
@@ -15,7 +17,11 @@ void ShooterGame::OnAttach()
 {
 	ZE_PROFILE_FUNCTION();
 
+	ImGuiIO& io = ImGui::GetIO();
+	m_Font = io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+
 	m_Level.Init();
+
 }
 
 void ShooterGame::OnDetach()

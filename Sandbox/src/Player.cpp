@@ -23,6 +23,7 @@ void Player::Init()
 	SetName("PlayerShip");
 
 	m_Level = GetLevel();
+	m_Font = GetFont();
 
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
@@ -99,12 +100,28 @@ void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
 
-	ImGui::Begin("Player Stats");
-
-	ImGui::Text("Health: %.f / %.f", m_CurrentHealth, m_MaxHealth);
-	ImGui::Text("Score: %d", m_Score);
-
-	ImGui::End();
+	auto pos = ImGui::GetWindowPos();
+	auto width = ZeoEngine::Application::Get().GetWindow().GetWidth();
+	auto height = ZeoEngine::Application::Get().GetWindow().GetHeight();
+	// Render health bar
+	{
+		const float healthBarWidth = 200.0f;
+		ImGui::GetBackgroundDrawList()->AddRectFilled(
+			{ pos.x, pos.y - 15.0f },
+			{ pos.x + m_CurrentHealth / m_MaxHealth * healthBarWidth, pos.y + 5.0f },
+			IM_COL32(255, 0, 0, 255));
+		ImGui::GetBackgroundDrawList()->AddRect(
+			{ pos.x, pos.y - 15.0f },
+			{ pos.x + healthBarWidth, pos.y + 5.0f },
+			IM_COL32_BLACK);
+	}
+	// Render score text
+	{
+		std::string scoreStr = std::string(u8"µÃ·Ö£º") + std::to_string(m_Score);
+		ImGui::GetForegroundDrawList()->AddText(m_Font, 30.0f,
+			{ pos.x + width * 0.5f - 100.0f, pos.y - 20.0f },
+			IM_COL32(255, 64, 0, 255), scoreStr.c_str());
+	}
 }
 
 void Player::SpawnBullet()

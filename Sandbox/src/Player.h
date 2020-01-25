@@ -5,6 +5,7 @@
 #include "ObjectPooler.h"
 
 class Level;
+struct ImFont;
 class PlayerBullet;
 
 class Player : public GameObject
@@ -19,6 +20,7 @@ public:
 
 	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
 
+	inline uint32_t GetScore() const { return m_Score; }
 	void AddScore(int32_t deltaScore) { m_Score = glm::clamp((int32_t)m_Score + deltaScore, 0, INT_MAX); }
 
 private:
@@ -38,4 +40,5 @@ private:
 	bool m_bCanShoot = true;
 
 	Level* m_Level;
+	ImFont* m_Font;
 };
