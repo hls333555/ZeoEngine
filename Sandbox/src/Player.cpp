@@ -140,6 +140,7 @@ void Player::OnImGuiRender()
 			{ pos.x + width * 0.5f - 100.0f, pos.y - 20.0f },
 			IM_COL32(255, 64, 0, 255), scoreStr.c_str());
 	}
+
 }
 
 void Player::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
@@ -150,7 +151,7 @@ void Player::TakeDamage(float damage, GameObject* causer, GameObject* instigator
 	if (m_CurrentHealth <= 0.0f)
 	{
 		Explode();
-		Destroy();
+		SetActive(false);
 	}
 }
 
@@ -176,4 +177,9 @@ void Player::Explode()
 	m_ExplosionEmitter.texture = m_ExplosionTexture;
 	m_ExplosionEmitter.subImageSize = { 4, 2 };
 	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
+
+	m_FlameParticle->Deactivate();
+	m_FlameParticle->OnSystemFinished = std::bind([&]() {
+		Destroy();
+	});
 }

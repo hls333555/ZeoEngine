@@ -337,6 +337,10 @@ void ParticleSystem::OnUpdate(ZeoEngine::DeltaTime dt)
 	if (m_bAutoDestroy && bSystemComplete && ((!m_bInfiniteLoop && m_LoopCount == 0) || !m_bActive))
 	{
 		m_bPendingDestroy = true;
+		if (OnSystemFinished)
+		{
+			OnSystemFinished();
+		}
 	}
 }
 

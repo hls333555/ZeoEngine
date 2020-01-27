@@ -210,6 +210,10 @@ public:
 private:
 	void Emit();
 
+public:
+	/** Called when this particle system is about to be destroyed */
+	std::function<void()> OnSystemFinished;
+
 private:
 	struct Particle
 	{
