@@ -29,8 +29,7 @@ void Player::Init()
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
 
-	// TODO: should be added to texture library
-	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 

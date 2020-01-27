@@ -30,7 +30,7 @@ void Enemy::Init()
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 	SetTranslucent(m_EnemyTexture->HasAlpha());
 
-	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 

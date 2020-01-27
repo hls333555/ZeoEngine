@@ -15,6 +15,7 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
+		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
 
 		virtual void SetData(void* data, uint32_t size) override;

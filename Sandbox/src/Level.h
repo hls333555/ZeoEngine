@@ -125,8 +125,6 @@ private:
 	void SpawnObstacle();
 
 private:
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_backgroundTexture;
-
 	LevelBounds m_LevelBounds;
 
 	std::vector<GameObject*> m_GameObjects;
@@ -136,6 +134,7 @@ private:
 
 	ParticleManager m_ParticleManager;
 
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_backgroundTexture;
 	Player* m_Player;
 
 	typedef ObjectPooler<Obstacle, 10> ObstaclePool;

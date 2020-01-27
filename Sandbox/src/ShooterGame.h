@@ -22,7 +22,10 @@ public:
 
 	inline TimerManager* GetTimerManager() { return &m_TimerManager; }
 	inline Level* GetLevel() { return &m_Level; }
+	inline ZeoEngine::Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 	inline ImFont* GetFont() { return m_Font; }
+
+	void LoadSharedTextures();
 
 private:
 	bool OnWindowResized(ZeoEngine::WindowResizeEvent& e);
@@ -32,6 +35,7 @@ private:
 	ZeoEngine::Scope<ZeoEngine::OrthographicCamera> m_Camera;
 	TimerManager m_TimerManager;
 	Level m_Level;
+	ZeoEngine::Texture2DLibrary m_Texture2DLibrary;
 	ImFont* m_Font;
 
 };
@@ -46,6 +50,12 @@ static TimerManager* GetTimerManager()
 {
 	ShooterGame* gameLayer = ZeoEngine::Application::Get().FindLayerByName<ShooterGame>("Game");
 	return gameLayer ? gameLayer->GetTimerManager() : nullptr;
+}
+
+static ZeoEngine::Texture2DLibrary* GetTexture2DLibrary()
+{
+	ShooterGame* gameLayer = ZeoEngine::Application::Get().FindLayerByName<ShooterGame>("Game");
+	return gameLayer ? gameLayer->GetTexture2DLibrary() : nullptr;
 }
 
 static ImFont* GetFont()

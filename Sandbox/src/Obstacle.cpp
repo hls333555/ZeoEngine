@@ -22,7 +22,7 @@ void Obstacle::Init()
 	m_ObstacleTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 	SetTranslucent(m_ObstacleTexture->HasAlpha());
 
-	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 }
 

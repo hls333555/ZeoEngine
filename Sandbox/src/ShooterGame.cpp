@@ -20,6 +20,8 @@ void ShooterGame::OnAttach()
 	ImGuiIO& io = ImGui::GetIO();
 	m_Font = io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
+	LoadSharedTextures();
+
 	m_Level.Init();
 
 }
@@ -90,4 +92,10 @@ void ShooterGame::CreateCamera(uint32_t width, uint32_t height)
 	float top = zoomLevel;
 	m_Camera = ZeoEngine::CreateScope<ZeoEngine::OrthographicCamera>(left, right, bottom, top);
 	m_Level.SetLevelBounds({ left, right, bottom, top });
+}
+
+void ShooterGame::LoadSharedTextures()
+{
+	m_Texture2DLibrary.Load("assets/textures/Explosion_2x4.png");
+
 }
