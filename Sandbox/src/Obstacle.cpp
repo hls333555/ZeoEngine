@@ -4,6 +4,7 @@
 #include "Level.h"
 #include "RandomEngine.h"
 #include "Player.h"
+#include "ParticleSystem.h"
 
 Obstacle::Obstacle()
 	: m_ScoreAmount(1)
@@ -20,6 +21,9 @@ void Obstacle::Init()
 
 	m_ObstacleTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 	SetTranslucent(m_ObstacleTexture->HasAlpha());
+
+	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
+
 }
 
 void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -72,6 +76,7 @@ void Obstacle::TakeDamage(float damage, GameObject* causer, GameObject* instigat
 			player->AddScore(m_ScoreAmount);
 		}
 		SetActive(false);
+		Explode();
 	}
 }
 
@@ -87,5 +92,20 @@ void Obstacle::OnOverlap(GameObject* other)
 			player->AddScore(-m_ScoreAmount);
 		}
 		SetActive(false);
+		Explode();
 	}
+}
+
+void Obstacle::Explode()
+{
+	ParticleTemplate m_ExplosionEmitter;
+	m_ExplosionEmitter.loopCount = 1;
+	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
+	m_ExplosionEmitter.AddBurstData(0.0f, 1);
+	m_ExplosionEmitter.initialPosition.SetConstant(GetPosition2D());
+	m_ExplosionEmitter.sizeBegin.SetConstant(GetScale());
+	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
+	m_ExplosionEmitter.texture = m_ExplosionTexture;
+	m_ExplosionEmitter.subImageSize = { 4, 2 };
+	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
 }

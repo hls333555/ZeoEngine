@@ -3,10 +3,12 @@
 #include "GameObject.h"
 
 #include "ObjectPooler.h"
+#include "Bullet.h"
 
 class Level;
 struct ImFont;
 class PlayerBullet;
+class ParticleSystem;
 
 class Player : public GameObject
 {
@@ -26,6 +28,8 @@ public:
 private:
 	void SpawnBullet();
 
+	void Explode();
+
 private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_PlayerTexture;
 
@@ -38,6 +42,10 @@ private:
 
 	float m_ShootRate;
 	bool m_bCanShoot = true;
+
+	ParticleSystem* m_FlameParticle;
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
+	ParticleSystem* m_ExplosionParticle;
 
 	Level* m_Level;
 	ImFont* m_Font;

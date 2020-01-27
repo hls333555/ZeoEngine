@@ -6,6 +6,7 @@
 
 class EnemyBullet;
 class Level;
+class ParticleSystem;
 
 class Enemy : public GameObject
 {
@@ -28,6 +29,8 @@ public:
 private:
 	void SpawnBullet();
 
+	void Explode();
+
 private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_EnemyTexture;
 
@@ -41,6 +44,9 @@ private:
 
 	float m_ShootRate;
 	bool m_bCanShoot = true;
+
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
+	ParticleSystem* m_ExplosionParticle;
 
 	Level* m_Level;
 };

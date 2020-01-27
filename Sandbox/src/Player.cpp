@@ -3,8 +3,8 @@
 #include <imgui/imgui.h>
 
 #include "Level.h"
-#include "Bullet.h"
 #include "ShooterGame.h"
+#include "ParticleSystem.h"
 
 Player::Player()
 	: m_ShootRate(0.25f)
@@ -14,6 +14,7 @@ Player::Player()
 {
 	SetSpeed(5.0f);
 	SetSphereCollisionData(0.75f);
+
 }
 
 void Player::Init()
@@ -28,7 +29,25 @@ void Player::Init()
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
 
+	// TODO: should be added to texture library
+	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
+
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
+
+	ParticleTemplate m_FlameEmitter;
+	m_FlameEmitter.lifeTime.SetRandom(0.75f, 1.5f);
+	m_FlameEmitter.spawnRate.SetConstant(30.0f);
+	m_FlameEmitter.initialPosition.SetConstant(glm::vec2(0.0f, -0.45f));
+	m_FlameEmitter.initialRotation.SetRandom(0.0f, 360.0f);
+	m_FlameEmitter.rotationRate.SetRandom(10.0f, 50.0f);
+	m_FlameEmitter.initialVelocity.SetRandom({ -0.5f, -0.5f }, { 0.5f, -2.0f });
+	m_FlameEmitter.inheritVelocity = { 0.1f, 0.1f };
+	m_FlameEmitter.sizeBegin.SetRandom(0.075f, 0.2f);
+	m_FlameEmitter.sizeEnd.SetConstant({ 0.0f, 0.0f });
+	m_FlameEmitter.colorBegin.SetRandom({ 0.9f, 0.4f, 0.2f, 1.0f }, { 0.9f, 0.8f, 0.2f, 1.0f });
+	m_FlameEmitter.colorEnd.SetConstant({ 0.9f, 0.8f, 0.5f, 0.0f });
+	m_FlameParticle = m_Level->SpawnParticleSystem(m_FlameEmitter, this);
+
 }
 
 void Player::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -124,6 +143,18 @@ void Player::OnImGuiRender()
 	}
 }
 
+void Player::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
+{
+	Super::TakeDamage(damage, causer, instigator);
+
+	m_CurrentHealth -= damage;
+	if (m_CurrentHealth <= 0.0f)
+	{
+		Explode();
+		Destroy();
+	}
+}
+
 void Player::SpawnBullet()
 {
 	// "Spawn" a bullet from pool
@@ -134,13 +165,16 @@ void Player::SpawnBullet()
 	}
 }
 
-void Player::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
+void Player::Explode()
 {
-	Super::TakeDamage(damage, causer, instigator);
-
-	m_CurrentHealth -= damage;
-	if (m_CurrentHealth <= 0.0f)
-	{
-		Destroy();
-	}
+	ParticleTemplate m_ExplosionEmitter;
+	m_ExplosionEmitter.loopCount = 1;
+	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
+	m_ExplosionEmitter.AddBurstData(0.0f, 1);
+	m_ExplosionEmitter.initialPosition.SetConstant(GetPosition2D());
+	m_ExplosionEmitter.sizeBegin.SetConstant(GetScale());
+	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
+	m_ExplosionEmitter.texture = m_ExplosionTexture;
+	m_ExplosionEmitter.subImageSize = { 4, 2 };
+	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
 }

@@ -1,5 +1,6 @@
 #include "GameObject.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
 
 #include "ShooterGame.h"
@@ -73,6 +74,9 @@ void GameObject::OnUpdate(ZeoEngine::DeltaTime dt)
 			m_MovingAlpha = 0.0f;
 		}
 	}
+
+	m_Velocity = (GetPosition2D() - m_LastPosition) / (float)dt;
+	m_LastPosition = GetPosition2D();
 }
 
 const glm::vec2 GameObject::GetForwardVector() const

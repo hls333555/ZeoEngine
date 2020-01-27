@@ -122,6 +122,7 @@ public:
 	inline void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
 	inline float GetSpeed() const { return m_Speed; }
 	inline void SetSpeed(float speed) { m_Speed = speed; }
+	inline const glm::vec2& GetVelocity() const { return m_Velocity; }
 	inline ObjectCollisionType GetCollisionType() const { return m_CollisionData ? m_CollisionData->collisionType : ObjectCollisionType::None; }
 	inline bool ShouldGenerateOverlapEvent() const { return m_bGenerateOverlapEvent; }
 	inline void SetGenerateOverlapEvent(bool bGenerate) { m_bGenerateOverlapEvent = bGenerate; }
@@ -185,7 +186,10 @@ private:
 	bool m_bIsActive = true;
 
 	Transform m_Transform;
+	/** A scalar indicating how fast this object moves */
 	float m_Speed = 0.0f;
+	/** A vector representing current velocity of this object  */
+	glm::vec2 m_Velocity{ 0.0f, 0.0f };
 	CollisionData* m_CollisionData = nullptr;
 	bool m_bGenerateOverlapEvent = false;
 
@@ -195,6 +199,7 @@ private:
 	glm::vec2 m_SourcePosition = { 0.0f, 0.0f }, m_TargetPosition = { 0.0f, 0.0f };
 	float m_MovingDistance = 0.0f;
 	float m_MovingAlpha = 0.0f;
+	glm::vec2 m_LastPosition{ 0.0f, 0.0f };
 
 	bool m_bIsTranslucent = false;
 };

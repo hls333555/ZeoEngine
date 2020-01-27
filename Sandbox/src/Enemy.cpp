@@ -5,6 +5,7 @@
 #include "RandomEngine.h"
 #include "Player.h"
 #include "Bullet.h"
+#include "ParticleSystem.h"
 
 Enemy::Enemy()
 	: m_MaxHealth(RandomEngine::RandFloatInRange(30.0f, 80.0f))
@@ -28,6 +29,8 @@ void Enemy::Init()
 
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 	SetTranslucent(m_EnemyTexture->HasAlpha());
+
+	m_ExplosionTexture = ZeoEngine::Texture2D::Create("assets/textures/Explosion_2x4.png");
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 
@@ -82,6 +85,7 @@ void Enemy::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
 		{
 			player->AddScore(m_ScoreAmount);
 		}
+		Explode();
 		Destroy();
 	}
 }
@@ -105,6 +109,7 @@ void Enemy::OnOverlap(GameObject* other)
 		{
 			player->AddScore(-m_ScoreAmount);
 		}
+		Explode();
 		Destroy();
 	}
 }
@@ -117,4 +122,18 @@ void Enemy::SpawnBullet()
 	{
 		bullet->SetPosition2D(GetPosition2D() - glm::vec2({ 0.0f, 0.5f }));
 	}
+}
+
+void Enemy::Explode()
+{
+	ParticleTemplate m_ExplosionEmitter;
+	m_ExplosionEmitter.loopCount = 1;
+	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
+	m_ExplosionEmitter.AddBurstData(0.0f, 1);
+	m_ExplosionEmitter.initialPosition.SetConstant(GetPosition2D());
+	m_ExplosionEmitter.sizeBegin.SetConstant(GetScale());
+	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
+	m_ExplosionEmitter.texture = m_ExplosionTexture;
+	m_ExplosionEmitter.subImageSize = { 4, 2 };
+	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
 }

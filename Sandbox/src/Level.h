@@ -5,6 +5,7 @@
 #include "GameObject.h"
 #include "ObjectPooler.h"
 #include "Obstacle.h"
+#include "ParticleSystem.h"
 
 class Player;
 
@@ -95,6 +96,8 @@ public:
 		return object;
 	}
 
+	ParticleSystem* SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+
 	void DelaySpawnEnemy(float delay);
 
 private:
@@ -130,6 +133,8 @@ private:
 	std::unordered_map<std::string, uint32_t> m_ObjectNames;
 	std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 	uint32_t m_TranslucentObjectIndex = 0;
+
+	ParticleManager m_ParticleManager;
 
 	Player* m_Player;
 
