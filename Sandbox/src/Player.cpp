@@ -2,9 +2,7 @@
 
 #include <imgui/imgui.h>
 
-#include "Level.h"
-#include "ShooterGame.h"
-#include "ParticleSystem.h"
+#include "GameLevel.h"
 
 Player::Player()
 	: m_ShootRate(0.25f)
@@ -23,17 +21,17 @@ void Player::Init()
 
 	SetName("PlayerShip");
 
-	m_Level = GetLevel();
-	m_Font = GetFont();
+	m_Level = ZeoEngine::GetLevel<GameLevel>();
+	m_Font = ZeoEngine::GetFont();
 
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
 
-	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 
-	ParticleTemplate m_FlameEmitter;
+	ZeoEngine::ParticleTemplate m_FlameEmitter;
 	m_FlameEmitter.lifeTime.SetRandom(0.75f, 1.5f);
 	m_FlameEmitter.spawnRate.SetConstant(30.0f);
 	m_FlameEmitter.initialPosition.SetConstant(glm::vec2(0.0f, -0.45f));
@@ -97,7 +95,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			if (m_bCanShoot)
 			{
 				m_bCanShoot = false;
-				GetTimerManager()->SetTimer(m_ShootRate, [&]() {
+				ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, [&]() {
 					m_bCanShoot = true;
 				});
 
@@ -167,7 +165,7 @@ void Player::SpawnBullet()
 
 void Player::Explode()
 {
-	ParticleTemplate m_ExplosionEmitter;
+	ZeoEngine::ParticleTemplate m_ExplosionEmitter;
 	m_ExplosionEmitter.loopCount = 1;
 	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
 	m_ExplosionEmitter.AddBurstData(0.0f, 1);

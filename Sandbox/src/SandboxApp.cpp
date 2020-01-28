@@ -5,8 +5,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Sandbox2D.h"
-#include "ShooterGame.h"
+#include "Engine/Core/EntryPoint.h"
+
+#include "Engine/Layers/GameLayer.h"
 
 class ExampleLayer : public ZeoEngine::Layer
 {
@@ -222,8 +223,7 @@ public:
 	SandBox()
 	{
 		//PushLayer(new ExampleLayer());
-		//PushLayer(new Sandbox2D());
-		PushLayer(new ShooterGame());
+		PushLayer(new ZeoEngine::GameLayer());
 	}
 
 	~SandBox()

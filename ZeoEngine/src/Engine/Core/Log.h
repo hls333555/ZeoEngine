@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	class ZE_API Log
+	class Log
 	{
 	public:
 		static void Init();

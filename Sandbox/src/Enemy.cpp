@@ -1,16 +1,12 @@
 #include "Enemy.h"
 
-#include "ShooterGame.h"
-#include "Level.h"
-#include "RandomEngine.h"
+#include "GameLevel.h"
 #include "Player.h"
-#include "Bullet.h"
-#include "ParticleSystem.h"
 
 Enemy::Enemy()
-	: m_MaxHealth(RandomEngine::RandFloatInRange(30.0f, 80.0f))
+	: m_MaxHealth(ZeoEngine::RandomEngine::RandFloatInRange(30.0f, 80.0f))
 	, m_CurrentHealth(m_MaxHealth)
-	, m_ExplosionDamage(RandomEngine::RandFloatInRange(5.0f, 20.0f))
+	, m_ExplosionDamage(ZeoEngine::RandomEngine::RandFloatInRange(5.0f, 20.0f))
 	, m_ScoreAmount(3)
 	, m_ShootRate(0.75f)
 {
@@ -23,14 +19,14 @@ void Enemy::Init()
 {
 	Super::Init();
 
-	m_Level = GetLevel();
+	m_Level = ZeoEngine::GetLevel<GameLevel>();
 
 	SetName("EnemyShip");
 
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 	SetTranslucent(m_EnemyTexture->HasAlpha());
 
-	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
 
@@ -41,7 +37,7 @@ void Enemy::BeginPlay()
 	Super::BeginPlay();
 
 	// Move to a random position of upper half screen nearby every 2 seconds
-	GetTimerManager()->SetTimer(2.0f, [&]() {
+	ZeoEngine::GetTimerManager()->SetTimer(2.0f, [&]() {
 		glm::vec2 targetPosition = GetRandomPositionInRange(GetPosition2D(), { 2.0f, 2.0f });
 		if (targetPosition.y > 0 && glm::length(targetPosition - GetPosition2D()) > 1.0f)
 		{
@@ -58,7 +54,7 @@ void Enemy::OnUpdate(ZeoEngine::DeltaTime dt)
 	if (m_bCanShoot)
 	{
 		m_bCanShoot = false;
-		GetTimerManager()->SetTimer(m_ShootRate, [&]() {
+		ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, [&]() {
 			m_bCanShoot = true;
 		});
 
@@ -126,7 +122,7 @@ void Enemy::SpawnBullet()
 
 void Enemy::Explode()
 {
-	ParticleTemplate m_ExplosionEmitter;
+	ZeoEngine::ParticleTemplate m_ExplosionEmitter;
 	m_ExplosionEmitter.loopCount = 1;
 	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
 	m_ExplosionEmitter.AddBurstData(0.0f, 1);

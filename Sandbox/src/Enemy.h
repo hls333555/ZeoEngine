@@ -1,14 +1,15 @@
 #pragma once
 
-#include "GameObject.h"
+#include "ZeoEngine.h"
 
-#include "ObjectPooler.h"
+#include "Engine/GameFramework/ObjectPooler.h"
 
-class EnemyBullet;
-class Level;
-class ParticleSystem;
+#include "Bullet.h"
 
-class Enemy : public GameObject
+class ZeoEngine::ParticleSystem;
+class GameLevel;
+
+class Enemy : public ZeoEngine::GameObject
 {
 public:
 	Enemy();
@@ -39,14 +40,14 @@ private:
 	float m_ExplosionDamage;
 	int32_t m_ScoreAmount;
 
-	typedef ObjectPooler<EnemyBullet, 3> BulletPool;
+	typedef ZeoEngine::ObjectPooler<EnemyBullet, 3> BulletPool;
 	ZeoEngine::Scope<BulletPool> m_BulletPool;
 
 	float m_ShootRate;
 	bool m_bCanShoot = true;
 
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
-	ParticleSystem* m_ExplosionParticle;
+	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	Level* m_Level;
+	GameLevel* m_Level;
 };

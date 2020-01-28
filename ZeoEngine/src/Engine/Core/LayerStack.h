@@ -5,7 +5,7 @@
 
 namespace ZeoEngine {
 
-	class ZE_API LayerStack
+	class LayerStack
 	{
 	public:
 		LayerStack() = default;

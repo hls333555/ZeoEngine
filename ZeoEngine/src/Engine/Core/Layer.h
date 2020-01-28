@@ -26,7 +26,7 @@ namespace ZeoEngine {
 	 * In general, the update process is going forwards through the list to render and update things and going backwards from the topmost to handle events.
 	 * @see Run() and OnEvent() in Application.cpp
 	 */
-	class ZE_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");

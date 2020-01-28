@@ -14,6 +14,11 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseButtonCodes.h"
 #include "Engine/Renderer/OrthographicCameraController.h"
+#include "Engine/Core/RandomEngine.h"
+#include "Engine/Core/EngineGlobals.h"
+
+#include "Engine/GameFramework/GameObject.h"
+#include "Engine/GameFramework/Level.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"
 

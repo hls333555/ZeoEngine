@@ -1,9 +1,9 @@
 #include "Bullet.h"
 
-#include "ShooterGame.h"
-#include "Level.h"
+#include "GameLevel.h"
 #include "Enemy.h"
 #include "Player.h"
+#include "Obstacle.h"
 
 Bullet::Bullet()
 	: m_bCanPenetrate(false)
@@ -18,7 +18,7 @@ void Bullet::Init()
 {
 	Super::Init();
 
-	m_Level = GetLevel();
+	m_Level = ZeoEngine::GetLevel<GameLevel>();
 }
 
 PlayerBullet::PlayerBullet()

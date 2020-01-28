@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	class ZE_API Input
+	class Input
 	{
 	protected:
 		Input() = default;

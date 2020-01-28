@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameObject.h"
+#include "ZeoEngine.h"
 
-class Level;
+class GameLevel;
 
-class Bullet : public GameObject
+class Bullet : public ZeoEngine::GameObject
 {
 public:
 	Bullet();
@@ -12,7 +12,7 @@ public:
 	virtual void Init() override;
 
 protected:
-	Level* m_Level;
+	GameLevel* m_Level;
 
 	float m_Damage = 0.0f;
 	bool m_bCanPenetrate;

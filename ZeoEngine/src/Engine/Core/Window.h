@@ -20,7 +20,7 @@ namespace ZeoEngine {
 	};
 
 	/** Interface representing a desktop system based Window */
-	class ZE_API Window
+	class Window
 	{
 	public:
 		using EventCallbackFunc = std::function<void(Event&)>;

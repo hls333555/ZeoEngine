@@ -1,11 +1,11 @@
 #pragma once
 
-#include "GameObject.h"
+#include "ZeoEngine.h"
 
-class Level;
-class ParticleSystem;
+class GameLevel;
+class ZeoEngine::ParticleSystem;
 
-class Obstacle : public GameObject
+class Obstacle : public ZeoEngine::GameObject
 {
 public:
 	Obstacle();
@@ -35,8 +35,8 @@ private:
 	int32_t m_ScoreAmount;
 
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
-	ParticleSystem* m_ExplosionParticle;
+	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	Level* m_Level;
+	GameLevel* m_Level;
 
 };

@@ -16,7 +16,7 @@ const char* glsl_version = "#version 410";
 namespace ZeoEngine {
 
 	ImGuiLayer::ImGuiLayer()
-		: Layer("ImGuiLayer")
+		: Layer("ImGui")
 	{
 	}
 

@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	class ZE_API KeyEvent : public Event
+	class KeyEvent : public Event
 	{
 	public:
 		inline int GetKeyCode() const { return m_KeyCode; }
@@ -19,7 +19,7 @@ namespace ZeoEngine {
 
 	};
 
-	class ZE_API KeyPressedEvent : public KeyEvent
+	class KeyPressedEvent : public KeyEvent
 	{
 	public:
 		KeyPressedEvent(int keycode, int repeatCount)
@@ -46,7 +46,7 @@ namespace ZeoEngine {
 
 	};
 
-	class ZE_API KeyReleasedEvent : public KeyEvent
+	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
 		KeyReleasedEvent(int keycode)
@@ -64,7 +64,7 @@ namespace ZeoEngine {
 	};
 
 	/** Event used for character input. */
-	class ZE_API KeyTypedEvent : public KeyEvent
+	class KeyTypedEvent : public KeyEvent
 	{
 	public:
 		KeyTypedEvent(int keycode)

@@ -1,10 +1,7 @@
 #include "Obstacle.h"
 
-#include "ShooterGame.h"
-#include "Level.h"
-#include "RandomEngine.h"
+#include "GameLevel.h"
 #include "Player.h"
-#include "ParticleSystem.h"
 
 Obstacle::Obstacle()
 	: m_ScoreAmount(1)
@@ -17,12 +14,12 @@ void Obstacle::Init()
 {
 	Super::Init();
 
-	m_Level = GetLevel();
+	m_Level = ZeoEngine::GetLevel<GameLevel>();
 
 	m_ObstacleTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 	SetTranslucent(m_ObstacleTexture->HasAlpha());
 
-	m_ExplosionTexture = GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
+	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 }
 
@@ -53,14 +50,14 @@ void Obstacle::Reset()
 {
 	Super::Reset();
 
-	m_MaxHealth = RandomEngine::RandFloatInRange(10.0f, 50.0f);
+	m_MaxHealth = ZeoEngine::RandomEngine::RandFloatInRange(10.0f, 50.0f);
 	m_CurrentHealth = m_MaxHealth;
-	m_ExplosionDamage = RandomEngine::RandFloatInRange(5.0f, 20.0f);
-	m_RotationSpeed = RandomEngine::RandFloatInRange(-10.0f, 10.0f);
-	SetPosition2D({ RandomEngine::RandFloatInRange(m_Level->GetLevelBounds().right - 0.5f, m_Level->GetLevelBounds().left + 0.5f), m_Level->GetLevelBounds().top });
-	SetRotation(RandomEngine::RandFloatInRange(0.0f, 180.0f));
-	SetScale(RandomEngine::RandFloatInRange(0.75f, 1.8f));
-	SetSpeed(RandomEngine::RandFloatInRange(0.5f, 1.5f));
+	m_ExplosionDamage = ZeoEngine::RandomEngine::RandFloatInRange(5.0f, 20.0f);
+	m_RotationSpeed = ZeoEngine::RandomEngine::RandFloatInRange(-10.0f, 10.0f);
+	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(m_Level->GetLevelBounds().right - 0.5f, m_Level->GetLevelBounds().left + 0.5f), m_Level->GetLevelBounds().top });
+	SetRotation(ZeoEngine::RandomEngine::RandFloatInRange(0.0f, 180.0f));
+	SetScale(ZeoEngine::RandomEngine::RandFloatInRange(0.75f, 1.8f));
+	SetSpeed(ZeoEngine::RandomEngine::RandFloatInRange(0.5f, 1.5f));
 }
 
 void Obstacle::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
@@ -98,7 +95,7 @@ void Obstacle::OnOverlap(GameObject* other)
 
 void Obstacle::Explode()
 {
-	ParticleTemplate m_ExplosionEmitter;
+	ZeoEngine::ParticleTemplate m_ExplosionEmitter;
 	m_ExplosionEmitter.loopCount = 1;
 	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
 	m_ExplosionEmitter.AddBurstData(0.0f, 1);

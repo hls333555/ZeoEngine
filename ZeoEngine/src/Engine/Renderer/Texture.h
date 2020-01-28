@@ -30,6 +30,7 @@ namespace ZeoEngine {
 
 	};
 
+	// TODO: Consider singleton like Input class?
 	class Texture2DLibrary
 	{
 	public:

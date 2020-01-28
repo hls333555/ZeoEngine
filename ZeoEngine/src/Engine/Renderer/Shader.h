@@ -26,6 +26,7 @@ namespace ZeoEngine {
 
 	};
 
+	// TODO: Consider singleton like Input class?
 	class ShaderLibrary
 	{
 	public:

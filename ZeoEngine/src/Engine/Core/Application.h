@@ -6,14 +6,13 @@
 #include "Engine/Events/Event.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Core/LayerStack.h"
-
 #include "Engine/Core/DeltaTime.h"
-
-#include "Engine/ImGui/ImGuiLayer.h"
 
 namespace ZeoEngine {
 
-	class ZE_API Application
+	class ImGuiLayer;
+
+	class Application
 	{
 	public:
 		Application();
@@ -28,6 +27,7 @@ namespace ZeoEngine {
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
+
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
 		{
