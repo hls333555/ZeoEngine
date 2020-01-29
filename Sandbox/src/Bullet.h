@@ -9,8 +9,6 @@ class Bullet : public ZeoEngine::GameObject
 public:
 	Bullet();
 
-	virtual void Init() override;
-
 protected:
 	GameLevel* m_Level;
 

@@ -72,6 +72,7 @@ namespace ZeoEngine {
 		float radiusMultiplier;
 	};
 
+	// TODO: move some variables and functionalities to components
 	class GameObject
 	{
 	public:

@@ -8,10 +8,11 @@
 
 class Player;
 
-class GameLevel : public ZeoEngine::Level
+// TODO: introduce python scripting
+class GameLevel
 {
 public:
-	virtual void Init() override;
+	virtual void Init();
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt);
 
 	inline Player* GetPlayer() { return m_Player; }

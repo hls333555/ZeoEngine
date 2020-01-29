@@ -1,13 +1,12 @@
 #include "ZEpch.h"
 #include "Engine/Layers/GameLayer.h"
 
-#include <imgui.h>
-
 #include "Engine/Core/Application.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Layers/EditorLayer.h"
 
 namespace ZeoEngine {
 
@@ -16,35 +15,19 @@ namespace ZeoEngine {
 	{
 		RandomEngine::Init();
 
-		m_Level = CreateLevel();
-
 		const auto& window = Application::Get().GetWindow();
 		CreateCamera(window.GetWidth(), window.GetHeight());
 
-	}
-
-	GameLayer::~GameLayer()
-	{
-		delete m_Level;
+		editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
 	}
 
 	void GameLayer::OnAttach()
 	{
 		ZE_PROFILE_FUNCTION();
 
-		// TODO: Load font
-		ImGuiIO& io = ImGui::GetIO();
-		m_Font = io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-
 		LoadSharedTextures();
 
-		m_Level->Init();
-
-	}
-
-	void GameLayer::OnDetach()
-	{
-		ZE_PROFILE_FUNCTION();
+		Level::Get().Init();
 
 	}
 
@@ -52,8 +35,10 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_TimerManager.OnUpdate(dt);
-		m_Level->OnUpdate(dt);
+		if (editor->GetPIEState() == PIEState::Running)
+		{
+			Level::Get().OnUpdate(dt);
+		}
 
 		Renderer2D::BeginRenderingToTexture();
 		// Render
@@ -68,7 +53,7 @@ namespace ZeoEngine {
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
 				Renderer2D::BeginScene(*m_Camera);
-				m_Level->OnRender();
+				Level::Get().OnRender();
 				Renderer2D::EndScene();
 			}
 		}
@@ -79,13 +64,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_Level->OnImGuiRender();
-	}
-
-	void GameLayer::OnEvent(Event& event)
-	{
-		ZE_PROFILE_FUNCTION();
-
+		Level::Get().OnImGuiRender();
 	}
 
 	void GameLayer::CreateCamera(uint32_t width, uint32_t height)
@@ -97,7 +76,7 @@ namespace ZeoEngine {
 		float bottom = -zoomLevel;
 		float top = zoomLevel;
 		m_Camera = CreateScope<OrthographicCamera>(left, right, bottom, top);
-		m_Level->SetLevelBounds({ left, right, bottom, top });
+		Level::Get().SetLevelBounds({ left, right, bottom, top });
 	}
 
 	void GameLayer::LoadSharedTextures()

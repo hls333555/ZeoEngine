@@ -7,7 +7,6 @@
 #include "Bullet.h"
 
 class ZeoEngine::ParticleSystem;
-class GameLevel;
 
 class Enemy : public ZeoEngine::GameObject
 {
@@ -49,5 +48,4 @@ private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	GameLevel* m_Level;
 };

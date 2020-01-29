@@ -17,6 +17,7 @@ namespace ZeoEngine {
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
+		virtual void* GetTexture() const override { return (void*)(intptr_t)m_RendererID; }
 
 		virtual void SetData(void* data, uint32_t size) override;
 

@@ -37,12 +37,12 @@ namespace ZeoEngine {
 
 		// Setup dark Dear ImGui style
 		ImGui::StyleColorsDark();
-
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		// Set default style
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			style.WindowRounding = 0.0f;
+			style.GrabRounding = style.WindowRounding = 8.0f;
+			style.WindowBorderSize = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 

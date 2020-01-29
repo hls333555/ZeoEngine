@@ -13,26 +13,38 @@
 
 namespace ZeoEngine {
 
+	EditorLayer::EditorLayer()
+		: Layer("Editor")
+	{
+	}
+
 	void EditorLayer::OnAttach()
 	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
+		LoadTextures();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
-		
+		Level::Get().OnEditorUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
-		//bool bShow = false;
-		//ImGui::ShowDemoWindow(&bShow);
+		bool bShow = false;
+		ImGui::ShowDemoWindow(&bShow);
 
 		// TODO: These bools are not saved out, so last opened windows cannot restore
 		static bool bShowGameView = true;
 		static bool bShowLevelOutline = true;
+		static bool bShowObjectProperty = true;
+		static bool bShowObjectBrowser = true;
 		static bool bShowConsole = true;
+		static bool bShowParticleEditor = false;
 		static bool bShowPreferences = false;
+		static bool bShowAbout = false;
 
 		ShowEditorDockspace();
 
@@ -76,13 +88,23 @@ namespace ZeoEngine {
 			{
 				ImGui::MenuItem("Game View", nullptr, &bShowGameView);
 				ImGui::MenuItem("Level Outline", nullptr, &bShowLevelOutline);
+				ImGui::MenuItem("Object Property", nullptr, &bShowObjectProperty);
+				ImGui::MenuItem("Object Browser", nullptr, &bShowObjectBrowser);
 				ImGui::MenuItem("Console", nullptr, &bShowConsole);
+				ImGui::MenuItem("ParticleEditor", nullptr, &bShowParticleEditor);
 				ImGui::Separator();
 				// Reset layout on next frame
 				if (ImGui::MenuItem("Reset layout", nullptr))
 				{
 					m_bResetLayout = true;
 				}
+				ImGui::EndMenu();
+			}
+			// Help
+			if (ImGui::BeginMenu("Help"))
+			{
+				ImGui::Separator();
+				ImGui::MenuItem("About ZeoEngine", nullptr, &bShowAbout);
 				ImGui::EndMenu();
 			}
 			// Display engine stats at right corner of menu bar
@@ -98,22 +120,47 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			// TODO: disable framebuffer rendering
+			// TODO: Disable framebuffer rendering
 
 		}
 		if (bShowLevelOutline)
 		{
 			ShowLevelOutline(&bShowLevelOutline);
 		}
+		if (bShowObjectProperty)
+		{
+			ShowObjectProperty(&bShowObjectProperty);
+		}
+		if (bShowObjectBrowser)
+		{
+			ShowObjectBrowser(&bShowObjectBrowser);
+		}
 		if (bShowConsole)
 		{
 			ShowConsole(&bShowConsole);
+		}
+
+		if (bShowParticleEditor)
+		{
+			ShowParticleEditor(&bShowParticleEditor);
 		}
 
 		if (bShowPreferences)
 		{
 			ShowPreferences(&bShowPreferences);
 		}
+
+		if (bShowAbout)
+		{
+			ShowAbout(&bShowAbout);
+		}
+	}
+
+	void EditorLayer::LoadTextures()
+	{
+		m_CurrentPlayTexture = m_PlayTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Play.png");
+		m_PauseTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Pause.png");
+		m_StopTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Stop.png");
 	}
 
 	void EditorLayer::ShowEditorDockspace()
@@ -146,14 +193,20 @@ namespace ZeoEngine {
 			// Main node should cover entire screen
 			ImGui::DockBuilderSetNodeSize(editorDockspaceId, ImVec2((float)window.GetWidth(), (float)window.GetHeight()));
 
-			ImGuiID dockMainUp;
-			ImGuiID dockMainDown = ImGui::DockBuilderSplitNode(editorDockspaceId, ImGuiDir_Down, 0.3f, nullptr, &dockMainUp);
-			ImGuiID dockMainRight;
-			ImGuiID dockMainLeft = ImGui::DockBuilderSplitNode(dockMainUp, ImGuiDir_Left, 0.8f, nullptr, &dockMainRight);
+			ImGuiID dockMainLeft;
+			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(editorDockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockMainLeft);
+			ImGuiID dockRightDown;
+			ImGuiID dockRightUp = ImGui::DockBuilderSplitNode(dockMainRight, ImGuiDir_Up, 0.4f, nullptr, &dockRightDown);
+			ImGuiID dockMainLeftUp;
+			ImGuiID dockMainLeftDown = ImGui::DockBuilderSplitNode(dockMainLeft, ImGuiDir_Down, 0.3f, nullptr, &dockMainLeftUp);
+			ImGuiID dockMainLeftRight;
+			ImGuiID dockMainLeftLeft = ImGui::DockBuilderSplitNode(dockMainLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockMainLeftRight);
 
-			ImGui::DockBuilderDockWindow("Game View", dockMainLeft);
-			ImGui::DockBuilderDockWindow("Level Outline", dockMainRight);
-			ImGui::DockBuilderDockWindow("Console", dockMainDown);
+			ImGui::DockBuilderDockWindow("Game View", dockMainLeftRight);
+			ImGui::DockBuilderDockWindow("Level Outline", dockRightUp);
+			ImGui::DockBuilderDockWindow("Object Property", dockRightDown);
+			ImGui::DockBuilderDockWindow("Object Browser", dockMainLeftLeft);
+			ImGui::DockBuilderDockWindow("Console", dockMainLeftDown);
 
 			ImGui::DockBuilderFinish(editorDockspaceId);
 		}
@@ -192,54 +245,163 @@ namespace ZeoEngine {
 			max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 			min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
 			m_LastGameViewSize = max - min;
+
+			// Show toolbar buttons inside game view
+			{
+				ImGui::SameLine(ImGui::GetWindowSize().x / 2 - 40.0f);
+				// Toggle play / stop
+				if (ImGui::ImageButton(m_CurrentPlayTexture->GetTexture(), ImVec2(32.0f, 32.0f)))
+				{
+					if (m_PIEState == PIEState::None)
+					{
+						m_CurrentPlayTexture = m_StopTexture;
+						StartPIE();
+					}
+					else
+					{
+						m_CurrentPlayTexture = m_PlayTexture;
+						StopPIE();
+					}
+				}
+				ImGui::SameLine();
+				// Toggle pause
+				if (ImGui::ImageButton(m_PauseTexture->GetTexture(), ImVec2(32.0f, 32.0f)))
+				{
+					if (m_PIEState == PIEState::Running)
+					{
+						PausePIE();
+					}
+					else if (m_PIEState == PIEState::Paused)
+					{
+						ResumePIE();
+					}
+				}
+			}
 		}
 		ImGui::End();
 	}
 
 	void EditorLayer::ShowLevelOutline(bool* bShow)
 	{
-		Level* level = GetLevel<Level>();
-		if (!level)
-			return;
+		auto& level = Level::Get();
 
 		if (ImGui::Begin("Level Outline", bShow))
 		{
-			ImGui::Text("(%d objects total)", level->m_GameObjects.size());
-			for (uint32_t i = 0; i < level->m_GameObjects.size(); ++i)
+			ImGui::Text("(%d objects total)", level.m_GameObjects.size());
+			for (uint32_t i = 0; i < level.m_GameObjects.size(); ++i)
 			{
 				ImVec4 color;
-				if (level->m_GameObjects[i]->IsActive())
+				if (level.m_GameObjects[i]->IsActive())
 				{
 					// Translucent objects are marked yellow instead of white
-					color = level->m_GameObjects[i]->IsTranslucent() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+					color = level.m_GameObjects[i]->IsTranslucent() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 				else
 				{
 					// Inactive objects are marked darker
-					color = level->m_GameObjects[i]->IsTranslucent() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+					color = level.m_GameObjects[i]->IsTranslucent() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 				}
-				ImGui::TextColored(color, "%s", level->m_GameObjects[i]->GetName().c_str());
+				ImGui::TextColored(color, "%s", level.m_GameObjects[i]->GetName().c_str());
 			}
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::ShowObjectProperty(bool* bShow)
+	{
+		if (ImGui::Begin("Object Property", bShow))
+		{
+
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::ShowObjectBrowser(bool* bShow)
+	{
+		if (ImGui::Begin("Object Browser", bShow))
+		{
+
 		}
 		ImGui::End();
 	}
 
 	void EditorLayer::ShowConsole(bool* bShow)
 	{
-		ImGui::Begin("Console", bShow);
+		if (ImGui::Begin("Console", bShow))
+		{
+
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::ShowParticleEditor(bool* bShow)
+	{
+		SetNextWindowDefaultPosition();
+		ImGui::SetNextWindowSize(ImVec2(700, 500), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Particle Editor", bShow))
+		{
+
+		}
 		ImGui::End();
 	}
 
 	void EditorLayer::ShowPreferences(bool* bShow)
 	{
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 100, viewport->Pos.y + 100), ImGuiCond_FirstUseEver);
+		SetNextWindowDefaultPosition();
 		ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
 		if (ImGui::Begin("Preferences", bShow, ImGuiWindowFlags_NoCollapse))
 		{
 			ImGui::ShowStyleSelector("Editor style");
 		}
 		ImGui::End();
+	}
+
+	// TODO: About dialog
+	void EditorLayer::ShowAbout(bool* bShow)
+	{
+		SetNextWindowDefaultPosition();
+		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("About", bShow, ImGuiWindowFlags_NoCollapse))
+		{
+			ImGui::Text("ZeoEngine 0.1");
+			ImGui::Text("Created by SanSan");
+			ImGui::Text("https://github.com/hls333555/");
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::SetNextWindowDefaultPosition()
+	{
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 100, viewport->Pos.y + 100), ImGuiCond_FirstUseEver);
+	}
+
+	void EditorLayer::StartPIE()
+	{
+		ZE_CORE_TRACE("Starting PIE...");
+		m_PIEState = PIEState::Running;
+
+	}
+
+	void EditorLayer::StopPIE()
+	{
+		ZE_CORE_TRACE("PIE stopped.");
+		m_PIEState = PIEState::None;
+
+	}
+
+	void EditorLayer::PausePIE()
+	{
+		ZE_CORE_TRACE("PIE paused.");
+		m_PIEState = PIEState::Paused;
+
+	}
+
+	void EditorLayer::ResumePIE()
+	{
+		ZE_CORE_TRACE("PIE resumed.");
+		m_PIEState = PIEState::Running;
+
 	}
 
 }

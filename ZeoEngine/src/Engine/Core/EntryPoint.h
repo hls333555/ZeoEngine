@@ -6,7 +6,7 @@ int main(int argc, char** argv)
 {
 	ZeoEngine::Log::Init();
 	ZE_CORE_TRACE("Initializing engine...");
-	ZE_CORE_TRACE("Initialized log!");
+	ZE_CORE_TRACE("Log initialized!");
 
 	ZE_PROFILE_BEGIN_SESSION("Startup", "ZeoEngineProfile_Startup.json");
 	auto app = ZeoEngine::CreateApplication();

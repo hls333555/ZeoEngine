@@ -19,8 +19,6 @@ void Enemy::Init()
 {
 	Super::Init();
 
-	m_Level = ZeoEngine::GetLevel<GameLevel>();
-
 	SetName("EnemyShip");
 
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
@@ -28,7 +26,7 @@ void Enemy::Init()
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
 
 }
 
@@ -91,7 +89,7 @@ void Enemy::OnDestroyed()
 	Super::OnDestroyed();
 
 	// Spawn next enemy
-	m_Level->DelaySpawnEnemy(2.0f);
+	//m_Level->DelaySpawnEnemy(2.0f);
 }
 
 void Enemy::OnOverlap(GameObject* other)
@@ -131,5 +129,5 @@ void Enemy::Explode()
 	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
 	m_ExplosionEmitter.texture = m_ExplosionTexture;
 	m_ExplosionEmitter.subImageSize = { 4, 2 };
-	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
+	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
 }

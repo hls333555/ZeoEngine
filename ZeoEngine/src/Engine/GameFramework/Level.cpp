@@ -25,6 +25,8 @@ namespace ZeoEngine {
 
 	void Level::OnUpdate(DeltaTime dt)
 	{
+		m_TimerManager.OnUpdate(dt);
+
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
 			if (!m_GameObjects[i]->IsActive())

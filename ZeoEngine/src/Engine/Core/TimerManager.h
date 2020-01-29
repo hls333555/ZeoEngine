@@ -32,10 +32,14 @@ namespace ZeoEngine {
 		bool m_bFirstLoop = true;
 	};
 
-	// TODO: Consider singleton like Input class?
 	class TimerManager
 	{
 	public:
+		TimerManager()
+		{
+			ZE_CORE_TRACE("Creating timer manager...");
+		}
+
 		/**
 		 * Start a countdown timer and call the callback when done.
 		 * @param loopCount - <= 0: loop infinitely, 1: loop once

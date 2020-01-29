@@ -14,13 +14,6 @@ Bullet::Bullet()
 	SetGenerateOverlapEvent(true);
 }
 
-void Bullet::Init()
-{
-	Super::Init();
-
-	m_Level = ZeoEngine::GetLevel<GameLevel>();
-}
-
 PlayerBullet::PlayerBullet()
 {
 	m_Damage = 10.0f;
@@ -30,13 +23,10 @@ void PlayerBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	if (m_Level)
+	SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
+	if (GetPosition().y > ZeoEngine::Level::Get().GetLevelBounds().top)
 	{
-		SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
-		if (GetPosition().y > m_Level->GetLevelBounds().top)
-		{
-			SetActive(false);
-		}
+		SetActive(false);
 	}
 }
 
@@ -70,13 +60,10 @@ void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	if (m_Level)
+	SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
+	if (GetPosition().y < ZeoEngine::Level::Get().GetLevelBounds().bottom)
 	{
-		SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
-		if (GetPosition().y < m_Level->GetLevelBounds().bottom)
-		{
-			SetActive(false);
-		}
+		SetActive(false);
 	}
 }
 

@@ -21,15 +21,12 @@ void Player::Init()
 
 	SetName("PlayerShip");
 
-	m_Level = ZeoEngine::GetLevel<GameLevel>();
-	m_Font = ZeoEngine::GetFont();
-
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(m_Level, this);
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
 
 	ZeoEngine::ParticleTemplate m_FlameEmitter;
 	m_FlameEmitter.lifeTime.SetRandom(0.75f, 1.5f);
@@ -43,7 +40,7 @@ void Player::Init()
 	m_FlameEmitter.sizeEnd.SetConstant({ 0.0f, 0.0f });
 	m_FlameEmitter.colorBegin.SetRandom({ 0.9f, 0.4f, 0.2f, 1.0f }, { 0.9f, 0.8f, 0.2f, 1.0f });
 	m_FlameEmitter.colorEnd.SetConstant({ 0.9f, 0.8f, 0.5f, 0.0f });
-	m_FlameParticle = m_Level->SpawnParticleSystem(m_FlameEmitter, this);
+	m_FlameParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_FlameEmitter, this);
 
 }
 
@@ -51,40 +48,39 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
+	auto& level = ZeoEngine::Level::Get();
+
 	// Movement control
-	if (m_Level)
+	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
 	{
-		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
+		SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
+		if (GetPosition().y > level.GetLevelBounds().top - 0.5f)
 		{
-			SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
-			if (GetPosition().y > m_Level->GetLevelBounds().top - 0.5f)
-			{
-				SetPosition2D({ GetPosition().x, m_Level->GetLevelBounds().top - 0.5f });
-			}
+			SetPosition2D({ GetPosition().x, level.GetLevelBounds().top - 0.5f });
 		}
-		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
+	}
+	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
+	{
+		SetPosition2D(GetPosition2D() - GetRightVector() * GetSpeed() * (float)dt);
+		if (GetPosition().x < level.GetLevelBounds().left + 0.5f)
 		{
-			SetPosition2D(GetPosition2D() - GetRightVector() * GetSpeed() * (float)dt);
-			if (GetPosition().x < m_Level->GetLevelBounds().left + 0.5f)
-			{
-				SetPosition2D({ m_Level->GetLevelBounds().left + 0.5f, GetPosition().y });
-			}
+			SetPosition2D({ level.GetLevelBounds().left + 0.5f, GetPosition().y });
 		}
-		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
+	}
+	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
+	{
+		SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
+		if (GetPosition().y < level.GetLevelBounds().bottom + 0.5f)
 		{
-			SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
-			if (GetPosition().y < m_Level->GetLevelBounds().bottom + 0.5f)
-			{
-				SetPosition2D({ GetPosition().x, m_Level->GetLevelBounds().bottom + 0.5f });
-			}
+			SetPosition2D({ GetPosition().x, level.GetLevelBounds().bottom + 0.5f });
 		}
-		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
+	}
+	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
+	{
+		SetPosition2D(GetPosition2D() + GetRightVector() * GetSpeed() * (float)dt);
+		if (GetPosition().x > level.GetLevelBounds().right - 0.5f)
 		{
-			SetPosition2D(GetPosition2D() + GetRightVector() * GetSpeed() * (float)dt);
-			if (GetPosition().x > m_Level->GetLevelBounds().right - 0.5f)
-			{
-				SetPosition2D({ m_Level->GetLevelBounds().right - 0.5f, GetPosition().y });
-			}
+			SetPosition2D({ level.GetLevelBounds().right - 0.5f, GetPosition().y });
 		}
 	}
 
@@ -116,7 +112,7 @@ void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
 
-	// TODO: Should be draw in GameView window
+	// TODO: Should be drawn in GameView window
 	//auto pos = ImGui::GetWindowPos();
 	//auto width = ZeoEngine::Application::Get().GetWindow().GetWidth();
 	//auto height = ZeoEngine::Application::Get().GetWindow().GetHeight();
@@ -175,7 +171,7 @@ void Player::Explode()
 	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
 	m_ExplosionEmitter.texture = m_ExplosionTexture;
 	m_ExplosionEmitter.subImageSize = { 4, 2 };
-	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
+	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
 
 	m_FlameParticle->Deactivate();
 	m_FlameParticle->OnSystemFinished = std::bind([&]() {

@@ -6,16 +6,13 @@ namespace ZeoEngine {
 	class ObjectPooler
 	{
 	public:
-		ObjectPooler(Level* level, GameObject* owner = nullptr)
+		ObjectPooler(GameObject* owner = nullptr)
 		{
-			if (level)
+			for (uint32_t i = 0; i < C; ++i)
 			{
-				for (uint32_t i = 0; i < C; ++i)
-				{
-					T* object = level->SpawnGameObject<T>(owner);
-					object->SetActive(false);
-					m_Objects.push_back(object);
-				}
+				T* object = Level::Get().SpawnGameObject<T>(owner);
+				object->SetActive(false);
+				m_Objects.push_back(object);
 			}
 		}
 

@@ -2,7 +2,6 @@
 
 #include "ZeoEngine.h"
 
-class GameLevel;
 class ZeoEngine::ParticleSystem;
 
 class Obstacle : public ZeoEngine::GameObject
@@ -36,7 +35,5 @@ private:
 
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
-
-	GameLevel* m_Level;
 
 };

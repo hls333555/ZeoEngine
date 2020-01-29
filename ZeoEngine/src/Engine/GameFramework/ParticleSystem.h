@@ -268,10 +268,13 @@ namespace ZeoEngine {
 
 	};
 
-	// TODO: Consider singleton like Input class?
 	class ParticleManager
 	{
 	public:
+		ParticleManager()
+		{
+			ZE_CORE_TRACE("Creating particle manager...");
+		}
 		~ParticleManager();
 
 		void OnUpdate(DeltaTime dt);

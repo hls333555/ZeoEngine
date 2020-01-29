@@ -3,20 +3,13 @@
 #include "Player.h"
 #include "Enemy.h"
 
-// Putting it inside header file will cause linking errors
-ZeoEngine::Level* ZeoEngine::CreateLevel()
-{
-	return new GameLevel();
-}
-
 void GameLevel::Init()
 {
-	Super::Init();
+	m_ObstaclePool = ZeoEngine::CreateScope<ObstaclePool>();
 
-	m_ObstaclePool = ZeoEngine::CreateScope<ObstaclePool>(this);
-
+	auto& level = ZeoEngine::Level::Get();
 	// Spawn player ship
-	m_Player = SpawnGameObject<Player>({ 0.0f, GetLevelBounds().bottom + 1.0f, 0.1f });
+	m_Player = level.SpawnGameObject<Player>({ 0.0f, level.GetLevelBounds().bottom + 1.0f, 0.1f });
 
 	// Spawn enemy ship
 	DelaySpawnEnemy(5.0f);
@@ -24,8 +17,6 @@ void GameLevel::Init()
 
 void GameLevel::OnUpdate(ZeoEngine::DeltaTime dt)
 {
-	Super::OnUpdate(dt);
-
 	// Spawn an obstacle every random intervals
 	if (m_bShouldSpawnObstacle)
 	{
@@ -33,7 +24,7 @@ void GameLevel::OnUpdate(ZeoEngine::DeltaTime dt)
 		float obstacleSpawnRate = ZeoEngine::RandomEngine::RandFloatInRange(1.0f, 4.0f);
 		ZeoEngine::GetTimerManager()->SetTimer(obstacleSpawnRate, [&]() {
 			m_bShouldSpawnObstacle = true;
-			});
+		});
 
 		SpawnObstacle();
 	}
@@ -42,10 +33,11 @@ void GameLevel::OnUpdate(ZeoEngine::DeltaTime dt)
 void GameLevel::DelaySpawnEnemy(float delay)
 {
 	ZeoEngine::GetTimerManager()->SetTimer(delay, [&]() {
-		glm::vec3 pos({ ZeoEngine::RandomEngine::RandFloatInRange(GetLevelBounds().right - 1.5f, GetLevelBounds().left + 1.5f), GetLevelBounds().top, 0.0f });
+		auto& level = ZeoEngine::Level::Get();
+		glm::vec3 pos({ ZeoEngine::RandomEngine::RandFloatInRange(level.GetLevelBounds().right - 1.5f, level.GetLevelBounds().left + 1.5f), level.GetLevelBounds().top, 0.0f });
 		glm::vec2 scale({ 1.0f, 1.0f });
 		float rot = 180.0f;
-		SpawnGameObject<Enemy>(pos, scale, rot);
+		level.SpawnGameObject<Enemy>(pos, scale, rot);
 	});
 }
 

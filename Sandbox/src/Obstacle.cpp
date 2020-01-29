@@ -1,6 +1,5 @@
 #include "Obstacle.h"
 
-#include "GameLevel.h"
 #include "Player.h"
 
 Obstacle::Obstacle()
@@ -13,8 +12,6 @@ Obstacle::Obstacle()
 void Obstacle::Init()
 {
 	Super::Init();
-
-	m_Level = ZeoEngine::GetLevel<GameLevel>();
 
 	m_ObstacleTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 	SetTranslucent(m_ObstacleTexture->HasAlpha());
@@ -29,13 +26,10 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 
 	SetRotation(GetRotation(false) + m_RotationSpeed * dt);
 
-	if (m_Level)
+	SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
+	if (GetPosition().y < ZeoEngine::Level::Get().GetLevelBounds().bottom - 0.5f)
 	{
-		SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
-		if (GetPosition().y < m_Level->GetLevelBounds().bottom - 0.5f)
-		{
-			SetActive(false);
-		}
+		SetActive(false);
 	}
 }
 
@@ -54,7 +48,8 @@ void Obstacle::Reset()
 	m_CurrentHealth = m_MaxHealth;
 	m_ExplosionDamage = ZeoEngine::RandomEngine::RandFloatInRange(5.0f, 20.0f);
 	m_RotationSpeed = ZeoEngine::RandomEngine::RandFloatInRange(-10.0f, 10.0f);
-	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(m_Level->GetLevelBounds().right - 0.5f, m_Level->GetLevelBounds().left + 0.5f), m_Level->GetLevelBounds().top });
+	auto& level = ZeoEngine::Level::Get();
+	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(level.GetLevelBounds().right - 0.5f, level.GetLevelBounds().left + 0.5f), level.GetLevelBounds().top });
 	SetRotation(ZeoEngine::RandomEngine::RandFloatInRange(0.0f, 180.0f));
 	SetScale(ZeoEngine::RandomEngine::RandFloatInRange(0.75f, 1.8f));
 	SetSpeed(ZeoEngine::RandomEngine::RandFloatInRange(0.5f, 1.5f));
@@ -104,5 +99,5 @@ void Obstacle::Explode()
 	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
 	m_ExplosionEmitter.texture = m_ExplosionTexture;
 	m_ExplosionEmitter.subImageSize = { 4, 2 };
-	m_ExplosionParticle = m_Level->SpawnParticleSystem(m_ExplosionEmitter);
+	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
 }

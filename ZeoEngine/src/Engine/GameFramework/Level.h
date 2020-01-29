@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/GameFramework/GameObject.h"
+#include "Engine/Core/TimerManager.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
@@ -30,8 +31,23 @@ namespace ZeoEngine {
 		friend class EditorLayer;
 		friend void GameObject::Destroy();
 
+	private:
+		Level()
+		{
+			ZE_CORE_TRACE("Creating level...");
+		}
+
+		Level(const Level&) = delete;
+		Level& operator=(const Level&) = delete;
+
 	public:
 		virtual ~Level();
+
+		static Level& Get()
+		{
+			static Level level;
+			return level;
+		}
 
 		virtual void Init();
 
@@ -42,6 +58,7 @@ namespace ZeoEngine {
 
 		inline const LevelBounds& GetLevelBounds() const { return m_LevelBounds; }
 		inline void SetLevelBounds(const LevelBounds& levelBounds) { m_LevelBounds = levelBounds; }
+		inline TimerManager* InternalGetTimerManager() { return &m_TimerManager; }
 
 		template<typename T>
 		T* SpawnGameObject(GameObject* owner = nullptr)
@@ -93,6 +110,7 @@ namespace ZeoEngine {
 			return object;
 		}
 
+		// TODO: Need a way to destroy a particle system explicitly
 		ParticleSystem* SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
 	private:
@@ -127,11 +145,9 @@ namespace ZeoEngine {
 		std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 		uint32_t m_TranslucentObjectIndex = 0;
 
+		TimerManager m_TimerManager;
 		ParticleManager m_ParticleManager;
 
 	};
-
-	// To be defined in the CLIENT
-	Level* CreateLevel();
 
 }

@@ -53,8 +53,7 @@ namespace ZeoEngine {
 			bPendingDestroy = true;
 			m_bIsActive = false;
 			OnDestroyed();
-			Level* level = GetLevel<Level>();
-			level->DestroyGameObject(this);
+			Level::Get().DestroyGameObject(this);
 		}
 
 	}
@@ -115,11 +114,11 @@ namespace ZeoEngine {
 
 	glm::vec2 GameObject::GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents)
 	{
-		Level* level = GetLevel<Level>();
-		float lowerX = std::max(center.x - extents.x, level->GetLevelBounds().left + 0.5f);
-		float upperX = std::min(center.x + extents.x, level->GetLevelBounds().right - 0.5f);
-		float lowerY = std::max(center.y - extents.y, level->GetLevelBounds().bottom + 0.5f);
-		float upperY = std::min(center.y + extents.y, level->GetLevelBounds().top - 0.5f);
+		auto& level = Level::Get();
+		float lowerX = std::max(center.x - extents.x, level.GetLevelBounds().left + 0.5f);
+		float upperX = std::min(center.x + extents.x, level.GetLevelBounds().right - 0.5f);
+		float lowerY = std::max(center.y - extents.y, level.GetLevelBounds().bottom + 0.5f);
+		float upperY = std::min(center.y + extents.y, level.GetLevelBounds().top - 0.5f);
 		float randomX = RandomEngine::RandFloatInRange(lowerX, upperX);
 		float randomY = RandomEngine::RandFloatInRange(lowerY, upperY);
 		return { randomX, randomY };

@@ -6,8 +6,6 @@
 
 #include "Bullet.h"
 
-class GameLevel;
-struct ImFont;
 class ZeoEngine::ParticleSystem;
 
 class Player : public ZeoEngine::GameObject
@@ -47,6 +45,4 @@ private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	GameLevel* m_Level;
-	ImFont* m_Font;
 };
