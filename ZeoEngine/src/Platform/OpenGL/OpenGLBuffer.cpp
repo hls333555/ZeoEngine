@@ -72,7 +72,61 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// FrameBuffer ///////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glCreateFramebuffers(1, &m_RendererID);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+		
+		// Texture attachments
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+		glTextureStorage2D(m_TextureID, 1, GL_RGB8, width, height);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_TextureID, 0);
+
+		// Renderbuffer object attachments
+		glCreateRenderbuffers(1, &m_RenderBufferObjectID);
+		glBindRenderbuffer(GL_RENDERBUFFER, m_RenderBufferObjectID);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RenderBufferObjectID);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			ZE_ERROR("Framebuffer is not complete!");
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	OpenGLFrameBuffer::~OpenGLFrameBuffer()
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glDeleteFramebuffers(1, &m_RendererID);
+	}
+
+	void OpenGLFrameBuffer::Bind() const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+	}
+
+	void OpenGLFrameBuffer::Unbind() const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 }

@@ -7,6 +7,7 @@
 
 #include "Engine/Core/EntryPoint.h"
 
+#include "Engine/Layers/EditorLayer.h"
 #include "Engine/Layers/GameLayer.h"
 
 class ExampleLayer : public ZeoEngine::Layer
@@ -223,6 +224,7 @@ public:
 	SandBox()
 	{
 		//PushLayer(new ExampleLayer());
+		PushLayer(new ZeoEngine::EditorLayer());
 		PushLayer(new ZeoEngine::GameLayer());
 	}
 

@@ -39,4 +39,20 @@ namespace ZeoEngine {
 
 	};
 
+	class OpenGLFrameBuffer : public FrameBuffer
+	{
+	public:
+		OpenGLFrameBuffer(uint32_t width, uint32_t height);
+		virtual ~OpenGLFrameBuffer();
+
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
+		virtual void* GetRenderedTexture() const override { return (void*)(intptr_t)m_TextureID; }
+
+	private:
+		uint32_t m_RendererID, m_TextureID, m_RenderBufferObjectID;
+
+	};
+
 }

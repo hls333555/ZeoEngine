@@ -47,6 +47,11 @@ namespace ZeoEngine {
 
 	}
 
+	void Level::OnEditorUpdate(DeltaTime dt)
+	{
+
+	}
+
 	void Level::OnRender()
 	{
 		Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 100.0f, 100.0f }, m_backgroundTexture, { 50.0f, 50.0f });
@@ -88,31 +93,6 @@ namespace ZeoEngine {
 				m_GameObjects[i]->OnImGuiRender();
 			}
 		}
-
-		// TODO: This will eventually be in EditorLayer
-		ImGui::Begin("Level Outline");
-		ImGui::Text("(%d objects total)", m_GameObjects.size());
-		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
-		{
-			ImVec4 color;
-			if (m_GameObjects[i]->IsActive())
-			{
-				// Translucent objects are marked yellow instead of white
-				color = m_GameObjects[i]->IsTranslucent() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-			}
-			else
-			{
-				// Inactive objects are marked darker
-				color = m_GameObjects[i]->IsTranslucent() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
-			}
-			ImGui::TextColored(color, "%s", m_GameObjects[i]->GetName().c_str());
-		}
-		ImGui::End();
-
-		ImGui::Begin("Engine Stats");
-		ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.f / ImGui::GetIO().Framerate);
-		ImGui::End();
-
 	}
 
 	void Level::DestroyGameObject(GameObject* object)

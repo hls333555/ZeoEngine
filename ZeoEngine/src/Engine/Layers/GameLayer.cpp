@@ -55,21 +55,24 @@ namespace ZeoEngine {
 		m_TimerManager.OnUpdate(dt);
 		m_Level->OnUpdate(dt);
 
+		Renderer2D::BeginRenderingToTexture();
 		// Render
 		{
-			ZE_PROFILE_SCOPE("Renderer Prep");
+			{
+				ZE_PROFILE_SCOPE("Renderer Prep");
 
-			RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-			RenderCommand::Clear();
+				RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+				RenderCommand::Clear();
+			}
+			{
+				ZE_PROFILE_SCOPE("Renderer Draw");
+
+				Renderer2D::BeginScene(*m_Camera);
+				m_Level->OnRender();
+				Renderer2D::EndScene();
+			}
 		}
-
-		{
-			ZE_PROFILE_SCOPE("Renderer Draw");
-
-			Renderer2D::BeginScene(*m_Camera);
-			m_Level->OnRender();
-			Renderer2D::EndScene();
-		}
+		Renderer2D::EndRenderingToTexture();
 	}
 
 	void GameLayer::OnImGuiRender()
@@ -83,17 +86,6 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(GameLayer::OnWindowResized));
-	}
-
-	bool GameLayer::OnWindowResized(WindowResizeEvent& e)
-	{
-		ZE_PROFILE_FUNCTION();
-
-		CreateCamera(e.GetWidth(), e.GetHeight());
-
-		return false;
 	}
 
 	void GameLayer::CreateCamera(uint32_t width, uint32_t height)

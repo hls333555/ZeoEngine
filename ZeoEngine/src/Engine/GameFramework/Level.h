@@ -27,6 +27,7 @@ namespace ZeoEngine {
 
 	class Level
 	{
+		friend class EditorLayer;
 		friend void GameObject::Destroy();
 
 	public:
@@ -35,6 +36,7 @@ namespace ZeoEngine {
 		virtual void Init();
 
 		virtual void OnUpdate(DeltaTime dt);
+		void OnEditorUpdate(DeltaTime dt);
 		void OnRender();
 		virtual void OnImGuiRender();
 

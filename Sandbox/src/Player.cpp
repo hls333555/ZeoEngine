@@ -116,28 +116,29 @@ void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
 
-	auto pos = ImGui::GetWindowPos();
-	auto width = ZeoEngine::Application::Get().GetWindow().GetWidth();
-	auto height = ZeoEngine::Application::Get().GetWindow().GetHeight();
-	// Render health bar
-	{
-		const float healthBarWidth = 200.0f;
-		ImGui::GetBackgroundDrawList()->AddRectFilled(
-			{ pos.x, pos.y - 15.0f },
-			{ pos.x + m_CurrentHealth / m_MaxHealth * healthBarWidth, pos.y + 5.0f },
-			IM_COL32(255, 0, 0, 255));
-		ImGui::GetBackgroundDrawList()->AddRect(
-			{ pos.x, pos.y - 15.0f },
-			{ pos.x + healthBarWidth, pos.y + 5.0f },
-			IM_COL32_BLACK);
-	}
-	// Render score text
-	{
-		std::string scoreStr = std::string(u8"得分：") + std::to_string(m_Score);
-		ImGui::GetForegroundDrawList()->AddText(m_Font, 30.0f,
-			{ pos.x + width * 0.5f - 100.0f, pos.y - 20.0f },
-			IM_COL32(255, 64, 0, 255), scoreStr.c_str());
-	}
+	// TODO: Should be draw in GameView window
+	//auto pos = ImGui::GetWindowPos();
+	//auto width = ZeoEngine::Application::Get().GetWindow().GetWidth();
+	//auto height = ZeoEngine::Application::Get().GetWindow().GetHeight();
+	//// Render health bar
+	//{
+	//	const float healthBarWidth = 200.0f;
+	//	ImGui::GetWindowDrawList()->AddRectFilled(
+	//		{ pos.x, pos.y - 15.0f },
+	//		{ pos.x + m_CurrentHealth / m_MaxHealth * healthBarWidth, pos.y + 5.0f },
+	//		IM_COL32(255, 0, 0, 255));
+	//	ImGui::GetWindowDrawList()->AddRect(
+	//		{ pos.x, pos.y - 15.0f },
+	//		{ pos.x + healthBarWidth, pos.y + 5.0f },
+	//		IM_COL32_BLACK);
+	//}
+	//// Render score text
+	//{
+	//	std::string scoreStr = std::string(u8"得分：") + std::to_string(m_Score);
+	//	ImGui::GetWindowDrawList()->AddText(m_Font, 30.0f,
+	//		{ pos.x + width * 0.5f - 100.0f, pos.y - 20.0f },
+	//		IM_COL32(255, 64, 0, 255), scoreStr.c_str());
+	//}
 
 }
 

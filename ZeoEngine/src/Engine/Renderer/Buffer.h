@@ -152,4 +152,17 @@ namespace ZeoEngine {
 
 	};
 
+	class FrameBuffer
+	{
+	public:
+		virtual ~FrameBuffer() = default;
+
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
+
+		virtual void* GetRenderedTexture() const = 0;
+
+		static Ref<FrameBuffer> Create(uint32_t width, uint32_t height);
+	};
+
 }

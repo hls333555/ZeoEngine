@@ -1,22 +1,17 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Renderer2D.h"
 
-#include "Engine/Renderer/VertexArray.h"
-#include "Engine/Renderer/Shader.h"
-#include "Engine/Renderer/RenderCommand.h"
-
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Core/Application.h"
 
 namespace ZeoEngine {
 
-	struct Renderer2DStorage
-	{
-		Ref<VertexArray> QuadVAO;
-		Ref<Shader> TextureShader;
-		Ref<Texture> WhiteTexture;
-	};
+#define FRAMEBUFFER_WIDTH 1280
+#define FRAMEBUFFER_HEIGHT 720
 
-	static Renderer2DStorage* s_Data;
+	Renderer2DStorage* Renderer2D::s_Data = nullptr;
 
 	void Renderer2D::Init()
 	{
@@ -59,6 +54,9 @@ namespace ZeoEngine {
 		// TextureShader is bound here!
 		s_Data->TextureShader->Bind();
 		s_Data->TextureShader->SetInt("u_Texture", 0);
+
+		s_Data->MainFBO = FrameBuffer::Create(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+
 	}
 
 	void Renderer2D::Shutdown()
@@ -66,6 +64,21 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		delete s_Data;
+	}
+
+	void Renderer2D::BeginRenderingToTexture()
+	{
+		// Update viewport to framebuffer texture's resolution before rendering
+		RenderCommand::SetViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+		s_Data->MainFBO->Bind();
+	}
+
+	void Renderer2D::EndRenderingToTexture()
+	{
+		s_Data->MainFBO->Unbind();
+		const auto& window = Application::Get().GetWindow();
+		// Restore resolution
+		RenderCommand::SetViewport(0, 0, window.GetWidth(), window.GetHeight());
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)

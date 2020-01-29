@@ -31,14 +31,11 @@ namespace ZeoEngine {
 		inline Texture2DLibrary* InternalGetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		inline ImFont* InternalGetFont() { return m_Font; }
 
-		// TODO: LoadSharedTextures()
-		void LoadSharedTextures();
-
-	private:
-		bool OnWindowResized(WindowResizeEvent& e);
-
 		// TODO: CreateCamera() 
 		void CreateCamera(uint32_t width, uint32_t height);
+
+		// TODO: LoadSharedTextures()
+		void LoadSharedTextures();
 
 	private:
 		Scope<OrthographicCamera> m_Camera;

@@ -61,6 +61,8 @@ namespace ZeoEngine {
 			ZE_PROFILE_SCOPE("glfwCreateWindow");
 
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
+			// Maximize window by default
+			glfwMaximizeWindow(m_Window);
 		}
 		
 		// Create rendering context
