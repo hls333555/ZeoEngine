@@ -24,6 +24,7 @@ IncludeDir["Glad"] = "ZeoEngine/vendor/Glad/include"
 IncludeDir["ImGui"] = "ZeoEngine/vendor/imgui"
 IncludeDir["glm"] = "ZeoEngine/vendor/glm"
 IncludeDir["stb_image"] = "ZeoEngine/vendor/stb_image"
+IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
 
 -- Include the premake file of GLFW
 include "ZeoEngine/vendor/GLFW"
@@ -31,6 +32,8 @@ include "ZeoEngine/vendor/GLFW"
 include "ZeoEngine/vendor/Glad"
 -- Include the premake file of ImGui
 include "ZeoEngine/vendor/ImGui"
+-- Include the premake file of rttr
+include "ZeoEngine/vendor/rttr"
 
 project "ZeoEngine"
 	location "ZeoEngine"
@@ -68,7 +71,8 @@ project "ZeoEngine"
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}"
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.rttr}"
 	}
 
 	links 
@@ -76,7 +80,8 @@ project "ZeoEngine"
 		"GLFW",
 		"Glad",
 		"ImGui",
-		"opengl32.lib"
+		"opengl32.lib",
+		"rttr"
 	}
 
 	filter "system:windows"
@@ -126,7 +131,9 @@ project "Sandbox"
 		"ZeoEngine/vendor/spdlog/include",
 		"ZeoEngine/src",
 		"ZeoEngine/vendor",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.rttr}"
 	}
 
 	links
