@@ -25,6 +25,7 @@ IncludeDir["ImGui"] = "ZeoEngine/vendor/imgui"
 IncludeDir["glm"] = "ZeoEngine/vendor/glm"
 IncludeDir["stb_image"] = "ZeoEngine/vendor/stb_image"
 IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
+IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 
 -- Include the premake file of GLFW
 include "ZeoEngine/vendor/GLFW"
@@ -55,7 +56,9 @@ project "ZeoEngine"
 		"%{prj.name}/vendor/stb_image/**.h",
 		"%{prj.name}/vendor/stb_image/**.cpp",
 		"%{prj.name}/vendor/glm/glm/**.hpp",
-		"%{prj.name}/vendor/glm/glm/**.ini"
+		"%{prj.name}/vendor/glm/glm/**.ini",
+		"%{prj.name}/vendor/ImGuizmo/**.h",
+		"%{prj.name}/vendor/ImGuizmo/**.cpp"
 	}
 
 	defines
@@ -72,7 +75,8 @@ project "ZeoEngine"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.rttr}"
+		"%{IncludeDir.rttr}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 
 	links 
