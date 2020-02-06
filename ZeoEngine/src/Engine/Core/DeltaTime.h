@@ -10,8 +10,8 @@ namespace ZeoEngine {
 		{
 		}
 
-		inline float GetSeconds() const { return m_Time; }
-		inline float GetMilliseconds() const { return m_Time * 1000.0f; }
+		float GetSeconds() const { return m_Time; }
+		float GetMilliseconds() const { return m_Time * 1000.0f; }
 
 		/** Conversion from DeltaTime to float. */
 		operator float() const { return m_Time; }

@@ -8,6 +8,48 @@
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/RandomEngine.h"
 
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+
+	registration::class_<Transform>("Transform")
+		.property("Position", &Transform::position)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"控制物体的移动。")
+		)
+		.property("Rotation", &Transform::rotation)
+		(
+			metadata(PropertyMeta::Tooltip, u8"控制物体的旋转。"),
+			metadata(PropertyMeta::Min, 0.0f),
+			metadata(PropertyMeta::Max, 360.0f)
+		)
+		.property("Scale", &Transform::scale)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"控制物体的缩放。")
+		);
+
+	registration::class_<GameObject>("GameObject")
+		.property("Name", &GameObject::m_Name)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"用于在editor里显示的名称。设为独一无二的最佳。")
+		)
+		.property("IsActive", &GameObject::m_bIsActive)
+		.property("Transform", &GameObject::m_Transform)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"Transform组件，用来控制基本的移动，旋转和缩放。")
+		)
+		.property("Speed", &GameObject::m_Speed)
+		(
+			metadata(PropertyMeta::Min, 0.0f),
+			metadata(PropertyMeta::Max, 20.0f)
+		);
+}
+
 namespace ZeoEngine {
 
 	void BoxCollisionData::UpdateData()
@@ -114,11 +156,11 @@ namespace ZeoEngine {
 
 	glm::vec2 GameObject::GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents)
 	{
-		auto& level = Level::Get();
-		float lowerX = std::max(center.x - extents.x, level.GetLevelBounds().left + 0.5f);
-		float upperX = std::min(center.x + extents.x, level.GetLevelBounds().right - 0.5f);
-		float lowerY = std::max(center.y - extents.y, level.GetLevelBounds().bottom + 0.5f);
-		float upperY = std::min(center.y + extents.y, level.GetLevelBounds().top - 0.5f);
+		// TODO: Random position is limited by camera bounds
+		float lowerX = std::max(center.x - extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Left + 0.5f);
+		float upperX = std::min(center.x + extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Right - 0.5f);
+		float lowerY = std::max(center.y - extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom + 0.5f);
+		float upperY = std::min(center.y + extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Top - 0.5f);
 		float randomX = RandomEngine::RandFloatInRange(lowerX, upperX);
 		float randomY = RandomEngine::RandFloatInRange(lowerY, upperY);
 		return { randomX, randomY };

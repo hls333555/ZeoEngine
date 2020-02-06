@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		case ShaderDataType::Bool:
 			return 1;
 		default:
-			ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
+			ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
 			return 0;
 		}
 	}
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 			case ShaderDataType::Bool:
 				return 1;
 			default:
-				ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
+				ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
 				return 0;
 			}
 		}
@@ -100,8 +100,8 @@ namespace ZeoEngine {
 			CalculateOffsetAndStride();
 		}
 
-		inline const std::vector<BufferElement>& GetElements() const { return m_Elements; }
-		inline uint32_t GetStride() const { return m_Stride; }
+		const std::vector<BufferElement>& GetElements() const { return m_Elements; }
+		uint32_t GetStride() const { return m_Stride; }
 
 	private:
 		void CalculateOffsetAndStride()

@@ -3,6 +3,14 @@
 #include "GameLevel.h"
 #include "Player.h"
 
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+	registration::class_<Enemy>("Enemy")
+		.constructor(&Enemy::SpawnGameObject, policy::ctor::as_raw_ptr);
+}
+
 Enemy::Enemy()
 	: m_MaxHealth(ZeoEngine::RandomEngine::RandFloatInRange(30.0f, 80.0f))
 	, m_CurrentHealth(m_MaxHealth)
@@ -18,8 +26,6 @@ Enemy::Enemy()
 void Enemy::Init()
 {
 	Super::Init();
-
-	SetName("EnemyShip");
 
 	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 	SetTranslucent(m_EnemyTexture->HasAlpha());

@@ -14,6 +14,8 @@ protected:
 
 	float m_Damage = 0.0f;
 	bool m_bCanPenetrate;
+
+	RTTR_REGISTER(Bullet, GameObject)
 };
 
 class PlayerBullet : public Bullet
@@ -25,6 +27,8 @@ public:
 	virtual void OnRender() override;
 
 	virtual void OnOverlap(GameObject* other) override;
+
+	RTTR_REGISTER(PlayerBullet, Bullet)
 };
 
 class EnemyBullet : public Bullet
@@ -36,4 +40,6 @@ public:
 	virtual void OnRender() override;
 
 	virtual void OnOverlap(GameObject* other) override;
+
+	RTTR_REGISTER(EnemyBullet, Bullet)
 };

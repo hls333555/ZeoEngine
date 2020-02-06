@@ -99,6 +99,9 @@ namespace ZeoEngine {
 
 	void Level::DestroyGameObject(GameObject* object)
 	{
+		if (!object)
+			return;
+
 		auto it = std::find(m_GameObjects.begin(), m_GameObjects.end(), object);
 		if (it != m_GameObjects.end())
 		{

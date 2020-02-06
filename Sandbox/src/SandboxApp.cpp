@@ -1,6 +1,6 @@
 #include "ZeoEngine.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -224,7 +224,9 @@ public:
 	SandBox()
 	{
 		//PushLayer(new ExampleLayer());
+#if WITH_EDITOR
 		PushLayer(new ZeoEngine::EditorLayer());
+#endif
 		PushLayer(new ZeoEngine::GameLayer());
 	}
 

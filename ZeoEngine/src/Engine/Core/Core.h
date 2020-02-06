@@ -22,16 +22,22 @@
 #endif // ZE_DEBUG
 
 #ifdef ZE_ENABLE_ASSERTS
-	#define ZE_ASSERT(x, ...) { if(!(x)) { ZE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define ZE_CORE_ASSERT(x, ...) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define ZE_ASSERT(x) { if(!(x)) { ZE_ERROR("Assertion Failed!"); __debugbreak(); } }
+	#define ZE_ASSERT_INFO(x, ...) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed:"); ZE_ERROR(__VA_ARGS__); __debugbreak(); } }
+	#define ZE_CORE_ASSERT(x) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed!"); __debugbreak(); } }
+	#define ZE_CORE_ASSERT_INFO(x, ...) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed:"); ZE_CORE_ERROR(__VA_ARGS__); __debugbreak(); } }
 #else
 	#define ZE_ASSERT(x, ...)
-	#define ZE_CORE_ASSERT(x, ...)
+	#define ZE_CORE_ASSERT_INFO(x, ...)
 #endif // ZE_ENABLE_ASSERTS
 
 #define BIT(x) (1 << x)
 
 #define ZE_BIND_EVENT_FUNC(func) std::bind(&func, this, std::placeholders::_1)
+
+#ifndef WITH_EDITOR
+	#define WITH_EDITOR	1
+#endif
 
 namespace ZeoEngine {
 

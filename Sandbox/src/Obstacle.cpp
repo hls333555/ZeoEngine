@@ -2,6 +2,14 @@
 
 #include "Player.h"
 
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+	registration::class_<Obstacle>("Obstacle")
+		.constructor(&Obstacle::SpawnGameObject, policy::ctor::as_raw_ptr);
+}
+
 Obstacle::Obstacle()
 	: m_ScoreAmount(1)
 {
@@ -27,7 +35,7 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 	SetRotation(GetRotation(false) + m_RotationSpeed * dt);
 
 	SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
-	if (GetPosition().y < ZeoEngine::Level::Get().GetLevelBounds().bottom - 0.5f)
+	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom - 0.5f)
 	{
 		SetActive(false);
 	}
@@ -48,8 +56,8 @@ void Obstacle::Reset()
 	m_CurrentHealth = m_MaxHealth;
 	m_ExplosionDamage = ZeoEngine::RandomEngine::RandFloatInRange(5.0f, 20.0f);
 	m_RotationSpeed = ZeoEngine::RandomEngine::RandFloatInRange(-10.0f, 10.0f);
-	auto& level = ZeoEngine::Level::Get();
-	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(level.GetLevelBounds().right - 0.5f, level.GetLevelBounds().left + 0.5f), level.GetLevelBounds().top });
+	const auto& cameraBounds = ZeoEngine::GetActiveGameCamera()->GetCameraBounds();
+	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(cameraBounds.Right - 0.5f, cameraBounds.Left + 0.5f), cameraBounds.Top });
 	SetRotation(ZeoEngine::RandomEngine::RandFloatInRange(0.0f, 180.0f));
 	SetScale(ZeoEngine::RandomEngine::RandFloatInRange(0.75f, 1.8f));
 	SetSpeed(ZeoEngine::RandomEngine::RandFloatInRange(0.5f, 1.5f));

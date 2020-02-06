@@ -1,8 +1,16 @@
 #include "Player.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "GameLevel.h"
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+	registration::class_<Player>("Player")
+		.constructor(&Player::SpawnGameObject, policy::ctor::as_raw_ptr);
+}
 
 Player::Player()
 	: m_ShootRate(0.25f)
@@ -18,8 +26,6 @@ Player::Player()
 void Player::Init()
 {
 	Super::Init();
-
-	SetName("PlayerShip");
 
 	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 	SetTranslucent(m_PlayerTexture->HasAlpha());
@@ -48,39 +54,38 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	auto& level = ZeoEngine::Level::Get();
-
+	const auto& cameraBounds = ZeoEngine::GetActiveGameCamera()->GetCameraBounds();
 	// Movement control
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
 	{
 		SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
-		if (GetPosition().y > level.GetLevelBounds().top - 0.5f)
+		if (GetPosition().y > cameraBounds.Top - 0.5f)
 		{
-			SetPosition2D({ GetPosition().x, level.GetLevelBounds().top - 0.5f });
+			SetPosition2D({ GetPosition().x, cameraBounds.Top - 0.5f });
 		}
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
 	{
 		SetPosition2D(GetPosition2D() - GetRightVector() * GetSpeed() * (float)dt);
-		if (GetPosition().x < level.GetLevelBounds().left + 0.5f)
+		if (GetPosition().x < cameraBounds.Left + 0.5f)
 		{
-			SetPosition2D({ level.GetLevelBounds().left + 0.5f, GetPosition().y });
+			SetPosition2D({ cameraBounds.Left + 0.5f, GetPosition().y });
 		}
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
 	{
 		SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
-		if (GetPosition().y < level.GetLevelBounds().bottom + 0.5f)
+		if (GetPosition().y < cameraBounds.Bottom + 0.5f)
 		{
-			SetPosition2D({ GetPosition().x, level.GetLevelBounds().bottom + 0.5f });
+			SetPosition2D({ GetPosition().x, cameraBounds.Bottom + 0.5f });
 		}
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
 	{
 		SetPosition2D(GetPosition2D() + GetRightVector() * GetSpeed() * (float)dt);
-		if (GetPosition().x > level.GetLevelBounds().right - 0.5f)
+		if (GetPosition().x > cameraBounds.Right - 0.5f)
 		{
-			SetPosition2D({ level.GetLevelBounds().right - 0.5f, GetPosition().y });
+			SetPosition2D({ cameraBounds.Right - 0.5f, GetPosition().y });
 		}
 	}
 
@@ -105,7 +110,7 @@ void Player::OnRender()
 {
 	Super::OnRender();
 
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), m_PlayerTexture);
+	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_PlayerTexture);
 }
 
 void Player::OnImGuiRender()

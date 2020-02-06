@@ -5,6 +5,23 @@
 #include "Player.h"
 #include "Obstacle.h"
 
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+	registration::class_<Bullet>("Bullet")
+		(
+			metadata(ClassMeta::Abstract, true)
+		)
+		.constructor(&Bullet::SpawnGameObject, policy::ctor::as_raw_ptr);
+
+	registration::class_<PlayerBullet>("PlayerBullet")
+		.constructor(&PlayerBullet::SpawnGameObject, policy::ctor::as_raw_ptr);
+
+	registration::class_<EnemyBullet>("EnemyBullet")
+		.constructor(&EnemyBullet::SpawnGameObject, policy::ctor::as_raw_ptr);
+}
+
 Bullet::Bullet()
 	: m_bCanPenetrate(false)
 {
@@ -24,7 +41,7 @@ void PlayerBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 	Super::OnUpdate(dt);
 
 	SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
-	if (GetPosition().y > ZeoEngine::Level::Get().GetLevelBounds().top)
+	if (GetPosition().y > ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Top)
 	{
 		SetActive(false);
 	}
@@ -61,7 +78,7 @@ void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 	Super::OnUpdate(dt);
 
 	SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
-	if (GetPosition().y < ZeoEngine::Level::Get().GetLevelBounds().bottom)
+	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom)
 	{
 		SetActive(false);
 	}

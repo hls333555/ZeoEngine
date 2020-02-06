@@ -16,9 +16,12 @@ namespace ZeoEngine {
 		RandomEngine::Init();
 
 		const auto& window = Application::Get().GetWindow();
-		CreateCamera(window.GetWidth(), window.GetHeight());
+		// TODO: Add an interface for user to create custom game camera
+		m_GameCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+		m_GameCameraController->SetZoomLevel(3.0f);
 
-		editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
+		m_EditorLayer = Application::Get().FindLayerByName<EditorLayer>("Editor");
+		ZE_CORE_ASSERT_INFO(m_EditorLayer, "GameLayer: m_EditorLayer is null!");
 	}
 
 	void GameLayer::OnAttach()
@@ -35,13 +38,22 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (editor->GetPIEState() == PIEState::Running)
+		if (m_EditorLayer->m_PIEState == PIEState::None)
 		{
-			Level::Get().OnUpdate(dt);
+			// Setting editor camera
+			m_ActiveCamera = &m_EditorLayer->m_EditorCameraController->GetCamera();
+		}
+		else
+		{
+			// Setting game camera
+			m_ActiveCamera = &m_GameCameraController->GetCamera();
+			if (m_EditorLayer->m_PIEState == PIEState::Running)
+			{
+				Level::Get().OnUpdate(dt);
+			}
 		}
 
 		Renderer2D::BeginRenderingToTexture();
-		// Render
 		{
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
@@ -52,7 +64,7 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
-				Renderer2D::BeginScene(*m_Camera);
+				Renderer2D::BeginScene(*m_ActiveCamera);
 				Level::Get().OnRender();
 				Renderer2D::EndScene();
 			}
@@ -65,18 +77,6 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		Level::Get().OnImGuiRender();
-	}
-
-	void GameLayer::CreateCamera(uint32_t width, uint32_t height)
-	{
-		float aspectRatio = (float)width / (float)height;
-		float zoomLevel = 4.0f;
-		float left = -zoomLevel * aspectRatio;
-		float right = zoomLevel * aspectRatio;
-		float bottom = -zoomLevel;
-		float top = zoomLevel;
-		m_Camera = CreateScope<OrthographicCamera>(left, right, bottom, top);
-		Level::Get().SetLevelBounds({ left, right, bottom, top });
 	}
 
 	void GameLayer::LoadSharedTextures()

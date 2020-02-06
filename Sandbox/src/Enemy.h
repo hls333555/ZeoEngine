@@ -48,4 +48,5 @@ private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
+	RTTR_REGISTER(Enemy, GameObject)
 };

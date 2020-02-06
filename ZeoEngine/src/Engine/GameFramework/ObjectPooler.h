@@ -24,7 +24,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		inline const std::vector<T*>& GetPooledObjects() const { return m_Objects; }
+		const std::vector<T*>& GetPooledObjects() const { return m_Objects; }
 
 		T* GetNextPooledObject() const
 		{

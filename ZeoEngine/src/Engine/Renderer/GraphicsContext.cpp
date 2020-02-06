@@ -11,12 +11,12 @@ namespace ZeoEngine {
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
 		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}

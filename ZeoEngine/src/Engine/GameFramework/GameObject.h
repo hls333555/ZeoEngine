@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 
+#include <rttr/type>
+#include <rttr/registration>
+#include <rttr/registration_friend>
+
 #include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
@@ -11,9 +15,16 @@ namespace ZeoEngine {
 
 	struct Transform
 	{
+		Transform() = default;
+		Transform(const glm::vec3& _position)
+			: position(_position)
+		{}
+
 		glm::vec3 position = { 0.0f, 0.0f, 0.0f };
 		float rotation = 0.0f;
 		glm::vec2 scale = { 1.0f, 1.0f };
+
+		RTTR_ENABLE()
 	};
 
 	enum class ObjectCollisionType
@@ -72,9 +83,67 @@ namespace ZeoEngine {
 		float radiusMultiplier;
 	};
 
+#define RTTR_SPAWN(className) \
+public: static className* SpawnGameObject(const glm::vec3& position)\
+		{\
+			return ZeoEngine::Level::Get().SpawnGameObject<className>(position);\
+		}
+#define RTTR_REGISTER(className, ...) RTTR_ENABLE(__VA_ARGS__) RTTR_SPAWN(className)
+
+	enum class ClassMeta
+	{
+		/** This class is abstract and cannot be instanced to the level */
+		Abstract,
+		/** Pop up a tooltip text on mouse hovering this class */
+		Tooltip,
+	};
+
+	enum class PropertyMeta
+	{
+		/** This property will display under this category in the object property window */
+		Category,
+		/** Pop up a tooltip text on mouse hovering this property */
+		Tooltip,
+		/** Defines the min value of numerical property slider */
+		Min,
+		/** Defines the max value of numerical property slider */
+		Max,
+		/** This property is transient and will not get serialized */
+		Transient,
+		/**
+		 * Used to filter out GameObject instances not derived from this specified class, which will not appear in the dropdown list.
+		 * The value (class name) should be the form of const char* or std::string.
+		 * NOTE: We ONLY support register GameObject* pointer for now!
+		 * e.g.
+		 * GameObject* m_Player;
+		 *
+		 * RTTR_REGISTRATION
+		 * {
+		 *     rttr::registration::class_<my_struct>("my_struct")
+		 *         .property("Player", &TestObject::m_Player)
+		 *         (
+		 *             rttr::metadata(META_PROP_SUBCLASSOF, "Player")
+		 *         );
+		 * }
+		 */
+		SubclassOf,
+	};
+
 	// TODO: move some variables and functionalities to components
+	/**
+	 * Base class for spawnable objects.
+	 *
+	 * IMPORTANT NOTES:
+	 * You should always call ZeoEngine::Level::Get().SpawnGameObject<>(); to spawn one to the level.
+	 * You should add the macro RTTR_REGISTER() to the end of every class derived from GameObject class, which you want to instantiate.
+	 * You should add the macro RTTR_REGISTRATION_FRIEND to the end of the class derived from GameObject class, in which you want to register protected or private variables directly instead of getters and setters.
+	 * If you come across a compile error: fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj, add /bigobj to the CommandLine of project properties.
+	 */
 	class GameObject
 	{
+		friend class EditorLayer;
+		friend class Level;
+
 	public:
 		GameObject() = default;
 		GameObject(const Transform& transform);
@@ -82,17 +151,21 @@ namespace ZeoEngine {
 
 		virtual ~GameObject();
 
-		inline const std::string& GetName() const { return m_Name; }
-		inline void SetName(const std::string& name) { m_Name = name; }
-		inline GameObject* GetOwner() const { return m_Owner; }
-		inline void SetOwner(GameObject* owner) { m_Owner = owner; }
-		inline bool IsActive() const { return m_bIsActive; }
-		inline void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
-		inline const Transform& GetTransform() const { return m_Transform; }
-		inline void SetTransform(const Transform& transform) { m_Transform = transform; }
-		inline const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }
-		inline const glm::vec3& GetPosition() const { return  m_Transform.position; }
-		inline void SetPosition2D(const glm::vec2& position)
+		const std::string& GetUniqueName() const { return m_UniqueName; }
+		const std::string& GetName() const { return m_Name; }
+	private:
+		void SetUniqueName(const std::string& uniqueName) { m_UniqueName = uniqueName; }
+		void SetName(const std::string& name) { m_Name = name; }
+	public:
+		GameObject* GetOwner() const { return m_Owner; }
+		void SetOwner(GameObject* owner) { m_Owner = owner; }
+		bool IsActive() const { return m_bIsActive; }
+		void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
+		const Transform& GetTransform() const { return m_Transform; }
+		void SetTransform(const Transform& transform) { m_Transform = transform; }
+		const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }
+		const glm::vec3& GetPosition() const { return  m_Transform.position; }
+		void SetPosition2D(const glm::vec2& position)
 		{
 			m_Transform.position.x = position.x;
 			m_Transform.position.y = position.y;
@@ -101,8 +174,8 @@ namespace ZeoEngine {
 				m_CollisionData->UpdateData();
 			}
 		}
-		/** FOr most cases, you should use SetPosition2D() for 2D rendering instead. */
-		inline void SetPosition(const glm::vec3& position)
+		/** For most cases, you should use SetPosition2D() for 2D rendering instead. */
+		void SetPosition(const glm::vec3& position)
 		{
 			m_Transform.position = position;
 			if (m_CollisionData)
@@ -111,10 +184,10 @@ namespace ZeoEngine {
 			}
 		}
 		/** For draw command, you should use radians as rotation. */
-		inline const float GetRotation(bool bInRadians) const { return bInRadians ? glm::radians(m_Transform.rotation) : m_Transform.rotation; }
-		inline void SetRotation(float rotation) { m_Transform.rotation = rotation; }
-		inline const glm::vec2& GetScale() const { return m_Transform.scale; }
-		inline void SetScale(const glm::vec2& scale)
+		const float GetRotation(bool bInRadians) const { return bInRadians ? glm::radians(m_Transform.rotation) : m_Transform.rotation; }
+		void SetRotation(float rotation) { m_Transform.rotation = rotation; }
+		const glm::vec2& GetScale() const { return m_Transform.scale; }
+		void SetScale(const glm::vec2& scale)
 		{
 			m_Transform.scale = scale;
 			if (m_CollisionData)
@@ -122,15 +195,15 @@ namespace ZeoEngine {
 				m_CollisionData->UpdateData();
 			}
 		}
-		inline void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
-		inline float GetSpeed() const { return m_Speed; }
-		inline void SetSpeed(float speed) { m_Speed = speed; }
-		inline const glm::vec2& GetVelocity() const { return m_Velocity; }
-		inline ObjectCollisionType GetCollisionType() const { return m_CollisionData ? m_CollisionData->collisionType : ObjectCollisionType::None; }
-		inline bool ShouldGenerateOverlapEvent() const { return m_bGenerateOverlapEvent; }
-		inline void SetGenerateOverlapEvent(bool bGenerate) { m_bGenerateOverlapEvent = bGenerate; }
-		inline bool IsTranslucent() const { return m_bIsTranslucent; }
-		inline void SetTranslucent(bool bIsTranslucent) { m_bIsTranslucent = bIsTranslucent; }
+		void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
+		float GetSpeed() const { return m_Speed; }
+		void SetSpeed(float speed) { m_Speed = speed; }
+		const glm::vec2& GetVelocity() const { return m_Velocity; }
+		ObjectCollisionType GetCollisionType() const { return m_CollisionData ? m_CollisionData->collisionType : ObjectCollisionType::None; }
+		bool ShouldGenerateOverlapEvent() const { return m_bGenerateOverlapEvent; }
+		void SetGenerateOverlapEvent(bool bGenerate) { m_bGenerateOverlapEvent = bGenerate; }
+		bool IsTranslucent() const { return m_bIsTranslucent; }
+		void SetTranslucent(bool bIsTranslucent) { m_bIsTranslucent = bIsTranslucent; }
 
 		/**
 		 * You should do initialization stuff here including loading the texture and updating IsTranslucent variable.
@@ -183,7 +256,11 @@ namespace ZeoEngine {
 		bool CheckCollision_BS(GameObject* boxObject, GameObject* sphereObject);
 		bool CheckCollision_SS(GameObject* other);
 
+		// TODO: Component system
 	private:
+		/** The unique name with suffix index number, e.g. "Player_2" */
+		std::string m_UniqueName;
+		/** The name displayed in the level outline, which can be modified by the user. By default, this is the same as m_UniqueName */
 		std::string m_Name;
 		GameObject* m_Owner;
 		bool m_bIsActive = true;
@@ -205,6 +282,13 @@ namespace ZeoEngine {
 		glm::vec2 m_LastPosition{ 0.0f, 0.0f };
 
 		bool m_bIsTranslucent = false;
+
+#if WITH_EDITOR
+		bool m_bIsSelectedInEditor = false;
+#endif
+
+		RTTR_ENABLE()
+		RTTR_REGISTRATION_FRIEND
 	};
 
 }

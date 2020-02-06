@@ -14,17 +14,17 @@ namespace ZeoEngine {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		virtual inline unsigned int GetWidth() const override { return m_Data.Width; }
-		virtual inline unsigned int GetHeight() const override { return m_Data.Height; }
+		virtual unsigned int GetWidth() const override { return m_Data.Width; }
+		virtual unsigned int GetHeight() const override { return m_Data.Height; }
 
 		virtual void OnUpdate() override;
 
 		// Window attributes
-		virtual inline void SetEventCallback(const EventCallbackFunc& callback) override { m_Data.EventCallback = callback; }
+		virtual void SetEventCallback(const EventCallbackFunc& callback) override { m_Data.EventCallback = callback; }
 		virtual void SetVSync(bool bEnabled) override;
 		virtual bool IsVSync() const override;
 
-		virtual inline void* GetNativeWindow() const override { return m_Window; }
+		virtual void* GetNativeWindow() const override { return m_Window; }
 
 	private:
 		virtual void Init(const WindowProps& props);

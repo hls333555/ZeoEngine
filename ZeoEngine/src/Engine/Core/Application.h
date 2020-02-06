@@ -18,8 +18,8 @@ namespace ZeoEngine {
 		Application();
 		virtual ~Application();
 
-		inline static Application& Get() { return *s_Instance; }
-		inline Window& GetWindow() { return *m_Window; }
+		static Application& Get() { return *s_Instance; }
+		Window& GetWindow() { return *m_Window; }
 
 		void Run();
 
@@ -28,6 +28,7 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
+		/** For internal use only. */
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
 		{

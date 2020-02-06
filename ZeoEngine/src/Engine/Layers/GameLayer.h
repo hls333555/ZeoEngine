@@ -3,7 +3,7 @@
 #include "Engine/Core/Layer.h"
 
 #include "Engine/Events/ApplicationEvent.h"
-#include "Engine/Renderer/OrthographicCamera.h"
+#include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
@@ -12,6 +12,8 @@ namespace ZeoEngine {
 
 	class GameLayer : public Layer
 	{
+		friend class EditorLayer;
+
 	public:
 		GameLayer();
 
@@ -20,19 +22,18 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 
-		inline Texture2DLibrary* InternalGetTexture2DLibrary() { return &m_Texture2DLibrary; }
-
-		// TODO: CreateCamera() 
-		void CreateCamera(uint32_t width, uint32_t height);
+		OrthographicCamera* GetGameCamera() { return &m_GameCameraController->GetCamera(); }
+		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 
 		// TODO: LoadSharedTextures()
 		void LoadSharedTextures();
 
 	private:
-		Scope<OrthographicCamera> m_Camera;
+		Scope<OrthographicCameraController> m_GameCameraController;
+		OrthographicCamera* m_ActiveCamera;
 		Texture2DLibrary m_Texture2DLibrary;
 
-		EditorLayer* editor;
+		EditorLayer* m_EditorLayer;
 
 	};
 

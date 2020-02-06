@@ -11,12 +11,12 @@ namespace ZeoEngine {
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLShader>(filePath);
 		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
@@ -26,19 +26,19 @@ namespace ZeoEngine {
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
 
 	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
 	{
-		ZE_CORE_ASSERT(!Exists(name), "Trying to add the shader which already exists!");
+		ZE_CORE_ASSERT_INFO(!Exists(name), "Trying to add the shader which already exists!");
 		m_Shaders[name] = shader;
 	}
 
@@ -64,7 +64,7 @@ namespace ZeoEngine {
 
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		ZE_CORE_ASSERT(Exists(name), "Shader not found!");
+		ZE_CORE_ASSERT_INFO(Exists(name), "Shader not found!");
 		return m_Shaders[name];
 	}
 
