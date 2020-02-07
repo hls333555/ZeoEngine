@@ -30,10 +30,6 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnAttach()
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		// TODO: Many chinese characters cannot show
-		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-
 		ConstructClassInheritanceTree();
 		LoadTextures();
 	}

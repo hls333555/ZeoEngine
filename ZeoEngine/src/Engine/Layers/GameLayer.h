@@ -25,6 +25,9 @@ namespace ZeoEngine {
 		OrthographicCamera* GetGameCamera() { return &m_GameCameraController->GetCamera(); }
 		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 
+	private:
+		void LoadFont(const char* fontPath, const char* missingChars);
+
 		// TODO: LoadSharedTextures()
 		void LoadSharedTextures();
 

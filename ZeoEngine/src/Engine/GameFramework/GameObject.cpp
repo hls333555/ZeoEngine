@@ -42,7 +42,7 @@ RTTR_REGISTRATION
 		.property("Name", &GameObject::m_Name)
 		(
 			policy::prop::bind_as_ptr,
-			metadata(PropertyMeta::Tooltip, u8"用于在editor里显示的名称。设为独一无二的最佳。")
+			metadata(PropertyMeta::Tooltip, u8"用于在编辑器里显示的名称。设为独一无二的最佳。")
 		)
 		.property("IsActive", &GameObject::m_bIsActive)
 		.property("Transform", &GameObject::m_Transform)

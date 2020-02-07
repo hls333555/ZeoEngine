@@ -1,6 +1,8 @@
 #include "ZEpch.h"
 #include "Engine/Layers/GameLayer.h"
 
+#include <imgui.h>
+
 #include "Engine/Core/Application.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/Level.h"
@@ -27,6 +29,10 @@ namespace ZeoEngine {
 	void GameLayer::OnAttach()
 	{
 		ZE_PROFILE_FUNCTION();
+
+		// NOTE: Add missing Chinese characters here!
+		static const char* missingChars = u8"¼­äÖ";
+		LoadFont("assets/fonts/wqy-microhei.ttc", missingChars);
 
 		LoadSharedTextures();
 
@@ -77,6 +83,22 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		Level::Get().OnImGuiRender();
+	}
+
+	void GameLayer::LoadFont(const char* fontPath, const char* missingChars)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImFontGlyphRangesBuilder builder;
+		// Load 2500 common Chinese characters
+		builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+		// Add needed missing Chinese characters
+		builder.AddText(missingChars);
+		ImVector<ImWchar> OutRanges;
+		builder.BuildRanges(&OutRanges);
+		io.Fonts->AddFontFromFileTTF(fontPath, 16.0f, NULL, &OutRanges[0]);
+		unsigned char* outPixels = nullptr;
+		int outWidth, outHeight, outBytesPerPixel;
+		io.Fonts->GetTexDataAsAlpha8(&outPixels, &outWidth, &outHeight, &outBytesPerPixel);
 	}
 
 	void GameLayer::LoadSharedTextures()
