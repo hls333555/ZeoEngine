@@ -3,6 +3,9 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
+#include <ImGuizmo.h>
 
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
@@ -17,18 +20,22 @@ RTTR_REGISTRATION
 		.property("Position", &Transform::position)
 		(
 			policy::prop::bind_as_ptr,
-			metadata(PropertyMeta::Tooltip, u8"控制物体的移动。")
+			metadata(PropertyMeta::Tooltip, u8"控制物体的移动，可渲染的Z坐标范围(-0.99, 0.99]"),
+			metadata(PropertyMeta::DragSensitivity, 0.1f)
 		)
 		.property("Rotation", &Transform::rotation)
 		(
 			metadata(PropertyMeta::Tooltip, u8"控制物体的旋转。"),
-			metadata(PropertyMeta::Min, 0.0f),
-			metadata(PropertyMeta::Max, 360.0f)
+			metadata(PropertyMeta::Min, -180.0f),
+			metadata(PropertyMeta::Max, 180.0f)
 		)
 		.property("Scale", &Transform::scale)
 		(
 			policy::prop::bind_as_ptr,
-			metadata(PropertyMeta::Tooltip, u8"控制物体的缩放。")
+			metadata(PropertyMeta::Tooltip, u8"控制物体的缩放。"),
+			// TODO: Currently negative scale values are not supported as ImGuizmo clamps that to 0.01
+			metadata(PropertyMeta::Min, 0.01f),
+			metadata(PropertyMeta::DragSensitivity, 0.1f)
 		);
 
 	registration::class_<GameObject>("GameObject")
@@ -46,7 +53,8 @@ RTTR_REGISTRATION
 		.property("Speed", &GameObject::m_Speed)
 		(
 			metadata(PropertyMeta::Min, 0.0f),
-			metadata(PropertyMeta::Max, 20.0f)
+			metadata(PropertyMeta::Max, 20.0f),
+			metadata(PropertyMeta::DragSensitivity, 0.5f)
 		);
 }
 
@@ -98,6 +106,11 @@ namespace ZeoEngine {
 			Level::Get().DestroyGameObject(this);
 		}
 
+	}
+
+	void GameObject::Init()
+	{
+		ReComposeTransformMatrix();
 	}
 
 	void GameObject::OnUpdate(DeltaTime dt)
@@ -286,6 +299,23 @@ namespace ZeoEngine {
 		float deltaX = center.x - otherCenter.x;
 		float deltaY = center.y - otherCenter.y;
 		return deltaX * deltaX + deltaY * deltaY <= (radius + otherRadius) * (radius + otherRadius);
+	}
+
+	void GameObject::DecomposeTransformMatrix()
+	{
+		float translation[3], rotation[3], scale[3];
+		ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(m_TransformMatrix), translation, rotation, scale);
+		// For 2D rendering, we do not want ZPos to be modified via gizmo editing
+		m_Transform.position = glm::vec3(translation[0], translation[1], m_Transform.position.z);
+		m_Transform.rotation = rotation[2];
+		m_Transform.scale = glm::vec2(scale[0], scale[1]);
+	}
+
+	void GameObject::ReComposeTransformMatrix()
+	{
+		glm::vec3 rotation = glm::vec3(0.0f, 0.0f, m_Transform.rotation);
+		glm::vec3 scale = glm::vec3(m_Transform.scale.x, m_Transform.scale.y, 0.0f);
+		ImGuizmo::RecomposeMatrixFromComponents(glm::value_ptr(m_Transform.position), glm::value_ptr(rotation), glm::value_ptr(scale), glm::value_ptr(m_TransformMatrix));
 	}
 
 	void GameObject::ApplyDamage(float damage, GameObject* target, GameObject* causer, GameObject* instigator)

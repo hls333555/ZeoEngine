@@ -56,7 +56,9 @@ namespace ZeoEngine {
 
 	void Level::OnRender()
 	{
-		Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 100.0f, 100.0f }, m_backgroundTexture, { 50.0f, 50.0f });
+		// We assume zFar of orthographic projection is always -1, so we draw background texture as far as we can
+		// TODO: Not applied to 3D rendering
+		Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.99f }, { 100.0f, 100.0f }, m_backgroundTexture, { 50.0f, 50.0f });
 
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
@@ -72,8 +74,6 @@ namespace ZeoEngine {
 
 		RenderCommand::EnableDepthWriting(false);
 		// Then render translucent objects
-		// NOTE: m_TranslucentObjects is not updated every frame
-		// so you must make sure all translucent object's zPositions will never change at runtime!
 		for (const auto& objectPair : m_TranslucentObjects)
 		{
 			if (!objectPair.second->IsActive())
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 
 		auto it2 = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
 			return objectPair.second == object;
-			});
+		});
 		if (it2 != m_TranslucentObjects.end())
 		{
 			m_TranslucentObjects.erase(it2);
@@ -124,6 +124,24 @@ namespace ZeoEngine {
 		ParticleSystem* ps = new ParticleSystem(particleTemplate, attachToParent, bAutoDestroy);
 		m_ParticleManager.AddParticleSystem(ps);
 		return ps;
+	}
+
+	void Level::OnTranslucentObjectsDirty(GameObject* dirtyGameObject)
+	{
+		auto it = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&dirtyGameObject](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
+			return objectPair.second == dirtyGameObject;
+		});
+		if (it != m_TranslucentObjects.end())
+		{
+			uint32_t index = it->first.index;
+			float zPos = dirtyGameObject->GetPosition().z;
+			// Only process re-sorting if Z position is changed
+			if (abs(it->first.zPosition - zPos) >= 1e-8)
+			{
+				m_TranslucentObjects.erase(it);
+				m_TranslucentObjects[{ zPos, index }] = dirtyGameObject;
+			}
+		}
 	}
 
 }

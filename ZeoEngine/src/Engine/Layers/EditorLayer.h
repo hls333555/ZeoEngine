@@ -50,14 +50,17 @@ namespace ZeoEngine {
 
 		void SetNextWindowDefaultPosition();
 
-		void OnGameViewWindowResized(float newSizeX, float newSizeY);
 		bool OnKeyPressed(KeyPressedEvent& e);
+		void OnGameViewWindowResized(float newSizeX, float newSizeY);
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
 
 		void StartPIE();
 		void StopPIE();
 		void PausePIE();
 		void ResumePIE();
+
+		/** Show transform options and draw transform gizmo. */
+		void EditTransform();
 
 		void ConstructClassInheritanceTree();
 		void ConstructClassInheritanceTreeRecursively(const rttr::type& baseType, const rttr::array_range<rttr::type>& derivedTypes);
@@ -70,7 +73,7 @@ namespace ZeoEngine {
 		ImGui::TreeNodeEx(prop.get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);\
 		ShowPropertyTooltip(prop);\
 		ImGui::NextColumn(); /*Switch to the right column*/\
-		ImGui::SetNextItemWidth(-1); /*Align width to the right side*/\
+		ImGui::SetNextItemWidth(-1.0f); /*Align width to the right side*/\
 		ss << "##" << prop.get_name().data(); /*We use property name as id here because rttr guarantees that only properties with different names can be registered*/
 #define END_PROP(prop) \
 		ShowPropertyTooltip(prop);\
@@ -169,9 +172,12 @@ namespace ZeoEngine {
 		/** Map from property category name to properties of that category, if category name is not specified, name "default" will be used */
 		std::map<std::string, std::vector<rttr::property>> m_SortedProperties;
 		/** Flag used to prevent sorting properties every frame, it will only sort them when selected GameObject is changed */
-		bool m_bSortedPropertiesDirty = true;
+		bool m_bIsSortedPropertiesDirty = true;
 		/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
 		bool m_bPropertyRecursed = false;
+
+		/** Flag used to prevent calling ReComposeTransformMatrix() every frame */
+		bool m_bIsTransformDirty = false;
 
 	};
 

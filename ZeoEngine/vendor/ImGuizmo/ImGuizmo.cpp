@@ -1304,7 +1304,7 @@ namespace ImGuizmo
                    bestAxisWorldDirection = dirPlaneNormalWorld;
                }
 
-               if( dt >= 0.1f )
+               if( gContext.mIsOrthographic || dt >= 0.1f )
                {
                    axes[numAxes] = i;
                    axesWorldDirections[numAxes] = dirPlaneNormalWorld;
@@ -1364,7 +1364,7 @@ namespace ImGuizmo
            {
                ImVec2 worldBound1 = worldToPos(aabb[i], boundsMVP);
                ImVec2 worldBound2 = worldToPos(aabb[(i+1)%4], boundsMVP);
-               if( !IsInContextRect( worldBound1 ) || !IsInContextRect( worldBound2 ) )
+               if( !IsInContextRect( worldBound1 ) && !IsInContextRect( worldBound2 ) )
                {
                    continue;
                }
@@ -1782,12 +1782,12 @@ namespace ImGuizmo
             vec_t baseVector = gContext.mTranslationPlanOrigin - gContext.mModel.v.position;
             float ratio = Dot(axisValue, baseVector + delta) / Dot(axisValue, baseVector);
 
-            gContext.mScale[axisIndex] = max(ratio, 0.001f);
+            gContext.mScale[axisIndex] = max(ratio, 0.01f);
          }
          else
          {
             float scaleDelta = (io.MousePos.x - gContext.mSaveMousePosx)  * 0.01f;
-            gContext.mScale.Set(max(1.f + scaleDelta, 0.001f));
+            gContext.mScale.Set(max(1.f + scaleDelta, 0.01f));
          }
 
          // snap
@@ -1799,7 +1799,7 @@ namespace ImGuizmo
 
          // no 0 allowed
          for (int i = 0; i < 3;i++)
-            gContext.mScale[i] = max(gContext.mScale[i], 0.001f);
+            gContext.mScale[i] = max(gContext.mScale[i], 0.01f);
 
          // compute matrix & delta
          matrix_t deltaMatrixScale;

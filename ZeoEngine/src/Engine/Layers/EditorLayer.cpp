@@ -5,6 +5,7 @@
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <ImGuizmo.h>
 #include "Engine/ImGui/MyImGui.h"
 
 #include "Engine/Renderer/Renderer2D.h"
@@ -30,6 +31,7 @@ namespace ZeoEngine {
 	void EditorLayer::OnAttach()
 	{
 		ImGuiIO& io = ImGui::GetIO();
+		// TODO: Many chinese characters cannot show
 		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
 		ConstructClassInheritanceTree();
@@ -43,6 +45,7 @@ namespace ZeoEngine {
 			// Thses camera controls are only applied to Game View window
 			m_EditorCameraController->OnUpdate(dt);
 		}
+
 		Level::Get().OnEditorUpdate(dt);
 	}
 
@@ -203,6 +206,7 @@ namespace ZeoEngine {
 		m_ToolBarTextures[0] = m_PlayTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Play.png");
 		m_ToolBarTextures[1] = m_PauseTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Pause.png");
 		m_StopTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Stop.png");
+
 	}
 
 	void EditorLayer::ShowEditorDockspace()
@@ -262,7 +266,7 @@ namespace ZeoEngine {
 	{
 		if (ImGui::Begin("Game View", bShow))
 		{
-			auto window = ImGui::GetCurrentWindow();
+			auto* window = ImGui::GetCurrentWindow();
 			// TODO: Add conversion from ImVec2 to glm::vec2 inside imconfig.h
 			glm::vec2 max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 			glm::vec2 min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
@@ -314,10 +318,19 @@ namespace ZeoEngine {
 
 						// Spawn dragged Game Object to the level at mouse position
 						// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
-						(*(rttr::type*)payload->Data).create({ glm::vec3{ levelX, levelY, 0.0f } });
+						rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ levelX, levelY, 0.1f } });
+						// Set it selected
+						m_SelectedGameObject = createdVar.get_value<GameObject*>();
+						m_SelectedGameObject->m_bIsSelectedInEditor = true;
 					}
 				}
 				ImGui::EndDragDropTarget();
+			}
+
+			// Transform options window
+			if (m_PIEState == PIEState::None)
+			{
+				EditTransform();
 			}
 
 			//////////////////////////////////////////////////////////////////////////
@@ -327,7 +340,7 @@ namespace ZeoEngine {
 			// Place buttons at window center
 			ImGui::Indent(ImGui::GetWindowSize().x / 2 - 40.0f);
 			// Toggle play / stop
-			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f)))
+			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0, 1), ImVec2(1, 0)))
 			{
 				if (m_PIEState == PIEState::None)
 				{
@@ -340,7 +353,7 @@ namespace ZeoEngine {
 			}
 			ImGui::SameLine();
 			// Toggle pause / resume
-			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f)))
+			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0, 1), ImVec2(1, 0)))
 			{
 				if (m_PIEState == PIEState::Running)
 				{
@@ -351,6 +364,7 @@ namespace ZeoEngine {
 					ResumePIE();
 				}
 			}
+			
 			m_bIsHoveringGameView = ImGui::IsWindowHovered();
 		}
 		ImGui::End();
@@ -436,7 +450,7 @@ namespace ZeoEngine {
 		{
 			if (m_SelectedGameObject)
 			{
-				if (m_bSortedPropertiesDirty)
+				if (m_bIsSortedPropertiesDirty)
 				{
 					PreProcessProperties();
 				}
@@ -467,7 +481,7 @@ namespace ZeoEngine {
 				m_SortedProperties["Default"].push_back(prop);
 			}
 		}
-		m_bSortedPropertiesDirty = false;
+		m_bIsSortedPropertiesDirty = false;
 	}
 
 	void EditorLayer::ProcessPropertiesRecursively(const rttr::instance& objectInstance)
@@ -578,6 +592,13 @@ namespace ZeoEngine {
 				{
 					m_bPropertyRecursed = true;
 					ProcessPropertiesRecursively(var);
+					// For transform specific type, we want to re-calculate transform matrix on value changes
+					// TODO: This may need refactoring if Transform struct is replaced with component
+					if (m_bIsTransformDirty && wrappedType.get_raw_type() == rttr::type::get<Transform>())
+					{
+						m_SelectedGameObject->ReComposeTransformMatrix();
+						m_bIsTransformDirty = false;
+					}
 					ImGui::TreePop();
 				}
 			}
@@ -937,19 +958,6 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 100, viewport->Pos.y + 100), ImGuiCond_FirstUseEver);
 	}
 
-	void EditorLayer::OnGameViewWindowResized(float newSizeX, float newSizeY)
-	{
-		// Update editor's camera
-		m_EditorCameraController->UpdateProjection(newSizeX / newSizeY);
-
-		GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
-		if (gl)
-		{
-			// Update game's camera
-			gl->m_GameCameraController->UpdateProjection(newSizeX / newSizeY);
-		}
-	}
-
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
 		// Start PIE by pressing Alt+P
@@ -971,9 +979,22 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	void EditorLayer::OnGameViewWindowResized(float newSizeX, float newSizeY)
+	{
+		// Update editor's camera
+		m_EditorCameraController->UpdateProjection(newSizeX / newSizeY);
+
+		GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
+		if (gl)
+		{
+			// Update game's camera
+			gl->m_GameCameraController->UpdateProjection(newSizeX / newSizeY);
+		}
+	}
+
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
-		m_bSortedPropertiesDirty = true;
+		m_bIsSortedPropertiesDirty = true;
 	}
 
 	// TODO: cache current game object's states
@@ -1007,6 +1028,111 @@ namespace ZeoEngine {
 		ZE_CORE_TRACE("PIE resumed.");
 		m_ToolBarTextures[1] = m_PauseTexture;
 		m_PIEState = PIEState::Running;
+	}
+
+	void EditorLayer::EditTransform()
+	{
+		static ImGuizmo::OPERATION currentGizmoOperation(ImGuizmo::TRANSLATE);
+		static ImGuizmo::MODE currentGizmoMode(ImGuizmo::LOCAL);
+		static bool bUseSnap = false;
+		// We have to share snap values as Manipulate() only accepts one parameter for snapping
+		static float snap[] = { 1.0f, 1.0f, 1.0f };
+		static float localBounds[] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
+		static bool bUseBoundSizing = false;
+		static bool bUseBoundSizingSnap = false;
+		static float boundSizingSnap[] = { 0.1f, 0.1f, 0.1f };
+
+		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_W))
+		{
+			currentGizmoOperation = ImGuizmo::TRANSLATE;
+		}
+		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_E))
+		{
+			currentGizmoOperation = ImGuizmo::ROTATE;
+		}
+		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_R))
+		{
+			currentGizmoOperation = ImGuizmo::SCALE;
+		}
+		ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
+		if (ImGui::Begin("Transform Options", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			if (ImGui::RadioButton("Translate (W)", currentGizmoOperation == ImGuizmo::TRANSLATE))
+			{
+				currentGizmoOperation = ImGuizmo::TRANSLATE;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Rotate (E)", currentGizmoOperation == ImGuizmo::ROTATE))
+			{
+				currentGizmoOperation = ImGuizmo::ROTATE;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Scale (R)", currentGizmoOperation == ImGuizmo::SCALE))
+			{
+				currentGizmoOperation = ImGuizmo::SCALE;
+			}
+			if (currentGizmoOperation != ImGuizmo::SCALE)
+			{
+				if (ImGui::RadioButton("Local", currentGizmoMode == ImGuizmo::LOCAL))
+				{
+					currentGizmoMode = ImGuizmo::LOCAL;
+				}
+				ImGui::SameLine();
+				if (ImGui::RadioButton("World", currentGizmoMode == ImGuizmo::WORLD))
+				{
+					currentGizmoMode = ImGuizmo::WORLD;
+				}
+			}
+
+			// Note: ImGui::IsKeyPressed() will only fire once every frame if key is clicked
+			// while Input::IsKeyPressed() will keep firing until key is released which is not good for toggle behaviors
+			if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_S))
+			{
+				bUseSnap = !bUseSnap;
+			}
+			ImGui::Checkbox("##UseSnap", &bUseSnap);
+			ImGui::SameLine();
+			switch (currentGizmoOperation)
+			{
+			case ImGuizmo::TRANSLATE:
+				ImGui::DragFloat3("Snap (S)", snap, 1.0f, 0.0f, 100.0f);
+				break;
+			case ImGuizmo::ROTATE:
+				ImGui::DragFloat("Angle Snap (S)", snap, 1.0f, 0.0f, 120.0f);
+				break;
+			case ImGuizmo::SCALE:
+				ImGui::DragFloat("Scale Snap (S)", snap, 1.0f, 0.0f, 10.0f);
+				break;
+			}
+			ImGui::Checkbox("Bound Sizing", &bUseBoundSizing);
+			if (bUseBoundSizing)
+			{
+				ImGui::Checkbox("##UseBoundSizingSnap", &bUseBoundSizingSnap);
+				ImGui::SameLine();
+				ImGui::InputFloat3("Bound Sizing Snap", boundSizingSnap);
+			}
+		}
+		ImGui::End();
+
+		// Draw transform gizmo on the selected GameObject when not in PIE
+		// as editor camera, which gizmo needs, will get deactivated in PIE
+		if (m_SelectedGameObject)
+		{
+			ImGuizmo::SetDrawlist();
+			// TODO: Not applied to 3D rendering
+			ImGuizmo::SetOrthographic(true);
+
+			auto* window = ImGui::GetCurrentWindow();
+			ImGuizmo::SetRect(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
+
+			ImGuizmo::Manipulate(glm::value_ptr(m_EditorCameraController->GetCamera().GetViewMatrix()), glm::value_ptr(m_EditorCameraController->GetCamera().GetProjectionMatrix()),
+				currentGizmoOperation, currentGizmoMode,
+				glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
+				bUseSnap ? &snap[0] : nullptr,
+				bUseBoundSizing ? localBounds : nullptr,
+				bUseBoundSizingSnap ? boundSizingSnap : nullptr);
+			m_SelectedGameObject->DecomposeTransformMatrix();
+		}
 	}
 
 	void EditorLayer::ConstructClassInheritanceTree()
@@ -1179,9 +1305,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		int8_t min = minVar ? std::max(minVar.to_int8(), (int8_t)INT8_MIN) : 0;
-		int8_t max = maxVar ? std::min(maxVar.to_int8(), (int8_t)INT8_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		int8_t min = minVar ? std::max(minVar.to_int8(), (int8_t)INT8_MIN) : (int8_t)INT8_MIN;
+		int8_t max = maxVar ? std::min(maxVar.to_int8(), (int8_t)INT8_MAX) : (int8_t)INT8_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_8(ss.str().c_str(), &int8Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1206,9 +1333,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : 0;
-		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
+		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt(ss.str().c_str(), &int32Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1233,9 +1361,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		int64_t min = minVar ? std::max(minVar.to_int64(), INT64_MIN) : 0;
-		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		int64_t min = minVar ? std::max(minVar.to_int64(), INT64_MIN) : INT64_MIN;
+		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : INT64_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_64(ss.str().c_str(), &int64Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1260,9 +1389,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
 		uint8_t min = minVar ? std::max(minVar.to_uint8(), (uint8_t)0) : 0;
-		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), (uint8_t)UINT8_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), (uint8_t)UINT8_MAX) : (uint8_t)UINT8_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_8(ss.str().c_str(), &uint8Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1287,9 +1417,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
 		uint32_t min = minVar ? std::max(minVar.to_uint32(), (uint32_t)0) : 0;
-		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), (uint32_t)UINT32_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), (uint32_t)UINT32_MAX) : (uint32_t)UINT32_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_32(ss.str().c_str(), &uint32Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1314,9 +1445,10 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
 		uint64_t min = minVar ? std::max(minVar.to_uint64(), (uint64_t)0) : 0;
-		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), (uint64_t)UINT64_MAX) : 0;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), (uint64_t)UINT64_MAX) : (uint64_t)UINT64_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_64(ss.str().c_str(), &uint64Value, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1341,10 +1473,16 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		float min = minVar ? std::max(minVar.to_float(), FLT_MIN) : 0.0f;
-		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : 0.0f;
-		float speed = glm::clamp(minVar && maxVar ? (max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
-		ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.1f");
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		// Note: The min of float should be -FLT_MAX
+		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
+		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
+		// If transform's property value changes, mark it dirty
+		if (ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f") && prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+		{
+			m_bIsTransformDirty = true;
+		}
 		if (sequentialIndex == -1)
 		{
 			END_SETPROP(prop, objectInstance, floatValue)
@@ -1368,9 +1506,11 @@ namespace ZeoEngine {
 		}
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		double min = minVar ? std::max(minVar.to_double(), DBL_MIN) : 0.0;
-		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : 0.0;
-		float speed = glm::clamp(minVar && maxVar ? (float)(max - min) / ImGui::CalcItemWidth() : 1.0f, 0.0f, 1.0f);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		// Note: The min of double should be -DBL_MAX
+		double min = minVar ? std::max(minVar.to_double(), -DBL_MAX) : -DBL_MAX;
+		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragDouble(ss.str().c_str(), &doubleValue, speed, min, max);
 		if (sequentialIndex == -1)
 		{
@@ -1443,16 +1583,26 @@ namespace ZeoEngine {
 	void EditorLayer::ProcessVec2Type(glm::vec2* vec2PointerValue, const rttr::property& prop, glm::vec2& vec2Value, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
 	{
 		std::stringstream ss;
+		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
+		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		if (sequentialIndex == -1)
 		{
 			BEGIN_PROP(prop)
-			ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), 1.0f, 0.0f, 0.0f, "%.1f");
+			// If transform's property value changes, mark it dirty
+			if (ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f") && prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+			{
+				m_bIsTransformDirty = true;
+			}
 			END_PROP(prop)
 		}
 		else
 		{
 			BEGIN_SEQPROP(prop, sequentialIndex)
-			ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(vec2Value), 1.0f, 0.0f, 0.0f, "%.1f");
+			ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(vec2Value), speed, min, max, "%.2f");
 			END_SETSEQPROP(prop, sequentialView, sequentialIndex, vec2Value, glm::vec2(0.0f));
 		}
 	}
@@ -1460,16 +1610,32 @@ namespace ZeoEngine {
 	void EditorLayer::ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, glm::vec3& vec3Value, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
 	{
 		std::stringstream ss;
+		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
+		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		if (sequentialIndex == -1)
 		{
 			BEGIN_PROP(prop)
-			ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), 1.0f, 0.0f, 0.0f, "%.1f");
+			// If transform's property value changes, mark it dirty
+			if (ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), speed, min, max, "%.2f") && prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+			{
+				m_bIsTransformDirty = true;
+			}
+			// If position value changes, schedule to re-sort translucent objects
+			// TODO: Not optimal for 3D rendering as modifying rotation and scale will invoke this too
+			if (ImGui::IsItemDeactivatedAfterChange())
+			{
+				Level::Get().OnTranslucentObjectsDirty(m_SelectedGameObject);
+			}
 			END_PROP(prop)
 		}
 		else
 		{
 			BEGIN_SEQPROP(prop, sequentialIndex)
-			ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(vec3Value), 1.0f, 0.0f, 0.0f, "%.1f");
+			ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(vec3Value), speed, min, max, "%.2f");
 			END_SETSEQPROP(prop, sequentialView, sequentialIndex, vec3Value, glm::vec3(0.0f));
 		}
 	}

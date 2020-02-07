@@ -10,6 +10,7 @@ namespace ZeoEngine {
 	{
 		bool operator<(const TranslucentObjectData& other) const
 		{
+			// Sort based on Z position or based on spawn order if Z position equals
 			if (abs(zPosition - other.zPosition) < 1e-8)
 			{
 				return index < other.index;
@@ -111,6 +112,9 @@ namespace ZeoEngine {
 
 		// TODO: Need a way to destroy a particle system explicitly
 		ParticleSystem* SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+
+		/** Re-sort translucent objects when GameObject's position value is changed in Object Property window.  */
+		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
 
 	private:
 		template<typename T>

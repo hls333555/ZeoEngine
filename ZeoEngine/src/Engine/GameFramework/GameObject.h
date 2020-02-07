@@ -108,6 +108,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Min,
 		/** Defines the max value of numerical property slider */
 		Max,
+		/** Controls how fast it changes when you are dragging a property value, default is 1.0f */
+		DragSensitivity,
 		/** This property is transient and will not get serialized */
 		Transient,
 		/**
@@ -196,6 +198,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 			}
 		}
 		void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
+		const glm::mat4& GetTransformMatrix() const { return m_TransformMatrix; }
 		float GetSpeed() const { return m_Speed; }
 		void SetSpeed(float speed) { m_Speed = speed; }
 		const glm::vec2& GetVelocity() const { return m_Velocity; }
@@ -209,7 +212,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		 * You should do initialization stuff here including loading the texture and updating IsTranslucent variable.
 		 * Putting other gameplay related code here is not recommended.
 		 */
-		virtual void Init() {}
+		virtual void Init();
 		virtual void BeginPlay() {}
 		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnRender() {}
@@ -256,6 +259,11 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		bool CheckCollision_BS(GameObject* boxObject, GameObject* sphereObject);
 		bool CheckCollision_SS(GameObject* other);
 
+		/** Called after gizmo manipulation to update the transform property */
+		void DecomposeTransformMatrix();
+		/** Called after modifying the transform property to update the transform matrix used by gizmo */
+		void ReComposeTransformMatrix();
+
 		// TODO: Component system
 	private:
 		/** The unique name with suffix index number, e.g. "Player_2" */
@@ -266,6 +274,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		bool m_bIsActive = true;
 
 		Transform m_Transform;
+		/** TODO: Do not pass it directly to OpenGL draw call as rotation inside is calculated from degrees while OpenGL prefers radians */
+		glm::mat4 m_TransformMatrix;
 		/** A scalar indicating how fast this object moves */
 		float m_Speed = 0.0f;
 		/** A vector representing current velocity of this object  */
