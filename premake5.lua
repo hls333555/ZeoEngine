@@ -26,6 +26,7 @@ IncludeDir["glm"] = "ZeoEngine/vendor/glm"
 IncludeDir["stb_image"] = "ZeoEngine/vendor/stb_image"
 IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
 IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
+IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
 
 -- Include the premake file of GLFW
 include "ZeoEngine/vendor/GLFW"
@@ -58,7 +59,8 @@ project "ZeoEngine"
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.ini",
 		"%{prj.name}/vendor/ImGuizmo/**.h",
-		"%{prj.name}/vendor/ImGuizmo/**.cpp"
+		"%{prj.name}/vendor/ImGuizmo/**.cpp",
+		"%{prj.name}/vendor/NFD/src/include/nfd.h"
 	}
 
 	defines
@@ -76,7 +78,13 @@ project "ZeoEngine"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.rttr}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.NFD}"
+	}
+
+	libdirs
+	{
+		"ZeoEngine/vendor/NFD/lib"
 	}
 
 	links 
@@ -85,7 +93,7 @@ project "ZeoEngine"
 		"Glad",
 		"ImGui",
 		"opengl32.lib",
-		"rttr"
+		"rttr",
 	}
 
 	filter "system:windows"
@@ -104,15 +112,30 @@ project "ZeoEngine"
 		runtime "Debug"
 		symbols "on"
 
+		links 
+		{ 
+			"nfd_d.lib"
+		}
+
 	filter "configurations:Release"
 		defines "ZE_RELEASE"
 		runtime "Release"
 		optimize "on"
 
+		links 
+		{ 
+			"nfd.lib"
+		}
+
 	filter "configurations:Dist"
 		defines "ZE_DIST"
 		runtime "Release"
 		optimize "on"
+
+		links 
+		{ 
+			"nfd.lib"
+		}
 
 project "Sandbox"
 	location "Sandbox"
