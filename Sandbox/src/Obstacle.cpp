@@ -13,15 +13,16 @@ RTTR_REGISTRATION
 Obstacle::Obstacle()
 	: m_ScoreAmount(1)
 {
-	SetSphereCollisionData(0.75f);
-	SetGenerateOverlapEvent(true);
-
+	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
+	SetGenerateOverlapEvents(true);
 	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 }
 
 void Obstacle::Init()
 {
 	Super::Init();
+
+	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 

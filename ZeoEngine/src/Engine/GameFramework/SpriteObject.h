@@ -18,6 +18,7 @@ namespace ZeoEngine {
 
 		virtual void Init() override;
 		virtual void OnRender() override;
+		virtual bool IsTranslucent() const override { return m_bIsTranslucent; }
 
 		void SetTextureTiling(const glm::vec2& tilling) { m_TextureTilling = tilling; }
 		void SetTintColor(const glm::vec4& color) { m_TintColor = color; }
@@ -28,6 +29,7 @@ namespace ZeoEngine {
 	private:
 		glm::vec2 m_TextureTilling = glm::vec2(1.0f);
 		glm::vec4 m_TintColor = glm::vec4(1.0f);
+		bool m_bIsTranslucent = false;
 
 		RTTR_REGISTER(SpriteObject, GameObject)
 		RTTR_REGISTRATION_FRIEND

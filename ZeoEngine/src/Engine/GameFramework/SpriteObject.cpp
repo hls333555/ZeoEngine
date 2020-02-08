@@ -35,7 +35,7 @@ namespace ZeoEngine {
 	{
 		Super::Init();
 
-		SetTranslucent(m_SpriteTexture ? m_SpriteTexture->HasAlpha() : false);
+		m_bIsTranslucent = m_SpriteTexture ? m_SpriteTexture->HasAlpha() : false;
 	}
 
 	void SpriteObject::OnRender()

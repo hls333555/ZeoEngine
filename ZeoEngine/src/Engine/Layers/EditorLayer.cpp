@@ -1034,7 +1034,7 @@ namespace ZeoEngine {
 		m_bIsSortedPropertiesDirty = true;
 	}
 
-	// TODO: cache current game object's states
+	// TODO: serialize current game object's states to a temp level file
 	void EditorLayer::StartPIE()
 	{
 		ZE_CORE_TRACE("Starting PIE...");
@@ -1588,6 +1588,11 @@ namespace ZeoEngine {
 					else
 					{
 						sequentialView.set_value(sequentialIndex, enumValue);
+					}
+					// Selection changes, call the callback
+					if (enumValue != enumType.name_to_value(stringValue))
+					{
+						objectInstance.get_type().invoke("OnPropertyValueChange", objectInstance, { prop });
 					}
 				}
 			}

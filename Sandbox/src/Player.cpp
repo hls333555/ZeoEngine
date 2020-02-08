@@ -19,14 +19,15 @@ Player::Player()
 	, m_Score(0)
 {
 	SetSpeed(5.0f);
-	SetSphereCollisionData(0.75f);
-
+	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
 	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 }
 
 void Player::Init()
 {
 	Super::Init();
+
+	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
@@ -56,7 +57,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	// Movement control
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
 	{
-		SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() + GetForwardVector2D() * GetSpeed() * (float)dt);
 		if (GetPosition().y > cameraBounds.Top - 0.5f)
 		{
 			SetPosition2D({ GetPosition().x, cameraBounds.Top - 0.5f });
@@ -64,7 +65,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
 	{
-		SetPosition2D(GetPosition2D() - GetRightVector() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() - GetRightVector2D() * GetSpeed() * (float)dt);
 		if (GetPosition().x < cameraBounds.Left + 0.5f)
 		{
 			SetPosition2D({ cameraBounds.Left + 0.5f, GetPosition().y });
@@ -72,7 +73,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
 	{
-		SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * (float)dt);
 		if (GetPosition().y < cameraBounds.Bottom + 0.5f)
 		{
 			SetPosition2D({ GetPosition().x, cameraBounds.Bottom + 0.5f });
@@ -80,7 +81,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
 	{
-		SetPosition2D(GetPosition2D() + GetRightVector() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() + GetRightVector2D() * GetSpeed() * (float)dt);
 		if (GetPosition().x > cameraBounds.Right - 0.5f)
 		{
 			SetPosition2D({ cameraBounds.Right - 0.5f, GetPosition().y });

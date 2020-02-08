@@ -10,8 +10,8 @@
 
 namespace ZeoEngine {
 
-#define WORLD_UP_VECTOR glm::vec2({ 0.0f, 1.0f })
-#define WORLD_RIGHT_VECTOR glm::vec2({ 1.0f, 0.0f })
+#define WORLD_UP_VECTOR glm::vec2{ 0.0f, 1.0f }
+#define WORLD_RIGHT_VECTOR glm::vec2{ 1.0f, 0.0f }
 
 	struct Transform
 	{
@@ -20,9 +20,9 @@ namespace ZeoEngine {
 			: position(_position)
 		{}
 
-		glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 position{ 0.0f };
 		float rotation = 0.0f;
-		glm::vec2 scale = { 1.0f, 1.0f };
+		glm::vec2 scale{ 1.0f };
 
 		RTTR_ENABLE()
 	};
@@ -34,53 +34,56 @@ namespace ZeoEngine {
 		Sphere,
 	};
 
+	// TODO: Support collision primitives which can be added to objects arbitrarily
 	struct CollisionData
 	{
+		friend class GameObject;
+
+	public:
 		virtual void UpdateData() = 0;
 
-		ObjectCollisionType collisionType;
-		glm::vec2 center = { 0.0f, 0.0f };
-		class GameObject* ownerObject;
+		glm::vec2 Center{ 0.0f };
+		GameObject* OwnerObject;
+
+	protected:
+		glm::vec2 CenterOffset;
+
+		RTTR_ENABLE()
+		RTTR_REGISTRATION_FRIEND
 	};
 
 	struct BoxCollisionData : public CollisionData
 	{
-	public:
-		BoxCollisionData(GameObject* _ownerObject, const glm::vec2& _centerOffset, const glm::vec2& _extentsMultiplier)
-			: centerOffset(_centerOffset)
-			, extentsMultiplier(_extentsMultiplier)
+		BoxCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, const glm::vec2& extents = { 0.0f, 0.0f })
+			: Extents(extents)
 		{
-			collisionType = ObjectCollisionType::Box;
-			ownerObject = _ownerObject;
+			OwnerObject = ownerObject;
+			CenterOffset = centerOffset;
 			UpdateData();
 		}
 
-		virtual void UpdateData() override;
+		inline virtual void UpdateData() override;
 
-		glm::vec2 extents;
-	private:
-		glm::vec2 centerOffset;
-		glm::vec2 extentsMultiplier;
+		glm::vec2 Extents;
+
+		RTTR_ENABLE(CollisionData)
 	};
 
 	struct SphereCollisionData : public CollisionData
 	{
-	public:
-		SphereCollisionData(GameObject* _ownerObject, const glm::vec2& _centerOffset, float _radiusMultiplier)
-			: centerOffset(_centerOffset)
-			, radiusMultiplier(_radiusMultiplier)
+		SphereCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, float radius = 0.0f)
+			: Radius(radius)
 		{
-			collisionType = ObjectCollisionType::Sphere;
-			ownerObject = _ownerObject;
+			OwnerObject = ownerObject;
+			CenterOffset = centerOffset;
 			UpdateData();
 		}
 
-		virtual void UpdateData() override;
+		inline virtual void UpdateData() override;
 
-		float radius;
-	private:
-		glm::vec2 centerOffset;
-		float radiusMultiplier;
+		float Radius;
+
+		RTTR_ENABLE(CollisionData)
 	};
 
 #define Super __super
@@ -116,7 +119,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Transient,
 		/**
 		 * Used to filter out GameObject instances not derived from this specified class, which will not appear in the dropdown list.
-		 * The value (class name) should be the form of const char* or std::string.
+		 * The value (class name) should be a string literal.
 		 * NOTE: We ONLY support register GameObject* pointer for now!
 		 * e.g.
 		 * GameObject* m_Player;
@@ -133,7 +136,6 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		SubclassOf,
 	};
 
-	// TODO: move some variables and functionalities to components
 	/**
 	 * Base class for spawnable objects.
 	 *
@@ -199,49 +201,57 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		}
 		void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
 		const glm::mat4& GetTransformMatrix() const { return m_TransformMatrix; }
+		ObjectCollisionType GetCollisionType() const { return m_CollisionType; }
+		void SetCollisionType(ObjectCollisionType newType) { m_CollisionType = newType; }
+		bool ShouldGenerateOverlapEvents() const { return m_bGenerateOverlapEvents; }
+		void SetGenerateOverlapEvents(bool bGenerate) { m_bGenerateOverlapEvents = bGenerate; }
 		float GetSpeed() const { return m_Speed; }
 		void SetSpeed(float speed) { m_Speed = speed; }
 		const glm::vec2& GetVelocity() const { return m_Velocity; }
-		ObjectCollisionType GetCollisionType() const { return m_CollisionData ? m_CollisionData->collisionType : ObjectCollisionType::None; }
-		bool ShouldGenerateOverlapEvent() const { return m_bGenerateOverlapEvent; }
-		void SetGenerateOverlapEvent(bool bGenerate) { m_bGenerateOverlapEvent = bGenerate; }
-		bool IsTranslucent() const { return m_bIsTranslucent; }
-		void SetTranslucent(bool bIsTranslucent) { m_bIsTranslucent = bIsTranslucent; }
 
-		/**
-		 * You should do initialization stuff here including loading the texture and updating IsTranslucent variable.
-		 * Putting other gameplay related code here is not recommended.
-		 */
+		virtual bool IsTranslucent() const { return false; }
+
 		virtual void Init();
 		virtual void BeginPlay() {}
 		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
 
+		// TODO: Currently only implements for enum
+		virtual void OnPropertyValueChange(const rttr::property& prop);
+
 		/**
 		 * Get forward vector based on this object's rotation.
 		 * @see WORLD_UP_VECTOR
 		 */
-		const glm::vec2 GetForwardVector() const;
+		const glm::vec2 GetForwardVector2D() const;
 		/**
 		 * Get right vector based on this object's rotation.
 		 * @see WORLD_RIGHT_VECTOR
 		 */
-		const glm::vec2 GetRightVector() const;
+		const glm::vec2 GetRightVector2D() const;
 
-		float FindLookAtRotation(const glm::vec2& sourcePosition, const glm::vec2& targetPosition);
+		float FindLookAtRotation2D(const glm::vec2& sourcePosition, const glm::vec2& targetPosition);
 
-		void TranslateTo(const glm::vec2& targetPosition);
+		void TranslateTo2D(const glm::vec2& targetPosition);
 
-		glm::vec2 GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents);
+		glm::vec2 GetRandomPositionInRange2D(const glm::vec2& center, const glm::vec2& extents);
 
 		/** Reset necessary data, mostly used by ObjectPooler. */
 		virtual void Reset();
 
-		void SetBoxCollisionData(const glm::vec2& extentsMultiplier = { 1.0f, 1.0f }, const glm::vec2& centerOffset = { 0.0f, 0.0f });
-		void SetSphereCollisionData(float radiusMultiplier = 1.0f, const glm::vec2& centerOffset = { 0.0f, 0.0f });
+		bool IsCollisionEnabled() const { return m_CollisionType > ObjectCollisionType::None; }
 
-		bool IsCollisionEnabled() const { return m_CollisionData ? m_CollisionData->collisionType > ObjectCollisionType::None : false; }
+		/**
+		 * Update box collision data.
+		 * You SHOULD call it after specifying box collision type and DO NOT call it in the constructor!
+		 */
+		void FillBoxCollisionData(const glm::vec2& extents = { 0.0f, 0.0f }, const glm::vec2& centerOffset = { 0.0f, 0.0f });
+		/**
+		 * Update sphere collision data.
+		 * You SHOULD call it after specifying sphere collision type and DO NOT call it in the constructor!
+		 */
+		void FillSphereCollisionData(float radius = 0.0f, const glm::vec2& centerOffset = { 0.0f, 0.0f });
 
 		void DoCollisionTest(const std::vector<GameObject*>& objects);
 
@@ -254,6 +264,9 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		virtual void OnDestroyed() {}
 
 	private:
+		/** Generate a new collision data based on current collision type. */
+		void GenerateCollisionData();
+
 		bool CheckCollision(GameObject* other);
 		bool CheckCollision_BB(GameObject* other);
 		bool CheckCollision_BS(GameObject* boxObject, GameObject* sphereObject);
@@ -270,28 +283,37 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		std::string m_UniqueName;
 		/** The name displayed in the level outline, which can be modified by the user. By default, this is the same as m_UniqueName */
 		std::string m_Name;
-		GameObject* m_Owner;
 		bool m_bIsActive = true;
+		GameObject* m_Owner;
+		bool bPendingDestroy = false;
 
+		//// Transform component
 		Transform m_Transform;
-		/** TODO: Do not pass it directly to OpenGL draw call as rotation inside is calculated from degrees while OpenGL prefers radians */
+		/**
+		 * Matrix used by gizmo manipulation internally
+		 * TODO: Do not pass it directly to OpenGL draw call as rotation inside is calculated from degrees while OpenGL prefers radians
+		 */
 		glm::mat4 m_TransformMatrix;
+
+		//// Collision component
+		ObjectCollisionType m_CollisionType = ObjectCollisionType::None;
+		CollisionData* m_CollisionData = nullptr;
+		bool m_bGenerateOverlapEvents = false;
+
+		GameObject* OverlappedObject = nullptr;
+
+		//// Movement component
 		/** A scalar indicating how fast this object moves */
 		float m_Speed = 0.0f;
 		/** A vector representing current velocity of this object  */
-		glm::vec2 m_Velocity{ 0.0f, 0.0f };
-		CollisionData* m_CollisionData = nullptr;
-		bool m_bGenerateOverlapEvent = false;
+		glm::vec2 m_Velocity{ 0.0f };
 
-		bool bPendingDestroy = false;
-		GameObject* OverlappedObject = nullptr;
-		bool m_bStartMoving = false;
-		glm::vec2 m_SourcePosition = { 0.0f, 0.0f }, m_TargetPosition = { 0.0f, 0.0f };
-		float m_MovingDistance = 0.0f;
-		float m_MovingAlpha = 0.0f;
-		glm::vec2 m_LastPosition{ 0.0f, 0.0f };
-
-		bool m_bIsTranslucent = false;
+		bool m_bIsMoving = false;
+		glm::vec2 m_MoveSourcePosition{ 0.0f }, m_MoveTargetPosition{ 0.0f };
+		float m_MoveDistance = 0.0f;
+		float m_MoveAlpha = 0.0f;
+		/** Used for calculating current velocity */
+		glm::vec2 m_LastPosition{ 0.0f };
 
 #if WITH_EDITOR
 		bool m_bIsSelectedInEditor = false;

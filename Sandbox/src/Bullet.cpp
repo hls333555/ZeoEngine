@@ -27,8 +27,8 @@ Bullet::Bullet()
 {
 	SetScale({ 0.075f, 0.2f });
 	SetSpeed(10.0f);
-	SetBoxCollisionData();
-	SetGenerateOverlapEvent(true);
+	SetCollisionType(ZeoEngine::ObjectCollisionType::Box);
+	SetGenerateOverlapEvents(true);
 }
 
 PlayerBullet::PlayerBullet()
@@ -41,7 +41,7 @@ void PlayerBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	SetPosition2D(GetPosition2D() + GetForwardVector() * GetSpeed() * (float)dt);
+	SetPosition2D(GetPosition2D() + GetForwardVector2D() * GetSpeed() * (float)dt);
 	if (GetPosition().y > ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Top)
 	{
 		SetActive(false);
@@ -72,7 +72,7 @@ void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	SetPosition2D(GetPosition2D() - GetForwardVector() * GetSpeed() * (float)dt);
+	SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * (float)dt);
 	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom)
 	{
 		SetActive(false);

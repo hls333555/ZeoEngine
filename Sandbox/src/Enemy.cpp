@@ -19,15 +19,16 @@ Enemy::Enemy()
 	, m_ShootRate(0.75f)
 {
 	SetSpeed(2.0f);
-	SetSphereCollisionData(0.75f);
-	SetGenerateOverlapEvent(true);
-
+	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
+	SetGenerateOverlapEvents(true);
 	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 }
 
 void Enemy::Init()
 {
 	Super::Init();
+
+	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
@@ -41,10 +42,10 @@ void Enemy::BeginPlay()
 
 	// Move to a random position of upper half screen nearby every 2 seconds
 	ZeoEngine::GetTimerManager()->SetTimer(2.0f, [&]() {
-		glm::vec2 targetPosition = GetRandomPositionInRange(GetPosition2D(), { 2.0f, 2.0f });
+		glm::vec2 targetPosition = GetRandomPositionInRange2D(GetPosition2D(), { 2.0f, 2.0f });
 		if (targetPosition.y > 0 && glm::length(targetPosition - GetPosition2D()) > 1.0f)
 		{
-			TranslateTo(targetPosition);
+			TranslateTo2D(targetPosition);
 		}
 	}, 0, 0.0f);
 

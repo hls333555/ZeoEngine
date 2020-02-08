@@ -36,7 +36,7 @@ namespace ZeoEngine {
 				continue;
 
 			// Collision detection
-			if (m_GameObjects[i]->IsCollisionEnabled() && m_GameObjects[i]->ShouldGenerateOverlapEvent())
+			if (m_GameObjects[i]->IsCollisionEnabled() && m_GameObjects[i]->ShouldGenerateOverlapEvents())
 			{
 				m_GameObjects[i]->DoCollisionTest(m_GameObjects);
 			}
