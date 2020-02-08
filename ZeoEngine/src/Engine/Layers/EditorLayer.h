@@ -34,7 +34,7 @@ namespace ZeoEngine {
 		const PIEState GetPIEState() const { return m_PIEState; }
 
 	private:
-		void LoadTextures();
+		void LoadEditorTextures();
 
 		void ShowEditorDockspace();
 		void ShowGameView(bool* bShow);
@@ -67,6 +67,7 @@ namespace ZeoEngine {
 		void DisplayClassHierarchyRecursively(const std::vector<rttr::type>& derivedTypes);
 		void ProcessClassInteraction(const rttr::type& type);
 
+		// TODO: Abstract again
 #define BEGIN_PROP(prop) \
 		ImGui::Columns(2);\
 		ImGui::AlignTextToFramePadding();\
@@ -147,15 +148,21 @@ namespace ZeoEngine {
 		void ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, glm::vec3& vec3Value, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
 		void ProcessColorType(glm::vec4* vec4PointerValue, const rttr::property& prop, glm::vec4& vec4Value, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
 		void ProcessGameObjectType(GameObject* gameObjectValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
+		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
 		/**
 		 * Returns true if gameObject's class is derived from the class specified by PropertyMeta::SubclassOf
 		 * or PropertyMeta::SubclassOf is not specified at all.
 		 */
 		bool IsSubclassOf(GameObject* gameObject, const rttr::property& prop);
 
+		// TODO: Maybe move it to dedicated utilities class in the future
+		/** Convert absolute path to relative path. */
+		std::string FormatPath(const char* absolutePath);
+
 	private:
 		Scope<OrthographicCameraController> m_EditorCameraController;
-		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2];
+		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
+			m_LogoTexture;
 
 		bool m_bIsHoveringGameView = false;
 		glm::vec2 m_LastGameViewSize;

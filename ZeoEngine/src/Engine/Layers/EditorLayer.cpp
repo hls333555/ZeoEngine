@@ -1,12 +1,14 @@
 #include "ZEpch.h"
 #include "Engine/Layers/EditorLayer.h"
 
+#include <filesystem>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <ImGuizmo.h>
-#include "Engine/ImGui/MyImGui.h"
+#include <nfd.h>
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
@@ -16,6 +18,7 @@
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {
 
@@ -31,7 +34,7 @@ namespace ZeoEngine {
 	void EditorLayer::OnAttach()
 	{
 		ConstructClassInheritanceTree();
-		LoadTextures();
+		LoadEditorTextures();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
@@ -77,6 +80,25 @@ namespace ZeoEngine {
 			// File menu
 			if (ImGui::BeginMenu("File"))
 			{
+				// TODO: Open level
+				if (ImGui::MenuItem("Open level", "CTRL+O"))
+				{
+					nfdchar_t* outPath = nullptr;
+					nfdresult_t result = NFD_OpenDialog(nullptr, nullptr, &outPath);
+					if (result == NFD_OKAY)
+					{
+
+						free(outPath);
+					}
+					else if (result == NFD_CANCEL)
+					{
+						ZE_CORE_TRACE("File menu: User pressed cancel.");
+					}
+					else
+					{
+						ZE_CORE_ERROR("File menu: {0}", NFD_GetError());
+					}
+				}
 				ImGui::EndMenu();
 			}
 			// Edit menu
@@ -197,11 +219,13 @@ namespace ZeoEngine {
 
 	}
 
-	void EditorLayer::LoadTextures()
+	void EditorLayer::LoadEditorTextures()
 	{
-		m_ToolBarTextures[0] = m_PlayTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Play.png");
-		m_ToolBarTextures[1] = m_PauseTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Pause.png");
-		m_StopTexture = ZeoEngine::Texture2D::Create("../ZeoEngine/assets/textures/Stop.png");
+		m_ToolBarTextures[0] = m_PlayTexture = Texture2D::Create("editor_assets/textures/Play.png");
+		m_ToolBarTextures[1] = m_PauseTexture = Texture2D::Create("editor_assets/textures/Pause.png");
+		m_StopTexture = Texture2D::Create("editor_assets/textures/Stop.png");
+
+		m_LogoTexture = Texture2D::Create("editor_assets/textures/Logo.png");
 
 	}
 
@@ -716,6 +740,12 @@ namespace ZeoEngine {
 			ProcessGameObjectType(var.get_value<GameObject*>(), prop, objectInstance, sequentialView, sequentialIndex);
 			return true;                      
 		}
+		// Ref<Texture2D>
+		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
+		{
+			ProcessTexture2DType(var.get_value<Ref<Texture2D>>(), prop, objectInstance, sequentialView, sequentialIndex);
+			return true;
+		}
 
 		return false;
 	}
@@ -723,7 +753,7 @@ namespace ZeoEngine {
 	void EditorLayer::AddSequentialButtons(const rttr::property& prop, rttr::variant_sequential_view& sequentialView)
 	{
 		rttr::type sequentialValueType = sequentialView.get_value_type();
-		// TODO: Consider using std::string + ""
+		// TODO: Consider using ImFormatString()
 		std::stringstream ss;
 		ss << "##" << prop.get_name() << sequentialView.get_value_type().get_name();
 		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))
@@ -795,6 +825,10 @@ namespace ZeoEngine {
 				{
 					sequentialView.insert(sequentialView.end(), (GameObject*)nullptr);
 				}
+				else if (sequentialValueType == rttr::type::get<Ref<Texture2D>>())
+				{
+					sequentialView.insert(sequentialView.end(), Ref<Texture2D>());
+				}
 				else
 				{
 					ZE_CORE_ASSERT_INFO(false, "Unsupported sequential container type!")
@@ -836,7 +870,9 @@ namespace ZeoEngine {
 			{
 				rttr::variant wrappedVar = item.extract_wrapped_value();
 				rttr::type valueType = wrappedVar.get_type();
-				if (ProcessAtomicTypes(valueType, wrappedVar, prop, rttr::instance(), sequentialView, i))
+				rttr::type wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
+				bool bIsWrapper = wrappedType != valueType;
+				if (ProcessAtomicTypes(wrappedType, bIsWrapper ? wrappedVar.extract_wrapped_value() : wrappedVar, prop, rttr::instance(), sequentialView, i))
 				{
 				}
 				// TODO: Sequential containers of struct/class not supported because we cannot implement a strongly typed insertion function for now
@@ -934,16 +970,21 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	// TODO: About dialog
 	void EditorLayer::ShowAbout(bool* bShow)
 	{
 		SetNextWindowDefaultPosition();
-		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-		if (ImGui::Begin("About", bShow, ImGuiWindowFlags_NoCollapse))
+		ImGui::SetNextWindowSize(ImVec2(300, 200));
+		if (ImGui::Begin("About", bShow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 		{
-			ImGui::Text("ZeoEngine 0.1");
-			ImGui::Text("Created by SanSan");
-			ImGui::Text("https://github.com/hls333555/");
+			ImGui::TextCentered("ZeoEngine 0.1");
+			ImGui::TextCentered("Created by SanSan");
+			ImGui::TextCentered("https://github.com/hls333555/");
+			static const float logoSize = 100.0f;
+			// Center the logo
+			ImGui::Indent((ImGui::GetWindowSize().x - logoSize) / 2.0f);
+			ImGui::Image(m_LogoTexture->GetTexture(),
+				ImVec2(logoSize, logoSize),
+				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		}
 		ImGui::End();
 	}
@@ -1752,6 +1793,117 @@ namespace ZeoEngine {
 		END_PROP(prop)
 	}
 
+	void EditorLayer::ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	{
+		std::stringstream ss;
+		if (sequentialIndex == -1)
+		{
+			BEGIN_PROP(prop)
+		}
+		else
+		{
+			BEGIN_SEQPROP(prop, sequentialIndex)
+		}
+		Texture2DLibrary* library = GetTexture2DLibrary();
+		// Try to align texture'a width to column's right side
+		float textureWidth = ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - ImGui::GetCursorScreenPos().x - 18.5f;
+		Ref<Texture2D> backgroundTexture = library->Get("editor_assets/textures/Checkerboard_Alpha.png");
+		// Draw checkerboard texture as background first
+		ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+			ImGui::GetCursorScreenPos(),
+			ImVec2(ImGui::GetCursorScreenPos().x + textureWidth, ImGui::GetCursorScreenPos().y + textureWidth),
+			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		// Draw our texture on top of that
+		ImGui::Image(texture2DValue ? texture2DValue->GetTexture() : nullptr,
+			ImVec2(textureWidth, textureWidth),
+			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
+			texture2DValue ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 0.0f), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+		// Display texture info tooltip
+		if (texture2DValue && ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DValue->GetWidth(), texture2DValue->GetHeight(), texture2DValue->HasAlpha() ? "true" : "false");
+		}
+		if (sequentialIndex == -1)
+		{
+			// Align combo box's width to column's right side
+			ImGui::SetNextItemWidth(-1.0f);
+		}
+		else
+		{
+			// Make room for sequential buttons
+			ImGui::SetNextItemWidth(-25.0f);
+		}
+		if (ImGui::BeginCombo(ss.str().c_str(), texture2DValue ? texture2DValue->GetFileName().c_str() : nullptr))
+		{
+			// Pop up file browser to select a texture
+			if (ImGui::Selectable("Browse texture..."))
+			{
+				nfdchar_t* outPath = nullptr;
+				nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
+				if (result == NFD_OKAY)
+				{
+					const std::string relativePath = FormatPath(outPath);
+					Ref<Texture2D> loadedTexture;
+					// Add selected texture to the library
+					if (library->Exists(relativePath))
+					{
+						loadedTexture = library->Get(relativePath);
+					}
+					else
+					{
+						loadedTexture = library->Load(relativePath);
+					}
+					if (sequentialIndex == -1)
+					{
+						prop.set_value(objectInstance, loadedTexture);
+					}
+					else
+					{
+						sequentialView.set_value(sequentialIndex, loadedTexture);
+					}
+					free(outPath);
+				}
+				else if (result == NFD_ERROR)
+				{
+					ZE_CORE_ERROR("ProcessTexture2DType: {0}", NFD_GetError());
+				}
+			}
+			ImGui::Separator();
+			// List all loaded textures from Texture2DLibrary
+			for (const auto& [path, texture] : library->GetTexturesMap())
+			{
+				if (ImGui::Selectable(texture->GetFileName().c_str()))
+				{
+					if (sequentialIndex == -1)
+					{
+						prop.set_value(objectInstance, texture);
+					}
+					else
+					{
+						sequentialView.set_value(sequentialIndex, texture);
+					}
+				}
+				// Display texture path tooltip
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", texture->GetPath().c_str());
+				}
+			}
+
+			ImGui::EndCombo();
+		}
+		// Display texture path tooltip
+		if (texture2DValue && ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
+		}
+		if (sequentialIndex != -1)
+		{
+			ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, Ref<Texture2D>())
+		}
+		END_PROP(prop)
+	}
+
 	bool EditorLayer::IsSubclassOf(GameObject* gameObject, const rttr::property& prop)
 	{
 		// Note: rttr::type::get() should take an object instance instead of pointer as its parameter to get the correct object type!
@@ -1773,6 +1925,23 @@ namespace ZeoEngine {
 			return true;
 		}
 		return false;
+	}
+
+	std::string EditorLayer::FormatPath(const char* absolutePath)
+	{
+		std::filesystem::path path(absolutePath);
+		// Convert abosulte path to relative path
+		path = std::filesystem::relative(path, std::filesystem::current_path());
+		std::string str = path.string();
+		// Replace all '\\' with '/'
+		for (uint32_t i = 0; i < str.size(); ++i)
+		{
+			if (str[i] == '\\')
+			{
+				str.replace(i, 1, "/");
+			}
+		}
+		return str;
 	}
 
 }

@@ -63,7 +63,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)
 	{
-		ZE_CORE_ASSERT_INFO(Exists(path), "Shader not found!");
+		ZE_CORE_ASSERT_INFO(Exists(path), "Texture not found!");
 		return m_Textures[path];
 	}
 

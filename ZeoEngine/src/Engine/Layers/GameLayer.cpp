@@ -101,6 +101,7 @@ namespace ZeoEngine {
 		io.Fonts->GetTexDataAsAlpha8(&outPixels, &outWidth, &outHeight, &outBytesPerPixel);
 	}
 
+	// TODO: Load all textures inside assets/textures
 	void GameLayer::LoadSharedTextures()
 	{
 		m_Texture2DLibrary.Load("assets/textures/Explosion_2x4.png");

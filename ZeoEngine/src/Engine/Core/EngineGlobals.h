@@ -8,8 +8,6 @@
 
 namespace ZeoEngine {
 
-#define Super __super
-
 	static OrthographicCamera* GetActiveGameCamera()
 	{
 		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");

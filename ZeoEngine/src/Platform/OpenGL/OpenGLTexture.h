@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual const std::string& GetPath() const override { return m_Path; }
+		virtual const std::string& GetFileName() const override { return m_FileName; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
 		virtual void* GetTexture() const override { return (void*)(intptr_t)m_RendererID; }
 
@@ -26,6 +27,7 @@ namespace ZeoEngine {
 	private:
 		/** Intended for hot-reloading */
 		std::string m_Path;
+		std::string m_FileName;
 		uint32_t m_Width, m_Height;
 		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;

@@ -33,6 +33,7 @@ Bullet::Bullet()
 
 PlayerBullet::PlayerBullet()
 {
+	SetTintColor({ 0.0f, 0.5f, 1.0f, 1.0f });
 	m_Damage = 10.0f;
 }
 
@@ -45,13 +46,6 @@ void PlayerBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		SetActive(false);
 	}
-}
-
-void PlayerBullet::OnRender()
-{
-	Super::OnRender();
-
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), { 0.0f, 0.5f, 1.0f, 1.0f });
 }
 
 void PlayerBullet::OnOverlap(GameObject* other)
@@ -70,6 +64,7 @@ void PlayerBullet::OnOverlap(GameObject* other)
 
 EnemyBullet::EnemyBullet()
 {
+	SetTintColor({ 1.0f, 0.0f, 0.0f, 1.0f });
 	m_Damage = 5.0f;
 }
 
@@ -82,13 +77,6 @@ void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		SetActive(false);
 	}
-}
-
-void EnemyBullet::OnRender()
-{
-	Super::OnRender();
-
-	ZeoEngine::Renderer2D::DrawQuad(GetPosition(), GetScale(), { 1.0f, 0.0f, 0.0f, 1.0f });
 }
 
 void EnemyBullet::OnOverlap(GameObject* other)

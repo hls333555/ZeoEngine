@@ -38,4 +38,16 @@ namespace ImGui {
 		return DragScalar(label, ImGuiDataType_Double, v, v_speed, &v_min, &v_max, format, power);
 	}
 
+	IMGUI_API void TextCentered(const char* fmt, ...)
+	{
+		ImVec2 textSize = CalcTextSize(fmt);
+		float indent = (GetWindowSize().x - textSize.x) / 2.0f;
+		Indent(indent);
+		va_list args;
+		va_start(args, fmt);
+		TextV(fmt, args);
+		va_end(args);
+		Unindent(indent);
+	}
+
 }

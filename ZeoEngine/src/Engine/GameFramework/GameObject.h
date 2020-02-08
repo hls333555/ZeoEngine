@@ -83,6 +83,8 @@ namespace ZeoEngine {
 		float radiusMultiplier;
 	};
 
+#define Super __super
+
 #define RTTR_SPAWN(className) \
 public: static className* SpawnGameObject(const glm::vec3& position)\
 		{\
@@ -137,7 +139,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	 *
 	 * IMPORTANT NOTES:
 	 * You should always call ZeoEngine::Level::Get().SpawnGameObject<>(); to spawn one to the level.
-	 * You should add the macro RTTR_REGISTER() to the end of every class derived from GameObject class, which you want to instantiate.
+	 * You should add the macro RTTR_REGISTER() to the end of every class derived from GameObject class, which you want to instantiate. Also make sure you have included level.h.
 	 * You should add the macro RTTR_REGISTRATION_FRIEND to the end of the class derived from GameObject class, in which you want to register protected or private variables directly instead of getters and setters.
 	 * If you come across a compile error: fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj, add /bigobj to the CommandLine of project properties.
 	 */
@@ -146,10 +148,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		friend class EditorLayer;
 		friend class Level;
 
-	public:
+	protected:
 		GameObject() = default;
-		GameObject(const Transform& transform);
-		GameObject(const glm::vec3& position, float rotation, const glm::vec2& scale);
 
 		virtual ~GameObject();
 

@@ -117,6 +117,7 @@ namespace ZeoEngine {
 		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
 
 	private:
+		// TODO: Should strip out "ZeoEngine::" in some cases
 		template<typename T>
 		std::string ConstructObjectName()
 		{

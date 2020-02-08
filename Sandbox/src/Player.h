@@ -8,14 +8,13 @@
 
 class ZeoEngine::ParticleSystem;
 
-class Player : public ZeoEngine::GameObject
+class Player : public ZeoEngine::SpriteObject
 {
 public:
 	Player();
 
 	virtual void Init() override;
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
-	virtual void OnRender() override;
 	virtual void OnImGuiRender() override;
 
 	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
@@ -29,8 +28,6 @@ private:
 	void Explode();
 
 private:
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_PlayerTexture;
-
 	float m_MaxHealth;
 	float m_CurrentHealth;
 	uint32_t m_Score;
@@ -45,5 +42,5 @@ private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	RTTR_REGISTER(Player, GameObject)
+	RTTR_REGISTER(Player, SpriteObject)
 };

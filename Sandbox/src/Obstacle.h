@@ -4,14 +4,13 @@
 
 class ZeoEngine::ParticleSystem;
 
-class Obstacle : public ZeoEngine::GameObject
+class Obstacle : public ZeoEngine::SpriteObject
 {
 public:
 	Obstacle();
 
 	virtual void Init() override;
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
-	virtual void OnRender() override;
 
 	virtual void Reset() override;
 
@@ -24,8 +23,6 @@ public:
 	void Explode();
 
 private:
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ObstacleTexture;
-
 	float m_RotationSpeed = 0.0f;
 
 	float m_MaxHealth;
@@ -36,5 +33,5 @@ private:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
 	ZeoEngine::ParticleSystem* m_ExplosionParticle;
 
-	RTTR_REGISTER(Obstacle, GameObject)
+	RTTR_REGISTER(Obstacle, SpriteObject)
 };

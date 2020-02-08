@@ -5,6 +5,7 @@
 
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Core/EngineGlobals.h"
 
 namespace ZeoEngine {
 
@@ -18,8 +19,10 @@ namespace ZeoEngine {
 
 	void Level::Init()
 	{
-		// Default background
-		m_backgroundTexture = Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
+		Texture2DLibrary* library = GetTexture2DLibrary();
+		ZE_CORE_ASSERT(library);
+		// Default level background
+		m_backgroundTexture = library->Load("editor_assets/textures/Checkerboard_Alpha.png");
 
 	}
 

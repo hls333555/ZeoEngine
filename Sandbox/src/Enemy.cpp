@@ -21,14 +21,13 @@ Enemy::Enemy()
 	SetSpeed(2.0f);
 	SetSphereCollisionData(0.75f);
 	SetGenerateOverlapEvent(true);
+
+	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
 }
 
 void Enemy::Init()
 {
 	Super::Init();
-
-	m_EnemyTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship2.png");
-	SetTranslucent(m_EnemyTexture->HasAlpha());
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
@@ -64,13 +63,6 @@ void Enemy::OnUpdate(ZeoEngine::DeltaTime dt)
 
 		SpawnBullet();
 	}
-}
-
-void Enemy::OnRender()
-{
-	Super::OnRender();
-
-	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_EnemyTexture);
 }
 
 void Enemy::TakeDamage(float damage, GameObject* causer, GameObject* instigator)

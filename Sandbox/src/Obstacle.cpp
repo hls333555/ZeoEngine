@@ -15,14 +15,13 @@ Obstacle::Obstacle()
 {
 	SetSphereCollisionData(0.75f);
 	SetGenerateOverlapEvent(true);
+
+	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
 }
 
 void Obstacle::Init()
 {
 	Super::Init();
-
-	m_ObstacleTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
-	SetTranslucent(m_ObstacleTexture->HasAlpha());
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
@@ -39,13 +38,6 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		SetActive(false);
 	}
-}
-
-void Obstacle::OnRender()
-{
-	Super::OnRender();
-
-	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_ObstacleTexture);
 }
 
 void Obstacle::Reset()

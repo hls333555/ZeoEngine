@@ -4,7 +4,7 @@
 
 class GameLevel;
 
-class Bullet : public ZeoEngine::GameObject
+class Bullet : public ZeoEngine::SpriteObject
 {
 public:
 	Bullet();
@@ -15,7 +15,7 @@ protected:
 	float m_Damage = 0.0f;
 	bool m_bCanPenetrate;
 
-	RTTR_REGISTER(Bullet, GameObject)
+	RTTR_REGISTER(Bullet, SpriteObject)
 };
 
 class PlayerBullet : public Bullet
@@ -24,7 +24,6 @@ public:
 	PlayerBullet();
 
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
-	virtual void OnRender() override;
 
 	virtual void OnOverlap(GameObject* other) override;
 
@@ -37,7 +36,6 @@ public:
 	EnemyBullet();
 
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
-	virtual void OnRender() override;
 
 	virtual void OnOverlap(GameObject* other) override;
 

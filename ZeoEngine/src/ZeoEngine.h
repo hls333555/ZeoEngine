@@ -18,6 +18,7 @@
 #include "Engine/Core/EngineGlobals.h"
 
 #include "Engine/GameFramework/GameObject.h"
+#include "Engine/GameFramework/SpriteObject.h"
 #include "Engine/GameFramework/Level.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"

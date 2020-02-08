@@ -21,14 +21,12 @@ Player::Player()
 	SetSpeed(5.0f);
 	SetSphereCollisionData(0.75f);
 
+	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
 }
 
 void Player::Init()
 {
 	Super::Init();
-
-	m_PlayerTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
-	SetTranslucent(m_PlayerTexture->HasAlpha());
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
@@ -104,13 +102,6 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			}
 		}
 	}
-}
-
-void Player::OnRender()
-{
-	Super::OnRender();
-
-	ZeoEngine::Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_PlayerTexture);
 }
 
 void Player::OnImGuiRender()

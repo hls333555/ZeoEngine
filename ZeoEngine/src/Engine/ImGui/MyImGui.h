@@ -12,4 +12,5 @@ namespace ImGui {
 	IMGUI_API bool DragUInt_64(const char* label, uint64_t* v, float v_speed = 1.0f, uint64_t v_min = 0, uint64_t v_max = 0, const char* format = "%d");
 	IMGUI_API bool DragDouble(const char* label, double* v, float v_speed = 1.0f, double v_min = 0.0f, double v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
 
+	IMGUI_API void TextCentered(const char* fmt, ...);
 }
