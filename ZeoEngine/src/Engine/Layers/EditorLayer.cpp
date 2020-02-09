@@ -318,17 +318,19 @@ namespace ZeoEngine {
 					GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
 					if (gl)
 					{
+						// We should refer to current window's inner rect instead of current window
+						auto* window = ImGui::GetCurrentWindow();
 						// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
 						// It should be changed back to editor camera if that behavior is disabled
 						const auto& cameraBounds = gl->m_ActiveCamera->GetCameraBounds();
-						float levelX = (ImGui::GetMousePos().x - ImGui::GetWindowPos().x) / ImGui::GetWindowSize().x *
+						float levelX = (ImGui::GetMousePos().x - window->InnerRect.Min.x) / window->InnerRect.GetSize().x *
 							// Left bound is a negative value
 							(-cameraBounds.Left + cameraBounds.Right) +
 							cameraBounds.Left +
 							// Corrected by camera position
 							gl->m_ActiveCamera->GetPosition().x;
 
-						float levelY = (ImGui::GetMousePos().y - ImGui::GetWindowPos().y) / ImGui::GetWindowSize().y *
+						float levelY = (ImGui::GetMousePos().y - window->InnerRect.Min.y) / window->InnerRect.GetSize().y *
 							// Window position y increases from top to bottom while OpenGL position y increases from bottom to top,
 							// level origin (0, 0) is at the center of Game View window
 							(cameraBounds.Bottom - cameraBounds.Top) +
