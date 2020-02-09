@@ -19,6 +19,7 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/ImGui/MyImGui.h"
+#include "Engine/Core/EngineUtilities.h"
 
 namespace ZeoEngine {
 
@@ -318,29 +319,14 @@ namespace ZeoEngine {
 					GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
 					if (gl)
 					{
-						// We should refer to current window's inner rect instead of current window
-						auto* window = ImGui::GetCurrentWindow();
+						// TODO: Convert from ImVec2 to glm::vec2
 						// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
 						// It should be changed back to editor camera if that behavior is disabled
-						const auto& cameraBounds = gl->m_ActiveCamera->GetCameraBounds();
-						float levelX = (ImGui::GetMousePos().x - window->InnerRect.Min.x) / window->InnerRect.GetSize().x *
-							// Left bound is a negative value
-							(-cameraBounds.Left + cameraBounds.Right) +
-							cameraBounds.Left +
-							// Corrected by camera position
-							gl->m_ActiveCamera->GetPosition().x;
-
-						float levelY = (ImGui::GetMousePos().y - window->InnerRect.Min.y) / window->InnerRect.GetSize().y *
-							// Window position y increases from top to bottom while OpenGL position y increases from bottom to top,
-							// level origin (0, 0) is at the center of Game View window
-							(cameraBounds.Bottom - cameraBounds.Top) +
-							cameraBounds.Top +
-							// Corrected by camera position
-							gl->m_ActiveCamera->GetPosition().y;
+						const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), gl->m_ActiveCamera);
 
 						// Spawn dragged Game Object to the level at mouse position
 						// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
-						rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ levelX, levelY, 0.1f } });
+						rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ result.x, result.y, 0.1f } });
 						GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
 						if (spawnedGameObject != m_SelectedGameObject)
 						{
@@ -390,6 +376,11 @@ namespace ZeoEngine {
 				{
 					ResumePIE();
 				}
+			}
+
+			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
+			{
+				m_SelectedGameObject->OnGameViewImGuiRender();
 			}
 			
 			m_bIsHoveringGameView = ImGui::IsWindowHovered();

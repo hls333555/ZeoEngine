@@ -22,6 +22,7 @@ namespace ZeoEngine {
 	class EditorLayer : public Layer
 	{
 		friend class GameLayer;
+		friend GameObject;
 
 	public:
 		EditorLayer();

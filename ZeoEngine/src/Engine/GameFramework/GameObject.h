@@ -42,6 +42,9 @@ namespace ZeoEngine {
 	public:
 		virtual void UpdateData() = 0;
 
+#if WITH_EDITOR
+		bool bDrawCollision = false;
+#endif
 		glm::vec2 Center{ 0.0f };
 		GameObject* OwnerObject;
 
@@ -217,7 +220,10 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		virtual void BeginPlay() {}
 		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnRender() {}
+		/** If you want to draw widgets inside Game View window, try OnGameViewImGuiRender(). */
 		virtual void OnImGuiRender() {}
+		/** Called only during this GameObject being selected and widgets will be drawn only inside Game View window. */
+		virtual void OnGameViewImGuiRender();
 
 		// TODO: Currently only implements for enum
 		virtual void OnPropertyValueChange(const rttr::property& prop);

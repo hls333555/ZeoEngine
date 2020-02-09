@@ -5,11 +5,14 @@
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <ImGuizmo.h>
 
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/RandomEngine.h"
+#include "Engine/Layers/EditorLayer.h"
+#include "Engine/Core/EngineUtilities.h"
 
 RTTR_REGISTRATION
 {
@@ -39,28 +42,30 @@ RTTR_REGISTRATION
 		);
 
 	registration::class_<CollisionData>("CollisionData")
+		.property("DrawCollision", &CollisionData::bDrawCollision)
+		(
+			metadata(PropertyMeta::Tooltip, u8"是否绘制碰撞体。")
+		)
 		.property("CenterOffset", &CollisionData::CenterOffset)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Tooltip, u8"碰撞体的中心较物体中心的偏移。"),
-			metadata(PropertyMeta::DragSensitivity, 0.1f)
+			metadata(PropertyMeta::DragSensitivity, 0.05f)
 		);
-
 	registration::class_<BoxCollisionData>("BoxCollisionData")
 		.property("Extents", &BoxCollisionData::Extents)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Tooltip, u8"盒子碰撞体的延展"),
 			metadata(PropertyMeta::Min, 0.01f),
-			metadata(PropertyMeta::DragSensitivity, 0.1f)
+			metadata(PropertyMeta::DragSensitivity, 0.05f)
 		);
-
 	registration::class_<SphereCollisionData>("SphereCollisionData")
 		.property("Radius", &SphereCollisionData::Radius)
 		(
 			metadata(PropertyMeta::Tooltip, u8"球形碰撞体的半径"),
 			metadata(PropertyMeta::Min, 0.01f),
-			metadata(PropertyMeta::DragSensitivity, 0.1f)
+			metadata(PropertyMeta::DragSensitivity, 0.05f)
 		);
 
 	registration::class_<GameObject>("GameObject")
@@ -166,6 +171,37 @@ namespace ZeoEngine {
 
 		m_Velocity = (GetPosition2D() - m_LastPosition) / (float)dt;
 		m_LastPosition = GetPosition2D();
+	}
+
+	void GameObject::OnGameViewImGuiRender()
+	{
+		// Draw collision
+		if (m_CollisionData && m_CollisionData->bDrawCollision)
+		{
+			EditorLayer* el = Application::Get().FindLayerByName<EditorLayer>("Editor");
+			// Do not draw in PIE mode
+			if (!el || el->m_PIEState != PIEState::None)
+				return;
+
+			ImDrawList* dl = ImGui::GetWindowDrawList();
+			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), &el->m_EditorCameraController->GetCamera());
+			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
+			static const float collisionThickness = 2.5f;
+			if (m_CollisionType == ObjectCollisionType::Box)
+			{
+				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / el->m_EditorCameraController->GetCamera().GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / el->m_EditorCameraController->GetCamera().GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
+				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
+					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
+					0.0f, 15, collisionThickness);
+			}
+			else if (m_CollisionType == ObjectCollisionType::Sphere)
+			{
+				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / el->m_EditorCameraController->GetCamera().GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				// TODO: Convert from glm::vec2 to ImVec2
+				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
+			}
+		}
 	}
 
 	void GameObject::OnPropertyValueChange(const rttr::property& prop)
