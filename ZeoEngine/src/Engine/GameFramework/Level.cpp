@@ -1,8 +1,6 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Level.h"
 
-#include <imgui.h>
-
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/EngineGlobals.h"
@@ -104,8 +102,8 @@ namespace ZeoEngine {
 		if (!object)
 			return;
 
-		GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
-		gl->m_GameObjectsPendingDestroy.push_back(object);
+		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
+		game->AddGameObjectPendingDestroy(object);
 
 		// NOTE: DO NOT USE index based for loop here as it will not iterate all elements!
 		for (auto it = m_GameObjects.begin(); it != m_GameObjects.end();)

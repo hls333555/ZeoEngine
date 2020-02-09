@@ -21,9 +21,6 @@ namespace ZeoEngine {
 
 	class EditorLayer : public Layer
 	{
-		friend class GameLayer;
-		friend GameObject;
-
 	public:
 		EditorLayer();
 
@@ -32,6 +29,8 @@ namespace ZeoEngine {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 
+		const Scope<OrthographicCameraController>& GetEditorCameraController() const { return m_EditorCameraController; }
+		OrthographicCamera* GetEditorCamera() const { return m_EditorCameraController ? &m_EditorCameraController->GetCamera() : nullptr; }
 		const PIEState GetPIEState() const { return m_PIEState; }
 
 	private:
@@ -69,11 +68,10 @@ namespace ZeoEngine {
 		void DisplayClassHierarchyRecursively(const std::vector<rttr::type>& derivedTypes);
 		void ProcessClassInteraction(const rttr::type& type);
 
-		// TODO: Abstract again
 #define BEGIN_PROP(prop) \
 		ImGui::Columns(2);\
 		ImGui::AlignTextToFramePadding();\
-		ImGui::TreeNodeEx(prop.get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);\
+		ImGui::TreeNodeEx(prop.get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Property name*/\
 		ShowPropertyTooltip(prop);\
 		ImGui::NextColumn(); /*Switch to the right column*/\
 		ImGui::SetNextItemWidth(-1.0f); /*Align width to the right side*/\
@@ -88,7 +86,7 @@ namespace ZeoEngine {
 		ImGui::Columns(2);\
 		ImGui::AlignTextToFramePadding();\
 		ss << "[" << sequentialIndex << "]";\
-		ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);\
+		ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Sequential index*/\
 		ShowPropertyTooltip(prop);\
 		ImGui::NextColumn(); /*Switch to the right column*/\
 		ss.clear(); ss.str("");\

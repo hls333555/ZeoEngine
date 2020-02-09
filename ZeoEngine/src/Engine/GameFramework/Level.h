@@ -110,8 +110,19 @@ namespace ZeoEngine {
 		// TODO: Need a way to destroy a particle system explicitly
 		ParticleSystem* SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
-		/** Re-sort translucent objects when GameObject's position value is changed in Object Property window.  */
-		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
+		template<typename T>
+		std::vector<GameObject*> GetAllObjectsOfClass()
+		{
+			std::vector<GameObject*> result;
+			for (auto* object : m_GameObjects)
+			{
+				if (dynamic_cast<T*>(object))
+				{
+					result.push_back(object);
+				}
+			}
+			return result;
+		}
 
 	private:
 		// TODO: Should strip out "ZeoEngine::" in some cases
@@ -136,6 +147,9 @@ namespace ZeoEngine {
 
 		/** DO NOT call it directly, call GameObject::Destroy() instead! This is for internal use only! */
 		void PendingDestroyGameObject(GameObject* object);
+
+		/** Re-sort translucent objects when GameObject's position value is changed in Object Property window.  */
+		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
 
 	private:
 		Ref<Texture2D> m_backgroundTexture;

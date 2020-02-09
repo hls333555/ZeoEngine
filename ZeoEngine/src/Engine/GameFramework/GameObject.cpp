@@ -79,7 +79,7 @@ RTTR_REGISTRATION
 		.property("Name", &GameObject::m_Name)
 		(
 			policy::prop::bind_as_ptr,
-			metadata(PropertyMeta::Tooltip, u8"用于在编辑器里显示的名称。设为独一无二的最佳。")
+			metadata(PropertyMeta::Tooltip, u8"用于在编辑器里显示的名称。")
 		)
 		.property("IsActive", &GameObject::m_bIsActive)
 		.property("Transform", &GameObject::m_Transform)
@@ -178,27 +178,26 @@ namespace ZeoEngine {
 		// Draw collision
 		if (m_CollisionData && m_CollisionData->bDrawCollision)
 		{
-			EditorLayer* el = Application::Get().FindLayerByName<EditorLayer>("Editor");
+			EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
 			// Do not draw in PIE mode
-			if (!el || el->m_PIEState != PIEState::None)
+			if (!editor || editor->GetPIEState() != PIEState::None)
 				return;
 
 			ImDrawList* dl = ImGui::GetWindowDrawList();
-			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), &el->m_EditorCameraController->GetCamera());
+			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), editor->GetEditorCamera());
 			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
 			static const float collisionThickness = 2.5f;
 			if (m_CollisionType == ObjectCollisionType::Box)
 			{
-				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / el->m_EditorCameraController->GetCamera().GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / el->m_EditorCameraController->GetCamera().GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
+				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / editor->GetEditorCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / editor->GetEditorCamera()->GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
 				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
 					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
 					0.0f, 15, collisionThickness);
 			}
 			else if (m_CollisionType == ObjectCollisionType::Sphere)
 			{
-				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / el->m_EditorCameraController->GetCamera().GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				// TODO: Convert from glm::vec2 to ImVec2
+				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / editor->GetEditorCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
 				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
 			}
 		}

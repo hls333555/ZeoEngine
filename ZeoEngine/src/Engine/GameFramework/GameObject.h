@@ -156,9 +156,9 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 	protected:
 		GameObject() = default;
-
 		virtual ~GameObject();
 
+	public:
 		const std::string& GetUniqueName() const { return m_UniqueName; }
 		const std::string& GetName() const { return m_Name; }
 	private:

@@ -14,6 +14,7 @@ namespace ZeoEngine {
 
 	GameLayer::GameLayer()
 		: Layer("Game")
+		, m_GarbageCollectionInterval(30.0f)
 	{
 		RandomEngine::Init();
 
@@ -22,8 +23,8 @@ namespace ZeoEngine {
 		m_GameCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
 		m_GameCameraController->SetZoomLevel(3.0f);
 
-		m_EditorLayer = Application::Get().FindLayerByName<EditorLayer>("Editor");
-		ZE_CORE_ASSERT_INFO(m_EditorLayer, "GameLayer: m_EditorLayer is null!");
+		m_Editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
+		ZE_CORE_ASSERT_INFO(m_Editor, "GameLayer::m_Editor is null!");
 	}
 
 	void GameLayer::OnAttach()
@@ -39,7 +40,7 @@ namespace ZeoEngine {
 		Level::Get().Init();
 
 		// A very basic GameObject based garbage collection system
-		m_TimerManager.SetTimer(30.0f, [&]() {
+		m_TimerManager.SetTimer(m_GarbageCollectionInterval, [&]() {
 			ZE_CORE_TRACE("Start garbage collecting...");
 			for (uint32_t i = 0; i < m_GameObjectsPendingDestroy.size(); ++i)
 			{
@@ -64,16 +65,16 @@ namespace ZeoEngine {
 
 		m_TimerManager.OnUpdate(dt);
 
-		if (m_EditorLayer->m_PIEState == PIEState::None)
+		if (m_Editor->GetPIEState() == PIEState::None)
 		{
 			// Setting editor camera
-			m_ActiveCamera = &m_EditorLayer->m_EditorCameraController->GetCamera();
+			m_ActiveCamera = m_Editor->GetEditorCamera();
 		}
 		else
 		{
 			// Setting game camera
 			m_ActiveCamera = &m_GameCameraController->GetCamera();
-			if (m_EditorLayer->m_PIEState == PIEState::Running)
+			if (m_Editor->GetPIEState() == PIEState::Running)
 			{
 				Level::Get().OnUpdate(dt);
 			}

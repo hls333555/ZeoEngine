@@ -10,12 +10,10 @@
 namespace ZeoEngine {
 
 	class GameObject;
+	class EditorLayer;
 
 	class GameLayer : public Layer
 	{
-		friend class EditorLayer;
-		friend class Level;
-
 	public:
 		GameLayer();
 
@@ -25,9 +23,13 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 
-		OrthographicCamera* GetGameCamera() { return &m_GameCameraController->GetCamera(); }
+		const Scope<OrthographicCameraController>& GetGameCameraController() const { return m_GameCameraController; }
+		OrthographicCamera* GetGameCamera() const { return m_GameCameraController ? &m_GameCameraController->GetCamera() : nullptr; }
+		OrthographicCamera* GetActiveCamera() const { return m_ActiveCamera; }
 		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		TimerManager* GetTimerManager() { return &m_TimerManager; }
+
+		void AddGameObjectPendingDestroy(GameObject* object) { m_GameObjectsPendingDestroy.push_back(object); }
 
 	private:
 		void LoadFont(const char* fontPath, const char* missingChars);
@@ -38,13 +40,14 @@ namespace ZeoEngine {
 	private:
 		Scope<OrthographicCameraController> m_GameCameraController;
 		OrthographicCamera* m_ActiveCamera;
-		Texture2DLibrary m_Texture2DLibrary;
 
+		Texture2DLibrary m_Texture2DLibrary;
 		TimerManager m_TimerManager;
 
 		std::vector<GameObject*> m_GameObjectsPendingDestroy;
+		float m_GarbageCollectionInterval;
 
-		EditorLayer* m_EditorLayer;
+		EditorLayer* m_Editor;
 
 	};
 

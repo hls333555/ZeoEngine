@@ -287,8 +287,7 @@ namespace ZeoEngine {
 	{
 		if (ImGui::Begin("Game View", bShow))
 		{
-			auto* window = ImGui::GetCurrentWindow();
-			// TODO: Add conversion from ImVec2 to glm::vec2 inside imconfig.h
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			glm::vec2 max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 			glm::vec2 min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
 			glm::vec2 size = max - min;
@@ -316,13 +315,12 @@ namespace ZeoEngine {
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragGameObjectClass"))
 				{
-					GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
-					if (gl)
+					GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
+					if (game)
 					{
-						// TODO: Convert from ImVec2 to glm::vec2
 						// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
 						// It should be changed back to editor camera if that behavior is disabled
-						const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), gl->m_ActiveCamera);
+						const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), game->GetActiveCamera());
 
 						// Spawn dragged Game Object to the level at mouse position
 						// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
@@ -351,9 +349,9 @@ namespace ZeoEngine {
 			//////////////////////////////////////////////////////////////////////////
 			
 			// Place buttons at window center
-			ImGui::Indent(ImGui::GetWindowSize().x / 2 - 40.0f);
+			ImGui::Indent(ImGui::GetWindowSize().x / 2.0f - 40.0f);
 			// Toggle play / stop
-			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0, 1), ImVec2(1, 0)))
+			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 			{
 				if (m_PIEState == PIEState::None)
 				{
@@ -366,7 +364,7 @@ namespace ZeoEngine {
 			}
 			ImGui::SameLine();
 			// Toggle pause / resume
-			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0, 1), ImVec2(1, 0)))
+			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 			{
 				if (m_PIEState == PIEState::Running)
 				{
@@ -418,7 +416,6 @@ namespace ZeoEngine {
 				{
 					level.m_GameObjects[i]->m_bIsSelectedInEditor = false;
 				}
-
 				std::stringstream ss;
 				// Use pointer as unique id
 				ss << "##" << level.m_GameObjects[i];
@@ -446,7 +443,7 @@ namespace ZeoEngine {
 				ImGui::SameLine();
 				ImGui::TextColored(color, "%s", level.m_GameObjects[i]->GetName().c_str());
 
-				// Clear the variable if it is deselected
+				// Clear the variable if that GameObject is deselected
 				if (m_SelectedGameObject == level.m_GameObjects[i] && !level.m_GameObjects[i]->m_bIsSelectedInEditor)
 				{
 					m_SelectedGameObject = nullptr;
@@ -754,7 +751,6 @@ namespace ZeoEngine {
 	void EditorLayer::AddSequentialButtons(const rttr::property& prop, rttr::variant_sequential_view& sequentialView)
 	{
 		rttr::type sequentialValueType = sequentialView.get_value_type();
-		// TODO: Consider using ImFormatString()
 		std::stringstream ss;
 		ss << "##" << prop.get_name() << sequentialView.get_value_type().get_name();
 		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))
@@ -993,7 +989,7 @@ namespace ZeoEngine {
 	void EditorLayer::SetNextWindowDefaultPosition()
 	{
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 100, viewport->Pos.y + 100), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + 100.0f, viewport->Pos.y + 100.0f), ImGuiCond_FirstUseEver);
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -1022,11 +1018,11 @@ namespace ZeoEngine {
 		// Update editor's camera
 		m_EditorCameraController->UpdateProjection(newSizeX / newSizeY);
 
-		GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
-		if (gl)
+		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
+		if (game)
 		{
 			// Update game's camera
-			gl->m_GameCameraController->UpdateProjection(newSizeX / newSizeY);
+			game->GetGameCameraController()->UpdateProjection(newSizeX / newSizeY);
 		}
 	}
 
@@ -1160,10 +1156,10 @@ namespace ZeoEngine {
 			// TODO: Not applied to 3D rendering
 			ImGuizmo::SetOrthographic(true);
 
-			auto* window = ImGui::GetCurrentWindow();
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImGuizmo::SetRect(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
 
-			ImGuizmo::Manipulate(glm::value_ptr(m_EditorCameraController->GetCamera().GetViewMatrix()), glm::value_ptr(m_EditorCameraController->GetCamera().GetProjectionMatrix()),
+			ImGuizmo::Manipulate(glm::value_ptr(GetEditorCamera()->GetViewMatrix()), glm::value_ptr(GetEditorCamera()->GetProjectionMatrix()),
 				currentGizmoOperation, currentGizmoMode,
 				glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
 				bUseSnap ? &snap[0] : nullptr,
@@ -1512,7 +1508,7 @@ namespace ZeoEngine {
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
-		// Note: The min of float should be -FLT_MAX
+		// Note: The min value of float should be -FLT_MAX
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
@@ -1545,7 +1541,7 @@ namespace ZeoEngine {
 		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
-		// Note: The min of double should be -DBL_MAX
+		// Note: The min value of double should be -DBL_MAX
 		double min = minVar ? std::max(minVar.to_double(), -DBL_MAX) : -DBL_MAX;
 		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
@@ -1668,7 +1664,7 @@ namespace ZeoEngine {
 				m_bIsTransformDirty = true;
 			}
 			// If position value changes, schedule to re-sort translucent objects
-			// TODO: Not optimal for 3D rendering as modifying rotation and scale will invoke this too
+			// TODO: Not optimal for 3D rendering as modifying x and y will invoke this too
 			if (ImGui::IsItemDeactivatedAfterChange())
 			{
 				Level::Get().OnTranslucentObjectsDirty(m_SelectedGameObject);
