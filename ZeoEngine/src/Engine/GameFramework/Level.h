@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/GameFramework/GameObject.h"
-#include "Engine/Core/TimerManager.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
@@ -51,8 +50,6 @@ namespace ZeoEngine {
 		void OnEditorUpdate(DeltaTime dt);
 		void OnRender();
 		virtual void OnImGuiRender();
-
-		TimerManager* GetTimerManager() { return &m_TimerManager; }
 
 		template<typename T>
 		T* SpawnGameObject(GameObject* owner = nullptr)
@@ -137,7 +134,8 @@ namespace ZeoEngine {
 			return ss.str();
 		}
 
-		void DestroyGameObject(GameObject* object);
+		/** DO NOT call it directly, call GameObject::Destroy() instead! This is for internal use only! */
+		void PendingDestroyGameObject(GameObject* object);
 
 	private:
 		Ref<Texture2D> m_backgroundTexture;
@@ -147,7 +145,6 @@ namespace ZeoEngine {
 		std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 		uint32_t m_TranslucentObjectIndex = 0;
 
-		TimerManager m_TimerManager;
 		ParticleManager m_ParticleManager;
 
 	};

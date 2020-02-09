@@ -38,11 +38,31 @@ namespace ZeoEngine {
 
 		Level::Get().Init();
 
+		// A very basic GameObject based garbage collection system
+		m_TimerManager.SetTimer(30.0f, [&]() {
+			ZE_CORE_TRACE("Start garbage collecting...");
+			for (uint32_t i = 0; i < m_GameObjectsPendingDestroy.size(); ++i)
+			{
+				delete m_GameObjectsPendingDestroy[i];
+			}
+			m_GameObjectsPendingDestroy.clear();
+		}, 0);
+
+	}
+
+	void GameLayer::OnDetach()
+	{
+		for (auto* object : m_GameObjectsPendingDestroy)
+		{
+			delete object;
+		}
 	}
 
 	void GameLayer::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNCTION();
+
+		m_TimerManager.OnUpdate(dt);
 
 		if (m_EditorLayer->m_PIEState == PIEState::None)
 		{

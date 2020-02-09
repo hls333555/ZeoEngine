@@ -6,6 +6,7 @@
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/EngineGlobals.h"
+#include "Engine/Core/Application.h"
 
 namespace ZeoEngine {
 
@@ -28,11 +29,9 @@ namespace ZeoEngine {
 
 	void Level::OnUpdate(DeltaTime dt)
 	{
-		m_TimerManager.OnUpdate(dt);
-
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
-			if (!m_GameObjects[i]->IsActive())
+			if (m_GameObjects[i]->IsPendingDestroy() || !m_GameObjects[i]->IsActive())
 				continue;
 
 			// Collision detection
@@ -65,7 +64,7 @@ namespace ZeoEngine {
 
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
-			if (!m_GameObjects[i]->IsActive())
+			if (m_GameObjects[i]->IsPendingDestroy() || !m_GameObjects[i]->IsActive())
 				continue;
 
 			if (!m_GameObjects[i]->IsTranslucent())
@@ -93,22 +92,40 @@ namespace ZeoEngine {
 	{
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
-			if (m_GameObjects[i]->IsActive())
+			if (!m_GameObjects[i]->IsPendingDestroy() && m_GameObjects[i]->IsActive())
 			{
 				m_GameObjects[i]->OnImGuiRender();
 			}
 		}
 	}
 
-	void Level::DestroyGameObject(GameObject* object)
+	void Level::PendingDestroyGameObject(GameObject* object)
 	{
 		if (!object)
 			return;
 
-		auto it = std::find(m_GameObjects.begin(), m_GameObjects.end(), object);
-		if (it != m_GameObjects.end())
+		GameLayer* gl = Application::Get().FindLayerByName<GameLayer>("Game");
+		gl->m_GameObjectsPendingDestroy.push_back(object);
+
+		// NOTE: DO NOT USE index based for loop here as it will not iterate all elements!
+		for (auto it = m_GameObjects.begin(); it != m_GameObjects.end();)
 		{
-			m_GameObjects.erase(it);
+			// Remove this GameObject
+			if (*it == object)
+			{
+				it = m_GameObjects.erase(it);
+			}
+			// Remove GameObjects that depend on this one
+			else if ((*it)->GetOwner() == object)
+			{
+				(*it)->m_bPendingDestroy = true;
+				(*it)->m_bIsActive = false;
+				it = m_GameObjects.erase(it);
+			}
+			else
+			{
+				++it;
+			}
 		}
 
 		auto it2 = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
@@ -118,8 +135,6 @@ namespace ZeoEngine {
 		{
 			m_TranslucentObjects.erase(it2);
 		}
-
-		delete object;
 	}
 
 	ParticleSystem* Level::SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)

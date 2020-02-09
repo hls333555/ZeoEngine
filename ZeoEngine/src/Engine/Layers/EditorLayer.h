@@ -52,6 +52,7 @@ namespace ZeoEngine {
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 		void OnGameViewWindowResized(float newSizeX, float newSizeY);
+		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
 
 		void StartPIE();

@@ -148,6 +148,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	class GameObject
 	{
 		friend class EditorLayer;
+		friend class GameLayer;
 		friend class Level;
 
 	protected:
@@ -161,10 +162,11 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		void SetUniqueName(const std::string& uniqueName) { m_UniqueName = uniqueName; }
 		void SetName(const std::string& name) { m_Name = name; }
 	public:
-		GameObject* GetOwner() const { return m_Owner; }
-		void SetOwner(GameObject* owner) { m_Owner = owner; }
+		GameObject* GetOwner() const { return m_OwnerObject; }
+		void SetOwner(GameObject* owner) { m_OwnerObject = owner; }
 		bool IsActive() const { return m_bIsActive; }
 		void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
+		bool IsPendingDestroy() const { return m_bPendingDestroy; }
 		const Transform& GetTransform() const { return m_Transform; }
 		void SetTransform(const Transform& transform) { m_Transform = transform; }
 		const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }
@@ -244,7 +246,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 		/**
 		 * Update box collision data.
-		 * You SHOULD call it after specifying box collision type and DO NOT call it in the constructor!
+		 * You SHOULD call it after specifying collision type and DO NOT call it in the constructor!
 		 */
 		void FillBoxCollisionData(const glm::vec2& extents = { 0.0f, 0.0f }, const glm::vec2& centerOffset = { 0.0f, 0.0f });
 		/**
@@ -284,8 +286,9 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** The name displayed in the level outline, which can be modified by the user. By default, this is the same as m_UniqueName */
 		std::string m_Name;
 		bool m_bIsActive = true;
-		GameObject* m_Owner;
-		bool bPendingDestroy = false;
+		/** GameObject that owns this one, which means if owner is destroyed, this one either */
+		GameObject* m_OwnerObject;
+		bool m_bPendingDestroy = false;
 
 		//// Transform component
 		Transform m_Transform;

@@ -351,12 +351,12 @@ namespace ZeoEngine {
 
 	void GameObject::Destroy()
 	{
-		if (!bPendingDestroy)
+		if (!m_bPendingDestroy)
 		{
-			bPendingDestroy = true;
+			m_bPendingDestroy = true;
 			m_bIsActive = false;
 			OnDestroyed();
-			Level::Get().DestroyGameObject(this);
+			Level::Get().PendingDestroyGameObject(this);
 		}
 	}
 

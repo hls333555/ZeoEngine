@@ -339,8 +339,13 @@ namespace ZeoEngine {
 						// Spawn dragged Game Object to the level at mouse position
 						// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
 						rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ levelX, levelY, 0.1f } });
+						GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
+						if (spawnedGameObject != m_SelectedGameObject)
+						{
+							OnGameObjectSelectionChanged(m_SelectedGameObject);
+						}
 						// Set it selected
-						m_SelectedGameObject = createdVar.get_value<GameObject*>();
+						m_SelectedGameObject = spawnedGameObject;
 						m_SelectedGameObject->m_bIsSelectedInEditor = true;
 					}
 				}
@@ -400,6 +405,9 @@ namespace ZeoEngine {
 			// Note: Always retrieve vector's size during loop, do not use cached one
 			for (uint32_t i = 0; i < level.m_GameObjects.size(); ++i)
 			{
+				if (level.m_GameObjects[i]->IsPendingDestroy())
+					continue;
+
 				ImVec4 color;
 				if (level.m_GameObjects[i]->IsActive())
 				{
@@ -456,7 +464,7 @@ namespace ZeoEngine {
 				if (m_SelectedGameObject && ImGui::IsKeyReleased(ImGui::GetKeyIndex(ImGuiKey_Delete)))
 				{
 					ZE_CORE_INFO("Deleting {0} from level...", m_SelectedGameObject->GetName());
-					level.DestroyGameObject(m_SelectedGameObject);
+					m_SelectedGameObject->Destroy();
 					m_SelectedGameObject = nullptr;
 				}
 			}
@@ -468,7 +476,7 @@ namespace ZeoEngine {
 	{
 		if (ImGui::Begin("Object Property", bShow))
 		{
-			if (m_SelectedGameObject)
+			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 			{
 				if (m_bIsSortedPropertiesDirty)
 				{
@@ -1153,7 +1161,7 @@ namespace ZeoEngine {
 
 		// Draw transform gizmo on the selected GameObject when not in PIE
 		// as editor camera, which gizmo needs, will get deactivated in PIE
-		if (m_SelectedGameObject)
+		if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 		{
 			ImGuizmo::SetDrawlist();
 			// TODO: Not applied to 3D rendering
@@ -1711,9 +1719,7 @@ namespace ZeoEngine {
 			BEGIN_SEQPROP(prop, sequentialIndex)
 		}
 		std::stringstream ss_PreviewName;
-		auto& levelObjects = Level::Get().m_GameObjects;
-		// TODO: Querying vector every frame may not be optimal
-		if (std::find(levelObjects.begin(), levelObjects.end(), gameObjectValue) != levelObjects.end())
+		if (gameObjectValue && !gameObjectValue->IsPendingDestroy())
 		{
 			// Displayed as "ObjectName (ClassName)"
 			ss_PreviewName << gameObjectValue->GetName() << " (" << rttr::type::get(*gameObjectValue).get_name() << ")";

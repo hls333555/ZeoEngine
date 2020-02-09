@@ -16,7 +16,8 @@ namespace ZeoEngine {
 
 	static TimerManager* GetTimerManager()
 	{
-		return Level::Get().GetTimerManager();
+		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
+		return gameLayer ? gameLayer->GetTimerManager() : nullptr;
 	}
 
 	static Texture2DLibrary* GetTexture2DLibrary()
