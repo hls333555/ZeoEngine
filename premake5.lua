@@ -27,6 +27,7 @@ IncludeDir["stb_image"] = "ZeoEngine/vendor/stb_image"
 IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
 IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
+IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
 
 -- Include the premake file of GLFW
 include "ZeoEngine/vendor/GLFW"
@@ -79,7 +80,8 @@ project "ZeoEngine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.NFD}"
+		"%{IncludeDir.NFD}",
+		"%{IncludeDir.rapidjson}"
 	}
 
 	libdirs
