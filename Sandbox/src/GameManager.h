@@ -6,16 +6,11 @@
 
 #include "Obstacle.h"
 
-class Player;
-
-// TODO: introduce python scripting
-class GameLevel
+class GameManager : public ZeoEngine::GameObject
 {
 public:
-	virtual void Init();
-	virtual void OnUpdate(ZeoEngine::DeltaTime dt);
-
-	inline Player* GetPlayer() { return m_Player; }
+	virtual void BeginPlay() override;
+	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 
 	void DelaySpawnEnemy(float delay);
 
@@ -23,11 +18,10 @@ private:
 	void SpawnObstacle();
 
 private:
-	Player* m_Player;
-
 	typedef ZeoEngine::ObjectPooler<Obstacle, 10> ObstaclePool;
 	ZeoEngine::Scope<ObstaclePool> m_ObstaclePool;
 
 	bool m_bShouldSpawnObstacle = true;
 
+	RTTR_REGISTER(GameManager, GameObject)
 };

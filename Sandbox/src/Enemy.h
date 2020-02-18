@@ -19,8 +19,6 @@ public:
 
 	virtual void TakeDamage(float damage, GameObject* causer, GameObject* instigator) override;
 
-	virtual void OnDestroyed() override;
-
 	virtual void OnOverlap(GameObject* other) override;
 
 	inline void SetMaxHealth(float maxHealth) { m_MaxHealth = maxHealth; m_CurrentHealth = maxHealth; }

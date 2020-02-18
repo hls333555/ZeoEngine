@@ -2,8 +2,6 @@
 
 #include <imgui.h>
 
-#include "GameLevel.h"
-
 RTTR_REGISTRATION
 {
 	using namespace rttr;
@@ -31,8 +29,6 @@ void Player::Init()
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
-
 	ZeoEngine::ParticleTemplate m_FlameEmitter;
 	m_FlameEmitter.lifeTime.SetRandom(0.75f, 1.5f);
 	m_FlameEmitter.spawnRate.SetConstant(30.0f);
@@ -47,6 +43,13 @@ void Player::Init()
 	m_FlameEmitter.colorEnd.SetConstant({ 0.9f, 0.8f, 0.5f, 0.0f });
 	m_FlameParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_FlameEmitter, this);
 
+}
+
+void Player::BeginPlay()
+{
+	Super::BeginPlay();
+
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
 }
 
 void Player::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -171,7 +174,7 @@ void Player::Explode()
 	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
 
 	m_FlameParticle->Deactivate();
-	m_FlameParticle->OnSystemFinished = std::bind([&]() {
+	m_FlameParticle->m_OnSystemFinished = std::bind([&]() {
 		Destroy();
 	});
 }

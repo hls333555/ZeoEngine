@@ -118,6 +118,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Max,
 		/** Controls how fast it changes when you are dragging a property value, default is 1.0f */
 		DragSensitivity,
+		/** This property is registered but will not show in the object property window */
+		Hidden,
 		/** This property is transient and will not get serialized */
 		Transient,
 		/**
@@ -217,7 +219,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		virtual bool IsTranslucent() const { return false; }
 
 		virtual void Init();
-		virtual void BeginPlay() {}
+		virtual void BeginPlay();
 		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnRender() {}
 		/** If you want to draw widgets inside Game View window, try OnGameViewImGuiRender(). */
@@ -227,6 +229,10 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 		// TODO: Currently only implements for enum
 		virtual void OnPropertyValueChange(const rttr::property& prop);
+
+		std::string Serialize();
+		//virtual bool SerializeCustomTypes();
+		virtual void OnDeserialized();
 
 		/**
 		 * Get forward vector based on this object's rotation.
@@ -283,7 +289,10 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** Called after gizmo manipulation to update the transform property */
 		void DecomposeTransformMatrix();
 		/** Called after modifying the transform property to update the transform matrix used by gizmo */
-		void ReComposeTransformMatrix();
+		void RecomposeTransformMatrix();
+
+	public:
+		std::function<void()> m_OnDestroyed;
 
 		// TODO: Component system
 	private:
@@ -295,6 +304,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** GameObject that owns this one, which means if owner is destroyed, this one either */
 		GameObject* m_OwnerObject;
 		bool m_bPendingDestroy = false;
+		bool m_bHasBegunPlay = false;
 
 		//// Transform component
 		Transform m_Transform;

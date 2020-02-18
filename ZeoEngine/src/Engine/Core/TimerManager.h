@@ -37,7 +37,7 @@ namespace ZeoEngine {
 	public:
 		TimerManager()
 		{
-			ZE_CORE_TRACE("Creating timer manager...");
+			ZE_CORE_TRACE("Timer manager initialized!");
 		}
 
 		/**

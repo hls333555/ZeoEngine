@@ -37,6 +37,7 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 	SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
 	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom - 0.5f)
 	{
+		// Lifetime is determined by ObjectPooler
 		SetActive(false);
 	}
 }
@@ -68,6 +69,7 @@ void Obstacle::TakeDamage(float damage, GameObject* causer, GameObject* instigat
 		{
 			player->AddScore(m_ScoreAmount);
 		}
+		// Lifetime is determined by ObjectPooler
 		SetActive(false);
 		Explode();
 	}
@@ -84,6 +86,7 @@ void Obstacle::OnOverlap(GameObject* other)
 		{
 			player->AddScore(-m_ScoreAmount);
 		}
+		// Lifetime is determined by ObjectPooler
 		SetActive(false);
 		Explode();
 	}

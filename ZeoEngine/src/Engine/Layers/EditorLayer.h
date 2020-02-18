@@ -19,6 +19,8 @@ namespace ZeoEngine {
 		Paused
 	};
 
+	extern PIEState g_PIEState;
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -31,7 +33,8 @@ namespace ZeoEngine {
 
 		const Scope<OrthographicCameraController>& GetEditorCameraController() const { return m_EditorCameraController; }
 		OrthographicCamera* GetEditorCamera() const { return m_EditorCameraController ? &m_EditorCameraController->GetCamera() : nullptr; }
-		const PIEState GetPIEState() const { return m_PIEState; }
+		// TODO: ClearSelectedGameObject()
+		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
 
 	private:
 		void LoadEditorTextures();
@@ -55,13 +58,13 @@ namespace ZeoEngine {
 		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
 
+		/** Show transform options and draw transform gizmo. */
+		void EditTransform();
+
 		void StartPIE();
 		void StopPIE();
 		void PausePIE();
 		void ResumePIE();
-
-		/** Show transform options and draw transform gizmo. */
-		void EditTransform();
 
 		void ConstructClassInheritanceTree();
 		void ConstructClassInheritanceTreeRecursively(const rttr::type& baseType, const rttr::array_range<rttr::type>& derivedTypes);
@@ -124,31 +127,31 @@ namespace ZeoEngine {
 
 		/** Categorizing properties before displaying them. */
 		void PreProcessProperties();
-		void ProcessPropertiesRecursively(const rttr::instance& objectInstance);
-		void ProcessProperty(const rttr::property& prop, const rttr::instance& objectInstance);
-		bool ProcessPropertyValue(const rttr::variant& var, const rttr::property& prop, const rttr::instance& objectInstance);
-		bool ProcessAtomicTypes(const rttr::type& type, const rttr::variant& var, const rttr::property& prop, const rttr::instance& objectInstance = rttr::instance(), rttr::variant_sequential_view& sequentialView = rttr::variant_sequential_view(), int32_t sequentialIndex = -1);
+		void ProcessPropertiesRecursively(const rttr::instance& object);
+		void ProcessProperty(const rttr::property& prop, const rttr::instance& object);
+		bool ProcessPropertyValue(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object);
+		bool ProcessAtomicTypes(const rttr::type& type, const rttr::variant& var, const rttr::property& prop, const rttr::instance& object = rttr::instance(), rttr::variant_sequential_view& sequentialView = rttr::variant_sequential_view(), int32_t sequentialIndex = -1);
 		void AddSequentialButtons(const rttr::property& prop, rttr::variant_sequential_view& sequentialView);
 		void ProcessSequentialContainerTypes(const rttr::property& prop, rttr::variant_sequential_view& sequentialView);
-		void ProcessAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, const rttr::property& prop, const rttr::instance& objectInstance);
+		void ProcessAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, const rttr::property& prop, const rttr::instance& object);
 		
-		// Every copied property type must take an objectInstance as a parameter
-		void ProcessBoolType(bool boolValue,  const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt8Type(int8_t int8Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt32Type(int32_t int32Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt64Type(int64_t int64Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt8Type(uint8_t uint8Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt32Type(uint32_t uint32Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt64Type(uint64_t uint64Value, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessFloatType(float floatValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessDoubleType(double doubleValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessEnumType(const rttr::variant& var, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessStringType(std::string* stringPointerValue, const rttr::property& prop, std::string & stringValue, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessVec2Type(glm::vec2* vec2PointerValue, const rttr::property& prop, glm::vec2& vec2Value, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, glm::vec3& vec3Value, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessColorType(glm::vec4* vec4PointerValue, const rttr::property& prop, glm::vec4& vec4Value, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessGameObjectType(GameObject* gameObjectValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
-		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& objectInstance, rttr::variant_sequential_view & sequentialView, int32_t sequentialIndex);
+		// Every copied property type must take an object as a parameter
+		void ProcessBoolType(bool boolValue,  const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessInt8Type(int8_t int8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessInt32Type(int32_t int32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessInt64Type(int64_t int64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessUInt8Type(uint8_t uint8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessUInt32Type(uint32_t uint32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessUInt64Type(uint64_t uint64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessFloatType(float floatValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessDoubleType(double doubleValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessEnumType(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessStringType(std::string* stringPointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessVec2Type(glm::vec2* vec2PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessColorType(glm::vec4* vec4PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessGameObjectType(GameObject* gameObjectValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
 		/**
 		 * Returns true if gameObject's class is derived from the class specified by PropertyMeta::SubclassOf
 		 * or PropertyMeta::SubclassOf is not specified at all.
@@ -168,7 +171,7 @@ namespace ZeoEngine {
 		glm::vec2 m_LastGameViewSize;
 		bool m_bResetLayout = false;
 
-		PIEState m_PIEState;
+		std::string m_CurrentLevelPath, m_CurrentLevelName;
 
 		/** Map from parent class type to its child class types */
 		std::unordered_map<rttr::type, std::vector<rttr::type>> m_ClassInheritanceTree;
@@ -182,9 +185,18 @@ namespace ZeoEngine {
 		bool m_bIsSortedPropertiesDirty = true;
 		/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
 		bool m_bPropertyRecursed = false;
+		/** Used to prevent logging warnings/errors of same property every frame */
+		std::vector<rttr::property> m_PropertiesLogged;
+		bool m_bGameObjectPropWarningLogged = false;
 
-		/** Flag used to prevent calling ReComposeTransformMatrix() every frame */
+		/** Flag used to prevent calling RecomposeTransformMatrix() every frame */
 		bool m_bIsTransformDirty = false;
+
+		/**
+		 * Map from InputText id to temp edited string plus a bool flag indicating if we are editing that InputText.
+		 * This variable is necessary as InputText() requires a persistent string to read and write, and we only want the input changes to apply when user presses enter etc - deferred editing.
+		 */
+		std::unordered_map<std::string, std::pair<bool, std::string>> m_TempInputStrings;
 
 	};
 

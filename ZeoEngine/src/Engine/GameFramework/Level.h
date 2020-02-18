@@ -2,6 +2,8 @@
 
 #include "Engine/GameFramework/GameObject.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/Application.h"
+#include "Engine/Layers/EditorLayer.h"
 
 namespace ZeoEngine {
 
@@ -27,10 +29,7 @@ namespace ZeoEngine {
 		friend void GameObject::Destroy();
 
 	private:
-		Level()
-		{
-			ZE_CORE_TRACE("Creating level...");
-		}
+		Level() = default;
 
 		Level(const Level&) = delete;
 		Level& operator=(const Level&) = delete;
@@ -55,55 +54,49 @@ namespace ZeoEngine {
 		T* SpawnGameObject(GameObject* owner = nullptr)
 		{
 			T* object = new T();
-			std::string uniqueName = ConstructObjectName<T>();
-			object->SetUniqueName(uniqueName);
-			object->SetName(uniqueName);
+			ConstructObjectName<T>(object);
 			object->SetOwner(owner);
 			object->Init();
 			m_GameObjects.push_back(object);
+			m_SortedGameObjects.insert({ object->GetName(), object });
 			if (object->IsTranslucent())
 			{
 				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 			}
-			object->BeginPlay();
 			return object;
 		}
 		template<typename T>
 		T* SpawnGameObject(const Transform& transform, GameObject* owner = nullptr)
 		{
 			T* object = new T();
-			std::string uniqueName = ConstructObjectName<T>();
-			object->SetUniqueName(uniqueName);
-			object->SetName(uniqueName);
+			ConstructObjectName<T>(object);
 			object->SetOwner(owner);
 			object->SetTransform(transform);
 			object->Init();
 			m_GameObjects.push_back(object);
+			m_SortedGameObjects.insert({ object->GetName(), object });
 			if (object->IsTranslucent())
 			{
 				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 			}
-			object->BeginPlay();
 			return object;
 		}
 		template<typename T>
 		T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, float rotation = 0.0f, GameObject* owner = nullptr)
 		{
 			T* object = new T();
-			std::string uniqueName = ConstructObjectName<T>();
-			object->SetUniqueName(uniqueName);
-			object->SetName(uniqueName);
+			ConstructObjectName<T>(object);
 			object->SetOwner(owner);
 			object->SetPosition(position);
 			object->SetRotation(rotation);
 			object->SetScale(scale);
 			object->Init();
 			m_GameObjects.push_back(object);
+			m_SortedGameObjects.insert({ object->GetName(), object });
 			if (object->IsTranslucent())
 			{
 				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
 			}
-			object->BeginPlay();
 			return object;
 		}
 
@@ -127,35 +120,60 @@ namespace ZeoEngine {
 	private:
 		// TODO: Should strip out "ZeoEngine::" in some cases
 		template<typename T>
-		std::string ConstructObjectName()
+		void ConstructObjectName(GameObject* object)
 		{
 			std::string s(typeid(T).name());
 			// TODO: Strip out "class " prefix, this behavior is compiler-dependent!
 			s = s.substr(6);
-			std::stringstream ss;
-			uint32_t count = ++m_ObjectNames[s];
-			if (count == 1)
+			std::stringstream ss1, ss2;
+			// Object's unique name
 			{
-				ss << s;
+				ss1 << s;
+				uint32_t count = ++m_ObjectUniqueNames[s];
+				if (count > 1)
+				{
+					ss1 << "_" << count;
+				}
+				object->SetUniqueName(ss1.str());
 			}
-			else
+			// Object's display name
 			{
-				ss << s << "_" << count;
+				ss2 << s;
+				uint32_t count = 1;
+				while (m_ObjectNames.find(ss2.str()) != m_ObjectNames.end())
+				{
+					ss2.clear();
+					ss2.str("");
+					ss2 << s << "_" << ++count;
+				}
+				m_ObjectNames.insert(ss2.str());
+				object->SetName(ss2.str());
 			}
-			return ss.str();
 		}
 
-		/** DO NOT call it directly, call GameObject::Destroy() instead! This is for internal use only! */
 		void PendingDestroyGameObject(GameObject* object);
+		void RemoveGameObject(GameObject* object);
 
 		/** Re-sort translucent objects when GameObject's position value is changed in Object Property window.  */
 		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
 
+		void CleanUp();
+
+		void LoadLevelFromFile(const char* levelPath, bool bIsTemp = false);
+		void SaveLevelToFile(std::string& levelPath, bool bIsTemp = false);
+
+		void PreDeserialize(const std::string& src);
+
 	private:
 		Ref<Texture2D> m_backgroundTexture;
 
+		/** Stores all created GameObjects */
 		std::vector<GameObject*> m_GameObjects;
-		std::unordered_map<std::string, uint32_t> m_ObjectNames;
+		/** Map from GameObject's name to GameObject, used dedicated by Level Outline window */
+		std::multimap<std::string, GameObject*> m_SortedGameObjects;
+		std::unordered_map<std::string, uint32_t> m_ObjectUniqueNames;
+		/** Stores all used object names */
+		std::set<std::string> m_ObjectNames;
 		std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 		uint32_t m_TranslucentObjectIndex = 0;
 

@@ -1,6 +1,5 @@
 #include "Bullet.h"
 
-#include "GameLevel.h"
 #include "Enemy.h"
 #include "Player.h"
 #include "Obstacle.h"

@@ -219,7 +219,7 @@ namespace ZeoEngine {
 
 	public:
 		/** Called when this particle system is about to be destroyed */
-		std::function<void()> OnSystemFinished;
+		std::function<void()> m_OnSystemFinished;
 
 	private:
 		struct Particle
@@ -273,7 +273,7 @@ namespace ZeoEngine {
 	public:
 		ParticleManager()
 		{
-			ZE_CORE_TRACE("Creating particle manager...");
+			ZE_CORE_TRACE("Particle manager initialized!");
 		}
 		~ParticleManager();
 
@@ -281,6 +281,8 @@ namespace ZeoEngine {
 		void OnRender();
 
 		void AddParticleSystem(ParticleSystem* particleSystem);
+
+		void CleanUp();
 
 	private:
 		std::vector<ParticleSystem*> m_ParticleSystems;

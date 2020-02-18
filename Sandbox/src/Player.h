@@ -14,6 +14,7 @@ public:
 	Player();
 
 	virtual void Init() override;
+	virtual void BeginPlay() override;
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 	virtual void OnImGuiRender() override;
 

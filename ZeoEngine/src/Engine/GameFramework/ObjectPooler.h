@@ -16,14 +16,6 @@ namespace ZeoEngine {
 			}
 		}
 
-		~ObjectPooler()
-		{
-			for (T* object : m_Objects)
-			{
-				object->Destroy();
-			}
-		}
-
 		const std::vector<T*>& GetPooledObjects() const { return m_Objects; }
 
 		T* GetNextPooledObject() const

@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		OrthographicCamera* m_ActiveCamera;
 
 		Texture2DLibrary m_Texture2DLibrary;
-		TimerManager m_TimerManager;
+		TimerManager m_CoreTimerManager, m_TimerManager;
 
 		std::vector<GameObject*> m_GameObjectsPendingDestroy;
 		float m_GarbageCollectionInterval;

@@ -341,9 +341,9 @@ namespace ZeoEngine {
 		if (m_bAutoDestroy && bSystemComplete && ((!m_bInfiniteLoop && m_LoopCount == 0) || !m_bActive))
 		{
 			m_bPendingDestroy = true;
-			if (OnSystemFinished)
+			if (m_OnSystemFinished)
 			{
-				OnSystemFinished();
+				m_OnSystemFinished();
 			}
 		}
 	}
@@ -388,10 +388,7 @@ namespace ZeoEngine {
 
 	ParticleManager::~ParticleManager()
 	{
-		for (auto* ps : m_ParticleSystems)
-		{
-			delete ps;
-		}
+		CleanUp();
 	}
 
 	void ParticleManager::OnUpdate(DeltaTime dt)
@@ -423,6 +420,15 @@ namespace ZeoEngine {
 	void ParticleManager::AddParticleSystem(ParticleSystem* particleSystem)
 	{
 		m_ParticleSystems.push_back(particleSystem);
+	}
+
+	void ParticleManager::CleanUp()
+	{
+		for (auto* ps : m_ParticleSystems)
+		{
+			delete ps;
+		}
+		m_ParticleSystems.clear();
 	}
 
 }

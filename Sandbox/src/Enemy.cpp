@@ -1,6 +1,5 @@
 #include "Enemy.h"
 
-#include "GameLevel.h"
 #include "Player.h"
 
 RTTR_REGISTRATION
@@ -32,13 +31,13 @@ void Enemy::Init()
 
 	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
-	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
-
 }
 
 void Enemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
 
 	// Move to a random position of upper half screen nearby every 2 seconds
 	ZeoEngine::GetTimerManager()->SetTimer(2.0f, [&]() {
@@ -81,14 +80,6 @@ void Enemy::TakeDamage(float damage, GameObject* causer, GameObject* instigator)
 		Explode();
 		Destroy();
 	}
-}
-
-void Enemy::OnDestroyed()
-{
-	Super::OnDestroyed();
-
-	// Spawn next enemy
-	//m_Level->DelaySpawnEnemy(2.0f);
 }
 
 void Enemy::OnOverlap(GameObject* other)

@@ -9,6 +9,7 @@
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Layers/EditorLayer.h"
+#include "Engine/Debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
@@ -40,13 +41,14 @@ namespace ZeoEngine {
 		Level::Get().Init();
 
 		// A very basic GameObject based garbage collection system
-		m_TimerManager.SetTimer(m_GarbageCollectionInterval, [&]() {
-			ZE_CORE_TRACE("Start garbage collecting...");
+		m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, [&]() {
+			BenchmarkTimer bt(false);
 			for (uint32_t i = 0; i < m_GameObjectsPendingDestroy.size(); ++i)
 			{
 				delete m_GameObjectsPendingDestroy[i];
 			}
 			m_GameObjectsPendingDestroy.clear();
+			ZE_CORE_INFO("Garbage collection took {0}s.", bt.GetDuration());
 		}, 0);
 
 	}
@@ -63,9 +65,9 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_TimerManager.OnUpdate(dt);
+		m_CoreTimerManager.OnUpdate(dt);
 
-		if (m_Editor->GetPIEState() == PIEState::None)
+		if (g_PIEState == PIEState::None)
 		{
 			// Setting editor camera
 			m_ActiveCamera = m_Editor->GetEditorCamera();
@@ -74,8 +76,9 @@ namespace ZeoEngine {
 		{
 			// Setting game camera
 			m_ActiveCamera = &m_GameCameraController->GetCamera();
-			if (m_Editor->GetPIEState() == PIEState::Running)
+			if (g_PIEState == PIEState::Running)
 			{
+				m_TimerManager.OnUpdate(dt);
 				Level::Get().OnUpdate(dt);
 			}
 		}
