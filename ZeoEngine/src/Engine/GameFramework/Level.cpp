@@ -34,7 +34,7 @@ namespace ZeoEngine {
 			if (m_GameObjects[i]->IsPendingDestroy() || !m_GameObjects[i]->IsActive())
 				continue;
 
-			if (!m_GameObjects[i]->m_bHasBegunPlay)
+			if (!m_GameObjects[i]->HasBegunPlay())
 			{
 				m_GameObjects[i]->BeginPlay();
 			}

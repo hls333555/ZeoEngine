@@ -179,6 +179,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		bool IsActive() const { return m_bIsActive; }
 		void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
 		bool IsPendingDestroy() const { return m_bPendingDestroy; }
+		bool HasBegunPlay() const { return m_bHasBegunPlay; }
 		const Transform& GetTransform() const { return m_Transform; }
 		void SetTransform(const Transform& transform) { m_Transform = transform; }
 		const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }

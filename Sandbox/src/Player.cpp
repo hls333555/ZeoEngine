@@ -104,30 +104,14 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
-
-	// TODO: Should be drawn in GameView window
-	//auto pos = ImGui::GetWindowPos();
-	//auto width = ZeoEngine::Application::Get().GetWindow().GetWidth();
-	//auto height = ZeoEngine::Application::Get().GetWindow().GetHeight();
-	//// Render health bar
-	//{
-	//	const float healthBarWidth = 200.0f;
-	//	ImGui::GetWindowDrawList()->AddRectFilled(
-	//		{ pos.x, pos.y - 15.0f },
-	//		{ pos.x + m_CurrentHealth / m_MaxHealth * healthBarWidth, pos.y + 5.0f },
-	//		IM_COL32(255, 0, 0, 255));
-	//	ImGui::GetWindowDrawList()->AddRect(
-	//		{ pos.x, pos.y - 15.0f },
-	//		{ pos.x + healthBarWidth, pos.y + 5.0f },
-	//		IM_COL32_BLACK);
-	//}
-	//// Render score text
-	//{
-	//	std::string scoreStr = std::string(u8"µÃ·Ö£º") + std::to_string(m_Score);
-	//	ImGui::GetWindowDrawList()->AddText(m_Font, 30.0f,
-	//		{ pos.x + width * 0.5f - 100.0f, pos.y - 20.0f },
-	//		IM_COL32(255, 64, 0, 255), scoreStr.c_str());
-	//}
+	
+	if (HasBegunPlay() && ImGui::Begin("Game View"))
+	{
+		ImGui::SetCursorPos(ImVec2(50.0f, 50.0f));
+		// Render health bar
+		ImGui::ProgressBar(m_CurrentHealth / m_MaxHealth, ImVec2(200.0f, 20.0f));
+		ImGui::End();
+	}
 
 }
 
