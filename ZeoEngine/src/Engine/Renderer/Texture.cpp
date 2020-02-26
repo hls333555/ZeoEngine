@@ -37,8 +37,10 @@ namespace ZeoEngine {
 
 	void Texture2DLibrary::Add(const std::string& path, const Ref<Texture2D>& texture)
 	{
-		ZE_CORE_ASSERT_INFO(!Exists(path), "Trying to add the texture which already exists!");
-		m_Textures[path] = texture;
+		if (!Exists(path))
+		{
+			m_Textures[path] = texture;
+		}
 	}
 
 	void Texture2DLibrary::Add(const Ref<Texture2D>& texture)
@@ -59,6 +61,18 @@ namespace ZeoEngine {
 		auto texture = Texture2D::Create(filePath);
 		Add(path, texture);
 		return texture;
+	}
+
+	Ref<Texture2D> Texture2DLibrary::GetOrLoad(const std::string& path)
+	{
+		if (Exists(path))
+		{
+			return m_Textures[path];
+		}
+		else
+		{
+			return Load(path);
+		}
 	}
 
 	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)

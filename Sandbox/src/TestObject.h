@@ -33,6 +33,8 @@ public:
 	glm::vec4 m_Color;
 	GameObject* m_GameObject;
 	ZeoEngine::Transform m_Struct;
+	ZeoEngine::Ref<ZeoEngine::Texture2D> m_Texture;
+	ZeoEngine::ParticleSystem* m_ParticleSystem;
 
 	std::vector<bool> m_VectorBool;
 	std::vector<int8_t> m_VectorInt8;
@@ -50,6 +52,8 @@ public:
 	std::vector<glm::vec3> m_VectorVec3;
 	std::vector<glm::vec4> m_VectorColor;
 	std::vector<GameObject*> m_VectorGameObject;
+	std::vector<ZeoEngine::Ref<ZeoEngine::Texture2D>> m_VectorTexture;
+	std::vector<ZeoEngine::ParticleSystem*> m_VectorParticleSystem;
 
 	RTTR_REGISTER(TestObject, GameObject);
 };

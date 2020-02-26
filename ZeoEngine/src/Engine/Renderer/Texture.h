@@ -41,6 +41,8 @@ namespace ZeoEngine {
 		Ref<Texture2D> Load(const std::string& filePath);
 		Ref<Texture2D> Load(const std::string& path, const std::string& filePath);
 
+		Ref<Texture2D> GetOrLoad(const std::string& path);
+
 		Ref<Texture2D> Get(const std::string& path);
 
 		bool Exists(const std::string& path) const;

@@ -28,14 +28,8 @@ namespace ZeoEngine {
 		friend class EditorLayer;
 		friend void GameObject::Destroy();
 
-	private:
-		Level() = default;
-
-		Level(const Level&) = delete;
-		Level& operator=(const Level&) = delete;
-
 	public:
-		virtual ~Level();
+		~Level();
 
 		static Level& Get()
 		{
@@ -43,6 +37,13 @@ namespace ZeoEngine {
 			return level;
 		}
 
+	private:
+		Level() = default;
+
+		Level(const Level&) = delete;
+		Level& operator=(const Level&) = delete;
+
+	public:
 		virtual void Init();
 
 		virtual void OnUpdate(DeltaTime dt);
@@ -101,7 +102,8 @@ namespace ZeoEngine {
 		}
 
 		// TODO: Need a way to destroy a particle system explicitly
-		ParticleSystem* SpawnParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+		ParticleSystem* SpawnParticleSystemAtPosition(ParticleSystem* psTemplate, const glm::vec2& position, bool bAutoDestroy = true);
+		ParticleSystem* SpawnParticleSystemAttached(ParticleSystem* psTemplate, GameObject* attachToParent, bool bAutoDestroy = true);
 
 		template<typename T>
 		std::vector<GameObject*> GetAllObjectsOfClass()
@@ -154,7 +156,7 @@ namespace ZeoEngine {
 		void PendingDestroyGameObject(GameObject* object);
 		void RemoveGameObject(GameObject* object);
 
-		/** Re-sort translucent objects when GameObject's position value is changed in Object Property window.  */
+		/** Re-sort translucent objects when GameObject's position value is changed in Object Inspector window.  */
 		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
 
 		void CleanUp();
@@ -165,6 +167,7 @@ namespace ZeoEngine {
 		void PreDeserialize(const std::string& src);
 
 	private:
+		const char* LevelFileToken = "Level";
 		Ref<Texture2D> m_backgroundTexture;
 
 		/** Stores all created GameObjects */

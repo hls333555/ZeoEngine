@@ -7,7 +7,11 @@ RTTR_REGISTRATION
 	using namespace rttr;
 	using namespace ZeoEngine;
 	registration::class_<Obstacle>("Obstacle")
-		.constructor(&Obstacle::SpawnGameObject, policy::ctor::as_raw_ptr);
+		.constructor(&Obstacle::SpawnGameObject, policy::ctor::as_raw_ptr)
+		.property("ExplosionParticle", &Obstacle::m_ExplosionParticle)
+		(
+			metadata(PropertyMeta::Category, "FX")
+		);
 }
 
 Obstacle::Obstacle()
@@ -15,7 +19,8 @@ Obstacle::Obstacle()
 {
 	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
 	SetGenerateOverlapEvents(true);
-	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Obstacle.png");
+	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("assets/textures/Obstacle.png");
+	m_ExplosionParticle = ZeoEngine::GetParticleLibrary()->GetOrLoad("assets/particles/Explosion.zparticle");
 }
 
 void Obstacle::Init()
@@ -23,8 +28,6 @@ void Obstacle::Init()
 	Super::Init();
 
 	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
-
-	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
 
 }
 
@@ -94,14 +97,5 @@ void Obstacle::OnOverlap(GameObject* other)
 
 void Obstacle::Explode()
 {
-	ZeoEngine::ParticleTemplate m_ExplosionEmitter;
-	m_ExplosionEmitter.loopCount = 1;
-	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
-	m_ExplosionEmitter.AddBurstData(0.0f, 1);
-	m_ExplosionEmitter.initialPosition.SetConstant(GetPosition2D());
-	m_ExplosionEmitter.sizeBegin.SetConstant(GetScale());
-	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
-	m_ExplosionEmitter.texture = m_ExplosionTexture;
-	m_ExplosionEmitter.subImageSize = { 4, 2 };
-	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
+	ZeoEngine::Level::Get().SpawnParticleSystemAtPosition(m_ExplosionParticle, GetPosition2D());
 }

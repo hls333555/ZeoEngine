@@ -39,9 +39,10 @@ private:
 	float m_ShootRate;
 	bool m_bCanShoot = true;
 
-	ZeoEngine::ParticleSystem* m_FlameParticle;
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
-	ZeoEngine::ParticleSystem* m_ExplosionParticle;
+	/** NOTE: Always initialize ParticleSystem* variables with nullptr! */
+	ZeoEngine::ParticleSystem* m_ShipFlameParticle = nullptr, *m_SpawnedShipFlameParticle = nullptr;
+	ZeoEngine::ParticleSystem* m_ExplosionParticle = nullptr;
 
 	RTTR_REGISTER(Player, SpriteObject)
+	RTTR_REGISTRATION_FRIEND
 };

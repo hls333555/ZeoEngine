@@ -7,6 +7,7 @@
 
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
@@ -27,25 +28,27 @@ namespace ZeoEngine {
 		EditorLayer();
 
 		virtual void OnAttach() override;
+		virtual void OnDetach() override;
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 
-		const Scope<OrthographicCameraController>& GetEditorCameraController() const { return m_EditorCameraController; }
-		OrthographicCamera* GetEditorCamera() const { return m_EditorCameraController ? &m_EditorCameraController->GetCamera() : nullptr; }
+		const Scope<OrthographicCameraController>& GetGameViewCameraController() const { return m_GameViewCameraController; }
+		OrthographicCamera* GetGameViewCamera() const { return m_GameViewCameraController ? &m_GameViewCameraController->GetCamera() : nullptr; }
 		// TODO: ClearSelectedGameObject()
 		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
 
 	private:
 		void LoadEditorTextures();
 
-		void ShowEditorDockspace();
+		void CreateMainEditorDockspace();
 		void ShowGameView(bool* bShow);
 		void ShowLevelOutline(bool* bShow);
-		void ShowObjectProperty(bool* bShow);
+		void ShowObjectInspector(bool* bShow);
 		void ShowClassBrowser(bool* bShow);
 		void ShowConsole(bool* bShow);
 
+		void CreateParticleEditorDockspace(bool* bShow);
 		void ShowParticleEditor(bool* bShow);
 
 		void ShowPreferences(bool* bShow);
@@ -61,6 +64,10 @@ namespace ZeoEngine {
 		/** Show transform options and draw transform gizmo. */
 		void EditTransform();
 
+		void CreateDefaultParticleSystem();
+		void LoadParticleSystemFromFile(const char* particleSystemPath);
+		void SaveParticleSystemToFile(std::string& particleSystemPath);
+
 		void StartPIE();
 		void StopPIE();
 		void PausePIE();
@@ -74,46 +81,53 @@ namespace ZeoEngine {
 #define BEGIN_PROP(prop) \
 		ImGui::Columns(2);\
 		ImGui::AlignTextToFramePadding();\
-		ImGui::TreeNodeEx(prop.get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Property name*/\
-		ShowPropertyTooltip(prop);\
+		ImGui::TreeNodeEx(prop->get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Property name*/\
+		ShowPropertyTooltip(*prop);\
 		ImGui::NextColumn(); /*Switch to the right column*/\
 		ImGui::SetNextItemWidth(-1.0f); /*Align width to the right side*/\
-		ss << "##" << prop.get_name().data(); /*We use property name as id here because rttr guarantees that only properties with different names can be registered*/
+		ss << "##" << prop->get_name().data(); /*We use property name as id here because rttr guarantees that only properties with different names can be registered*/
 #define END_PROP(prop) \
-		ShowPropertyTooltip(prop);\
+		ShowPropertyTooltip(*prop);\
 		ImGui::NextColumn(); /*Switch to next line's left column*/
 #define END_SETPROP(prop, instance, value) \
 		END_PROP(prop)\
-		prop.set_value(instance, value);
-#define BEGIN_SEQPROP(prop, sequentialIndex) \
+		prop->set_value(*instance, value);
+#define BEGIN_SEQPROP(prop, sequentialIndex, bPropRecursed) \
 		ImGui::Columns(2);\
 		ImGui::AlignTextToFramePadding();\
-		ss << "[" << sequentialIndex << "]";\
+		if (bPropRecursed)\
+		{\
+			ss << prop->get_name().data(); /**Property of custom struct/class inside a sequential container*/\
+		}\
+		else\
+		{\
+			ss << "[" << sequentialIndex << "]"; /**Property inside a sequential container*/\
+		}\
 		ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Sequential index*/\
-		ShowPropertyTooltip(prop);\
+		ShowPropertyTooltip(*prop);\
 		ImGui::NextColumn(); /*Switch to the right column*/\
 		ss.clear(); ss.str("");\
-		ss << "##" << prop.get_name().data() << sequentialIndex;
+		ss << "##" << prop->get_name().data() << sequentialIndex;
 #define ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, insertValue) \
 		ImGui::SameLine();\
-		ss.clear(); ss.str(""); ss << "##" << prop.get_name() << sequentialView.get_value_type().get_name() << sequentialIndex;\
-		if (ImGui::BeginCombo(ss.str().c_str(), nullptr,ImGuiComboFlags_NoPreview))\
+		ss.clear(); ss.str(""); ss << "##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
+		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))\
 		{\
-			ss.clear(); ss.str(""); ss << "Insert##" << prop.get_name() << sequentialView.get_value_type().get_name() << sequentialIndex;\
+			ss.clear(); ss.str(""); ss << "Insert##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
 			if (ImGui::Selectable(ss.str().c_str()))\
 			{\
-				sequentialView.insert(sequentialView.begin() + sequentialIndex, insertValue);\
+				sequentialView->insert(sequentialView->begin() + sequentialIndex, insertValue);\
 			}\
-			ss.clear(); ss.str(""); ss << "Erase##" << prop.get_name() << sequentialView.get_value_type().get_name() << sequentialIndex;\
+			ss.clear(); ss.str(""); ss << "Erase##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
 			if (ImGui::Selectable(ss.str().c_str()))\
 			{\
-				sequentialView.erase(sequentialView.begin() + sequentialIndex);\
+				sequentialView->erase(sequentialView->begin() + sequentialIndex);\
 			}\
 			ImGui::EndCombo();\
 		}
 #define END_SETSEQPROP(prop, sequentialView, sequentialIndex, value, insertValue) \
-		ShowPropertyTooltip(prop);\
-		sequentialView.set_value(sequentialIndex, value);\
+		ShowPropertyTooltip(*prop);\
+		sequentialView->set_value(sequentialIndex, value);\
 		ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, insertValue)\
 		ImGui::NextColumn();
 
@@ -125,33 +139,52 @@ namespace ZeoEngine {
 		 */
 		void ShowPropertyTooltip(const rttr::property& prop);
 
+		struct PropertyData
+		{
+			/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
+			bool bPropertyRecursed = false;
+			rttr::property* Property = nullptr, *OuterProperty = nullptr;
+			rttr::instance* Object = nullptr, *OutermostObject = nullptr;
+			rttr::variant* PropertyValue = nullptr;
+			rttr::variant_sequential_view* SequentialView = nullptr;
+			rttr::variant_associative_view* AssociativeView = nullptr;
+			int32_t SequentialIndex = -1;
+		};
+
 		/** Categorizing properties before displaying them. */
-		void PreProcessProperties();
-		void ProcessPropertiesRecursively(const rttr::instance& object);
-		void ProcessProperty(const rttr::property& prop, const rttr::instance& object);
-		bool ProcessPropertyValue(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object);
-		bool ProcessAtomicTypes(const rttr::type& type, const rttr::variant& var, const rttr::property& prop, const rttr::instance& object = rttr::instance(), rttr::variant_sequential_view& sequentialView = rttr::variant_sequential_view(), int32_t sequentialIndex = -1);
-		void AddSequentialButtons(const rttr::property& prop, rttr::variant_sequential_view& sequentialView);
-		void ProcessSequentialContainerTypes(const rttr::property& prop, rttr::variant_sequential_view& sequentialView);
-		void ProcessAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, const rttr::property& prop, const rttr::instance& object);
+		void PreProcessProperties(const rttr::instance& object);
+		void ProcessPropertiesRecursively(PropertyData& data);
+		void ProcessProperty(PropertyData& data);
+		bool ProcessPropertyValue(PropertyData& data);
+		bool ProcessAtomicTypes(const rttr::type& type, PropertyData& data);
+		void AddSequentialButtons(const PropertyData& data);
+		void ProcessSequentialContainerTypes(PropertyData& data);
+		void ProcessAssociativeContainerTypes(PropertyData& data);
+
+		/** logLevel - 0: trace, 1: info, 2: warning, 3: error, 4: critical */
+		void LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel);
+
+		void InvokePropertyChangeCallback(const PropertyData& data);
 		
 		// Every copied property type must take an object as a parameter
-		void ProcessBoolType(bool boolValue,  const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt8Type(int8_t int8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt32Type(int32_t int32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessInt64Type(int64_t int64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt8Type(uint8_t uint8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt32Type(uint32_t uint32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessUInt64Type(uint64_t uint64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessFloatType(float floatValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessDoubleType(double doubleValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessEnumType(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessStringType(std::string* stringPointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessVec2Type(glm::vec2* vec2PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessColorType(glm::vec4* vec4PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessGameObjectType(GameObject* gameObjectValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
-		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex);
+		void ProcessBoolType(bool boolValue,  const PropertyData& data);
+		void ProcessInt8Type(int8_t int8Value, const PropertyData& data);
+		void ProcessInt32Type(int32_t int32Value, const PropertyData& data);
+		void ProcessInt64Type(int64_t int64Value, const PropertyData& data);
+		void ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data);
+		void ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data);
+		void ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data);
+		void ProcessFloatType(float floatValue, const PropertyData& data);
+		void ProcessDoubleType(double doubleValue, const PropertyData& data);
+		void ProcessEnumType(const PropertyData& data);
+		void ProcessStringType(std::string* stringPointerValue, const PropertyData& data);
+		void ProcessVec2Type(glm::vec2* vec2PointerValue, const PropertyData& data);
+		void ProcessI32Vec2Type(glm::i32vec2* i32vec2PointerValue, const PropertyData& data);
+		void ProcessVec3Type(glm::vec3* vec3PointerValue, const PropertyData& data);
+		void ProcessColorType(glm::vec4* vec4PointerValue, const PropertyData& data);
+		void ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data);
+		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data);
+		void ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data);
 		/**
 		 * Returns true if gameObject's class is derived from the class specified by PropertyMeta::SubclassOf
 		 * or PropertyMeta::SubclassOf is not specified at all.
@@ -160,10 +193,12 @@ namespace ZeoEngine {
 
 		// TODO: Maybe move it to dedicated utilities class in the future
 		/** Convert absolute path to relative path. */
-		std::string FormatPath(const char* absolutePath);
+		std::string ToRelativePath(const char* absolutePath);
+		/** Convert relative path to absolute path. */
+		std::string ToAbsolutePath(const char* relativePath);
 
 	private:
-		Scope<OrthographicCameraController> m_EditorCameraController;
+		Scope<OrthographicCameraController> m_GameViewCameraController, m_ParticleViewCameraController;
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;
 
@@ -173,21 +208,34 @@ namespace ZeoEngine {
 
 		std::string m_CurrentLevelPath, m_CurrentLevelName;
 
+		bool m_bShowParticleEditor = false;
+		std::string m_CurrentParticleSystemPath, m_CurrentParticleSystemName;
+		ParticleSystem* m_EditorParticleSystem = nullptr;
+		bool m_bIsHoveringParticleView = false;
+		glm::vec2 m_LastParticleViewSize;
+
 		/** Map from parent class type to its child class types */
 		std::unordered_map<rttr::type, std::vector<rttr::type>> m_ClassInheritanceTree;
 		/** Stores a list of class types which have already been handled to prevent them from being handled again */
 		std::set<rttr::type> m_DisplayedClasses;
 
 		GameObject* m_SelectedGameObject = nullptr;
+
+		enum PropertySource
+		{
+			GameObjectProperty,
+			ParticleSystemProperty
+		}m_CurrentPropertySource;
+#define PROPERTY_SOURCE_NUM 2
 		/** Map from property category name to properties of that category, if category name is not specified, name "default" will be used */
-		std::map<std::string, std::vector<rttr::property>> m_SortedProperties;
-		/** Flag used to prevent sorting properties every frame, it will only sort them when selected GameObject is changed */
-		bool m_bIsSortedPropertiesDirty = true;
-		/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
-		bool m_bPropertyRecursed = false;
-		/** Used to prevent logging warnings/errors of same property every frame */
-		std::vector<rttr::property> m_PropertiesLogged;
-		bool m_bGameObjectPropWarningLogged = false;
+		std::map<std::string, std::vector<rttr::property>> m_SortedProperties[PROPERTY_SOURCE_NUM];
+		/** Flag used to prevent sorting properties every frame, it will only sort them when current object is changed */
+		bool m_bIsSortedPropertiesDirty[PROPERTY_SOURCE_NUM]{ true, true };
+		/**
+		 * Used to prevent logging identical messages every frame.
+		 * Although we can share this across different property sources, we want to improve performance by reserving capacity beforehand, which is not possible for sharing case
+		 */
+		std::vector<rttr::property> m_PropertiesLogged[PROPERTY_SOURCE_NUM];
 
 		/** Flag used to prevent calling RecomposeTransformMatrix() every frame */
 		bool m_bIsTransformDirty = false;

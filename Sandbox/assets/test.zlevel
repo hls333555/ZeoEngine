@@ -1,3 +1,4 @@
+#type Level
 #GameManager(GameManager)
 {
     "Name": "GameManager",
@@ -56,5 +57,7 @@
         1.0,
         1.0,
         1.0
-    ]
+    ],
+    "ShipFlameParticle": "assets/particles/ShipFlame.zparticle",
+    "ExplosionParticle": "assets/particles/Explosion.zparticle"
 }

@@ -127,6 +127,7 @@ namespace ZeoEngine {
 			m_Camera.SetPosition(m_CameraPosition);
 			m_CameraRotation = 0.0f;
 			m_Camera.SetRotation(0.0f);
+			// TODO: Should calculate desired zoom level
 			SetZoomLevel(DEFAULT_ZOOMLEVEL);
 			UpdateProjection(m_AspectRatio);
 		}

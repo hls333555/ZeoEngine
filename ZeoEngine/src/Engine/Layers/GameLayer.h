@@ -4,8 +4,9 @@
 
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Renderer/OrthographicCameraController.h"
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Core/TimerManager.h"
+#include "Engine/Renderer/Texture.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
@@ -26,23 +27,22 @@ namespace ZeoEngine {
 		const Scope<OrthographicCameraController>& GetGameCameraController() const { return m_GameCameraController; }
 		OrthographicCamera* GetGameCamera() const { return m_GameCameraController ? &m_GameCameraController->GetCamera() : nullptr; }
 		OrthographicCamera* GetActiveCamera() const { return m_ActiveCamera; }
-		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		TimerManager* GetTimerManager() { return &m_TimerManager; }
+		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
+		ParticleLibrary* GetParticleLibrary() { return &m_ParticleLibrary; }
 
 		void AddGameObjectPendingDestroy(GameObject* object) { m_GameObjectsPendingDestroy.push_back(object); }
 
 	private:
 		void LoadFont(const char* fontPath, const char* missingChars);
 
-		// TODO: LoadSharedTextures()
-		void LoadSharedTextures();
-
 	private:
 		Scope<OrthographicCameraController> m_GameCameraController;
 		OrthographicCamera* m_ActiveCamera;
 
-		Texture2DLibrary m_Texture2DLibrary;
 		TimerManager m_CoreTimerManager, m_TimerManager;
+		Texture2DLibrary m_Texture2DLibrary;
+		ParticleLibrary m_ParticleLibrary;
 
 		std::vector<GameObject*> m_GameObjectsPendingDestroy;
 		float m_GarbageCollectionInterval;

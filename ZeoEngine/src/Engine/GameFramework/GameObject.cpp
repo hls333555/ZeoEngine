@@ -7,9 +7,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
-#define RAPIDJSON_HAS_STDSTRING 1
-#include <prettywriter.h> // for stringify JSON
-#include <document.h>     // rapidjson's DOM-style API
 
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
@@ -78,7 +75,7 @@ RTTR_REGISTRATION
 			value("Box Collision", ObjectCollisionType::Box),
 			value("Sphere Collision", ObjectCollisionType::Sphere)
 		)
-		.method("OnPropertyValueChange", &GameObject::OnPropertyValueChange)
+		.method("OnPropertyValueEditChange", &GameObject::OnPropertyValueEditChange)
 		.property("Name", &GameObject::m_Name)
 		(
 			policy::prop::bind_as_ptr,
@@ -98,6 +95,7 @@ RTTR_REGISTRATION
 		.property("CollisionData", &GameObject::m_CollisionData)
 		(
 			metadata(PropertyMeta::Category, "Collision"),
+			metadata(PropertyMeta::HideCondition, "CollisionType==None"),
 			metadata(PropertyMeta::Tooltip, u8"≈ˆ◊≤ÃÂ≈‰÷√")
 		)
 		.property("GenerateOverlapEvents", &GameObject::m_bGenerateOverlapEvents)
@@ -192,333 +190,34 @@ namespace ZeoEngine {
 
 			EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
 			ImDrawList* dl = ImGui::GetWindowDrawList();
-			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), editor->GetEditorCamera());
+			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), editor->GetGameViewCamera());
 			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
 			static const float collisionThickness = 2.5f;
 			if (m_CollisionType == ObjectCollisionType::Box)
 			{
-				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / editor->GetEditorCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / editor->GetEditorCamera()->GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
+				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / editor->GetGameViewCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / editor->GetGameViewCamera()->GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
 				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
 					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
 					0.0f, 15, collisionThickness);
 			}
 			else if (m_CollisionType == ObjectCollisionType::Sphere)
 			{
-				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / editor->GetEditorCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / editor->GetGameViewCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
 				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
 			}
 		}
 	}
 
-	void GameObject::OnPropertyValueChange(const rttr::property& prop)
+#if WITH_EDITOR
+	void GameObject::OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
 	{
-		if (prop.get_name() == "CollisionType")
+		if (prop && prop->get_name() == "CollisionType")
 		{
 			GenerateCollisionData();
 		}
 	}
-
-	void SerializeRecursively(const rttr::instance& object, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-
-	// TODO: Save camera position
-	std::string GameObject::Serialize()
-	{
-		rapidjson::StringBuffer sb;
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-
-		SerializeRecursively(*this, writer);
-		return sb.GetString();
-	}
-
-	bool SerializeAtomicTypes(const rttr::type& type, const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
-	{
-		if (type.is_arithmetic())
-		{
-			if (type == rttr::type::get<bool>())
-			{
-				writer.Bool(var.to_bool());
-			}
-			else if (type == rttr::type::get<char>())
-			{
-				writer.Bool(var.to_bool());
-			}
-			else if (type == rttr::type::get<int8_t>())
-			{
-				writer.Int(var.to_int8());
-			}
-			else if (type == rttr::type::get<int16_t>())
-			{
-				writer.Int(var.to_int16());
-			}
-			else if (type == rttr::type::get<int32_t>())
-			{
-				writer.Int(var.to_int32());
-			}
-			else if (type == rttr::type::get<int64_t>())
-			{
-				writer.Int64(var.to_int64());
-			}
-			else if (type == rttr::type::get<uint8_t>())
-			{
-				writer.Uint(var.to_uint8());
-			}
-			else if (type == rttr::type::get<uint16_t>())
-			{
-				writer.Uint(var.to_uint16());
-			}
-			else if (type == rttr::type::get<uint32_t>())
-			{
-				writer.Uint(var.to_uint32());
-			}
-			else if (type == rttr::type::get<uint64_t>())
-			{
-				writer.Uint64(var.to_uint64());
-			}
-			else if (type == rttr::type::get<float>())
-			{
-				writer.Double(var.to_double());
-			}
-			else if (type == rttr::type::get<double>())
-			{
-				writer.Double(var.to_double());
-			}
-			return true;
-		}
-		// enum
-		else if (type.is_enumeration())
-		{
-			bool bOk = false;
-			const std::string stringValue = var.to_string(&bOk);
-			if (bOk)
-			{
-				writer.String(stringValue);
-			}
-			else
-			{
-				bOk = false;
-				uint64_t uint64Value = var.to_uint64(&bOk);
-				if (bOk)
-				{
-					writer.Uint64(uint64Value);
-				}
-				else
-				{
-					writer.Null();
-				}
-			}
-			return true;
-		}
-		// std::string
-		else if (type.get_raw_type() == rttr::type::get<std::string>())
-		{
-			if (type.is_pointer())
-			{
-				writer.String(*var.get_value<std::string*>());
-			}
-			else
-			{
-				writer.String(var.to_string());
-			}
-			return true;
-		}
-		// glm::vec2
-		else if (type.get_raw_type() == rttr::type::get<glm::vec2>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec2*>()->x);
-				writer.Double(var.get_value<glm::vec2*>()->y);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec2>().x);
-				writer.Double(var.get_value<glm::vec2>().y);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// glm::vec3
-		else if (type.get_raw_type() == rttr::type::get<glm::vec3>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec3*>()->x);
-				writer.Double(var.get_value<glm::vec3*>()->y);
-				writer.Double(var.get_value<glm::vec3*>()->z);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec3>().x);
-				writer.Double(var.get_value<glm::vec3>().y);
-				writer.Double(var.get_value<glm::vec3>().z);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// glm::vec4
-		else if (type.get_raw_type() == rttr::type::get<glm::vec4>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec4*>()->x);
-				writer.Double(var.get_value<glm::vec4*>()->y);
-				writer.Double(var.get_value<glm::vec4*>()->z);
-				writer.Double(var.get_value<glm::vec4*>()->w);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec4>().x);
-				writer.Double(var.get_value<glm::vec4>().y);
-				writer.Double(var.get_value<glm::vec4>().z);
-				writer.Double(var.get_value<glm::vec4>().w);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// TODO: Serialize GameObject*
-		// GameObject*
-		else if (type.is_pointer() && type == rttr::type::get<GameObject*>())
-		{
-			writer.String(var.get_value<GameObject*>()->GetUniqueName());
-			return true;                      
-		}
-		// Ref<Texture2D>
-		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
-		{
-			const auto& texture = var.get_value<Ref<Texture2D>>();
-			writer.String(texture ? texture->GetPath() : "");
-			return true;
-		}
-		return false;
-	}
-
-	void SerializeSequentialContainerTypes(const rttr::variant_sequential_view& sequentialView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
-	{
-		writer.StartArray();
-		for (const auto& item : sequentialView)
-		{
-			if (item.is_sequential_container())
-			{
-				SerializeSequentialContainerTypes(item.create_sequential_view(), writer);
-			}
-			else
-			{
-				rttr::variant wrappedVar = item.extract_wrapped_value();
-				rttr::type valueType = wrappedVar.get_type();
-				if (SerializeAtomicTypes(valueType, wrappedVar, writer))
-				{
-				}
-				else
-				{
-					SerializeRecursively(wrappedVar, writer);
-				}
-			}
-		}
-		writer.EndArray();
-	}
-
-	bool SerializeValue(const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-
-	void SerializeAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
-	{
-		static const std::string keyName("key");
-		static const std::string valueName("value");
-
-		writer.StartArray();
-		if (associativeView.is_key_only_type())
-		{
-			for (auto& item : associativeView)
-			{
-				SerializeValue(item.first, writer);
-			}
-		}
-		else
-		{
-			for (auto& item : associativeView)
-			{
-				writer.StartObject();
-				writer.String(keyName.c_str(), static_cast<rapidjson::SizeType>(keyName.size()), false);
-				SerializeValue(item.first, writer);
-				writer.String(valueName.c_str(), static_cast<rapidjson::SizeType>(valueName.size()), false);
-				SerializeValue(item.second, writer);
-				writer.EndObject();
-			}
-		}
-		writer.EndArray();
-	}
-
-	bool SerializeValue(const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
-	{
-		rttr::type valueType = var.get_type();
-		rttr::type wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
-		bool is_wrapper = wrappedType != valueType;
-		if (SerializeAtomicTypes(wrappedType, is_wrapper ? var.extract_wrapped_value() : var, writer))
-		{
-		}
-		else if (var.is_sequential_container())
-		{
-			SerializeSequentialContainerTypes(var.create_sequential_view(), writer);
-		}
-		else if (var.is_associative_container())
-		{
-			SerializeAssociativeContainerTypes(var.create_associative_view(), writer);
-		}
-		else
-		{
-			auto& childProps = is_wrapper ? wrappedType.get_properties() : valueType.get_properties();
-			if (!childProps.empty())
-			{
-				SerializeRecursively(var, writer);
-			}
-			else
-			{
-				bool bOk = false;
-				std::string stringValue = var.to_string(&bOk);
-				if (!bOk)
-				{
-					writer.String(stringValue);
-					return false;
-				}
-				writer.String(stringValue);
-			}
-		}
-		return true;
-	}
-
-	void SerializeRecursively(const rttr::instance& object, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
-	{
-		writer.StartObject();
-		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
-		const auto& properties = obj.get_derived_type().get_properties();
-		for (auto prop : properties)
-		{
-			if (prop.get_metadata(PropertyMeta::Transient))
-				continue;
-
-			rttr::variant var = prop.get_value(obj);
-			// Cannot serialize, because we cannot retrieve the value
-			if (!var)
-				continue;
-
-			const auto name = prop.get_name();
-			writer.String(name.data(), static_cast<rapidjson::SizeType>(name.length()), false);
-			if (!SerializeValue(var, writer))
-			{
-				ZE_CORE_ERROR("Failed to serialize property: {0}", name);
-			}
-		}
-		writer.EndObject();
-	}
+#endif
 
 	void GameObject::OnDeserialized()
 	{

@@ -20,6 +20,8 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Core/EngineUtilities.h"
+#include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
@@ -29,8 +31,8 @@ namespace ZeoEngine {
 		: Layer("Editor")
 	{
 		const auto& window = Application::Get().GetWindow();
-		m_EditorCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
-		m_EditorCameraController->SetZoomLevel(3.0f);
+		m_GameViewCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+		m_GameViewCameraController->SetZoomLevel(3.0f);
 	}
 
 	void EditorLayer::OnAttach()
@@ -43,15 +45,51 @@ namespace ZeoEngine {
 		std::filesystem::create_directory(cachePath);
 	}
 
+	void EditorLayer::OnDetach()
+	{
+		delete m_EditorParticleSystem;
+	}
+
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
 		if (g_PIEState == PIEState::None && m_bIsHoveringGameView)
 		{
 			// Thses camera controls are only applied to Game View window
-			m_EditorCameraController->OnUpdate(dt);
+			m_GameViewCameraController->OnUpdate(dt);
 		}
 
 		Level::Get().OnEditorUpdate(dt);
+
+		if (m_bShowParticleEditor)
+		{
+			if (m_bIsHoveringParticleView)
+			{
+				// Thses camera controls are only applied to Particle Editor window
+				m_ParticleViewCameraController->OnUpdate(dt);
+			}
+			if (m_EditorParticleSystem)
+			{
+				m_EditorParticleSystem->OnUpdate(dt);
+			}
+
+			Renderer2D::BeginRenderingToTexture(1);
+			{
+				{
+					RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+					RenderCommand::Clear();
+				}
+				{
+					Renderer2D::BeginScene(m_ParticleViewCameraController->GetCamera());
+					if (m_EditorParticleSystem)
+					{
+						m_EditorParticleSystem->OnRender();
+					}
+					Renderer2D::EndScene();
+				}
+			}
+			Renderer2D::EndRenderingToTexture(1);
+		}
+		
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -62,10 +100,9 @@ namespace ZeoEngine {
 		// TODO: These bools are not saved out, so last opened windows cannot restore
 		static bool bShowGameView = true;
 		static bool bShowLevelOutline = true;
-		static bool bShowObjectProperty = true;
+		static bool bShowObjectInspector = true;
 		static bool bShowClassBrowser = true;
 		static bool bShowConsole = true;
-		static bool bShowParticleEditor = false;
 		static bool bShowPreferences = false;
 		static bool bShowAbout = false;
 
@@ -73,7 +110,7 @@ namespace ZeoEngine {
 		// EditorDockspace ///////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		ShowEditorDockspace();
+		CreateMainEditorDockspace();
 
 		//////////////////////////////////////////////////////////////////////////
 		// MainMenuBar ///////////////////////////////////////////////////////////
@@ -87,6 +124,8 @@ namespace ZeoEngine {
 			// File menu
 			if (ImGui::BeginMenu("File"))
 			{
+				// TODO: Add an option to create new level
+
 				static bool bEnableLoadingOrSaving = true;
 				// Loading and saving level during PIE is not allowed
 				if (g_PIEState != PIEState::None)
@@ -96,6 +135,12 @@ namespace ZeoEngine {
 				else
 				{
 					bEnableLoadingOrSaving = true;
+				}
+				if (ImGui::MenuItem("New level", "CTRL+N", false, bEnableLoadingOrSaving))
+				{
+					Level::Get().CleanUp();
+					m_CurrentLevelPath.clear();
+					m_CurrentLevelName.clear();
 				}
 				if (ImGui::MenuItem("Open level", "CTRL+O", false, bEnableLoadingOrSaving))
 				{
@@ -110,7 +155,7 @@ namespace ZeoEngine {
 					}
 					else if (result == NFD_ERROR)
 					{
-						ZE_CORE_ERROR("Open level failure: {0}", NFD_GetError());
+						ZE_CORE_ERROR("Open level failed: {0}", NFD_GetError());
 					}
 				}
 				if (ImGui::MenuItem("Save level", "CTRL+S", false, bEnableLoadingOrSaving))
@@ -121,14 +166,20 @@ namespace ZeoEngine {
 						nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
 						if (result == NFD_OKAY)
 						{
-							Level::Get().SaveLevelToFile(std::string(outPath));
-							m_CurrentLevelPath = outPath;
-							m_CurrentLevelName = std::filesystem::path(outPath).filename().string();
+							std::string pathStr = std::string(outPath);
 							free(outPath);
+							Level::Get().SaveLevelToFile(pathStr);
+							m_CurrentLevelPath = pathStr;
+							static const char* levelFileSuffix = ".zlevel";
+							if (pathStr.rfind(levelFileSuffix) == std::string::npos)
+							{
+								pathStr += levelFileSuffix;
+							}
+							m_CurrentLevelName = std::filesystem::path(pathStr).filename().string();
 						}
 						else if (result == NFD_ERROR)
 						{
-							ZE_CORE_ERROR("Save level failure: {0}", NFD_GetError());
+							ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
 						}
 					}
 					else
@@ -149,7 +200,7 @@ namespace ZeoEngine {
 					}
 					else if (result == NFD_ERROR)
 					{
-						ZE_CORE_ERROR("Save level failure: {0}", NFD_GetError());
+						ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
 					}
 				}
 				ImGui::EndMenu();
@@ -187,10 +238,10 @@ namespace ZeoEngine {
 			{
 				ImGui::MenuItem("Game View", nullptr, &bShowGameView);
 				ImGui::MenuItem("Level Outline", nullptr, &bShowLevelOutline);
-				ImGui::MenuItem("Object Property", nullptr, &bShowObjectProperty);
+				ImGui::MenuItem("Object Inspector", nullptr, &bShowObjectInspector);
 				ImGui::MenuItem("Class Browser", nullptr, &bShowClassBrowser);
 				ImGui::MenuItem("Console", nullptr, &bShowConsole);
-				ImGui::MenuItem("ParticleEditor", nullptr, &bShowParticleEditor);
+				ImGui::MenuItem("Particle Editor", nullptr, &m_bShowParticleEditor);
 				ImGui::Separator();
 				// Reset layout on next frame
 				if (ImGui::MenuItem("Reset layout", nullptr))
@@ -206,7 +257,7 @@ namespace ZeoEngine {
 				ImGui::MenuItem("About ZeoEngine", nullptr, &bShowAbout);
 				ImGui::EndMenu();
 			}
-			// Display level name at center of menu bar
+			// Display level file name at center of menu bar
 			{
 				ImGui::TextCentered("%s", m_CurrentLevelName.empty() ? "Untitled" : m_CurrentLevelName.c_str());
 			}
@@ -236,9 +287,9 @@ namespace ZeoEngine {
 		{
 			ShowLevelOutline(&bShowLevelOutline);
 		}
-		if (bShowObjectProperty)
+		if (bShowObjectInspector)
 		{
-			ShowObjectProperty(&bShowObjectProperty);
+			ShowObjectInspector(&bShowObjectInspector);
 		}
 		if (bShowClassBrowser)
 		{
@@ -249,9 +300,10 @@ namespace ZeoEngine {
 			ShowConsole(&bShowConsole);
 		}
 
-		if (bShowParticleEditor)
+		if (m_bShowParticleEditor)
 		{
-			ShowParticleEditor(&bShowParticleEditor);
+			CreateParticleEditorDockspace(&m_bShowParticleEditor);
+			ShowParticleEditor(&m_bShowParticleEditor);
 		}
 
 		if (bShowPreferences)
@@ -272,8 +324,13 @@ namespace ZeoEngine {
 
 		if (m_bIsHoveringGameView)
 		{
-			// Thses camera events are only applied to Game View window
-			m_EditorCameraController->OnEvent(event);
+			// These camera events are only applied to Game View window
+			m_GameViewCameraController->OnEvent(event);
+		}
+		if (m_bIsHoveringParticleView)
+		{
+			// These camera events are only applied to Particle View
+			m_ParticleViewCameraController->OnEvent(event);
 		}
 
 	}
@@ -288,7 +345,7 @@ namespace ZeoEngine {
 
 	}
 
-	void EditorLayer::ShowEditorDockspace()
+	void EditorLayer::CreateMainEditorDockspace()
 	{
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -305,22 +362,22 @@ namespace ZeoEngine {
 		static bool bOpen = true;
 		ImGui::Begin("Editor", &bOpen, windowFlags);
 		ImGui::PopStyleVar(3);
-		ImGuiID editorDockspaceId = ImGui::GetID("EditorDockspace");
+		ImGuiID mainEditorDockspaceId = ImGui::GetID("MainEditorDockspace");
 		// Update docking layout
-		if (ImGui::DockBuilderGetNode(editorDockspaceId) == nullptr || m_bResetLayout)
+		if (ImGui::DockBuilderGetNode(mainEditorDockspaceId) == nullptr || m_bResetLayout)
 		{
 			m_bResetLayout = false;
 
 			// Clear out existing layout
-			ImGui::DockBuilderRemoveNode(editorDockspaceId);
+			ImGui::DockBuilderRemoveNode(mainEditorDockspaceId);
 			// Add empty node
-			ImGui::DockBuilderAddNode(editorDockspaceId, ImGuiDockNodeFlags_DockSpace);
+			ImGui::DockBuilderAddNode(mainEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
 			const auto& window = Application::Get().GetWindow();
 			// Main node should cover entire screen
-			ImGui::DockBuilderSetNodeSize(editorDockspaceId, ImVec2((float)window.GetWidth(), (float)window.GetHeight()));
+			ImGui::DockBuilderSetNodeSize(mainEditorDockspaceId, ImVec2((float)window.GetWidth(), (float)window.GetHeight()));
 
 			ImGuiID dockMainLeft;
-			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(editorDockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockMainLeft);
+			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(mainEditorDockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockMainLeft);
 			ImGuiID dockRightDown;
 			ImGuiID dockRightUp = ImGui::DockBuilderSplitNode(dockMainRight, ImGuiDir_Up, 0.4f, nullptr, &dockRightDown);
 			ImGuiID dockMainLeftUp;
@@ -330,14 +387,14 @@ namespace ZeoEngine {
 
 			ImGui::DockBuilderDockWindow("Game View", dockMainLeftRight);
 			ImGui::DockBuilderDockWindow("Level Outline", dockRightUp);
-			ImGui::DockBuilderDockWindow("Object Property", dockRightDown);
+			ImGui::DockBuilderDockWindow("Object Inspector", dockRightDown);
 			ImGui::DockBuilderDockWindow("Class Browser", dockMainLeftLeft);
 			ImGui::DockBuilderDockWindow("Console", dockMainLeftDown);
 
-			ImGui::DockBuilderFinish(editorDockspaceId);
+			ImGui::DockBuilderFinish(mainEditorDockspaceId);
 		}
 		// Should be put at last
-		ImGui::DockSpace(editorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+		ImGui::DockSpace(mainEditorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 		ImGui::End();
 	}
 
@@ -356,7 +413,7 @@ namespace ZeoEngine {
 			}
 			// Draw framebuffer texture
 			ImGui::GetWindowDrawList()->AddImage(
-				Renderer2D::GetStorageData()->MainFBO->GetRenderedTexture(),
+				Renderer2D::GetStorageData()->FBOs[0]->GetRenderedTexture(),
 				// Upper left corner for the UVs to be applied at
 				window->InnerRect.Min,
 				// Lower right corner for the UVs to be applied at
@@ -487,7 +544,7 @@ namespace ZeoEngine {
 					}
 				}
 				// Begin dragging spawned GameObject from level outline
-				// Target should be exposed GameObject* variables in Object Property window
+				// Target should be exposed GameObject* variables in Object Inspector window
 				if (m_SelectedGameObject && ImGui::BeginDragDropSource())
 				{
 					// Note: The payload data of the drag operation should always be the variable's address, therefore, in order to pass a GameObject*, we need to pass it by GameObject**
@@ -524,27 +581,32 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	void EditorLayer::ShowObjectProperty(bool* bShow)
+	void EditorLayer::ShowObjectInspector(bool* bShow)
 	{
-		if (ImGui::Begin("Object Property", bShow))
+		if (ImGui::Begin("Object Inspector", bShow))
 		{
 			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 			{
-				if (m_bIsSortedPropertiesDirty)
+				m_CurrentPropertySource = GameObjectProperty;
+				if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
 				{
-					PreProcessProperties();
+					PreProcessProperties(m_SelectedGameObject);
 				}
-				m_bPropertyRecursed = false;
-				ProcessPropertiesRecursively(m_SelectedGameObject);
+				PropertyData data;
+				data.bPropertyRecursed = false;
+				// NOTE: Do not combine following two statements into "data.Object = data.OutermostObject = &rttr::instance(m_SelectedGameObject);",
+				// which will get optimized out in release mode causing data.Object to be an invalid object
+				rttr::instance object = rttr::instance(m_SelectedGameObject);
+				data.Object = data.OutermostObject = &object;
+				ProcessPropertiesRecursively(data);
 			}
 		}
 		ImGui::End();
 	}
 
-	void EditorLayer::PreProcessProperties()
+	void EditorLayer::PreProcessProperties(const rttr::instance& object)
 	{
-		m_SortedProperties.clear();
-		rttr::instance object = rttr::instance(m_SelectedGameObject);
+		m_SortedProperties[m_CurrentPropertySource].clear();
 		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
 		// Get the most derived class's properties
 		auto& properties = obj.get_derived_type().get_properties();
@@ -558,25 +620,24 @@ namespace ZeoEngine {
 			if (categoryVar)
 			{
 				const std::string& category = categoryVar.get_value<std::string>();
-				m_SortedProperties[category].push_back(prop);
+				m_SortedProperties[m_CurrentPropertySource][category].push_back(prop);
 			}
 			else
 			{
-				static const char* defaultCategory = "Default";
-				m_SortedProperties[defaultCategory].push_back(prop);
+				m_SortedProperties[m_CurrentPropertySource]["Default"].push_back(prop);
 			}
 		}
-		m_PropertiesLogged.reserve(properties.size());
-		m_bIsSortedPropertiesDirty = false;
+		m_PropertiesLogged[m_CurrentPropertySource].reserve(properties.size());
+		m_bIsSortedPropertiesDirty[m_CurrentPropertySource] = false;
 	}
 
-	void EditorLayer::ProcessPropertiesRecursively(const rttr::instance& object)
+	void EditorLayer::ProcessPropertiesRecursively(PropertyData& data)
 	{
-		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
+		rttr::instance obj = data.Object->get_type().get_raw_type().is_wrapper() ? data.Object->get_wrapped_instance() : *data.Object;
 		// If it is the outermost property
-		if (!m_bPropertyRecursed)
+		if (!data.bPropertyRecursed)
 		{
-			for (const auto& propPair : m_SortedProperties)
+			for (const auto& propPair : m_SortedProperties[m_CurrentPropertySource])
 			{
 				ImGui::Columns(1);
 				// Display category seperator
@@ -584,18 +645,20 @@ namespace ZeoEngine {
 				{
 					for (auto prop : propPair.second)
 					{
-						ProcessProperty(prop, obj);
+						data.Property = &prop;
+						data.Object = &obj;
+						ProcessProperty(data);
 					}
 				}
 			}
 		}
+		// TODO: Category of child properties
 		// Or it is a child property of a class/struct or possibly an element of a container
 		else
 		{
-			if (obj.get_type().is_derived_from<GameObject>() && !m_bGameObjectPropWarningLogged)
+			if (obj.get_type().is_derived_from<GameObject>())
 			{
-				m_bGameObjectPropWarningLogged = true;
-				ZE_CORE_WARN("Failed registering property with type {0}! You should always register it with base type GameObject* and specify PropertyMeta::SubclassOf instead.", obj.get_type().get_name());
+				LogPropertyMessage(*data.Property, "Failed registering property {0}! You should always register it with base type GameObject* and specify PropertyMeta::SubclassOf instead. See comments of PropertyMeta::SubclassOf for details.", 3);
 				return;
 			}
 			// Get the most derived class's properties
@@ -604,388 +667,467 @@ namespace ZeoEngine {
 			// @see GameObject::m_Transform, GameObject::m_CollisionData
 			for (auto prop : properties)
 			{
-				ProcessProperty(prop, obj);
+				data.Property = &prop;
+				data.Object = &obj;
+				ProcessProperty(data);
 			}
+			data.bPropertyRecursed = false;
 		}
 	}
 
-	void EditorLayer::ProcessProperty(const rttr::property& prop, const rttr::instance& object)
+	void EditorLayer::ProcessProperty(PropertyData& data)
 	{
-		rttr::variant& var = prop.get_value(object);
+		rttr::variant& var = data.Property->get_value(*data.Object);
 		if (!var)
 			return;
 
-		if (!ProcessPropertyValue(var, prop, object) && std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
+		data.PropertyValue = &var;
+
+		// Do not show this property if hide condition meets
+		rttr::variant& hideConditionVar = data.Property->get_metadata(PropertyMeta::HideCondition);
+		if (hideConditionVar)
 		{
-			m_PropertiesLogged.push_back(prop);
-			ZE_CORE_ERROR("Failed to resolve value of property {0}!", prop.get_name());
+			bool bOK = true;
+			std::string hideCondition = hideConditionVar.to_string(&bOK);
+			if (bOK)
+			{
+				size_t seperatorPos = hideCondition.find("==");
+				if (seperatorPos != std::string::npos)
+				{
+					std::string keyName = hideCondition.substr(0, seperatorPos);
+					std::string valueName = hideCondition.substr(seperatorPos + 2, hideCondition.size() - 1);
+					auto& properties = data.Object->get_derived_type().get_properties();
+					for (auto prop : properties)
+					{
+						// We only support bool and enum for now
+						if (prop.get_type() == rttr::type::get<bool>() || prop.is_enumeration())
+						{
+							if (prop.get_name() == keyName)
+							{
+								if (prop.get_value(*data.Object).to_string() == valueName)
+								{
+									return;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					bOK = false;
+				}
+			}
+			if (!bOK)
+			{
+				LogPropertyMessage(*data.Property, "Syntax error on PropertyMeta::HideCondition of property {0}! See comments of PropertyMeta::HideCondition for details." , 3);
+			}
+		}
+
+		if (!ProcessPropertyValue(data))
+		{
+			LogPropertyMessage(*data.Property, "Failed to resolve value of property {0}!", 3);
 		}
 	}
 
-	bool EditorLayer::ProcessPropertyValue(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object)
+	bool EditorLayer::ProcessPropertyValue(PropertyData& data)
 	{
-		rttr::type valueType = var.get_type();
+		rttr::type valueType = data.PropertyValue->get_type();
 		rttr::type wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
 		bool bIsWrapper = wrappedType != valueType;
+		// Backup variant value
+		rttr::variant& propertyValue = *data.PropertyValue;
+		data.PropertyValue = bIsWrapper ? &data.PropertyValue->extract_wrapped_value() : data.PropertyValue;
 		// Atomic types
-		if (ProcessAtomicTypes(wrappedType, bIsWrapper ? var.extract_wrapped_value() : var, prop, object))
+		if (ProcessAtomicTypes(wrappedType, data))
 		{
 		}
-		// Sequential container types - this is not recognized as wrapper types
-		else if (var.is_sequential_container())
-		{
-			if (wrappedType.is_pointer() && std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-			{
-				m_PropertiesLogged.push_back(prop);
-				ZE_CORE_WARN("Registering a pointer type sequential container {0} is not supported!", prop.get_name());
-				return true;
-			}
-			rttr::variant_sequential_view sequentialView = var.create_sequential_view();
-			if (sequentialView.get_rank() > 1 && std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-			{
-				m_PropertiesLogged.push_back(prop);
-				ZE_CORE_WARN("Registering a nested sequential container {0} is not supported!", prop.get_name());
-				return true;
-			}
-			bool bOpen = ImGui::TreeNodeEx(prop.get_name().data());
-			ShowPropertyTooltip(prop);
-			if (bOpen)
-			{
-				// Switch to the right column
-				ImGui::NextColumn();
-				// Add insert and erase-all buttons
-				AddSequentialButtons(prop, sequentialView);
-				// Switch to next line's left column
-				ImGui::NextColumn();
-				ProcessSequentialContainerTypes(prop, sequentialView);
-				prop.set_value(object, var);
-				ImGui::TreePop();
-			}
-			else
-			{
-				// Switch to next line's left column
-				ImGui::NextColumn();
-				ImGui::NextColumn();
-			}
-		}
-		// TODO: Associative container types
-		else if (var.is_associative_container())
-		{
-			ZE_CORE_ASSERT_INFO(false, "Associative containers are currently not supported!");
-			if (ImGui::TreeNodeEx(prop.get_name().data()))
-			{
-				auto associativeView = var.create_associative_view();
-				ProcessAssociativeContainerTypes(associativeView, prop, object);
-				prop.set_value(object, var);
-				ImGui::TreePop();
-			}
-		}
-		// class/struct types
 		else
 		{
-			auto& childProps = bIsWrapper ? wrappedType.get_properties() : valueType.get_properties();
-			if (!childProps.empty())
+			// Restore variant value
+			data.PropertyValue = &propertyValue;
+			// Backup object and property
+			rttr::instance& object = *data.Object;
+			rttr::property& prop = *data.Property;
+
+			// Sequential container types - this is not recognized as wrapper types
+			if (propertyValue.is_sequential_container())
 			{
 				if (!wrappedType.is_pointer())
 				{
-					if (std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-					{
-						m_PropertiesLogged.push_back(prop);
-						ZE_CORE_WARN("Registering custom struct ({0}) by value is not supported! Try 'policy::prop::bind_as_ptr'.", prop.get_name());
-					}
+					LogPropertyMessage(*data.Property, "Avoid registering sequential container {0} by value. Try 'policy::prop::bind_as_ptr'!", 2);
+				}
+				data.SequentialView = &propertyValue.create_sequential_view();
+				if (data.SequentialView->get_rank() > 1)
+				{
+					LogPropertyMessage(*data.Property, "Registering a nested sequential container {0} is not supported!", 3);
 					return true;
 				}
-				ImGui::AlignTextToFramePadding();
-				bool bOpen = ImGui::TreeNodeEx(prop.get_name().data(), ImGuiTreeNodeFlags_DefaultOpen);
-				ShowPropertyTooltip(prop);
-				// Switch to next line's left column
-				ImGui::NextColumn();
-				ImGui::NextColumn();
+				bool bOpen = ImGui::TreeNodeEx(data.Property->get_name().data());
+				ShowPropertyTooltip(*data.Property);
 				if (bOpen)
 				{
-					m_bPropertyRecursed = true;
-					ProcessPropertiesRecursively(var);
-					// For transform specific type, we want to re-calculate transform matrix on value changes
-					// TODO: This may need refactoring if Transform struct is replaced with component
-					if (m_bIsTransformDirty && wrappedType.get_raw_type() == rttr::type::get<Transform>())
-					{
-						m_SelectedGameObject->RecomposeTransformMatrix();
-						m_bIsTransformDirty = false;
-					}
+					// Switch to the right column
+					ImGui::NextColumn();
+					// Add insert and erase-all buttons
+					AddSequentialButtons(data);
+					// Switch to next line's left column
+					ImGui::NextColumn();
+					ProcessSequentialContainerTypes(data);
+					// Write updated value to sequential container property
+					prop.set_value(object, propertyValue);
 					ImGui::TreePop();
 				}
+				else
+				{
+					// Switch to next line's left column
+					ImGui::NextColumn();
+					ImGui::NextColumn();
+				}
 			}
+			// TODO: Associative container types
+			else if (propertyValue.is_associative_container())
+			{
+				LogPropertyMessage(*data.Property, "Registering associative containers is not supported!", 3);
+				//if (ImGui::TreeNodeEx(data.Property->get_name().data()))
+				//{
+				//	data.AssociativeView = &propertyValue.create_associative_view();
+				//	ProcessAssociativeContainerTypes(data);
+				//	prop.set_value(object, propertyValue);
+				//	ImGui::TreePop();
+				//}
+			}
+			// class/struct types
 			else
 			{
-				return false;
+				auto& childProps = wrappedType.get_properties();
+				if (!childProps.empty())
+				{
+					if (!wrappedType.is_pointer())
+					{
+						LogPropertyMessage(*data.Property, "Registering custom struct {0} by value is not well supported for some reasons. Try 'policy::prop::bind_as_ptr'!", 2);
+					}
+					ImGui::AlignTextToFramePadding();
+					bool bOpen = ImGui::TreeNodeEx(data.Property->get_name().data(), ImGuiTreeNodeFlags_DefaultOpen);
+					ShowPropertyTooltip(*data.Property);
+					// Switch to next line's left column
+					ImGui::NextColumn();
+					ImGui::NextColumn();
+					if (bOpen)
+					{
+						data.bPropertyRecursed = true;
+						data.OuterProperty = data.Property;
+						rttr::instance object = rttr::instance(propertyValue);
+						data.Object = &object;
+						ProcessPropertiesRecursively(data);
+						// For transform specific type, we want to re-calculate transform matrix on value changes
+						// TODO: This may need refactoring if Transform struct is replaced with component
+						if (m_bIsTransformDirty && wrappedType.get_raw_type() == rttr::type::get<Transform>())
+						{
+							m_SelectedGameObject->RecomposeTransformMatrix();
+							m_bIsTransformDirty = false;
+						}
+						ImGui::TreePop();
+					}
+				}
+				else
+				{
+					return false;
+				}
 			}
 		}
 		return true;
 	}
 
-	bool EditorLayer::ProcessAtomicTypes(const rttr::type& type, const rttr::variant& var, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	bool EditorLayer::ProcessAtomicTypes(const rttr::type& type, PropertyData& data)
 	{
 		if (type.is_arithmetic())
 		{
 			if (type == rttr::type::get<bool>())
 			{
-				ProcessBoolType(var.to_bool(), prop, object, sequentialView, sequentialIndex);
+				ProcessBoolType(data.PropertyValue->to_bool(), data);
 			}
 			else if (type == rttr::type::get<int8_t>())
 			{
-				ProcessInt8Type(var.to_int8(), prop, object, sequentialView, sequentialIndex);
+				ProcessInt8Type(data.PropertyValue->to_int8(), data);
 			}
 			else if (type == rttr::type::get<int32_t>())
 			{
-				ProcessInt32Type(var.to_int32(), prop, object, sequentialView, sequentialIndex);
+				ProcessInt32Type(data.PropertyValue->to_int32(), data);
 			}
 			else if (type == rttr::type::get<int64_t>())
 			{
-				ProcessInt64Type(var.to_int64(), prop, object, sequentialView, sequentialIndex);
+				ProcessInt64Type(data.PropertyValue->to_int64(), data);
 			}
 			else if (type == rttr::type::get<uint8_t>())
 			{
-				ProcessUInt8Type(var.to_uint8(), prop, object, sequentialView, sequentialIndex);
+				ProcessUInt8Type(data.PropertyValue->to_uint8(), data);
 			}
 			else if (type == rttr::type::get<uint32_t>())
 			{
-				ProcessUInt32Type(var.to_uint32(), prop, object, sequentialView, sequentialIndex);
+				ProcessUInt32Type(data.PropertyValue->to_uint32(), data);
 			}
 			else if (type == rttr::type::get<uint64_t>())
 			{
-				ProcessUInt64Type(var.to_uint64(), prop, object, sequentialView, sequentialIndex);
+				ProcessUInt64Type(data.PropertyValue->to_uint64(), data);
 			}
 			else if (type == rttr::type::get<float>())
 			{
-				ProcessFloatType(var.to_float(), prop, object, sequentialView, sequentialIndex);
+				ProcessFloatType(data.PropertyValue->to_float(), data);
 			}
 			else if (type == rttr::type::get<double>())
 			{
-				ProcessDoubleType(var.to_double(), prop, object, sequentialView, sequentialIndex);
+				ProcessDoubleType(data.PropertyValue->to_double(), data);
 			}
 			return true;
 		}
 		// enum
 		else if (type.is_enumeration())
 		{
-			ProcessEnumType(var, prop, object, sequentialView, sequentialIndex);
+			ProcessEnumType(data);
 			return true;
 		}
 		// std::string
 		else if (type.get_raw_type() == rttr::type::get<std::string>())
 		{
-			if (sequentialIndex == -1)
+			if (data.SequentialIndex == -1)
 			{
 				if (!type.is_pointer())
 				{
-					if (std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-					{
-						m_PropertiesLogged.push_back(prop);
-						ZE_CORE_WARN("Registering std::string ({0}) by value is not supported! Try 'policy::prop::bind_as_ptr'.", prop.get_name());
-					}
+					LogPropertyMessage(*data.Property, "Registering std::string {0} by value is not supported. Try 'policy::prop::bind_as_ptr'!", 3);
 				}
 				else
 				{
-					ProcessStringType(var.get_value<std::string*>(), prop, sequentialView, sequentialIndex);
+					ProcessStringType(data.PropertyValue->get_value<std::string*>(), data);
 				}
 			}
 			else
 			{
-				ProcessStringType(const_cast<std::string*>(&var.get_value<std::string>()), prop, sequentialView, sequentialIndex);
+				ProcessStringType(const_cast<std::string*>(&data.PropertyValue->get_value<std::string>()), data);
+			}
+			return true;
+		}
+		// glm::i32vec2
+		else if (type.get_raw_type() == rttr::type::get<glm::i32vec2>())
+		{
+			if (data.SequentialIndex == -1)
+			{
+				if (!type.is_pointer())
+				{
+					LogPropertyMessage(*data.Property, "Registering glm::i32vec2 {0} by value is not supported. Try 'policy::prop::bind_as_ptr'!", 3);
+				}
+				else
+				{
+					ProcessI32Vec2Type(data.PropertyValue->get_value<glm::i32vec2*>(), data);
+				}
+			}
+			else
+			{
+				ProcessI32Vec2Type(const_cast<glm::i32vec2*>(&data.PropertyValue->get_value<glm::i32vec2>()), data);
 			}
 			return true;
 		}
 		// glm::vec2
 		else if (type.get_raw_type() == rttr::type::get<glm::vec2>())
 		{
-			if (sequentialIndex == -1)
+			if (data.SequentialIndex == -1)
 			{
 				if (!type.is_pointer())
 				{
-					if (std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-					{
-						m_PropertiesLogged.push_back(prop);
-						ZE_CORE_WARN("Registering glm::vec2 ({0}) by value is not supported! Try 'policy::prop::bind_as_ptr'.", prop.get_name());
-					}
+					LogPropertyMessage(*data.Property, "Registering glm::vec2 {0} by value is not supported. Try 'policy::prop::bind_as_ptr'!", 3);
 				}
 				else
 				{
-					ProcessVec2Type(var.get_value<glm::vec2*>(), prop, sequentialView, sequentialIndex);
+					ProcessVec2Type(data.PropertyValue->get_value<glm::vec2*>(), data);
 				}
 			}
 			else
 			{
-				ProcessVec2Type(const_cast<glm::vec2*>(&var.get_value<glm::vec2>()), prop, sequentialView, sequentialIndex);
+				ProcessVec2Type(const_cast<glm::vec2*>(&data.PropertyValue->get_value<glm::vec2>()), data);
 			}
 			return true;
 		}
 		// glm::vec3
 		else if (type.get_raw_type() == rttr::type::get<glm::vec3>())
 		{
-			if (sequentialIndex == -1)
+			if (data.SequentialIndex == -1)
 			{
 				if (!type.is_pointer())
 				{
-					if (std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-					{
-						m_PropertiesLogged.push_back(prop);
-						ZE_CORE_WARN("Registering glm::vec3 ({0}) by value is not supported! Try 'policy::prop::bind_as_ptr'.", prop.get_name());
-					}
+					LogPropertyMessage(*data.Property, "Registering glm::vec3 {0} by value is not supported. Try 'policy::prop::bind_as_ptr'!", 3);
 				}
 				else
 				{
-					ProcessVec3Type(var.get_value<glm::vec3*>(), prop, sequentialView, sequentialIndex);
+					ProcessVec3Type(data.PropertyValue->get_value<glm::vec3*>(), data);
 				}
 			}
 			else
 			{
-				ProcessVec3Type(const_cast<glm::vec3*>(&var.get_value<glm::vec3>()), prop, sequentialView, sequentialIndex);
+				ProcessVec3Type(const_cast<glm::vec3*>(&data.PropertyValue->get_value<glm::vec3>()), data);
 			}
 			return true;
 		}
 		// glm::vec4
 		else if (type.get_raw_type() == rttr::type::get<glm::vec4>())
 		{
-			if (sequentialIndex == -1)
+			if (data.SequentialIndex == -1)
 			{
 				if (!type.is_pointer())
 				{
-					if (std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
-					{
-						m_PropertiesLogged.push_back(prop);
-						ZE_CORE_WARN("Registering glm::vec4 ({0}) by value is not supported! Try 'policy::prop::bind_as_ptr'.", prop.get_name());
-					}
+					LogPropertyMessage(*data.Property, "Registering glm::vec4 {0} by value is not supported. Try 'policy::prop::bind_as_ptr'!", 3);
 				}
 				else
 				{
-					ProcessColorType(var.get_value<glm::vec4*>(), prop, sequentialView, sequentialIndex);
+					ProcessColorType(data.PropertyValue->get_value<glm::vec4*>(), data);
 				}
 			}
 			else
 			{
-				ProcessColorType(const_cast<glm::vec4*>(&var.get_value<glm::vec4>()), prop, sequentialView, sequentialIndex);
+				ProcessColorType(const_cast<glm::vec4*>(&data.PropertyValue->get_value<glm::vec4>()), data);
 			}
 			return true;
 		}
 		// GameObject*
 		else if (type.is_pointer() && type == rttr::type::get<GameObject*>())
 		{
-			ProcessGameObjectType(var.get_value<GameObject*>(), prop, object, sequentialView, sequentialIndex);
+			ProcessGameObjectType(data.PropertyValue->get_value<GameObject*>(), data);
 			return true;                      
 		}
 		// Ref<Texture2D>
 		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
 		{
-			ProcessTexture2DType(var.get_value<Ref<Texture2D>>(), prop, object, sequentialView, sequentialIndex);
+			ProcessTexture2DType(data.PropertyValue->get_value<Ref<Texture2D>>(), data);
+			return true;
+		}
+		// ParticleSystem*
+		else if (type.get_raw_type() == rttr::type::get<ParticleSystem>())
+		{
+			if (!type.is_pointer())
+			{
+				LogPropertyMessage(*data.Property, "Registering ParticleSystem type {0} is not supported. Try ParticleSystem*!", 3);
+			}
+			else
+			{
+				ProcessParticleSystemType(data.PropertyValue->get_value<ParticleSystem*>(), data);
+			}
 			return true;
 		}
 
 		return false;
 	}
 
-	void EditorLayer::AddSequentialButtons(const rttr::property& prop, rttr::variant_sequential_view& sequentialView)
+	void EditorLayer::AddSequentialButtons(const PropertyData& data)
 	{
-		rttr::type sequentialValueType = sequentialView.get_value_type();
+		rttr::type itemType = data.SequentialView->get_value_type();
 		std::stringstream ss;
-		ss << "##" << prop.get_name() << sequentialView.get_value_type().get_name();
+		ss << "##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name();
 		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))
 		{
-			ss.clear();
-			ss.str("");
-			ss << "Insert##" << prop.get_name() << sequentialView.get_value_type().get_name();
+			ss.clear(); ss.str(""); ss << "Insert##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name();
 			// Insert a new item at the end
 			if (ImGui::Selectable(ss.str().c_str()))
 			{
-				// TODO: We have to add every supported type explicitly for sequential container insertion, which is really not elegant
-				if (sequentialValueType == rttr::type::get<bool>())
+				// TODO: We have to add every supported type explicitly for sequential container insertion, which is really bad
+				if (itemType == rttr::type::get<bool>())
 				{
-					sequentialView.insert(sequentialView.end(), false);
+					ZE_CORE_WARN("Bool type sequential container {0} is currently not supported!", data.Property->get_name());
+					//data.SequentialView->insert(data.SequentialView->end(), false);
 				}
-				else if (sequentialValueType == rttr::type::get<int8_t>())
+				else if (itemType == rttr::type::get<int8_t>())
 				{
-					sequentialView.insert(sequentialView.end(), (int8_t)0);
+					data.SequentialView->insert(data.SequentialView->end(), (int8_t)0);
 				}
-				else if (sequentialValueType == rttr::type::get<int32_t>())
+				else if (itemType == rttr::type::get<int32_t>())
 				{
-					sequentialView.insert(sequentialView.end(), 0);
+					data.SequentialView->insert(data.SequentialView->end(), 0);
 				}
-				else if (sequentialValueType == rttr::type::get<int64_t>())
+				else if (itemType == rttr::type::get<int64_t>())
 				{
-					sequentialView.insert(sequentialView.end(), 0ll);
+					data.SequentialView->insert(data.SequentialView->end(), 0ll);
 				}
-				else if (sequentialValueType == rttr::type::get<uint8_t>())
+				else if (itemType == rttr::type::get<uint8_t>())
 				{
-					sequentialView.insert(sequentialView.end(), (uint8_t)0);
+					data.SequentialView->insert(data.SequentialView->end(), (uint8_t)0);
 				}
-				else if (sequentialValueType == rttr::type::get<uint32_t>())
+				else if (itemType == rttr::type::get<uint32_t>())
 				{
-					sequentialView.insert(sequentialView.end(), 0u);
+					data.SequentialView->insert(data.SequentialView->end(), 0u);
 				}
-				else if (sequentialValueType == rttr::type::get<uint64_t>())
+				else if (itemType == rttr::type::get<uint64_t>())
 				{
-					sequentialView.insert(sequentialView.end(), 0ull);
+					data.SequentialView->insert(data.SequentialView->end(), 0ull);
 				}
-				else if (sequentialValueType == rttr::type::get<float>())
+				else if (itemType == rttr::type::get<float>())
 				{
-					sequentialView.insert(sequentialView.end(), 0.0f);
+					data.SequentialView->insert(data.SequentialView->end(), 0.0f);
 				}
-				else if (sequentialValueType == rttr::type::get<double>())
+				else if (itemType == rttr::type::get<double>())
 				{
-					sequentialView.insert(sequentialView.end(), 0.0);
+					data.SequentialView->insert(data.SequentialView->end(), 0.0);
 				}
-				else if (sequentialValueType.is_enumeration())
+				else if (itemType.is_enumeration())
 				{
-					sequentialView.insert(sequentialView.end(), *sequentialValueType.get_enumeration().get_values().begin());
+					data.SequentialView->insert(data.SequentialView->end(), *itemType.get_enumeration().get_values().begin());
 				}
-				else if (sequentialValueType == rttr::type::get<std::string>())
+				else if (itemType == rttr::type::get<std::string>())
 				{
-					sequentialView.insert(sequentialView.end(), std::string(""));
+					data.SequentialView->insert(data.SequentialView->end(), std::string(""));
 				}
-				else if (sequentialValueType == rttr::type::get<glm::vec2>())
+				else if (itemType == rttr::type::get<glm::vec2>())
 				{
-					sequentialView.insert(sequentialView.end(), glm::vec2(0.0f));
+					data.SequentialView->insert(data.SequentialView->end(), glm::vec2(0.0f));
 				}
-				else if (sequentialValueType == rttr::type::get<glm::vec3>())
+				else if (itemType == rttr::type::get<glm::i32vec2>())
 				{
-					sequentialView.insert(sequentialView.end(), glm::vec3(0.0f));
+					data.SequentialView->insert(data.SequentialView->end(), glm::i32vec2(0));
 				}
-				else if (sequentialValueType == rttr::type::get<glm::vec4>())
+				else if (itemType == rttr::type::get<glm::vec3>())
 				{
-					sequentialView.insert(sequentialView.end(), glm::vec4(0.0f));
+					data.SequentialView->insert(data.SequentialView->end(), glm::vec3(0.0f));
 				}
-				else if (sequentialValueType == rttr::type::get<GameObject*>())
+				else if (itemType == rttr::type::get<glm::vec4>())
 				{
-					sequentialView.insert(sequentialView.end(), (GameObject*)nullptr);
+					data.SequentialView->insert(data.SequentialView->end(), glm::vec4(0.0f));
 				}
-				else if (sequentialValueType == rttr::type::get<Ref<Texture2D>>())
+				else if (itemType == rttr::type::get<GameObject*>())
 				{
-					sequentialView.insert(sequentialView.end(), Ref<Texture2D>());
+					data.SequentialView->insert(data.SequentialView->end(), (GameObject*)nullptr);
+				}
+				else if (itemType == rttr::type::get<Ref<Texture2D>>())
+				{
+					data.SequentialView->insert(data.SequentialView->end(), Ref<Texture2D>());
+				}
+				else if (itemType == rttr::type::get<BurstData>())
+				{
+					data.SequentialView->insert(data.SequentialView->end(), BurstData());
+				}
+				else if (itemType == rttr::type::get<ParticleSystem*>())
+				{
+					data.SequentialView->insert(data.SequentialView->end(), (ParticleSystem*)nullptr);
 				}
 				else
 				{
-					ZE_CORE_WARN("Unknown sequential container type {0}!", prop.get_name());
+					ZE_CORE_WARN("Unknown sequential container {0}!", data.Property->get_name());
 				}
 			}	
-			if (!sequentialView.is_empty())
+			if (!data.SequentialView->is_empty())
 			{
-				ss.clear();
-				ss.str("");
-				ss << "Erase all##" << prop.get_name() << sequentialView.get_value_type().get_name();
+				ss.clear(); ss.str(""); ss << "Erase all##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name();
 				// Clear all items
 				if (ImGui::Selectable(ss.str().c_str()))
 				{
-					sequentialView.clear();
+					data.SequentialView->clear();
+					InvokePropertyChangeCallback(data);
 				}
 			}
 			ImGui::EndCombo();
 		}
 	}
 
-	void EditorLayer::ProcessSequentialContainerTypes(const rttr::property& prop, rttr::variant_sequential_view& sequentialView)
+	void EditorLayer::ProcessSequentialContainerTypes(PropertyData& data)
 	{
-		for (uint32_t i = 0; i < sequentialView.get_size(); ++i)
+		for (uint32_t i = 0; i < data.SequentialView->get_size(); ++i)
 		{
-			rttr::variant& item = sequentialView.get_value(i);
+			rttr::variant& item = data.SequentialView->get_value(i);
 			// TODO: Nested sequential containers not supported
 			if (item.is_sequential_container())
 			{
@@ -993,53 +1135,140 @@ namespace ZeoEngine {
 				ss << "[" << i << "]";
 				if (ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					sequentialView = item.create_sequential_view();
-					ProcessSequentialContainerTypes(prop, sequentialView);
+					data.SequentialView = &item.create_sequential_view();
+					ProcessSequentialContainerTypes(data);
 					ImGui::TreePop();
 				}
 			}
 			else
 			{
-				rttr::variant& wrappedVar = item.extract_wrapped_value();
+				rttr::variant wrappedVar = item.extract_wrapped_value();
 				rttr::type valueType = wrappedVar.get_type();
 				rttr::type wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
 				bool bIsWrapper = wrappedType != valueType;
-				if (ProcessAtomicTypes(wrappedType, bIsWrapper ? wrappedVar.extract_wrapped_value() : wrappedVar, prop, rttr::instance(), sequentialView, i))
+				// Backup variant value
+				rttr::variant& propertyValue = *data.PropertyValue;
+				data.PropertyValue = bIsWrapper ? &wrappedVar.extract_wrapped_value() : &wrappedVar;
+				data.SequentialIndex = i;
+				if (ProcessAtomicTypes(wrappedType, data))
 				{
 				}
-				// TODO: Sequential containers of struct/class not supported for now because we cannot implement a strongly typed insertion function for now
+				// TODO: Sequential containers of custom struct/class not supported for now because we cannot implement a general strongly typed insertion function
+				// For internal use currently
 				else
 				{
+					// Restore variant value
+					data.PropertyValue = &propertyValue;
+
 					std::stringstream ss;
-					ss << valueType.get_name() << "[" << i << "]";
+					ss << "[" << i << "]";
 					if (ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						m_bPropertyRecursed = true;
-						ProcessPropertiesRecursively(wrappedVar);
+						// Switch to the right column
+						ImGui::NextColumn();
+						// Add insert and erase buttons
+						{
+							ss.clear(); ss.str(""); ss << "##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+							if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))
+							{
+								ss.clear(); ss.str(""); ss << "Insert##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+								if (ImGui::Selectable(ss.str().c_str()))
+								{
+									// Item type is BurstData
+									if (data.SequentialView->get_value_type() == rttr::type::get<BurstData>())
+									{
+										// Increment SequentialIndex after insertion to match data.Object
+										data.SequentialView->insert(data.SequentialView->begin() + data.SequentialIndex++, BurstData());
+									}
+								}
+								ss.clear(); ss.str(""); ss << "Erase##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+								if (ImGui::Selectable(ss.str().c_str()))
+								{
+									data.SequentialView->erase(data.SequentialView->begin() + data.SequentialIndex);
+									InvokePropertyChangeCallback(data);
+									// The last item has been erased, current sequential container has finished processing
+									if (data.SequentialIndex >= data.SequentialView->get_size())
+									{
+										data.SequentialIndex = -1;
+										ImGui::EndCombo();
+										ImGui::TreePop();
+										return;
+									}
+									// Because previous item is erased, we need to update item (data.Object) to match SequentialIndex
+									else
+									{
+										wrappedVar = data.SequentialView->get_value(data.SequentialIndex).extract_wrapped_value();
+									}
+								}
+								ImGui::EndCombo();
+							}
+						}
+						// Switch to next line's left column
+						ImGui::NextColumn();
+						data.bPropertyRecursed = true;
+						data.OuterProperty = data.Property;
+						rttr::instance object = rttr::instance(wrappedVar);
+						data.Object = &object;
+						// Backup current property
+						rttr::property& prop = *data.Property;
+						ProcessPropertiesRecursively(data);
+						// Restore property
+						data.Property = &prop;
 						ImGui::TreePop();
 					}
+					// Current sequential container has finished processing, reset SequentialIndex
+					data.SequentialIndex = -1;
 				}
 			}
 		}
 	}
 
-	void EditorLayer::ProcessAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, const rttr::property& prop, const rttr::instance& object)
+	void EditorLayer::ProcessAssociativeContainerTypes(PropertyData& data)
 	{
 		// i.e. std::set
-		if (associativeView.is_key_only_type())
+		if (data.AssociativeView->is_key_only_type())
 		{
-			for (const auto& pair : associativeView)
+			for (auto& pair : *data.AssociativeView)
 			{
-				ProcessPropertyValue(pair.first, prop, object);
+				data.PropertyValue = const_cast<rttr::variant*>(&pair.first);
+				ProcessPropertyValue(data);
 			}
 		}
 		else
 		{
-			for (const auto& pair : associativeView)
+			for (auto& pair : *data.AssociativeView)
 			{
-				ProcessPropertyValue(pair.first, prop, object);
+				data.PropertyValue = const_cast<rttr::variant*>(&pair.first);
+				ProcessPropertyValue(data);
 				ImGui::SameLine();
-				ProcessPropertyValue(pair.second, prop, object);
+				data.PropertyValue = const_cast<rttr::variant*>(&pair.second);
+				ProcessPropertyValue(data);
+			}
+		}
+	}
+
+	void EditorLayer::LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel)
+	{
+		if (std::find(m_PropertiesLogged[m_CurrentPropertySource].begin(), m_PropertiesLogged[m_CurrentPropertySource].end(), prop) == m_PropertiesLogged[m_CurrentPropertySource].end())
+		{
+			m_PropertiesLogged[m_CurrentPropertySource].push_back(prop);
+			switch (logLevel)
+			{
+			case 0:
+				ZE_CORE_TRACE(msg, prop.get_name());
+				break;
+			case 1:
+				ZE_CORE_INFO(msg, prop.get_name());
+				break;
+			case 2:
+				ZE_CORE_WARN(msg, prop.get_name());
+				break;
+			case 3:
+				ZE_CORE_ERROR(msg, prop.get_name());
+				break;
+			case 4:
+				ZE_CORE_CRITICAL(msg, prop.get_name());
+				break;
 			}
 		}
 	}
@@ -1080,13 +1309,168 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	void EditorLayer::ShowParticleEditor(bool* bShow)
+	void EditorLayer::CreateParticleEditorDockspace(bool* bShow)
 	{
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar;
 		SetNextWindowDefaultPosition();
 		ImGui::SetNextWindowSize(ImVec2(700, 500), ImGuiCond_FirstUseEver);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+		ImGui::Begin("Particle Editor", bShow, windowFlags);
+		ImGui::PopStyleVar(2);
+		ImGuiID particleEditorDockspaceId = ImGui::GetID("ParticleEditorDockspace");
+		// Update docking layout
+		if (ImGui::DockBuilderGetNode(particleEditorDockspaceId) == nullptr || m_bResetLayout)
+		{
+			m_bResetLayout = false;
+
+			// Clear out existing layout
+			ImGui::DockBuilderRemoveNode(particleEditorDockspaceId);
+			// Add empty node
+			ImGui::DockBuilderAddNode(particleEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
+			// Main node should cover entire window
+			ImGui::DockBuilderSetNodeSize(particleEditorDockspaceId, ImGui::GetWindowSize());
+
+			ImGuiID dockMainLeft;
+			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(particleEditorDockspaceId, ImGuiDir_Right, 0.5f, nullptr, &dockMainLeft);
+
+			ImGui::DockBuilderDockWindow("Particle View", dockMainLeft);
+			ImGui::DockBuilderDockWindow("Particle Inspector", dockMainRight);
+
+			ImGui::DockBuilderFinish(particleEditorDockspaceId);
+		}
+		// Should be put at last
+		ImGui::DockSpace(particleEditorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+		ImGui::End();
+	}
+
+	void EditorLayer::ShowParticleEditor(bool* bShow)
+	{
 		if (ImGui::Begin("Particle Editor", bShow))
 		{
+			if (ImGui::BeginMenuBar())
+			{
+				// File menu
+				if (ImGui::BeginMenu("File"))
+				{
+					if (ImGui::MenuItem("New particle system"))
+					{
+						delete m_EditorParticleSystem;
+						CreateDefaultParticleSystem();
+						m_CurrentParticleSystemPath.clear();
+						m_CurrentParticleSystemName.clear();
+					}
+					if (ImGui::MenuItem("Load particle system"))
+					{
+						nfdchar_t* outPath = nullptr;
+						nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
+						if (result == NFD_OKAY)
+						{
+							LoadParticleSystemFromFile(outPath);
+							m_CurrentParticleSystemPath = outPath;
+							m_CurrentParticleSystemName = std::filesystem::path(outPath).filename().string();
+							free(outPath);
+						}
+						else if (result == NFD_ERROR)
+						{
+							ZE_CORE_ERROR("Load particle system failed: {0}", NFD_GetError());
+						}
+					}
+					if (ImGui::MenuItem("Save particle system"))
+					{
+						if (m_CurrentParticleSystemPath.empty())
+						{
+							nfdchar_t* outPath = nullptr;
+							nfdresult_t result = NFD_SaveDialog("zparticle", nullptr, &outPath);
+							if (result == NFD_OKAY)
+							{
+								std::string pathStr = std::string(outPath);
+								free(outPath);
+								SaveParticleSystemToFile(pathStr);
+								m_CurrentParticleSystemPath = pathStr;
+								static const char* particleSystemFileSuffix = ".zparticle";
+								if (pathStr.rfind(particleSystemFileSuffix) == std::string::npos)
+								{
+									pathStr += particleSystemFileSuffix;
+								}
+								m_CurrentParticleSystemName = std::filesystem::path(pathStr).filename().string();
+							}
+							else if (result == NFD_ERROR)
+							{
+								ZE_CORE_ERROR("Save particle system failed: {0}", NFD_GetError());
+							}
+						}
+						else
+						{
+							SaveParticleSystemToFile(m_CurrentParticleSystemPath);
+						}
+					}
+					ImGui::EndMenu();
+				}
+				// Display particle system file name at center of menu bar
+				{
+					ImGui::TextCentered("%s", m_CurrentParticleSystemName.empty() ? "Untitled" : m_CurrentParticleSystemName.c_str());
+				}
+				ImGui::EndMenuBar();
+			}
 
+			if (ImGui::Begin("Particle View", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
+			{
+				if (!m_ParticleViewCameraController)
+				{
+					const auto& window = Application::Get().GetWindow();
+					m_ParticleViewCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+					m_ParticleViewCameraController->SetZoomLevel(3.0f);
+				}
+
+				if (!m_EditorParticleSystem)
+				{
+					CreateDefaultParticleSystem();
+				}
+
+				ImGuiWindow* window = ImGui::GetCurrentWindow();
+				glm::vec2 max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
+				glm::vec2 min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
+				glm::vec2 size = max - min;
+				if (size != m_LastParticleViewSize)
+				{
+					// Update camera aspect ratio when Particle View is resized
+					m_ParticleViewCameraController->UpdateProjection(size.x / size.y);
+				}
+				// Draw framebuffer texture
+				ImGui::Image(Renderer2D::GetStorageData()->FBOs[1]->GetRenderedTexture(),
+					ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
+					ImVec2(0, 1), ImVec2(1, 0));
+				max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
+				min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
+				m_LastParticleViewSize = max - min;
+				m_bIsHoveringParticleView = ImGui::IsItemHovered();
+
+				if (m_EditorParticleSystem)
+				{
+					m_EditorParticleSystem->OnParticleViewImGuiRender();
+				}
+			}
+			ImGui::End();
+
+			if (ImGui::Begin("Particle Inspector"))
+			{
+				if (m_EditorParticleSystem)
+				{
+					m_CurrentPropertySource = ParticleSystemProperty;
+					if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
+					{
+						PreProcessProperties(m_EditorParticleSystem);
+					}
+					PropertyData data;
+					data.bPropertyRecursed = false;
+					rttr::instance object = rttr::instance(m_EditorParticleSystem);
+					data.Object = data.OutermostObject = &object;
+					ProcessPropertiesRecursively(data);
+				}
+			}
+			ImGui::End();
 		}
 		ImGui::End();
 	}
@@ -1151,7 +1535,7 @@ namespace ZeoEngine {
 	void EditorLayer::OnGameViewWindowResized(float newSizeX, float newSizeY)
 	{
 		// Update editor's camera
-		m_EditorCameraController->UpdateProjection(newSizeX / newSizeY);
+		m_GameViewCameraController->UpdateProjection(newSizeX / newSizeY);
 
 		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
 		if (game)
@@ -1163,9 +1547,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
-		m_bIsSortedPropertiesDirty = true;
-		m_PropertiesLogged.clear();
-		m_bGameObjectPropWarningLogged = false;
+		m_bIsSortedPropertiesDirty[GameObjectProperty] = true;
+		m_PropertiesLogged[GameObjectProperty].clear();
 		m_TempInputStrings.clear();
 	}
 
@@ -1264,7 +1647,7 @@ namespace ZeoEngine {
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImGuizmo::SetRect(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
 
-			ImGuizmo::Manipulate(glm::value_ptr(GetEditorCamera()->GetViewMatrix()), glm::value_ptr(GetEditorCamera()->GetProjectionMatrix()),
+			ImGuizmo::Manipulate(glm::value_ptr(GetGameViewCamera()->GetViewMatrix()), glm::value_ptr(GetGameViewCamera()->GetProjectionMatrix()),
 				currentGizmoOperation, currentGizmoMode,
 				glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
 				bUseSnap ? &snap[0] : nullptr,
@@ -1272,6 +1655,53 @@ namespace ZeoEngine {
 				bUseBoundSizingSnap ? boundSizingSnap : nullptr);
 			m_SelectedGameObject->DecomposeTransformMatrix();
 		}
+	}
+
+	void EditorLayer::CreateDefaultParticleSystem()
+	{
+		ParticleTemplate m_DefaultEmitter;
+		m_DefaultEmitter.lifeTime.SetRandom(0.75f, 1.5f);
+		m_DefaultEmitter.spawnRate.SetConstant(30.0f);
+		m_DefaultEmitter.initialRotation.SetRandom(0.0f, 360.0f);
+		m_DefaultEmitter.rotationRate.SetRandom(10.0f, 50.0f);
+		m_DefaultEmitter.initialVelocity.SetRandom({ -0.5f, 0.5f }, { 0.5f, 2.0f });
+		m_DefaultEmitter.sizeBegin.SetRandom(0.1f, 0.2f);
+		m_DefaultEmitter.sizeEnd.SetConstant({ 0.0f, 0.0f });
+		m_DefaultEmitter.colorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
+		m_DefaultEmitter.colorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
+		m_EditorParticleSystem = new ParticleSystem(m_DefaultEmitter, nullptr, false, true);
+	}
+
+	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
+	{
+		std::string result;
+		if (!Serializer::Get().ValidateFile(particleSystemPath, ParticleSystem::ParticleSystemFileToken, result))
+			return;
+
+		// We need to recreate because some values may not get cleared out
+		delete m_EditorParticleSystem;
+		CreateDefaultParticleSystem();
+
+		Serializer::Get().Deserialize<ParticleSystem*>(result, [&]() {
+			return rttr::variant(m_EditorParticleSystem);
+		});
+	}
+
+	void EditorLayer::SaveParticleSystemToFile(std::string& particleSystemPath)
+	{
+		if (particleSystemPath.rfind(".zparticle") == std::string::npos)
+		{
+			particleSystemPath += ".zparticle";
+		}
+		std::ofstream out(particleSystemPath, std::ios::out | std::ios::binary);
+		if (!out)
+		{
+			ZE_CORE_ERROR("Could not open particle system file!");
+			return;
+		}
+
+		out << "#type " << ParticleSystem::ParticleSystemFileToken << std::endl;
+		out << Serializer::Get().Serialize(m_EditorParticleSystem);
 	}
 
 	const char* PIETempFile("temp/PIE.tmp");
@@ -1447,277 +1877,316 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorLayer::ProcessBoolType(bool boolValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::InvokePropertyChangeCallback(const PropertyData& data)
+	{
+		data.OutermostObject->get_type().invoke("OnPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
+	}
+
+	void EditorLayer::ProcessBoolType(bool boolValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		ImGui::Checkbox(ss.str().c_str(), &boolValue);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, boolValue)
+			END_SETPROP(data.Property, data.Object, boolValue)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, boolValue, false)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, boolValue, false)
 		}
 	}
 
-	void EditorLayer::ProcessInt8Type(int8_t int8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessInt8Type(int8_t int8Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		int8_t min = minVar ? std::max(minVar.to_int8(), (int8_t)INT8_MIN) : (int8_t)INT8_MIN;
 		int8_t max = maxVar ? std::min(maxVar.to_int8(), (int8_t)INT8_MAX) : (int8_t)INT8_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_8(ss.str().c_str(), &int8Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, int8Value)
+			END_SETPROP(data.Property, data.Object, int8Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, int8Value, (int8_t)0)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int8Value, (int8_t)0)
 		}
 	}
 
-	void EditorLayer::ProcessInt32Type(int32_t int32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessInt32Type(int32_t int32Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt(ss.str().c_str(), &int32Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			END_SETPROP(prop, object, int32Value)
+			InvokePropertyChangeCallback(data);
+		}
+		if (data.SequentialIndex == -1)
+		{
+			END_SETPROP(data.Property, data.Object, int32Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, int32Value, 0)
+			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
+			// Sequential item type is BurstData
+			if (sequentialVar.can_convert<BurstData>())
+			{
+				if (data.Property->get_name() == "Value")
+				{
+					sequentialVar.get_value<BurstData*>()->Amount.val1 = int32Value;
+				}
+				else if (data.Property->get_name() == "ValueHigh")
+				{
+					sequentialVar.get_value<BurstData*>()->Amount.val2 = int32Value;
+				}
+				END_PROP(data.Property)
+			}
+			else
+			{
+				END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int32Value, 0)
+			}
 		}
 	}
 
-	void EditorLayer::ProcessInt64Type(int64_t int64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessInt64Type(int64_t int64Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		int64_t min = minVar ? std::max(minVar.to_int64(), INT64_MIN) : INT64_MIN;
 		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : INT64_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_64(ss.str().c_str(), &int64Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, int64Value)
+			END_SETPROP(data.Property, data.Object, int64Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, int64Value, 0ll)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int64Value, 0ll)
 		}
 	}
 
-	void EditorLayer::ProcessUInt8Type(uint8_t uint8Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		uint8_t min = minVar ? std::max(minVar.to_uint8(), (uint8_t)0) : 0;
 		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), (uint8_t)UINT8_MAX) : (uint8_t)UINT8_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_8(ss.str().c_str(), &uint8Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, uint8Value)
+			END_SETPROP(data.Property, data.Object, uint8Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, uint8Value, (uint8_t)0)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint8Value, (uint8_t)0)
 		}
 	}
 
-	void EditorLayer::ProcessUInt32Type(uint32_t uint32Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		uint32_t min = minVar ? std::max(minVar.to_uint32(), (uint32_t)0) : 0;
 		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), (uint32_t)UINT32_MAX) : (uint32_t)UINT32_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_32(ss.str().c_str(), &uint32Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, uint32Value)
+			END_SETPROP(data.Property, data.Object, uint32Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, uint32Value, 0u)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint32Value, 0u)
 		}
 	}
 
-	void EditorLayer::ProcessUInt64Type(uint64_t uint64Value, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		uint64_t min = minVar ? std::max(minVar.to_uint64(), (uint64_t)0) : 0;
 		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), (uint64_t)UINT64_MAX) : (uint64_t)UINT64_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_64(ss.str().c_str(), &uint64Value, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, uint64Value)
+			END_SETPROP(data.Property, data.Object, uint64Value)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, uint64Value, 0ull)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint64Value, 0ull)
 		}
 	}
 
-	void EditorLayer::ProcessFloatType(float floatValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessFloatType(float floatValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		// Note: The min value of float should be -FLT_MAX
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		// If transform's property value changes, mark it dirty (2D rotation only)
-		if (ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f") && prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+		if (ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f") && data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
 		{
 			m_bIsTransformDirty = true;
 		}
-		if (sequentialIndex == -1)
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			END_SETPROP(prop, object, floatValue)
+			InvokePropertyChangeCallback(data);
+		}
+		if (data.SequentialIndex == -1)
+		{
+			END_SETPROP(data.Property, data.Object, floatValue)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, floatValue, 0.0f)
+			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
+			// Sequential item type is BurstData
+			if (sequentialVar.can_convert<BurstData>())
+			{
+				sequentialVar.get_value<BurstData*>()->Time = floatValue;
+				END_PROP(data.Property)
+			}
+			else
+			{
+				END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, floatValue, 0.0f)
+			}
 		}
 	}
 
-	void EditorLayer::ProcessDoubleType(double doubleValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessDoubleType(double doubleValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		// Note: The min value of double should be -DBL_MAX
 		double min = minVar ? std::max(minVar.to_double(), -DBL_MAX) : -DBL_MAX;
 		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragDouble(ss.str().c_str(), &doubleValue, speed, min, max);
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_SETPROP(prop, object, doubleValue)
+			END_SETPROP(data.Property, data.Object, doubleValue)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, doubleValue, 0.0)
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, doubleValue, 0.0)
 		}
 	}
 
-	void EditorLayer::ProcessEnumType(const rttr::variant& var, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessEnumType(const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		bool bOK = false;
-		std::string stringValue = var.to_string(&bOK);
-		if (!bOK && std::find(m_PropertiesLogged.begin(), m_PropertiesLogged.end(), prop) == m_PropertiesLogged.end())
+		std::string stringValue = data.PropertyValue->to_string(&bOK);
+		if (!bOK)
 		{
-			m_PropertiesLogged.push_back(prop);
-			ZE_CORE_WARN("Failed to convert an enum value of property {0} to string!", prop.get_name());
+			LogPropertyMessage(*data.Property, "Failed to convert an enum value of property {0} to string!", 3);
 		}
-		rttr::enumeration enumType = var.get_type().get_enumeration();
+		rttr::enumeration enumType = data.PropertyValue->get_type().get_enumeration();
 		auto& enumValues = enumType.get_values();
 		if (ImGui::BeginCombo(ss.str().c_str(), stringValue.c_str()))
 		{
@@ -1725,40 +2194,49 @@ namespace ZeoEngine {
 			{
 				if (ImGui::Selectable(enumType.value_to_name(enumValue).data()))
 				{
-					if (sequentialIndex == -1)
+					if (data.SequentialIndex == -1)
 					{
-						prop.set_value(object, enumValue);
+						data.Property->set_value(*data.Object, enumValue);
 					}
 					else
 					{
-						sequentialView.set_value(sequentialIndex, enumValue);
+						rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
+						// Sequential item type is BurstData
+						if (sequentialVar.can_convert<BurstData>())
+						{
+							sequentialVar.get_value<BurstData*>()->Amount.variationType = enumValue.get_value<ParticleVariationType>();
+						}
+						else
+						{
+							data.SequentialView->set_value(data.SequentialIndex, enumValue);
+						}
 					}
 					// Selection changes, call the callback
 					if (enumValue != enumType.name_to_value(stringValue))
 					{
-						object.get_type().invoke("OnPropertyValueChange", object, { prop });
+						InvokePropertyChangeCallback(data);
 					}
 				}
 			}
 			ImGui::EndCombo();
 		}
-		if (sequentialIndex != -1)
+		if (data.SequentialIndex != -1 && !data.bPropertyRecursed)
 		{
-			ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, *enumValues.begin())
+			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, *enumValues.begin())
 		}
-		END_PROP(prop)
+		END_PROP(data.Property)
 	}
 
-	void EditorLayer::ProcessStringType(std::string* stringPointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessStringType(std::string* stringPointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		ImGui::InputText(ss.str().c_str(),
 			m_TempInputStrings[ss.str().c_str()].first ?
@@ -1774,7 +2252,7 @@ namespace ZeoEngine {
 		// Apply cache when user finishes editing
 		if (ImGui::IsItemDeactivated())
 		{
-			if (prop.get_name() == "Name")
+			if (data.Property->get_name() == "Name")
 			{
 				Level::Get().m_ObjectNames.erase(*stringPointerValue);
 				Level::Get().m_ObjectNames.insert(m_TempInputStrings[ss.str().c_str()].second);
@@ -1783,66 +2261,98 @@ namespace ZeoEngine {
 			m_TempInputStrings[ss.str().c_str()].first = false;
 			m_TempInputStrings[ss.str().c_str()].second.clear();
 		}
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_PROP(prop)
+			END_PROP(data.Property)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, *stringPointerValue, std::string(""));
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *stringPointerValue, std::string(""));
 		}
 	}
 
-	void EditorLayer::ProcessVec2Type(glm::vec2* vec2PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessVec2Type(glm::vec2* vec2PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		// If transform's property value changes, mark it dirty (2D scale only)
-		if (ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f") && prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+		if (ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f") && data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
 		{
 			m_bIsTransformDirty = true;
 		}
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_PROP(prop)
+			END_PROP(data.Property)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, *vec2PointerValue, glm::vec2(0.0f));
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec2PointerValue, glm::vec2(0.0f));
 		}
 	}
 
-	void EditorLayer::ProcessVec3Type(glm::vec3* vec3PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessI32Vec2Type(glm::i32vec2* i32vec2PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
-		rttr::variant minVar = prop.get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = prop.get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = prop.get_metadata(PropertyMeta::DragSensitivity);
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
+		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
+		ImGui::DragInt2(ss.str().c_str(), glm::value_ptr(*i32vec2PointerValue), speed, min, max);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
+		if (data.SequentialIndex == -1)
+		{
+			END_PROP(data.Property)
+		}
+		else
+		{
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *i32vec2PointerValue, glm::i32vec2(0));
+		}
+	}
+
+	void EditorLayer::ProcessVec3Type(glm::vec3* vec3PointerValue, const PropertyData& data)
+	{
+		std::stringstream ss;
+		if (data.SequentialIndex == -1)
+		{
+			BEGIN_PROP(data.Property)
+		}
+		else
+		{
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
+		}
+		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
+		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		bool bIsTransformProp = prop.get_declaring_type().get_raw_type() == rttr::type::get<Transform>();
+		bool bIsTransformProp = data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>();
 		// If transform's property value changes, mark it dirty
 		if (ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), speed, min, max, "%.2f") && bIsTransformProp)
 		{
@@ -1854,48 +2364,48 @@ namespace ZeoEngine {
 		{
 			Level::Get().OnTranslucentObjectsDirty(m_SelectedGameObject);
 		}
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_PROP(prop)
+			END_PROP(data.Property)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, *vec3PointerValue, glm::vec3(0.0f));
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec3PointerValue, glm::vec3(0.0f));
 		}
 	}
 
-	void EditorLayer::ProcessColorType(glm::vec4* vec4PointerValue, const rttr::property& prop, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessColorType(glm::vec4* vec4PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		ImGui::ColorEdit4(ss.str().c_str(), glm::value_ptr(*vec4PointerValue));
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			END_PROP(prop)
+			END_PROP(data.Property)
 		}
 		else
 		{
-			END_SETSEQPROP(prop, sequentialView, sequentialIndex, *vec4PointerValue, glm::vec4(0.0f));
+			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec4PointerValue, glm::vec4(0.0f));
 		}
 	}
 
-	void EditorLayer::ProcessGameObjectType(GameObject* gameObjectValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		std::stringstream ss_PreviewName;
 		if (gameObjectValue && !gameObjectValue->IsPendingDestroy())
@@ -1906,13 +2416,13 @@ namespace ZeoEngine {
 		// If current chosen GameObject is deleted from level, zero the pointer
 		else
 		{
-			if (sequentialIndex == -1)
+			if (data.SequentialIndex == -1)
 			{
-				prop.set_value(object, nullptr);
+				data.Property->set_value(*data.Object, nullptr);
 			}
 			else
 			{
-				sequentialView.set_value(sequentialIndex, (GameObject*)nullptr);
+				data.SequentialView->set_value(data.SequentialIndex, (GameObject*)nullptr);
 			}
 		}
 		if (ImGui::BeginCombo(ss.str().c_str(), ss_PreviewName.str().c_str()))
@@ -1920,13 +2430,13 @@ namespace ZeoEngine {
 			// A specialized entry for clearing out current selection (empty the pointer)
 			if (ImGui::Selectable("Null"))
 			{
-				if (sequentialIndex == -1)
+				if (data.SequentialIndex == -1)
 				{
-					prop.set_value(object, nullptr);
+					data.Property->set_value(*data.Object, nullptr);
 				}
 				else
 				{
-					sequentialView.set_value(sequentialIndex, (GameObject*)nullptr);
+					data.SequentialView->set_value(data.SequentialIndex, (GameObject*)nullptr);
 				}
 			}
 
@@ -1934,7 +2444,7 @@ namespace ZeoEngine {
 			auto gameObjectCount = level.m_GameObjects.size();
 			for (uint32_t i = 0; i < gameObjectCount; ++i)
 			{
-				if (!IsSubclassOf(level.m_GameObjects[i], prop))
+				if (!IsSubclassOf(level.m_GameObjects[i], *data.Property))
 					continue;
 
 				std::stringstream ss_ObjectName;
@@ -1943,13 +2453,13 @@ namespace ZeoEngine {
 				{
 					// Note: The pointer assignment will only succeed if assigned-from pointer type is exactly the same as assigned-to pointer type
 					// That's to say, GameObject* cannot be assigned to Player* even if that GameObject* object is indeed a Player* object
-					if (sequentialIndex == -1)
+					if (data.SequentialIndex == -1)
 					{
-						prop.set_value(object, level.m_GameObjects[i]);
+						data.Property->set_value(*data.Object, level.m_GameObjects[i]);
 					}
 					else
 					{
-						sequentialView.set_value(sequentialIndex, level.m_GameObjects[i]);
+						data.SequentialView->set_value(data.SequentialIndex, level.m_GameObjects[i]);
 					}
 				}
 			}
@@ -1962,37 +2472,37 @@ namespace ZeoEngine {
 			{
 				// see ShowLevelOutline()
 				GameObject* draggedGameObject = *(GameObject**)payload->Data;
-				if (IsSubclassOf(draggedGameObject, prop))
+				if (IsSubclassOf(draggedGameObject, *data.Property))
 				{
-					if (sequentialIndex == -1)
+					if (data.SequentialIndex == -1)
 					{
-						prop.set_value(object, draggedGameObject);
+						data.Property->set_value(*data.Object, draggedGameObject);
 					}
 					else
 					{
-						sequentialView.set_value(sequentialIndex, draggedGameObject);
+						data.SequentialView->set_value(data.SequentialIndex, draggedGameObject);
 					}
 				}
 			}
 			ImGui::EndDragDropTarget();
 		}
-		if (sequentialIndex != -1)
+		if (data.SequentialIndex != -1)
 		{
-			ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, (GameObject*)nullptr)
+			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, (GameObject*)nullptr)
 		}
-		END_PROP(prop)
+		END_PROP(data.Property)
 	}
 
-	void EditorLayer::ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const rttr::property& prop, const rttr::instance& object, rttr::variant_sequential_view& sequentialView, int32_t sequentialIndex)
+	void EditorLayer::ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
-			BEGIN_PROP(prop)
+			BEGIN_PROP(data.Property)
 		}
 		else
 		{
-			BEGIN_SEQPROP(prop, sequentialIndex)
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
 		}
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		// TODO: Add an right-click option to draw texture smaller
@@ -2014,7 +2524,7 @@ namespace ZeoEngine {
 		{
 			ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DValue->GetWidth(), texture2DValue->GetHeight(), texture2DValue->HasAlpha() ? "true" : "false");
 		}
-		if (sequentialIndex == -1)
+		if (data.SequentialIndex == -1)
 		{
 			// Align combo box's width to column's right side
 			ImGui::SetNextItemWidth(-1.0f);
@@ -2034,24 +2544,17 @@ namespace ZeoEngine {
 				nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
 				if (result == NFD_OKAY)
 				{
-					const std::string relativePath = FormatPath(outPath);
+					const std::string relativePath = ToRelativePath(outPath);
 					Ref<Texture2D> loadedTexture;
 					// Add selected texture to the library
-					if (library->Exists(relativePath))
+					loadedTexture = library->GetOrLoad(relativePath);
+					if (data.SequentialIndex == -1)
 					{
-						loadedTexture = library->Get(relativePath);
+						data.Property->set_value(*data.Object, loadedTexture);
 					}
 					else
 					{
-						loadedTexture = library->Load(relativePath);
-					}
-					if (sequentialIndex == -1)
-					{
-						prop.set_value(object, loadedTexture);
-					}
-					else
-					{
-						sequentialView.set_value(sequentialIndex, loadedTexture);
+						data.SequentialView->set_value(data.SequentialIndex, loadedTexture);
 					}
 					free(outPath);
 				}
@@ -2066,13 +2569,13 @@ namespace ZeoEngine {
 			{
 				if (ImGui::Selectable(texture->GetFileName().c_str()))
 				{
-					if (sequentialIndex == -1)
+					if (data.SequentialIndex == -1)
 					{
-						prop.set_value(object, texture);
+						data.Property->set_value(*data.Object, texture);
 					}
 					else
 					{
-						sequentialView.set_value(sequentialIndex, texture);
+						data.SequentialView->set_value(data.SequentialIndex, texture);
 					}
 				}
 				// Display texture path tooltip
@@ -2081,7 +2584,6 @@ namespace ZeoEngine {
 					ImGui::SetTooltip("%s", texture->GetPath().c_str());
 				}
 			}
-
 			ImGui::EndCombo();
 		}
 		// Display texture path tooltip
@@ -2089,11 +2591,99 @@ namespace ZeoEngine {
 		{
 			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
 		}
-		if (sequentialIndex != -1)
+		if (data.SequentialIndex != -1)
 		{
-			ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, Ref<Texture2D>())
+			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, Ref<Texture2D>())
 		}
-		END_PROP(prop)
+		END_PROP(data.Property)
+	}
+
+	void EditorLayer::ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data)
+	{
+		std::stringstream ss;
+		if (data.SequentialIndex == -1)
+		{
+			BEGIN_PROP(data.Property)
+		}
+		else
+		{
+			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
+		}
+		// TODO: Add search filter for particle system
+		if (ImGui::BeginCombo(ss.str().c_str(), particleSystemValue ? particleSystemValue->GetFileName().c_str() : nullptr))
+		{
+			ParticleLibrary* library = GetParticleLibrary();
+			// Pop up file browser to select a particle system
+			if (ImGui::Selectable("Browse particle system..."))
+			{
+				nfdchar_t* outPath = nullptr;
+				nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
+				if (result == NFD_OKAY)
+				{
+					const std::string relativePath = ToRelativePath(outPath);
+					ParticleSystem* loadedPs;
+					// Add selected particle system to the library
+					loadedPs = library->GetOrLoad(relativePath);
+					if (data.SequentialIndex == -1)
+					{
+						data.Property->set_value(*data.Object, loadedPs);
+					}
+					else
+					{
+						data.SequentialView->set_value(data.SequentialIndex, loadedPs);
+					}
+					free(outPath);
+				}
+				else if (result == NFD_ERROR)
+				{
+					ZE_CORE_ERROR("ProcessParticleSystemType: {0}", NFD_GetError());
+				}
+			}
+			ImGui::Separator();
+			// List all loaded particle systems from ParticleLibrary
+			for (const auto& [path, ps] : library->GetParticlesMap())
+			{
+				if (ImGui::Selectable(ps->GetFileName().c_str()))
+				{
+					if (data.SequentialIndex == -1)
+					{
+						data.Property->set_value(*data.Object, ps);
+					}
+					else
+					{
+						data.SequentialView->set_value(data.SequentialIndex, ps);
+					}
+				}
+				// Display particle system path tooltip
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", ps->GetPath().c_str());
+				}
+			}
+			ImGui::EndCombo();
+		}
+		if (particleSystemValue)
+		{
+			// Display particle system path tooltip
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip(u8"%s\n(Ë«»÷Êó±êÓÒ¼ü´ò¿ªÁ£×Ó±à¼­Æ÷)", particleSystemValue->GetPath().c_str());
+				// Open Particle Editor on right mouse button double clicked
+				// Note: IsItemHovered() must be true at the same time or multiple combo boxes will be affected
+				if (ImGui::IsMouseDoubleClicked(1))
+				{
+					m_bShowParticleEditor = true;
+					LoadParticleSystemFromFile(particleSystemValue->GetPath().c_str());
+					m_CurrentParticleSystemPath = ToAbsolutePath(particleSystemValue->GetPath().c_str());
+					m_CurrentParticleSystemName = particleSystemValue->GetFileName();
+				}
+			}
+		}
+		if (data.SequentialIndex != -1)
+		{
+			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, (ParticleSystem*)nullptr)
+		}
+		END_PROP(data.Property)
 	}
 
 	bool EditorLayer::IsSubclassOf(GameObject* gameObject, const rttr::property& prop)
@@ -2119,7 +2709,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	std::string EditorLayer::FormatPath(const char* absolutePath)
+	std::string EditorLayer::ToRelativePath(const char* absolutePath)
 	{
 		std::filesystem::path path(absolutePath);
 		// Convert abosulte path to relative path
@@ -2134,6 +2724,11 @@ namespace ZeoEngine {
 			}
 		}
 		return str;
+	}
+
+	std::string EditorLayer::ToAbsolutePath(const char* relativePath)
+	{
+		return std::filesystem::current_path().string() + "/" + relativePath;
 	}
 
 }

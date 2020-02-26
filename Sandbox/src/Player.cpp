@@ -7,7 +7,15 @@ RTTR_REGISTRATION
 	using namespace rttr;
 	using namespace ZeoEngine;
 	registration::class_<Player>("Player")
-		.constructor(&Player::SpawnGameObject, policy::ctor::as_raw_ptr);
+		.constructor(&Player::SpawnGameObject, policy::ctor::as_raw_ptr)
+		.property("ShipFlameParticle", &Player::m_ShipFlameParticle)
+		(
+			metadata(PropertyMeta::Category, "FX")
+		)
+		.property("ExplosionParticle", &Player::m_ExplosionParticle)
+		(
+			metadata(PropertyMeta::Category, "FX")
+		);
 }
 
 Player::Player()
@@ -18,7 +26,7 @@ Player::Player()
 {
 	SetSpeed(5.0f);
 	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
-	m_SpriteTexture = ZeoEngine::Texture2D::Create("assets/textures/Ship.png");
+	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("assets/textures/Ship.png");
 }
 
 void Player::Init()
@@ -27,22 +35,6 @@ void Player::Init()
 
 	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
 
-	m_ExplosionTexture = ZeoEngine::GetTexture2DLibrary()->Get("assets/textures/Explosion_2x4.png");
-
-	ZeoEngine::ParticleTemplate m_FlameEmitter;
-	m_FlameEmitter.lifeTime.SetRandom(0.75f, 1.5f);
-	m_FlameEmitter.spawnRate.SetConstant(30.0f);
-	m_FlameEmitter.initialPosition.SetConstant(glm::vec2(0.0f, -0.45f));
-	m_FlameEmitter.initialRotation.SetRandom(0.0f, 360.0f);
-	m_FlameEmitter.rotationRate.SetRandom(10.0f, 50.0f);
-	m_FlameEmitter.initialVelocity.SetRandom({ -0.5f, -0.5f }, { 0.5f, -2.0f });
-	m_FlameEmitter.inheritVelocity = { 0.1f, 0.1f };
-	m_FlameEmitter.sizeBegin.SetRandom(0.075f, 0.2f);
-	m_FlameEmitter.sizeEnd.SetConstant({ 0.0f, 0.0f });
-	m_FlameEmitter.colorBegin.SetRandom({ 0.9f, 0.4f, 0.2f, 1.0f }, { 0.9f, 0.8f, 0.2f, 1.0f });
-	m_FlameEmitter.colorEnd.SetConstant({ 0.9f, 0.8f, 0.5f, 0.0f });
-	m_FlameParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_FlameEmitter, this);
-
 }
 
 void Player::BeginPlay()
@@ -50,6 +42,7 @@ void Player::BeginPlay()
 	Super::BeginPlay();
 
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
+	m_SpawnedShipFlameParticle = ZeoEngine::Level::Get().SpawnParticleSystemAttached(m_ShipFlameParticle, this);
 }
 
 void Player::OnUpdate(ZeoEngine::DeltaTime dt)
@@ -162,19 +155,9 @@ void Player::SpawnBullet()
 
 void Player::Explode()
 {
-	ZeoEngine::ParticleTemplate m_ExplosionEmitter;
-	m_ExplosionEmitter.loopCount = 1;
-	m_ExplosionEmitter.lifeTime.SetConstant(0.4f);
-	m_ExplosionEmitter.AddBurstData(0.0f, 1);
-	m_ExplosionEmitter.initialPosition.SetConstant(GetPosition2D());
-	m_ExplosionEmitter.sizeBegin.SetConstant(GetScale());
-	m_ExplosionEmitter.sizeEnd.SetConstant(GetScale());
-	m_ExplosionEmitter.texture = m_ExplosionTexture;
-	m_ExplosionEmitter.subImageSize = { 4, 2 };
-	m_ExplosionParticle = ZeoEngine::Level::Get().SpawnParticleSystem(m_ExplosionEmitter);
-
-	m_FlameParticle->Deactivate();
-	m_FlameParticle->m_OnSystemFinished = std::bind([&]() {
+	ZeoEngine::Level::Get().SpawnParticleSystemAtPosition(m_ExplosionParticle, GetPosition2D());
+	m_SpawnedShipFlameParticle->Deactivate();
+	m_SpawnedShipFlameParticle->m_OnSystemFinished = std::bind([&]() {
 		Destroy();
 	});
 }

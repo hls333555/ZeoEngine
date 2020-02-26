@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Engine/GameFramework/Level.h"
-#include "Engine/Core/TimerManager.h"
 #include "Engine/Core/Application.h"
 #include "Engine/Layers/GameLayer.h"
-#include "Engine/Renderer/OrthographicCamera.h"
 
 namespace ZeoEngine {
 
@@ -24,6 +21,12 @@ namespace ZeoEngine {
 	{
 		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
 		return gameLayer ? gameLayer->GetTexture2DLibrary() : nullptr;
+	}
+
+	static ParticleLibrary* GetParticleLibrary()
+	{
+		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
+		return gameLayer ? gameLayer->GetParticleLibrary() : nullptr;
 	}
 
 }

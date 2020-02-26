@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <rttr/registration.h>
+#include <rttr/registration_friend.h>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
@@ -18,7 +20,9 @@ namespace ZeoEngine {
 
 	struct ParticleVariation
 	{
-		ParticleVariationType variationType;
+		ParticleVariationType variationType = ParticleVariationType::Constant;
+
+		RTTR_ENABLE()
 	};
 
 	struct ParticleInt : public ParticleVariation
@@ -48,6 +52,8 @@ namespace ZeoEngine {
 		}
 
 		int32_t val1 = 0, val2 = 0;
+
+		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleFloat : public ParticleVariation
@@ -65,6 +71,8 @@ namespace ZeoEngine {
 		}
 
 		float val1 = 0.0f, val2 = 0.0f;
+
+		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleVec2 : public ParticleVariation
@@ -90,6 +98,8 @@ namespace ZeoEngine {
 		}
 
 		glm::vec2 val1{ 0.0f, 0.0f }, val2{ 0.0f, 0.0f };
+
+		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleVec3 : public ParticleVariation
@@ -115,6 +125,8 @@ namespace ZeoEngine {
 		}
 
 		glm::vec3 val1{ 0.0f, 0.0f, 0.0f }, val2{ 0.0f, 0.0f, 0.0f };
+
+		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleColor : public ParticleVariation
@@ -132,33 +144,41 @@ namespace ZeoEngine {
 		}
 
 		glm::vec4 val1{ 1.0f, 1.0f, 1.0f, 1.0f }, val2{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+		RTTR_ENABLE(ParticleVariation)
 	};
 
-	struct BurstTimeData
+	struct BurstData
 	{
-		BurstTimeData(float _time)
-			: time(_time)
-			, bProcessed(false)
+		BurstData() = default;
+		BurstData(float time, ParticleInt amount)
+			: Time(time)
+			, Amount(amount)
+		{}
+		BurstData(float time, int32_t amount)
+			: Time(time)
+			, Amount(amount)
+		{}
+		BurstData(float time, int32_t amountLow, int32_t amountHigh)
+			: Time(time)
+			, Amount(ParticleInt(amountLow, amountHigh))
 		{}
 
-		bool operator<(const BurstTimeData& other) const
-		{
-			return time < other.time;
-		}
+		float Time = 0.0f;
+		ParticleInt Amount = 0;
 
-		float time;
-		bool bProcessed;
+		RTTR_ENABLE()
 	};
 
 	struct ParticleTemplate
 	{
 		void AddBurstData(float time, int32_t amount)
 		{
-			burstList.emplace(time, amount);
+			burstList.emplace_back(time, amount);
 		}
 		void AddBurstData(float time, int32_t amountLow, int32_t amountHigh)
 		{
-			burstList.emplace(time, ParticleInt{ amountLow, amountHigh });
+			burstList.emplace_back(time, amountLow, amountHigh);
 		}
 
 		bool bIsLocalSpace = false;
@@ -170,7 +190,7 @@ namespace ZeoEngine {
 		/** Number of particles to spawn per second in total. < 0 means spawn at fps rate */
 		ParticleFloat spawnRate;
 		/** List of burst of particles to spawn instantaneously per time. The time should be within (0.0, 1.0) */
-		std::map<float, ParticleInt> burstList;
+		std::vector<BurstData> burstList;
 
 		ParticleVec2 initialPosition;
 
@@ -198,30 +218,36 @@ namespace ZeoEngine {
 		 * So, you can change lifetime to control the animation speed.
 		 */
 		glm::i32vec2 subImageSize{ 0, 0 };
+
+		RTTR_ENABLE()
 	};
+
+#define MAX_PARTICLE_COUNT 1000
 
 	class ParticleSystem
 	{
+		friend class ParticleLibrary;
 		friend class ParticleManager;
 
 	public:
 		ParticleSystem() = default;
-		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
-
-		void OnUpdate(DeltaTime dt);
-		void OnRender();
-
-		void Activate();
-		void Deactivate();
-
 	private:
-		void Emit();
-
+		ParticleSystem(const std::string& filePath, const std::string& processedSrc);
 	public:
-		/** Called when this particle system is about to be destroyed */
-		std::function<void()> m_OnSystemFinished;
+		ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
+		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true, bool bIsInParticleEditor = false);
+
+#if WITH_EDITOR
+		void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
+#endif
+
+		const std::string& GetPath() const { return m_Path; }
+		const std::string& GetFileName() const { return m_FileName; }
+
+		const ParticleTemplate& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 	private:
+		// Particle properties
 		struct Particle
 		{
 			glm::vec2 position{ 0.0f, 0.0f };
@@ -245,26 +271,115 @@ namespace ZeoEngine {
 			bool bActive = false;
 		};
 
+	public:
+		void EvaluateEmitterProperties();
+		void EvaluateParticleProperties(Particle& particle);
+
+		void OnUpdate(DeltaTime dt);
+		void OnRender();
+#if WITH_EDITOR
+		void OnParticleViewImGuiRender();
+#endif
+
+		void OnDeserialized();
+
+		void Activate();
+		void Deactivate();
+
+		void Resimulate();
+
+	private:
+		void Emit();
+
+	public:
+		/** Called when this particle system is about to be destroyed */
+		std::function<void()> m_OnSystemFinished;
+
+		static const char* ParticleSystemFileToken;
+
+	private:
 		std::vector<Particle> m_ParticlePool;
-		uint32_t m_PoolIndex = 999;
+		uint32_t m_PoolIndex;
+
+		uint32_t m_ActiveParticleCount = 0;
+
+		std::string m_Path;
+		std::string m_FileName;
 
 		ParticleTemplate m_ParticleTemplate;
+
+		/** Particle's origin in world space */
+		glm::vec2 m_SpawnPosition{ 0.0f, 0.0f };
+		/** Parent GameObject this particle system attaches to, particle's position is affected by parent's position */
+		GameObject* m_Parent = nullptr;
+		bool m_bAutoDestroy = true;
+
+		// Emitter properties
 		/** Time between emitting two particles, which equals to 1 / ParticleTemplate.spawnRate */
 		float m_SpawnRate;
+		struct BurstTimeData
+		{
+			BurstTimeData(float _time)
+				: time(_time)
+				, bProcessed(false)
+			{}
+
+			bool operator<(const BurstTimeData& other) const
+			{
+				return time < other.time;
+			}
+
+			float time;
+			bool bProcessed;
+		};
 		std::map<BurstTimeData, uint32_t> m_BurstList;
 		int32_t m_LoopCount;
 		bool m_bInfiniteLoop;
 		glm::vec2 m_TilingFactor{ 1.0f, 1.0f };
+
 		/** This equals to lifetime / (subImageSize.x * subImageSize.y) */
 		float m_UVAnimationInterval = 0.0f;
 		float m_Time = 0.0f, m_LoopStartTime = 0.0f, m_SpawnTime = 0.0f, m_BurstTime = 0.0f, m_UVAnimationTime = 0.0f;
 
-		GameObject* m_Parent;
-		bool m_bAutoDestroy;
 		/** Used to guarantee that initial emitted particles can be rendered properly */
 		bool m_bStartUpdate = false;
 		bool m_bActive = true;
+		bool m_bSystemComplete = false;
 		bool m_bPendingDestroy = false;
+
+#if WITH_EDITOR
+		bool m_bIsInParticleEditor = false;
+		bool m_bFiniteLoopPrepareToRestart = true;
+		float m_FiniteLoopRestartInterval = 0.0f;
+		float m_FiniteLoopRestartTime = 0.0f;
+#endif
+
+		RTTR_ENABLE()
+		RTTR_REGISTRATION_FRIEND
+	};
+
+	// TODO: Consider singleton like Input class?
+	class ParticleLibrary
+	{
+	public:
+		~ParticleLibrary();
+
+		void Add(const std::string& path, ParticleSystem* ps);
+		void Add(ParticleSystem* ps);
+		ParticleSystem* Load(const std::string& filePath);
+		ParticleSystem* Load(const std::string& path, const std::string& filePath);
+
+		ParticleSystem* GetOrLoad(const std::string& path);
+
+		ParticleSystem* Get(const std::string& path);
+
+		bool Exists(const std::string& path) const;
+
+		const std::unordered_map<std::string, ParticleSystem*>& GetParticlesMap() const { return m_ParticleSystems; }
+
+	private:
+		/** The containing particle systems will not be used during gameplay, instead they are regarded as templates for instantiating */
+		std::unordered_map<std::string, ParticleSystem*> m_ParticleSystems;
 
 	};
 

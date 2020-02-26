@@ -3,34 +3,279 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
+#include <imgui.h>
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/GameObject.h"
+#include "Engine/Core/Serializer.h"
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace ZeoEngine;
+
+	registration::class_<ParticleVariation>("ParticleVariation")
+		.enumeration<ParticleVariationType>("ParticleVariationType")
+		(
+			value("Constant", ParticleVariationType::Constant),
+			value("Random In Range", ParticleVariationType::RandomInRange),
+			value("Uniform In Range", ParticleVariationType::UniformInRange)
+		)
+		.property("VariationType", &ParticleVariation::variationType);
+
+	registration::class_<ParticleInt>("ParticleInt")
+		.property("Value", &ParticleInt::val1)
+		.property("ValueHigh", &ParticleInt::val2)
+		(
+			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
+		);
+
+	registration::class_<ParticleFloat>("ParticleFloat")
+		.property("Value", &ParticleFloat::val1)
+		.property("ValueHigh", &ParticleFloat::val2)
+		(
+			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
+		);
+
+	registration::class_<ParticleVec2>("ParticleVec2")
+		.property("Value", &ParticleVec2::val1)
+		(
+			policy::prop::bind_as_ptr
+		)
+		.property("ValueHigh", &ParticleVec2::val2)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
+		);
+
+	registration::class_<ParticleVec3>("ParticleVec3")
+		.property("Value", &ParticleVec3::val1)
+		(
+			policy::prop::bind_as_ptr
+		)
+		.property("ValueHigh", &ParticleVec3::val2)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
+		);
+
+	registration::class_<ParticleColor>("ParticleColor")
+		.property("Value", &ParticleColor::val1)
+		(
+			policy::prop::bind_as_ptr
+		)
+		.property("ValueHigh", &ParticleColor::val2)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
+		);
+
+	registration::class_<BurstData>("BurstData")
+		.property("Time", &BurstData::Time)
+		(
+			metadata(PropertyMeta::Tooltip, u8"标准化的时间点：[0,1]"),
+			metadata(PropertyMeta::Min, 0.0f),
+			metadata(PropertyMeta::Max, 1.0f),
+			metadata(PropertyMeta::DragSensitivity, 0.01f)
+		)
+		.property("Amount", &BurstData::Amount)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"在该时间点一次性生成的粒子数")
+		);
+
+	registration::class_<ParticleTemplate>("ParticleTemplate")
+		.property("IsLocalSpace", &ParticleTemplate::bIsLocalSpace)
+		(
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"是否在局部空间模拟粒子")
+		)
+		.property("LoopCount", &ParticleTemplate::loopCount)
+		(
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"循环次数。若小于等于0, 则为无限循环")
+		)
+		.property("LoopDuration", &ParticleTemplate::loopDuration)
+		(
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"每次循环的时长")
+		)
+		.property("SpawnRate", &ParticleTemplate::spawnRate)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于0，生成速度由帧数决定")
+		)
+		.property("BurstList", &ParticleTemplate::burstList)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"每个时间点一次性生成的粒子数")
+		)
+		.property("InitialPosition", &ParticleTemplate::initialPosition)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Location"),
+			metadata(PropertyMeta::Tooltip, u8"粒子的初始位置")
+		)
+		.property("InitialRotation", &ParticleTemplate::initialRotation)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Rotation"),
+			metadata(PropertyMeta::Tooltip, u8"粒子的初始旋转")
+		)
+		.property("RotationRate", &ParticleTemplate::rotationRate)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Rotation"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的旋转速度")
+		)
+		.property("SizeBegin", &ParticleTemplate::sizeBegin)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Size"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始大小")
+		)
+		.property("SizeEnd", &ParticleTemplate::sizeEnd)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Size"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的最终大小")
+		)
+		.property("InitialVelocity", &ParticleTemplate::initialVelocity)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Velocity"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始速度")
+		)
+		.property("InheritVelocity", &ParticleTemplate::inheritVelocity)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Velocity"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子所能继承的速度。该变量只有在非局部空间有效")
+		)
+		.property("ColorBegin", &ParticleTemplate::colorBegin)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Color"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始颜色")
+		)
+		.property("ColorEnd", &ParticleTemplate::colorEnd)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Color"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的最终颜色")
+		)
+		.property("LifeTime", &ParticleTemplate::lifeTime)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Particle: Base"),
+			metadata(PropertyMeta::Tooltip, u8"决定粒子的生命周期")
+		)
+		.property("Texture", &ParticleTemplate::texture)
+		(
+			metadata(PropertyMeta::Category, "Renderer: Texture"),
+			metadata(PropertyMeta::Tooltip, u8"粒子的材质贴图")
+		)
+		.property("SubImageSize", &ParticleTemplate::subImageSize)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "Renderer: Texture"),
+			metadata(PropertyMeta::Tooltip, u8"决定如何分割贴图来用于UV动画。x为列数，y为行数"),
+			metadata(PropertyMeta::Min, 0)
+		);
+
+	registration::class_<ParticleSystem>("ParticleSystem")
+		.method("OnPropertyValueEditChange", &ParticleSystem::OnPropertyValueEditChange)
+		.property("ParticleEmitter", &ParticleSystem::m_ParticleTemplate)
+		(
+			policy::prop::bind_as_ptr
+		);
+}
 
 namespace ZeoEngine {
 
-	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)
-		: m_ParticleTemplate(particleTemplate)
+	const char* ParticleSystem::ParticleSystemFileToken = "ParticleSystem";
+
+	ParticleSystem::ParticleSystem(const std::string& filePath, const std::string& processedSrc)
+		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		, m_Path(filePath)
 		, m_SpawnRate(1.0f / 30.0f)
+	{
+		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
+
+		// Extract name from file path
+		// "assets/particles/Particle.zparticle" -> "Particle.zparticle"
+		auto lastSlash = m_Path.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
+		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+		auto count = m_Path.size() - lastSlash;
+		m_FileName = m_Path.substr(lastSlash, count);
+
+		Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
+			return rttr::variant(this);
+		});
+		EvaluateEmitterProperties();
+	}
+
+	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position, bool bAutoDestroy)
+		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		, m_ParticleTemplate(particleTemplate)
+		, m_SpawnPosition(position)
+		, m_bAutoDestroy(bAutoDestroy)
+		, m_SpawnRate(1.0f / 30.0f)
+	{
+		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
+		EvaluateEmitterProperties();
+	}
+
+	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy, bool bIsInParticleEditor)
+		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		, m_ParticleTemplate(particleTemplate)
 		, m_Parent(attachToParent)
 		, m_bAutoDestroy(bAutoDestroy)
+		, m_SpawnRate(1.0f / 30.0f)
+#if WITH_EDITOR
+		, m_bIsInParticleEditor(bIsInParticleEditor)
+		, m_FiniteLoopRestartInterval(1.0f)
+#endif
 	{
-		m_ParticlePool.resize(1000);
+		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
+		EvaluateEmitterProperties();
+	}
 
-		m_LoopCount = particleTemplate.loopCount;
+#if WITH_EDITOR
+	void ParticleSystem::OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
+	{
+		if (outerProp)
+		{
+			if (prop->get_name() == "LoopCount" ||
+				outerProp->get_name() == "SpawnRate" ||
+				outerProp->get_name() == "BurstList" || outerProp->get_declaring_type().get_name() == "BurstData" ||
+				prop->get_name() == "SubImageSize")
+			{
+				EvaluateEmitterProperties();
+				Resimulate();
+			}
+		}
+	}
+#endif
+
+	void ParticleSystem::EvaluateEmitterProperties()
+	{
+		m_LoopCount = m_ParticleTemplate.loopCount;
 		m_bInfiniteLoop = m_LoopCount <= 0;
 
 		// Spawn rate
 		{
 			float evaluated = 0.0f;
-			switch (particleTemplate.spawnRate.variationType)
+			switch (m_ParticleTemplate.spawnRate.variationType)
 			{
 			case ParticleVariationType::Constant:
-				evaluated = particleTemplate.spawnRate.val1;
+				evaluated = m_ParticleTemplate.spawnRate.val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				evaluated = RandomEngine::RandFloatInRange(particleTemplate.spawnRate.val1, particleTemplate.spawnRate.val2);
+				evaluated = RandomEngine::RandFloatInRange(m_ParticleTemplate.spawnRate.val1, m_ParticleTemplate.spawnRate.val2);
 				break;
 			default:
 				break;
@@ -47,15 +292,16 @@ namespace ZeoEngine {
 
 		// Burst list
 		{
-			for (const auto& burstData : particleTemplate.burstList)
+			m_BurstList.clear();
+			for (const auto& burstData : m_ParticleTemplate.burstList)
 			{
-				switch (burstData.second.variationType)
+				switch (burstData.Amount.variationType)
 				{
 				case ParticleVariationType::Constant:
-					m_BurstList.emplace(burstData.first, burstData.second.val1);
+					m_BurstList.emplace(burstData.Time, burstData.Amount.val1);
 					break;
 				case ParticleVariationType::RandomInRange:
-					m_BurstList.emplace(burstData.first, (int32_t)RandomEngine::RandFloatInRange((float)burstData.second.val1, (float)burstData.second.val2));
+					m_BurstList.emplace(burstData.Time, (int32_t)RandomEngine::RandFloatInRange((float)burstData.Amount.val1, (float)burstData.Amount.val2));
 					break;
 				default:
 					break;
@@ -65,18 +311,14 @@ namespace ZeoEngine {
 
 		// Texture
 		{
-			float x = particleTemplate.subImageSize.x == 0 ? 1.0f : 1.0f / particleTemplate.subImageSize.x;
-			float y = particleTemplate.subImageSize.y == 0 ? 1.0f : 1.0f / particleTemplate.subImageSize.y;
+			float x = m_ParticleTemplate.subImageSize.x == 0 ? 1.0f : 1.0f / m_ParticleTemplate.subImageSize.x;
+			float y = m_ParticleTemplate.subImageSize.y == 0 ? 1.0f : 1.0f / m_ParticleTemplate.subImageSize.y;
 			m_TilingFactor = { x, y };
 		}
-
 	}
 
-	void ParticleSystem::Emit()
+	void ParticleSystem::EvaluateParticleProperties(Particle& particle)
 	{
-		Particle& particle = m_ParticlePool[m_PoolIndex];
-		particle.bActive = true;
-
 		// Position
 		{
 			switch (m_ParticleTemplate.initialPosition.variationType)
@@ -94,6 +336,10 @@ namespace ZeoEngine {
 			if (m_Parent)
 			{
 				particle.position += m_Parent->GetPosition2D();
+			}
+			if (m_SpawnPosition != glm::vec2(0.0f))
+			{
+				particle.position += m_SpawnPosition;
 			}
 		}
 
@@ -232,8 +478,23 @@ namespace ZeoEngine {
 			particle.uvOffset.x = 0;
 			particle.uvOffset.y = (float)m_ParticleTemplate.subImageSize.y - 1.0f;
 		}
+	}
 
-		m_PoolIndex = --m_PoolIndex % m_ParticlePool.size();
+	void ParticleSystem::Emit()
+	{
+		Particle& particle = m_ParticlePool[m_PoolIndex];
+		particle.bActive = true;
+
+		EvaluateParticleProperties(particle);
+
+		if (m_PoolIndex == 0)
+		{
+			m_PoolIndex = MAX_PARTICLE_COUNT - 1;
+		}
+		else
+		{
+			m_PoolIndex = --m_PoolIndex % m_ParticlePool.size();
+		}
 	}
 
 	void ParticleSystem::OnUpdate(DeltaTime dt)
@@ -286,7 +547,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		bool bSystemComplete = true;
+		m_bSystemComplete = true;
 		for (auto& particle : m_ParticlePool)
 		{
 			if (!particle.bActive)
@@ -298,7 +559,7 @@ namespace ZeoEngine {
 				continue;
 			}
 
-			bSystemComplete = false;
+			m_bSystemComplete = false;
 
 			particle.lifeRemaining -= dt;
 			glm::vec2 velocity{ 0.0f, 0.0f };
@@ -338,7 +599,26 @@ namespace ZeoEngine {
 			}
 		}
 
-		if (m_bAutoDestroy && bSystemComplete && ((!m_bInfiniteLoop && m_LoopCount == 0) || !m_bActive))
+		m_bSystemComplete = m_bSystemComplete && ((!m_bInfiniteLoop && m_LoopCount == 0) || !m_bActive);
+
+#if WITH_EDITOR
+		// If this completed particle system is previewed in ParticleSystem Editor, just restart it after a while
+		if (m_bSystemComplete && m_bIsInParticleEditor)
+		{
+			if (m_bFiniteLoopPrepareToRestart)
+			{
+				m_bFiniteLoopPrepareToRestart = false;
+				m_FiniteLoopRestartTime = m_Time;
+			}
+			if (m_Time - m_FiniteLoopRestartTime >= m_FiniteLoopRestartInterval)
+			{
+				Resimulate();
+				return;
+			}
+		}
+#endif
+
+		if (m_bAutoDestroy && m_bSystemComplete)
 		{
 			m_bPendingDestroy = true;
 			if (m_OnSystemFinished)
@@ -355,11 +635,13 @@ namespace ZeoEngine {
 
 		m_bStartUpdate = true;
 
+		m_ActiveParticleCount = 0;
 		for (auto& particle : m_ParticlePool)
 		{
 			if (!particle.bActive)
 				continue;
 
+			++m_ActiveParticleCount;
 			if (m_ParticleTemplate.texture)
 			{
 				Renderer2D::DrawRotatedQuad(particle.position, particle.size, glm::radians(particle.rotation), m_ParticleTemplate.texture, m_TilingFactor, particle.uvOffset, particle.color);
@@ -371,6 +653,34 @@ namespace ZeoEngine {
 		}
 	}
 
+#if WITH_EDITOR
+	void ParticleSystem::OnParticleViewImGuiRender()
+	{
+		// The last item should be full windowed framebuffer texture
+		const ImVec2 particleViewStartDrawPos = ImGui::GetItemRectMin();
+
+		char particleCount[16];
+		_itoa(m_ActiveParticleCount, particleCount, 10);
+		const ImVec2 textSize = ImGui::CalcTextSize(particleCount);
+		// Display particle count at the top right corner of Particle View window
+		ImGui::GetForegroundDrawList()->AddText(ImVec2(ImGui::GetItemRectMax().x - textSize.x - 15.0f, particleViewStartDrawPos.y), IM_COL32(255, 255, 0, 255), particleCount);
+
+		if (m_bSystemComplete)
+		{
+			static const ImVec2 textSize = ImGui::CalcTextSize("Completed");
+			const float indent = (ImGui::GetWindowSize().x - textSize.x) / 2.0f;
+			// Display completed text at the top center of Particle View window
+			ImGui::GetForegroundDrawList()->AddText(ImVec2(particleViewStartDrawPos.x + indent, particleViewStartDrawPos.y), IM_COL32_WHITE, "Completed");
+		}
+	}
+#endif
+
+	void ParticleSystem::OnDeserialized()
+	{
+		EvaluateEmitterProperties();
+		Resimulate();
+	}
+
 	void ParticleSystem::Activate()
 	{
 		if (m_bPendingDestroy || m_bActive)
@@ -378,13 +688,93 @@ namespace ZeoEngine {
 
 		m_bActive = true;
 		m_LoopCount = m_ParticleTemplate.loopCount;
-		m_Time = m_LoopStartTime = m_SpawnTime = 0.0f;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
 	}
 
 	void ParticleSystem::Deactivate()
 	{
 		m_bActive = false;
 	}
+
+	void ParticleSystem::Resimulate()
+	{
+		m_LoopCount = m_ParticleTemplate.loopCount;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
+#if WITH_EDITOR
+		m_bFiniteLoopPrepareToRestart = true;
+#endif
+	}
+
+	ParticleLibrary::~ParticleLibrary()
+	{
+		for (const auto& [path, ps] : m_ParticleSystems)
+		{
+			delete ps;
+		}
+		m_ParticleSystems.clear();
+	}
+
+	void ParticleLibrary::Add(const std::string& path, ParticleSystem* ps)
+	{
+		ZE_CORE_ASSERT(ps);
+		if (!Exists(path))
+		{
+			m_ParticleSystems[path] = ps;
+		}
+	}
+
+	void ParticleLibrary::Add(ParticleSystem* ps)
+	{
+		ZE_CORE_ASSERT(ps);
+		const std::string& path = ps->GetPath();
+		Add(path, ps);
+	}
+
+	ParticleSystem* ParticleLibrary::Load(const std::string& filePath)
+	{
+		std::string result;
+		if (!Serializer::Get().ValidateFile(filePath, "ParticleSystem", result))
+			return nullptr;
+
+		ParticleSystem* ps = new ParticleSystem(filePath, result);
+		Add(ps);
+		return ps;
+	}
+
+	ParticleSystem* ParticleLibrary::Load(const std::string& path, const std::string& filePath)
+	{
+		std::string result;
+		if (!Serializer::Get().ValidateFile(filePath, "ParticleSystem", result))
+			return nullptr;
+
+		ParticleSystem* ps = new ParticleSystem(filePath, result);
+		Add(path, ps);
+		return ps;
+	}
+
+	ParticleSystem* ParticleLibrary::GetOrLoad(const std::string& path)
+	{
+		if (Exists(path))
+		{
+			return m_ParticleSystems[path];
+		}
+		else
+		{
+			return Load(path);
+		}
+	}
+
+	ParticleSystem* ParticleLibrary::Get(const std::string& path)
+	{
+		ZE_CORE_ASSERT_INFO(Exists(path), "Partile system not found!");
+		return m_ParticleSystems[path];
+	}
+
+	bool ParticleLibrary::Exists(const std::string& path) const
+	{
+		return m_ParticleSystems.find(path) != m_ParticleSystems.end();
+	}
+
 
 	ParticleManager::~ParticleManager()
 	{

@@ -108,7 +108,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 	enum class PropertyMeta
 	{
-		/** This property will display under this category in the object property window */
+		/** This property will display under this category in the inspector window */
 		Category,
 		/** Pop up a tooltip text on mouse hovering this property */
 		Tooltip,
@@ -118,7 +118,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Max,
 		/** Controls how fast it changes when you are dragging a property value, default is 1.0f */
 		DragSensitivity,
-		/** This property is registered but will not show in the object property window */
+		/** This property is registered but will not show in the inspector window */
 		Hidden,
 		/** This property is transient and will not get serialized */
 		Transient,
@@ -134,11 +134,18 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		 *     rttr::registration::class_<my_struct>("my_struct")
 		 *         .property("Player", &TestObject::m_Player)
 		 *         (
-		 *             rttr::metadata(META_PROP_SUBCLASSOF, "Player")
+		 *             rttr::metadata(PropertyMeta::SubclassOf, "Player")
 		 *         );
 		 * }
 		 */
 		SubclassOf,
+		/**
+		 * Used to hide and unhide this property based on the provided condition.
+		 * NOTE: We ONLY support equality condition of bool or enum variable for now and those variables should be in the same scope of this property!
+		 * The syntax of rttr::metadata()'s second parameter should be "[BoolVariableName]==[true/false]" for bool or "[EnumVariableName]==[EnumValueName]" for enum.
+		 * DO NOT add any blank space on both sides of the equality operator!
+		 */
+		HideCondition,
 	};
 
 	/**
@@ -227,11 +234,12 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** Called only during this GameObject being selected and widgets will be drawn only inside Game View window. */
 		virtual void OnGameViewImGuiRender();
 
-		// TODO: Currently only implements for enum
-		virtual void OnPropertyValueChange(const rttr::property& prop);
+#if WITH_EDITOR
+		// TODO: Add more types for OnPropertyValueEditChange()
+		/** Currently supported types: int32_t, float, enum, glm::i32vec2. */
+		virtual void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
+#endif
 
-		std::string Serialize();
-		//virtual bool SerializeCustomTypes();
 		virtual void OnDeserialized();
 
 		/**

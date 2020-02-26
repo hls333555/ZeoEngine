@@ -33,10 +33,8 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		// NOTE: Add missing Chinese characters here!
-		static const char* missingChars = u8"¼­äÖ";
+		static const char* missingChars = u8"¼­äÖÄâÖ¡";
 		LoadFont("assets/fonts/wqy-microhei.ttc", missingChars);
-
-		LoadSharedTextures();
 
 		Level::Get().Init();
 
@@ -70,7 +68,7 @@ namespace ZeoEngine {
 		if (g_PIEState == PIEState::None)
 		{
 			// Setting editor camera
-			m_ActiveCamera = m_Editor->GetEditorCamera();
+			m_ActiveCamera = m_Editor->GetGameViewCamera();
 		}
 		else
 		{
@@ -83,7 +81,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		Renderer2D::BeginRenderingToTexture();
+		Renderer2D::BeginRenderingToTexture(0);
 		{
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
@@ -99,7 +97,7 @@ namespace ZeoEngine {
 				Renderer2D::EndScene();
 			}
 		}
-		Renderer2D::EndRenderingToTexture();
+		Renderer2D::EndRenderingToTexture(0);
 	}
 
 	void GameLayer::OnImGuiRender()
@@ -123,13 +121,6 @@ namespace ZeoEngine {
 		unsigned char* outPixels = nullptr;
 		int outWidth, outHeight, outBytesPerPixel;
 		io.Fonts->GetTexDataAsAlpha8(&outPixels, &outWidth, &outHeight, &outBytesPerPixel);
-	}
-
-	// TODO: Load all textures inside assets/textures
-	void GameLayer::LoadSharedTextures()
-	{
-		m_Texture2DLibrary.Load("assets/textures/Explosion_2x4.png");
-
 	}
 
 }

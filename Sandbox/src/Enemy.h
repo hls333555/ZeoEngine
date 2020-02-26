@@ -40,8 +40,8 @@ private:
 	float m_ShootRate;
 	bool m_bCanShoot = true;
 
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
-	ZeoEngine::ParticleSystem* m_ExplosionParticle;
+	ZeoEngine::ParticleSystem* m_ExplosionParticle = nullptr;
 
 	RTTR_REGISTER(Enemy, SpriteObject)
+	RTTR_REGISTRATION_FRIEND
 };

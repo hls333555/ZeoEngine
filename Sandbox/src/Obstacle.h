@@ -30,8 +30,8 @@ private:
 	float m_ExplosionDamage;
 	int32_t m_ScoreAmount;
 
-	ZeoEngine::Ref<ZeoEngine::Texture2D> m_ExplosionTexture;
-	ZeoEngine::ParticleSystem* m_ExplosionParticle;
+	ZeoEngine::ParticleSystem* m_ExplosionParticle = nullptr;
 
 	RTTR_REGISTER(Obstacle, SpriteObject)
+	RTTR_REGISTRATION_FRIEND
 };

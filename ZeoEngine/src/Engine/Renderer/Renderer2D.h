@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		Ref<VertexArray> QuadVAO;
 		Ref<Shader> TextureShader;
 		Ref<Texture> WhiteTexture;
-		Ref<FrameBuffer> MainFBO;
+		Ref<FrameBuffer> FBOs[2];
 	};
 
 	class Renderer2D
@@ -21,8 +21,8 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void BeginRenderingToTexture();
-		static void EndRenderingToTexture();
+		static void BeginRenderingToTexture(uint32_t frameBufferIndex);
+		static void EndRenderingToTexture(uint32_t frameBufferIndex);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 
