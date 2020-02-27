@@ -57,6 +57,7 @@ void Obstacle::Reset()
 	SetPosition2D({ ZeoEngine::RandomEngine::RandFloatInRange(cameraBounds.Right - 0.5f, cameraBounds.Left + 0.5f), cameraBounds.Top });
 	SetRotation(ZeoEngine::RandomEngine::RandFloatInRange(0.0f, 180.0f));
 	SetScale(ZeoEngine::RandomEngine::RandFloatInRange(0.75f, 1.8f));
+	FillSphereCollisionData(GetScale().x / 2.0f * 0.75f);
 	SetSpeed(ZeoEngine::RandomEngine::RandFloatInRange(0.5f, 1.5f));
 }
 
