@@ -27,7 +27,7 @@ namespace ZeoEngine {
 		const Scope<OrthographicCameraController>& GetGameCameraController() const { return m_GameCameraController; }
 		OrthographicCamera* GetGameCamera() const { return m_GameCameraController ? &m_GameCameraController->GetCamera() : nullptr; }
 		OrthographicCamera* GetActiveCamera() const { return m_ActiveCamera; }
-		TimerManager* GetTimerManager() { return &m_TimerManager; }
+		TimerManager* GetGameTimerManager() { return &m_GameTimerManager; }
 		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		ParticleLibrary* GetParticleLibrary() { return &m_ParticleLibrary; }
 
@@ -40,14 +40,16 @@ namespace ZeoEngine {
 		Scope<OrthographicCameraController> m_GameCameraController;
 		OrthographicCamera* m_ActiveCamera;
 
-		TimerManager m_CoreTimerManager, m_TimerManager;
+		TimerManager m_CoreTimerManager{ "Core" }, m_GameTimerManager{ "Game" };
 		Texture2DLibrary m_Texture2DLibrary;
 		ParticleLibrary m_ParticleLibrary;
 
 		std::vector<GameObject*> m_GameObjectsPendingDestroy;
 		float m_GarbageCollectionInterval;
 
+#if WITH_EDITOR
 		EditorLayer* m_Editor;
+#endif
 
 	};
 

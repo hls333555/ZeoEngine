@@ -47,7 +47,6 @@ namespace ZeoEngine {
 		virtual void Init();
 
 		virtual void OnUpdate(DeltaTime dt);
-		void OnEditorUpdate(DeltaTime dt);
 		void OnRender();
 		virtual void OnImGuiRender();
 

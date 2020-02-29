@@ -38,8 +38,9 @@
 #define ZE_BIND_EVENT_FUNC(func) std::bind(&func, this, std::placeholders::_1)
 
 #ifndef WITH_EDITOR
+// Set to 0 to toggle standalone game mode
 	#define WITH_EDITOR	1
-#endif
+#endif // WITH_EDITOR
 
 namespace ZeoEngine {
 

@@ -1,6 +1,6 @@
 #include "Player.h"
 
-#include <imgui.h>
+#include "Engine/ImGui/MyImGui.h"
 
 RTTR_REGISTRATION
 {
@@ -105,12 +105,25 @@ void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
 	
-	if (HasBegunPlay() && ImGui::Begin("Game View"))
+	if (HasBegunPlay())
 	{
-		ImGui::SetCursorPos(ImVec2(50.0f, 50.0f));
-		// Render health bar
-		ImGui::ProgressBar(m_CurrentHealth / m_MaxHealth, ImVec2(200.0f, 20.0f));
-		ImGui::End();
+		const float healthBarWidth = 200.0f;
+#if WITH_EDITOR
+		if (ImGui::Begin("Game View"))
+		{
+			ImVec2 pos = ImGui::GetWindowPos();
+			ImGui::AddProgressBar(ImGui::GetWindowDrawList(), m_CurrentHealth / m_MaxHealth,
+				{ pos.x + 50.0f, pos.y + 50.0f },
+				{ pos.x + 50.0f + healthBarWidth, pos.y + 70.0f },
+				ImGui::GetColorU32(ImGuiCol_PlotHistogram), ImGui::GetColorU32(ImGuiCol_FrameBg));
+			ImGui::End();
+		}
+#else
+		ImGui::AddProgressBar(ImGui::GetForegroundDrawList(), m_CurrentHealth / m_MaxHealth,
+			{ 50.0f, 50.0f },
+			{ 50.0f + healthBarWidth, 70.0f },
+			ImGui::GetColorU32(ImGuiCol_PlotHistogram), ImGui::GetColorU32(ImGuiCol_FrameBg));
+#endif
 	}
 
 }

@@ -187,7 +187,9 @@ RTTR_REGISTRATION
 		);
 
 	registration::class_<ParticleSystem>("ParticleSystem")
+#if WITH_EDITOR
 		.method("OnPropertyValueEditChange", &ParticleSystem::OnPropertyValueEditChange)
+#endif
 		.property("ParticleEmitter", &ParticleSystem::m_ParticleTemplate)
 		(
 			policy::prop::bind_as_ptr

@@ -35,9 +35,9 @@ namespace ZeoEngine {
 	class TimerManager
 	{
 	public:
-		TimerManager()
+		TimerManager(const std::string& name)
 		{
-			ZE_CORE_TRACE("Timer manager initialized!");
+			ZE_CORE_TRACE("{0} timer manager initialized!", name);
 		}
 
 		/**

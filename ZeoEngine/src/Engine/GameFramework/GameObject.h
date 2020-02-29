@@ -42,9 +42,7 @@ namespace ZeoEngine {
 	public:
 		virtual void UpdateData() = 0;
 
-#if WITH_EDITOR
 		bool bDrawCollision = false;
-#endif
 		glm::vec2 Center{ 0.0f };
 		GameObject* OwnerObject;
 

@@ -13,4 +13,7 @@ namespace ImGui {
 	IMGUI_API bool DragDouble(const char* label, double* v, float v_speed = 1.0f, double v_min = 0.0f, double v_max = 0.0f, const char* format = "%.3f", float power = 1.0f);
 
 	IMGUI_API void TextCentered(const char* fmt, ...);
+
+	/** To draw a progress bar in Game View window, use GetWindowDrawList(); to draw a progress bar in standalone game, use GetForgroundDrawList(). */
+	IMGUI_API void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol);
 }

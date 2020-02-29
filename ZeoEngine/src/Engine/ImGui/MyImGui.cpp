@@ -50,4 +50,13 @@ namespace ImGui {
 		Unindent(indent);
 	}
 
+	IMGUI_API void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol)
+	{
+		if (!drawList)
+			return;
+
+		drawList->AddRectFilled(a, b, backgroundCol);
+		drawList->AddRectFilled(a, { a.x + fraction * (b.x - a.x), b.y }, foregroundCol);
+	}
+
 }

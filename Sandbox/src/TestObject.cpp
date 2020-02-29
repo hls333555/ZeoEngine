@@ -1,6 +1,6 @@
 #include "TestObject.h"
 
-#if 1
+#if 0
 RTTR_REGISTRATION
 {
 	using namespace rttr;

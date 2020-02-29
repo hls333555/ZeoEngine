@@ -1,4 +1,5 @@
 #include "ZEpch.h"
+#if WITH_EDITOR
 #include "Engine/Layers/EditorLayer.h"
 
 #include <filesystem>
@@ -57,8 +58,6 @@ namespace ZeoEngine {
 			// Thses camera controls are only applied to Game View window
 			m_GameViewCameraController->OnUpdate(dt);
 		}
-
-		Level::Get().OnEditorUpdate(dt);
 
 		if (m_bShowParticleEditor)
 		{
@@ -124,8 +123,6 @@ namespace ZeoEngine {
 			// File menu
 			if (ImGui::BeginMenu("File"))
 			{
-				// TODO: Add an option to create new level
-
 				static bool bEnableLoadingOrSaving = true;
 				// Loading and saving level during PIE is not allowed
 				if (g_PIEState != PIEState::None)
@@ -205,7 +202,7 @@ namespace ZeoEngine {
 				}
 				ImGui::EndMenu();
 			}
-			// Edit menu
+			// TODO: Edit menu
 			if (ImGui::BeginMenu("Edit"))
 			{
 				if (ImGui::MenuItem("Undo", "CTRL+Z"))
@@ -1479,6 +1476,7 @@ namespace ZeoEngine {
 	{
 		SetNextWindowDefaultPosition();
 		ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+		// TODO: Write preferences to a config file
 		if (ImGui::Begin("Preferences", bShow, ImGuiWindowFlags_NoCollapse))
 		{
 			ImGui::ShowStyleSelector("Editor style");
@@ -2732,3 +2730,4 @@ namespace ZeoEngine {
 	}
 
 }
+#endif

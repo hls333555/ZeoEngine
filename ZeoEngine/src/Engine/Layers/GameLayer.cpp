@@ -24,14 +24,17 @@ namespace ZeoEngine {
 		m_GameCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
 		m_GameCameraController->SetZoomLevel(3.0f);
 
+#if WITH_EDITOR
 		m_Editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
 		ZE_CORE_ASSERT_INFO(m_Editor, "GameLayer::m_Editor is null!");
+#endif
 	}
 
 	void GameLayer::OnAttach()
 	{
 		ZE_PROFILE_FUNCTION();
 
+		// TODO: Move it to config file
 		// NOTE: Add missing Chinese characters here!
 		static const char* missingChars = u8"¼­äÖÄâÖ¡";
 		LoadFont("assets/fonts/wqy-microhei.ttc", missingChars);
@@ -65,6 +68,7 @@ namespace ZeoEngine {
 
 		m_CoreTimerManager.OnUpdate(dt);
 
+#if WITH_EDITOR
 		if (g_PIEState == PIEState::None)
 		{
 			// Setting editor camera
@@ -76,12 +80,19 @@ namespace ZeoEngine {
 			m_ActiveCamera = &m_GameCameraController->GetCamera();
 			if (g_PIEState == PIEState::Running)
 			{
-				m_TimerManager.OnUpdate(dt);
+				m_GameTimerManager.OnUpdate(dt);
 				Level::Get().OnUpdate(dt);
 			}
 		}
+#else
+		m_ActiveCamera = &m_GameCameraController->GetCamera();
+		m_GameTimerManager.OnUpdate(dt);
+		Level::Get().OnUpdate(dt);
+#endif
 
+#if WITH_EDITOR
 		Renderer2D::BeginRenderingToTexture(0);
+#endif
 		{
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
@@ -97,7 +108,9 @@ namespace ZeoEngine {
 				Renderer2D::EndScene();
 			}
 		}
+#if WITH_EDITOR
 		Renderer2D::EndRenderingToTexture(0);
+#endif
 	}
 
 	void GameLayer::OnImGuiRender()

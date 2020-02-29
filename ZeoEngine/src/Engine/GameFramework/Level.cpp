@@ -25,6 +25,12 @@ namespace ZeoEngine {
 		// Default level background
 		m_backgroundTexture = library->Load("editor_assets/textures/Checkerboard_Alpha.png");
 
+		// TODO: Move it to config file
+		// Load default game level when out of editor
+#if !WITH_EDITOR
+		LoadLevelFromFile("assets/test.zlevel");
+#endif
+
 	}
 
 	void Level::OnUpdate(DeltaTime dt)
@@ -53,11 +59,6 @@ namespace ZeoEngine {
 		}
 
 		m_ParticleManager.OnUpdate(dt);
-
-	}
-
-	void Level::OnEditorUpdate(DeltaTime dt)
-	{
 
 	}
 
@@ -207,8 +208,10 @@ namespace ZeoEngine {
 		m_ObjectNames.clear();
 		m_TranslucentObjects.clear();
 		m_TranslucentObjectIndex = 0;
+#if WITH_EDITOR
 		EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
 		editor->ClearSelectedGameObject();
+#endif
 
 		m_ParticleManager.CleanUp();
 

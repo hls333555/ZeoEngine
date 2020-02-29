@@ -32,9 +32,9 @@ namespace ZeoEngine {
 		bool OnWindowResized(WindowResizeEvent& e);
 
 	private:
-		OrthographicCamera m_Camera;
 		float m_AspectRatio;
 		float m_ZoomLevel;
+		OrthographicCamera m_Camera;
 		float m_CameraTranslationSpeed, m_CameraRotationSpeed;
 		bool m_bRotation;
 

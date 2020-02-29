@@ -75,7 +75,9 @@ RTTR_REGISTRATION
 			value("Box Collision", ObjectCollisionType::Box),
 			value("Sphere Collision", ObjectCollisionType::Sphere)
 		)
+#if WITH_EDITOR
 		.method("OnPropertyValueEditChange", &GameObject::OnPropertyValueEditChange)
+#endif
 		.property("Name", &GameObject::m_Name)
 		(
 			policy::prop::bind_as_ptr,
@@ -181,6 +183,7 @@ namespace ZeoEngine {
 
 	void GameObject::OnGameViewImGuiRender()
 	{
+#if WITH_EDITOR
 		// Draw collision
 		if (m_CollisionData && m_CollisionData->bDrawCollision)
 		{
@@ -207,6 +210,7 @@ namespace ZeoEngine {
 				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
 			}
 		}
+#endif
 	}
 
 #if WITH_EDITOR
