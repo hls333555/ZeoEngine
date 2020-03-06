@@ -36,7 +36,7 @@ public:
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_Texture;
 	ZeoEngine::ParticleSystem* m_ParticleSystem;
 
-	std::vector<bool> m_VectorBool;
+	std::deque<bool> m_DequeBool;
 	std::vector<int8_t> m_VectorInt8;
 	std::vector<int32_t> m_VectorInt32;
 	std::vector<int64_t> m_VectorInt64;

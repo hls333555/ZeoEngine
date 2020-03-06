@@ -1025,10 +1025,18 @@ namespace ZeoEngine {
 			if (ImGui::Selectable(ss.str().c_str()))
 			{
 				// TODO: We have to add every supported type explicitly for sequential container insertion, which is really bad
+
 				if (itemType == rttr::type::get<bool>())
 				{
-					ZE_CORE_WARN("Bool type sequential container {0} is currently not supported!", data.Property->get_name());
-					//data.SequentialView->insert(data.SequentialView->end(), false);
+					// Note: std::vector<bool> is not supported because stl uses bits to store bool elements internally
+					if (data.Property->get_type().get_raw_type() == rttr::type::get<std::vector<bool>>())
+					{
+						ZE_CORE_WARN("std::vector<bool> sequential container {0} is not supported! Try other sequential containers for bool instead.", data.Property->get_name());
+					}
+					else
+					{
+						data.SequentialView->insert(data.SequentialView->end(), false);
+					}
 				}
 				else if (itemType == rttr::type::get<int8_t>())
 				{

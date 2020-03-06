@@ -123,13 +123,12 @@ RTTR_REGISTRATION
 			metadata(PropertyMeta::Tooltip, u8"我是一个ParticleSystem。"),
 			metadata(PropertyMeta::Category, "Test")
 		)
-		// TODO: VectorBool issue
-		//.property("VectorBool", &TestObject::m_VectorBool)
-		//(
-		//	policy::prop::bind_as_ptr,
-		//	metadata(PropertyMeta::Tooltip, u8"我是一个bool vector。"),
-		//	metadata(PropertyMeta::Category, "Test")
-		//)
+		.property("DequeBool", &TestObject::m_DequeBool)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Tooltip, u8"我是一个bool deque。"),
+			metadata(PropertyMeta::Category, "Test")
+		)
 		.property("VectorInt8", &TestObject::m_VectorInt8)
 		(
 			policy::prop::bind_as_ptr,
