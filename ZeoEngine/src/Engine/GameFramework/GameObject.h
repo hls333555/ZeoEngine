@@ -16,13 +16,13 @@ namespace ZeoEngine {
 	struct Transform
 	{
 		Transform() = default;
-		Transform(const glm::vec3& _position)
-			: position(_position)
+		Transform(const glm::vec3& position)
+			: Position(position)
 		{}
 
-		glm::vec3 position{ 0.0f };
-		float rotation = 0.0f;
-		glm::vec2 scale{ 1.0f };
+		glm::vec3 Position{ 0.0f };
+		float Rotation = 0.0f;
+		glm::vec2 Scale{ 1.0f };
 
 		RTTR_ENABLE()
 	};
@@ -39,15 +39,16 @@ namespace ZeoEngine {
 	{
 		friend class GameObject;
 
-	public:
+		virtual ~CollisionData() = default;
+
 		virtual void UpdateData() = 0;
 
 		bool bDrawCollision = false;
 		glm::vec2 Center{ 0.0f };
-		GameObject* OwnerObject;
+		GameObject* OwnerObject = nullptr;
 
 	protected:
-		glm::vec2 CenterOffset;
+		glm::vec2 CenterOffset{ 0.0f };
 
 		RTTR_ENABLE()
 		RTTR_REGISTRATION_FRIEND
@@ -55,7 +56,7 @@ namespace ZeoEngine {
 
 	struct BoxCollisionData : public CollisionData
 	{
-		BoxCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, const glm::vec2& extents = { 0.0f, 0.0f })
+		explicit BoxCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, const glm::vec2& extents = { 0.0f, 0.0f })
 			: Extents(extents)
 		{
 			OwnerObject = ownerObject;
@@ -63,7 +64,7 @@ namespace ZeoEngine {
 			UpdateData();
 		}
 
-		inline virtual void UpdateData() override;
+		virtual void UpdateData() override;
 
 		glm::vec2 Extents;
 
@@ -72,7 +73,7 @@ namespace ZeoEngine {
 
 	struct SphereCollisionData : public CollisionData
 	{
-		SphereCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, float radius = 0.0f)
+		explicit SphereCollisionData(GameObject* ownerObject, const glm::vec2& centerOffset = { 0.0f, 0.0f }, float radius = 0.0f)
 			: Radius(radius)
 		{
 			OwnerObject = ownerObject;
@@ -80,7 +81,7 @@ namespace ZeoEngine {
 			UpdateData();
 		}
 
-		inline virtual void UpdateData() override;
+		virtual void UpdateData() override;
 
 		float Radius;
 
@@ -98,7 +99,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 	enum class ClassMeta
 	{
-		/** This class is abstract and cannot be instanced to the level */
+		/** This class is abstract and cannot be instantiated to the level */
 		Abstract,
 		/** Pop up a tooltip text on mouse hovering this class */
 		Tooltip,
@@ -147,7 +148,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	};
 
 	/**
-	 * Base class for spawnable objects.
+	 * Base (abstract) class for spawnable objects.
 	 *
 	 * IMPORTANT NOTES:
 	 * You should always call ZeoEngine::Level::Get().SpawnGameObject<>(); to spawn one to the level.
@@ -161,9 +162,10 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		friend class GameLayer;
 		friend class Level;
 
+		using OnDestroyedFn = std::function<void()>;
+
 	protected:
-		GameObject() = default;
-		virtual ~GameObject();
+		virtual ~GameObject() = 0;
 
 	public:
 		const std::string& GetUniqueName() const { return m_UniqueName; }
@@ -180,12 +182,12 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		bool HasBegunPlay() const { return m_bHasBegunPlay; }
 		const Transform& GetTransform() const { return m_Transform; }
 		void SetTransform(const Transform& transform) { m_Transform = transform; }
-		const glm::vec2 GetPosition2D() const { return { m_Transform.position.x, m_Transform.position.y }; }
-		const glm::vec3& GetPosition() const { return  m_Transform.position; }
+		const glm::vec2 GetPosition2D() const { return { m_Transform.Position.x, m_Transform.Position.y }; }
+		const glm::vec3& GetPosition() const { return  m_Transform.Position; }
 		void SetPosition2D(const glm::vec2& position)
 		{
-			m_Transform.position.x = position.x;
-			m_Transform.position.y = position.y;
+			m_Transform.Position.x = position.x;
+			m_Transform.Position.y = position.y;
 			if (m_CollisionData)
 			{
 				m_CollisionData->UpdateData();
@@ -194,25 +196,25 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** For most cases, you should use SetPosition2D() for 2D rendering instead. */
 		void SetPosition(const glm::vec3& position)
 		{
-			m_Transform.position = position;
+			m_Transform.Position = position;
 			if (m_CollisionData)
 			{
 				m_CollisionData->UpdateData();
 			}
 		}
 		/** For draw command, you should use radians as rotation. */
-		const float GetRotation(bool bInRadians) const { return bInRadians ? glm::radians(m_Transform.rotation) : m_Transform.rotation; }
-		void SetRotation(float rotation) { m_Transform.rotation = rotation; }
-		const glm::vec2& GetScale() const { return m_Transform.scale; }
+		const float GetRotation(bool bInRadians) const { return bInRadians ? glm::radians(m_Transform.Rotation) : m_Transform.Rotation; }
+		void SetRotation(float rotation) { m_Transform.Rotation = rotation; }
+		const glm::vec2& GetScale() const { return m_Transform.Scale; }
 		void SetScale(const glm::vec2& scale)
 		{
-			m_Transform.scale = scale;
+			m_Transform.Scale = scale;
 			if (m_CollisionData)
 			{
 				m_CollisionData->UpdateData();
 			}
 		}
-		void SetScale(float uniformScale) { m_Transform.scale = { uniformScale, uniformScale }; }
+		void SetScale(float uniformScale) { m_Transform.Scale = { uniformScale, uniformScale }; }
 		const glm::mat4& GetTransformMatrix() const { return m_TransformMatrix; }
 		ObjectCollisionType GetCollisionType() const { return m_CollisionType; }
 		void SetCollisionType(ObjectCollisionType newType) { m_CollisionType = newType; }
@@ -256,8 +258,6 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 		void TranslateTo2D(const glm::vec2& targetPosition);
 
-		glm::vec2 GetRandomPositionInRange2D(const glm::vec2& center, const glm::vec2& extents);
-
 		/** Reset necessary data, mostly used by ObjectPooler. */
 		virtual void Reset();
 
@@ -299,7 +299,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		void RecomposeTransformMatrix();
 
 	public:
-		std::function<void()> m_OnDestroyed;
+		OnDestroyedFn m_OnDestroyed;
 
 		// TODO: Component system
 	private:
@@ -308,7 +308,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		/** The name displayed in the level outline, which can be modified by the user. By default, this is the same as m_UniqueName */
 		std::string m_Name;
 		bool m_bIsActive = true;
-		/** GameObject that owns this one, which means if owner is destroyed, this one either */
+		/** GameObject that owns this one, which means if owner is destroyed, either will this one */
 		GameObject* m_OwnerObject;
 		bool m_bPendingDestroy = false;
 		bool m_bHasBegunPlay = false;

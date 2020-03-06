@@ -32,10 +32,16 @@ namespace ZeoEngine {
 
 	};
 
-	// TODO: Consider singleton like Input class?
 	class Texture2DLibrary
 	{
+		friend class GameLayer;
+
+	private:
+		Texture2DLibrary() = default;
 	public:
+		Texture2DLibrary(const Texture2DLibrary&) = delete;
+		Texture2DLibrary& operator=(const Texture2DLibrary&) = delete;
+
 		void Add(const std::string& path, const Ref<Texture2D>& texture);
 		void Add(const Ref<Texture2D>& texture);
 		Ref<Texture2D> Load(const std::string& filePath);

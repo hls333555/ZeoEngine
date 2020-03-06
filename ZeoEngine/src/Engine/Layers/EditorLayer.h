@@ -7,11 +7,19 @@
 
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Renderer/Texture.h"
-#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
 	class GameObject;
+	class ParticleSystem;
+
+	struct RTTRPropertyHashHasher
+	{
+		size_t operator()(const rttr::property& k) const noexcept
+		{
+			return std::hash<std::string>{}(k.get_name().to_string());
+		}
+	};
 
 	enum class PIEState
 	{
@@ -35,7 +43,6 @@ namespace ZeoEngine {
 
 		const Scope<OrthographicCameraController>& GetGameViewCameraController() const { return m_GameViewCameraController; }
 		OrthographicCamera* GetGameViewCamera() const { return m_GameViewCameraController ? &m_GameViewCameraController->GetCamera() : nullptr; }
-		// TODO: ClearSelectedGameObject()
 		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
 
 	private:
@@ -64,7 +71,6 @@ namespace ZeoEngine {
 		/** Show transform options and draw transform gizmo. */
 		void EditTransform();
 
-		void CreateDefaultParticleSystem();
 		void LoadParticleSystemFromFile(const char* particleSystemPath);
 		void SaveParticleSystemToFile(std::string& particleSystemPath);
 
@@ -235,7 +241,7 @@ namespace ZeoEngine {
 		 * Used to prevent logging identical messages every frame.
 		 * Although we can share this across different property sources, we want to improve performance by reserving capacity beforehand, which is not possible for sharing case
 		 */
-		std::vector<rttr::property> m_PropertiesLogged[PROPERTY_SOURCE_NUM];
+		std::unordered_set<rttr::property, RTTRPropertyHashHasher> m_PropertiesLogged[PROPERTY_SOURCE_NUM];
 
 		/** Flag used to prevent calling RecomposeTransformMatrix() every frame */
 		bool m_bIsTransformDirty = false;

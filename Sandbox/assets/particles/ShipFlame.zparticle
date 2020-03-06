@@ -98,7 +98,7 @@
                 1.0
             ]
         },
-        "LifeTime": {
+        "Lifetime": {
             "VariationType": "Random In Range",
             "Value": 0.75,
             "ValueHigh": 1.5

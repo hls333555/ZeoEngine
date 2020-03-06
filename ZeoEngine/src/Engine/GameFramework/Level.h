@@ -12,15 +12,15 @@ namespace ZeoEngine {
 		bool operator<(const TranslucentObjectData& other) const
 		{
 			// Sort based on Z position or based on spawn order if Z position equals
-			if (abs(zPosition - other.zPosition) < 1e-8)
+			if (abs(ZPosition - other.ZPosition) < 1e-8)
 			{
-				return index < other.index;
+				return Index < other.Index;
 			}
-			return zPosition < other.zPosition;
+			return ZPosition < other.ZPosition;
 		}
 
-		float zPosition;
-		uint32_t index;
+		float ZPosition;
+		uint32_t Index;
 	};
 
 	class Level
@@ -30,6 +30,8 @@ namespace ZeoEngine {
 
 	public:
 		~Level();
+		Level(const Level&) = delete;
+		Level& operator=(const Level&) = delete;
 
 		static Level& Get()
 		{
@@ -39,9 +41,6 @@ namespace ZeoEngine {
 
 	private:
 		Level() = default;
-
-		Level(const Level&) = delete;
-		Level& operator=(const Level&) = delete;
 
 	public:
 		virtual void Init();
@@ -53,50 +52,26 @@ namespace ZeoEngine {
 		template<typename T>
 		T* SpawnGameObject(GameObject* owner = nullptr)
 		{
-			T* object = new T();
-			ConstructObjectName<T>(object);
-			object->SetOwner(owner);
-			object->Init();
-			m_GameObjects.push_back(object);
-			m_SortedGameObjects.insert({ object->GetName(), object });
-			if (object->IsTranslucent())
-			{
-				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
-			}
+			T* object = PreConstructObject<T>(owner);
+			PostConstructObject(object);
 			return object;
 		}
 		template<typename T>
 		T* SpawnGameObject(const Transform& transform, GameObject* owner = nullptr)
 		{
-			T* object = new T();
-			ConstructObjectName<T>(object);
-			object->SetOwner(owner);
+			T* object = PreConstructObject<T>(owner);
 			object->SetTransform(transform);
-			object->Init();
-			m_GameObjects.push_back(object);
-			m_SortedGameObjects.insert({ object->GetName(), object });
-			if (object->IsTranslucent())
-			{
-				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
-			}
+			PostConstructObject(object);
 			return object;
 		}
 		template<typename T>
 		T* SpawnGameObject(const glm::vec3& position, const glm::vec2& scale = { 1.0f, 1.0f }, float rotation = 0.0f, GameObject* owner = nullptr)
 		{
-			T* object = new T();
-			ConstructObjectName<T>(object);
-			object->SetOwner(owner);
+			T* object = PreConstructObject<T>(owner);
 			object->SetPosition(position);
 			object->SetRotation(rotation);
 			object->SetScale(scale);
-			object->Init();
-			m_GameObjects.push_back(object);
-			m_SortedGameObjects.insert({ object->GetName(), object });
-			if (object->IsTranslucent())
-			{
-				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
-			}
+			PostConstructObject(object);
 			return object;
 		}
 
@@ -119,6 +94,26 @@ namespace ZeoEngine {
 		}
 
 	private:
+		template<typename T>
+		T* PreConstructObject(GameObject* owner)
+		{
+			T* object = new T();
+			ConstructObjectName<T>(object);
+			object->SetOwner(owner);
+			return object;
+		}
+		template<typename T>
+		void PostConstructObject(T* object)
+		{
+			object->Init();
+			m_GameObjects.push_back(object);
+			m_SortedGameObjects.insert({ object->GetName(), object });
+			if (object->IsTranslucent())
+			{
+				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
+			}
+		}
+
 		// TODO: Should strip out "ZeoEngine::" in some cases
 		template<typename T>
 		void ConstructObjectName(GameObject* object)
@@ -169,7 +164,7 @@ namespace ZeoEngine {
 		const char* LevelFileToken = "Level";
 		Ref<Texture2D> m_backgroundTexture;
 
-		/** Stores all created GameObjects */
+		/** Stores all spawned GameObjects */
 		std::vector<GameObject*> m_GameObjects;
 		/** Map from GameObject's name to GameObject, used dedicated by Level Outline window */
 		std::multimap<std::string, GameObject*> m_SortedGameObjects;

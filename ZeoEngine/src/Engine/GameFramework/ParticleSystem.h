@@ -20,130 +20,173 @@ namespace ZeoEngine {
 
 	struct ParticleVariation
 	{
-		ParticleVariationType variationType = ParticleVariationType::Constant;
+		virtual ~ParticleVariation() = 0 {}
+
+		ParticleVariationType VariationType = ParticleVariationType::Constant;
 
 		RTTR_ENABLE()
 	};
 
 	struct ParticleInt : public ParticleVariation
 	{
-		ParticleInt(int32_t constant)
-			: val1(constant)
+		ParticleInt(int32_t constant = 0)
 		{
-			variationType = ParticleVariationType::Constant;
+			SetConstant(constant);
 		}
 		ParticleInt(int32_t low, int32_t high)
-			: val1(low)
-			, val2(high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
+			SetRandom(low, high);
 		}
 
 		void SetConstant(int32_t constant)
 		{
-			variationType = ParticleVariationType::Constant;
-			val1 = constant;
+			VariationType = ParticleVariationType::Constant;
+			Val1 = constant;
 		}
 		void SetRandom(int32_t low, int32_t high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
-			val1 = low;
-			val2 = high;
+			VariationType = ParticleVariationType::RandomInRange;
+			Val1 = low;
+			Val2 = high;
 		}
 
-		int32_t val1 = 0, val2 = 0;
+		int32_t Val1 = 0, Val2 = 0;
 
 		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleFloat : public ParticleVariation
 	{
+		ParticleFloat(float constant = 0.0f)
+		{
+			SetConstant(constant);
+		}
+		ParticleFloat(float low, float high)
+		{
+			SetRandom(low, high);
+		}
+
 		void SetConstant(float constant)
 		{
-			variationType = ParticleVariationType::Constant;
-			val1 = constant;
+			VariationType = ParticleVariationType::Constant;
+			Val1 = constant;
 		}
 		void SetRandom(float low, float high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
-			val1 = low;
-			val2 = high;
+			VariationType = ParticleVariationType::RandomInRange;
+			Val1 = low;
+			Val2 = high;
 		}
 
-		float val1 = 0.0f, val2 = 0.0f;
+		float Val1 = 0.0f, Val2 = 0.0f;
 
 		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleVec2 : public ParticleVariation
 	{
+		ParticleVec2(const glm::vec2& constant = { 0.0f, 0.0f })
+		{
+			SetConstant(constant);
+		}
+		ParticleVec2(const glm::vec2& low, const glm::vec2& high)
+		{
+			SetRandom(low, high);
+		}
+		ParticleVec2(float low, float high)
+		{
+			SetRandom(low, high);
+		}
+
 		void SetConstant(const glm::vec2& constant)
 		{
-			variationType = ParticleVariationType::Constant;
-			val1 = constant;
+			VariationType = ParticleVariationType::Constant;
+			Val1 = constant;
 		}
 		/** Get a random x value and a random y value repectively. */
 		void SetRandom(const glm::vec2& low, const glm::vec2& high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
-			val1 = low;
-			val2 = high;
+			VariationType = ParticleVariationType::RandomInRange;
+			Val1 = low;
+			Val2 = high;
 		}
 		/** Get a random x, y value uniformly. */
 		void SetRandom(float low, float high)
 		{
-			variationType = ParticleVariationType::UniformInRange;
-			val1 = { low, low };
-			val2 = { high, high };
+			VariationType = ParticleVariationType::UniformInRange;
+			Val1 = { low, low };
+			Val2 = { high, high };
 		}
 
-		glm::vec2 val1{ 0.0f, 0.0f }, val2{ 0.0f, 0.0f };
+		glm::vec2 Val1{ 0.0f }, Val2{ 0.0f };
 
 		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleVec3 : public ParticleVariation
 	{
+		ParticleVec3(const glm::vec3& constant = { 0.0f, 0.0f, 0.0f })
+		{
+			SetConstant(constant);
+		}
+		ParticleVec3(const glm::vec3& low, const glm::vec3& high)
+		{
+			SetRandom(low, high);
+		}
+		ParticleVec3(float low, float high)
+		{
+			SetRandom(low, high);
+		}
+
 		void SetConstant(const glm::vec3& constant)
 		{
-			variationType = ParticleVariationType::Constant;
-			val1 = constant;
+			VariationType = ParticleVariationType::Constant;
+			Val1 = constant;
 		}
 		/** Get a random x value, a random y value and a random z value repectively. */
 		void SetRandom(const glm::vec3& low, const glm::vec3& high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
-			val1 = low;
-			val2 = high;
+			VariationType = ParticleVariationType::RandomInRange;
+			Val1 = low;
+			Val2 = high;
 		}
 		/** Get a random x, y, z value uniformly. */
 		void SetRandom(float low, float high)
 		{
-			variationType = ParticleVariationType::UniformInRange;
-			val1 = { low, low, low };
-			val2 = { high, high, high };
+			VariationType = ParticleVariationType::UniformInRange;
+			Val1 = { low, low, low };
+			Val2 = { high, high, high };
 		}
 
-		glm::vec3 val1{ 0.0f, 0.0f, 0.0f }, val2{ 0.0f, 0.0f, 0.0f };
+		glm::vec3 Val1{ 0.0f }, Val2{ 0.0f };
 
 		RTTR_ENABLE(ParticleVariation)
 	};
 
 	struct ParticleColor : public ParticleVariation
 	{
+		ParticleColor(const glm::vec4& constant = { 1.0f, 1.0f, 1.0f, 1.0f })
+		{
+			SetConstant(constant);
+		}
+		ParticleColor(const glm::vec4& low, const glm::vec4& high)
+		{
+			SetRandom(low, high);
+		}
+
 		void SetConstant(const glm::vec4& constant)
 		{
-			variationType = ParticleVariationType::Constant;
-			val1 = constant;
+			VariationType = ParticleVariationType::Constant;
+			Val1 = constant;
 		}
 		void SetRandom(const glm::vec4& low, const glm::vec4& high)
 		{
-			variationType = ParticleVariationType::RandomInRange;
-			val1 = low;
-			val2 = high;
+			VariationType = ParticleVariationType::RandomInRange;
+			Val1 = low;
+			Val2 = high;
 		}
 
-		glm::vec4 val1{ 1.0f, 1.0f, 1.0f, 1.0f }, val2{ 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec4 Val1{ 1.0f }, Val2{ 1.0f };
 
 		RTTR_ENABLE(ParticleVariation)
 	};
@@ -154,15 +197,18 @@ namespace ZeoEngine {
 		BurstData(float time, ParticleInt amount)
 			: Time(time)
 			, Amount(amount)
-		{}
+		{
+		}
 		BurstData(float time, int32_t amount)
 			: Time(time)
 			, Amount(amount)
-		{}
+		{
+		}
 		BurstData(float time, int32_t amountLow, int32_t amountHigh)
 			: Time(time)
 			, Amount(ParticleInt(amountLow, amountHigh))
-		{}
+		{
+		}
 
 		float Time = 0.0f;
 		ParticleInt Amount = 0;
@@ -174,50 +220,50 @@ namespace ZeoEngine {
 	{
 		void AddBurstData(float time, int32_t amount)
 		{
-			burstList.emplace_back(time, amount);
+			BurstList.emplace_back(time, amount);
 		}
 		void AddBurstData(float time, int32_t amountLow, int32_t amountHigh)
 		{
-			burstList.emplace_back(time, amountLow, amountHigh);
+			BurstList.emplace_back(time, amountLow, amountHigh);
 		}
 
 		bool bIsLocalSpace = false;
 
 		/** <= 0 means infinite loop */
-		int32_t loopCount = 0;
-		float loopDuration = 1.0f;
+		int32_t LoopCount = 0;
+		float LoopDuration = 1.0f;
 
 		/** Number of particles to spawn per second in total. < 0 means spawn at fps rate */
-		ParticleFloat spawnRate;
+		ParticleFloat SpawnRate;
 		/** List of burst of particles to spawn instantaneously per time. The time should be within (0.0, 1.0) */
-		std::vector<BurstData> burstList;
+		std::vector<BurstData> BurstList;
 
-		ParticleVec2 initialPosition;
+		ParticleVec2 InitialPosition;
 
-		ParticleFloat initialRotation;
-		ParticleFloat rotationRate;
+		ParticleFloat InitialRotation;
+		ParticleFloat RotationRate;
 
-		ParticleVec2 sizeBegin, sizeEnd;
+		ParticleVec2 SizeBegin, SizeEnd;
 
-		ParticleVec2 initialVelocity;
+		ParticleVec2 InitialVelocity;
 		/**
 		 * How much velocity one particle will inherit. This param is only useful when bIsLocalSpace is false.
 		 * This value will be clamp between (0.0f, 0.0f) and (1.0f, 1.0f)
 		 */
-		glm::vec2 inheritVelocity{ 0.0f, 0.0f };
+		glm::vec2 InheritVelocity{ 0.0f };
 
-		ParticleColor colorBegin, colorEnd;
+		ParticleColor ColorBegin, ColorEnd;
 
-		ParticleFloat lifeTime;
+		ParticleFloat Lifetime;
 
-		Ref<Texture2D> texture;
+		Ref<Texture2D> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for use by UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
 		 * By default, subUV animation will animate from left-up sub-image to right-down sub-image uniformly during particle's lifetime.
 		 * So, you can change lifetime to control the animation speed.
 		 */
-		glm::i32vec2 subImageSize{ 0, 0 };
+		glm::i32vec2 SubImageSize{ 0 };
 
 		RTTR_ENABLE()
 	};
@@ -228,15 +274,17 @@ namespace ZeoEngine {
 	{
 		friend class ParticleLibrary;
 		friend class ParticleManager;
+		friend class Level;
 
-	public:
-		ParticleSystem() = default;
+		using SystemFinishedFn = std::function<void()>;
+
 	private:
+		/** Construct a particle system from zparticle file. */
 		ParticleSystem(const std::string& filePath, const std::string& processedSrc);
-	public:
 		ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
 		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true, bool bIsInParticleEditor = false);
 
+	public:
 #if WITH_EDITOR
 		void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 #endif
@@ -246,27 +294,29 @@ namespace ZeoEngine {
 
 		const ParticleTemplate& GetParticleTemplate() const { return m_ParticleTemplate; }
 
+		static ParticleSystem* CreateDefaultParticleSystem();
+
 	private:
 		// Particle properties
 		struct Particle
 		{
-			glm::vec2 position{ 0.0f, 0.0f };
+			glm::vec2 Position{ 0.0f };
 
-			float rotation = 0.0f;
-			float rotationRate = 0.0f;
+			float Rotation = 0.0f;
+			float RotationRate = 0.0f;
 
-			glm::vec2 sizeBegin{ 1.0f, 1.0f }, sizeEnd{ 1.0f, 1.0f };
-			glm::vec2 size{ 1.0f, 1.0f };
+			glm::vec2 SizeBegin{ 1.0f }, SizeEnd{ 1.0f };
+			glm::vec2 Size{ 1.0f };
 
-			glm::vec2 velocity{ 0.0f, 0.0f };
+			glm::vec2 Velocity{ 0.0f };
 
-			glm::vec4 colorBegin{ 1.0f, 1.0f, 1.0f, 1.0f }, colorEnd{ 1.0f, 1.0f, 1.0f, 1.0f };
-			glm::vec4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
+			glm::vec4 ColorBegin{ 1.0f }, ColorEnd{ 1.0f };
+			glm::vec4 Color{ 1.0f };
 
-			float lifeTime = 1.0f;
-			float lifeRemaining = 1.0f;
+			float Lifetime = 1.0f;
+			float LifeRemaining = 1.0f;
 
-			glm::vec2 uvOffset{ 0.0f, 0.0f };
+			glm::vec2 UvOffset{ 0.0f };
 
 			bool bActive = false;
 		};
@@ -293,7 +343,7 @@ namespace ZeoEngine {
 
 	public:
 		/** Called when this particle system is about to be destroyed */
-		std::function<void()> m_OnSystemFinished;
+		SystemFinishedFn m_OnSystemFinished;
 
 		static const char* ParticleSystemFileToken;
 
@@ -309,35 +359,36 @@ namespace ZeoEngine {
 		ParticleTemplate m_ParticleTemplate;
 
 		/** Particle's origin in world space */
-		glm::vec2 m_SpawnPosition{ 0.0f, 0.0f };
+		glm::vec2 m_SpawnPosition{ 0.0f };
 		/** Parent GameObject this particle system attaches to, particle's position is affected by parent's position */
 		GameObject* m_Parent = nullptr;
 		bool m_bAutoDestroy = true;
 
 		// Emitter properties
-		/** Time between emitting two particles, which equals to 1 / ParticleTemplate.spawnRate */
+		/** Time between emitting two particles, which equals to 1 / ParticleTemplate.SpawnRate */
 		float m_SpawnRate;
 		struct BurstTimeData
 		{
-			BurstTimeData(float _time)
-				: time(_time)
+			BurstTimeData(float time)
+				: Time(time)
 				, bProcessed(false)
-			{}
+			{
+			}
 
 			bool operator<(const BurstTimeData& other) const
 			{
-				return time < other.time;
+				return Time < other.Time;
 			}
 
-			float time;
+			float Time;
 			bool bProcessed;
 		};
 		std::map<BurstTimeData, uint32_t> m_BurstList;
 		int32_t m_LoopCount;
 		bool m_bInfiniteLoop;
-		glm::vec2 m_TilingFactor{ 1.0f, 1.0f };
+		glm::vec2 m_TilingFactor{ 1.0f };
 
-		/** This equals to lifetime / (subImageSize.x * subImageSize.y) */
+		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */
 		float m_UVAnimationInterval = 0.0f;
 		float m_Time = 0.0f, m_LoopStartTime = 0.0f, m_SpawnTime = 0.0f, m_BurstTime = 0.0f, m_UVAnimationTime = 0.0f;
 
@@ -358,10 +409,15 @@ namespace ZeoEngine {
 		RTTR_REGISTRATION_FRIEND
 	};
 
-	// TODO: Consider singleton like Input class?
 	class ParticleLibrary
 	{
+		friend class GameLayer;
+
+	private:
+		ParticleLibrary() = default;
 	public:
+		ParticleLibrary(const ParticleLibrary&) = delete;
+		ParticleLibrary& operator=(const ParticleLibrary&) = delete;
 		~ParticleLibrary();
 
 		void Add(const std::string& path, ParticleSystem* ps);
@@ -385,11 +441,16 @@ namespace ZeoEngine {
 
 	class ParticleManager
 	{
-	public:
+		friend class Level;
+
+	private:
 		ParticleManager()
 		{
 			ZE_CORE_TRACE("Particle manager initialized!");
 		}
+	public:
+		ParticleManager(const ParticleManager&) = delete;
+		ParticleManager& operator=(const ParticleManager&) = delete;
 		~ParticleManager();
 
 		void OnUpdate(DeltaTime dt);

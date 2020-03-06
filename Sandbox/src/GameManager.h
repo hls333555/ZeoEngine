@@ -8,6 +8,8 @@
 
 class GameManager : public ZeoEngine::GameObject
 {
+	using ObstaclePool = ZeoEngine::ObjectPooler<Obstacle, 10>;
+
 public:
 	virtual void BeginPlay() override;
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
@@ -18,7 +20,6 @@ private:
 	void SpawnObstacle();
 
 private:
-	typedef ZeoEngine::ObjectPooler<Obstacle, 10> ObstaclePool;
 	ZeoEngine::Scope<ObstaclePool> m_ObstaclePool;
 
 	bool m_bShouldSpawnObstacle = true;

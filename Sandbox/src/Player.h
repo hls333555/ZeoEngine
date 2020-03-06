@@ -10,6 +10,8 @@ class ZeoEngine::ParticleSystem;
 
 class Player : public ZeoEngine::SpriteObject
 {
+	using BulletPool = ZeoEngine::ObjectPooler<PlayerBullet, 5>;
+
 public:
 	Player();
 
@@ -33,7 +35,6 @@ private:
 	float m_CurrentHealth;
 	uint32_t m_Score;
 
-	typedef ZeoEngine::ObjectPooler<PlayerBullet, 5> BulletPool;
 	ZeoEngine::Scope<BulletPool> m_BulletPool;
 
 	float m_ShootRate;

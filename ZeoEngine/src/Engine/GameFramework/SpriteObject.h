@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	/**
 	 * Base class for renderable objects.
 	 * If texture is not assigned, it will draw a quad by default.
-	 * Be sure to load the texture before SpriteObject::Init() being invoked!
+	 * If you want to load the texture in code, be sure to do it before SpriteObject::Init() being invoked!
 	 */
 	class SpriteObject : public GameObject
 	{
@@ -27,8 +27,8 @@ namespace ZeoEngine {
 		Ref<Texture2D> m_SpriteTexture;
 
 	private:
-		glm::vec2 m_TextureTilling = glm::vec2(1.0f);
-		glm::vec4 m_TintColor = glm::vec4(1.0f);
+		glm::vec2 m_TextureTilling{ 1.0f };
+		glm::vec4 m_TintColor{ 1.0f };
 		bool m_bIsTranslucent = false;
 
 		RTTR_REGISTER(SpriteObject, GameObject)

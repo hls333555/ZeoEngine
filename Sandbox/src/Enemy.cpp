@@ -44,7 +44,7 @@ void Enemy::BeginPlay()
 
 	// Move to a random position of upper half screen nearby every 2 seconds
 	ZeoEngine::GetTimerManager()->SetTimer(2.0f, [&]() {
-		glm::vec2 targetPosition = GetRandomPositionInRange2D(GetPosition2D(), { 2.0f, 2.0f });
+		glm::vec2 targetPosition = GetRandomPositionInRange(GetPosition2D(), { 2.0f, 2.0f });
 		if (targetPosition.y > 0 && glm::length(targetPosition - GetPosition2D()) > 1.0f)
 		{
 			TranslateTo2D(targetPosition);
@@ -99,6 +99,17 @@ void Enemy::OnOverlap(GameObject* other)
 		Explode();
 		Destroy();
 	}
+}
+
+glm::vec2 Enemy::GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents)
+{
+	float lowerX = std::max(center.x - extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Left + 0.5f);
+	float upperX = std::min(center.x + extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Right - 0.5f);
+	float lowerY = std::max(center.y - extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom + 0.5f);
+	float upperY = std::min(center.y + extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Top - 0.5f);
+	float randomX = ZeoEngine::RandomEngine::RandFloatInRange(lowerX, upperX);
+	float randomY = ZeoEngine::RandomEngine::RandFloatInRange(lowerY, upperY);
+	return { randomX, randomY };
 }
 
 void Enemy::SpawnBullet()

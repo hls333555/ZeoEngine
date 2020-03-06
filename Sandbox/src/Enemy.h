@@ -10,6 +10,8 @@ class ZeoEngine::ParticleSystem;
 
 class Enemy : public ZeoEngine::SpriteObject
 {
+	using BulletPool = ZeoEngine::ObjectPooler<EnemyBullet, 3>;
+
 public:
 	Enemy();
 
@@ -24,6 +26,8 @@ public:
 	inline void SetMaxHealth(float maxHealth) { m_MaxHealth = maxHealth; m_CurrentHealth = maxHealth; }
 
 private:
+	glm::vec2 GetRandomPositionInRange(const glm::vec2& center, const glm::vec2& extents);
+
 	void SpawnBullet();
 
 	void Explode();
@@ -34,7 +38,6 @@ private:
 	float m_ExplosionDamage;
 	int32_t m_ScoreAmount;
 
-	typedef ZeoEngine::ObjectPooler<EnemyBullet, 3> BulletPool;
 	ZeoEngine::Scope<BulletPool> m_BulletPool;
 
 	float m_ShootRate;

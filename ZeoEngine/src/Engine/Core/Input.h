@@ -13,8 +13,6 @@ namespace ZeoEngine {
 		Input(const Input&) = delete;
 		Input& operator=(const Input&) = delete;
 
-		// Below is a good example for singleton implementation
-
 		static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressedImpl(keycode); }
 		static bool IsKeyReleased(int keycode) { return s_Instance->IsKeyReleasedImpl(keycode); }
 		

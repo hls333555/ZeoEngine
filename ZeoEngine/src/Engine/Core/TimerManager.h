@@ -11,22 +11,35 @@ namespace ZeoEngine {
 		Finished,
 	};
 
+	using TimerFn = std::function<void()>;
+
 	class Timer
 	{
 		friend class TimerManager;
+		
+		/** A dummy class used to prevent public Timer constructor from being called outside. */
+		class TimerPlaceholder
+		{
+		public:
+			TimerPlaceholder() = default;
 
-	public:
+			TimerPlaceholder(const TimerPlaceholder&) = delete;
+			TimerPlaceholder& operator=(const TimerPlaceholder&) = delete;
+		};
+
+	private:
 		Timer() = default;
-		Timer(float startTime, float duration, std::function<void()> callback, int32_t loopCount, float firstDelay);
+	public:
+		// Note: We make it public as std::vector::emplace_back() will need to access this
+		Timer(float startTime, float duration, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&);
 
-		void SetStartTime(float startTime) { m_StartTime = startTime; }
-
+	private:
 		TimerState OnUpdate(float currentTime);
 
 	private:
 		float m_StartTime = 0.0f;
 		float m_Duration = 0.0f;
-		std::function<void()> m_Callback;
+		TimerFn m_Callback;
 		int32_t m_LoopCount = 0;
 		float m_FirstDelay;
 		bool m_bFirstLoop = true;
@@ -34,19 +47,26 @@ namespace ZeoEngine {
 
 	class TimerManager
 	{
-	public:
-		TimerManager(const std::string& name)
+		friend class GameLayer;
+
+	private:
+		explicit TimerManager(const std::string& name)
 		{
 			ZE_CORE_TRACE("{0} timer manager initialized!", name);
 		}
+
+	public:
+		TimerManager(const TimerManager&) = delete;
+		TimerManager& operator=(const TimerManager&) = delete;
 
 		/**
 		 * Start a countdown timer and call the callback when done.
 		 * @param loopCount - <= 0: loop infinitely, 1: loop once
 		 * @param bFirstDelay - Time before invoking callback for the first time. If < 0.0, duration will be used.
 		 */
-		void SetTimer(float duration, std::function<void()> callback, int32_t loopCount = 1, float firstDelay = -1.0f);
+		void SetTimer(float duration, TimerFn callback, int32_t loopCount = 1, float firstDelay = -1.0f);
 
+	private:
 		void OnUpdate(DeltaTime dt);
 
 	private:

@@ -22,50 +22,50 @@ RTTR_REGISTRATION
 			value("Random In Range", ParticleVariationType::RandomInRange),
 			value("Uniform In Range", ParticleVariationType::UniformInRange)
 		)
-		.property("VariationType", &ParticleVariation::variationType);
+		.property("VariationType", &ParticleVariation::VariationType);
 
 	registration::class_<ParticleInt>("ParticleInt")
-		.property("Value", &ParticleInt::val1)
-		.property("ValueHigh", &ParticleInt::val2)
+		.property("Value", &ParticleInt::Val1)
+		.property("ValueHigh", &ParticleInt::Val2)
 		(
 			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
 		);
 
 	registration::class_<ParticleFloat>("ParticleFloat")
-		.property("Value", &ParticleFloat::val1)
-		.property("ValueHigh", &ParticleFloat::val2)
+		.property("Value", &ParticleFloat::Val1)
+		.property("ValueHigh", &ParticleFloat::Val2)
 		(
 			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
 		);
 
 	registration::class_<ParticleVec2>("ParticleVec2")
-		.property("Value", &ParticleVec2::val1)
+		.property("Value", &ParticleVec2::Val1)
 		(
 			policy::prop::bind_as_ptr
 		)
-		.property("ValueHigh", &ParticleVec2::val2)
+		.property("ValueHigh", &ParticleVec2::Val2)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
 		);
 
 	registration::class_<ParticleVec3>("ParticleVec3")
-		.property("Value", &ParticleVec3::val1)
+		.property("Value", &ParticleVec3::Val1)
 		(
 			policy::prop::bind_as_ptr
 		)
-		.property("ValueHigh", &ParticleVec3::val2)
+		.property("ValueHigh", &ParticleVec3::Val2)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
 		);
 
 	registration::class_<ParticleColor>("ParticleColor")
-		.property("Value", &ParticleColor::val1)
+		.property("Value", &ParticleColor::Val1)
 		(
 			policy::prop::bind_as_ptr
 		)
-		.property("ValueHigh", &ParticleColor::val2)
+		.property("ValueHigh", &ParticleColor::Val2)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::HideCondition, "VariationType==Constant")
@@ -91,94 +91,94 @@ RTTR_REGISTRATION
 			metadata(PropertyMeta::Category, "Emitter"),
 			metadata(PropertyMeta::Tooltip, u8"是否在局部空间模拟粒子")
 		)
-		.property("LoopCount", &ParticleTemplate::loopCount)
+		.property("LoopCount", &ParticleTemplate::LoopCount)
 		(
 			metadata(PropertyMeta::Category, "Emitter"),
 			metadata(PropertyMeta::Tooltip, u8"循环次数。若小于等于0, 则为无限循环")
 		)
-		.property("LoopDuration", &ParticleTemplate::loopDuration)
+		.property("LoopDuration", &ParticleTemplate::LoopDuration)
 		(
 			metadata(PropertyMeta::Category, "Emitter"),
 			metadata(PropertyMeta::Tooltip, u8"每次循环的时长")
 		)
-		.property("SpawnRate", &ParticleTemplate::spawnRate)
+		.property("SpawnRate", &ParticleTemplate::SpawnRate)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Emitter"),
 			metadata(PropertyMeta::Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于0，生成速度由帧数决定")
 		)
-		.property("BurstList", &ParticleTemplate::burstList)
+		.property("BurstList", &ParticleTemplate::BurstList)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Emitter"),
 			metadata(PropertyMeta::Tooltip, u8"每个时间点一次性生成的粒子数")
 		)
-		.property("InitialPosition", &ParticleTemplate::initialPosition)
+		.property("InitialPosition", &ParticleTemplate::InitialPosition)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Location"),
 			metadata(PropertyMeta::Tooltip, u8"粒子的初始位置")
 		)
-		.property("InitialRotation", &ParticleTemplate::initialRotation)
+		.property("InitialRotation", &ParticleTemplate::InitialRotation)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Rotation"),
 			metadata(PropertyMeta::Tooltip, u8"粒子的初始旋转")
 		)
-		.property("RotationRate", &ParticleTemplate::rotationRate)
+		.property("RotationRate", &ParticleTemplate::RotationRate)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Rotation"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的旋转速度")
 		)
-		.property("SizeBegin", &ParticleTemplate::sizeBegin)
+		.property("SizeBegin", &ParticleTemplate::SizeBegin)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Size"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始大小")
 		)
-		.property("SizeEnd", &ParticleTemplate::sizeEnd)
+		.property("SizeEnd", &ParticleTemplate::SizeEnd)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Size"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的最终大小")
 		)
-		.property("InitialVelocity", &ParticleTemplate::initialVelocity)
+		.property("InitialVelocity", &ParticleTemplate::InitialVelocity)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Velocity"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始速度")
 		)
-		.property("InheritVelocity", &ParticleTemplate::inheritVelocity)
+		.property("InheritVelocity", &ParticleTemplate::InheritVelocity)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Velocity"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子所能继承的速度。该变量只有在非局部空间有效")
 		)
-		.property("ColorBegin", &ParticleTemplate::colorBegin)
+		.property("ColorBegin", &ParticleTemplate::ColorBegin)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Color"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的初始颜色")
 		)
-		.property("ColorEnd", &ParticleTemplate::colorEnd)
+		.property("ColorEnd", &ParticleTemplate::ColorEnd)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Color"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的最终颜色")
 		)
-		.property("LifeTime", &ParticleTemplate::lifeTime)
+		.property("Lifetime", &ParticleTemplate::Lifetime)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Particle: Base"),
 			metadata(PropertyMeta::Tooltip, u8"决定粒子的生命周期")
 		)
-		.property("Texture", &ParticleTemplate::texture)
+		.property("Texture", &ParticleTemplate::Texture)
 		(
 			metadata(PropertyMeta::Category, "Renderer: Texture"),
 			metadata(PropertyMeta::Tooltip, u8"粒子的材质贴图")
 		)
-		.property("SubImageSize", &ParticleTemplate::subImageSize)
+		.property("SubImageSize", &ParticleTemplate::SubImageSize)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Renderer: Texture"),
@@ -263,21 +263,36 @@ namespace ZeoEngine {
 	}
 #endif
 
+	ParticleSystem* ParticleSystem::CreateDefaultParticleSystem()
+	{
+		ParticleTemplate m_DefaultEmitter;
+		m_DefaultEmitter.Lifetime.SetRandom(0.75f, 1.5f);
+		m_DefaultEmitter.SpawnRate.SetConstant(30.0f);
+		m_DefaultEmitter.InitialRotation.SetRandom(0.0f, 360.0f);
+		m_DefaultEmitter.RotationRate.SetRandom(10.0f, 50.0f);
+		m_DefaultEmitter.InitialVelocity.SetRandom({ -0.5f, 0.5f }, { 0.5f, 2.0f });
+		m_DefaultEmitter.SizeBegin.SetRandom(0.1f, 0.2f);
+		m_DefaultEmitter.SizeEnd.SetConstant({ 0.0f, 0.0f });
+		m_DefaultEmitter.ColorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
+		m_DefaultEmitter.ColorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
+		return new ParticleSystem(m_DefaultEmitter, nullptr, false, true);
+	}
+
 	void ParticleSystem::EvaluateEmitterProperties()
 	{
-		m_LoopCount = m_ParticleTemplate.loopCount;
+		m_LoopCount = m_ParticleTemplate.LoopCount;
 		m_bInfiniteLoop = m_LoopCount <= 0;
 
 		// Spawn rate
 		{
 			float evaluated = 0.0f;
-			switch (m_ParticleTemplate.spawnRate.variationType)
+			switch (m_ParticleTemplate.SpawnRate.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				evaluated = m_ParticleTemplate.spawnRate.val1;
+				evaluated = m_ParticleTemplate.SpawnRate.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				evaluated = RandomEngine::RandFloatInRange(m_ParticleTemplate.spawnRate.val1, m_ParticleTemplate.spawnRate.val2);
+				evaluated = RandomEngine::RandFloatInRange(m_ParticleTemplate.SpawnRate.Val1, m_ParticleTemplate.SpawnRate.Val2);
 				break;
 			default:
 				break;
@@ -295,15 +310,15 @@ namespace ZeoEngine {
 		// Burst list
 		{
 			m_BurstList.clear();
-			for (const auto& burstData : m_ParticleTemplate.burstList)
+			for (const auto& burstData : m_ParticleTemplate.BurstList)
 			{
-				switch (burstData.Amount.variationType)
+				switch (burstData.Amount.VariationType)
 				{
 				case ParticleVariationType::Constant:
-					m_BurstList.emplace(burstData.Time, burstData.Amount.val1);
+					m_BurstList.emplace(burstData.Time, burstData.Amount.Val1);
 					break;
 				case ParticleVariationType::RandomInRange:
-					m_BurstList.emplace(burstData.Time, (int32_t)RandomEngine::RandFloatInRange((float)burstData.Amount.val1, (float)burstData.Amount.val2));
+					m_BurstList.emplace(burstData.Time, (int32_t)RandomEngine::RandFloatInRange((float)burstData.Amount.Val1, (float)burstData.Amount.Val2));
 					break;
 				default:
 					break;
@@ -313,8 +328,8 @@ namespace ZeoEngine {
 
 		// Texture
 		{
-			float x = m_ParticleTemplate.subImageSize.x == 0 ? 1.0f : 1.0f / m_ParticleTemplate.subImageSize.x;
-			float y = m_ParticleTemplate.subImageSize.y == 0 ? 1.0f : 1.0f / m_ParticleTemplate.subImageSize.y;
+			float x = m_ParticleTemplate.SubImageSize.x == 0 ? 1.0f : 1.0f / m_ParticleTemplate.SubImageSize.x;
+			float y = m_ParticleTemplate.SubImageSize.y == 0 ? 1.0f : 1.0f / m_ParticleTemplate.SubImageSize.y;
 			m_TilingFactor = { x, y };
 		}
 	}
@@ -323,48 +338,48 @@ namespace ZeoEngine {
 	{
 		// Position
 		{
-			switch (m_ParticleTemplate.initialPosition.variationType)
+			switch (m_ParticleTemplate.InitialPosition.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.position = m_ParticleTemplate.initialPosition.val1;
+				particle.Position = m_ParticleTemplate.InitialPosition.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.position.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.initialPosition.val1.x, m_ParticleTemplate.initialPosition.val2.x);
-				particle.position.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.initialPosition.val1.y, m_ParticleTemplate.initialPosition.val2.y);
+				particle.Position.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.InitialPosition.Val1.x, m_ParticleTemplate.InitialPosition.Val2.x);
+				particle.Position.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.InitialPosition.Val1.y, m_ParticleTemplate.InitialPosition.Val2.y);
 				break;
 			default:
 				break;
 			}
 			if (m_Parent)
 			{
-				particle.position += m_Parent->GetPosition2D();
+				particle.Position += m_Parent->GetPosition2D();
 			}
 			if (m_SpawnPosition != glm::vec2(0.0f))
 			{
-				particle.position += m_SpawnPosition;
+				particle.Position += m_SpawnPosition;
 			}
 		}
 
 		// Rotation
 		{
-			switch (m_ParticleTemplate.initialRotation.variationType)
+			switch (m_ParticleTemplate.InitialRotation.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.rotation = m_ParticleTemplate.initialRotation.val1;
+				particle.Rotation = m_ParticleTemplate.InitialRotation.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.rotation = RandomEngine::RandFloatInRange(m_ParticleTemplate.initialRotation.val1, m_ParticleTemplate.initialRotation.val2);
+				particle.Rotation = RandomEngine::RandFloatInRange(m_ParticleTemplate.InitialRotation.Val1, m_ParticleTemplate.InitialRotation.Val2);
 				break;
 			default:
 				break;
 			}
-			switch (m_ParticleTemplate.rotationRate.variationType)
+			switch (m_ParticleTemplate.RotationRate.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.rotationRate = m_ParticleTemplate.rotationRate.val1;
+				particle.RotationRate = m_ParticleTemplate.RotationRate.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.rotationRate = RandomEngine::RandFloatInRange(m_ParticleTemplate.rotationRate.val1, m_ParticleTemplate.rotationRate.val2);
+				particle.RotationRate = RandomEngine::RandFloatInRange(m_ParticleTemplate.RotationRate.Val1, m_ParticleTemplate.RotationRate.Val2);
 				break;
 			default:
 				break;
@@ -373,34 +388,34 @@ namespace ZeoEngine {
 
 		// Size
 		{
-			switch (m_ParticleTemplate.sizeBegin.variationType)
+			switch (m_ParticleTemplate.SizeBegin.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.sizeBegin = m_ParticleTemplate.sizeBegin.val1;
+				particle.SizeBegin = m_ParticleTemplate.SizeBegin.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.sizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeBegin.val1.x, m_ParticleTemplate.sizeBegin.val2.x);
-				particle.sizeBegin.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeBegin.val1.y, m_ParticleTemplate.sizeBegin.val2.y);
+				particle.SizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeBegin.Val1.x, m_ParticleTemplate.SizeBegin.Val2.x);
+				particle.SizeBegin.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeBegin.Val1.y, m_ParticleTemplate.SizeBegin.Val2.y);
 				break;
 			case ParticleVariationType::UniformInRange:
-				particle.sizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeBegin.val1.x, m_ParticleTemplate.sizeBegin.val2.x);
-				particle.sizeBegin.y = particle.sizeBegin.x;
+				particle.SizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeBegin.Val1.x, m_ParticleTemplate.SizeBegin.Val2.x);
+				particle.SizeBegin.y = particle.SizeBegin.x;
 				break;
 			default:
 				break;
 			}
-			switch (m_ParticleTemplate.sizeEnd.variationType)
+			switch (m_ParticleTemplate.SizeEnd.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.sizeEnd = m_ParticleTemplate.sizeEnd.val1;
+				particle.SizeEnd = m_ParticleTemplate.SizeEnd.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.sizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeEnd.val1.x, m_ParticleTemplate.sizeEnd.val2.x);
-				particle.sizeEnd.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeEnd.val1.y, m_ParticleTemplate.sizeEnd.val2.y);
+				particle.SizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeEnd.Val1.x, m_ParticleTemplate.SizeEnd.Val2.x);
+				particle.SizeEnd.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeEnd.Val1.y, m_ParticleTemplate.SizeEnd.Val2.y);
 				break;
 			case ParticleVariationType::UniformInRange:
-				particle.sizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.sizeEnd.val1.x, m_ParticleTemplate.sizeEnd.val2.x);
-				particle.sizeEnd.y = particle.sizeEnd.x;
+				particle.SizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.SizeEnd.Val1.x, m_ParticleTemplate.SizeEnd.Val2.x);
+				particle.SizeEnd.y = particle.SizeEnd.x;
 				break;
 			default:
 				break;
@@ -409,47 +424,47 @@ namespace ZeoEngine {
 
 		// Velocity
 		{
-			switch (m_ParticleTemplate.initialVelocity.variationType)
+			switch (m_ParticleTemplate.InitialVelocity.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.velocity = m_ParticleTemplate.initialVelocity.val1;
+				particle.Velocity = m_ParticleTemplate.InitialVelocity.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.velocity.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.initialVelocity.val1.x, m_ParticleTemplate.initialVelocity.val2.x);
-				particle.velocity.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.initialVelocity.val1.y, m_ParticleTemplate.initialVelocity.val2.y);
+				particle.Velocity.x = RandomEngine::RandFloatInRange(m_ParticleTemplate.InitialVelocity.Val1.x, m_ParticleTemplate.InitialVelocity.Val2.x);
+				particle.Velocity.y = RandomEngine::RandFloatInRange(m_ParticleTemplate.InitialVelocity.Val1.y, m_ParticleTemplate.InitialVelocity.Val2.y);
 				break;
 			default:
 				break;
 			}
-			m_ParticleTemplate.inheritVelocity = glm::clamp(m_ParticleTemplate.inheritVelocity, { 0.0f, 0.0f }, { 1.0f, 1.0f });
+			m_ParticleTemplate.InheritVelocity = glm::clamp(m_ParticleTemplate.InheritVelocity, { 0.0f, 0.0f }, { 1.0f, 1.0f });
 		}
 
 		// Color
 		{
-			switch (m_ParticleTemplate.colorBegin.variationType)
+			switch (m_ParticleTemplate.ColorBegin.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.colorBegin = m_ParticleTemplate.colorBegin.val1;
+				particle.ColorBegin = m_ParticleTemplate.ColorBegin.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.colorBegin.r = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorBegin.val1.r, m_ParticleTemplate.colorBegin.val2.r);
-				particle.colorBegin.g = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorBegin.val1.g, m_ParticleTemplate.colorBegin.val2.g);
-				particle.colorBegin.b = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorBegin.val1.b, m_ParticleTemplate.colorBegin.val2.b);
-				particle.colorBegin.a = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorBegin.val1.a, m_ParticleTemplate.colorBegin.val2.a);
+				particle.ColorBegin.r = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorBegin.Val1.r, m_ParticleTemplate.ColorBegin.Val2.r);
+				particle.ColorBegin.g = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorBegin.Val1.g, m_ParticleTemplate.ColorBegin.Val2.g);
+				particle.ColorBegin.b = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorBegin.Val1.b, m_ParticleTemplate.ColorBegin.Val2.b);
+				particle.ColorBegin.a = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorBegin.Val1.a, m_ParticleTemplate.ColorBegin.Val2.a);
 				break;
 			default:
 				break;
 			}
-			switch (m_ParticleTemplate.colorEnd.variationType)
+			switch (m_ParticleTemplate.ColorEnd.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.colorEnd = m_ParticleTemplate.colorEnd.val1;
+				particle.ColorEnd = m_ParticleTemplate.ColorEnd.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.colorEnd.r = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorEnd.val1.r, m_ParticleTemplate.colorEnd.val2.r);
-				particle.colorEnd.g = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorEnd.val1.g, m_ParticleTemplate.colorEnd.val2.g);
-				particle.colorEnd.b = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorEnd.val1.b, m_ParticleTemplate.colorEnd.val2.b);
-				particle.colorEnd.a = RandomEngine::RandFloatInRange(m_ParticleTemplate.colorEnd.val1.a, m_ParticleTemplate.colorEnd.val2.a);
+				particle.ColorEnd.r = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorEnd.Val1.r, m_ParticleTemplate.ColorEnd.Val2.r);
+				particle.ColorEnd.g = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorEnd.Val1.g, m_ParticleTemplate.ColorEnd.Val2.g);
+				particle.ColorEnd.b = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorEnd.Val1.b, m_ParticleTemplate.ColorEnd.Val2.b);
+				particle.ColorEnd.a = RandomEngine::RandFloatInRange(m_ParticleTemplate.ColorEnd.Val1.a, m_ParticleTemplate.ColorEnd.Val2.a);
 				break;
 			default:
 				break;
@@ -458,27 +473,27 @@ namespace ZeoEngine {
 
 		// Life
 		{
-			switch (m_ParticleTemplate.lifeTime.variationType)
+			switch (m_ParticleTemplate.Lifetime.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				particle.lifeTime = m_ParticleTemplate.lifeTime.val1;
+				particle.Lifetime = m_ParticleTemplate.Lifetime.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				particle.lifeTime = RandomEngine::RandFloatInRange(m_ParticleTemplate.lifeTime.val1, m_ParticleTemplate.lifeTime.val2);
+				particle.Lifetime = RandomEngine::RandFloatInRange(m_ParticleTemplate.Lifetime.Val1, m_ParticleTemplate.Lifetime.Val2);
 				break;
 			default:
 				break;
 			}
-			particle.lifeRemaining = particle.lifeTime;
+			particle.LifeRemaining = particle.Lifetime;
 		}
 
 		// Texture
 		{
-			auto count = m_ParticleTemplate.subImageSize.x * m_ParticleTemplate.subImageSize.y;
-			m_UVAnimationInterval = count == 0 ? 0.0f : particle.lifeTime / count;
+			auto count = m_ParticleTemplate.SubImageSize.x * m_ParticleTemplate.SubImageSize.y;
+			m_UVAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
 			// Initialize uv animation start point to left-up corner
-			particle.uvOffset.x = 0;
-			particle.uvOffset.y = (float)m_ParticleTemplate.subImageSize.y - 1.0f;
+			particle.UvOffset.x = 0;
+			particle.UvOffset.y = (float)m_ParticleTemplate.SubImageSize.y - 1.0f;
 		}
 	}
 
@@ -509,7 +524,7 @@ namespace ZeoEngine {
 		m_Time += dt;
 		if (m_bActive)
 		{
-			if (m_Time - m_LoopStartTime >= m_ParticleTemplate.loopDuration)
+			if (m_Time - m_LoopStartTime >= m_ParticleTemplate.LoopDuration)
 			{
 				if (m_LoopCount != 0)
 				{
@@ -534,7 +549,7 @@ namespace ZeoEngine {
 				// Process BurstList
 				for (auto& burstData : m_BurstList)
 				{
-					if (m_Time - m_BurstTime >= burstData.first.time * m_ParticleTemplate.loopDuration)
+					if (m_Time - m_BurstTime >= burstData.first.Time * m_ParticleTemplate.LoopDuration)
 					{
 						if (!burstData.first.bProcessed && burstData.second > 0)
 						{
@@ -555,7 +570,7 @@ namespace ZeoEngine {
 			if (!particle.bActive)
 				continue;
 
-			if (particle.lifeRemaining <= 0.0f)
+			if (particle.LifeRemaining <= 0.0f)
 			{
 				particle.bActive = false;
 				continue;
@@ -563,39 +578,39 @@ namespace ZeoEngine {
 
 			m_bSystemComplete = false;
 
-			particle.lifeRemaining -= dt;
+			particle.LifeRemaining -= dt;
 			glm::vec2 velocity{ 0.0f, 0.0f };
 			if (m_Parent)
 			{
 				velocity = m_ParticleTemplate.bIsLocalSpace ?
-					m_Parent->GetVelocity() + particle.velocity :
-					m_Parent->GetVelocity() * m_ParticleTemplate.inheritVelocity + particle.velocity;
+					m_Parent->GetVelocity() + particle.Velocity :
+					m_Parent->GetVelocity() * m_ParticleTemplate.InheritVelocity + particle.Velocity;
 			}
 			else
 			{
-				velocity = particle.velocity;
+				velocity = particle.Velocity;
 			}
-			particle.position += velocity * (float)dt;
-			particle.rotation += particle.rotationRate * dt;
-			float lifeRatio = particle.lifeRemaining / particle.lifeTime;
-			particle.size = glm::lerp(particle.sizeEnd, particle.sizeBegin, lifeRatio);
-			particle.color = glm::lerp(particle.colorEnd, particle.colorBegin, lifeRatio);
+			particle.Position += velocity * (float)dt;
+			particle.Rotation += particle.RotationRate * dt;
+			float lifeRatio = particle.LifeRemaining / particle.Lifetime;
+			particle.Size = glm::lerp(particle.SizeEnd, particle.SizeBegin, lifeRatio);
+			particle.Color = glm::lerp(particle.ColorEnd, particle.ColorBegin, lifeRatio);
 			// Process UV animation
 			if (m_UVAnimationInterval != 0.0f && m_Time - m_UVAnimationTime >= m_UVAnimationInterval)
 			{
 				// When animation reaches the last sub-image, deactivate this particle immediately
-				if (particle.uvOffset.x == m_ParticleTemplate.subImageSize.x - 1.0f && particle.uvOffset.y == 0.0f)
+				if (particle.UvOffset.x == m_ParticleTemplate.SubImageSize.x - 1.0f && particle.UvOffset.y == 0.0f)
 				{
 					particle.bActive = false;
 					continue;
 				}
 				// Next column
-				particle.uvOffset.x += 1.0f;
-				if (particle.uvOffset.x == m_ParticleTemplate.subImageSize.x)
+				particle.UvOffset.x += 1.0f;
+				if (particle.UvOffset.x == m_ParticleTemplate.SubImageSize.x)
 				{
-					particle.uvOffset.x = 0.0f;
+					particle.UvOffset.x = 0.0f;
 					// Next row
-					particle.uvOffset.y -= 1.0f;
+					particle.UvOffset.y -= 1.0f;
 				}
 				m_UVAnimationTime = m_Time;
 			}
@@ -644,13 +659,13 @@ namespace ZeoEngine {
 				continue;
 
 			++m_ActiveParticleCount;
-			if (m_ParticleTemplate.texture)
+			if (m_ParticleTemplate.Texture)
 			{
-				Renderer2D::DrawRotatedQuad(particle.position, particle.size, glm::radians(particle.rotation), m_ParticleTemplate.texture, m_TilingFactor, particle.uvOffset, particle.color);
+				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_ParticleTemplate.Texture, m_TilingFactor, particle.UvOffset, particle.Color);
 			}
 			else
 			{
-				Renderer2D::DrawRotatedQuad(particle.position, particle.size, glm::radians(particle.rotation), particle.color);
+				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), particle.Color);
 			}
 		}
 	}
@@ -689,7 +704,7 @@ namespace ZeoEngine {
 			return;
 
 		m_bActive = true;
-		m_LoopCount = m_ParticleTemplate.loopCount;
+		m_LoopCount = m_ParticleTemplate.LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
 	}
 
@@ -700,7 +715,7 @@ namespace ZeoEngine {
 
 	void ParticleSystem::Resimulate()
 	{
-		m_LoopCount = m_ParticleTemplate.loopCount;
+		m_LoopCount = m_ParticleTemplate.LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
 #if WITH_EDITOR
 		m_bFiniteLoopPrepareToRestart = true;

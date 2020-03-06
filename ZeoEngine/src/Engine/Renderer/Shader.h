@@ -26,7 +26,7 @@ namespace ZeoEngine {
 
 	};
 
-	// TODO: Consider singleton like Input class?
+	// TODO: Refactor like Texture2DLibrary
 	class ShaderLibrary
 	{
 	public:

@@ -82,12 +82,12 @@ namespace ZeoEngine {
 
 		RenderCommand::EnableDepthWriting(false);
 		// Then render translucent objects
-		for (const auto& objectPair : m_TranslucentObjects)
+		for (const auto& [data, object] : m_TranslucentObjects)
 		{
-			if (!objectPair.second->IsActive())
+			if (!object->IsActive())
 				continue;
 
-			objectPair.second->OnRender();
+			object->OnRender();
 		}
 		m_ParticleManager.OnRender();
 		RenderCommand::EnableDepthWriting(true);
@@ -142,14 +142,14 @@ namespace ZeoEngine {
 		m_ObjectNames.erase(object->GetName());
 		auto it = std::find_if(m_SortedGameObjects.begin(), m_SortedGameObjects.end(), [&object](const std::pair<std::string, GameObject*>& objectPair) {
 			return objectPair.second == object;
-			});
+		});
 		if (it != m_SortedGameObjects.end())
 		{
 			m_SortedGameObjects.erase(it);
 		}
 		auto it2 = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
 			return objectPair.second == object;
-			});
+		});
 		if (it2 != m_TranslucentObjects.end())
 		{
 			m_TranslucentObjects.erase(it2);
@@ -183,10 +183,10 @@ namespace ZeoEngine {
 		});
 		if (it != m_TranslucentObjects.end())
 		{
-			uint32_t index = it->first.index;
+			uint32_t index = it->first.Index;
 			float zPos = dirtyGameObject->GetPosition().z;
 			// Only process re-sorting if Z position is changed
-			if (abs(it->first.zPosition - zPos) >= 1e-8)
+			if (abs(it->first.ZPosition - zPos) >= 1e-8)
 			{
 				m_TranslucentObjects.erase(it);
 				m_TranslucentObjects[{ zPos, index }] = dirtyGameObject;

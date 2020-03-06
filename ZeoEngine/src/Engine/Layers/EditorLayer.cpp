@@ -23,6 +23,7 @@
 #include "Engine/Core/EngineUtilities.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
@@ -634,13 +635,13 @@ namespace ZeoEngine {
 		// If it is the outermost property
 		if (!data.bPropertyRecursed)
 		{
-			for (const auto& propPair : m_SortedProperties[m_CurrentPropertySource])
+			for (const auto& [category, properties] : m_SortedProperties[m_CurrentPropertySource])
 			{
 				ImGui::Columns(1);
 				// Display category seperator
-				if (ImGui::CollapsingHeader(propPair.first.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					for (auto prop : propPair.second)
+					for (auto prop : properties)
 					{
 						data.Property = &prop;
 						data.Object = &obj;
@@ -1225,20 +1226,20 @@ namespace ZeoEngine {
 		// i.e. std::set
 		if (data.AssociativeView->is_key_only_type())
 		{
-			for (auto& pair : *data.AssociativeView)
+			for (auto& [key, value] : *data.AssociativeView)
 			{
-				data.PropertyValue = const_cast<rttr::variant*>(&pair.first);
+				data.PropertyValue = const_cast<rttr::variant*>(&key);
 				ProcessPropertyValue(data);
 			}
 		}
 		else
 		{
-			for (auto& pair : *data.AssociativeView)
+			for (auto& [key, value] : *data.AssociativeView)
 			{
-				data.PropertyValue = const_cast<rttr::variant*>(&pair.first);
+				data.PropertyValue = const_cast<rttr::variant*>(&key);
 				ProcessPropertyValue(data);
 				ImGui::SameLine();
-				data.PropertyValue = const_cast<rttr::variant*>(&pair.second);
+				data.PropertyValue = const_cast<rttr::variant*>(&value);
 				ProcessPropertyValue(data);
 			}
 		}
@@ -1246,9 +1247,9 @@ namespace ZeoEngine {
 
 	void EditorLayer::LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel)
 	{
-		if (std::find(m_PropertiesLogged[m_CurrentPropertySource].begin(), m_PropertiesLogged[m_CurrentPropertySource].end(), prop) == m_PropertiesLogged[m_CurrentPropertySource].end())
+		auto [it, res] = m_PropertiesLogged[m_CurrentPropertySource].insert(prop);
+		if (res)
 		{
-			m_PropertiesLogged[m_CurrentPropertySource].push_back(prop);
 			switch (logLevel)
 			{
 			case 0:
@@ -1296,7 +1297,7 @@ namespace ZeoEngine {
 		}
 		ImGui::End();
 	}
-
+	// TODO: ShowConsole()
 	void EditorLayer::ShowConsole(bool* bShow)
 	{
 		if (ImGui::Begin("Console", bShow))
@@ -1354,7 +1355,7 @@ namespace ZeoEngine {
 					if (ImGui::MenuItem("New particle system"))
 					{
 						delete m_EditorParticleSystem;
-						CreateDefaultParticleSystem();
+						m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 						m_CurrentParticleSystemPath.clear();
 						m_CurrentParticleSystemName.clear();
 					}
@@ -1423,7 +1424,7 @@ namespace ZeoEngine {
 
 				if (!m_EditorParticleSystem)
 				{
-					CreateDefaultParticleSystem();
+					m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 				}
 
 				ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -1655,21 +1656,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorLayer::CreateDefaultParticleSystem()
-	{
-		ParticleTemplate m_DefaultEmitter;
-		m_DefaultEmitter.lifeTime.SetRandom(0.75f, 1.5f);
-		m_DefaultEmitter.spawnRate.SetConstant(30.0f);
-		m_DefaultEmitter.initialRotation.SetRandom(0.0f, 360.0f);
-		m_DefaultEmitter.rotationRate.SetRandom(10.0f, 50.0f);
-		m_DefaultEmitter.initialVelocity.SetRandom({ -0.5f, 0.5f }, { 0.5f, 2.0f });
-		m_DefaultEmitter.sizeBegin.SetRandom(0.1f, 0.2f);
-		m_DefaultEmitter.sizeEnd.SetConstant({ 0.0f, 0.0f });
-		m_DefaultEmitter.colorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
-		m_DefaultEmitter.colorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
-		m_EditorParticleSystem = new ParticleSystem(m_DefaultEmitter, nullptr, false, true);
-	}
-
 	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
 	{
 		std::string result;
@@ -1678,7 +1664,7 @@ namespace ZeoEngine {
 
 		// We need to recreate because some values may not get cleared out
 		delete m_EditorParticleSystem;
-		CreateDefaultParticleSystem();
+		m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 
 		Serializer::Get().Deserialize<ParticleSystem*>(result, [&]() {
 			return rttr::variant(m_EditorParticleSystem);
@@ -1964,11 +1950,11 @@ namespace ZeoEngine {
 			{
 				if (data.Property->get_name() == "Value")
 				{
-					sequentialVar.get_value<BurstData*>()->Amount.val1 = int32Value;
+					sequentialVar.get_value<BurstData*>()->Amount.Val1 = int32Value;
 				}
 				else if (data.Property->get_name() == "ValueHigh")
 				{
-					sequentialVar.get_value<BurstData*>()->Amount.val2 = int32Value;
+					sequentialVar.get_value<BurstData*>()->Amount.Val2 = int32Value;
 				}
 				END_PROP(data.Property)
 			}
@@ -2202,7 +2188,7 @@ namespace ZeoEngine {
 						// Sequential item type is BurstData
 						if (sequentialVar.can_convert<BurstData>())
 						{
-							sequentialVar.get_value<BurstData*>()->Amount.variationType = enumValue.get_value<ParticleVariationType>();
+							sequentialVar.get_value<BurstData*>()->Amount.VariationType = enumValue.get_value<ParticleVariationType>();
 						}
 						else
 						{

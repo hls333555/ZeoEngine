@@ -10,6 +10,9 @@ namespace ZeoEngine {
 	class Serializer
 	{
 	public:
+		Serializer(const Serializer&) = delete;
+		Serializer& operator=(const Serializer&) = delete;
+
 		static Serializer& Get()
 		{
 			static Serializer serializer;
@@ -18,8 +21,6 @@ namespace ZeoEngine {
 
 	private:
 		Serializer() = default;
-		Serializer(const Serializer&) = delete;
-		Serializer& operator=(const Serializer&) = delete;
 
 	public:
 		/**
@@ -64,7 +65,6 @@ namespace ZeoEngine {
 		void SerializeRecursively(const rttr::instance& object, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
 		bool SerializeValue(const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
 		bool SerializeAtomicTypes(const rttr::type& type, const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-	private:
 		void SerializeSequentialContainerTypes(const rttr::variant_sequential_view& sequentialView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
 		void SerializeAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
 

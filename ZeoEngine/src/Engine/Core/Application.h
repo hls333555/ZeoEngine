@@ -28,7 +28,6 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		/** For internal use only. */
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
 		{

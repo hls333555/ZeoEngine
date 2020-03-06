@@ -20,19 +20,19 @@ RTTR_REGISTRATION
 	using namespace ZeoEngine;
 
 	registration::class_<Transform>("Transform")
-		.property("Position", &Transform::position)
+		.property("Position", &Transform::Position)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Tooltip, u8"控制物体的移动，可渲染的Z坐标范围(-0.99, 0.99]"),
 			metadata(PropertyMeta::DragSensitivity, 0.1f)
 		)
-		.property("Rotation", &Transform::rotation)
+		.property("Rotation", &Transform::Rotation)
 		(
 			metadata(PropertyMeta::Tooltip, u8"控制物体的旋转。"),
 			metadata(PropertyMeta::Min, -180.0f),
 			metadata(PropertyMeta::Max, 180.0f)
 		)
-		.property("Scale", &Transform::scale)
+		.property("Scale", &Transform::Scale)
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Tooltip, u8"控制物体的缩放。"),
@@ -230,13 +230,13 @@ namespace ZeoEngine {
 
 	const glm::vec2 GameObject::GetForwardVector2D() const
 	{
-		return { sin(glm::radians(m_Transform.rotation)), cos(glm::radians(m_Transform.rotation)) };
+		return { sin(glm::radians(m_Transform.Rotation)), cos(glm::radians(m_Transform.Rotation)) };
 	}
 
 	const glm::vec2 GameObject::GetRightVector2D() const
 	{
 		const glm::vec3 zVector{ 0.0f, 0.0f, -1.0f };
-		const glm::vec3 forwardVector(sin(glm::radians(m_Transform.rotation)), cos(glm::radians(m_Transform.rotation)), 0.0f);
+		const glm::vec3 forwardVector(sin(glm::radians(m_Transform.Rotation)), cos(glm::radians(m_Transform.Rotation)), 0.0f);
 		const glm::vec3 rightVector = glm::cross(zVector, forwardVector);
 		return { rightVector.x, rightVector.y };
 	}
@@ -257,18 +257,6 @@ namespace ZeoEngine {
 			m_MoveDistance = glm::length(m_MoveSourcePosition - m_MoveTargetPosition);
 			m_bIsMoving = true;
 		}
-	}
-
-	glm::vec2 GameObject::GetRandomPositionInRange2D(const glm::vec2& center, const glm::vec2& extents)
-	{
-		// TODO: Random position is limited by camera bounds
-		float lowerX = std::max(center.x - extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Left + 0.5f);
-		float upperX = std::min(center.x + extents.x, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Right - 0.5f);
-		float lowerY = std::max(center.y - extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom + 0.5f);
-		float upperY = std::min(center.y + extents.y, ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Top - 0.5f);
-		float randomX = RandomEngine::RandFloatInRange(lowerX, upperX);
-		float randomY = RandomEngine::RandFloatInRange(lowerY, upperY);
-		return { randomX, randomY };
 	}
 
 	void GameObject::Reset()
@@ -429,16 +417,16 @@ namespace ZeoEngine {
 		float translation[3], rotation[3], scale[3];
 		ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(m_TransformMatrix), translation, rotation, scale);
 		// For 2D rendering, we do not want ZPos to be modified via gizmo editing
-		m_Transform.position = glm::vec3(translation[0], translation[1], m_Transform.position.z);
-		m_Transform.rotation = rotation[2];
-		m_Transform.scale = glm::vec2(scale[0], scale[1]);
+		m_Transform.Position = glm::vec3(translation[0], translation[1], m_Transform.Position.z);
+		m_Transform.Rotation = rotation[2];
+		m_Transform.Scale = glm::vec2(scale[0], scale[1]);
 	}
 
 	void GameObject::RecomposeTransformMatrix()
 	{
-		glm::vec3 rotation = glm::vec3(0.0f, 0.0f, m_Transform.rotation);
-		glm::vec3 scale = glm::vec3(m_Transform.scale.x, m_Transform.scale.y, 0.0f);
-		ImGuizmo::RecomposeMatrixFromComponents(glm::value_ptr(m_Transform.position), glm::value_ptr(rotation), glm::value_ptr(scale), glm::value_ptr(m_TransformMatrix));
+		glm::vec3 rotation = glm::vec3(0.0f, 0.0f, m_Transform.Rotation);
+		glm::vec3 scale = glm::vec3(m_Transform.Scale.x, m_Transform.Scale.y, 0.0f);
+		ImGuizmo::RecomposeMatrixFromComponents(glm::value_ptr(m_Transform.Position), glm::value_ptr(rotation), glm::value_ptr(scale), glm::value_ptr(m_TransformMatrix));
 	}
 
 }

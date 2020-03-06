@@ -29,7 +29,7 @@ namespace ZeoEngine {
 	class Layer
 	{
 	public:
-		Layer(const std::string& name = "Layer");
+		explicit Layer(const std::string& name = "Layer");
 		virtual ~Layer() = default;
 
 		/** Called when the layer is pushed onto layer stack. */
@@ -42,6 +42,7 @@ namespace ZeoEngine {
 		virtual void OnEvent(Event& event) {}
 
 		const std::string& GetName() const { return m_DebugName; }
+
 	protected:
 		std::string m_DebugName;
 	};

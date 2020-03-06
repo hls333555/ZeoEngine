@@ -3,7 +3,7 @@
 
 namespace ZeoEngine {
 
-	Timer::Timer(float startTime, float duration, std::function<void()> callback, int32_t loopCount, float firstDelay)
+	Timer::Timer(float startTime, float duration, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&)
 		: m_StartTime(startTime)
 		, m_Duration(duration)
 		, m_Callback(callback)
@@ -36,10 +36,10 @@ namespace ZeoEngine {
 		return TimerState::Running;
 	}
 
-	void TimerManager::SetTimer(float duration, std::function<void()> callback, int32_t loopCount, float firstDelay)
+	void TimerManager::SetTimer(float duration, TimerFn callback, int32_t loopCount, float firstDelay)
 	{
 		//ZE_TRACE("Creating new timer...");
-		m_Timers.emplace_back(m_Time, duration, callback, loopCount, firstDelay);
+		m_Timers.emplace_back(m_Time, duration, callback, loopCount, firstDelay, Timer::TimerPlaceholder());
 	}
 
 	void TimerManager::OnUpdate(DeltaTime dt)
@@ -54,7 +54,7 @@ namespace ZeoEngine {
 				break;
 			case TimerState::StartNextLoop:
 				//ZE_TRACE("Starting next timer loop...");
-				m_Timers[i].SetStartTime(m_Time);
+				m_Timers[i].m_StartTime = m_Time;
 				m_Timers[i].m_Callback();
 				break;
 			case TimerState::Finished:
