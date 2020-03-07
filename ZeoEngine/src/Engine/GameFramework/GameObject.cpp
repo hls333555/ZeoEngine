@@ -226,6 +226,10 @@ namespace ZeoEngine {
 	void GameObject::OnDeserialized()
 	{
 		RecomposeTransformMatrix();
+		if (m_CollisionData)
+		{
+			m_CollisionData->UpdateData();
+		}
 	}
 
 	const glm::vec2 GameObject::GetForwardVector2D() const
