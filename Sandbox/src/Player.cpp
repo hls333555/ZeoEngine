@@ -91,7 +91,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			if (m_bCanShoot)
 			{
 				m_bCanShoot = false;
-				ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, [&]() {
+				ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, this, [&]() {
 					m_bCanShoot = true;
 				});
 

@@ -37,7 +37,7 @@ void Obstacle::OnUpdate(ZeoEngine::DeltaTime dt)
 
 	SetRotation(GetRotation(false) + m_RotationSpeed * dt);
 
-	SetPosition2D(GetPosition2D() - WORLD_UP_VECTOR * GetSpeed() * (float)dt);
+	SetPosition2D(GetPosition2D() - GetWorldUpVector2D() * GetSpeed() * (float)dt);
 	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom - 0.5f)
 	{
 		// Lifetime is determined by ObjectPooler

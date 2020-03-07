@@ -27,7 +27,7 @@ void GameManager::OnUpdate(ZeoEngine::DeltaTime dt)
 	{
 		m_bShouldSpawnObstacle = false;
 		float obstacleSpawnRate = ZeoEngine::RandomEngine::RandFloatInRange(1.0f, 4.0f);
-		ZeoEngine::GetTimerManager()->SetTimer(obstacleSpawnRate, [&]() {
+		ZeoEngine::GetTimerManager()->SetTimer(obstacleSpawnRate, this, [&]() {
 			m_bShouldSpawnObstacle = true;
 		});
 
@@ -37,7 +37,7 @@ void GameManager::OnUpdate(ZeoEngine::DeltaTime dt)
 
 void GameManager::DelaySpawnEnemy(float delay)
 {
-	ZeoEngine::GetTimerManager()->SetTimer(delay, [&]() {
+	ZeoEngine::GetTimerManager()->SetTimer(delay, this, [&]() {
 		const auto& cameraBounds = ZeoEngine::GetActiveGameCamera()->GetCameraBounds();
 		glm::vec3 pos({ ZeoEngine::RandomEngine::RandFloatInRange(cameraBounds.Right - 1.5f, cameraBounds.Left + 1.5f), cameraBounds.Top, 0.0f });
 		glm::vec2 scale({ 1.0f, 1.0f });

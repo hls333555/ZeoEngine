@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		Level::Get().Init();
 
 		// A very basic GameObject based garbage collection system
-		m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, [&]() {
+		m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, nullptr, [&]() {
 			BenchmarkTimer bt(false);
 			for (uint32_t i = 0; i < m_GameObjectsPendingDestroy.size(); ++i)
 			{

@@ -4,6 +4,8 @@
 
 namespace ZeoEngine {
 
+	class GameObject;
+
 	enum class TimerState
 	{
 		Running,
@@ -31,7 +33,7 @@ namespace ZeoEngine {
 		Timer() = default;
 	public:
 		// Note: We make it public as std::vector::emplace_back() will need to access this
-		Timer(float startTime, float duration, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&);
+		Timer(float startTime, float duration, GameObject* outerObject, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&);
 
 	private:
 		TimerState OnUpdate(float currentTime);
@@ -39,6 +41,7 @@ namespace ZeoEngine {
 	private:
 		float m_StartTime = 0.0f;
 		float m_Duration = 0.0f;
+		GameObject* m_OuterObject;
 		TimerFn m_Callback;
 		int32_t m_LoopCount = 0;
 		float m_FirstDelay;
@@ -60,11 +63,14 @@ namespace ZeoEngine {
 		TimerManager& operator=(const TimerManager&) = delete;
 
 		/**
-		 * Start a countdown timer and call the callback when done.
+		 * Start a countdown timer and call the callback at a set interval.
+		 * @param duration - Time (in seconds) before invoking callback
+		 * @param outerObject - GameObject which calls this method. Passing nullptr if caller is not a GameObject
+		 * @param callback - Function to invoke when timer fires
 		 * @param loopCount - <= 0: loop infinitely, 1: loop once
-		 * @param bFirstDelay - Time before invoking callback for the first time. If < 0.0, duration will be used.
+		 * @param bFirstDelay - Time (in seconds) before invoking callback for the first time. If < 0.0, duration will be used
 		 */
-		void SetTimer(float duration, TimerFn callback, int32_t loopCount = 1, float firstDelay = -1.0f);
+		void SetTimer(float duration, GameObject* outerObject, TimerFn callback, int32_t loopCount = 1, float firstDelay = -1.0f);
 
 	private:
 		void OnUpdate(DeltaTime dt);

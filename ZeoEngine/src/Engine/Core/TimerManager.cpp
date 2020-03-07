@@ -1,11 +1,13 @@
 #include "ZEpch.h"
 #include "Engine/Core/TimerManager.h"
+#include "Engine/GameFramework/GameObject.h"
 
 namespace ZeoEngine {
 
-	Timer::Timer(float startTime, float duration, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&)
+	Timer::Timer(float startTime, float duration, GameObject* outerObject, TimerFn callback, int32_t loopCount, float firstDelay, const TimerPlaceholder&)
 		: m_StartTime(startTime)
 		, m_Duration(duration)
+		, m_OuterObject(outerObject)
 		, m_Callback(callback)
 		, m_LoopCount(loopCount)
 		, m_FirstDelay(firstDelay)
@@ -36,10 +38,10 @@ namespace ZeoEngine {
 		return TimerState::Running;
 	}
 
-	void TimerManager::SetTimer(float duration, TimerFn callback, int32_t loopCount, float firstDelay)
+	void TimerManager::SetTimer(float duration, GameObject* outerObject, TimerFn callback, int32_t loopCount, float firstDelay)
 	{
-		//ZE_TRACE("Creating new timer...");
-		m_Timers.emplace_back(m_Time, duration, callback, loopCount, firstDelay, Timer::TimerPlaceholder());
+		//ZE_CORE_TRACE("Creating new timer...");
+		m_Timers.emplace_back(m_Time, duration, outerObject, callback, loopCount, firstDelay, Timer::TimerPlaceholder());
 	}
 
 	void TimerManager::OnUpdate(DeltaTime dt)
@@ -48,19 +50,27 @@ namespace ZeoEngine {
 
 		for (uint32_t i = 0; i < m_Timers.size(); ++i)
 		{
+			GameObject* outer = m_Timers[i].m_OuterObject;
+			if (outer && outer->IsPendingDestroy())
+			{
+				//ZE_CORE_TRACE("Destroying dangling timer...");
+				m_Timers.erase(m_Timers.cbegin() + i);
+				continue;
+			}
+
 			switch (m_Timers[i].OnUpdate(m_Time))
 			{
 			case TimerState::Running:
 				break;
 			case TimerState::StartNextLoop:
-				//ZE_TRACE("Starting next timer loop...");
+				//ZE_CORE_TRACE("Starting next timer loop...");
 				m_Timers[i].m_StartTime = m_Time;
 				m_Timers[i].m_Callback();
 				break;
 			case TimerState::Finished:
 				m_Timers[i].m_Callback();
-				//ZE_TRACE("Destroying finished timer...");
-				m_Timers.erase(m_Timers.begin() + i);
+				//ZE_CORE_TRACE("Destroying finished timer...");
+				m_Timers.erase(m_Timers.cbegin() + i);
 				break;
 			default:
 				break;

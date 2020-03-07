@@ -43,7 +43,7 @@ void Enemy::BeginPlay()
 	m_BulletPool = ZeoEngine::CreateScope<BulletPool>(this);
 
 	// Move to a random position of upper half screen nearby every 2 seconds
-	ZeoEngine::GetTimerManager()->SetTimer(2.0f, [&]() {
+	ZeoEngine::GetTimerManager()->SetTimer(2.0f, this, [&]() {
 		glm::vec2 targetPosition = GetRandomPositionInRange(GetPosition2D(), { 2.0f, 2.0f });
 		if (targetPosition.y > 0 && glm::length(targetPosition - GetPosition2D()) > 1.0f)
 		{
@@ -60,7 +60,7 @@ void Enemy::OnUpdate(ZeoEngine::DeltaTime dt)
 	if (m_bCanShoot)
 	{
 		m_bCanShoot = false;
-		ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, [&]() {
+		ZeoEngine::GetTimerManager()->SetTimer(m_ShootRate, this, [&]() {
 			m_bCanShoot = true;
 		});
 
