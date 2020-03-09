@@ -77,8 +77,8 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
+		const auto& window = Application::Get().GetWindow();
+		io.DisplaySize = ImVec2(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));
 
 		// Rendering
 		ImGui::Render();

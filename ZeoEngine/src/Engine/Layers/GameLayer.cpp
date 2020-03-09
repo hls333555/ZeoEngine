@@ -21,7 +21,7 @@ namespace ZeoEngine {
 
 		const auto& window = Application::Get().GetWindow();
 		// TODO: Add an interface for user to create custom game camera
-		m_GameCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+		m_GameCameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 		m_GameCameraController->SetZoomLevel(3.0f);
 
 #if WITH_EDITOR
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 		m_CoreTimerManager.OnUpdate(dt);
 
 #if WITH_EDITOR
-		if (g_PIEState == PIEState::None)
+		if (pieState == PIEState::None)
 		{
 			// Setting editor camera
 			m_ActiveCamera = m_Editor->GetGameViewCamera();
@@ -78,7 +78,7 @@ namespace ZeoEngine {
 		{
 			// Setting game camera
 			m_ActiveCamera = &m_GameCameraController->GetCamera();
-			if (g_PIEState == PIEState::Running)
+			if (pieState == PIEState::Running)
 			{
 				m_GameTimerManager.OnUpdate(dt);
 				Level::Get().OnUpdate(dt);

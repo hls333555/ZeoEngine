@@ -31,7 +31,7 @@ public:
 	glm::vec2 m_Vec2;
 	glm::vec3 m_Vec3;
 	glm::vec4 m_Color;
-	GameObject* m_GameObject;
+	GameObject* m_Player;
 	ZeoEngine::Transform m_Struct;
 	ZeoEngine::Ref<ZeoEngine::Texture2D> m_Texture;
 	ZeoEngine::ParticleSystem* m_ParticleSystem;
@@ -51,7 +51,7 @@ public:
 	std::vector<glm::vec2> m_VectorVec2;
 	std::vector<glm::vec3> m_VectorVec3;
 	std::vector<glm::vec4> m_VectorColor;
-	std::vector<GameObject*> m_VectorGameObject;
+	std::vector<GameObject*> m_VectorEnemy;
 	std::vector<ZeoEngine::Ref<ZeoEngine::Texture2D>> m_VectorTexture;
 	std::vector<ZeoEngine::ParticleSystem*> m_VectorParticleSystem;
 

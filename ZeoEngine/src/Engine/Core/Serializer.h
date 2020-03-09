@@ -9,6 +9,8 @@ namespace ZeoEngine {
 
 	class Serializer
 	{
+		using ObjectInstantiationFn = std::function<rttr::variant()>;
+
 	public:
 		Serializer(const Serializer&) = delete;
 		Serializer& operator=(const Serializer&) = delete;
@@ -40,10 +42,10 @@ namespace ZeoEngine {
 		 * Deserialize a string.
 		 * NOTE: Only call this if ValidateFile() returns true!
 		 * @templ T - Type of instantiated object, should be a pointer
-		 * @param objectInstantiationFn - Function that performs instantiation of an object to be deserialized to
+		 * @param instantiator - Function that performs instantiation of an object to be deserialized to
 		 */
 		template<typename T>
-		bool Deserialize(const std::string& extractedString, std::function<rttr::variant()> objectInstantiationFn)
+		bool Deserialize(const std::string& extractedString, ObjectInstantiationFn instantiator)
 		{
 			// Default template parameter uses UTF8 and MemoryPoolAllocator
 			rapidjson::Document document;
@@ -54,7 +56,7 @@ namespace ZeoEngine {
 				return false;
 			}
 
-			rttr::variant& object = objectInstantiationFn();
+			rttr::variant& object = instantiator();
 			DeserializeRecursively(object, document);
 			// Call the callback
 			object.get_value<T>()->OnDeserialized();

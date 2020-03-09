@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		{
 			ZE_PROFILE_SCOPE("glfwCreateWindow");
 
-			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
+			m_Window = glfwCreateWindow(static_cast<int>(props.Width), static_cast<int>(props.Height), props.Title.c_str(), nullptr, nullptr);
 			// Maximize window by default
 			glfwMaximizeWindow(m_Window);
 		}
@@ -77,7 +77,7 @@ namespace ZeoEngine {
 		// ---Set GLFW callbacks------------------------------------------------------------------------------------
 
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			data.Width = width;
 			data.Height = height;
 
@@ -86,13 +86,13 @@ namespace ZeoEngine {
 		});
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			WindowCloseEvent event;
 			data.EventCallback(event);
 		});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			switch (action)
 			{
 			case GLFW_PRESS:
@@ -119,13 +119,13 @@ namespace ZeoEngine {
 		});
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int key) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			KeyTypedEvent event(key);
 			data.EventCallback(event);
 		});
 
 		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			switch (action)
 			{
 			case GLFW_PRESS:
@@ -146,14 +146,14 @@ namespace ZeoEngine {
 		});
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			MouseScrolledEvent event((float)xoffset, (float)yoffset);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			MouseScrolledEvent event(static_cast<float>(xoffset), static_cast<float>(yoffset));
 			data.EventCallback(event);
 		});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos) {
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			MouseMovedEvent event((float)xpos, (float)ypos);
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			MouseMovedEvent event(static_cast<float>(xpos), static_cast<float>(ypos));
 			data.EventCallback(event);
 		});
 	}

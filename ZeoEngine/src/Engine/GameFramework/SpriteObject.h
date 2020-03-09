@@ -31,7 +31,7 @@ namespace ZeoEngine {
 		glm::vec4 m_TintColor{ 1.0f };
 		bool m_bIsTranslucent = false;
 
-		RTTR_REGISTER(SpriteObject, GameObject)
+		RTTR_ENABLE(GameObject)
 		RTTR_REGISTRATION_FRIEND
 	};
 

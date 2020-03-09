@@ -15,7 +15,7 @@ protected:
 	float m_Damage = 0.0f;
 	bool m_bCanPenetrate;
 
-	RTTR_REGISTER(Bullet, SpriteObject)
+	RTTR_ENABLE(SpriteObject)
 };
 
 class PlayerBullet : public Bullet

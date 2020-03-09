@@ -77,6 +77,7 @@ RTTR_REGISTRATION
 		)
 #if WITH_EDITOR
 		.method("OnPropertyValueEditChange", &GameObject::OnPropertyValueEditChange)
+		.method("PostPropertyValueEditChange", &GameObject::PostPropertyValueEditChange)
 #endif
 		.property("Name", &GameObject::m_Name)
 		(
@@ -177,7 +178,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		m_Velocity = (GetPosition2D() - m_LastPosition) / (float)dt;
+		m_Velocity = (GetPosition2D() - m_LastPosition) / static_cast<float>(dt);
 		m_LastPosition = GetPosition2D();
 	}
 
@@ -188,7 +189,7 @@ namespace ZeoEngine {
 		if (m_CollisionData && m_CollisionData->bDrawCollision)
 		{
 			// Do not draw in PIE mode
-			if (g_PIEState != PIEState::None)
+			if (pieState != PIEState::None)
 				return;
 
 			EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
@@ -216,9 +217,25 @@ namespace ZeoEngine {
 #if WITH_EDITOR
 	void GameObject::OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
 	{
-		if (prop && prop->get_name() == "CollisionType")
+		ZE_CORE_ASSERT(outerProp);
+
+		if (outerProp->get_name() == "Transform")
+		{
+			RecomposeTransformMatrix();
+		}
+	}
+
+	void GameObject::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
+	{
+		ZE_CORE_ASSERT(prop);
+
+		if (prop->get_name() == "CollisionType")
 		{
 			GenerateCollisionData();
+		}
+		else if (prop->get_name() == "Position" && outerProp->get_name() == "Transform")
+		{
+			Level::Get().OnTranslucentObjectsDirty(this);
 		}
 	}
 #endif
@@ -245,7 +262,7 @@ namespace ZeoEngine {
 		return { rightVector.x, rightVector.y };
 	}
 
-	float GameObject::FindLookAtRotation2D(const glm::vec2& sourcePosition, const glm::vec2& targetPosition)
+	float GameObject::FindLookAtRotation2D(const glm::vec2& sourcePosition, const glm::vec2& targetPosition) const
 	{
 		float deltaX = targetPosition.x - sourcePosition.x;
 		float deltaY = targetPosition.y - sourcePosition.y;
@@ -366,28 +383,28 @@ namespace ZeoEngine {
 	bool GameObject::CheckCollision_BS(GameObject* boxObject, GameObject* sphereObject)
 	{
 		// AABB circle collision detection
-		BoxCollisionData* bcd = dynamic_cast<BoxCollisionData*>(boxObject->m_CollisionData);
-		SphereCollisionData* scd = dynamic_cast<SphereCollisionData*>(sphereObject->m_CollisionData);
+		const BoxCollisionData* bcd = dynamic_cast<BoxCollisionData*>(boxObject->m_CollisionData);
+		const SphereCollisionData* scd = dynamic_cast<SphereCollisionData*>(sphereObject->m_CollisionData);
 		float sphereRadius = scd->Radius;
-		glm::vec2 sphereCenter = scd->Center;
-		glm::vec2 boxExtents = bcd->Extents;
-		glm::vec2 boxCenter = bcd->Center;
-		glm::vec2 centerDiff = sphereCenter - boxCenter;
-		glm::vec2 clampedDiff = glm::clamp(centerDiff, -boxExtents, boxExtents);
-		glm::vec2 closestPosOnBox = boxCenter + clampedDiff;
-		glm::vec2 closestDiff = closestPosOnBox - sphereCenter;
+		const glm::vec2& sphereCenter = scd->Center;
+		const glm::vec2& boxExtents = bcd->Extents;
+		const glm::vec2& boxCenter = bcd->Center;
+		const glm::vec2& centerDiff = sphereCenter - boxCenter;
+		const glm::vec2& clampedDiff = glm::clamp(centerDiff, -boxExtents, boxExtents);
+		const glm::vec2& closestPosOnBox = boxCenter + clampedDiff;
+		const glm::vec2& closestDiff = closestPosOnBox - sphereCenter;
 		return glm::length(closestDiff) <= sphereRadius;
 	}
 
 	bool GameObject::CheckCollision_SS(GameObject* other)
 	{
 		// Circle-circle collision detection
-		SphereCollisionData* scd = dynamic_cast<SphereCollisionData*>(m_CollisionData);
-		SphereCollisionData* otherScd = dynamic_cast<SphereCollisionData*>(other->m_CollisionData);
+		const SphereCollisionData* scd = dynamic_cast<SphereCollisionData*>(m_CollisionData);
+		const SphereCollisionData* otherScd = dynamic_cast<SphereCollisionData*>(other->m_CollisionData);
 		float radius = scd->Radius;
 		float otherRadius = otherScd->Radius;
-		glm::vec2 center = scd->Center;
-		glm::vec2 otherCenter = otherScd->Center;
+		const glm::vec2& center = scd->Center;
+		const glm::vec2& otherCenter = otherScd->Center;
 		float deltaX = center.x - otherCenter.x;
 		float deltaY = center.y - otherCenter.y;
 		return deltaX * deltaX + deltaY * deltaY <= (radius + otherRadius) * (radius + otherRadius);

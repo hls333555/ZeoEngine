@@ -11,7 +11,6 @@ RTTR_REGISTRATION
 		(
 			metadata(ClassMeta::Abstract, true)
 		)
-		.constructor(&SpriteObject::SpawnGameObject, policy::ctor::as_raw_ptr)
 		.property("SpriteTexture", &SpriteObject::m_SpriteTexture)
 		(
 			metadata(PropertyMeta::Category, "Texture")

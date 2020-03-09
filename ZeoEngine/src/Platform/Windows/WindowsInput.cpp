@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
-		return {(float)xpos, (float)ypos};
+		return { static_cast<float>(xpos), static_cast<float>(ypos) };
 	}
 
 	float WindowsInput::GetMouseXImpl()

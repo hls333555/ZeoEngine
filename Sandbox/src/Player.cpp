@@ -53,7 +53,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	// Movement control
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
 	{
-		SetPosition2D(GetPosition2D() + GetForwardVector2D() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() + GetForwardVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().y > cameraBounds.Top - 0.5f)
 		{
 			SetPosition2D({ GetPosition().x, cameraBounds.Top - 0.5f });
@@ -61,7 +61,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
 	{
-		SetPosition2D(GetPosition2D() - GetRightVector2D() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() - GetRightVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().x < cameraBounds.Left + 0.5f)
 		{
 			SetPosition2D({ cameraBounds.Left + 0.5f, GetPosition().y });
@@ -69,7 +69,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
 	{
-		SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().y < cameraBounds.Bottom + 0.5f)
 		{
 			SetPosition2D({ GetPosition().x, cameraBounds.Bottom + 0.5f });
@@ -77,7 +77,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 	}
 	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
 	{
-		SetPosition2D(GetPosition2D() + GetRightVector2D() * GetSpeed() * (float)dt);
+		SetPosition2D(GetPosition2D() + GetRightVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().x > cameraBounds.Right - 0.5f)
 		{
 			SetPosition2D({ cameraBounds.Right - 0.5f, GetPosition().y });

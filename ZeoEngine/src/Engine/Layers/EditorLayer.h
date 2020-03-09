@@ -15,9 +15,9 @@ namespace ZeoEngine {
 
 	struct RTTRPropertyHashHasher
 	{
-		size_t operator()(const rttr::property& k) const noexcept
+		size_t operator()(const rttr::property& prop) const
 		{
-			return std::hash<std::string>{}(k.get_name().to_string());
+			return std::hash<std::string>{}(prop.get_name().to_string());
 		}
 	};
 
@@ -28,10 +28,27 @@ namespace ZeoEngine {
 		Paused
 	};
 
-	extern PIEState g_PIEState;
+	extern PIEState pieState;
+
+	constexpr uint32_t propertySourceNum = 2;
 
 	class EditorLayer : public Layer
 	{
+		struct PropertyData
+		{
+			/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
+			bool bPropertyRecursed = false;
+			rttr::property* Property = nullptr, *OuterProperty = nullptr;
+			rttr::instance* Object = nullptr, *OutermostObject = nullptr;
+			rttr::variant* PropertyValue = nullptr;
+			rttr::variant_sequential_view* SequentialView = nullptr;
+			rttr::variant_associative_view* AssociativeView = nullptr;
+			/** -1 means it is not an item in a sequential container */
+			int32_t SequentialIndex = -1;
+		};
+
+		using RecursedSequentialPropertyProcessingFn = std::function<void(const PropertyData&)>;
+
 	public:
 		EditorLayer();
 
@@ -84,59 +101,6 @@ namespace ZeoEngine {
 		void DisplayClassHierarchyRecursively(const std::vector<rttr::type>& derivedTypes);
 		void ProcessClassInteraction(const rttr::type& type);
 
-#define BEGIN_PROP(prop) \
-		ImGui::Columns(2);\
-		ImGui::AlignTextToFramePadding();\
-		ImGui::TreeNodeEx(prop->get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Property name*/\
-		ShowPropertyTooltip(*prop);\
-		ImGui::NextColumn(); /*Switch to the right column*/\
-		ImGui::SetNextItemWidth(-1.0f); /*Align width to the right side*/\
-		ss << "##" << prop->get_name().data(); /*We use property name as id here because rttr guarantees that only properties with different names can be registered*/
-#define END_PROP(prop) \
-		ShowPropertyTooltip(*prop);\
-		ImGui::NextColumn(); /*Switch to next line's left column*/
-#define END_SETPROP(prop, instance, value) \
-		END_PROP(prop)\
-		prop->set_value(*instance, value);
-#define BEGIN_SEQPROP(prop, sequentialIndex, bPropRecursed) \
-		ImGui::Columns(2);\
-		ImGui::AlignTextToFramePadding();\
-		if (bPropRecursed)\
-		{\
-			ss << prop->get_name().data(); /**Property of custom struct/class inside a sequential container*/\
-		}\
-		else\
-		{\
-			ss << "[" << sequentialIndex << "]"; /**Property inside a sequential container*/\
-		}\
-		ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet); /*Sequential index*/\
-		ShowPropertyTooltip(*prop);\
-		ImGui::NextColumn(); /*Switch to the right column*/\
-		ss.clear(); ss.str("");\
-		ss << "##" << prop->get_name().data() << sequentialIndex;
-#define ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, insertValue) \
-		ImGui::SameLine();\
-		ss.clear(); ss.str(""); ss << "##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
-		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))\
-		{\
-			ss.clear(); ss.str(""); ss << "Insert##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
-			if (ImGui::Selectable(ss.str().c_str()))\
-			{\
-				sequentialView->insert(sequentialView->begin() + sequentialIndex, insertValue);\
-			}\
-			ss.clear(); ss.str(""); ss << "Erase##" << prop->get_name() << sequentialView->get_value_type().get_name() << sequentialIndex;\
-			if (ImGui::Selectable(ss.str().c_str()))\
-			{\
-				sequentialView->erase(sequentialView->begin() + sequentialIndex);\
-			}\
-			ImGui::EndCombo();\
-		}
-#define END_SETSEQPROP(prop, sequentialView, sequentialIndex, value, insertValue) \
-		ShowPropertyTooltip(*prop);\
-		sequentialView->set_value(sequentialIndex, value);\
-		ADD_SEQBUTTONS(prop, sequentialView, sequentialIndex, insertValue)\
-		ImGui::NextColumn();
-
 		/** Show tooltip on top of classes or structs if available. */
 		void ShowTypeTooltip(const rttr::type& type);
 		/**
@@ -145,34 +109,29 @@ namespace ZeoEngine {
 		 */
 		void ShowPropertyTooltip(const rttr::property& prop);
 
-		struct PropertyData
-		{
-			/** False if current property is the outermost property (GameObject::m_Struct rather than GameObject::m_Struct.property) */
-			bool bPropertyRecursed = false;
-			rttr::property* Property = nullptr, *OuterProperty = nullptr;
-			rttr::instance* Object = nullptr, *OutermostObject = nullptr;
-			rttr::variant* PropertyValue = nullptr;
-			rttr::variant_sequential_view* SequentialView = nullptr;
-			rttr::variant_associative_view* AssociativeView = nullptr;
-			int32_t SequentialIndex = -1;
-		};
-
 		/** Categorizing properties before displaying them. */
-		void PreProcessProperties(const rttr::instance& object);
+		void PreProcessProperties(rttr::instance object);
 		void ProcessPropertiesRecursively(PropertyData& data);
 		void ProcessProperty(PropertyData& data);
 		bool ProcessPropertyValue(PropertyData& data);
 		bool ProcessAtomicTypes(const rttr::type& type, PropertyData& data);
-		void AddSequentialButtons(const PropertyData& data);
+		void AddSequentialContainerButtons(const PropertyData& data);
 		void ProcessSequentialContainerTypes(PropertyData& data);
 		void ProcessAssociativeContainerTypes(PropertyData& data);
 
 		/** logLevel - 0: trace, 1: info, 2: warning, 3: error, 4: critical */
 		void LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel);
 
-		void InvokePropertyChangeCallback(const PropertyData& data);
+		/** Invoke a callback function to reflect property value changes. Should be called after property value is updated. */
+		void InvokePropertyChangeCallback(const PropertyData& data, bool bInvokeOnlyIfDeactivated = true);
+
+		// Utility methods for displaying various properties via ImGui
+		void BeginDisplayProperty(std::stringstream& ss, const PropertyData& data);
+		void AddSequentialItemButtons(std::stringstream& ss, const PropertyData& data, rttr::argument insertValue);
+		void SetPropertyValue(const PropertyData& data, rttr::argument value, rttr::argument insertValue, RecursedSequentialPropertyProcessingFn func = nullptr);
+		void EndDisplayProperty(std::stringstream& ss, const PropertyData& data, rttr::argument value, rttr::argument insertValue, RecursedSequentialPropertyProcessingFn func = nullptr);
+		void EndDisplayProperty(std::stringstream& ss, const PropertyData& data, rttr::argument insertValue);
 		
-		// Every copied property type must take an object as a parameter
 		void ProcessBoolType(bool boolValue,  const PropertyData& data);
 		void ProcessInt8Type(int8_t int8Value, const PropertyData& data);
 		void ProcessInt32Type(int32_t int32Value, const PropertyData& data);
@@ -191,6 +150,7 @@ namespace ZeoEngine {
 		void ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data);
 		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data);
 		void ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data);
+
 		/**
 		 * Returns true if gameObject's class is derived from the class specified by PropertyMeta::SubclassOf
 		 * or PropertyMeta::SubclassOf is not specified at all.
@@ -227,24 +187,26 @@ namespace ZeoEngine {
 
 		GameObject* m_SelectedGameObject = nullptr;
 
-		enum PropertySource
+		enum class PropertySource
 		{
 			GameObjectProperty,
 			ParticleSystemProperty
-		}m_CurrentPropertySource;
-#define PROPERTY_SOURCE_NUM 2
+		} m_CurrentPropertySource;
 		/** Map from property category name to properties of that category, if category name is not specified, name "default" will be used */
-		std::map<std::string, std::vector<rttr::property>> m_SortedProperties[PROPERTY_SOURCE_NUM];
+		std::map<std::string, std::vector<rttr::property>> m_SortedProperties[propertySourceNum];
 		/** Flag used to prevent sorting properties every frame, it will only sort them when current object is changed */
-		bool m_bIsSortedPropertiesDirty[PROPERTY_SOURCE_NUM]{ true, true };
+		bool m_bIsSortedPropertiesDirty[propertySourceNum]{ true, true };
 		/**
 		 * Used to prevent logging identical messages every frame.
 		 * Although we can share this across different property sources, we want to improve performance by reserving capacity beforehand, which is not possible for sharing case
 		 */
-		std::unordered_set<rttr::property, RTTRPropertyHashHasher> m_PropertiesLogged[PROPERTY_SOURCE_NUM];
-
-		/** Flag used to prevent calling RecomposeTransformMatrix() every frame */
-		bool m_bIsTransformDirty = false;
+		std::unordered_set<rttr::property, RTTRPropertyHashHasher> m_LoggedProperties[propertySourceNum];
+		/**
+		 * Map from property to {condition property, condition property value} pair.
+		 * Used to prevent processing HideCondition properties every frame.
+		 * Although we can share this across different property sources, we want to improve performance by reserving capacity beforehand, which is not possible for sharing case
+		 */
+		std::unordered_map<rttr::property, std::pair<rttr::property, std::string>, RTTRPropertyHashHasher> m_HideConditionProperties[propertySourceNum];
 
 		/**
 		 * Map from InputText id to temp edited string plus a bool flag indicating if we are editing that InputText.

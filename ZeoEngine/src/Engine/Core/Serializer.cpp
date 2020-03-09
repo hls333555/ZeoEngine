@@ -442,45 +442,45 @@ namespace ZeoEngine {
 					{
 						if (type.is_pointer())
 						{
-							var.get_value<glm::vec2*>()->x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec2*>()->y = (float)jsonValue[1].GetDouble();
+							var.get_value<glm::vec2*>()->x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec2*>()->y = static_cast<float>(jsonValue[1].GetDouble());
 						}
 						else
 						{
-							var.get_value<glm::vec2>().x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec2>().y = (float)jsonValue[1].GetDouble();
+							var.get_value<glm::vec2>().x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec2>().y = static_cast<float>(jsonValue[1].GetDouble());
 						}
 					}
 					else if (type.get_raw_type() == rttr::type::get<glm::vec3>())
 					{
 						if (type.is_pointer())
 						{
-							var.get_value<glm::vec3*>()->x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec3*>()->y = (float)jsonValue[1].GetDouble();
-							var.get_value<glm::vec3*>()->z = (float)jsonValue[2].GetDouble();
+							var.get_value<glm::vec3*>()->x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec3*>()->y = static_cast<float>(jsonValue[1].GetDouble());
+							var.get_value<glm::vec3*>()->z = static_cast<float>(jsonValue[2].GetDouble());
 						}
 						else
 						{
-							var.get_value<glm::vec3>().x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec3>().y = (float)jsonValue[1].GetDouble();
-							var.get_value<glm::vec3>().z = (float)jsonValue[2].GetDouble();
+							var.get_value<glm::vec3>().x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec3>().y = static_cast<float>(jsonValue[1].GetDouble());
+							var.get_value<glm::vec3>().z = static_cast<float>(jsonValue[2].GetDouble());
 						}
 					}
 					else if (type.get_raw_type() == rttr::type::get<glm::vec4>())
 					{
 						if (type.is_pointer())
 						{
-							var.get_value<glm::vec4*>()->x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec4*>()->y = (float)jsonValue[1].GetDouble();
-							var.get_value<glm::vec4*>()->z = (float)jsonValue[2].GetDouble();
-							var.get_value<glm::vec4*>()->w = (float)jsonValue[3].GetDouble();
+							var.get_value<glm::vec4*>()->x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec4*>()->y = static_cast<float>(jsonValue[1].GetDouble());
+							var.get_value<glm::vec4*>()->z = static_cast<float>(jsonValue[2].GetDouble());
+							var.get_value<glm::vec4*>()->w = static_cast<float>(jsonValue[3].GetDouble());
 						}
 						else
 						{
-							var.get_value<glm::vec4>().x = (float)jsonValue[0].GetDouble();
-							var.get_value<glm::vec4>().y = (float)jsonValue[1].GetDouble();
-							var.get_value<glm::vec4>().z = (float)jsonValue[2].GetDouble();
-							var.get_value<glm::vec4>().w = (float)jsonValue[3].GetDouble();
+							var.get_value<glm::vec4>().x = static_cast<float>(jsonValue[0].GetDouble());
+							var.get_value<glm::vec4>().y = static_cast<float>(jsonValue[1].GetDouble());
+							var.get_value<glm::vec4>().z = static_cast<float>(jsonValue[2].GetDouble());
+							var.get_value<glm::vec4>().w = static_cast<float>(jsonValue[3].GetDouble());
 						}
 					}
 					prop.set_value(obj, var);

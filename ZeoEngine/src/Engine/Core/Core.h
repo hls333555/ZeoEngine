@@ -42,6 +42,8 @@
 	#define WITH_EDITOR	1
 #endif // WITH_EDITOR
 
+#define ENUM_TO_INT(enumVar) static_cast<int32_t>(enumVar)
+
 namespace ZeoEngine {
 
 	template<typename T>

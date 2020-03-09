@@ -188,7 +188,7 @@ RTTR_REGISTRATION
 
 	registration::class_<ParticleSystem>("ParticleSystem")
 #if WITH_EDITOR
-		.method("OnPropertyValueEditChange", &ParticleSystem::OnPropertyValueEditChange)
+		.method("PostPropertyValueEditChange", &ParticleSystem::PostPropertyValueEditChange)
 #endif
 		.property("ParticleEmitter", &ParticleSystem::m_ParticleTemplate)
 		(
@@ -197,8 +197,6 @@ RTTR_REGISTRATION
 }
 
 namespace ZeoEngine {
-
-	const char* ParticleSystem::ParticleSystemFileToken = "ParticleSystem";
 
 	ParticleSystem::ParticleSystem(const std::string& filePath, const std::string& processedSrc)
 		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
@@ -247,18 +245,17 @@ namespace ZeoEngine {
 	}
 
 #if WITH_EDITOR
-	void ParticleSystem::OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
+	void ParticleSystem::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
 	{
-		if (outerProp)
+		ZE_CORE_ASSERT(prop);
+
+		if (prop->get_name() == "LoopCount" ||
+			outerProp->get_name() == "SpawnRate" ||
+			outerProp->get_name() == "BurstList" /* e.g. BurstData.Time */ || outerProp->get_declaring_type().get_name() == "BurstData" /* e.g. BurstData.Amount.Value */ ||
+			prop->get_name() == "SubImageSize")
 		{
-			if (prop->get_name() == "LoopCount" ||
-				outerProp->get_name() == "SpawnRate" ||
-				outerProp->get_name() == "BurstList" || outerProp->get_declaring_type().get_name() == "BurstData" ||
-				prop->get_name() == "SubImageSize")
-			{
-				EvaluateEmitterProperties();
-				Resimulate();
-			}
+			EvaluateEmitterProperties();
+			Resimulate();
 		}
 	}
 #endif
@@ -318,7 +315,7 @@ namespace ZeoEngine {
 					m_BurstList.emplace(burstData.Time, burstData.Amount.Val1);
 					break;
 				case ParticleVariationType::RandomInRange:
-					m_BurstList.emplace(burstData.Time, (int32_t)RandomEngine::RandFloatInRange((float)burstData.Amount.Val1, (float)burstData.Amount.Val2));
+					m_BurstList.emplace(burstData.Time, static_cast<int32_t>(RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2))));
 					break;
 				default:
 					break;
@@ -493,7 +490,7 @@ namespace ZeoEngine {
 			m_UVAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
 			// Initialize uv animation start point to left-up corner
 			particle.UvOffset.x = 0;
-			particle.UvOffset.y = (float)m_ParticleTemplate.SubImageSize.y - 1.0f;
+			particle.UvOffset.y = static_cast<float>(m_ParticleTemplate.SubImageSize.y) - 1.0f;
 		}
 	}
 
@@ -532,9 +529,9 @@ namespace ZeoEngine {
 				}
 				m_LoopStartTime = m_Time;
 				m_BurstTime = m_Time;
-				for (auto& burstData : m_BurstList)
+				for (auto& [data, amount] : m_BurstList)
 				{
-					const_cast<BurstTimeData&>(burstData.first).bProcessed = false;
+					const_cast<BurstTimeData&>(data).bProcessed = false;
 				}
 			}
 
@@ -547,14 +544,14 @@ namespace ZeoEngine {
 					m_SpawnTime = m_Time;
 				}
 				// Process BurstList
-				for (auto& burstData : m_BurstList)
+				for (auto& [data, amount] : m_BurstList)
 				{
-					if (m_Time - m_BurstTime >= burstData.first.Time * m_ParticleTemplate.LoopDuration)
+					if (m_Time - m_BurstTime >= data.Time * m_ParticleTemplate.LoopDuration)
 					{
-						if (!burstData.first.bProcessed && burstData.second > 0)
+						if (!data.bProcessed && amount > 0)
 						{
-							const_cast<BurstTimeData&>(burstData.first).bProcessed = true;
-							for (uint32_t i = 0; i < burstData.second; ++i)
+							const_cast<BurstTimeData&>(data).bProcessed = true;
+							for (uint32_t i = 0; i < amount; ++i)
 							{
 								Emit();
 							}
@@ -590,7 +587,7 @@ namespace ZeoEngine {
 			{
 				velocity = particle.Velocity;
 			}
-			particle.Position += velocity * (float)dt;
+			particle.Position += velocity * static_cast<float>(dt);
 			particle.Rotation += particle.RotationRate * dt;
 			float lifeRatio = particle.LifeRemaining / particle.Lifetime;
 			particle.Size = glm::lerp(particle.SizeEnd, particle.SizeBegin, lifeRatio);
@@ -805,7 +802,7 @@ namespace ZeoEngine {
 			if (m_ParticleSystems[i]->m_bPendingDestroy)
 			{
 				delete m_ParticleSystems[i];
-				m_ParticleSystems.erase(m_ParticleSystems.begin() + i);
+				m_ParticleSystems.erase(m_ParticleSystems.cbegin() + i);
 			}
 			else
 			{

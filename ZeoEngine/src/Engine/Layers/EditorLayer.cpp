@@ -27,13 +27,15 @@
 
 namespace ZeoEngine {
 
-	PIEState g_PIEState;
+#define SHOW_IMGUI_DEMO 0
+
+	PIEState pieState;
 
 	EditorLayer::EditorLayer()
 		: Layer("Editor")
 	{
 		const auto& window = Application::Get().GetWindow();
-		m_GameViewCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+		m_GameViewCameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 		m_GameViewCameraController->SetZoomLevel(3.0f);
 	}
 
@@ -54,7 +56,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
-		if (g_PIEState == PIEState::None && m_bIsHoveringGameView)
+		if (pieState == PIEState::None && m_bIsHoveringGameView)
 		{
 			// Thses camera controls are only applied to Game View window
 			m_GameViewCameraController->OnUpdate(dt);
@@ -94,8 +96,10 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnImGuiRender()
 	{
+#if SHOW_IMGUI_DEMO
 		bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);
+#endif
 
 		// TODO: These bools are not saved out, so last opened windows cannot restore
 		static bool bShowGameView = true;
@@ -126,7 +130,7 @@ namespace ZeoEngine {
 			{
 				static bool bEnableLoadingOrSaving = true;
 				// Loading and saving level during PIE is not allowed
-				if (g_PIEState != PIEState::None)
+				if (pieState != PIEState::None)
 				{
 					bEnableLoadingOrSaving = false;
 				}
@@ -164,7 +168,7 @@ namespace ZeoEngine {
 						nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
 						if (result == NFD_OKAY)
 						{
-							std::string pathStr = std::string(outPath);
+							std::string pathStr = outPath;
 							free(outPath);
 							Level::Get().SaveLevelToFile(pathStr);
 							m_CurrentLevelPath = pathStr;
@@ -322,12 +326,10 @@ namespace ZeoEngine {
 
 		if (m_bIsHoveringGameView)
 		{
-			// These camera events are only applied to Game View window
 			m_GameViewCameraController->OnEvent(event);
 		}
 		if (m_bIsHoveringParticleView)
 		{
-			// These camera events are only applied to Particle View
 			m_ParticleViewCameraController->OnEvent(event);
 		}
 
@@ -372,7 +374,7 @@ namespace ZeoEngine {
 			ImGui::DockBuilderAddNode(mainEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
 			const auto& window = Application::Get().GetWindow();
 			// Main node should cover entire screen
-			ImGui::DockBuilderSetNodeSize(mainEditorDockspaceId, ImVec2((float)window.GetWidth(), (float)window.GetHeight()));
+			ImGui::DockBuilderSetNodeSize(mainEditorDockspaceId, ImVec2(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight())));
 
 			ImGuiID dockMainLeft;
 			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(mainEditorDockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockMainLeft);
@@ -417,7 +419,7 @@ namespace ZeoEngine {
 				// Lower right corner for the UVs to be applied at
 				window->InnerRect.Max,
 				// The UVs have to be flipped
-				ImVec2(0, 1), ImVec2(1, 0));
+				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 			max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 			min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
 			m_LastGameViewSize = max - min;
@@ -452,7 +454,7 @@ namespace ZeoEngine {
 			}
 
 			// Transform options window
-			if (g_PIEState == PIEState::None)
+			if (pieState == PIEState::None)
 			{
 				EditTransform();
 			}
@@ -466,7 +468,7 @@ namespace ZeoEngine {
 			// Toggle play / stop
 			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 			{
-				if (g_PIEState == PIEState::None)
+				if (pieState == PIEState::None)
 				{
 					StartPIE();
 				}
@@ -479,11 +481,11 @@ namespace ZeoEngine {
 			// Toggle pause / resume
 			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 			{
-				if (g_PIEState == PIEState::Running)
+				if (pieState == PIEState::Running)
 				{
 					PausePIE();
 				}
-				else if (g_PIEState == PIEState::Paused)
+				else if (pieState == PIEState::Paused)
 				{
 					ResumePIE();
 				}
@@ -506,7 +508,7 @@ namespace ZeoEngine {
 		if (ImGui::Begin("Level Outline", bShow))
 		{
 			ImGui::Text("(%d objects total)", level.m_SortedGameObjects.size());
-			for (auto it = level.m_SortedGameObjects.begin(); it != level.m_SortedGameObjects.end(); ++it)
+			for (auto it = level.m_SortedGameObjects.cbegin(); it != level.m_SortedGameObjects.cend(); ++it)
 			{
 				if (it->second->IsPendingDestroy())
 					continue;
@@ -514,13 +516,13 @@ namespace ZeoEngine {
 				ImVec4 color;
 				if (it->second->IsActive())
 				{
-					// Translucent objects are marked yellow instead of white
-					color = it->second->IsTranslucent() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+					// Dynamically spawned objects are marked yellow instead of white
+					color = it->second->IsDynamicallySpawned() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 				else
 				{
 					// Inactive objects are marked darker
-					color = it->second->IsTranslucent() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+					color = it->second->IsDynamicallySpawned() ? ImVec4(0.75f, 0.75f, 0.0f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 				}
 
 				// Clear other selections if a new GameObject is selected
@@ -585,8 +587,8 @@ namespace ZeoEngine {
 		{
 			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 			{
-				m_CurrentPropertySource = GameObjectProperty;
-				if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
+				m_CurrentPropertySource = PropertySource::GameObjectProperty;
+				if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
 				{
 					PreProcessProperties(m_SelectedGameObject);
 				}
@@ -594,7 +596,7 @@ namespace ZeoEngine {
 				data.bPropertyRecursed = false;
 				// NOTE: Do not combine following two statements into "data.Object = data.OutermostObject = &rttr::instance(m_SelectedGameObject);",
 				// which will get optimized out in release mode causing data.Object to be an invalid object
-				rttr::instance object = rttr::instance(m_SelectedGameObject);
+				rttr::instance object = m_SelectedGameObject;
 				data.Object = data.OutermostObject = &object;
 				ProcessPropertiesRecursively(data);
 			}
@@ -602,31 +604,31 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	void EditorLayer::PreProcessProperties(const rttr::instance& object)
+	void EditorLayer::PreProcessProperties(rttr::instance object)
 	{
-		m_SortedProperties[m_CurrentPropertySource].clear();
+		m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)].clear();
 		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
 		// Get the most derived class's properties
-		auto& properties = obj.get_derived_type().get_properties();
+		auto properties = obj.get_derived_type().get_properties();
 		for (auto prop : properties)
 		{
 			// Properties with Hidden meta do not pass here
 			if (prop.get_metadata(PropertyMeta::Hidden))
 				continue;
 
-			const rttr::variant& categoryVar = prop.get_metadata(PropertyMeta::Category);
+			rttr::variant categoryVar = prop.get_metadata(PropertyMeta::Category);
 			if (categoryVar)
 			{
 				const std::string& category = categoryVar.get_value<std::string>();
-				m_SortedProperties[m_CurrentPropertySource][category].push_back(prop);
+				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)][category].emplace_back(prop);
 			}
 			else
 			{
-				m_SortedProperties[m_CurrentPropertySource]["Default"].push_back(prop);
+				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)]["Default"].emplace_back(prop);
 			}
 		}
-		m_PropertiesLogged[m_CurrentPropertySource].reserve(properties.size());
-		m_bIsSortedPropertiesDirty[m_CurrentPropertySource] = false;
+		m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].reserve(properties.size());
+		m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)] = false;
 	}
 
 	void EditorLayer::ProcessPropertiesRecursively(PropertyData& data)
@@ -635,7 +637,7 @@ namespace ZeoEngine {
 		// If it is the outermost property
 		if (!data.bPropertyRecursed)
 		{
-			for (const auto& [category, properties] : m_SortedProperties[m_CurrentPropertySource])
+			for (const auto& [category, properties] : m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)])
 			{
 				ImGui::Columns(1);
 				// Display category seperator
@@ -660,7 +662,7 @@ namespace ZeoEngine {
 				return;
 			}
 			// Get the most derived class's properties
-			auto& properties = obj.get_derived_type().get_properties();
+			auto properties = obj.get_derived_type().get_properties();
 			// Note: If custom struct/class is a pointer, it must not be null in order to retrieve its properties
 			// @see GameObject::m_Transform, GameObject::m_CollisionData
 			for (auto prop : properties)
@@ -675,49 +677,63 @@ namespace ZeoEngine {
 
 	void EditorLayer::ProcessProperty(PropertyData& data)
 	{
-		rttr::variant& var = data.Property->get_value(*data.Object);
+		rttr::variant var = data.Property->get_value(*data.Object);
 		if (!var)
 			return;
 
 		data.PropertyValue = &var;
 
-		// Do not show this property if hide condition meets
-		rttr::variant& hideConditionVar = data.Property->get_metadata(PropertyMeta::HideCondition);
+		// Do not show this property if "HideCondition" meets
+		rttr::variant hideConditionVar = data.Property->get_metadata(PropertyMeta::HideCondition);
+		// If current property has defined "HideCondition" metadata, attempt to find the required data to evaluate in the processed map; if failed, process it
 		if (hideConditionVar)
 		{
-			bool bOK = true;
-			std::string hideCondition = hideConditionVar.to_string(&bOK);
-			if (bOK)
+			auto it = m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].find(*data.Property);
+			if (it != m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].cend())
 			{
-				size_t seperatorPos = hideCondition.find("==");
-				if (seperatorPos != std::string::npos)
+				if (it->second.first.get_value(*data.Object).to_string() == it->second.second)
 				{
-					std::string keyName = hideCondition.substr(0, seperatorPos);
-					std::string valueName = hideCondition.substr(seperatorPos + 2, hideCondition.size() - 1);
-					auto& properties = data.Object->get_derived_type().get_properties();
-					for (auto prop : properties)
+					return;
+				}
+			}
+			else
+			{
+				bool bOK = true;
+				std::string hideConditionStr = hideConditionVar.to_string(&bOK);
+				if (bOK)
+				{
+					size_t seperatorPos = hideConditionStr.find("==");
+					if (seperatorPos != std::string::npos)
 					{
-						// We only support bool and enum for now
-						if (prop.get_type() == rttr::type::get<bool>() || prop.is_enumeration())
+						std::string keyName = hideConditionStr.substr(0, seperatorPos);
+						std::string valueName = hideConditionStr.substr(seperatorPos + 2, hideConditionStr.size() - 1);
+						auto properties = data.Object->get_derived_type().get_properties();
+						for (auto prop : properties)
 						{
-							if (prop.get_name() == keyName)
+							// We only support bool and enum for now
+							if (prop.get_type() == rttr::type::get<bool>() || prop.is_enumeration())
 							{
-								if (prop.get_value(*data.Object).to_string() == valueName)
+								if (prop.get_name() == keyName)
 								{
-									return;
+									// Cache the required data to be used the next time
+									m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(std::make_pair(*data.Property, std::make_pair(prop, std::move(valueName))));
+									if (prop.get_value(*data.Object).to_string() == valueName)
+									{
+										return;
+									}
 								}
 							}
 						}
 					}
+					else
+					{
+						bOK = false;
+					}
 				}
-				else
+				if (!bOK)
 				{
-					bOK = false;
+					LogPropertyMessage(*data.Property, "Syntax error on PropertyMeta::HideCondition of property {0}! See comments of PropertyMeta::HideCondition for details.", 3);
 				}
-			}
-			if (!bOK)
-			{
-				LogPropertyMessage(*data.Property, "Syntax error on PropertyMeta::HideCondition of property {0}! See comments of PropertyMeta::HideCondition for details." , 3);
 			}
 		}
 
@@ -767,7 +783,7 @@ namespace ZeoEngine {
 					// Switch to the right column
 					ImGui::NextColumn();
 					// Add insert and erase-all buttons
-					AddSequentialButtons(data);
+					AddSequentialContainerButtons(data);
 					// Switch to next line's left column
 					ImGui::NextColumn();
 					ProcessSequentialContainerTypes(data);
@@ -797,7 +813,7 @@ namespace ZeoEngine {
 			// class/struct types
 			else
 			{
-				auto& childProps = wrappedType.get_properties();
+				auto childProps = wrappedType.get_properties();
 				if (!childProps.empty())
 				{
 					if (!wrappedType.is_pointer())
@@ -814,16 +830,9 @@ namespace ZeoEngine {
 					{
 						data.bPropertyRecursed = true;
 						data.OuterProperty = data.Property;
-						rttr::instance object = rttr::instance(propertyValue);
+						rttr::instance object = propertyValue;
 						data.Object = &object;
 						ProcessPropertiesRecursively(data);
-						// For transform specific type, we want to re-calculate transform matrix on value changes
-						// TODO: This may need refactoring if Transform struct is replaced with component
-						if (m_bIsTransformDirty && wrappedType.get_raw_type() == rttr::type::get<Transform>())
-						{
-							m_SelectedGameObject->RecomposeTransformMatrix();
-							m_bIsTransformDirty = false;
-						}
 						ImGui::TreePop();
 					}
 				}
@@ -900,7 +909,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				ProcessStringType(const_cast<std::string*>(&data.PropertyValue->get_value<std::string>()), data);
+				ProcessStringType(&data.PropertyValue->get_value<std::string>(), data);
 			}
 			return true;
 		}
@@ -920,7 +929,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				ProcessI32Vec2Type(const_cast<glm::i32vec2*>(&data.PropertyValue->get_value<glm::i32vec2>()), data);
+				ProcessI32Vec2Type(&data.PropertyValue->get_value<glm::i32vec2>(), data);
 			}
 			return true;
 		}
@@ -940,7 +949,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				ProcessVec2Type(const_cast<glm::vec2*>(&data.PropertyValue->get_value<glm::vec2>()), data);
+				ProcessVec2Type(&data.PropertyValue->get_value<glm::vec2>(), data);
 			}
 			return true;
 		}
@@ -960,7 +969,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				ProcessVec3Type(const_cast<glm::vec3*>(&data.PropertyValue->get_value<glm::vec3>()), data);
+				ProcessVec3Type(&data.PropertyValue->get_value<glm::vec3>(), data);
 			}
 			return true;
 		}
@@ -980,15 +989,15 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				ProcessColorType(const_cast<glm::vec4*>(&data.PropertyValue->get_value<glm::vec4>()), data);
+				ProcessColorType(&data.PropertyValue->get_value<glm::vec4>(), data);
 			}
 			return true;
 		}
 		// GameObject*
-		else if (type.is_pointer() && type == rttr::type::get<GameObject*>())
+		else if (type == rttr::type::get<GameObject*>())
 		{
 			ProcessGameObjectType(data.PropertyValue->get_value<GameObject*>(), data);
-			return true;                      
+			return true;
 		}
 		// Ref<Texture2D>
 		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
@@ -1013,7 +1022,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void EditorLayer::AddSequentialButtons(const PropertyData& data)
+	void EditorLayer::AddSequentialContainerButtons(const PropertyData& data)
 	{
 		rttr::type itemType = data.SequentialView->get_value_type();
 		std::stringstream ss;
@@ -1031,7 +1040,7 @@ namespace ZeoEngine {
 					// Note: std::vector<bool> is not supported because stl uses bits to store bool elements internally
 					if (data.Property->get_type().get_raw_type() == rttr::type::get<std::vector<bool>>())
 					{
-						ZE_CORE_WARN("std::vector<bool> sequential container {0} is not supported! Try other sequential containers for bool instead.", data.Property->get_name());
+						ZE_CORE_ERROR("std::vector<bool> sequential container {0} is not supported! Try other sequential containers for bool instead.", data.Property->get_name());
 					}
 					else
 					{
@@ -1040,7 +1049,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<int8_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), (int8_t)0);
+					data.SequentialView->insert(data.SequentialView->end(), static_cast<int8_t>(0));
 				}
 				else if (itemType == rttr::type::get<int32_t>())
 				{
@@ -1052,7 +1061,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<uint8_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), (uint8_t)0);
+					data.SequentialView->insert(data.SequentialView->end(), static_cast<uint8_t>(0));
 				}
 				else if (itemType == rttr::type::get<uint32_t>())
 				{
@@ -1072,7 +1081,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType.is_enumeration())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), *itemType.get_enumeration().get_values().begin());
+					data.SequentialView->insert(data.SequentialView->end(), *itemType.get_enumeration().get_values().cbegin());
 				}
 				else if (itemType == rttr::type::get<std::string>())
 				{
@@ -1096,7 +1105,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<GameObject*>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), (GameObject*)nullptr);
+					data.SequentialView->insert(data.SequentialView->end(), static_cast<GameObject*>(nullptr));
 				}
 				else if (itemType == rttr::type::get<Ref<Texture2D>>())
 				{
@@ -1108,7 +1117,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<ParticleSystem*>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), (ParticleSystem*)nullptr);
+					data.SequentialView->insert(data.SequentialView->end(), static_cast<ParticleSystem*>(nullptr));
 				}
 				else
 				{
@@ -1133,18 +1142,18 @@ namespace ZeoEngine {
 	{
 		for (uint32_t i = 0; i < data.SequentialView->get_size(); ++i)
 		{
-			rttr::variant& item = data.SequentialView->get_value(i);
+			rttr::variant item = data.SequentialView->get_value(i);
 			// TODO: Nested sequential containers not supported
 			if (item.is_sequential_container())
 			{
-				std::stringstream ss;
-				ss << "[" << i << "]";
-				if (ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					data.SequentialView = &item.create_sequential_view();
-					ProcessSequentialContainerTypes(data);
-					ImGui::TreePop();
-				}
+				//std::stringstream ss;
+				//ss << "[" << i << "]";
+				//if (ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+				//{
+				//	data.SequentialView = &item.create_sequential_view();
+				//	ProcessSequentialContainerTypes(data);
+				//	ImGui::TreePop();
+				//}
 			}
 			else
 			{
@@ -1159,8 +1168,8 @@ namespace ZeoEngine {
 				if (ProcessAtomicTypes(wrappedType, data))
 				{
 				}
-				// TODO: Sequential containers of custom struct/class not supported for now because we cannot implement a general strongly typed insertion function
-				// For internal use currently
+				// TODO: Sequential containers of custom struct/class not supported for now because we cannot implement a generic strongly typed insertion function
+				// Currently for internal use currently
 				else
 				{
 					// Restore variant value
@@ -1213,13 +1222,17 @@ namespace ZeoEngine {
 						ImGui::NextColumn();
 						data.bPropertyRecursed = true;
 						data.OuterProperty = data.Property;
-						rttr::instance object = rttr::instance(wrappedVar);
+						rttr::instance object = wrappedVar;
 						data.Object = &object;
 						// Backup current property
 						rttr::property& prop = *data.Property;
+						// Backup current outer property
+						rttr::property& outerProp = *data.OuterProperty;
 						ProcessPropertiesRecursively(data);
 						// Restore property
 						data.Property = &prop;
+						// Restore outer property
+						data.OuterProperty = &outerProp;
 						ImGui::TreePop();
 					}
 					// Current sequential container has finished processing, reset SequentialIndex
@@ -1255,7 +1268,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel)
 	{
-		auto [it, res] = m_PropertiesLogged[m_CurrentPropertySource].insert(prop);
+		auto [it, res] = m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(prop);
 		if (res)
 		{
 			switch (logLevel)
@@ -1292,12 +1305,12 @@ namespace ZeoEngine {
 			// Display the root class - GameObject class
 			if (ImGui::TreeNodeEx("GameObject (ABSTRACT)", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				for (const auto& typePair : m_ClassInheritanceTree)
+				for (const auto& [parentType, childTypes] : m_ClassInheritanceTree)
 				{
 					// Class iteration starts from GameObject type
-					if (typePair.first.get_name() == "GameObject")
+					if (parentType.get_name() == "GameObject")
 					{
-						DisplayClassHierarchyRecursively(typePair.second);
+						DisplayClassHierarchyRecursively(childTypes);
 					}
 				}
 				ImGui::TreePop();
@@ -1391,7 +1404,7 @@ namespace ZeoEngine {
 							nfdresult_t result = NFD_SaveDialog("zparticle", nullptr, &outPath);
 							if (result == NFD_OKAY)
 							{
-								std::string pathStr = std::string(outPath);
+								std::string pathStr = outPath;
 								free(outPath);
 								SaveParticleSystemToFile(pathStr);
 								m_CurrentParticleSystemPath = pathStr;
@@ -1426,7 +1439,7 @@ namespace ZeoEngine {
 				if (!m_ParticleViewCameraController)
 				{
 					const auto& window = Application::Get().GetWindow();
-					m_ParticleViewCameraController = CreateScope<OrthographicCameraController>((float)window.GetWidth() / (float)window.GetHeight());
+					m_ParticleViewCameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 					m_ParticleViewCameraController->SetZoomLevel(3.0f);
 				}
 
@@ -1447,7 +1460,7 @@ namespace ZeoEngine {
 				// Draw framebuffer texture
 				ImGui::Image(Renderer2D::GetStorageData()->FBOs[1]->GetRenderedTexture(),
 					ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
-					ImVec2(0, 1), ImVec2(1, 0));
+					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 				max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 				min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
 				m_LastParticleViewSize = max - min;
@@ -1464,14 +1477,14 @@ namespace ZeoEngine {
 			{
 				if (m_EditorParticleSystem)
 				{
-					m_CurrentPropertySource = ParticleSystemProperty;
-					if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
+					m_CurrentPropertySource = PropertySource::ParticleSystemProperty;
+					if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
 					{
 						PreProcessProperties(m_EditorParticleSystem);
 					}
 					PropertyData data;
 					data.bPropertyRecursed = false;
-					rttr::instance object = rttr::instance(m_EditorParticleSystem);
+					rttr::instance object = m_EditorParticleSystem;
 					data.Object = data.OutermostObject = &object;
 					ProcessPropertiesRecursively(data);
 				}
@@ -1502,7 +1515,7 @@ namespace ZeoEngine {
 			ImGui::TextCentered("ZeoEngine 0.1");
 			ImGui::TextCentered("Created by SanSan");
 			ImGui::TextCentered("https://github.com/hls333555/");
-			static const float logoSize = 100.0f;
+			const float logoSize = 100.0f;
 			// Center the logo
 			ImGui::Indent((ImGui::GetWindowSize().x - logoSize) / 2.0f);
 			ImGui::Image(m_LogoTexture->GetTexture(),
@@ -1523,7 +1536,7 @@ namespace ZeoEngine {
 		// Start PIE by pressing Alt+P
 		if ((Input::IsKeyPressed(ZE_KEY_LEFT_ALT) || Input::IsKeyPressed(ZE_KEY_RIGHT_ALT)) && Input::IsKeyPressed(ZE_KEY_P))
 		{
-			if (g_PIEState == PIEState::None)
+			if (pieState == PIEState::None)
 			{
 				StartPIE();
 			}
@@ -1531,7 +1544,7 @@ namespace ZeoEngine {
 		// Exit PIE by pressing Esc
 		if (Input::IsKeyPressed(ZE_KEY_ESCAPE))
 		{
-			if (g_PIEState != PIEState::None)
+			if (pieState != PIEState::None)
 			{
 				StopPIE();
 			}
@@ -1554,8 +1567,9 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
-		m_bIsSortedPropertiesDirty[GameObjectProperty] = true;
-		m_PropertiesLogged[GameObjectProperty].clear();
+		m_bIsSortedPropertiesDirty[ENUM_TO_INT(PropertySource::GameObjectProperty)] = true;
+		m_LoggedProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
+		m_HideConditionProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
 		m_TempInputStrings.clear();
 	}
 
@@ -1696,7 +1710,7 @@ namespace ZeoEngine {
 		out << Serializer::Get().Serialize(m_EditorParticleSystem);
 	}
 
-	const char* PIETempFile("temp/PIE.tmp");
+	constexpr const char* PIETempFile = "temp/PIE.tmp";
 
 	void EditorLayer::StartPIE()
 	{
@@ -1704,7 +1718,7 @@ namespace ZeoEngine {
 		Level::Get().SaveLevelToFile(std::string(PIETempFile), true);
 
 		m_ToolBarTextures[0] = m_StopTexture;
-		g_PIEState = PIEState::Running;
+		pieState = PIEState::Running;
 		ZE_CORE_TRACE("PIE started");
 	}
 
@@ -1717,21 +1731,21 @@ namespace ZeoEngine {
 
 		m_ToolBarTextures[0] = m_PlayTexture;
 		m_ToolBarTextures[1] = m_PauseTexture;
-		g_PIEState = PIEState::None;
+		pieState = PIEState::None;
 		ZE_CORE_TRACE("PIE stopped");
 	}
 
 	void EditorLayer::PausePIE()
 	{
 		m_ToolBarTextures[1] = m_PlayTexture;
-		g_PIEState = PIEState::Paused;
+		pieState = PIEState::Paused;
 		ZE_CORE_TRACE("PIE paused");
 	}
 
 	void EditorLayer::ResumePIE()
 	{
 		m_ToolBarTextures[1] = m_PauseTexture;
-		g_PIEState = PIEState::Running;
+		pieState = PIEState::Running;
 		ZE_CORE_TRACE("PIE resumed");
 	}
 
@@ -1869,72 +1883,161 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorLayer::InvokePropertyChangeCallback(const PropertyData& data)
+	void EditorLayer::InvokePropertyChangeCallback(const PropertyData& data, bool bInvokeOnlyIfDeactivated)
 	{
-		data.OutermostObject->get_type().invoke("OnPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
+		if (bInvokeOnlyIfDeactivated)
+		{
+			data.OutermostObject->get_type().invoke("PostPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
+		}
+		else
+		{
+			data.OutermostObject->get_type().invoke("OnPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
+		}
+	}
+
+	void EditorLayer::BeginDisplayProperty(std::stringstream& ss, const PropertyData& data)
+	{
+		ImGui::Columns(2);
+		ImGui::AlignTextToFramePadding();
+		if (data.SequentialIndex == -1)
+		{
+			ImGui::TreeNodeEx(data.Property->get_name().data(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);
+			ShowPropertyTooltip(*data.Property);
+			// Switch to the right column
+			ImGui::NextColumn();
+			// Align width to the right side
+			ImGui::SetNextItemWidth(-1.0f);
+			// We use property name as id here because rttr guarantees that only properties with different names can be registered
+			ss << "##" << data.Property->get_name().data();
+		}
+		else
+		{
+			// Property of custom struct/class inside a sequential container
+			if (data.bPropertyRecursed)
+			{
+				ss << data.Property->get_name().data();
+			}
+			// Property inside a sequential container
+			else
+			{
+				ss << "[" << data.SequentialIndex << "]";
+			}
+			ImGui::TreeNodeEx(ss.str().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);
+			ShowPropertyTooltip(*data.Property);
+			// Switch to the right column
+			ImGui::NextColumn();
+			ss.clear(); ss.str("");
+			ss << "##" << data.Property->get_name().data() << data.SequentialIndex;
+		}
+	}
+
+	// This method does not apply to custom struct/class inside a sequential container
+	// @see ProcessSequentialContainerTypes()
+	void EditorLayer::AddSequentialItemButtons(std::stringstream& ss, const PropertyData& data, rttr::argument insertValue)
+	{
+		ImGui::SameLine();
+		ss.clear(); ss.str(""); ss << "##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+		if (ImGui::BeginCombo(ss.str().c_str(), nullptr, ImGuiComboFlags_NoPreview))
+		{
+			ss.clear(); ss.str(""); ss << "Insert##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+			// Insert a new item before current item
+			if (ImGui::Selectable(ss.str().c_str()))
+			{
+				data.SequentialView->insert(data.SequentialView->begin() + data.SequentialIndex, insertValue);
+			}
+			ss.clear(); ss.str(""); ss << "Erase##" << data.Property->get_name() << data.SequentialView->get_value_type().get_name() << data.SequentialIndex;
+			// Erase current item
+			if (ImGui::Selectable(ss.str().c_str()))
+			{
+				data.SequentialView->erase(data.SequentialView->begin() + data.SequentialIndex);
+			}
+			ImGui::EndCombo();
+		}
+	}
+
+	void EditorLayer::SetPropertyValue(const PropertyData& data, rttr::argument value, rttr::argument insertValue, RecursedSequentialPropertyProcessingFn func)
+	{
+		if (data.SequentialIndex == -1)
+		{
+			data.Property->set_value(*data.Object, value);
+		}
+		else
+		{
+			// Property inside a sequential container
+			if (!data.bPropertyRecursed)
+			{
+				data.SequentialView->set_value(data.SequentialIndex, value);
+			}
+			// Call the custom set-value function if provided, usually for properties of custom struct/class inside a sequential container
+			else if (func)
+			{
+				func(data);
+			}
+		}
+	}
+
+	void EditorLayer::EndDisplayProperty(std::stringstream& ss, const PropertyData& data, rttr::argument value, rttr::argument insertValue, RecursedSequentialPropertyProcessingFn func)
+	{
+		ShowPropertyTooltip(*data.Property);
+		if (data.SequentialIndex == -1)
+		{
+			data.Property->set_value(*data.Object, value);
+		}
+		else
+		{
+			// Property inside a sequential container
+			if (!data.bPropertyRecursed)
+			{
+				data.SequentialView->set_value(data.SequentialIndex, value);
+				AddSequentialItemButtons(ss, data, insertValue);
+			}
+			// Call the custom set-value function if provided, usually for properties of custom struct/class inside a sequential container
+			else if (func)
+			{
+				func(data);
+			}
+		}
+		// Switch to next line's left column
+		ImGui::NextColumn();
+	}
+
+	void EditorLayer::EndDisplayProperty(std::stringstream& ss, const PropertyData& data, rttr::argument insertValue)
+	{
+		ShowPropertyTooltip(*data.Property);
+		if (data.SequentialIndex != -1 && !data.bPropertyRecursed)
+		{
+			AddSequentialItemButtons(ss, data, insertValue);
+		}
+		// Switch to next line's left column
+		ImGui::NextColumn();
 	}
 
 	void EditorLayer::ProcessBoolType(bool boolValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		ImGui::Checkbox(ss.str().c_str(), &boolValue);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, boolValue)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, boolValue, false)
-		}
+		EndDisplayProperty(ss, data, boolValue, false);
 	}
 
 	void EditorLayer::ProcessInt8Type(int8_t int8Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		int8_t min = minVar ? std::max(minVar.to_int8(), (int8_t)INT8_MIN) : (int8_t)INT8_MIN;
-		int8_t max = maxVar ? std::min(maxVar.to_int8(), (int8_t)INT8_MAX) : (int8_t)INT8_MAX;
+		int8_t min = minVar ? std::max(minVar.to_int8(), static_cast<int8_t>(INT8_MIN)) : static_cast<int8_t>(INT8_MIN);
+		int8_t max = maxVar ? std::min(maxVar.to_int8(), static_cast<int8_t>(INT8_MAX)) : static_cast<int8_t>(INT8_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_8(ss.str().c_str(), &int8Value, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, int8Value)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int8Value, (int8_t)0)
-		}
+		EndDisplayProperty(ss, data, int8Value, static_cast<int8_t>(0));
 	}
 
 	void EditorLayer::ProcessInt32Type(int32_t int32Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
@@ -1942,18 +2045,8 @@ namespace ZeoEngine {
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt(ss.str().c_str(), &int32Value, speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			InvokePropertyChangeCallback(data);
-		}
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, int32Value)
-		}
-		else
-		{
+		EndDisplayProperty(ss, data, int32Value, 0, [&int32Value](const PropertyData& data) {
 			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-			// Sequential item type is BurstData
 			if (sequentialVar.can_convert<BurstData>())
 			{
 				if (data.Property->get_name() == "Value")
@@ -1964,26 +2057,18 @@ namespace ZeoEngine {
 				{
 					sequentialVar.get_value<BurstData*>()->Amount.Val2 = int32Value;
 				}
-				END_PROP(data.Property)
 			}
-			else
-			{
-				END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int32Value, 0)
-			}
+		});
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
 		}
 	}
 
 	void EditorLayer::ProcessInt64Type(int64_t int64Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
@@ -1991,111 +2076,55 @@ namespace ZeoEngine {
 		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : INT64_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_64(ss.str().c_str(), &int64Value, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, int64Value)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, int64Value, 0ll)
-		}
+		EndDisplayProperty(ss, data, int64Value, 0ll);
 	}
 
 	void EditorLayer::ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint8_t min = minVar ? std::max(minVar.to_uint8(), (uint8_t)0) : 0;
-		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), (uint8_t)UINT8_MAX) : (uint8_t)UINT8_MAX;
+		uint8_t min = minVar ? std::max(minVar.to_uint8(), static_cast<uint8_t>(0)) : static_cast<uint8_t>(0);
+		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), static_cast<uint8_t>(UINT8_MAX)) : static_cast<uint8_t>(UINT8_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_8(ss.str().c_str(), &uint8Value, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, uint8Value)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint8Value, (uint8_t)0)
-		}
+		EndDisplayProperty(ss, data, uint8Value, static_cast<uint8_t>(0));
 	}
 
 	void EditorLayer::ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint32_t min = minVar ? std::max(minVar.to_uint32(), (uint32_t)0) : 0;
-		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), (uint32_t)UINT32_MAX) : (uint32_t)UINT32_MAX;
+		uint32_t min = minVar ? std::max(minVar.to_uint32(), static_cast<uint32_t>(0)) : 0u;
+		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), static_cast<uint32_t>(UINT32_MAX)) : static_cast<uint32_t>(UINT32_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_32(ss.str().c_str(), &uint32Value, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, uint32Value)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint32Value, 0u)
-		}
+		EndDisplayProperty(ss, data, uint32Value, 0u);
 	}
 
 	void EditorLayer::ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint64_t min = minVar ? std::max(minVar.to_uint64(), (uint64_t)0) : 0;
-		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), (uint64_t)UINT64_MAX) : (uint64_t)UINT64_MAX;
+		uint64_t min = minVar ? std::max(minVar.to_uint64(), static_cast<uint64_t>(0)) : 0ull;
+		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), static_cast<uint64_t>(UINT64_MAX)) : static_cast<uint64_t>(UINT64_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_64(ss.str().c_str(), &uint64Value, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, uint64Value)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, uint64Value, 0ull)
-		}
+		EndDisplayProperty(ss, data, uint64Value, 0ull);
 	}
 
 	void EditorLayer::ProcessFloatType(float floatValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
@@ -2103,46 +2132,29 @@ namespace ZeoEngine {
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		// If transform's property value changes, mark it dirty (2D rotation only)
-		if (ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f") && data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+		bool bChanged = ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f");
+		EndDisplayProperty(ss, data, floatValue, 0.0f, [&floatValue](const PropertyData& data) {
+			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
+			if (sequentialVar.can_convert<BurstData>())
+			{
+				sequentialVar.get_value<BurstData*>()->Time = floatValue;
+			}
+		});
+		// Note: If we put it before EndDisplayProperty(), the rotation property's value can not be edited in the editor because RecomposeTransformMatrix() will perform calculations based on an out-of-date value
+		if (bChanged)
 		{
-			m_bIsTransformDirty = true;
+			InvokePropertyChangeCallback(data, false);
 		}
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
 			InvokePropertyChangeCallback(data);
-		}
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, floatValue)
-		}
-		else
-		{
-			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-			// Sequential item type is BurstData
-			if (sequentialVar.can_convert<BurstData>())
-			{
-				sequentialVar.get_value<BurstData*>()->Time = floatValue;
-				END_PROP(data.Property)
-			}
-			else
-			{
-				END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, floatValue, 0.0f)
-			}
 		}
 	}
 
 	void EditorLayer::ProcessDoubleType(double doubleValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
@@ -2151,27 +2163,13 @@ namespace ZeoEngine {
 		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragDouble(ss.str().c_str(), &doubleValue, speed, min, max);
-		if (data.SequentialIndex == -1)
-		{
-			END_SETPROP(data.Property, data.Object, doubleValue)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, doubleValue, 0.0)
-		}
+		EndDisplayProperty(ss, data, doubleValue, 0.0);
 	}
 
 	void EditorLayer::ProcessEnumType(const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		bool bOK = false;
 		std::string stringValue = data.PropertyValue->to_string(&bOK);
 		if (!bOK)
@@ -2186,23 +2184,13 @@ namespace ZeoEngine {
 			{
 				if (ImGui::Selectable(enumType.value_to_name(enumValue).data()))
 				{
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, enumValue);
-					}
-					else
-					{
+					SetPropertyValue(data, enumValue, enumValue, [&enumValue](const PropertyData& data) {
 						rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-						// Sequential item type is BurstData
 						if (sequentialVar.can_convert<BurstData>())
 						{
 							sequentialVar.get_value<BurstData*>()->Amount.VariationType = enumValue.get_value<ParticleVariationType>();
 						}
-						else
-						{
-							data.SequentialView->set_value(data.SequentialIndex, enumValue);
-						}
-					}
+					});
 					// Selection changes, call the callback
 					if (enumValue != enumType.name_to_value(stringValue))
 					{
@@ -2212,24 +2200,13 @@ namespace ZeoEngine {
 			}
 			ImGui::EndCombo();
 		}
-		if (data.SequentialIndex != -1 && !data.bPropertyRecursed)
-		{
-			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, *enumValues.begin())
-		}
-		END_PROP(data.Property)
+		EndDisplayProperty(ss, data, *enumValues.cbegin());
 	}
 
 	void EditorLayer::ProcessStringType(std::string* stringPointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		ImGui::InputText(ss.str().c_str(),
 			m_TempInputStrings[ss.str().c_str()].first ?
 			&m_TempInputStrings[ss.str().c_str()].second :
@@ -2247,65 +2224,36 @@ namespace ZeoEngine {
 			if (data.Property->get_name() == "Name")
 			{
 				Level::Get().m_ObjectNames.erase(*stringPointerValue);
-				Level::Get().m_ObjectNames.insert(m_TempInputStrings[ss.str().c_str()].second);
+				Level::Get().m_ObjectNames.emplace(m_TempInputStrings[ss.str().c_str()].second);
 			}
-			*stringPointerValue = m_TempInputStrings[ss.str().c_str()].second;
+			*stringPointerValue = std::move(m_TempInputStrings[ss.str().c_str()].second);
 			m_TempInputStrings[ss.str().c_str()].first = false;
-			m_TempInputStrings[ss.str().c_str()].second.clear();
 		}
-		if (data.SequentialIndex == -1)
-		{
-			END_PROP(data.Property)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *stringPointerValue, std::string(""));
-		}
+		EndDisplayProperty(ss, data, *stringPointerValue, std::string(""));
 	}
 
 	void EditorLayer::ProcessVec2Type(glm::vec2* vec2PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		// If transform's property value changes, mark it dirty (2D scale only)
-		if (ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f") && data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>())
+		bool bChanged = ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f");
+		EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
+		if (bChanged)
 		{
-			m_bIsTransformDirty = true;
-		}
-		if (data.SequentialIndex == -1)
-		{
-			END_PROP(data.Property)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec2PointerValue, glm::vec2(0.0f));
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
 	void EditorLayer::ProcessI32Vec2Type(glm::i32vec2* i32vec2PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
@@ -2313,92 +2261,47 @@ namespace ZeoEngine {
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt2(ss.str().c_str(), glm::value_ptr(*i32vec2PointerValue), speed, min, max);
+		EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
 			InvokePropertyChangeCallback(data);
-		}
-		if (data.SequentialIndex == -1)
-		{
-			END_PROP(data.Property)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *i32vec2PointerValue, glm::i32vec2(0));
 		}
 	}
 
 	void EditorLayer::ProcessVec3Type(glm::vec3* vec3PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
 		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		bool bIsTransformProp = data.Property->get_declaring_type().get_raw_type() == rttr::type::get<Transform>();
-		// If transform's property value changes, mark it dirty
-		if (ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), speed, min, max, "%.2f") && bIsTransformProp)
+		bool bChanged = ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), speed, min, max, "%.2f");
+		EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
+		if (bChanged)
 		{
-			m_bIsTransformDirty = true;
+			InvokePropertyChangeCallback(data, false);
 		}
-		// If position value changes, schedule to re-sort translucent objects
-		// TODO: Not optimal for 3D rendering as modifying rotation and scale will invoke this too
-		if (ImGui::IsItemDeactivatedAfterEdit() && bIsTransformProp)
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			Level::Get().OnTranslucentObjectsDirty(m_SelectedGameObject);
-		}
-		if (data.SequentialIndex == -1)
-		{
-			END_PROP(data.Property)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec3PointerValue, glm::vec3(0.0f));
+			InvokePropertyChangeCallback(data);
 		}
 	}
 
 	void EditorLayer::ProcessColorType(glm::vec4* vec4PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		ImGui::ColorEdit4(ss.str().c_str(), glm::value_ptr(*vec4PointerValue));
-		if (data.SequentialIndex == -1)
-		{
-			END_PROP(data.Property)
-		}
-		else
-		{
-			END_SETSEQPROP(data.Property, data.SequentialView, data.SequentialIndex, *vec4PointerValue, glm::vec4(0.0f));
-		}
+		EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));
 	}
 
 	void EditorLayer::ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		std::stringstream ss_PreviewName;
 		if (gameObjectValue && !gameObjectValue->IsPendingDestroy())
 		{
@@ -2408,28 +2311,14 @@ namespace ZeoEngine {
 		// If current chosen GameObject is deleted from level, zero the pointer
 		else
 		{
-			if (data.SequentialIndex == -1)
-			{
-				data.Property->set_value(*data.Object, nullptr);
-			}
-			else
-			{
-				data.SequentialView->set_value(data.SequentialIndex, (GameObject*)nullptr);
-			}
+			SetPropertyValue(data, nullptr, static_cast<GameObject*>(nullptr));
 		}
 		if (ImGui::BeginCombo(ss.str().c_str(), ss_PreviewName.str().c_str()))
 		{
 			// A specialized entry for clearing out current selection (empty the pointer)
 			if (ImGui::Selectable("Null"))
 			{
-				if (data.SequentialIndex == -1)
-				{
-					data.Property->set_value(*data.Object, nullptr);
-				}
-				else
-				{
-					data.SequentialView->set_value(data.SequentialIndex, (GameObject*)nullptr);
-				}
+				SetPropertyValue(data, nullptr, static_cast<GameObject*>(nullptr));
 			}
 
 			auto& level = Level::Get();
@@ -2445,14 +2334,7 @@ namespace ZeoEngine {
 				{
 					// Note: The pointer assignment will only succeed if assigned-from pointer type is exactly the same as assigned-to pointer type
 					// That's to say, GameObject* cannot be assigned to Player* even if that GameObject* object is indeed a Player* object
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, level.m_GameObjects[i]);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, level.m_GameObjects[i]);
-					}
+					SetPropertyValue(data, level.m_GameObjects[i], level.m_GameObjects[i]);
 				}
 			}
 			ImGui::EndCombo();
@@ -2463,39 +2345,21 @@ namespace ZeoEngine {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragGameObject"))
 			{
 				// see ShowLevelOutline()
-				GameObject* draggedGameObject = *(GameObject**)payload->Data;
+				GameObject* draggedGameObject = *static_cast<GameObject**>(payload->Data);
 				if (IsSubclassOf(draggedGameObject, *data.Property))
 				{
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, draggedGameObject);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, draggedGameObject);
-					}
+					SetPropertyValue(data, draggedGameObject, draggedGameObject);
 				}
 			}
 			ImGui::EndDragDropTarget();
 		}
-		if (data.SequentialIndex != -1)
-		{
-			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, (GameObject*)nullptr)
-		}
-		END_PROP(data.Property)
+		EndDisplayProperty(ss, data, static_cast<GameObject*>(nullptr));
 	}
 
 	void EditorLayer::ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		// TODO: Add an right-click option to draw texture smaller
 		// Try to align texture'a width to column's right side
@@ -2540,14 +2404,7 @@ namespace ZeoEngine {
 					Ref<Texture2D> loadedTexture;
 					// Add selected texture to the library
 					loadedTexture = library->GetOrLoad(relativePath);
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, loadedTexture);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, loadedTexture);
-					}
+					SetPropertyValue(data, loadedTexture, loadedTexture);
 					free(outPath);
 				}
 				else if (result == NFD_ERROR)
@@ -2561,14 +2418,7 @@ namespace ZeoEngine {
 			{
 				if (ImGui::Selectable(texture->GetFileName().c_str()))
 				{
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, texture);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, texture);
-					}
+					SetPropertyValue(data, texture, texture);
 				}
 				// Display texture path tooltip
 				if (ImGui::IsItemHovered())
@@ -2583,24 +2433,13 @@ namespace ZeoEngine {
 		{
 			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
 		}
-		if (data.SequentialIndex != -1)
-		{
-			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, Ref<Texture2D>())
-		}
-		END_PROP(data.Property)
+		EndDisplayProperty(ss, data, Ref<Texture2D>());
 	}
 
 	void EditorLayer::ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data)
 	{
 		std::stringstream ss;
-		if (data.SequentialIndex == -1)
-		{
-			BEGIN_PROP(data.Property)
-		}
-		else
-		{
-			BEGIN_SEQPROP(data.Property, data.SequentialIndex, data.bPropertyRecursed)
-		}
+		BeginDisplayProperty(ss, data);
 		// TODO: Add search filter for particle system
 		if (ImGui::BeginCombo(ss.str().c_str(), particleSystemValue ? particleSystemValue->GetFileName().c_str() : nullptr))
 		{
@@ -2616,14 +2455,7 @@ namespace ZeoEngine {
 					ParticleSystem* loadedPs;
 					// Add selected particle system to the library
 					loadedPs = library->GetOrLoad(relativePath);
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, loadedPs);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, loadedPs);
-					}
+					SetPropertyValue(data, loadedPs, loadedPs);
 					free(outPath);
 				}
 				else if (result == NFD_ERROR)
@@ -2637,14 +2469,7 @@ namespace ZeoEngine {
 			{
 				if (ImGui::Selectable(ps->GetFileName().c_str()))
 				{
-					if (data.SequentialIndex == -1)
-					{
-						data.Property->set_value(*data.Object, ps);
-					}
-					else
-					{
-						data.SequentialView->set_value(data.SequentialIndex, ps);
-					}
+					SetPropertyValue(data, ps, ps);
 				}
 				// Display particle system path tooltip
 				if (ImGui::IsItemHovered())
@@ -2671,11 +2496,7 @@ namespace ZeoEngine {
 				}
 			}
 		}
-		if (data.SequentialIndex != -1)
-		{
-			ADD_SEQBUTTONS(data.Property, data.SequentialView, data.SequentialIndex, (ParticleSystem*)nullptr)
-		}
-		END_PROP(data.Property)
+		EndDisplayProperty(ss, data, static_cast<ParticleSystem*>(nullptr));
 	}
 
 	bool EditorLayer::IsSubclassOf(GameObject* gameObject, const rttr::property& prop)

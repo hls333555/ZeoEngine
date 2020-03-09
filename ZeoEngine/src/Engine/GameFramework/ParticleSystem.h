@@ -286,7 +286,7 @@ namespace ZeoEngine {
 
 	public:
 #if WITH_EDITOR
-		void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
+		void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 #endif
 
 		const std::string& GetPath() const { return m_Path; }
@@ -345,7 +345,7 @@ namespace ZeoEngine {
 		/** Called when this particle system is about to be destroyed */
 		SystemFinishedFn m_OnSystemFinished;
 
-		static const char* ParticleSystemFileToken;
+		static constexpr const char* ParticleSystemFileToken = "ParticleSystem";
 
 	private:
 		std::vector<Particle> m_ParticlePool;

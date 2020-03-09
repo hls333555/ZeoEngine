@@ -138,7 +138,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		UpdateProjection((float)e.GetWidth() / (float)e.GetHeight());
+		UpdateProjection(static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight()));
 		return false;
 	}
 

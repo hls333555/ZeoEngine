@@ -10,9 +10,6 @@
 
 namespace ZeoEngine {
 
-#define WORLD_UP_VECTOR glm::vec2{ 0.0f, 1.0f }
-#define WORLD_RIGHT_VECTOR glm::vec2{ 1.0f, 0.0f }
-
 	struct Transform
 	{
 		Transform() = default;
@@ -90,11 +87,21 @@ namespace ZeoEngine {
 
 #define Super __super
 
+#if WITH_EDITOR
+#define RTTR_SPAWN(className) \
+public: static className* SpawnGameObject(const glm::vec3& position)\
+		{\
+			className* object = ZeoEngine::Level::Get().SpawnGameObject<className>(position);\
+			object->SetDynamicallySpawned(false);\
+			return object;\
+		}
+#else
 #define RTTR_SPAWN(className) \
 public: static className* SpawnGameObject(const glm::vec3& position)\
 		{\
 			return ZeoEngine::Level::Get().SpawnGameObject<className>(position);\
 		}
+#endif
 #define RTTR_REGISTER(className, ...) RTTR_ENABLE(__VA_ARGS__) RTTR_SPAWN(className)
 
 	enum class ClassMeta
@@ -117,7 +124,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Max,
 		/** Controls how fast it changes when you are dragging a property value, default is 1.0f */
 		DragSensitivity,
-		/** This property is registered but will not show in the inspector window */
+		/** This property is registered but will not show in the editor */
 		Hidden,
 		/** This property is transient and will not get serialized */
 		Transient,
@@ -130,8 +137,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		 *
 		 * RTTR_REGISTRATION
 		 * {
-		 *     rttr::registration::class_<my_struct>("my_struct")
-		 *         .property("Player", &TestObject::m_Player)
+		 *     rttr::registration::class_<MyClass>("MyClass")
+		 *         .property("Player", &MyClass::m_Player)
 		 *         (
 		 *             rttr::metadata(PropertyMeta::SubclassOf, "Player")
 		 *         );
@@ -152,9 +159,28 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	 *
 	 * IMPORTANT NOTES:
 	 * You should always call ZeoEngine::Level::Get().SpawnGameObject<>(); to spawn one to the level.
-	 * You should add the macro RTTR_REGISTER() to the end of every class derived from GameObject class, which you want to instantiate. Also make sure you have included level.h.
+	 * You should add the macro RTTR_REGISTER(ClassName, ParentClassName...) to the end of every class derived from GameObject class, which you want to instantiate. And register a "constructor" like this:
+	 * .constructor(&ClassName::SpawnGameObject, policy::ctor::as_raw_ptr)
+	 * However, if you do not want to instantiate it the level, add the macro RTTR_ENABLE(ParentClassName...) instead of RTTR_REGISTER(ClassName, ParentClassName...) and add an "abstract" metadata to the class registration like this:
+	 * (
+	 *     metadata(ClassMeta::Abstract, true)
+	 * )
 	 * You should add the macro RTTR_REGISTRATION_FRIEND to the end of the class derived from GameObject class, in which you want to register protected or private variables directly instead of getters and setters.
-	 * If you come across a compile error: fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj, add /bigobj to the CommandLine of project properties.
+	 * Generally, the class registration should be put in cpp file and be looking like this:
+	 * RTTR_REGISTRATION
+	 * {
+	 *	   using namespace rttr;
+	 *	   using namespace ZeoEngine;
+	 *     rttr::registration::class_<MyClass>("MyClass")
+	 *		   .enumeration<MyEnum>("MyEnum")
+	 *		   (
+	 *			   value("Enum1", MyEnum::Enum1),
+	 *			   value("Enum2", MyEnum::Enum2)
+	 *		   )
+	 * 		   .method("MyMethod", &MyClass::MyMethod);
+	 *         .property("MyVar", &MyClass::m_MyVar)
+	 * }
+	 * If you come across a compile error: "fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj", add /bigobj to the CommandLine of project properties.
 	 */
 	class GameObject
 	{
@@ -171,8 +197,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		const std::string& GetUniqueName() const { return m_UniqueName; }
 		const std::string& GetName() const { return m_Name; }
 	private:
-		void SetUniqueName(const std::string& uniqueName) { m_UniqueName = uniqueName; }
-		void SetName(const std::string& name) { m_Name = name; }
+		void SetUniqueName(std::string&& uniqueName) { m_UniqueName = std::move(uniqueName); }
+		void SetName(std::string&& name) { m_Name = std::move(name); }
 	public:
 		GameObject* GetOwner() const { return m_OwnerObject; }
 		void SetOwner(GameObject* owner) { m_OwnerObject = owner; }
@@ -226,6 +252,11 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 		virtual bool IsTranslucent() const { return false; }
 
+#if WITH_EDITOR
+		bool IsDynamicallySpawned() const { return m_bIsDynamicallySpawned; }
+		void SetDynamicallySpawned(bool bValue) { m_bIsDynamicallySpawned = bValue; }
+#endif
+
 		virtual void Init();
 		virtual void BeginPlay();
 		virtual void OnUpdate(DeltaTime dt);
@@ -236,25 +267,30 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		virtual void OnGameViewImGuiRender();
 
 #if WITH_EDITOR
-		// TODO: Add more types for OnPropertyValueEditChange()
-		/** Currently supported types: int32_t, float, enum, glm::i32vec2. */
+		// TODO: Add more types for these callbacks
+		// Currently supported types: int32_t, float, enum, glm::i32vec2
+		/** Called every time this property is changed in the editor. (e.g. during dragging a slider to tweak the property) */
 		virtual void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
+		/** Called only when this property is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the property) */
+		virtual void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 #endif
 
 		virtual void OnDeserialized();
 
+		constexpr const glm::vec2 GetWorldUpVector2D() const { return { 0.0f, 1.0f }; }
+		constexpr const glm::vec2 GetWorldRightVector2D() const { return { 1.0f, 0.0f }; }
 		/**
 		 * Get forward vector based on this object's rotation.
-		 * @see WORLD_UP_VECTOR
+		 * @see GetWorldUpVector2D()
 		 */
 		const glm::vec2 GetForwardVector2D() const;
 		/**
 		 * Get right vector based on this object's rotation.
-		 * @see WORLD_RIGHT_VECTOR
+		 * @see GetWorldRightVector2D()
 		 */
 		const glm::vec2 GetRightVector2D() const;
 
-		float FindLookAtRotation2D(const glm::vec2& sourcePosition, const glm::vec2& targetPosition);
+		float FindLookAtRotation2D(const glm::vec2& sourcePosition, const glm::vec2& targetPosition) const;
 
 		void TranslateTo2D(const glm::vec2& targetPosition);
 
@@ -309,7 +345,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		std::string m_Name;
 		bool m_bIsActive = true;
 		/** GameObject that owns this one, which means if owner is destroyed, either will this one */
-		GameObject* m_OwnerObject;
+		GameObject* m_OwnerObject = nullptr;
 		bool m_bPendingDestroy = false;
 		bool m_bHasBegunPlay = false;
 
@@ -343,6 +379,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 #if WITH_EDITOR
 		bool m_bIsSelectedInEditor = false;
+		bool m_bIsDynamicallySpawned = true;
 #endif
 
 		RTTR_ENABLE()

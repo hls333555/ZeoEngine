@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		virtual void OnUpdate() override;
 
 		// Window attributes
-		virtual void SetEventCallback(const EventCallbackFunc& callback) override { m_Data.EventCallback = callback; }
+		virtual void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		virtual void SetVSync(bool bEnabled) override;
 		virtual bool IsVSync() const override;
 
@@ -40,7 +40,7 @@ namespace ZeoEngine {
 			unsigned int Width, Height;
 			bool bVSync;
 
-			EventCallbackFunc EventCallback;
+			EventCallbackFn EventCallback;
 		};
 
 		WindowData m_Data;

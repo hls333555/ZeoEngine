@@ -2,8 +2,6 @@
 
 #include "Engine/GameFramework/GameObject.h"
 #include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Core/Application.h"
-#include "Engine/Layers/EditorLayer.h"
 
 namespace ZeoEngine {
 
@@ -23,10 +21,12 @@ namespace ZeoEngine {
 		uint32_t Index;
 	};
 
+	constexpr const char* LevelFileToken = "Level";
+
 	class Level
 	{
 		friend class EditorLayer;
-		friend void GameObject::Destroy();
+		friend class GameObject;
 
 	public:
 		~Level();
@@ -107,7 +107,7 @@ namespace ZeoEngine {
 		{
 			object->Init();
 			m_GameObjects.push_back(object);
-			m_SortedGameObjects.insert({ object->GetName(), object });
+			m_SortedGameObjects.emplace(std::make_pair(object->GetName(), object));
 			if (object->IsTranslucent())
 			{
 				m_TranslucentObjects[{ object->GetPosition().z, m_TranslucentObjectIndex++ }] = object;
@@ -142,7 +142,7 @@ namespace ZeoEngine {
 					ss2.str("");
 					ss2 << s << "_" << ++count;
 				}
-				m_ObjectNames.insert(ss2.str());
+				m_ObjectNames.emplace(ss2.str());
 				object->SetName(ss2.str());
 			}
 		}
@@ -161,7 +161,6 @@ namespace ZeoEngine {
 		void PreDeserialize(const std::string& src);
 
 	private:
-		const char* LevelFileToken = "Level";
 		Ref<Texture2D> m_backgroundTexture;
 
 		/** Stores all spawned GameObjects */

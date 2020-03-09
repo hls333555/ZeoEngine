@@ -11,8 +11,7 @@ RTTR_REGISTRATION
 	registration::class_<Bullet>("Bullet")
 		(
 			metadata(ClassMeta::Abstract, true)
-		)
-		.constructor(&Bullet::SpawnGameObject, policy::ctor::as_raw_ptr);
+		);
 
 	registration::class_<PlayerBullet>("PlayerBullet")
 		.constructor(&PlayerBullet::SpawnGameObject, policy::ctor::as_raw_ptr);
@@ -71,7 +70,7 @@ void EnemyBullet::OnUpdate(ZeoEngine::DeltaTime dt)
 {
 	Super::OnUpdate(dt);
 
-	SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * (float)dt);
+	SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * static_cast<float>(dt));
 	if (GetPosition().y < ZeoEngine::GetActiveGameCamera()->GetCameraBounds().Bottom)
 	{
 		SetActive(false);

@@ -101,7 +101,7 @@ RTTR_REGISTRATION
 			metadata(PropertyMeta::Tooltip, u8"我是一个color。"),
 			metadata(PropertyMeta::Category, "Test")
 		)
-		.property("Player", &TestObject::m_GameObject)
+		.property("Player", &TestObject::m_Player)
 		(
 			metadata(PropertyMeta::Category, "Test"),
 			metadata(PropertyMeta::Tooltip, u8"我是一个Player。"),
@@ -213,10 +213,10 @@ RTTR_REGISTRATION
 			metadata(PropertyMeta::Tooltip, u8"我是一个color vector。"),
 			metadata(PropertyMeta::Category, "Test")
 		)
-		.property("VectorGameObject", &TestObject::m_VectorGameObject)
+		.property("VectorEnemy", &TestObject::m_VectorEnemy)
 		(
 			policy::prop::bind_as_ptr,
-			metadata(PropertyMeta::Tooltip, u8"我是一个GameObject* vector。"),
+			metadata(PropertyMeta::Tooltip, u8"我是一个Enemy* vector。"),
 			metadata(PropertyMeta::Category, "Test"),
 			metadata(PropertyMeta::SubclassOf, "Enemy")
 		)

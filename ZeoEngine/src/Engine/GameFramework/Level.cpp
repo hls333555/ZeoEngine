@@ -7,6 +7,7 @@
 #include "Engine/Core/Application.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/Layers/EditorLayer.h"
 
 namespace ZeoEngine {
 
@@ -112,7 +113,7 @@ namespace ZeoEngine {
 
 		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
 		// NOTE: DO NOT USE index based for loop here as it will not iterate all elements!
-		for (auto it = m_GameObjects.begin(); it != m_GameObjects.end();)
+		for (auto it = m_GameObjects.cbegin(); it != m_GameObjects.cend();)
 		{
 			// Remove this GameObject
 			if (*it == object)
@@ -140,17 +141,17 @@ namespace ZeoEngine {
 	void Level::RemoveGameObject(GameObject* object)
 	{
 		m_ObjectNames.erase(object->GetName());
-		auto it = std::find_if(m_SortedGameObjects.begin(), m_SortedGameObjects.end(), [&object](const std::pair<std::string, GameObject*>& objectPair) {
+		auto it = std::find_if(m_SortedGameObjects.cbegin(), m_SortedGameObjects.cend(), [&object](const std::pair<std::string, GameObject*>& objectPair) {
 			return objectPair.second == object;
 		});
-		if (it != m_SortedGameObjects.end())
+		if (it != m_SortedGameObjects.cend())
 		{
 			m_SortedGameObjects.erase(it);
 		}
-		auto it2 = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
+		auto it2 = std::find_if(m_TranslucentObjects.cbegin(), m_TranslucentObjects.cend(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
 			return objectPair.second == object;
 		});
-		if (it2 != m_TranslucentObjects.end())
+		if (it2 != m_TranslucentObjects.cend())
 		{
 			m_TranslucentObjects.erase(it2);
 		}
@@ -178,10 +179,10 @@ namespace ZeoEngine {
 
 	void Level::OnTranslucentObjectsDirty(GameObject* dirtyGameObject)
 	{
-		auto it = std::find_if(m_TranslucentObjects.begin(), m_TranslucentObjects.end(), [&dirtyGameObject](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
+		auto it = std::find_if(m_TranslucentObjects.cbegin(), m_TranslucentObjects.cend(), [&dirtyGameObject](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
 			return objectPair.second == dirtyGameObject;
 		});
-		if (it != m_TranslucentObjects.end())
+		if (it != m_TranslucentObjects.cend())
 		{
 			uint32_t index = it->first.Index;
 			float zPos = dirtyGameObject->GetPosition().z;
