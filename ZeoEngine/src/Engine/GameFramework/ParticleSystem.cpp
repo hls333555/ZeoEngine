@@ -529,6 +529,13 @@ namespace ZeoEngine {
 				}
 				m_LoopStartTime = m_Time;
 				m_BurstTime = m_Time;
+				for (const auto& burstData : m_ParticleTemplate.BurstList)
+				{
+					if (burstData.Amount.VariationType == ParticleVariationType::RandomInRange)
+					{
+						m_BurstList[burstData.Time] = static_cast<int32_t>(RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2)));
+					}
+				}
 				for (auto& [data, amount] : m_BurstList)
 				{
 					const_cast<BurstTimeData&>(data).bProcessed = false;
