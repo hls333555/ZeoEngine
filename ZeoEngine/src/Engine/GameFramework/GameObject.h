@@ -202,9 +202,11 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	public:
 		GameObject* GetOwner() const { return m_OwnerObject; }
 		void SetOwner(GameObject* owner) { m_OwnerObject = owner; }
+		void AddOwningObjects(GameObject* owningObject) { m_OwningObjects.push_back(owningObject); }
 		bool IsActive() const { return m_bIsActive; }
 		void SetActive(bool bIsActive) { m_bIsActive = bIsActive; }
 		bool IsPendingDestroy() const { return m_bPendingDestroy; }
+		void MarkPendingDesotry() { m_bPendingDestroy = true; }
 		bool HasBegunPlay() const { return m_bHasBegunPlay; }
 		const Transform& GetTransform() const { return m_Transform; }
 		void SetTransform(const Transform& transform) { m_Transform = transform; }
@@ -346,6 +348,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		bool m_bIsActive = true;
 		/** GameObject that owns this one, which means if owner is destroyed, either will this one */
 		GameObject* m_OwnerObject = nullptr;
+		/** GameObjects this one owns */
+		std::vector<GameObject*> m_OwningObjects;
 		bool m_bPendingDestroy = false;
 		bool m_bHasBegunPlay = false;
 

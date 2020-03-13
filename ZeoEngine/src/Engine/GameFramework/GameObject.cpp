@@ -421,6 +421,11 @@ namespace ZeoEngine {
 			{
 				m_OnDestroyed();
 			}
+			for (auto* object : m_OwningObjects)
+			{
+				ZE_CORE_ASSERT(object != this);
+				object->Destroy();
+			}
 			Level::Get().PendingDestroyGameObject(this);
 		}
 	}

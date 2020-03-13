@@ -78,4 +78,9 @@ namespace ZeoEngine {
 		}
 	}
 
+	void TimerManager::CleanUp()
+	{
+		m_Timers.clear();
+	}
+
 }

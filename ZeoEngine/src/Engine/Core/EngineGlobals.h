@@ -2,6 +2,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Layers/GameLayer.h"
+#include "Engine/GameFramework/Level.h"
 
 namespace ZeoEngine {
 
@@ -13,8 +14,7 @@ namespace ZeoEngine {
 
 	static TimerManager* GetTimerManager()
 	{
-		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
-		return gameLayer ? gameLayer->GetGameTimerManager() : nullptr;
+		return Level::Get().GetGameTimerManager();
 	}
 
 	static Texture2DLibrary* GetTexture2DLibrary()

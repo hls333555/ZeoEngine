@@ -2,6 +2,7 @@
 
 #include "Engine/GameFramework/GameObject.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/TimerManager.h"
 
 namespace ZeoEngine {
 
@@ -26,6 +27,7 @@ namespace ZeoEngine {
 	class Level
 	{
 		friend class EditorLayer;
+		friend class GameLayer;
 		friend class GameObject;
 
 	public:
@@ -43,11 +45,13 @@ namespace ZeoEngine {
 		Level() = default;
 
 	public:
-		virtual void Init();
+		virtual void Init(GameLayer* gameLayer);
 
 		virtual void OnUpdate(DeltaTime dt);
 		void OnRender();
 		virtual void OnImGuiRender();
+
+		TimerManager* GetGameTimerManager() { return &m_GameTimerManager; }
 
 		template<typename T>
 		T* SpawnGameObject(GameObject* owner = nullptr)
@@ -100,6 +104,10 @@ namespace ZeoEngine {
 			T* object = new T();
 			ConstructObjectName<T>(object);
 			object->SetOwner(owner);
+			if (owner)
+			{
+				owner->AddOwningObjects(object);
+			}
 			return object;
 		}
 		template<typename T>
@@ -148,7 +156,8 @@ namespace ZeoEngine {
 		}
 
 		void PendingDestroyGameObject(GameObject* object);
-		void RemoveGameObject(GameObject* object);
+		/** Remove GameObject pointers from containers but do not delete them. Called when garbage collection starts. */
+		void RemoveGameObjects();
 
 		/** Re-sort translucent objects when GameObject's position value is changed in Object Inspector window.  */
 		void OnTranslucentObjectsDirty(GameObject* dirtyGameObject);
@@ -163,7 +172,7 @@ namespace ZeoEngine {
 	private:
 		Ref<Texture2D> m_backgroundTexture;
 
-		/** Stores all spawned GameObjects */
+		/** Stores all spawned GameObjects in spawn order */
 		std::vector<GameObject*> m_GameObjects;
 		/** Map from GameObject's name to GameObject, used dedicated by Level Outline window */
 		std::multimap<std::string, GameObject*> m_SortedGameObjects;
@@ -173,7 +182,10 @@ namespace ZeoEngine {
 		std::map<TranslucentObjectData, GameObject*> m_TranslucentObjects;
 		uint32_t m_TranslucentObjectIndex = 0;
 
+		TimerManager m_GameTimerManager{ "Game" };
 		ParticleManager m_ParticleManager;
+
+		GameLayer* m_Game;
 
 	};
 

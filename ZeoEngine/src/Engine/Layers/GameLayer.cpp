@@ -39,14 +39,16 @@ namespace ZeoEngine {
 		static const char* missingChars = u8"º≠‰÷ƒ‚÷°";
 		LoadFont("assets/fonts/wqy-microhei.ttc", missingChars);
 
-		Level::Get().Init();
+		auto& level = Level::Get();
+		level.Init(this);
 
 		// A very basic GameObject based garbage collection system
 		m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, nullptr, [&]() {
 			BenchmarkTimer bt(false);
-			for (uint32_t i = 0; i < m_GameObjectsPendingDestroy.size(); ++i)
+			level.RemoveGameObjects();
+			for (auto* object : m_GameObjectsPendingDestroy)
 			{
-				delete m_GameObjectsPendingDestroy[i];
+				delete object;
 			}
 			m_GameObjectsPendingDestroy.clear();
 			ZE_CORE_INFO("Garbage collection took {0}s.", bt.GetDuration());
@@ -80,13 +82,11 @@ namespace ZeoEngine {
 			m_ActiveCamera = &m_GameCameraController->GetCamera();
 			if (pieState == PIEState::Running)
 			{
-				m_GameTimerManager.OnUpdate(dt);
 				Level::Get().OnUpdate(dt);
 			}
 		}
 #else
 		m_ActiveCamera = &m_GameCameraController->GetCamera();
-		m_GameTimerManager.OnUpdate(dt);
 		Level::Get().OnUpdate(dt);
 #endif
 

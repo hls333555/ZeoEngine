@@ -507,11 +507,15 @@ namespace ZeoEngine {
 
 		if (ImGui::Begin("Level Outline", bShow))
 		{
-			ImGui::Text("(%d objects total)", level.m_SortedGameObjects.size());
+			static uint32_t objectCount = 0;
+			ImGui::Text("(%d objects total)", objectCount);
+			objectCount = 0;
 			for (auto it = level.m_SortedGameObjects.cbegin(); it != level.m_SortedGameObjects.cend(); ++it)
 			{
 				if (it->second->IsPendingDestroy())
 					continue;
+
+				++objectCount;
 
 				ImVec4 color;
 				if (it->second->IsActive())
@@ -2330,10 +2334,9 @@ namespace ZeoEngine {
 			}
 
 			auto& level = Level::Get();
-			auto gameObjectCount = level.m_GameObjects.size();
-			for (uint32_t i = 0; i < gameObjectCount; ++i)
+			for (uint32_t i = 0; i < level.m_GameObjects.size(); ++i)
 			{
-				if (!IsSubclassOf(level.m_GameObjects[i], *data.Property))
+				if (level.m_GameObjects[i]->IsPendingDestroy() || !IsSubclassOf(level.m_GameObjects[i], *data.Property))
 					continue;
 
 				std::stringstream ss_ObjectName;

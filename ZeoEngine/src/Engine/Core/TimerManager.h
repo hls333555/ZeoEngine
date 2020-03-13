@@ -51,6 +51,7 @@ namespace ZeoEngine {
 	class TimerManager
 	{
 		friend class GameLayer;
+		friend class Level;
 
 	private:
 		explicit TimerManager(const std::string& name)
@@ -74,6 +75,8 @@ namespace ZeoEngine {
 
 	private:
 		void OnUpdate(DeltaTime dt);
+
+		void CleanUp();
 
 	private:
 		std::vector<Timer> m_Timers;

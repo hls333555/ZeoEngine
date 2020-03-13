@@ -8,6 +8,7 @@
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/Layers/EditorLayer.h"
+#include "Engine/Layers/GameLayer.h"
 
 namespace ZeoEngine {
 
@@ -19,8 +20,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Level::Init()
+	void Level::Init(GameLayer* gameLayer)
 	{
+		m_Game = gameLayer;
+
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		ZE_CORE_ASSERT(library);
 		// Default level background
@@ -36,6 +39,8 @@ namespace ZeoEngine {
 
 	void Level::OnUpdate(DeltaTime dt)
 	{
+		m_GameTimerManager.OnUpdate(dt);
+
 		for (uint32_t i = 0; i < m_GameObjects.size(); ++i)
 		{
 			if (m_GameObjects[i]->IsPendingDestroy() || !m_GameObjects[i]->IsActive())
@@ -111,24 +116,16 @@ namespace ZeoEngine {
 		if (!object)
 			return;
 
-		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
-		// NOTE: DO NOT USE index based for loop here as it will not iterate all elements!
+		m_Game->AddGameObjectPendingDestroy(object);
+		m_ObjectNames.erase(object->GetName());
+	}
+
+	void Level::RemoveGameObjects()
+	{
 		for (auto it = m_GameObjects.cbegin(); it != m_GameObjects.cend();)
 		{
-			// Remove this GameObject
-			if (*it == object)
+			if ((*it)->IsPendingDestroy())
 			{
-				game->AddGameObjectPendingDestroy(object);
-				RemoveGameObject(object);
-				it = m_GameObjects.erase(it);
-			}
-			// Remove GameObjects that depend on this one
-			else if ((*it)->GetOwner() == object)
-			{
-				(*it)->m_bPendingDestroy = true;
-				(*it)->m_bIsActive = false;
-				game->AddGameObjectPendingDestroy(*it);
-				RemoveGameObject(*it);
 				it = m_GameObjects.erase(it);
 			}
 			else
@@ -136,24 +133,27 @@ namespace ZeoEngine {
 				++it;
 			}
 		}
-	}
-
-	void Level::RemoveGameObject(GameObject* object)
-	{
-		m_ObjectNames.erase(object->GetName());
-		auto it = std::find_if(m_SortedGameObjects.cbegin(), m_SortedGameObjects.cend(), [&object](const std::pair<std::string, GameObject*>& objectPair) {
-			return objectPair.second == object;
-		});
-		if (it != m_SortedGameObjects.cend())
+		for (auto it = m_SortedGameObjects.cbegin(); it != m_SortedGameObjects.cend();)
 		{
-			m_SortedGameObjects.erase(it);
+			if (it->second->IsPendingDestroy())
+			{
+				it = m_SortedGameObjects.erase(it);
+			}
+			else
+			{
+				++it;
+			}
 		}
-		auto it2 = std::find_if(m_TranslucentObjects.cbegin(), m_TranslucentObjects.cend(), [&object](const std::pair<TranslucentObjectData, GameObject*>& objectPair) {
-			return objectPair.second == object;
-		});
-		if (it2 != m_TranslucentObjects.cend())
+		for (auto it = m_TranslucentObjects.cbegin(); it != m_TranslucentObjects.cend();)
 		{
-			m_TranslucentObjects.erase(it2);
+			if (it->second->IsPendingDestroy())
+			{
+				it = m_TranslucentObjects.erase(it);
+			}
+			else
+			{
+				++it;
+			}
 		}
 	}
 
@@ -201,7 +201,7 @@ namespace ZeoEngine {
 
 		for (auto* object : m_GameObjects)
 		{
-			delete object;
+			m_Game->AddGameObjectPendingDestroy(object);
 		}
 		m_GameObjects.clear();
 		m_SortedGameObjects.clear();
@@ -215,6 +215,7 @@ namespace ZeoEngine {
 #endif
 
 		m_ParticleManager.CleanUp();
+		m_GameTimerManager.CleanUp();
 
 		ZE_CORE_INFO("Level cleanup took {0}s.", bt.GetDuration());
 	}
