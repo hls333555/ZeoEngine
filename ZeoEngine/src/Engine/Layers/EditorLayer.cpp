@@ -413,7 +413,7 @@ namespace ZeoEngine {
 			}
 			// Draw framebuffer texture
 			ImGui::GetWindowDrawList()->AddImage(
-				Renderer2D::GetStorageData()->FBOs[0]->GetRenderedTexture(),
+				Renderer2D::GetRenderer2DData().FBOs[0]->GetRenderedTexture(),
 				// Upper left corner for the UVs to be applied at
 				window->InnerRect.Min,
 				// Lower right corner for the UVs to be applied at
@@ -1462,7 +1462,7 @@ namespace ZeoEngine {
 					m_ParticleViewCameraController->UpdateProjection(size.x / size.y);
 				}
 				// Draw framebuffer texture
-				ImGui::Image(Renderer2D::GetStorageData()->FBOs[1]->GetRenderedTexture(),
+				ImGui::Image(Renderer2D::GetRenderer2DData().FBOs[1]->GetRenderedTexture(),
 					ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
 					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 				max = { window->InnerRect.Max.x, window->InnerRect.Max.y };

@@ -7,6 +7,21 @@
 
 namespace ZeoEngine {
 
+	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	{
+		switch (Renderer::GetAPI())
+		{
+		case RendererAPI::API::None:
+			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
+			return nullptr;
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLVertexBuffer>(size);
+		default:
+			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
+			return nullptr;
+		}
+	}
+
 	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())

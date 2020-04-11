@@ -24,6 +24,11 @@ namespace ZeoEngine {
 
 		virtual void Bind(uint32_t slot = 0) const override;
 
+		virtual bool operator==(const Texture& other) const override
+		{
+			return m_RendererID == dynamic_cast<const OpenGLTexture2D&>(other).m_RendererID;
+		}
+
 	private:
 		/** Intended for hot-reloading */
 		std::string m_Path;
