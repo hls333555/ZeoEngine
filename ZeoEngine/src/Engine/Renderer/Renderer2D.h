@@ -17,6 +17,15 @@ namespace ZeoEngine {
 		glm::vec2 UVOffset;
 	};
 
+	struct Statistics
+	{
+		uint32_t DrawCalls = 0;
+		uint32_t QuadCount = 0;
+
+		uint32_t GetTotalVertexCount() { return QuadCount * 4; }
+		uint32_t GetTotalIndexCount() { return QuadCount * 6; }
+	};
+
 	struct Renderer2DData
 	{
 		const uint32_t MaxQuads = 10000;
@@ -37,6 +46,8 @@ namespace ZeoEngine {
 		Ref<Texture2D> WhiteTexture;
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
+
+		Statistics Stats;
 	};
 
 	class Renderer2D
@@ -50,7 +61,10 @@ namespace ZeoEngine {
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 		static void Flush();
+	private:
+		static void FlushAndReset();
 
+	public:
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
@@ -63,6 +77,9 @@ namespace ZeoEngine {
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
 	
 		static const Renderer2DData& GetRenderer2DData() { return s_Data; }
+
+		static Statistics GetStats();
+		static void ResetStats();
 
 	private:
 		static Renderer2DData s_Data;

@@ -75,6 +75,7 @@ namespace ZeoEngine {
 		void CreateParticleEditorDockspace(bool* bShow);
 		void ShowParticleEditor(bool* bShow);
 
+		void ShowStats(bool* bShow);
 		void ShowPreferences(bool* bShow);
 		void ShowAbout(bool* bShow);
 

@@ -107,6 +107,7 @@ namespace ZeoEngine {
 		static bool bShowObjectInspector = true;
 		static bool bShowClassBrowser = true;
 		static bool bShowConsole = true;
+		static bool bShowStats = false;
 		static bool bShowPreferences = false;
 		static bool bShowAbout = false;
 
@@ -243,6 +244,7 @@ namespace ZeoEngine {
 				ImGui::MenuItem("Object Inspector", nullptr, &bShowObjectInspector);
 				ImGui::MenuItem("Class Browser", nullptr, &bShowClassBrowser);
 				ImGui::MenuItem("Console", nullptr, &bShowConsole);
+				ImGui::MenuItem("Stats", nullptr, &bShowStats);
 				ImGui::MenuItem("Particle Editor", nullptr, &m_bShowParticleEditor);
 				ImGui::Separator();
 				// Reset layout on next frame
@@ -306,6 +308,11 @@ namespace ZeoEngine {
 		{
 			CreateParticleEditorDockspace(&m_bShowParticleEditor);
 			ShowParticleEditor(&m_bShowParticleEditor);
+		}
+
+		if (bShowStats)
+		{
+			ShowStats(&bShowStats);
 		}
 
 		if (bShowPreferences)
@@ -1494,6 +1501,21 @@ namespace ZeoEngine {
 				}
 			}
 			ImGui::End();
+		}
+		ImGui::End();
+	}
+
+	void EditorLayer::ShowStats(bool* bShow)
+	{
+		SetNextWindowDefaultPosition();
+		ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Stats", bShow, ImGuiWindowFlags_NoCollapse))
+		{
+			auto Stats = Renderer2D::GetStats();
+			ImGui::Text("Draw Calls: %d", Stats.DrawCalls);
+			ImGui::Text("Quads: %d", Stats.QuadCount);
+			ImGui::Text("Vertices: %d", Stats.GetTotalVertexCount());
+			ImGui::Text("Indices: %d", Stats.GetTotalIndexCount());
 		}
 		ImGui::End();
 	}

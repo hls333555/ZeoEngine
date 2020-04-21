@@ -94,6 +94,7 @@ namespace ZeoEngine {
 		Renderer2D::BeginRenderingToTexture(0);
 #endif
 		{
+			Renderer2D::ResetStats();
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
 

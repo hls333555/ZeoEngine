@@ -130,7 +130,19 @@ namespace ZeoEngine {
 		{
 			s_Data.TextureSlots[i]->Bind(i);
 		}
+
 		RenderCommand::DrawIndexed(s_Data.QuadVAO, s_Data.QuadIndexCount);
+		++s_Data.Stats.DrawCalls;
+	}
+
+	void Renderer2D::FlushAndReset()
+	{
+		EndScene();
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
@@ -142,6 +154,11 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		{
+			FlushAndReset();
+		}
+
 		// White texture
 		constexpr float textureIndex = 0.0f;
 		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
@@ -183,6 +200,8 @@ namespace ZeoEngine {
 		++s_Data.QuadVertexBufferPtr;
 
 		s_Data.QuadIndexCount += 6;
+
+		++s_Data.Stats.QuadCount;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
@@ -194,6 +213,11 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		{
+			FlushAndReset();
+		}
+
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
@@ -245,6 +269,8 @@ namespace ZeoEngine {
 		++s_Data.QuadVertexBufferPtr;
 
 		s_Data.QuadIndexCount += 6;
+
+		++s_Data.Stats.QuadCount;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -255,6 +281,11 @@ namespace ZeoEngine {
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		ZE_PROFILE_FUNCTION();
+
+		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		{
+			FlushAndReset();
+		}
 
 		// White texture
 		constexpr float textureIndex = 0.0f;
@@ -298,6 +329,8 @@ namespace ZeoEngine {
 		++s_Data.QuadVertexBufferPtr;
 
 		s_Data.QuadIndexCount += 6;
+
+		++s_Data.Stats.QuadCount;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
@@ -308,6 +341,11 @@ namespace ZeoEngine {
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
+
+		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		{
+			FlushAndReset();
+		}
 
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
@@ -361,6 +399,18 @@ namespace ZeoEngine {
 		++s_Data.QuadVertexBufferPtr;
 
 		s_Data.QuadIndexCount += 6;
+
+		++s_Data.Stats.QuadCount;
+	}
+
+	Statistics Renderer2D::GetStats()
+	{
+		return s_Data.Stats;
+	}
+
+	void Renderer2D::ResetStats()
+	{
+		memset(&s_Data.Stats, 0, sizeof(Statistics));
 	}
 
 }
