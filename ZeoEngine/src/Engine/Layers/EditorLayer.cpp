@@ -1502,6 +1502,14 @@ namespace ZeoEngine {
 		if (ImGui::Begin("Preferences", bShow, ImGuiWindowFlags_NoCollapse))
 		{
 			ImGui::ShowStyleSelector("Editor style");
+
+			// VSync
+			{
+				static bool bEnableVSync = true;
+				ImGui::Checkbox("VSync", &bEnableVSync);
+				auto& window = Application::Get().GetWindow();
+				window.SetVSync(bEnableVSync);
+			}
 		}
 		ImGui::End();
 	}
