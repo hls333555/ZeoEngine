@@ -2405,6 +2405,10 @@ namespace ZeoEngine {
 					// Add selected texture to the library
 					loadedTexture = library->GetOrLoad(relativePath);
 					SetPropertyValue(data, loadedTexture, loadedTexture);
+					if (loadedTexture != texture2DValue)
+					{
+						InvokePropertyChangeCallback(data);
+					}
 					free(outPath);
 				}
 				else if (result == NFD_ERROR)
@@ -2419,6 +2423,10 @@ namespace ZeoEngine {
 				if (ImGui::Selectable(texture->GetFileName().c_str()))
 				{
 					SetPropertyValue(data, texture, texture);
+					if (texture != texture2DValue)
+					{
+						InvokePropertyChangeCallback(data);
+					}
 				}
 				// Display texture path tooltip
 				if (ImGui::IsItemHovered())
