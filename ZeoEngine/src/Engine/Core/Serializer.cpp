@@ -363,9 +363,11 @@ namespace ZeoEngine {
 				return false;
 			}
 
+			// End of line
+			size_t eol = firstLine.find_first_of("\r\n", typeTokenPos);
 			size_t typePos = typeTokenPos + typeTokenLength + 1;
 			// Get file type
-			std::string type = firstLine.substr(typePos, firstLine.size() - typePos);
+			std::string type = firstLine.substr(typePos, eol - typePos);
 			if (type != validationStr)
 			{
 				ZE_CORE_ERROR("Validation failed: Unrecognized {0} file format!", validationStr.c_str());
