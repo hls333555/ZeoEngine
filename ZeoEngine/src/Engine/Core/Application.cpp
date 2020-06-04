@@ -112,6 +112,11 @@ namespace ZeoEngine {
 		}
 	}
 
+	void Application::Close()
+	{
+		m_bRunning = false;
+	}
+
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_bRunning = false;

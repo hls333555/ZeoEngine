@@ -206,6 +206,11 @@ namespace ZeoEngine {
 						ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
 					}
 				}
+				if (ImGui::MenuItem("Exit"))
+				{
+					// TODO: Check if current level needs saving
+					Application::Get().Close();
+				}
 				ImGui::EndMenu();
 			}
 			// TODO: Edit menu
