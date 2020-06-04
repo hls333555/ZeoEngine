@@ -43,7 +43,7 @@ namespace ZeoEngine {
 	public:
 		SubSpriteObject() = default;
 
-		virtual void Init() override;
+		virtual void OnDeserialized() override;
 		virtual void OnRender() override;
 
 #if WITH_EDITOR

@@ -72,9 +72,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SubSpriteObject::Init()
+	void SubSpriteObject::OnDeserialized()
 	{
-		Super::Init();
+		Super::OnDeserialized();
 
 		GenerateSubTexture();
 	}
