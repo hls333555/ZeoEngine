@@ -26,6 +26,29 @@ RTTR_REGISTRATION
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Texture")
 		);
+
+	registration::class_<SubSpriteObject>("SubSpriteObject")
+		(
+			metadata(ClassMeta::Abstract, true)
+		)
+		.property("Coordinates", &SubSpriteObject::m_Coordinates)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "SubTexture"),
+			metadata(PropertyMeta::Min, 0)
+		)
+		.property("CellSize", &SubSpriteObject::m_CellSize)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "SubTexture"),
+			metadata(PropertyMeta::Min, 0)
+		)
+		.property("SpriteSize", &SubSpriteObject::m_SpriteSize)
+		(
+			policy::prop::bind_as_ptr,
+			metadata(PropertyMeta::Category, "SubTexture"),
+			metadata(PropertyMeta::Min, 0)
+		);
 }
 
 namespace ZeoEngine {
@@ -39,8 +62,6 @@ namespace ZeoEngine {
 
 	void SpriteObject::OnRender()
 	{
-		Super::OnRender();
-
 		if (m_SpriteTexture)
 		{
 			Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_SpriteTexture, m_TextureTilling, { 0.0f, 0.0f }, m_TintColor);
@@ -50,5 +71,42 @@ namespace ZeoEngine {
 			Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_TintColor);
 		}
 	}
+
+	void SubSpriteObject::Init()
+	{
+		Super::Init();
+
+		GenerateSubTexture();
+	}
+
+	void SubSpriteObject::OnRender()
+	{
+		if (m_SubSpriteTexture)
+		{
+			Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), m_SubSpriteTexture, GetTextureTiling(), { 0.0f, 0.0f }, GetTintColor());
+		}
+		else
+		{
+			Renderer2D::DrawRotatedQuad(GetPosition(), GetScale(), GetRotation(true), GetTintColor());
+		}
+	}
+
+	void SubSpriteObject::GenerateSubTexture()
+	{
+		m_SubSpriteTexture = SubTexture2D::CreateFromCoords(m_SpriteTexture, m_Coordinates, m_CellSize, m_SpriteSize);
+	}
+
+#if WITH_EDITOR
+	void SubSpriteObject::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
+	{
+		Super::PostPropertyValueEditChange(prop, outerProp);
+
+		if (prop->get_name() == "SpriteTexture" ||
+			prop->get_name() == "Coordinates" || prop->get_name() == "CellSize" || prop->get_name() == "SpriteSize")
+		{
+			GenerateSubTexture();
+		}
+	}
+#endif
 
 }
