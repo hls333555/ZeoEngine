@@ -118,8 +118,8 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		uint32_t dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
-		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, dataSize);
+		auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
+		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 
 		// If we have nothing to draw, just skip flushing
 		if (dataSize != 0)

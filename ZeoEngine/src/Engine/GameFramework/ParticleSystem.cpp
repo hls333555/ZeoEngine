@@ -105,7 +105,7 @@ RTTR_REGISTRATION
 		(
 			policy::prop::bind_as_ptr,
 			metadata(PropertyMeta::Category, "Emitter"),
-			metadata(PropertyMeta::Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于0，生成速度由帧数决定")
+			metadata(PropertyMeta::Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于等于0，则不生成")
 		)
 		.property("BurstList", &ParticleTemplate::BurstList)
 		(
@@ -201,7 +201,7 @@ namespace ZeoEngine {
 	ParticleSystem::ParticleSystem(const std::string& filePath, const std::string& processedSrc)
 		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
 		, m_Path(filePath)
-		, m_SpawnRate(1.0f / 30.0f)
+		, m_SpawnRate(30.0f)
 	{
 		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
 
@@ -223,7 +223,7 @@ namespace ZeoEngine {
 		, m_ParticleTemplate(particleTemplate)
 		, m_SpawnPosition(position)
 		, m_bAutoDestroy(bAutoDestroy)
-		, m_SpawnRate(1.0f / 30.0f)
+		, m_SpawnRate(30.0f)
 	{
 		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
 		EvaluateEmitterProperties();
@@ -234,7 +234,7 @@ namespace ZeoEngine {
 		, m_ParticleTemplate(particleTemplate)
 		, m_Parent(attachToParent)
 		, m_bAutoDestroy(bAutoDestroy)
-		, m_SpawnRate(1.0f / 30.0f)
+		, m_SpawnRate(30.0f)
 #if WITH_EDITOR
 		, m_bIsInParticleEditor(bIsInParticleEditor)
 		, m_FiniteLoopRestartInterval(1.0f)
@@ -282,26 +282,18 @@ namespace ZeoEngine {
 
 		// Spawn rate
 		{
-			float evaluated = 0.0f;
 			switch (m_ParticleTemplate.SpawnRate.VariationType)
 			{
 			case ParticleVariationType::Constant:
-				evaluated = m_ParticleTemplate.SpawnRate.Val1;
+				m_SpawnRate = m_ParticleTemplate.SpawnRate.Val1;
 				break;
 			case ParticleVariationType::RandomInRange:
-				evaluated = RandomEngine::RandFloatInRange(m_ParticleTemplate.SpawnRate.Val1, m_ParticleTemplate.SpawnRate.Val2);
+				m_SpawnRate = RandomEngine::RandFloatInRange(m_ParticleTemplate.SpawnRate.Val1, m_ParticleTemplate.SpawnRate.Val2);
 				break;
 			default:
 				break;
 			}
-			if (evaluated == 0.0f)
-			{
-				m_SpawnRate = 0.0f;
-			}
-			else if (evaluated > 0.0f)
-			{
-				m_SpawnRate = 1.0f / evaluated;
-			}
+			m_SpawnRate = m_SpawnRate < 0.0f ? 0.0f : m_SpawnRate;
 		}
 
 		// Burst list
@@ -496,11 +488,27 @@ namespace ZeoEngine {
 
 	void ParticleSystem::Emit()
 	{
+		uint32_t OldPoolIndex = m_PoolIndex;
+		// Iterate until we find an available (inactive) particle to activate
+		while (m_ParticlePool[m_PoolIndex].bActive)
+		{
+			CalculateNextPoolIndex();
+			if (m_PoolIndex == OldPoolIndex)
+			{
+				// Fail to find one, skip emitting
+				return;
+			}
+		}
+
 		Particle& particle = m_ParticlePool[m_PoolIndex];
 		particle.bActive = true;
-
 		EvaluateParticleProperties(particle);
 
+		CalculateNextPoolIndex();
+	}
+
+	void ParticleSystem::CalculateNextPoolIndex()
+	{
 		if (m_PoolIndex == 0)
 		{
 			m_PoolIndex = MAX_PARTICLE_COUNT - 1;
@@ -545,9 +553,15 @@ namespace ZeoEngine {
 			if ((m_bInfiniteLoop || m_LoopCount != 0))
 			{
 				// Process SpawnRate
-				if (m_SpawnRate != 0.0f && (m_SpawnTime == 0.0f || m_Time - m_SpawnTime > m_SpawnRate))
+				if (m_SpawnRate != 0.0f && (m_SpawnTime == 0.0f || m_Time - m_SpawnTime > 1.0f / m_SpawnRate))
 				{
-					Emit();
+					uint32_t i = 0;
+					uint32_t imax = static_cast<uint32_t>(m_SpawnRate * dt);
+					do 
+					{
+						Emit();
+						++i;
+					} while (i < imax);
 					m_SpawnTime = m_Time;
 				}
 				// Process BurstList

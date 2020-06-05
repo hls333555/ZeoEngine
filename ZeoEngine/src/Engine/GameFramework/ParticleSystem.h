@@ -341,6 +341,8 @@ namespace ZeoEngine {
 	private:
 		void Emit();
 
+		void CalculateNextPoolIndex();
+
 	public:
 		/** Called when this particle system is about to be destroyed */
 		SystemFinishedFn m_OnSystemFinished;
@@ -365,7 +367,6 @@ namespace ZeoEngine {
 		bool m_bAutoDestroy = true;
 
 		// Emitter properties
-		/** Time between emitting two particles, which equals to 1 / ParticleTemplate.SpawnRate */
 		float m_SpawnRate;
 		struct BurstTimeData
 		{
