@@ -121,7 +121,11 @@ namespace ZeoEngine {
 		uint32_t dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
 		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
-		Flush();
+		// If we have nothing to draw, just skip flushing
+		if (dataSize != 0)
+		{
+			Flush();
+		}
 	}
 
 	void Renderer2D::Flush()
