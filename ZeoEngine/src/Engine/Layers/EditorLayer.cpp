@@ -62,6 +62,8 @@ namespace ZeoEngine {
 			m_GameViewCameraController->OnUpdate(dt);
 		}
 
+		Renderer2D::ResetStats();
+
 		if (m_bShowParticleEditor)
 		{
 			if (m_bIsHoveringParticleView)

@@ -92,9 +92,10 @@ namespace ZeoEngine {
 
 #if WITH_EDITOR
 		Renderer2D::BeginRenderingToTexture(0);
-#endif
 		{
+#else
 			Renderer2D::ResetStats();
+#endif
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
 
@@ -108,8 +109,8 @@ namespace ZeoEngine {
 				Level::Get().OnRender();
 				Renderer2D::EndScene();
 			}
-		}
 #if WITH_EDITOR
+		}
 		Renderer2D::EndRenderingToTexture(0);
 #endif
 	}
