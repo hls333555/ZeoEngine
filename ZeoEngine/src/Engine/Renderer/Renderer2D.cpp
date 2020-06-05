@@ -108,10 +108,7 @@ namespace ZeoEngine {
 
 		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-
-		s_Data.TextureSlotIndex = 1;
+		Reset();
 	}
 
 	void Renderer2D::EndScene()
@@ -139,14 +136,18 @@ namespace ZeoEngine {
 		++s_Data.Stats.DrawCalls;
 	}
 
-	void Renderer2D::FlushAndReset()
+	void Renderer2D::Reset()
 	{
-		EndScene();
-
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
+	}
+
+	void Renderer2D::FlushAndReset()
+	{
+		EndScene();
+		Reset();
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
@@ -158,7 +159,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}
@@ -198,7 +199,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}
@@ -249,7 +250,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}
@@ -300,7 +301,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}
@@ -341,7 +342,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}
@@ -393,7 +394,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadIndexCount > s_Data.MaxIndices)
+		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
 		}

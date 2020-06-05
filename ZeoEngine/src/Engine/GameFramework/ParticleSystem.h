@@ -268,7 +268,7 @@ namespace ZeoEngine {
 		RTTR_ENABLE()
 	};
 
-#define MAX_PARTICLE_COUNT 1000
+#define MAX_PARTICLE_COUNT 10000
 
 	class ParticleSystem
 	{

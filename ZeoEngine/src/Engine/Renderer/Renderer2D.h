@@ -61,8 +61,9 @@ namespace ZeoEngine {
 		static void EndRenderingToTexture(uint32_t frameBufferIndex);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
-		static void Flush();
 	private:
+		static void Flush();
+		static void Reset();
 		static void FlushAndReset();
 
 	public:
