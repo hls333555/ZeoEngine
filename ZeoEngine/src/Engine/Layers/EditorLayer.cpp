@@ -2073,6 +2073,10 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_8(ss.str().c_str(), &int8Value, speed, min, max);
 		EndDisplayProperty(ss, data, int8Value, static_cast<int8_t>(0));
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessInt32Type(int32_t int32Value, const PropertyData& data)
@@ -2118,6 +2122,10 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragInt_64(ss.str().c_str(), &int64Value, speed, min, max);
 		EndDisplayProperty(ss, data, int64Value, 0ll);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data)
@@ -2132,6 +2140,10 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_8(ss.str().c_str(), &uint8Value, speed, min, max);
 		EndDisplayProperty(ss, data, uint8Value, static_cast<uint8_t>(0));
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data)
@@ -2146,6 +2158,10 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_32(ss.str().c_str(), &uint32Value, speed, min, max);
 		EndDisplayProperty(ss, data, uint32Value, 0u);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data)
@@ -2160,6 +2176,10 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		ImGui::DragUInt_64(ss.str().c_str(), &uint64Value, speed, min, max);
 		EndDisplayProperty(ss, data, uint64Value, 0ull);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessFloatType(float floatValue, const PropertyData& data)

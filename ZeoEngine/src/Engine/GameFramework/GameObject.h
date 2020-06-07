@@ -270,7 +270,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 #if WITH_EDITOR
 		// TODO: Add more types for these callbacks
-		// Currently supported types: int32_t, float, enum, glm::i32vec2, Texture2D
+		// Currently supported types: int8_t, int32_t, int64_t, uint8_t, uint32_t, uint64_t, float, enum, glm::i32vec2, Texture2D
 		/** Called every time this property is changed in the editor. (e.g. during dragging a slider to tweak the property) */
 		virtual void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 		/** Called only when this property is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the property) */
