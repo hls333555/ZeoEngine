@@ -301,14 +301,22 @@ namespace ZeoEngine {
 			m_BurstList.clear();
 			for (const auto& burstData : m_ParticleTemplate.BurstList)
 			{
+				uint32_t value = 0;
 				switch (burstData.Amount.VariationType)
 				{
 				case ParticleVariationType::Constant:
-					m_BurstList.emplace(burstData.Time, burstData.Amount.Val1);
+				{
+					value = burstData.Amount.Val1 > 0 ? burstData.Amount.Val1 : 0;
+					m_BurstList.emplace(burstData.Time, value);
 					break;
+				}
 				case ParticleVariationType::RandomInRange:
-					m_BurstList.emplace(burstData.Time, static_cast<int32_t>(RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2))));
+				{
+					float tempValue = RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2));
+					value = tempValue > 0.0f ? static_cast<uint32_t>(tempValue) : 0;
+					m_BurstList.emplace(burstData.Time, value);
 					break;
+				}
 				default:
 					break;
 				}
