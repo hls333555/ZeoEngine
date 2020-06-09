@@ -265,10 +265,10 @@ namespace ZeoEngine {
 		 */
 		glm::i32vec2 SubImageSize{ 0 };
 
+		uint32_t MaxDrawParticles{ 500 };
+
 		RTTR_ENABLE()
 	};
-
-#define MAX_PARTICLE_COUNT 10000
 
 	class ParticleSystem
 	{
@@ -295,6 +295,9 @@ namespace ZeoEngine {
 		const ParticleTemplate& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 		static ParticleSystem* CreateDefaultParticleSystem();
+
+	private:
+		void ResizeParticlePool();
 
 	private:
 		// Particle properties

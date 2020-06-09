@@ -184,6 +184,11 @@ RTTR_REGISTRATION
 			metadata(PropertyMeta::Category, "Renderer: Texture"),
 			metadata(PropertyMeta::Tooltip, u8"决定如何分割贴图来用于UV动画。x为列数，y为行数"),
 			metadata(PropertyMeta::Min, 0)
+		)
+		.property("MaxDrawParticles", &ParticleTemplate::MaxDrawParticles)
+		(
+			metadata(PropertyMeta::Category, "Emitter"),
+			metadata(PropertyMeta::Tooltip, u8"最多生成的粒子数")
 		);
 
 	registration::class_<ParticleSystem>("ParticleSystem")
@@ -199,12 +204,10 @@ RTTR_REGISTRATION
 namespace ZeoEngine {
 
 	ParticleSystem::ParticleSystem(const std::string& filePath, const std::string& processedSrc)
-		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		: m_PoolIndex(0)
 		, m_Path(filePath)
 		, m_SpawnRate(30.0f)
 	{
-		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
-
 		// Extract name from file path
 		// "assets/particles/Particle.zparticle" -> "Particle.zparticle"
 		auto lastSlash = m_Path.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
@@ -215,22 +218,24 @@ namespace ZeoEngine {
 		Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
 			return rttr::variant(this);
 		});
+		m_PoolIndex = m_ParticleTemplate.MaxDrawParticles - 1;
+		ResizeParticlePool();
 		EvaluateEmitterProperties();
 	}
 
 	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position, bool bAutoDestroy)
-		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		: m_PoolIndex(particleTemplate.MaxDrawParticles - 1)
 		, m_ParticleTemplate(particleTemplate)
 		, m_SpawnPosition(position)
 		, m_bAutoDestroy(bAutoDestroy)
 		, m_SpawnRate(30.0f)
 	{
-		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
+		ResizeParticlePool();
 		EvaluateEmitterProperties();
 	}
 
 	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy, bool bIsInParticleEditor)
-		: m_PoolIndex(MAX_PARTICLE_COUNT - 1)
+		: m_PoolIndex(particleTemplate.MaxDrawParticles - 1)
 		, m_ParticleTemplate(particleTemplate)
 		, m_Parent(attachToParent)
 		, m_bAutoDestroy(bAutoDestroy)
@@ -240,7 +245,7 @@ namespace ZeoEngine {
 		, m_FiniteLoopRestartInterval(1.0f)
 #endif
 	{
-		m_ParticlePool.resize(MAX_PARTICLE_COUNT);
+		ResizeParticlePool();
 		EvaluateEmitterProperties();
 	}
 
@@ -256,6 +261,10 @@ namespace ZeoEngine {
 		{
 			EvaluateEmitterProperties();
 			Resimulate();
+		}
+		else if (prop->get_name() == "MaxDrawParticles")
+		{
+			ResizeParticlePool();
 		}
 	}
 #endif
@@ -273,6 +282,12 @@ namespace ZeoEngine {
 		m_DefaultEmitter.ColorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
 		m_DefaultEmitter.ColorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
 		return new ParticleSystem(m_DefaultEmitter, nullptr, false, true);
+	}
+
+	void ParticleSystem::ResizeParticlePool()
+	{
+		m_ParticlePool.resize(m_ParticleTemplate.MaxDrawParticles);
+		m_PoolIndex = m_ParticleTemplate.MaxDrawParticles - 1;
 	}
 
 	void ParticleSystem::EvaluateEmitterProperties()
@@ -519,7 +534,7 @@ namespace ZeoEngine {
 	{
 		if (m_PoolIndex == 0)
 		{
-			m_PoolIndex = MAX_PARTICLE_COUNT - 1;
+			m_PoolIndex = m_ParticleTemplate.MaxDrawParticles - 1;
 		}
 		else
 		{
