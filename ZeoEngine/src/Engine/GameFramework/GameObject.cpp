@@ -217,9 +217,9 @@ namespace ZeoEngine {
 #if WITH_EDITOR
 	void GameObject::OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
 	{
-		ZE_CORE_ASSERT(outerProp);
+		ZE_CORE_ASSERT(prop);
 
-		if (outerProp->get_name() == "Transform")
+		if (outerProp && outerProp->get_name() == "Transform")
 		{
 			RecomposeTransformMatrix();
 		}

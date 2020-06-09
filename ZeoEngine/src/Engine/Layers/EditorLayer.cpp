@@ -1067,27 +1067,27 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<int8_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), static_cast<int8_t>(0));
+					data.SequentialView->insert(data.SequentialView->end(), 0i8);
 				}
 				else if (itemType == rttr::type::get<int32_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), 0);
+					data.SequentialView->insert(data.SequentialView->end(), 0i32);
 				}
 				else if (itemType == rttr::type::get<int64_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), 0ll);
+					data.SequentialView->insert(data.SequentialView->end(), 0i64);
 				}
 				else if (itemType == rttr::type::get<uint8_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), static_cast<uint8_t>(0));
+					data.SequentialView->insert(data.SequentialView->end(), 0ui8);
 				}
 				else if (itemType == rttr::type::get<uint32_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), 0u);
+					data.SequentialView->insert(data.SequentialView->end(), 0ui32);
 				}
 				else if (itemType == rttr::type::get<uint64_t>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), 0ull);
+					data.SequentialView->insert(data.SequentialView->end(), 0ui64);
 				}
 				else if (itemType == rttr::type::get<float>())
 				{
@@ -1111,7 +1111,7 @@ namespace ZeoEngine {
 				}
 				else if (itemType == rttr::type::get<glm::i32vec2>())
 				{
-					data.SequentialView->insert(data.SequentialView->end(), glm::i32vec2(0));
+					data.SequentialView->insert(data.SequentialView->end(), glm::i32vec2(0i32));
 				}
 				else if (itemType == rttr::type::get<glm::vec3>())
 				{
@@ -1611,7 +1611,6 @@ namespace ZeoEngine {
 		m_bIsSortedPropertiesDirty[ENUM_TO_INT(PropertySource::GameObjectProperty)] = true;
 		m_LoggedProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
 		m_HideConditionProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
-		m_TempInputStrings.clear();
 	}
 
 	void EditorLayer::EditTransform()
@@ -1926,13 +1925,10 @@ namespace ZeoEngine {
 
 	void EditorLayer::InvokePropertyChangeCallback(const PropertyData& data, bool bInvokeOnlyIfDeactivated)
 	{
+		data.OutermostObject->get_type().invoke("OnPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
 		if (bInvokeOnlyIfDeactivated)
 		{
 			data.OutermostObject->get_type().invoke("PostPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
-		}
-		else
-		{
-			data.OutermostObject->get_type().invoke("OnPropertyValueEditChange", *data.OutermostObject, { const_cast<const rttr::property*>(data.Property), const_cast<const rttr::property*>(data.OuterProperty) });
 		}
 	}
 
@@ -2065,17 +2061,46 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		// Create buffer if not exists
+		static std::unordered_map<std::string, int8_t> valueBuffer;
+		valueBuffer[ss.str()] = int8Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		int8_t min = minVar ? std::max(minVar.to_int8(), static_cast<int8_t>(INT8_MIN)) : static_cast<int8_t>(INT8_MIN);
 		int8_t max = maxVar ? std::min(maxVar.to_int8(), static_cast<int8_t>(INT8_MAX)) : static_cast<int8_t>(INT8_MAX);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragInt_8(ss.str().c_str(), &int8Value, speed, min, max);
-		EndDisplayProperty(ss, data, int8Value, static_cast<int8_t>(0));
+		bool bIsDragging = ImGui::IsMouseDragging();
+		// Write changes to buffer if not dragging
+		// For dragging, the value is applied immediately
+		// For editing, the value is applied after completion
+		bool bChanged = ImGui::DragInt_8(ss.str().c_str(), bIsDragging ? &int8Value : &valueBuffer[ss.str()], speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			// Apply buffer
+			int8Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, int8Value, 0i8);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			// WORKAROUND: Pressing TAB after editing will discard the changes due to ImGui::IsItemDeactivatedAfterEdit() being processed one frame later
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				int8Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, int8Value, 0i8);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				int8Value = glm::clamp(int8Value, min, max);
+				EndDisplayProperty(ss, data, int8Value, 0i8);
+			}
+		}
+		// Put it at last to ensure value is already updated
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2083,14 +2108,17 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, int32_t> valueBuffer;
+		valueBuffer[ss.str()] = int32Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragInt(ss.str().c_str(), &int32Value, speed, min, max);
-		EndDisplayProperty(ss, data, int32Value, 0, [&int32Value](const PropertyData& data) {
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragInt_32(ss.str().c_str(), bIsDragging ? &int32Value : &valueBuffer[ss.str()], speed, min, max);
+		auto f = [&int32Value](const PropertyData& data) {
 			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
 			if (sequentialVar.can_convert<BurstData>())
 			{
@@ -2103,10 +2131,30 @@ namespace ZeoEngine {
 					sequentialVar.get_value<BurstData*>()->Amount.Val2 = int32Value;
 				}
 			}
-		});
+		};
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			int32Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, int32Value, 0i32, f);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				int32Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, int32Value, 0i32, f);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				int32Value = glm::clamp(int32Value, min, max);
+				EndDisplayProperty(ss, data, int32Value, 0i32, f);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2114,17 +2162,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, int64_t> valueBuffer;
+		valueBuffer[ss.str()] = int64Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		int64_t min = minVar ? std::max(minVar.to_int64(), INT64_MIN) : INT64_MIN;
 		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : INT64_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragInt_64(ss.str().c_str(), &int64Value, speed, min, max);
-		EndDisplayProperty(ss, data, int64Value, 0ll);
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragInt_64(ss.str().c_str(), bIsDragging ? &int64Value : &valueBuffer[ss.str()], speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			int64Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, int64Value, 0i64);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				int64Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, int64Value, 0i64);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				int64Value = glm::clamp(int64Value, min, max);
+				EndDisplayProperty(ss, data, int64Value, 0i64);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2132,17 +2202,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, uint8_t> valueBuffer;
+		valueBuffer[ss.str()] = uint8Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint8_t min = minVar ? std::max(minVar.to_uint8(), static_cast<uint8_t>(0)) : static_cast<uint8_t>(0);
-		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), static_cast<uint8_t>(UINT8_MAX)) : static_cast<uint8_t>(UINT8_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragUInt_8(ss.str().c_str(), &uint8Value, speed, min, max);
-		EndDisplayProperty(ss, data, uint8Value, static_cast<uint8_t>(0));
+		uint8_t min = minVar ? std::max(minVar.to_uint8(), 0ui8) : 0ui8;
+		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), UINT8_MAX) : UINT8_MAX;
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragUInt_8(ss.str().c_str(), bIsDragging ? &uint8Value : &valueBuffer[ss.str()], speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			uint8Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, uint8Value, 0ui8);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				uint8Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, uint8Value, 0ui8);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				uint8Value = glm::clamp(uint8Value, min, max);
+				EndDisplayProperty(ss, data, uint8Value, 0ui8);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2150,17 +2242,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, uint32_t> valueBuffer;
+		valueBuffer[ss.str()] = uint32Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint32_t min = minVar ? std::max(minVar.to_uint32(), static_cast<uint32_t>(0)) : 0u;
-		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), static_cast<uint32_t>(UINT32_MAX)) : static_cast<uint32_t>(UINT32_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragUInt_32(ss.str().c_str(), &uint32Value, speed, min, max);
-		EndDisplayProperty(ss, data, uint32Value, 0u);
+		uint32_t min = minVar ? std::max(minVar.to_uint32(), 0ui32) : 0ui32;
+		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), UINT32_MAX) : UINT32_MAX;
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragUInt_32(ss.str().c_str(), bIsDragging ? &uint32Value : &valueBuffer[ss.str()], speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			uint32Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, uint32Value, 0ui32);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				uint32Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, uint32Value, 0ui32);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				uint32Value = glm::clamp(uint32Value, min, max);
+				EndDisplayProperty(ss, data, uint32Value, 0ui32);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2168,17 +2282,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, uint64_t> valueBuffer;
+		valueBuffer[ss.str()] = uint64Value;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		uint64_t min = minVar ? std::max(minVar.to_uint64(), static_cast<uint64_t>(0)) : 0ull;
-		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), static_cast<uint64_t>(UINT64_MAX)) : static_cast<uint64_t>(UINT64_MAX);
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragUInt_64(ss.str().c_str(), &uint64Value, speed, min, max);
-		EndDisplayProperty(ss, data, uint64Value, 0ull);
+		uint64_t min = minVar ? std::max(minVar.to_uint64(), 0ui64) : 0ui64;
+		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), UINT64_MAX) : UINT64_MAX;
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragUInt_64(ss.str().c_str(), bIsDragging ? &uint64Value : &valueBuffer[ss.str()], speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			uint64Value = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, uint64Value, 0ui64);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				uint64Value = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, uint64Value, 0ui64);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				uint64Value = glm::clamp(uint64Value, min, max);
+				EndDisplayProperty(ss, data, uint64Value, 0ui64);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2186,29 +2322,47 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, float> valueBuffer;
+		valueBuffer[ss.str()] = floatValue;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		// Note: The min value of float should be -FLT_MAX
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		bool bChanged = ImGui::DragFloat(ss.str().c_str(), &floatValue, speed, min, max, "%.2f");
-		EndDisplayProperty(ss, data, floatValue, 0.0f, [&floatValue](const PropertyData& data) {
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragFloat(ss.str().c_str(), bIsDragging ? &floatValue : &valueBuffer[ss.str()], speed, min, max, "%.2f");
+		auto f = [&floatValue](const PropertyData& data) {
 			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
 			if (sequentialVar.can_convert<BurstData>())
 			{
 				sequentialVar.get_value<BurstData*>()->Time = floatValue;
 			}
-		});
-		// Note: If we put it before EndDisplayProperty(), the rotation property's value can not be edited in the editor because RecomposeTransformMatrix() will perform calculations based on an out-of-date value
-		if (bChanged)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
+		};
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			floatValue = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, floatValue, 0.0f, f);
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				floatValue = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, floatValue, 0.0f, f);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				floatValue = glm::clamp(floatValue, min, max);
+				EndDisplayProperty(ss, data, floatValue, 0.0f, f);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2216,15 +2370,41 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, double> valueBuffer;
+		valueBuffer[ss.str()] = doubleValue;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		// Note: The min value of double should be -DBL_MAX
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		double min = minVar ? std::max(minVar.to_double(), -DBL_MAX) : -DBL_MAX;
 		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragDouble(ss.str().c_str(), &doubleValue, speed, min, max);
-		EndDisplayProperty(ss, data, doubleValue, 0.0);
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragDouble(ss.str().c_str(), bIsDragging ? &doubleValue : &valueBuffer[ss.str()], speed, min, max);
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			doubleValue = glm::clamp(valueBuffer[ss.str()], min, max);
+			EndDisplayProperty(ss, data, doubleValue, 0.0);
+			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				doubleValue = glm::clamp(valueBuffer[ss.str()], min, max);
+				EndDisplayProperty(ss, data, doubleValue, 0.0);
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				doubleValue = glm::clamp(doubleValue, min, max);
+				EndDisplayProperty(ss, data, doubleValue, 0.0);
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
+		}
 	}
 
 	void EditorLayer::ProcessEnumType(const PropertyData& data)
@@ -2268,44 +2448,71 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
-		ImGui::InputText(ss.str().c_str(),
-			m_TempInputStrings[ss.str().c_str()].first ?
-			&m_TempInputStrings[ss.str().c_str()].second :
-			stringPointerValue,
-			ImGuiInputTextFlags_AutoSelectAll);
+		// Map from id to temp edited string plus a bool flag indicating if we are editing the InputText
+		static std::unordered_map<std::string, std::pair<bool, std::string>> valueBuffer;
+		ImGui::InputText(ss.str().c_str(), valueBuffer[ss.str()].first ? &valueBuffer[ss.str()].second : stringPointerValue, ImGuiInputTextFlags_AutoSelectAll);
 		// Write changes to cache first
 		if (ImGui::IsItemActivated())
 		{
-			m_TempInputStrings[ss.str().c_str()].first = true;
-			m_TempInputStrings[ss.str().c_str()].second = *stringPointerValue;
+			valueBuffer[ss.str()].first = true;
+			valueBuffer[ss.str()].second = *stringPointerValue;
 		}
+		bool bChanged = false;
 		// Apply cache when user finishes editing
 		if (ImGui::IsItemDeactivated())
 		{
+			// "Name" property specific
 			if (data.Property->get_name() == "Name")
 			{
 				Level::Get().m_ObjectNames.erase(*stringPointerValue);
-				Level::Get().m_ObjectNames.emplace(m_TempInputStrings[ss.str().c_str()].second);
+				Level::Get().m_ObjectNames.emplace(valueBuffer[ss.str()].second);
 			}
-			*stringPointerValue = std::move(m_TempInputStrings[ss.str().c_str()].second);
-			m_TempInputStrings[ss.str().c_str()].first = false;
+			bChanged = valueBuffer[ss.str()].second != *stringPointerValue;
+			*stringPointerValue = std::move(valueBuffer[ss.str()].second);
+			valueBuffer[ss.str()].first = false;
 		}
 		EndDisplayProperty(ss, data, *stringPointerValue, std::string(""));
+		if (bChanged)
+		{
+			InvokePropertyChangeCallback(data);
+		}
 	}
 
 	void EditorLayer::ProcessVec2Type(glm::vec2* vec2PointerValue, const PropertyData& data)
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, glm::vec2> valueBuffer;
+		valueBuffer[ss.str()] = *vec2PointerValue;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		bool bChanged = ImGui::DragFloat2(ss.str().c_str(), glm::value_ptr(*vec2PointerValue), speed, min, max, "%.2f");
-		EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
-		if (bChanged)
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragFloat2(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec2PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max, "%.2f");
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			*vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+			EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
+			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				*vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+				EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				*vec2PointerValue = glm::clamp(*vec2PointerValue, min, max);
+				EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
+			}
+		}
+		if (bChanged && bIsDragging)
 		{
 			InvokePropertyChangeCallback(data, false);
 		}
@@ -2315,17 +2522,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, glm::i32vec2> valueBuffer;
+		valueBuffer[ss.str()] = *i32vec2PointerValue;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		ImGui::DragInt2(ss.str().c_str(), glm::value_ptr(*i32vec2PointerValue), speed, min, max);
-		EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragInt2(ss.str().c_str(), bIsDragging ? glm::value_ptr(*i32vec2PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			*i32vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+			EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				*i32vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+				EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				*i32vec2PointerValue = glm::clamp(*i32vec2PointerValue, min, max);
+				EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2333,21 +2562,39 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
+		static std::unordered_map<std::string, glm::vec3> valueBuffer;
+		valueBuffer[ss.str()] = *vec3PointerValue;
+		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
 		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
 		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
+		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		bool bChanged = ImGui::DragFloat3(ss.str().c_str(), glm::value_ptr(*vec3PointerValue), speed, min, max, "%.2f");
-		EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
-		if (bChanged)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::DragFloat3(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec3PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max, "%.2f");
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			*vec3PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+			EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
 			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				*vec3PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
+				EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				*vec3PointerValue = glm::clamp(*vec3PointerValue, min, max);
+				EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
 		}
 	}
 
@@ -2355,8 +2602,33 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
-		ImGui::ColorEdit4(ss.str().c_str(), glm::value_ptr(*vec4PointerValue));
-		EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));
+		static std::unordered_map<std::string, glm::vec4> valueBuffer;
+		valueBuffer[ss.str()] = *vec4PointerValue;
+		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bChanged = ImGui::ColorEdit4(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec4PointerValue) : glm::value_ptr(valueBuffer[ss.str()]));
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			*vec4PointerValue = std::move(valueBuffer[ss.str()]);
+			EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));
+			InvokePropertyChangeCallback(data);
+		}
+		else
+		{
+			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			{
+				*vec4PointerValue = std::move(valueBuffer[ss.str()]);
+				EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));
+				InvokePropertyChangeCallback(data);
+			}
+			else
+			{
+				EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));
+			}
+		}
+		if (bChanged && bIsDragging)
+		{
+			InvokePropertyChangeCallback(data, false);
+		}
 	}
 
 	void EditorLayer::ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data)

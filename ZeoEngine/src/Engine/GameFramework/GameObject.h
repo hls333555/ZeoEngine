@@ -122,7 +122,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		Min,
 		/** Defines the max value of numerical property slider */
 		Max,
-		/** Controls how fast it changes when you are dragging a property value, default is 1.0f */
+		/** Used by Drag* Widgets. Controls how fast it changes when you are dragging a property value, default is 1.0f */
 		DragSensitivity,
 		/** This property is registered but will not show in the editor */
 		Hidden,
@@ -270,7 +270,11 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 
 #if WITH_EDITOR
 		// TODO: Add more types for these callbacks
-		// Currently supported types: int8_t, int32_t, int64_t, uint8_t, uint32_t, uint64_t, float, enum, glm::i32vec2, Texture2D
+		// Currently supported types:
+		// int8_t, int32_t, int64_t, uint8_t, uint32_t, uint64_t, float, double,
+		// enum, std::string,
+		// glm::vec2, glm::i32vec2, glm::vec3, glm::vec4,
+		// Texture2D
 		/** Called every time this property is changed in the editor. (e.g. during dragging a slider to tweak the property) */
 		virtual void OnPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 		/** Called only when this property is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the property) */

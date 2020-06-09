@@ -209,12 +209,6 @@ namespace ZeoEngine {
 		 */
 		std::unordered_map<rttr::property, std::pair<rttr::property, std::string>, RTTRPropertyHashHasher> m_HideConditionProperties[propertySourceNum];
 
-		/**
-		 * Map from InputText id to temp edited string plus a bool flag indicating if we are editing that InputText.
-		 * This variable is necessary as InputText() requires a persistent string to read and write, and we only want the input changes to apply when user presses enter etc - deferred editing.
-		 */
-		std::unordered_map<std::string, std::pair<bool, std::string>> m_TempInputStrings;
-
 	};
 
 }
