@@ -45,16 +45,21 @@ namespace ZeoEngine {
 	class OpenGLFrameBuffer : public FrameBuffer
 	{
 	public:
-		OpenGLFrameBuffer(uint32_t width, uint32_t height);
+		OpenGLFrameBuffer(const FrameBufferSpec& spec);
 		virtual ~OpenGLFrameBuffer();
+
+		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
+
+		void Invalidate();
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void* GetRenderedTexture() const override { return (void*)(intptr_t)m_TextureID; }
+		virtual void* GetColorAttachment() const override { return (void*)(intptr_t)m_ColorAttachment; }
 
 	private:
-		uint32_t m_RendererID, m_TextureID, m_RenderBufferObjectID;
+		FrameBufferSpec m_Spec;
+		uint32_t m_RendererID, m_ColorAttachment, m_DepthAttachment;
 
 	};
 

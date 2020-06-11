@@ -73,10 +73,13 @@ namespace ZeoEngine {
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
+		FrameBufferSpec fbSpec;
+		fbSpec.Width = FRAMEBUFFER_WIDTH;
+		fbSpec.Height = FRAMEBUFFER_HEIGHT;
 		// Game View framebuffer
-		s_Data.FBOs[0] = FrameBuffer::Create(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+		s_Data.FBOs[0] = FrameBuffer::Create(fbSpec);
 		// Particle View framebuffer
-		s_Data.FBOs[1] = FrameBuffer::Create(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+		s_Data.FBOs[1] = FrameBuffer::Create(fbSpec);
 
 	}
 

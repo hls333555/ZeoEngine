@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<FrameBuffer> FrameBuffer::Create(uint32_t width, uint32_t height)
+	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpec& spec)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -60,7 +60,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLFrameBuffer>(width, height);
+			return CreateRef<OpenGLFrameBuffer>(spec);
 		default:
 			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
 			return nullptr;
