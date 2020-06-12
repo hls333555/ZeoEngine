@@ -89,9 +89,9 @@ namespace ZeoEngine {
 		void OnGameViewWindowResized(float newSizeX, float newSizeY);
 		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
+		void OnGameViewImGuiRender();
 		/** Show transform options and draw transform gizmo. */
 		void EditTransform();
-		void OnGameViewImGuiRender();
 		void DrawCollision();
 
 		void LoadParticleSystemFromFile(const char* particleSystemPath);
@@ -180,7 +180,7 @@ namespace ZeoEngine {
 
 		Scope<OrthographicCameraController> m_CameraControllers[3];
 		Ref<FrameBuffer> m_FBOs[2];
-		bool m_bIsHoveringViews[2];
+		bool m_bIsHoveringViews[2] = { false };
 
 		OrthographicCamera* m_ActiveCamera;
 

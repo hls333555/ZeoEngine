@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		ZE_CORE_ASSERT(library);
 		// Default level background
-		m_backgroundTexture = library->Load("assets/textures/Checkerboard_Alpha.png");
+		m_backgroundTexture = library->Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 
 	}
 

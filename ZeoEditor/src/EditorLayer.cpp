@@ -1,5 +1,3 @@
-#include "ZEpch.h"
-#if WITH_EDITOR
 #include "EditorLayer.h"
 
 #include <filesystem>
@@ -72,7 +70,7 @@ namespace ZeoEngine {
 	{
 		switch (pieState)
 		{
-		case ZeoEngine::PIEState::None:
+		case PIEState::None:
 			if (m_bIsHoveringViews[GAME_VIEW])
 			{
 				m_CameraControllers[GAME_VIEW]->OnUpdate(dt);
@@ -80,9 +78,9 @@ namespace ZeoEngine {
 			// Setting editor camera
 			m_ActiveCamera = &m_CameraControllers[GAME_VIEW]->GetCamera();
 			break;
-		case ZeoEngine::PIEState::Running:
+		case PIEState::Running:
 			Level::Get().OnUpdate(dt);
-		case ZeoEngine::PIEState::Paused:
+		case PIEState::Paused:
 			// Setting game camera
 			m_ActiveCamera = &m_CameraControllers[GAME_VIEW_PIE]->GetCamera();
 			break;
@@ -528,11 +526,7 @@ namespace ZeoEngine {
 				ImGui::EndDragDropTarget();
 			}
 
-			// Transform options window
-			if (pieState == PIEState::None)
-			{
-				EditTransform();
-			}
+			OnGameViewImGuiRender();
 
 			// ToolBar
 			{
@@ -564,8 +558,6 @@ namespace ZeoEngine {
 					}
 				}
 			}
-
-			OnGameViewImGuiRender();
 			
 			m_bIsHoveringViews[GAME_VIEW] = ImGui::IsWindowHovered();
 		}
@@ -1663,6 +1655,16 @@ namespace ZeoEngine {
 		m_HideConditionProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
 	}
 
+	void EditorLayer::OnGameViewImGuiRender()
+	{
+		// Do not draw in PIE mode
+		if (pieState == PIEState::None)
+		{
+			EditTransform();
+			DrawCollision();
+		}
+	}
+
 	void EditorLayer::EditTransform()
 	{
 		static ImGuizmo::OPERATION currentGizmoOperation(ImGuizmo::TRANSLATE);
@@ -1768,11 +1770,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorLayer::OnGameViewImGuiRender()
-	{
-		DrawCollision();
-	}
-
 	void EditorLayer::DrawCollision()
 	{
 		if (!m_SelectedGameObject || m_SelectedGameObject->IsPendingDestroy())
@@ -1782,13 +1779,9 @@ namespace ZeoEngine {
 		const ObjectCollisionType collisionType = m_SelectedGameObject->GetCollisionType();
 		if (collisionData && collisionData->bDrawCollision)
 		{
-			// Do not draw in PIE mode
-			if (pieState != PIEState::None)
-				return;
-
 			auto& gameViewCamera = m_CameraControllers[GAME_VIEW]->GetCamera();
 			ImDrawList* dl = ImGui::GetWindowDrawList();
-			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(m_SelectedGameObject->GetPosition2D() + collisionData->CenterOffset, ImGui::GetCurrentWindow(), &gameViewCamera);
+			const glm::vec2 collisionScreenCenter = ProjectWorldToScreen2D(m_SelectedGameObject->GetPosition2D() + collisionData->CenterOffset, ImGui::GetCurrentWindow(), &gameViewCamera);
 			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
 			static const float collisionThickness = 2.5f;
 			if (collisionType == ObjectCollisionType::Box)
@@ -2785,7 +2778,7 @@ namespace ZeoEngine {
 		// TODO: Add an right-click option to draw texture smaller
 		// Try to align texture'a width to column's right side
 		float textureWidth = ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - ImGui::GetCursorScreenPos().x - 18.5f;
-		Ref<Texture2D> backgroundTexture = library->Get("assets/textures/Checkerboard_Alpha.png");
+		Ref<Texture2D> backgroundTexture = library->Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 		// Draw checkerboard texture as background first
 		ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
 			ImGui::GetCursorScreenPos(),
@@ -2974,4 +2967,3 @@ namespace ZeoEngine {
 	}
 
 }
-#endif

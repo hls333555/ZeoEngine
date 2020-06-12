@@ -48,6 +48,6 @@ bin-Intermediate/
 
 # Other files
 *.user
-/Sandbox/imgui.ini
+imgui.ini
 *.json
 temp/

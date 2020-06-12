@@ -151,6 +151,8 @@ project "ZeoEditor"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+		"Sandbox/src/Game/**.h",
+		"Sandbox/src/Game/**.cpp",
 	}
 
 	includedirs

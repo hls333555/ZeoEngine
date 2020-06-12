@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		// TODO: Move it to config file
 		// NOTE: Add missing Chinese characters here!
 		static const char* missingChars = u8"º≠‰÷ƒ‚÷°";
-		LoadFont("assets/fonts/wqy-microhei.ttc", missingChars);
+		LoadFont("../ZeoEditor/assets/fonts/wqy-microhei.ttc", missingChars);
 
 		//// A very basic GameObject based garbage collection system
 		//m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, nullptr, [&]() {
