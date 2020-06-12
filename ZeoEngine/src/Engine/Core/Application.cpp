@@ -11,13 +11,13 @@ namespace ZeoEngine {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application()
+	Application::Application(const std::string& name)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		ZE_CORE_ASSERT_INFO(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		m_Window = Window::Create();
+		m_Window = Window::Create(WindowProps(name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
 
 		Renderer::Init();
@@ -67,6 +67,15 @@ namespace ZeoEngine {
 
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
+	}
+
+	EngineLayer* Application::GetEngineLayer()
+	{
+		for (auto* layer : m_LayerStack)
+		{
+			return dynamic_cast<EngineLayer*>(layer);
+		}
+		return nullptr;
 	}
 
 	void Application::Run()

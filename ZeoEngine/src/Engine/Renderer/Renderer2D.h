@@ -36,7 +36,6 @@ namespace ZeoEngine {
 
 		Ref<VertexArray> QuadVAO;
 		Ref<VertexBuffer> QuadVBO;
-		Ref<FrameBuffer> FBOs[2];
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
@@ -57,8 +56,6 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void BeginRenderingToTexture(uint32_t frameBufferIndex);
-		static void EndRenderingToTexture(uint32_t frameBufferIndex);
 		static void BeginScene(const OrthographicCamera& camera);
 		static void EndScene();
 	private:
