@@ -34,9 +34,9 @@ namespace ZeoEngine {
 		: EngineLayer("Editor")
 	{
 		const auto& window = Application::Get().GetWindow();
-		// TODO: Add an interface for user to create custom game camera
 		m_CameraControllers[GAME_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 		m_CameraControllers[GAME_VIEW]->SetZoomLevel(3.0f);
+		// TODO: Add an interface for user to create custom game camera
 		m_CameraControllers[GAME_VIEW_PIE] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 		m_CameraControllers[GAME_VIEW_PIE]->SetZoomLevel(3.0f);
 	}
@@ -404,7 +404,7 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 
-		if (m_bIsHoveringViews[GAME_VIEW])
+		if (m_bIsHoveringViews[GAME_VIEW] && pieState == PIEState::None)
 		{
 			m_CameraControllers[GAME_VIEW]->OnEvent(event);
 		}

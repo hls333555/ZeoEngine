@@ -11,6 +11,7 @@ namespace ZeoEngine {
 		: EngineLayer("Game")
 	{
 		const auto& window = Application::Get().GetWindow();
+		// TODO: Add an interface for user to create custom game camera
 		m_CameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
 		m_CameraController->SetZoomLevel(3.0f);
 
