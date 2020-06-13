@@ -26,7 +26,7 @@ Player::Player()
 {
 	SetSpeed(5.0f);
 	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
-	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("assets/textures/Ship.png");
+	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("../Sandbox/assets/textures/Ship.png");
 }
 
 void Player::Init()
@@ -105,6 +105,7 @@ void Player::OnImGuiRender()
 {
 	Super::OnImGuiRender();
 	
+	// TODO: HealthBar may disappear on window resize
 	if (HasBegunPlay())
 	{
 		const float healthBarWidth = 200.0f;

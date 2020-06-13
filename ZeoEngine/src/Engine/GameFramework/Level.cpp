@@ -7,8 +7,6 @@
 #include "Engine/Core/Application.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
-#include "Engine/Layers/EditorLayer.h"
-#include "Engine/Layers/GameLayer.h"
 
 namespace ZeoEngine {
 
@@ -20,20 +18,15 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Level::Init(GameLayer* gameLayer)
+	void Level::Init()
 	{
-		m_Game = gameLayer;
+		m_EngineLayer = Application::Get().GetEngineLayer();
+		ZE_CORE_ASSERT(m_EngineLayer);
 
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		ZE_CORE_ASSERT(library);
 		// Default level background
-		m_backgroundTexture = library->Load("editor_assets/textures/Checkerboard_Alpha.png");
-
-		// TODO: Move it to config file
-		// Load default game level when out of editor
-#if !WITH_EDITOR
-		LoadLevelFromFile("assets/test.zlevel");
-#endif
+		m_backgroundTexture = library->Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 
 	}
 
@@ -116,7 +109,7 @@ namespace ZeoEngine {
 		if (!object)
 			return;
 
-		m_Game->AddGameObjectPendingDestroy(object);
+		m_EngineLayer->AddGameObjectPendingDestroy(object);
 		m_ObjectNames.erase(object->GetName());
 	}
 
@@ -201,7 +194,7 @@ namespace ZeoEngine {
 
 		for (auto* object : m_GameObjects)
 		{
-			m_Game->AddGameObjectPendingDestroy(object);
+			m_EngineLayer->AddGameObjectPendingDestroy(object);
 		}
 		m_GameObjects.clear();
 		m_SortedGameObjects.clear();
@@ -209,10 +202,10 @@ namespace ZeoEngine {
 		m_ObjectNames.clear();
 		m_TranslucentObjects.clear();
 		m_TranslucentObjectIndex = 0;
-#if WITH_EDITOR
-		EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
-		editor->ClearSelectedGameObject();
-#endif
+//#if WITH_EDITOR
+//		EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
+//		editor->ClearSelectedGameObject();
+//#endif
 
 		m_ParticleManager.CleanUp();
 		m_GameTimerManager.CleanUp();

@@ -47,7 +47,7 @@
     },
     "GenerateOverlapEvents": false,
     "Speed": 5.0,
-    "SpriteTexture": "assets/textures/Ship.png",
+    "SpriteTexture": "../Sandbox/assets/textures/Ship.png",
     "TextureTilling": [
         1.0,
         1.0
@@ -58,6 +58,6 @@
         1.0,
         1.0
     ],
-    "ShipFlameParticle": "assets/particles/ShipFlame.zparticle",
-    "ExplosionParticle": "assets/particles/Explosion.zparticle"
+    "ShipFlameParticle": "../Sandbox/assets/particles/ShipFlame.zparticle",
+    "ExplosionParticle": "../Sandbox/assets/particles/Explosion.zparticle"
 }

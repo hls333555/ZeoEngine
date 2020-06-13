@@ -35,6 +35,7 @@ namespace ZeoEngine {
 	struct CollisionData
 	{
 		friend class GameObject;
+		friend class EditorLayer;
 
 		virtual ~CollisionData() = default;
 
@@ -184,8 +185,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	 */
 	class GameObject
 	{
+		friend class EngineLayer;
 		friend class EditorLayer;
-		friend class GameLayer;
 		friend class Level;
 
 		using OnDestroyedFn = std::function<void()>;
@@ -244,6 +245,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		}
 		void SetScale(float uniformScale) { m_Transform.Scale = { uniformScale, uniformScale }; }
 		const glm::mat4& GetTransformMatrix() const { return m_TransformMatrix; }
+		const CollisionData* GetCollisionData() const { return m_CollisionData; }
 		ObjectCollisionType GetCollisionType() const { return m_CollisionType; }
 		void SetCollisionType(ObjectCollisionType newType) { m_CollisionType = newType; }
 		bool ShouldGenerateOverlapEvents() const { return m_bGenerateOverlapEvents; }
@@ -263,10 +265,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		virtual void BeginPlay();
 		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnRender() {}
-		/** If you want to draw widgets inside Game View window, try OnGameViewImGuiRender(). */
 		virtual void OnImGuiRender() {}
-		/** Called only during this GameObject being selected and widgets will be drawn only inside Game View window. */
-		virtual void OnGameViewImGuiRender();
 
 #if WITH_EDITOR
 		// TODO: Add more types for these callbacks

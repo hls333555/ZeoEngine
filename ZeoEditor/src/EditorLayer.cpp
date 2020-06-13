@@ -1,6 +1,4 @@
-#include "ZEpch.h"
-#if WITH_EDITOR
-#include "Engine/Layers/EditorLayer.h"
+#include "EditorLayer.h"
 
 #include <filesystem>
 
@@ -14,7 +12,6 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Core/Application.h"
-#include "Engine/Layers/GameLayer.h"
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/Input.h"
@@ -28,19 +25,34 @@
 namespace ZeoEngine {
 
 #define SHOW_IMGUI_DEMO 0
+#define FRAMEBUFFER_WIDTH 1280
+#define FRAMEBUFFER_HEIGHT 720
 
 	PIEState pieState;
 
 	EditorLayer::EditorLayer()
-		: Layer("Editor")
+		: EngineLayer("Editor")
 	{
 		const auto& window = Application::Get().GetWindow();
-		m_GameViewCameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
-		m_GameViewCameraController->SetZoomLevel(3.0f);
+		// TODO: Add an interface for user to create custom game camera
+		m_CameraControllers[GAME_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+		m_CameraControllers[GAME_VIEW]->SetZoomLevel(3.0f);
+		m_CameraControllers[GAME_VIEW_PIE] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+		m_CameraControllers[GAME_VIEW_PIE]->SetZoomLevel(3.0f);
 	}
 
 	void EditorLayer::OnAttach()
 	{
+		EngineLayer::OnAttach();
+
+		Level::Get().Init();
+
+		FrameBufferSpec fbSpec;
+		fbSpec.Width = FRAMEBUFFER_WIDTH;
+		fbSpec.Height = FRAMEBUFFER_HEIGHT;
+		m_FBOs[GAME_VIEW] = FrameBuffer::Create(fbSpec);
+		m_FBOs[PARTICLE_VIEW] = FrameBuffer::Create(fbSpec);
+
 		ConstructClassInheritanceTree();
 		LoadEditorTextures();
 
@@ -56,34 +68,71 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
-		if (pieState == PIEState::None && m_bIsHoveringGameView)
+		EngineLayer::OnUpdate(dt);
+
+		switch (pieState)
 		{
-			// Thses camera controls are only applied to Game View window
-			m_GameViewCameraController->OnUpdate(dt);
+		case PIEState::None:
+			if (m_bIsHoveringViews[GAME_VIEW])
+			{
+				m_CameraControllers[GAME_VIEW]->OnUpdate(dt);
+			}
+			// Setting editor camera
+			m_ActiveCamera = &m_CameraControllers[GAME_VIEW]->GetCamera();
+			break;
+		case PIEState::Running:
+			Level::Get().OnUpdate(dt);
+		case PIEState::Paused:
+			// Setting game camera
+			m_ActiveCamera = &m_CameraControllers[GAME_VIEW_PIE]->GetCamera();
+			break;
+		default:
+			break;
 		}
 
 		Renderer2D::ResetStats();
 
+		BeginFrameBuffer(GAME_VIEW);
+		{
+			{
+				ZE_PROFILE_SCOPE("Renderer Prep: GameView");
+
+				RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+				RenderCommand::Clear();
+			}
+			{
+				ZE_PROFILE_SCOPE("Renderer Draw: GameView");
+
+				Renderer2D::BeginScene(*m_ActiveCamera);
+				Level::Get().OnRender();
+				Renderer2D::EndScene();
+			}
+		}
+		EndFrameBuffer(GAME_VIEW);
+
 		if (m_bShowParticleEditor)
 		{
-			if (m_bIsHoveringParticleView)
+			if (m_bIsHoveringViews[PARTICLE_VIEW])
 			{
-				// Thses camera controls are only applied to Particle Editor window
-				m_ParticleViewCameraController->OnUpdate(dt);
+				m_CameraControllers[PARTICLE_VIEW]->OnUpdate(dt);
 			}
 			if (m_EditorParticleSystem)
 			{
 				m_EditorParticleSystem->OnUpdate(dt);
 			}
 
-			Renderer2D::BeginRenderingToTexture(1);
+			BeginFrameBuffer(PARTICLE_VIEW);
 			{
 				{
+					ZE_PROFILE_SCOPE("Renderer Prep: ParticleView");
+
 					RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 					RenderCommand::Clear();
 				}
 				{
-					Renderer2D::BeginScene(m_ParticleViewCameraController->GetCamera());
+					ZE_PROFILE_SCOPE("Renderer Draw: ParticleView");
+
+					Renderer2D::BeginScene(m_CameraControllers[PARTICLE_VIEW]->GetCamera());
 					if (m_EditorParticleSystem)
 					{
 						m_EditorParticleSystem->OnRender();
@@ -91,9 +140,23 @@ namespace ZeoEngine {
 					Renderer2D::EndScene();
 				}
 			}
-			Renderer2D::EndRenderingToTexture(1);
+			EndFrameBuffer(PARTICLE_VIEW);
 		}
-		
+	}
+
+	void EditorLayer::BeginFrameBuffer(uint8_t viewportType)
+	{
+		// Update viewport to framebuffer texture's resolution before rendering
+		RenderCommand::SetViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+		m_FBOs[viewportType]->Bind();
+	}
+
+	void EditorLayer::EndFrameBuffer(uint8_t viewportType)
+	{
+		m_FBOs[viewportType]->Unbind();
+		const auto& window = Application::Get().GetWindow();
+		// Restore resolution
+		RenderCommand::SetViewport(0, 0, window.GetWidth(), window.GetHeight());
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -331,6 +394,9 @@ namespace ZeoEngine {
 		{
 			ShowAbout(&bShowAbout);
 		}
+
+		// Put it at last to prevent GameObject's UI from being covered by GameView
+		Level::Get().OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -338,24 +404,24 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 
-		if (m_bIsHoveringGameView)
+		if (m_bIsHoveringViews[GAME_VIEW])
 		{
-			m_GameViewCameraController->OnEvent(event);
+			m_CameraControllers[GAME_VIEW]->OnEvent(event);
 		}
-		if (m_bIsHoveringParticleView)
+		if (m_bIsHoveringViews[PARTICLE_VIEW])
 		{
-			m_ParticleViewCameraController->OnEvent(event);
+			m_CameraControllers[PARTICLE_VIEW]->OnEvent(event);
 		}
 
 	}
 
 	void EditorLayer::LoadEditorTextures()
 	{
-		m_ToolBarTextures[0] = m_PlayTexture = Texture2D::Create("editor_assets/textures/Play.png");
-		m_ToolBarTextures[1] = m_PauseTexture = Texture2D::Create("editor_assets/textures/Pause.png");
-		m_StopTexture = Texture2D::Create("editor_assets/textures/Stop.png");
+		m_ToolBarTextures[0] = m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
+		m_ToolBarTextures[1] = m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
+		m_StopTexture = Texture2D::Create("assets/textures/Stop.png");
 
-		m_LogoTexture = Texture2D::Create("editor_assets/textures/Logo.png");
+		m_LogoTexture = Texture2D::Create("assets/textures/Logo.png");
 
 	}
 
@@ -427,7 +493,7 @@ namespace ZeoEngine {
 			}
 			// Draw framebuffer texture
 			ImGui::GetWindowDrawList()->AddImage(
-				Renderer2D::GetRenderer2DData().FBOs[0]->GetRenderedTexture(),
+				m_FBOs[GAME_VIEW]->GetColorAttachment(),
 				// Upper left corner for the UVs to be applied at
 				window->InnerRect.Min,
 				// Lower right corner for the UVs to be applied at
@@ -444,73 +510,59 @@ namespace ZeoEngine {
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragGameObjectClass"))
 				{
-					GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
-					if (game)
-					{
-						// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
+					// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
 						// It should be changed back to editor camera if that behavior is disabled
-						const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), game->GetActiveCamera());
+					const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), m_ActiveCamera);
 
-						// Spawn dragged Game Object to the level at mouse position
-						// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
-						rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ result.x, result.y, 0.1f } });
-						GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
-						if (spawnedGameObject != m_SelectedGameObject)
-						{
-							OnGameObjectSelectionChanged(m_SelectedGameObject);
-						}
-						// Set it selected
-						m_SelectedGameObject = spawnedGameObject;
-						m_SelectedGameObject->m_bIsSelectedInEditor = true;
+					// Spawn dragged Game Object to the level at mouse position
+					// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
+					rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ result.x, result.y, 0.1f } });
+					GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
+					if (spawnedGameObject != m_SelectedGameObject)
+					{
+						OnGameObjectSelectionChanged(m_SelectedGameObject);
 					}
+					// Set it selected
+					m_SelectedGameObject = spawnedGameObject;
+					m_SelectedGameObject->m_bIsSelectedInEditor = true;
 				}
 				ImGui::EndDragDropTarget();
 			}
 
-			// Transform options window
-			if (pieState == PIEState::None)
-			{
-				EditTransform();
-			}
+			OnGameViewImGuiRender();
 
-			//////////////////////////////////////////////////////////////////////////
-			// ToolBar ///////////////////////////////////////////////////////////////
-			//////////////////////////////////////////////////////////////////////////
-			
-			// Place buttons at window center
-			ImGui::Indent(ImGui::GetWindowSize().x / 2.0f - 40.0f);
-			// Toggle play / stop
-			if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
+			// ToolBar
 			{
-				if (pieState == PIEState::None)
+				// Place buttons at window center
+				ImGui::Indent(ImGui::GetWindowSize().x / 2.0f - 40.0f);
+				// Toggle play / stop
+				if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 				{
-					StartPIE();
+					if (pieState == PIEState::None)
+					{
+						StartPIE();
+					}
+					else
+					{
+						StopPIE();
+					}
 				}
-				else
+				ImGui::SameLine();
+				// Toggle pause / resume
+				if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
 				{
-					StopPIE();
+					if (pieState == PIEState::Running)
+					{
+						PausePIE();
+					}
+					else if (pieState == PIEState::Paused)
+					{
+						ResumePIE();
+					}
 				}
-			}
-			ImGui::SameLine();
-			// Toggle pause / resume
-			if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
-			{
-				if (pieState == PIEState::Running)
-				{
-					PausePIE();
-				}
-				else if (pieState == PIEState::Paused)
-				{
-					ResumePIE();
-				}
-			}
-
-			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
-			{
-				m_SelectedGameObject->OnGameViewImGuiRender();
 			}
 			
-			m_bIsHoveringGameView = ImGui::IsWindowHovered();
+			m_bIsHoveringViews[GAME_VIEW] = ImGui::IsWindowHovered();
 		}
 		ImGui::End();
 	}
@@ -605,8 +657,8 @@ namespace ZeoEngine {
 		{
 			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 			{
-				m_CurrentPropertySource = PropertySource::GameObjectProperty;
-				if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
+				m_CurrentPropertySource = GAMEOBJECT_PROP;
+				if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
 				{
 					PreProcessProperties(m_SelectedGameObject);
 				}
@@ -624,7 +676,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::PreProcessProperties(rttr::instance object)
 	{
-		m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)].clear();
+		m_SortedProperties[m_CurrentPropertySource].clear();
 		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
 		// Get the most derived class's properties
 		auto properties = obj.get_derived_type().get_properties();
@@ -638,15 +690,15 @@ namespace ZeoEngine {
 			if (categoryVar)
 			{
 				const std::string& category = categoryVar.get_value<std::string>();
-				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)][category].emplace_back(prop);
+				m_SortedProperties[m_CurrentPropertySource][category].emplace_back(prop);
 			}
 			else
 			{
-				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)]["Default"].emplace_back(prop);
+				m_SortedProperties[m_CurrentPropertySource]["Default"].emplace_back(prop);
 			}
 		}
-		m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].reserve(properties.size());
-		m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)] = false;
+		m_LoggedProperties[m_CurrentPropertySource].reserve(properties.size());
+		m_bIsSortedPropertiesDirty[m_CurrentPropertySource] = false;
 	}
 
 	void EditorLayer::ProcessPropertiesRecursively(PropertyData& data)
@@ -655,7 +707,7 @@ namespace ZeoEngine {
 		// If it is the outermost property
 		if (!data.bPropertyRecursed)
 		{
-			for (const auto& [category, properties] : m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)])
+			for (const auto& [category, properties] : m_SortedProperties[m_CurrentPropertySource])
 			{
 				ImGui::Columns(1);
 				// Display category seperator
@@ -706,8 +758,8 @@ namespace ZeoEngine {
 		// If current property has defined "HideCondition" metadata, attempt to find the required data to evaluate in the processed map; if failed, process it
 		if (hideConditionVar)
 		{
-			auto it = m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].find(*data.Property);
-			if (it != m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].cend())
+			auto it = m_HideConditionProperties[m_CurrentPropertySource].find(*data.Property);
+			if (it != m_HideConditionProperties[m_CurrentPropertySource].cend())
 			{
 				if (it->second.first.get_value(*data.Object).to_string() == it->second.second)
 				{
@@ -734,7 +786,7 @@ namespace ZeoEngine {
 								if (prop.get_name() == keyName)
 								{
 									// Cache the required data to be used the next time
-									m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(std::make_pair(*data.Property, std::make_pair(prop, std::move(valueName))));
+									m_HideConditionProperties[m_CurrentPropertySource].emplace(std::make_pair(*data.Property, std::make_pair(prop, std::move(valueName))));
 									if (prop.get_value(*data.Object).to_string() == valueName)
 									{
 										return;
@@ -1286,7 +1338,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel)
 	{
-		auto [it, res] = m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(prop);
+		auto [it, res] = m_LoggedProperties[m_CurrentPropertySource].emplace(prop);
 		if (res)
 		{
 			switch (logLevel)
@@ -1454,11 +1506,11 @@ namespace ZeoEngine {
 
 			if (ImGui::Begin("Particle View", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
 			{
-				if (!m_ParticleViewCameraController)
+				if (!m_CameraControllers[PARTICLE_VIEW])
 				{
 					const auto& window = Application::Get().GetWindow();
-					m_ParticleViewCameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
-					m_ParticleViewCameraController->SetZoomLevel(3.0f);
+					m_CameraControllers[PARTICLE_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+					m_CameraControllers[PARTICLE_VIEW]->SetZoomLevel(3.0f);
 				}
 
 				if (!m_EditorParticleSystem)
@@ -1473,16 +1525,16 @@ namespace ZeoEngine {
 				if (size != m_LastParticleViewSize)
 				{
 					// Update camera aspect ratio when Particle View is resized
-					m_ParticleViewCameraController->UpdateProjection(size.x / size.y);
+					m_CameraControllers[PARTICLE_VIEW]->UpdateProjection(size.x / size.y);
 				}
 				// Draw framebuffer texture
-				ImGui::Image(Renderer2D::GetRenderer2DData().FBOs[1]->GetRenderedTexture(),
+				ImGui::Image(m_FBOs[PARTICLE_VIEW]->GetColorAttachment(),
 					ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
 					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 				max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
 				min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
 				m_LastParticleViewSize = max - min;
-				m_bIsHoveringParticleView = ImGui::IsItemHovered();
+				m_bIsHoveringViews[PARTICLE_VIEW] = ImGui::IsItemHovered();
 
 				if (m_EditorParticleSystem)
 				{
@@ -1495,8 +1547,8 @@ namespace ZeoEngine {
 			{
 				if (m_EditorParticleSystem)
 				{
-					m_CurrentPropertySource = PropertySource::ParticleSystemProperty;
-					if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
+					m_CurrentPropertySource = PARTICLESYSTEM_PROP;
+					if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
 					{
 						PreProcessProperties(m_EditorParticleSystem);
 					}
@@ -1595,22 +1647,25 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnGameViewWindowResized(float newSizeX, float newSizeY)
 	{
-		// Update editor's camera
-		m_GameViewCameraController->UpdateProjection(newSizeX / newSizeY);
-
-		GameLayer* game = Application::Get().FindLayerByName<GameLayer>("Game");
-		if (game)
-		{
-			// Update game's camera
-			game->GetGameCameraController()->UpdateProjection(newSizeX / newSizeY);
-		}
+		m_CameraControllers[GAME_VIEW]->UpdateProjection(newSizeX / newSizeY);
+		m_CameraControllers[GAME_VIEW_PIE]->UpdateProjection(newSizeX / newSizeY);
 	}
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
-		m_bIsSortedPropertiesDirty[ENUM_TO_INT(PropertySource::GameObjectProperty)] = true;
-		m_LoggedProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
-		m_HideConditionProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
+		m_bIsSortedPropertiesDirty[GAMEOBJECT_PROP] = true;
+		m_LoggedProperties[GAMEOBJECT_PROP].clear();
+		m_HideConditionProperties[GAMEOBJECT_PROP].clear();
+	}
+
+	void EditorLayer::OnGameViewImGuiRender()
+	{
+		// Do not draw in PIE mode
+		if (pieState == PIEState::None)
+		{
+			EditTransform();
+			DrawCollision();
+		}
 	}
 
 	void EditorLayer::EditTransform()
@@ -1625,15 +1680,15 @@ namespace ZeoEngine {
 		static bool bUseBoundSizingSnap = false;
 		static float boundSizingSnap[] = { 0.1f, 0.1f, 0.1f };
 
-		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_W))
+		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_W))
 		{
 			currentGizmoOperation = ImGuizmo::TRANSLATE;
 		}
-		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_E))
+		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_E))
 		{
 			currentGizmoOperation = ImGuizmo::ROTATE;
 		}
-		if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_R))
+		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_R))
 		{
 			currentGizmoOperation = ImGuizmo::SCALE;
 		}
@@ -1669,7 +1724,7 @@ namespace ZeoEngine {
 
 			// Note: ImGui::IsKeyPressed() will only fire once every frame if key is clicked
 			// while Input::IsKeyPressed() will keep firing until key is released which is not good for toggle behaviors
-			if (m_bIsHoveringGameView && ImGui::IsKeyPressed(ZE_KEY_S))
+			if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_S))
 			{
 				bUseSnap = !bUseSnap;
 			}
@@ -1708,13 +1763,43 @@ namespace ZeoEngine {
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImGuizmo::SetRect(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
 
-			ImGuizmo::Manipulate(glm::value_ptr(GetGameViewCamera()->GetViewMatrix()), glm::value_ptr(GetGameViewCamera()->GetProjectionMatrix()),
+			ImGuizmo::Manipulate(glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetViewMatrix()), glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetProjectionMatrix()),
 				currentGizmoOperation, currentGizmoMode,
 				glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
 				bUseSnap ? &snap[0] : nullptr,
 				bUseBoundSizing ? localBounds : nullptr,
 				bUseBoundSizingSnap ? boundSizingSnap : nullptr);
 			m_SelectedGameObject->DecomposeTransformMatrix();
+		}
+	}
+
+	void EditorLayer::DrawCollision()
+	{
+		if (!m_SelectedGameObject || m_SelectedGameObject->IsPendingDestroy())
+			return;
+
+		const CollisionData* collisionData = m_SelectedGameObject->GetCollisionData();
+		const ObjectCollisionType collisionType = m_SelectedGameObject->GetCollisionType();
+		if (collisionData && collisionData->bDrawCollision)
+		{
+			auto& gameViewCamera = m_CameraControllers[GAME_VIEW]->GetCamera();
+			ImDrawList* dl = ImGui::GetWindowDrawList();
+			const glm::vec2 collisionScreenCenter = ProjectWorldToScreen2D(m_SelectedGameObject->GetPosition2D() + collisionData->CenterOffset, ImGui::GetCurrentWindow(), &gameViewCamera);
+			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
+			static const float collisionThickness = 2.5f;
+			if (collisionType == ObjectCollisionType::Box)
+			{
+				const float collisionScreenExtentX = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.x / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				const float collisionScreenExtentY = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.y / gameViewCamera.GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
+				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
+					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
+					0.0f, 15, collisionThickness);
+			}
+			else if (collisionType == ObjectCollisionType::Sphere)
+			{
+				const float collisionScreenRadius = dynamic_cast<const SphereCollisionData*>(collisionData)->Radius / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
+			}
 		}
 	}
 
@@ -2696,7 +2781,7 @@ namespace ZeoEngine {
 		// TODO: Add an right-click option to draw texture smaller
 		// Try to align texture'a width to column's right side
 		float textureWidth = ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - ImGui::GetCursorScreenPos().x - 18.5f;
-		Ref<Texture2D> backgroundTexture = library->Get("editor_assets/textures/Checkerboard_Alpha.png");
+		Ref<Texture2D> backgroundTexture = library->Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 		// Draw checkerboard texture as background first
 		ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
 			ImGui::GetCursorScreenPos(),
@@ -2885,4 +2970,3 @@ namespace ZeoEngine {
 	}
 
 }
-#endif

@@ -156,17 +156,27 @@ namespace ZeoEngine {
 
 	};
 
+	struct FrameBufferSpec
+	{
+		uint32_t Width, Height;
+		uint32_t Samples = 1;
+
+		bool bSwapChainTarget = false;
+	};
+
 	class FrameBuffer
 	{
 	public:
 		virtual ~FrameBuffer() = default;
 
+		virtual const FrameBufferSpec& GetSpec() const = 0;
+
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		virtual void* GetRenderedTexture() const = 0;
+		virtual void* GetColorAttachment() const = 0;
 
-		static Ref<FrameBuffer> Create(uint32_t width, uint32_t height);
+		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
 	};
 
 }

@@ -1,6 +1,6 @@
 workspace "ZeoEngine"
 	architecture "x64"
-	startproject "Sandbox"
+	startproject "ZeoEditor"
 
 	configurations
 	{
@@ -29,14 +29,13 @@ IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
 IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
 
--- Include the premake file of GLFW
-include "ZeoEngine/vendor/GLFW"
--- Include the premake file of Glad
-include "ZeoEngine/vendor/Glad"
--- Include the premake file of ImGui
-include "ZeoEngine/vendor/ImGui"
--- Include the premake file of rttr
-include "ZeoEngine/vendor/rttr"
+-- Include premake files
+group "Dependencies"
+	include "ZeoEngine/vendor/GLFW"
+	include "ZeoEngine/vendor/Glad"
+	include "ZeoEngine/vendor/ImGui"
+	include "ZeoEngine/vendor/rttr"
+group ""
 
 project "ZeoEngine"
 	location "ZeoEngine"
@@ -80,7 +79,6 @@ project "ZeoEngine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.NFD}",
 		"%{IncludeDir.rapidjson}"
 	}
 
@@ -138,6 +136,65 @@ project "ZeoEngine"
 		{ 
 			"nfd.lib"
 		}
+
+project "ZeoEditor"
+	location "ZeoEditor"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
+
+	targetdir("bin/" .. outputdir .. "/%{prj.name}")
+	objdir("bin-Intermediate/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"Sandbox/src/Game/**.h",
+		"Sandbox/src/Game/**.cpp",
+	}
+
+	includedirs
+	{
+		"ZeoEngine/vendor/spdlog/include",
+		"ZeoEngine/src",
+		"ZeoEngine/vendor",
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.rttr}",
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.NFD}",
+		"%{IncludeDir.rapidjson}"
+	}
+
+	links
+	{
+		"ZeoEngine"
+	}
+
+	filter "system:windows"
+		systemversion "latest"
+
+		defines
+		{
+			"ZE_PLATFORM_WINDOWS"
+		}
+
+	filter "configurations:Debug"
+		defines "ZE_DEBUG"
+		runtime "Debug"
+		symbols "on"
+
+	filter "configurations:Release"
+		defines "ZE_RELEASE"
+		runtime "Release"
+		optimize "on"
+
+	filter "configurations:Dist"
+		defines "ZE_DIST"
+		runtime "Release"
+		optimize "on"
 
 project "Sandbox"
 	location "Sandbox"

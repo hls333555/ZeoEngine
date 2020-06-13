@@ -112,7 +112,7 @@
             "Value": 0.4000000059604645,
             "ValueHigh": 1.5
         },
-        "Texture": "assets/textures/Explosion_2x4.png",
+        "Texture": "../Sandbox/assets/textures/Explosion_2x4.png",
         "SubImageSize": [
             4,
             2

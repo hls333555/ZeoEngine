@@ -7,6 +7,7 @@
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/GameFramework/EngineLayer.h"
 
 namespace ZeoEngine {
 
@@ -15,7 +16,7 @@ namespace ZeoEngine {
 	class Application
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Zeo App");
 		virtual ~Application();
 
 		static Application& Get() { return *s_Instance; }
@@ -29,6 +30,8 @@ namespace ZeoEngine {
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
+
+		EngineLayer* GetEngineLayer();
 
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)

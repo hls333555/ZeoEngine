@@ -1,17 +1,15 @@
 #pragma once
 
-#include "Engine/Core/Layer.h"
+#include "Engine/GameFramework/EngineLayer.h"
 
 #include <glm/glm.hpp>
 #include <rttr/type>
 
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Buffer.h"
 
 namespace ZeoEngine {
-
-	class GameObject;
-	class ParticleSystem;
 
 	struct RTTRPropertyHashHasher
 	{
@@ -32,7 +30,7 @@ namespace ZeoEngine {
 
 	constexpr uint32_t propertySourceNum = 2;
 
-	class EditorLayer : public Layer
+	class EditorLayer : public EngineLayer
 	{
 		struct PropertyData
 		{
@@ -57,12 +55,14 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
+		virtual OrthographicCamera* GetGameCamera() override { return &m_CameraControllers[GAME_VIEW_PIE]->GetCamera(); }
 
-		const Scope<OrthographicCameraController>& GetGameViewCameraController() const { return m_GameViewCameraController; }
-		OrthographicCamera* GetGameViewCamera() const { return m_GameViewCameraController ? &m_GameViewCameraController->GetCamera() : nullptr; }
 		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
 
 	private:
+		void BeginFrameBuffer(uint8_t viewportType);
+		void EndFrameBuffer(uint8_t viewportType);
+
 		void LoadEditorTextures();
 
 		void CreateMainEditorDockspace();
@@ -82,12 +82,14 @@ namespace ZeoEngine {
 		void SetNextWindowDefaultPosition();
 
 		bool OnKeyPressed(KeyPressedEvent& e);
+
 		void OnGameViewWindowResized(float newSizeX, float newSizeY);
 		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
-
+		void OnGameViewImGuiRender();
 		/** Show transform options and draw transform gizmo. */
 		void EditTransform();
+		void DrawCollision();
 
 		void LoadParticleSystemFromFile(const char* particleSystemPath);
 		void SaveParticleSystemToFile(std::string& particleSystemPath);
@@ -165,11 +167,23 @@ namespace ZeoEngine {
 		std::string ToAbsolutePath(const char* relativePath);
 
 	private:
-		Scope<OrthographicCameraController> m_GameViewCameraController, m_ParticleViewCameraController;
+		enum ViewportType
+		{
+			GAME_VIEW = 0,
+			PARTICLE_VIEW = 1,
+
+			GAME_VIEW_PIE = 2
+		};
+
+		Scope<OrthographicCameraController> m_CameraControllers[3];
+		Ref<FrameBuffer> m_FBOs[2];
+		bool m_bIsHoveringViews[2] = { false };
+
+		OrthographicCamera* m_ActiveCamera;
+
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;
 
-		bool m_bIsHoveringGameView = false;
 		glm::vec2 m_LastGameViewSize;
 		bool m_bResetLayout = false;
 
@@ -178,7 +192,6 @@ namespace ZeoEngine {
 		bool m_bShowParticleEditor = false;
 		std::string m_CurrentParticleSystemPath, m_CurrentParticleSystemName;
 		ParticleSystem* m_EditorParticleSystem = nullptr;
-		bool m_bIsHoveringParticleView = false;
 		glm::vec2 m_LastParticleViewSize;
 
 		/** Map from parent class type to its child class types */
@@ -188,10 +201,10 @@ namespace ZeoEngine {
 
 		GameObject* m_SelectedGameObject = nullptr;
 
-		enum class PropertySource
+		enum PropertySource
 		{
-			GameObjectProperty,
-			ParticleSystemProperty
+			GAMEOBJECT_PROP = 0,
+			PARTICLESYSTEM_PROP = 1
 		} m_CurrentPropertySource;
 		/** Map from property category name to properties of that category, if category name is not specified, name "default" will be used */
 		std::map<std::string, std::vector<rttr::property>> m_SortedProperties[propertySourceNum];

@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Engine/Core/Application.h"
-#include "Engine/Layers/GameLayer.h"
+#include "Engine/GameFramework/EngineLayer.h"
 #include "Engine/GameFramework/Level.h"
 
 namespace ZeoEngine {
 
 	static OrthographicCamera* GetActiveGameCamera()
 	{
-		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
-		return gameLayer ? gameLayer->GetGameCamera() : nullptr;
+		EngineLayer* engineLayer = Application::Get().GetEngineLayer();
+		return engineLayer ? engineLayer->GetGameCamera() : nullptr;
 	}
 
 	static TimerManager* GetTimerManager()
@@ -19,14 +19,14 @@ namespace ZeoEngine {
 
 	static Texture2DLibrary* GetTexture2DLibrary()
 	{
-		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
-		return gameLayer ? gameLayer->GetTexture2DLibrary() : nullptr;
+		EngineLayer* engineLayer = Application::Get().GetEngineLayer();
+		return engineLayer ? engineLayer->GetTexture2DLibrary() : nullptr;
 	}
 
 	static ParticleLibrary* GetParticleLibrary()
 	{
-		GameLayer* gameLayer = Application::Get().FindLayerByName<GameLayer>("Game");
-		return gameLayer ? gameLayer->GetParticleLibrary() : nullptr;
+		EngineLayer* engineLayer = Application::Get().GetEngineLayer();
+		return engineLayer ? engineLayer->GetParticleLibrary() : nullptr;
 	}
 
 }

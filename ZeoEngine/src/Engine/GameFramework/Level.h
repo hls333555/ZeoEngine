@@ -26,6 +26,7 @@ namespace ZeoEngine {
 
 	class Level
 	{
+		friend class EngineLayer;
 		friend class EditorLayer;
 		friend class GameLayer;
 		friend class GameObject;
@@ -45,7 +46,7 @@ namespace ZeoEngine {
 		Level() = default;
 
 	public:
-		virtual void Init(GameLayer* gameLayer);
+		virtual void Init();
 
 		virtual void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -185,7 +186,7 @@ namespace ZeoEngine {
 		TimerManager m_GameTimerManager{ "Game" };
 		ParticleManager m_ParticleManager;
 
-		GameLayer* m_Game;
+		EngineLayer* m_EngineLayer;
 
 	};
 

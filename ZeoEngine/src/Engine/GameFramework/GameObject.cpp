@@ -11,7 +11,6 @@
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/Layers/EditorLayer.h"
 #include "Engine/Core/EngineUtilities.h"
 
 RTTR_REGISTRATION
@@ -180,38 +179,6 @@ namespace ZeoEngine {
 
 		m_Velocity = (GetPosition2D() - m_LastPosition) / static_cast<float>(dt);
 		m_LastPosition = GetPosition2D();
-	}
-
-	void GameObject::OnGameViewImGuiRender()
-	{
-#if WITH_EDITOR
-		// Draw collision
-		if (m_CollisionData && m_CollisionData->bDrawCollision)
-		{
-			// Do not draw in PIE mode
-			if (pieState != PIEState::None)
-				return;
-
-			EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
-			ImDrawList* dl = ImGui::GetWindowDrawList();
-			const glm::vec2 collisionScreenCenter = ZeoEngine::ProjectWorldToScreen2D(GetPosition2D() + m_CollisionData->CenterOffset, ImGui::GetCurrentWindow(), editor->GetGameViewCamera());
-			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
-			static const float collisionThickness = 2.5f;
-			if (m_CollisionType == ObjectCollisionType::Box)
-			{
-				const float collisionScreenExtentX = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.x / editor->GetGameViewCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				const float collisionScreenExtentY = dynamic_cast<BoxCollisionData*>(m_CollisionData)->Extents.y / editor->GetGameViewCamera()->GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
-				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
-					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
-					0.0f, 15, collisionThickness);
-			}
-			else if (m_CollisionType == ObjectCollisionType::Sphere)
-			{
-				const float collisionScreenRadius = dynamic_cast<SphereCollisionData*>(m_CollisionData)->Radius / editor->GetGameViewCamera()->GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
-			}
-		}
-#endif
 	}
 
 #if WITH_EDITOR

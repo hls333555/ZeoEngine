@@ -415,7 +415,7 @@ namespace ZeoEngine {
 
 	class ParticleLibrary
 	{
-		friend class GameLayer;
+		friend class EngineLayer;
 
 	private:
 		ParticleLibrary() = default;

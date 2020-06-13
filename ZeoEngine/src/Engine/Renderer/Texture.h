@@ -37,7 +37,7 @@ namespace ZeoEngine {
 
 	class Texture2DLibrary
 	{
-		friend class GameLayer;
+		friend class EngineLayer;
 
 	private:
 		Texture2DLibrary() = default;

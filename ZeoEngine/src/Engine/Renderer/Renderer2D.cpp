@@ -8,9 +8,6 @@
 
 namespace ZeoEngine {
 
-#define FRAMEBUFFER_WIDTH 1280
-#define FRAMEBUFFER_HEIGHT 720
-
 	Renderer2DData Renderer2D::s_Data;
 
 	void Renderer2D::Init()
@@ -66,17 +63,12 @@ namespace ZeoEngine {
 		{
 			samplers[i] = i;
 		}
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data.TextureShader = Shader::Create("../ZeoEditor/assets/shaders/Texture.glsl");
 		// TextureShader is bound here!
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
-
-		// Game View framebuffer
-		s_Data.FBOs[0] = FrameBuffer::Create(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
-		// Particle View framebuffer
-		s_Data.FBOs[1] = FrameBuffer::Create(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
 
 	}
 
@@ -85,21 +77,6 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		delete[] s_Data.QuadVertexBufferBase;
-	}
-
-	void Renderer2D::BeginRenderingToTexture(uint32_t frameBufferIndex)
-	{
-		// Update viewport to framebuffer texture's resolution before rendering
-		RenderCommand::SetViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
-		s_Data.FBOs[frameBufferIndex]->Bind();
-	}
-
-	void Renderer2D::EndRenderingToTexture(uint32_t frameBufferIndex)
-	{
-		s_Data.FBOs[frameBufferIndex]->Unbind();
-		const auto& window = Application::Get().GetWindow();
-		// Restore resolution
-		RenderCommand::SetViewport(0, 0, window.GetWidth(), window.GetHeight());
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
