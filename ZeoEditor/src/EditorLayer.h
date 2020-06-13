@@ -11,9 +11,6 @@
 
 namespace ZeoEngine {
 
-	class GameObject;
-	class ParticleSystem;
-
 	struct RTTRPropertyHashHasher
 	{
 		size_t operator()(const rttr::property& prop) const
@@ -204,10 +201,10 @@ namespace ZeoEngine {
 
 		GameObject* m_SelectedGameObject = nullptr;
 
-		enum class PropertySource
+		enum PropertySource
 		{
-			GameObjectProperty,
-			ParticleSystemProperty
+			GAMEOBJECT_PROP = 0,
+			PARTICLESYSTEM_PROP = 1
 		} m_CurrentPropertySource;
 		/** Map from property category name to properties of that category, if category name is not specified, name "default" will be used */
 		std::map<std::string, std::vector<rttr::property>> m_SortedProperties[propertySourceNum];

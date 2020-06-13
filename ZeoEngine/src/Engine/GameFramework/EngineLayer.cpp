@@ -4,11 +4,14 @@
 #include <imgui.h>
 
 #include "Engine/Core/RandomEngine.h"
+#include "Engine/GameFramework/Level.h"
+#include "Engine/Debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
 	EngineLayer::EngineLayer(const std::string& name)
 		: Layer(name)
+		, m_GarbageCollectionInterval(30.0f)
 	{
 		RandomEngine::Init();
 	}
@@ -22,18 +25,33 @@ namespace ZeoEngine {
 		static const char* missingChars = u8"º≠‰÷ƒ‚÷°";
 		LoadFont("../ZeoEditor/assets/fonts/wqy-microhei.ttc", missingChars);
 
-		//// A very basic GameObject based garbage collection system
-		//m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, nullptr, [&]() {
-		//	BenchmarkTimer bt(false);
-		//	level.RemoveGameObjects();
-		//	for (auto* object : m_GameObjectsPendingDestroy)
-		//	{
-		//		delete object;
-		//	}
-		//	m_GameObjectsPendingDestroy.clear();
-		//	ZE_CORE_INFO("Garbage collection took {0}s.", bt.GetDuration());
-		//	}, 0);
+		Level& level = Level::Get();
 
+		// A very basic GameObject based garbage collection system
+		m_CoreTimerManager.SetTimer(m_GarbageCollectionInterval, nullptr, [&]() {
+			BenchmarkTimer bt(false);
+			level.RemoveGameObjects();
+			for (auto* object : m_GameObjectsPendingDestroy)
+			{
+				delete object;
+			}
+			m_GameObjectsPendingDestroy.clear();
+			ZE_CORE_INFO("Garbage collection took {0}s.", bt.GetDuration());
+		}, 0);
+
+	}
+
+	void EngineLayer::OnDetach()
+	{
+		for (auto* object : m_GameObjectsPendingDestroy)
+		{
+			delete object;
+		}
+	}
+
+	void EngineLayer::OnUpdate(DeltaTime dt)
+	{
+		m_CoreTimerManager.OnUpdate(dt);
 	}
 
 	void EngineLayer::LoadFont(const char* fontPath, const char* missingChars)

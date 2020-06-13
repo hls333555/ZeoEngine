@@ -18,9 +18,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Level::Init(GameLayer* gameLayer)
+	void Level::Init()
 	{
-		m_Game = gameLayer;
+		m_EngineLayer = Application::Get().GetEngineLayer();
+		ZE_CORE_ASSERT(m_EngineLayer);
 
 		Texture2DLibrary* library = GetTexture2DLibrary();
 		ZE_CORE_ASSERT(library);
@@ -108,7 +109,7 @@ namespace ZeoEngine {
 		if (!object)
 			return;
 
-		//m_Game->AddGameObjectPendingDestroy(object);
+		m_EngineLayer->AddGameObjectPendingDestroy(object);
 		m_ObjectNames.erase(object->GetName());
 	}
 
@@ -193,7 +194,7 @@ namespace ZeoEngine {
 
 		for (auto* object : m_GameObjects)
 		{
-			//m_Game->AddGameObjectPendingDestroy(object);
+			m_EngineLayer->AddGameObjectPendingDestroy(object);
 		}
 		m_GameObjects.clear();
 		m_SortedGameObjects.clear();

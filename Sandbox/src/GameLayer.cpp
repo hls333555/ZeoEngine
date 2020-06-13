@@ -9,7 +9,6 @@ namespace ZeoEngine {
 
 	GameLayer::GameLayer()
 		: EngineLayer("Game")
-		, m_GarbageCollectionInterval(30.0f)
 	{
 		const auto& window = Application::Get().GetWindow();
 		m_CameraController = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
@@ -22,25 +21,17 @@ namespace ZeoEngine {
 		EngineLayer::OnAttach();
 
 		Level& level = Level::Get();
-		level.Init(nullptr);
+		level.Init();
 		// TODO: Move it to config file
 		// Load default game level
 		level.LoadLevelFromFile("assets/test.zlevel");
-	}
-
-	void GameLayer::OnDetach()
-	{
-		for (auto* object : m_GameObjectsPendingDestroy)
-		{
-			delete object;
-		}
 	}
 
 	void GameLayer::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_CoreTimerManager.OnUpdate(dt);
+		EngineLayer::OnUpdate(dt);
 
 		Level::Get().OnUpdate(dt);
 
@@ -60,6 +51,11 @@ namespace ZeoEngine {
 				Renderer2D::EndScene();
 			}
 		}
+	}
+
+	void GameLayer::OnImGuiRender()
+	{
+		Level::Get().OnImGuiRender();
 	}
 
 }

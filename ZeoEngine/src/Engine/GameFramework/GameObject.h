@@ -185,8 +185,8 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 	 */
 	class GameObject
 	{
+		friend class EngineLayer;
 		friend class EditorLayer;
-		friend class GameLayer;
 		friend class Level;
 
 		using OnDestroyedFn = std::function<void()>;

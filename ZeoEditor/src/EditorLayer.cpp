@@ -45,7 +45,7 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		Level::Get().Init(nullptr);
+		Level::Get().Init();
 
 		FrameBufferSpec fbSpec;
 		fbSpec.Width = FRAMEBUFFER_WIDTH;
@@ -68,6 +68,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
+		EngineLayer::OnUpdate(dt);
+
 		switch (pieState)
 		{
 		case PIEState::None:
@@ -88,6 +90,8 @@ namespace ZeoEngine {
 			break;
 		}
 
+		Renderer2D::ResetStats();
+
 		BeginFrameBuffer(GAME_VIEW);
 		{
 			{
@@ -105,8 +109,6 @@ namespace ZeoEngine {
 			}
 		}
 		EndFrameBuffer(GAME_VIEW);
-
-		Renderer2D::ResetStats();
 
 		if (m_bShowParticleEditor)
 		{
@@ -159,8 +161,6 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnImGuiRender()
 	{
-		Level::Get().OnImGuiRender();
-
 #if SHOW_IMGUI_DEMO
 		bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);
@@ -394,6 +394,9 @@ namespace ZeoEngine {
 		{
 			ShowAbout(&bShowAbout);
 		}
+
+		// Put it at last to prevent GameObject's UI from being covered by GameView
+		Level::Get().OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -654,8 +657,8 @@ namespace ZeoEngine {
 		{
 			if (m_SelectedGameObject && !m_SelectedGameObject->IsPendingDestroy())
 			{
-				m_CurrentPropertySource = PropertySource::GameObjectProperty;
-				if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
+				m_CurrentPropertySource = GAMEOBJECT_PROP;
+				if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
 				{
 					PreProcessProperties(m_SelectedGameObject);
 				}
@@ -673,7 +676,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::PreProcessProperties(rttr::instance object)
 	{
-		m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)].clear();
+		m_SortedProperties[m_CurrentPropertySource].clear();
 		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
 		// Get the most derived class's properties
 		auto properties = obj.get_derived_type().get_properties();
@@ -687,15 +690,15 @@ namespace ZeoEngine {
 			if (categoryVar)
 			{
 				const std::string& category = categoryVar.get_value<std::string>();
-				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)][category].emplace_back(prop);
+				m_SortedProperties[m_CurrentPropertySource][category].emplace_back(prop);
 			}
 			else
 			{
-				m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)]["Default"].emplace_back(prop);
+				m_SortedProperties[m_CurrentPropertySource]["Default"].emplace_back(prop);
 			}
 		}
-		m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].reserve(properties.size());
-		m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)] = false;
+		m_LoggedProperties[m_CurrentPropertySource].reserve(properties.size());
+		m_bIsSortedPropertiesDirty[m_CurrentPropertySource] = false;
 	}
 
 	void EditorLayer::ProcessPropertiesRecursively(PropertyData& data)
@@ -704,7 +707,7 @@ namespace ZeoEngine {
 		// If it is the outermost property
 		if (!data.bPropertyRecursed)
 		{
-			for (const auto& [category, properties] : m_SortedProperties[ENUM_TO_INT(m_CurrentPropertySource)])
+			for (const auto& [category, properties] : m_SortedProperties[m_CurrentPropertySource])
 			{
 				ImGui::Columns(1);
 				// Display category seperator
@@ -755,8 +758,8 @@ namespace ZeoEngine {
 		// If current property has defined "HideCondition" metadata, attempt to find the required data to evaluate in the processed map; if failed, process it
 		if (hideConditionVar)
 		{
-			auto it = m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].find(*data.Property);
-			if (it != m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].cend())
+			auto it = m_HideConditionProperties[m_CurrentPropertySource].find(*data.Property);
+			if (it != m_HideConditionProperties[m_CurrentPropertySource].cend())
 			{
 				if (it->second.first.get_value(*data.Object).to_string() == it->second.second)
 				{
@@ -783,7 +786,7 @@ namespace ZeoEngine {
 								if (prop.get_name() == keyName)
 								{
 									// Cache the required data to be used the next time
-									m_HideConditionProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(std::make_pair(*data.Property, std::make_pair(prop, std::move(valueName))));
+									m_HideConditionProperties[m_CurrentPropertySource].emplace(std::make_pair(*data.Property, std::make_pair(prop, std::move(valueName))));
 									if (prop.get_value(*data.Object).to_string() == valueName)
 									{
 										return;
@@ -1335,7 +1338,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::LogPropertyMessage(const rttr::property& prop, const char* msg, uint32_t logLevel)
 	{
-		auto [it, res] = m_LoggedProperties[ENUM_TO_INT(m_CurrentPropertySource)].emplace(prop);
+		auto [it, res] = m_LoggedProperties[m_CurrentPropertySource].emplace(prop);
 		if (res)
 		{
 			switch (logLevel)
@@ -1544,8 +1547,8 @@ namespace ZeoEngine {
 			{
 				if (m_EditorParticleSystem)
 				{
-					m_CurrentPropertySource = PropertySource::ParticleSystemProperty;
-					if (m_bIsSortedPropertiesDirty[ENUM_TO_INT(m_CurrentPropertySource)])
+					m_CurrentPropertySource = PARTICLESYSTEM_PROP;
+					if (m_bIsSortedPropertiesDirty[m_CurrentPropertySource])
 					{
 						PreProcessProperties(m_EditorParticleSystem);
 					}
@@ -1650,9 +1653,9 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
-		m_bIsSortedPropertiesDirty[ENUM_TO_INT(PropertySource::GameObjectProperty)] = true;
-		m_LoggedProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
-		m_HideConditionProperties[ENUM_TO_INT(PropertySource::GameObjectProperty)].clear();
+		m_bIsSortedPropertiesDirty[GAMEOBJECT_PROP] = true;
+		m_LoggedProperties[GAMEOBJECT_PROP].clear();
+		m_HideConditionProperties[GAMEOBJECT_PROP].clear();
 	}
 
 	void EditorLayer::OnGameViewImGuiRender()

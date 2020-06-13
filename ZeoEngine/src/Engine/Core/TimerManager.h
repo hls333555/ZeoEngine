@@ -50,7 +50,7 @@ namespace ZeoEngine {
 
 	class TimerManager
 	{
-		friend class GameLayer;
+		friend class EngineLayer;
 		friend class Level;
 
 	private:
