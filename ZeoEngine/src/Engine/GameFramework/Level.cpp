@@ -283,6 +283,9 @@ namespace ZeoEngine {
 		out << "#type " << LevelFileToken << std::endl;
 		for (auto* object : m_GameObjects)
 		{
+			if (object->IsPendingDestroy())
+				continue;
+
 			// e.g. #Player_2(Player)
 			out << "#" << object->GetUniqueName() << "(" << rttr::type::get(*object).get_name() << ")" << std::endl;
 			// TODO: Save camera position
