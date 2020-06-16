@@ -37,6 +37,8 @@
 
 #define ZE_BIND_EVENT_FUNC(func) std::bind(&func, this, std::placeholders::_1)
 
+#define GET_MEMBER_FUNC(object, memberFn) ZeoEngine::MemberFunc(object, memberFn)
+
 #ifndef WITH_EDITOR
 // Set to 0 when toggling standalone game mode
 	#define WITH_EDITOR	1

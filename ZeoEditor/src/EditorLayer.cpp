@@ -45,7 +45,9 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		Level::Get().Init();
+		Level& level = Level::Get();
+		level.Init();
+		level.m_OnLevelCleanUp += GET_MEMBER_FUNC(this, &EditorLayer::ClearSelectedGameObject);
 
 		FrameBufferSpec fbSpec;
 		fbSpec.Width = FRAMEBUFFER_WIDTH;

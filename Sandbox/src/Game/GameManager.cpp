@@ -45,11 +45,14 @@ void GameManager::DelaySpawnEnemy(float delay)
 		Enemy* enemy = ZeoEngine::Level::Get().SpawnGameObject<Enemy>(pos, scale, rot);
 		if (enemy)
 		{
-			enemy->m_OnDestroyed = std::bind([&]() {
-				DelaySpawnEnemy(2.0f);
-			});
+			enemy->m_OnDestroyed += GET_MEMBER_FUNC(this, &GameManager::DefaultDelaySpawnEnemy);
 		}
 	});
+}
+
+void GameManager::DefaultDelaySpawnEnemy()
+{
+	DelaySpawnEnemy(2.0f);
 }
 
 void GameManager::SpawnObstacle()

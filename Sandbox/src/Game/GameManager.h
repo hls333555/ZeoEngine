@@ -15,6 +15,7 @@ public:
 	virtual void OnUpdate(ZeoEngine::DeltaTime dt) override;
 
 	void DelaySpawnEnemy(float delay);
+	void DefaultDelaySpawnEnemy();
 
 private:
 	void SpawnObstacle();

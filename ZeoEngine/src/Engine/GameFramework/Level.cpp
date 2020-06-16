@@ -202,10 +202,7 @@ namespace ZeoEngine {
 		m_ObjectNames.clear();
 		m_TranslucentObjects.clear();
 		m_TranslucentObjectIndex = 0;
-//#if WITH_EDITOR
-//		EditorLayer* editor = Application::Get().FindLayerByName<EditorLayer>("Editor");
-//		editor->ClearSelectedGameObject();
-//#endif
+		m_OnLevelCleanUp();
 
 		m_ParticleManager.CleanUp();
 		m_GameTimerManager.CleanUp();

@@ -3,6 +3,7 @@
 #include "Engine/GameFramework/GameObject.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/TimerManager.h"
+#include "Engine/Core/Delegate.h"
 
 namespace ZeoEngine {
 
@@ -30,6 +31,8 @@ namespace ZeoEngine {
 		friend class EditorLayer;
 		friend class GameLayer;
 		friend class GameObject;
+
+		using LevelCleanUpDel = Delegate<void()>;
 
 	public:
 		~Level();
@@ -169,6 +172,9 @@ namespace ZeoEngine {
 		void SaveLevelToFile(std::string& levelPath, bool bIsTemp = false);
 
 		void PreDeserialize(const std::string& src);
+
+	public:
+		LevelCleanUpDel m_OnLevelCleanUp;
 
 	private:
 		Ref<Texture2D> m_backgroundTexture;

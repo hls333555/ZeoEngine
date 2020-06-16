@@ -384,10 +384,7 @@ namespace ZeoEngine {
 			m_bPendingDestroy = true;
 			m_bIsActive = false;
 			OnDestroyed();
-			if (m_OnDestroyed)
-			{
-				m_OnDestroyed();
-			}
+			m_OnDestroyed();
 			for (auto* object : m_OwningObjects)
 			{
 				ZE_CORE_ASSERT(object != this);

@@ -6,6 +6,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/Core/Delegate.h"
 
 namespace ZeoEngine {
 
@@ -276,7 +277,7 @@ namespace ZeoEngine {
 		friend class ParticleManager;
 		friend class Level;
 
-		using SystemFinishedFn = std::function<void()>;
+		using SystemFinishedDel = Delegate<void()>;
 
 	private:
 		/** Construct a particle system from zparticle file. */
@@ -348,7 +349,7 @@ namespace ZeoEngine {
 
 	public:
 		/** Called when this particle system is about to be destroyed */
-		SystemFinishedFn m_OnSystemFinished;
+		SystemFinishedDel m_OnSystemFinished;
 
 		static constexpr const char* ParticleSystemFileToken = "ParticleSystem";
 

@@ -679,10 +679,7 @@ namespace ZeoEngine {
 		if (m_bAutoDestroy && m_bSystemComplete)
 		{
 			m_bPendingDestroy = true;
-			if (m_OnSystemFinished)
-			{
-				m_OnSystemFinished();
-			}
+			m_OnSystemFinished();
 		}
 	}
 

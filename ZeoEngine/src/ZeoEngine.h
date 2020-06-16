@@ -16,6 +16,7 @@
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/Core/EngineGlobals.h"
+#include "Engine/Core/Delegate.h"
 
 #include "Engine/GameFramework/GameObject.h"
 #include "Engine/GameFramework/SpriteObject.h"

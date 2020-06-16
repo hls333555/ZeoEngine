@@ -7,6 +7,7 @@
 #include <rttr/registration_friend>
 
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/Core/Delegate.h"
 
 namespace ZeoEngine {
 
@@ -189,7 +190,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		friend class EditorLayer;
 		friend class Level;
 
-		using OnDestroyedFn = std::function<void()>;
+		using OnDestroyedDel = Delegate<void()>;
 
 	protected:
 		virtual ~GameObject() = 0;
@@ -340,7 +341,7 @@ public: static className* SpawnGameObject(const glm::vec3& position)\
 		void RecomposeTransformMatrix();
 
 	public:
-		OnDestroyedFn m_OnDestroyed;
+		OnDestroyedDel m_OnDestroyed;
 
 		// TODO: Component system
 	private:
