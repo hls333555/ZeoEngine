@@ -100,10 +100,10 @@ namespace ZeoEngine {
 		//dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(OrthographicCameraController::OnWindowResized));
 	}
 
-	void OrthographicCameraController::UpdateProjection(float aspectRatio)
+	void OrthographicCameraController::OnResize(float width, float height)
 	{
-		m_AspectRatio = aspectRatio;
-		m_Camera.SetProjection(-aspectRatio * m_ZoomLevel, aspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+		m_AspectRatio = width / height;
+		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 	}
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
@@ -112,7 +112,7 @@ namespace ZeoEngine {
 
 		m_ZoomLevel -= e.GetYOffset() * 0.25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
-		UpdateProjection(m_AspectRatio);
+		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		return false;
 	}
 
@@ -129,7 +129,7 @@ namespace ZeoEngine {
 			m_Camera.SetRotation(0.0f);
 			// TODO: Should calculate desired zoom level
 			SetZoomLevel(DEFAULT_ZOOMLEVEL);
-			UpdateProjection(m_AspectRatio);
+			m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
 		}
 		return false;
 	}
@@ -138,7 +138,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		UpdateProjection(static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight()));
+		OnResize(static_cast<float>(e.GetWidth()), static_cast<float>(e.GetHeight()));
 		return false;
 	}
 

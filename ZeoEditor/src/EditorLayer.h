@@ -83,7 +83,7 @@ namespace ZeoEngine {
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 
-		void OnGameViewWindowResized(float newSizeX, float newSizeY);
+		void OnGameViewWindowResized(const glm::vec2& newSize);
 		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
 		void OnGameViewImGuiRender();
@@ -91,6 +91,7 @@ namespace ZeoEngine {
 		void EditTransform();
 		void DrawCollision();
 
+		void OnParticleViewWindowResized(const glm::vec2& newSize);
 		void LoadParticleSystemFromFile(const char* particleSystemPath);
 		void SaveParticleSystemToFile(std::string& particleSystemPath);
 
@@ -184,7 +185,7 @@ namespace ZeoEngine {
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;
 
-		glm::vec2 m_LastGameViewSize;
+		glm::vec2 m_LastGameViewSize{ 0.0f, 0.0f };
 		bool m_bResetLayout = false;
 
 		std::string m_CurrentLevelPath, m_CurrentLevelName;

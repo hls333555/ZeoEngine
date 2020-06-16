@@ -23,8 +23,7 @@ namespace ZeoEngine {
 		float GetZoomLevel() const { return m_ZoomLevel; }
 		void SetZoomLevel(float level) { m_ZoomLevel = level; }
 
-		/** Wrapper function for setting camera's projection. */
-		void UpdateProjection(float aspectRatio);
+		void OnResize(float width, float height);
 
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);

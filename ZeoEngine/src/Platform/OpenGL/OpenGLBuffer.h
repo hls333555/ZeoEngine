@@ -55,11 +55,13 @@ namespace ZeoEngine {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
+		virtual void Resize(uint32_t width, uint32_t height) override;
+
 		virtual void* GetColorAttachment() const override { return (void*)(intptr_t)m_ColorAttachment; }
 
 	private:
 		FrameBufferSpec m_Spec;
-		uint32_t m_RendererID, m_ColorAttachment, m_DepthAttachment;
+		uint32_t m_RendererID = 0, m_ColorAttachment = 0, m_DepthAttachment = 0;
 
 	};
 

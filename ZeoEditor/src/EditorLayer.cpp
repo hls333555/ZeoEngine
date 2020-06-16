@@ -148,17 +148,12 @@ namespace ZeoEngine {
 
 	void EditorLayer::BeginFrameBuffer(uint8_t viewportType)
 	{
-		// Update viewport to framebuffer texture's resolution before rendering
-		RenderCommand::SetViewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
 		m_FBOs[viewportType]->Bind();
 	}
 
 	void EditorLayer::EndFrameBuffer(uint8_t viewportType)
 	{
 		m_FBOs[viewportType]->Unbind();
-		const auto& window = Application::Get().GetWindow();
-		// Restore resolution
-		RenderCommand::SetViewport(0, 0, window.GetWidth(), window.GetHeight());
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -482,6 +477,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::ShowGameView(bool* bShow)
 	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		if (ImGui::Begin("Game View", bShow))
 		{
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -490,8 +486,7 @@ namespace ZeoEngine {
 			glm::vec2 size = max - min;
 			if (size != m_LastGameViewSize)
 			{
-				// Update camera aspect ratio when Game View window is resized
-				OnGameViewWindowResized(size.x, size.y);
+				OnGameViewWindowResized(size);
 			}
 			// Draw framebuffer texture
 			ImGui::GetWindowDrawList()->AddImage(
@@ -567,6 +562,7 @@ namespace ZeoEngine {
 			m_bIsHoveringViews[GAME_VIEW] = ImGui::IsWindowHovered();
 		}
 		ImGui::End();
+		ImGui::PopStyleVar();
 	}
 
 	void EditorLayer::ShowLevelOutline(bool* bShow)
@@ -1526,8 +1522,7 @@ namespace ZeoEngine {
 				glm::vec2 size = max - min;
 				if (size != m_LastParticleViewSize)
 				{
-					// Update camera aspect ratio when Particle View is resized
-					m_CameraControllers[PARTICLE_VIEW]->UpdateProjection(size.x / size.y);
+					OnParticleViewWindowResized(size);
 				}
 				// Draw framebuffer texture
 				ImGui::Image(m_FBOs[PARTICLE_VIEW]->GetColorAttachment(),
@@ -1647,10 +1642,11 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void EditorLayer::OnGameViewWindowResized(float newSizeX, float newSizeY)
+	void EditorLayer::OnGameViewWindowResized(const glm::vec2& newSize)
 	{
-		m_CameraControllers[GAME_VIEW]->UpdateProjection(newSizeX / newSizeY);
-		m_CameraControllers[GAME_VIEW_PIE]->UpdateProjection(newSizeX / newSizeY);
+		m_FBOs[GAME_VIEW]->Resize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
+		m_CameraControllers[GAME_VIEW]->OnResize(newSize.x, newSize.y);
+		m_CameraControllers[GAME_VIEW_PIE]->OnResize(newSize.x, newSize.y);
 	}
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
@@ -1803,6 +1799,12 @@ namespace ZeoEngine {
 				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
 			}
 		}
+	}
+
+	void EditorLayer::OnParticleViewWindowResized(const glm::vec2& newSize)
+	{
+		m_FBOs[PARTICLE_VIEW]->Resize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
+		m_CameraControllers[PARTICLE_VIEW]->OnResize(newSize.x, newSize.y);
 	}
 
 	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
