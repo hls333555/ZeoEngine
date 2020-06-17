@@ -477,7 +477,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::ShowGameView(bool* bShow)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
 		if (ImGui::Begin("Game View", bShow))
 		{
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -1690,6 +1690,7 @@ namespace ZeoEngine {
 		{
 			currentGizmoOperation = ImGuizmo::SCALE;
 		}
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 5.0f });
 		ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
 		if (ImGui::Begin("Transform Options", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize))
 		{
@@ -1749,6 +1750,7 @@ namespace ZeoEngine {
 			}
 		}
 		ImGui::End();
+		ImGui::PopStyleVar();
 
 		// Draw transform gizmo on the selected GameObject when not in PIE
 		// as editor camera, which gizmo needs, will get deactivated in PIE
