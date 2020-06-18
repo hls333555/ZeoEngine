@@ -487,6 +487,7 @@ namespace ZeoEngine {
 			if (size != m_LastGameViewSize)
 			{
 				OnGameViewWindowResized(size);
+				m_LastGameViewSize = max - min;
 			}
 			// Draw framebuffer texture
 			ImGui::GetWindowDrawList()->AddImage(
@@ -497,9 +498,6 @@ namespace ZeoEngine {
 				window->InnerRect.Max,
 				// The UVs have to be flipped
 				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-			max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
-			min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
-			m_LastGameViewSize = max - min;
 
 			// Begin drop operation from Class Browser
 			// Note: BeginDragDropTarget() does not support window as target
@@ -525,6 +523,9 @@ namespace ZeoEngine {
 				}
 				ImGui::EndDragDropTarget();
 			}
+
+			float padding = 5.0f;
+			ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + padding, ImGui::GetCursorPos().y + padding));
 
 			OnGameViewImGuiRender();
 
