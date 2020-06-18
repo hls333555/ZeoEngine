@@ -107,6 +107,7 @@
         "SubImageSize": [
             0,
             0
-        ]
+        ],
+        "MaxDrawParticles": 500
     }
 }

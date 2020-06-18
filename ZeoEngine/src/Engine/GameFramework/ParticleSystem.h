@@ -271,6 +271,11 @@ namespace ZeoEngine {
 		RTTR_ENABLE()
 	};
 
+	/**
+	 * Particle system instances are generally stored in ParticleLibrary and ParticleManager.
+	 * ParticleLibrary stores templated particle systems for preview purposes which are generated upon loading particle system assets.
+	 * ParticleManager stores runtime particle systems which are generated from particle templates and will be destroyed on end play.
+	 */
 	class ParticleSystem
 	{
 		friend class ParticleLibrary;
@@ -283,7 +288,7 @@ namespace ZeoEngine {
 		/** Construct a particle system from zparticle file. */
 		ParticleSystem(const std::string& filePath, const std::string& processedSrc);
 		ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
-		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true, bool bIsInParticleEditor = false);
+		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
 	public:
 #if WITH_EDITOR
@@ -292,6 +297,10 @@ namespace ZeoEngine {
 
 		const std::string& GetPath() const { return m_Path; }
 		const std::string& GetFileName() const { return m_FileName; }
+		bool GetAutoDestroy() const { return m_bAutoDestroy; }
+		void SetAutoDestroy(bool bValue) { m_bAutoDestroy = bValue; }
+
+		void DeserializeProperties(const std::string& processedSrc);
 
 		const ParticleTemplate& GetParticleTemplate() const { return m_ParticleTemplate; }
 
@@ -333,6 +342,12 @@ namespace ZeoEngine {
 		void OnRender();
 #if WITH_EDITOR
 		void OnParticleViewImGuiRender();
+
+		void SetParticleEditorPreviewMode(bool bIsInParticleEditor, bool bAutoDestroy)
+		{
+			m_bIsInParticleEditor = bIsInParticleEditor;
+			m_bAutoDestroy = bAutoDestroy;
+		}
 #endif
 
 		void OnDeserialized();
@@ -406,7 +421,7 @@ namespace ZeoEngine {
 #if WITH_EDITOR
 		bool m_bIsInParticleEditor = false;
 		bool m_bFiniteLoopPrepareToRestart = true;
-		float m_FiniteLoopRestartInterval = 0.0f;
+		float m_FiniteLoopRestartInterval = 1.0f;
 		float m_FiniteLoopRestartTime = 0.0f;
 #endif
 
@@ -425,12 +440,13 @@ namespace ZeoEngine {
 		ParticleLibrary& operator=(const ParticleLibrary&) = delete;
 		~ParticleLibrary();
 
-		void Add(const std::string& path, ParticleSystem* ps);
 		void Add(ParticleSystem* ps);
+	private:
+		void Add(const std::string& path, ParticleSystem* ps);
+	public:
 		ParticleSystem* Load(const std::string& filePath);
-		ParticleSystem* Load(const std::string& path, const std::string& filePath);
-
 		ParticleSystem* GetOrLoad(const std::string& path);
+		ParticleSystem* UpdateOrLoad(const std::string& path);
 
 		ParticleSystem* Get(const std::string& path);
 

@@ -65,7 +65,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnDetach()
 	{
-		delete m_EditorParticleSystem;
+		EngineLayer::OnDetach();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
@@ -120,7 +120,10 @@ namespace ZeoEngine {
 			}
 			if (m_EditorParticleSystem)
 			{
+				bool bAutoDestroy = m_EditorParticleSystem->GetAutoDestroy();
+				m_EditorParticleSystem->SetParticleEditorPreviewMode(true, false);
 				m_EditorParticleSystem->OnUpdate(dt);
+				m_EditorParticleSystem->SetParticleEditorPreviewMode(false, bAutoDestroy);
 			}
 
 			BeginFrameBuffer(PARTICLE_VIEW);
@@ -1444,7 +1447,6 @@ namespace ZeoEngine {
 				{
 					if (ImGui::MenuItem("New particle system"))
 					{
-						delete m_EditorParticleSystem;
 						m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 						m_CurrentParticleSystemPath.clear();
 						m_CurrentParticleSystemName.clear();
@@ -1812,17 +1814,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
 	{
-		std::string result;
-		if (!Serializer::Get().ValidateFile(particleSystemPath, ParticleSystem::ParticleSystemFileToken, result))
-			return;
-
-		// We need to recreate because some values may not get cleared out
-		delete m_EditorParticleSystem;
-		m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
-
-		Serializer::Get().Deserialize<ParticleSystem*>(result, [&]() {
-			return rttr::variant(m_EditorParticleSystem);
-		});
+		const std::string relativePath = ToRelativePath(particleSystemPath);
+		m_EditorParticleSystem = GetParticleLibrary()->UpdateOrLoad(relativePath);
 	}
 
 	void EditorLayer::SaveParticleSystemToFile(std::string& particleSystemPath)
@@ -2825,9 +2818,8 @@ namespace ZeoEngine {
 				if (result == NFD_OKAY)
 				{
 					const std::string relativePath = ToRelativePath(outPath);
-					Ref<Texture2D> loadedTexture;
 					// Add selected texture to the library
-					loadedTexture = library->GetOrLoad(relativePath);
+					Ref<Texture2D> loadedTexture = library->GetOrLoad(relativePath);
 					SetPropertyValue(data, loadedTexture, loadedTexture);
 					if (loadedTexture != texture2DValue)
 					{
@@ -2884,9 +2876,8 @@ namespace ZeoEngine {
 				if (result == NFD_OKAY)
 				{
 					const std::string relativePath = ToRelativePath(outPath);
-					ParticleSystem* loadedPs;
 					// Add selected particle system to the library
-					loadedPs = library->GetOrLoad(relativePath);
+					ParticleSystem* loadedPs = library->GetOrLoad(relativePath);
 					SetPropertyValue(data, loadedPs, loadedPs);
 					free(outPath);
 				}

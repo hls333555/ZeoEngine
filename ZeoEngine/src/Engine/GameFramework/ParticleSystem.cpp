@@ -215,9 +215,7 @@ namespace ZeoEngine {
 		auto count = m_Path.size() - lastSlash;
 		m_FileName = m_Path.substr(lastSlash, count);
 
-		Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
-			return rttr::variant(this);
-		});
+		DeserializeProperties(processedSrc);
 		m_PoolIndex = m_ParticleTemplate.MaxDrawParticles - 1;
 		ResizeParticlePool();
 		EvaluateEmitterProperties();
@@ -234,16 +232,12 @@ namespace ZeoEngine {
 		EvaluateEmitterProperties();
 	}
 
-	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy, bool bIsInParticleEditor)
+	ParticleSystem::ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)
 		: m_PoolIndex(particleTemplate.MaxDrawParticles - 1)
 		, m_ParticleTemplate(particleTemplate)
 		, m_Parent(attachToParent)
 		, m_bAutoDestroy(bAutoDestroy)
 		, m_SpawnRate(30.0f)
-#if WITH_EDITOR
-		, m_bIsInParticleEditor(bIsInParticleEditor)
-		, m_FiniteLoopRestartInterval(1.0f)
-#endif
 	{
 		ResizeParticlePool();
 		EvaluateEmitterProperties();
@@ -269,6 +263,13 @@ namespace ZeoEngine {
 	}
 #endif
 
+	void ParticleSystem::DeserializeProperties(const std::string& processedSrc)
+	{
+		Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
+			return rttr::variant(this);
+		});
+	}
+
 	ParticleSystem* ParticleSystem::CreateDefaultParticleSystem()
 	{
 		ParticleTemplate m_DefaultEmitter;
@@ -281,7 +282,7 @@ namespace ZeoEngine {
 		m_DefaultEmitter.SizeEnd.SetConstant({ 0.0f, 0.0f });
 		m_DefaultEmitter.ColorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
 		m_DefaultEmitter.ColorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
-		return new ParticleSystem(m_DefaultEmitter, nullptr, false, true);
+		return new ParticleSystem(m_DefaultEmitter, nullptr, false);
 	}
 
 	void ParticleSystem::ResizeParticlePool()
@@ -769,6 +770,13 @@ namespace ZeoEngine {
 		m_ParticleSystems.clear();
 	}
 
+	void ParticleLibrary::Add(ParticleSystem* ps)
+	{
+		ZE_CORE_ASSERT(ps);
+		const std::string& path = ps->GetPath();
+		Add(path, ps);
+	}
+
 	void ParticleLibrary::Add(const std::string& path, ParticleSystem* ps)
 	{
 		ZE_CORE_ASSERT(ps);
@@ -778,32 +786,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleLibrary::Add(ParticleSystem* ps)
-	{
-		ZE_CORE_ASSERT(ps);
-		const std::string& path = ps->GetPath();
-		Add(path, ps);
-	}
-
 	ParticleSystem* ParticleLibrary::Load(const std::string& filePath)
 	{
 		std::string result;
-		if (!Serializer::Get().ValidateFile(filePath, "ParticleSystem", result))
+		if (!Serializer::Get().ValidateFile(filePath, ParticleSystem::ParticleSystemFileToken, result))
 			return nullptr;
 
 		ParticleSystem* ps = new ParticleSystem(filePath, result);
 		Add(ps);
-		return ps;
-	}
-
-	ParticleSystem* ParticleLibrary::Load(const std::string& path, const std::string& filePath)
-	{
-		std::string result;
-		if (!Serializer::Get().ValidateFile(filePath, "ParticleSystem", result))
-			return nullptr;
-
-		ParticleSystem* ps = new ParticleSystem(filePath, result);
-		Add(path, ps);
 		return ps;
 	}
 
@@ -812,6 +802,24 @@ namespace ZeoEngine {
 		if (Exists(path))
 		{
 			return m_ParticleSystems[path];
+		}
+		else
+		{
+			return Load(path);
+		}
+	}
+
+	ParticleSystem* ParticleLibrary::UpdateOrLoad(const std::string& path)
+	{
+		if (Exists(path))
+		{
+			std::string result;
+			if (!Serializer::Get().ValidateFile(path, ParticleSystem::ParticleSystemFileToken, result))
+				return nullptr;
+
+			ParticleSystem* ps = m_ParticleSystems[path];
+			ps->DeserializeProperties(result);
+			return ps;
 		}
 		else
 		{
