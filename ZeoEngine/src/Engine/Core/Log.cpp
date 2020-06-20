@@ -3,6 +3,10 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#if WITH_EDITOR
+#include "Engine/Core/EditorLogSink.h"
+#endif // WITH_EDITOR
+
 namespace ZeoEngine {
 
 	Ref<spdlog::logger> Log::s_CoreLogger;
@@ -10,13 +14,25 @@ namespace ZeoEngine {
 
 	void Log::Init()
 	{
-		// Set the global pattern, check https://github.com/gabime/spdlog/wiki/3.-Custom-formatting for more information about formatting
-		spdlog::set_pattern("%^[%T] %n: %v%$");
-		s_CoreLogger = spdlog::stdout_color_mt("ZE");
+		std::vector<spdlog::sink_ptr> sinks;
+#if WITH_EDITOR
+		sinks.push_back(std::make_shared<spdlog::sinks::editorlog_sink_mt>());
+#else
+		sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+#endif // WITH_EDITOR
+
+		s_CoreLogger = std::make_shared<spdlog::logger>("ZE", begin(sinks), end(sinks));
+		spdlog::register_logger(s_CoreLogger);
 		// Only messages whose level >= log_level will be logged to the console, in this case, all types of messages will be logged
 		s_CoreLogger->set_level(spdlog::level::trace);
-		s_ClientLogger = spdlog::stdout_color_mt("APP");
+
+		s_ClientLogger = std::make_shared<spdlog::logger>("APP", begin(sinks), end(sinks));
+		spdlog::register_logger(s_ClientLogger);
 		s_ClientLogger->set_level(spdlog::level::trace);
+
+		// Set the global pattern, check https://github.com/gabime/spdlog/wiki/3.-Custom-formatting for more information about formatting
+		// Call this after loggers being registered
+		spdlog::set_pattern("%^[%T] %n: %v%$");
 	}
 
 }

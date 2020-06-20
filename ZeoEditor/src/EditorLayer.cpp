@@ -21,6 +21,7 @@
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/EditorLogSink.h"
 
 namespace ZeoEngine {
 
@@ -1395,9 +1396,9 @@ namespace ZeoEngine {
 	{
 		if (ImGui::Begin("Console", bShow))
 		{
-
 		}
 		ImGui::End();
+		EditorLog::s_EditorLog.Draw("Console", bShow);
 	}
 
 	void EditorLayer::CreateParticleEditorDockspace(bool* bShow)
