@@ -12,6 +12,7 @@ namespace ZeoEngine {
 		ImGuiTextBuffer     Buf;
 		ImGuiTextFilter     Filter;
 		ImVector<int>       LineOffsets;        // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
+		ImVector<ImVec4>	LogColors;
 		bool                AutoScroll;     // Keep scrolling if already at the bottom
 
 		EditorLog()
@@ -25,9 +26,10 @@ namespace ZeoEngine {
 			Buf.clear();
 			LineOffsets.clear();
 			LineOffsets.push_back(0);
+			LogColors.clear();
 		}
 
-		void AddLog(const char* fmt, ...) IM_FMTARGS(2)
+		void AddLog(int logLevel, const char* fmt, ...) IM_FMTARGS(2)
 		{
 			int old_size = Buf.size();
 			va_list args;
@@ -35,8 +37,41 @@ namespace ZeoEngine {
 			Buf.appendfv(fmt, args);
 			va_end(args);
 			for (int new_size = Buf.size(); old_size < new_size; old_size++)
+			{
 				if (Buf[old_size] == '\n')
+				{
 					LineOffsets.push_back(old_size + 1);
+					switch (logLevel)
+					{
+						// Trace
+					case 0:
+						LogColors.push_back(ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+						break;
+						// Debug
+					case 1:
+						LogColors.push_back(ImVec4(0.0f, 1.0f, 1.0f, 1.0f));
+						break;
+						// Info
+					case 2:
+						LogColors.push_back(ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+						break;
+						// Warn
+					case 3:
+						LogColors.push_back(ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
+						break;
+						// Error
+					case 4:
+						LogColors.push_back(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+						break;
+						// Critical
+					case 5:
+						LogColors.push_back(ImVec4(1.0f, 0.5f, 0.0f, 1.0f));
+						break;
+					default:
+						break;
+					}
+				}
+			}
 		}
 
 		void Draw(const char* title, bool* p_open = NULL)
@@ -81,12 +116,16 @@ namespace ZeoEngine {
 				// This is because we don't have a random access on the result on our filter.
 				// A real application processing logs with ten of thousands of entries may want to store the result of search/filter.
 				// especially if the filtering function is not trivial (e.g. reg-exp).
-				for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
+				for (int line_no = 0; line_no < LineOffsets.Size; ++line_no)
 				{
 					const char* line_start = buf + LineOffsets[line_no];
 					const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-					if (Filter.PassFilter(line_start, line_end))
+					if (Filter.PassFilter(line_start, line_end) && line_no < LogColors.size())
+					{
+						ImGui::PushStyleColor(ImGuiCol_Text, LogColors[line_no]);
 						ImGui::TextUnformatted(line_start, line_end);
+						ImGui::PopStyleColor();
+					}
 				}
 			}
 			else
@@ -104,11 +143,16 @@ namespace ZeoEngine {
 				clipper.Begin(LineOffsets.Size);
 				while (clipper.Step())
 				{
-					for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
+					for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; ++line_no)
 					{
 						const char* line_start = buf + LineOffsets[line_no];
 						const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-						ImGui::TextUnformatted(line_start, line_end);
+						if (line_no < LogColors.size())
+						{
+							ImGui::PushStyleColor(ImGuiCol_Text, LogColors[line_no]);
+							ImGui::TextUnformatted(line_start, line_end);
+							ImGui::PopStyleColor();
+						}
 					}
 				}
 				clipper.End();
@@ -139,7 +183,7 @@ namespace spdlog {
 			// If needed (very likely but not mandatory), the sink formats the message before sending it to its final destination:
 			spdlog::memory_buf_t formatted;
 			base_sink<Mutex>::formatter_->format(msg, formatted);
-			ZeoEngine::EditorLog::s_EditorLog.AddLog(fmt::to_string(formatted).c_str());
+			ZeoEngine::EditorLog::s_EditorLog.AddLog(msg.level, fmt::to_string(formatted).c_str());
 		}
 
 		void flush_() override
