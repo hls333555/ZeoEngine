@@ -1,5 +1,5 @@
 #include "ZEpch.h"
-#include "Engine/Core/EditorLogSink.h"
+#include "Engine/Core/EditorLog.h"
 
 namespace ZeoEngine {
 

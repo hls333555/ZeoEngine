@@ -2,9 +2,10 @@
 #include "Engine/Core/Log.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 #if WITH_EDITOR
-#include "Engine/Core/EditorLogSink.h"
+#include "Engine/Core/EditorLog.h"
 #endif // WITH_EDITOR
 
 namespace ZeoEngine {
@@ -20,6 +21,7 @@ namespace ZeoEngine {
 #else
 		sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 #endif // WITH_EDITOR
+		sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.log", true));
 
 		s_CoreLogger = std::make_shared<spdlog::logger>("ZE", begin(sinks), end(sinks));
 		spdlog::register_logger(s_CoreLogger);
@@ -32,7 +34,7 @@ namespace ZeoEngine {
 
 		// Set the global pattern, check https://github.com/gabime/spdlog/wiki/3.-Custom-formatting for more information about formatting
 		// Call this after loggers being registered
-		spdlog::set_pattern("%^[%T] %n: %v%$");
+		spdlog::set_pattern("%^[%T] [%l] %n: %v%$");
 	}
 
 }
