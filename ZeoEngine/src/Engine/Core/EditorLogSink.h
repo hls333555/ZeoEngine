@@ -12,12 +12,18 @@ namespace ZeoEngine {
 		ImGuiTextBuffer     Buf;
 		ImGuiTextFilter     Filter;
 		ImVector<int>       LineOffsets;        // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
+		ImVector<int>		LogLevels;
 		ImVector<ImVec4>	LogColors;
 		bool                AutoScroll;     // Keep scrolling if already at the bottom
+		bool				bEnableLogLevelFilters[6];
 
 		EditorLog()
 		{
 			AutoScroll = true;
+			for (int i = 0; i < 6; ++i)
+			{
+				bEnableLogLevelFilters[i] = true;
+			}
 			Clear();
 		}
 
@@ -41,6 +47,7 @@ namespace ZeoEngine {
 				if (Buf[old_size] == '\n')
 				{
 					LineOffsets.push_back(old_size + 1);
+					LogLevels.push_back(logLevel);
 					switch (logLevel)
 					{
 						// Trace
@@ -88,19 +95,38 @@ namespace ZeoEngine {
 				ImGui::Checkbox("Auto-scroll", &AutoScroll);
 				ImGui::EndPopup();
 			}
-
-			// Main window
 			if (ImGui::Button("Options"))
 				ImGui::OpenPopup("Options");
+
 			ImGui::SameLine();
+
 			bool clear = ImGui::Button("Clear");
+
 			ImGui::SameLine();
+
 			bool copy = ImGui::Button("Copy");
+
 			ImGui::SameLine();
-			Filter.Draw("Filter", -100.0f);
+
+			// Filters menu
+			if (ImGui::BeginPopup("Filters"))
+			{
+				ImGui::Checkbox("Trace", &bEnableLogLevelFilters[0]);
+				ImGui::Checkbox("Info", &bEnableLogLevelFilters[2]);
+				ImGui::Checkbox("Warn", &bEnableLogLevelFilters[3]);
+				ImGui::Checkbox("Error", &bEnableLogLevelFilters[4]);
+				ImGui::Checkbox("Critical", &bEnableLogLevelFilters[5]);
+				ImGui::EndPopup();
+			}
+			if (ImGui::Button("Filters"))
+				ImGui::OpenPopup("Filters");
+
+			ImGui::SameLine();
+
+			Filter.Draw("##LogTextFilter", -1.0f);
 
 			ImGui::Separator();
-			ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+			ImGui::BeginChild("LogScrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
 			if (clear)
 				Clear();
@@ -120,7 +146,7 @@ namespace ZeoEngine {
 				{
 					const char* line_start = buf + LineOffsets[line_no];
 					const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-					if (Filter.PassFilter(line_start, line_end) && line_no < LogColors.size())
+					if (Filter.PassFilter(line_start, line_end) && line_no < LogColors.size() && bEnableLogLevelFilters[LogLevels[line_no]])
 					{
 						ImGui::PushStyleColor(ImGuiCol_Text, LogColors[line_no]);
 						ImGui::TextUnformatted(line_start, line_end);
@@ -140,14 +166,14 @@ namespace ZeoEngine {
 				// When using the filter (in the block of code above) we don't have random access into the data to display anymore, which is why we don't use the clipper.
 				// Storing or skimming through the search result would make it possible (and would be recommended if you want to search through tens of thousands of entries)
 				ImGuiListClipper clipper;
-				clipper.Begin(LineOffsets.Size);
+				clipper.Begin(LineOffsets.Size, ImGui::GetTextLineHeightWithSpacing());
 				while (clipper.Step())
 				{
 					for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; ++line_no)
 					{
 						const char* line_start = buf + LineOffsets[line_no];
 						const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-						if (line_no < LogColors.size())
+						if (line_no < LogColors.size() && bEnableLogLevelFilters[LogLevels[line_no]])
 						{
 							ImGui::PushStyleColor(ImGuiCol_Text, LogColors[line_no]);
 							ImGui::TextUnformatted(line_start, line_end);
