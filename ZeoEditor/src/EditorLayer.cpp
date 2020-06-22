@@ -21,6 +21,7 @@
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/EditorLog.h"
 
 namespace ZeoEngine {
 
@@ -1390,12 +1391,13 @@ namespace ZeoEngine {
 		}
 		ImGui::End();
 	}
-	// TODO: ShowConsole()
+	
 	void EditorLayer::ShowConsole(bool* bShow)
 	{
+		EditorLog::s_EditorLog.Draw("Console", bShow);
+		// TODO: Console command
 		if (ImGui::Begin("Console", bShow))
 		{
-
 		}
 		ImGui::End();
 	}
