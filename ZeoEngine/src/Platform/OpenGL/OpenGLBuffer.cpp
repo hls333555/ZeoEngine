@@ -95,6 +95,8 @@ namespace ZeoEngine {
 	// FrameBuffer ///////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
+	static const uint32_t s_MaxFrameBufferSize = 8192;
+
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpec& spec)
 		: m_Spec(spec)
 	{
@@ -178,6 +180,12 @@ namespace ZeoEngine {
 
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
+		if (width == 0 || height == 0 || width > s_MaxFrameBufferSize || height > s_MaxFrameBufferSize)
+		{
+			ZE_CORE_WARN("Attempted to resize framebuffer to {0}, {1}!", width, height);
+			return;
+		}
+
 		m_Spec.Width = width;
 		m_Spec.Height = height;
 		Invalidate();
