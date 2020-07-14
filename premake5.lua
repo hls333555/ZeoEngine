@@ -28,6 +28,7 @@ IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
 IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
 IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
+IncludeDir["entt"] = "ZeoEngine/vendor/entt/include"
 
 -- Include premake files
 group "Dependencies"
@@ -79,7 +80,8 @@ project "ZeoEngine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.rapidjson}"
+		"%{IncludeDir.rapidjson}",
+		"%{IncludeDir.entt}"
 	}
 
 	libdirs
@@ -165,7 +167,8 @@ project "ZeoEditor"
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.NFD}",
-		"%{IncludeDir.rapidjson}"
+		"%{IncludeDir.rapidjson}",
+		"%{IncludeDir.entt}"
 	}
 
 	links
@@ -219,7 +222,8 @@ project "Sandbox"
 		"ZeoEngine/vendor",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.rttr}"
+		"%{IncludeDir.rttr}",
+		"%{IncludeDir.entt}"
 	}
 
 	links
