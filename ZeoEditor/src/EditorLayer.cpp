@@ -56,6 +56,8 @@ namespace ZeoEngine {
 		m_FBOs[GAME_VIEW] = FrameBuffer::Create(fbSpec);
 		m_FBOs[PARTICLE_VIEW] = FrameBuffer::Create(fbSpec);
 
+		m_ActiveScene = CreateRef<Scene>();
+
 		ConstructClassInheritanceTree();
 		LoadEditorTextures();
 
@@ -85,6 +87,7 @@ namespace ZeoEngine {
 			break;
 		case PIEState::Running:
 			Level::Get().OnUpdate(dt);
+			m_ActiveScene->OnUpdate(dt);
 		case PIEState::Paused:
 			// Setting game camera
 			m_ActiveCamera = &m_CameraControllers[GAME_VIEW_PIE]->GetCamera();

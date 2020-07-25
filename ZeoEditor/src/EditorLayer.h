@@ -8,6 +8,7 @@
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Buffer.h"
+#include "Engine/GameFramework/Scene.h"
 
 namespace ZeoEngine {
 
@@ -181,6 +182,8 @@ namespace ZeoEngine {
 		bool m_bIsHoveringViews[2] = { false };
 
 		OrthographicCamera* m_ActiveCamera;
+
+		Ref<Scene> m_ActiveScene;
 
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;
