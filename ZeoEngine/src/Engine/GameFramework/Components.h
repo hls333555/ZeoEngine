@@ -4,6 +4,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/SceneCamera.h"
+#include "Engine/GameFramework/ScriptableEntity.h"
 
 namespace ZeoEngine {
 
@@ -56,6 +57,29 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
+	};
+
+	struct NativeScriptCompont
+	{
+		ScriptableEntity* Instance = nullptr;
+
+		std::function<void()> InstantiateFunc;
+		std::function<void()> DestroyInstanceFunc;
+
+		std::function<void(ScriptableEntity*)> OnCreateFunc;
+		std::function<void(ScriptableEntity*)> OnDestroyFunc;
+		std::function<void(ScriptableEntity*, DeltaTime)> OnUpdateFunc;
+
+		template<typename T>
+		void Bind()
+		{
+			InstantiateFunc = [&]() { Instance = new T(); };
+			DestroyInstanceFunc = [&]() { delete static_cast<T*>(Instance); Instance = nullptr; };
+
+			OnCreateFunc = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnCreate(); };
+			OnDestroyFunc = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnDestroy(); };
+			OnUpdateFunc = [](ScriptableEntity* instance, DeltaTime dt) { static_cast<T*>(instance)->OnUpdate(dt); };
+		}
 	};
 
 }

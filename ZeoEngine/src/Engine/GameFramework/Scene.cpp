@@ -30,6 +30,27 @@ namespace ZeoEngine {
 
 	void Scene::OnUpdate(DeltaTime dt)
 	{
+		// Update scripts
+		{
+			m_Registry.view<NativeScriptCompont>().each([=](auto entity, auto& nativeScriptComponent)
+			{
+				if (!nativeScriptComponent.Instance)
+				{
+					nativeScriptComponent.InstantiateFunc();
+					nativeScriptComponent.Instance->m_Entity = Entity{ entity, this };
+					if (nativeScriptComponent.OnCreateFunc)
+					{
+						nativeScriptComponent.OnCreateFunc(nativeScriptComponent.Instance);
+					}
+				}
+
+				if (nativeScriptComponent.OnUpdateFunc)
+				{
+					nativeScriptComponent.OnUpdateFunc(nativeScriptComponent.Instance, dt);
+				}
+			});
+		}
+
 		// Render 2D
 		Camera* mainCamera = nullptr;
 		glm::mat4* cameraTransform = nullptr;
