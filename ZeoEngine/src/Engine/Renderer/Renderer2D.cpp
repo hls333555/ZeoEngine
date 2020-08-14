@@ -299,6 +299,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, color);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -310,10 +321,6 @@ namespace ZeoEngine {
 		constexpr float textureIndex = 0.0f;
 		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
 		constexpr glm::vec2 uvOffset = { 0.0f, 0.0f };
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; ++i)
 		{
@@ -340,6 +347,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, texture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -362,10 +380,6 @@ namespace ZeoEngine {
 
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -392,6 +406,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -414,10 +439,6 @@ namespace ZeoEngine {
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{

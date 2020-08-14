@@ -3,6 +3,7 @@
 
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
 
@@ -33,8 +34,14 @@ namespace ZeoEngine {
 		for (auto entity : group)
 		{
 			auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-			
-
+			if (sprite.Texture)
+			{
+				Renderer2D::DrawRotatedQuad(transform, sprite.Texture, sprite.TextureTiling, { 0.0f, 0.0f }, sprite.TintColor);
+			}
+			else
+			{
+				Renderer2D::DrawRotatedQuad(transform, sprite.TintColor);
+			}
 		}
 	}
 
