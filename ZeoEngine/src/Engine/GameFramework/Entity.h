@@ -9,6 +9,7 @@ namespace ZeoEngine {
 	class Entity
 	{
 	public:
+		Entity() = default;
 		Entity(entt::entity handle, Scene* scene);
 		Entity(const Entity&) = default;
 
@@ -39,10 +40,10 @@ namespace ZeoEngine {
 			return m_Scene->m_Registry.has<T>(m_EntityHandle);
 		}
 
-		operator bool() const { return m_EntityHandle != static_cast<entt::entity>(0); }
+		operator bool() const { return m_EntityHandle != entt::null; }
 
 	private:
-		entt::entity m_EntityHandle{ 0 };
+		entt::entity m_EntityHandle{ entt::null };
 		Scene* m_Scene = nullptr;
 
 	};
