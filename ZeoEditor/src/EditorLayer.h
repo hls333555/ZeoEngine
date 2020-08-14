@@ -9,6 +9,7 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/GameFramework/Scene.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -184,6 +185,7 @@ namespace ZeoEngine {
 		OrthographicCamera* m_ActiveCamera;
 
 		Ref<Scene> m_ActiveScene;
+		Entity m_CameraEntity;
 
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;

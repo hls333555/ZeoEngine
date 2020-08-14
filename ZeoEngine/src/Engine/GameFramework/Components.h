@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Renderer/Texture.h"
+#include "Engine/GameFramework/SceneCamera.h"
 
 namespace ZeoEngine {
 
@@ -43,6 +44,17 @@ namespace ZeoEngine {
 			: TintColor(color) {}
 		SpriteRendererComponent(const Ref<Texture2D>& texture, glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
 			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
+
+	};
+
+	struct CameraComponent
+	{
+		SceneCamera Camera;
+		bool bIsPrimary = true;
+		bool bFixedAspectRatio = false;
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
 
 	};
 

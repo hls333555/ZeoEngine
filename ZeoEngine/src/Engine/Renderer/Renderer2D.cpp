@@ -79,6 +79,17 @@ namespace ZeoEngine {
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		Reset();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		ZE_PROFILE_FUNCTION();

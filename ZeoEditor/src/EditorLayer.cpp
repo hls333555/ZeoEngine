@@ -22,6 +22,7 @@
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/EditorLog.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -57,6 +58,10 @@ namespace ZeoEngine {
 		m_FBOs[PARTICLE_VIEW] = FrameBuffer::Create(fbSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
+
+		// Create main camera
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+		m_CameraEntity.AddComponent<CameraComponent>();
 
 		ConstructClassInheritanceTree();
 		LoadEditorTextures();
@@ -1655,6 +1660,8 @@ namespace ZeoEngine {
 		m_FBOs[GAME_VIEW]->Resize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
 		m_CameraControllers[GAME_VIEW]->OnResize(newSize.x, newSize.y);
 		m_CameraControllers[GAME_VIEW_PIE]->OnResize(newSize.x, newSize.y);
+
+		m_ActiveScene->OnViewportResize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
 	}
 
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
