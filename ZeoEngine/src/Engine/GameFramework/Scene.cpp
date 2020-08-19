@@ -34,20 +34,15 @@ namespace ZeoEngine {
 		{
 			m_Registry.view<NativeScriptCompont>().each([=](auto entity, auto& nativeScriptComponent)
 			{
+				// TODO: Move to Scene::OnBeginPlay
 				if (!nativeScriptComponent.Instance)
 				{
-					nativeScriptComponent.InstantiateFunc();
+					nativeScriptComponent.Instance = nativeScriptComponent.InstantiateScript();
 					nativeScriptComponent.Instance->m_Entity = Entity{ entity, this };
-					if (nativeScriptComponent.OnCreateFunc)
-					{
-						nativeScriptComponent.OnCreateFunc(nativeScriptComponent.Instance);
-					}
+					nativeScriptComponent.Instance->OnCreate();
 				}
 
-				if (nativeScriptComponent.OnUpdateFunc)
-				{
-					nativeScriptComponent.OnUpdateFunc(nativeScriptComponent.Instance, dt);
-				}
+				nativeScriptComponent.Instance->OnUpdate(dt);
 			});
 		}
 
@@ -58,7 +53,7 @@ namespace ZeoEngine {
 			auto group = m_Registry.group<TransformComponent>(entt::get<CameraComponent>);
 			for (auto entity : group)
 			{
-				auto& [transformComponent, cameraComponent] = group.get<TransformComponent, CameraComponent>(entity);
+				auto [transformComponent, cameraComponent] = group.get<TransformComponent, CameraComponent>(entity);
 				if (cameraComponent.bIsPrimary)
 				{
 					mainCamera = &cameraComponent.Camera;
@@ -67,7 +62,6 @@ namespace ZeoEngine {
 				}
 			}
 		}
-
 		if (mainCamera)
 		{
 			Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
@@ -75,7 +69,7 @@ namespace ZeoEngine {
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
 			{
-				auto& [transformComponent, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				auto [transformComponent, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 				if (spriteComponent.Texture)
 				{
 					Renderer2D::DrawRotatedQuad(transformComponent, spriteComponent.Texture, spriteComponent.TextureTiling, { 0.0f, 0.0f }, spriteComponent.TintColor);

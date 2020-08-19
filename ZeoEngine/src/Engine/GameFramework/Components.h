@@ -61,24 +61,19 @@ namespace ZeoEngine {
 
 	struct NativeScriptCompont
 	{
+		using InstantiateScriptDef = ScriptableEntity*(*)();
+		using DestroyScriptDef = void(*)(NativeScriptCompont*);
+
 		ScriptableEntity* Instance = nullptr;
 
-		std::function<void()> InstantiateFunc;
-		std::function<void()> DestroyInstanceFunc;
-
-		std::function<void(ScriptableEntity*)> OnCreateFunc;
-		std::function<void(ScriptableEntity*)> OnDestroyFunc;
-		std::function<void(ScriptableEntity*, DeltaTime)> OnUpdateFunc;
+		InstantiateScriptDef InstantiateScript;
+		DestroyScriptDef DestroyScript;
 
 		template<typename T>
 		void Bind()
 		{
-			InstantiateFunc = [&]() { Instance = new T(); };
-			DestroyInstanceFunc = [&]() { delete static_cast<T*>(Instance); Instance = nullptr; };
-
-			OnCreateFunc = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnCreate(); };
-			OnDestroyFunc = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnDestroy(); };
-			OnUpdateFunc = [](ScriptableEntity* instance, DeltaTime dt) { static_cast<T*>(instance)->OnUpdate(dt); };
+			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
+			DestroyScript = [](NativeScriptCompont* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
 
