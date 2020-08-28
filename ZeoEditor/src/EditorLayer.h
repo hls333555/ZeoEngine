@@ -10,6 +10,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/Entity.h"
+#include "Panels/SceneOutlinePanel.h"
 
 namespace ZeoEngine {
 
@@ -185,7 +186,10 @@ namespace ZeoEngine {
 		OrthographicCamera* m_ActiveCamera;
 
 		Ref<Scene> m_ActiveScene;
-		Entity m_CameraEntity;
+		Entity m_EditorCameraEntities[2];
+
+		// Panels
+		SceneOutlinePanel m_SceneOutlinePanel;
 
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
 			m_LogoTexture;

@@ -35,12 +35,6 @@ namespace ZeoEngine {
 	EditorLayer::EditorLayer()
 		: EngineLayer("Editor")
 	{
-		const auto& window = Application::Get().GetWindow();
-		m_CameraControllers[GAME_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
-		m_CameraControllers[GAME_VIEW]->SetZoomLevel(3.0f);
-		// TODO: Add an interface for user to create custom game camera
-		m_CameraControllers[GAME_VIEW_PIE] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
-		m_CameraControllers[GAME_VIEW_PIE]->SetZoomLevel(3.0f);
 	}
 
 	void EditorLayer::OnAttach()
@@ -59,9 +53,11 @@ namespace ZeoEngine {
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		// Create main camera
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
-		m_CameraEntity.AddComponent<CameraComponent>();
+		// Create game view camera
+		m_EditorCameraEntities[GAME_VIEW] = m_ActiveScene->CreateEntity("Game View Camera");
+		m_EditorCameraEntities[GAME_VIEW].AddComponent<CameraComponent>();
+
+		m_SceneOutlinePanel.SetContext(m_ActiveScene);
 
 		ConstructClassInheritanceTree();
 		LoadEditorTextures();
@@ -356,6 +352,8 @@ namespace ZeoEngine {
 		//////////////////////////////////////////////////////////////////////////
 		// Editor Windows ////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
+
+		m_SceneOutlinePanel.OnImGuiRender();
 
 		if (bShowGameView)
 		{

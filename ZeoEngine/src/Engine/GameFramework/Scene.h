@@ -9,6 +9,7 @@ namespace ZeoEngine {
 	class Scene
 	{
 		friend class Entity;
+		friend class SceneOutlinePanel;
 
 	public:
 		Scene();
