@@ -59,10 +59,10 @@ namespace ZeoEngine {
 
 	};
 
-	struct NativeScriptCompont
+	struct NativeScriptComponent
 	{
 		using InstantiateScriptDef = ScriptableEntity*(*)();
-		using DestroyScriptDef = void(*)(NativeScriptCompont*);
+		using DestroyScriptDef = void(*)(NativeScriptComponent*);
 
 		ScriptableEntity* Instance = nullptr;
 
@@ -73,7 +73,7 @@ namespace ZeoEngine {
 		void Bind()
 		{
 			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
-			DestroyScript = [](NativeScriptCompont* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
+			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
 

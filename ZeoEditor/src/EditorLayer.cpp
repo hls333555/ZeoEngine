@@ -53,9 +53,46 @@ namespace ZeoEngine {
 
 		m_ActiveScene = CreateRef<Scene>();
 
+		class SceneCameraController : public ScriptableEntity
+		{
+		public:
+			void OnUpdate(DeltaTime dt)
+			{
+				auto& transform = GetComponent<TransformComponent>().Transform;
+				auto& sceneCamera = GetComponent<CameraComponent>().Camera;
+
+				// Move speed is set based on the zoom level (OrhographicSize)
+				float cameraPanSpeed = sceneCamera.GetOrhographicSize() / 2.0f;
+
+				// Pan camera view by holding middle mouse button
+				// TODO: This does not go well with camera rotation
+				if (Input::IsMouseButtonPressed(2))
+				{
+					auto [x, y] = Input::GetMousePosition();
+					if (!m_IsbMiddleMouseButtonFirstPressed)
+					{
+						transform[3][0] -= (x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
+						transform[3][1] += (y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
+					}
+					m_IsbMiddleMouseButtonFirstPressed = false;
+					m_LastPressedMousePosition = { x, y };
+				}
+
+				if (Input::IsMouseButtonReleased(2))
+				{
+					m_IsbMiddleMouseButtonFirstPressed = true;
+				}
+			}
+
+		private:
+			glm::vec2 m_LastPressedMousePosition{ 0.0f };
+			bool m_IsbMiddleMouseButtonFirstPressed = true;
+		};
+
 		// Create game view camera
 		m_EditorCameraEntities[GAME_VIEW] = m_ActiveScene->CreateEntity("Game View Camera");
 		m_EditorCameraEntities[GAME_VIEW].AddComponent<CameraComponent>();
+		m_EditorCameraEntities[GAME_VIEW].AddComponent<NativeScriptComponent>().Bind<SceneCameraController>();
 
 		m_SceneOutlinePanel.SetContext(m_ActiveScene);
 

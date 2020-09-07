@@ -9,12 +9,10 @@ namespace ZeoEngine {
 
 	Scene::Scene()
 	{
-
 	}
 
 	Scene::~Scene()
 	{
-
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -32,7 +30,7 @@ namespace ZeoEngine {
 	{
 		// Update scripts
 		{
-			m_Registry.view<NativeScriptCompont>().each([=](auto entity, auto& nativeScriptComponent)
+			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nativeScriptComponent)
 			{
 				// TODO: Move to Scene::OnBeginPlay
 				if (!nativeScriptComponent.Instance)
