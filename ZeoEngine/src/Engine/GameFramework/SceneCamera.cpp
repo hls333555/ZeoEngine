@@ -18,9 +18,9 @@ namespace ZeoEngine {
 		RecalculateProjection();
 	}
 
-	void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
+	void SceneCamera::SetViewportSize(const glm::vec2& size)
 	{
-		m_AspectRatio = static_cast<float>(width) / static_cast<float>(height);
+		m_AspectRatio = size.x / size.y;
 		RecalculateProjection();
 	}
 

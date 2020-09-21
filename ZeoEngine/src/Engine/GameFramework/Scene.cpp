@@ -15,13 +15,14 @@ namespace ZeoEngine {
 	{
 	}
 
-	Entity Scene::CreateEntity(const std::string& name)
+	Entity Scene::CreateEntity(const std::string& name, bool bForInternalUse)
 	{
 		Entity entity = { m_Registry.create(), this };
 
 		entity.AddComponent<TransformComponent>();
 		auto& tagComp = entity.AddComponent<TagComponent>();
 		tagComp.Tag = name.empty() ? "Entity" : name;
+		tagComp.bForInternalUse = bForInternalUse;
 
 		return entity;
 	}
@@ -30,32 +31,35 @@ namespace ZeoEngine {
 	{
 		// Update scripts
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nativeScriptComponent)
+			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 			{
 				// TODO: Move to Scene::OnBeginPlay
-				if (!nativeScriptComponent.Instance)
+				if (!nsc.Instance)
 				{
-					nativeScriptComponent.Instance = nativeScriptComponent.InstantiateScript();
-					nativeScriptComponent.Instance->m_Entity = Entity{ entity, this };
-					nativeScriptComponent.Instance->OnCreate();
+					nsc.Instance = nsc.InstantiateScript();
+					nsc.Instance->m_Entity = Entity{ entity, this };
+					nsc.Instance->OnCreate();
 				}
 
-				nativeScriptComponent.Instance->OnUpdate(dt);
+				nsc.Instance->OnUpdate(dt);
 			});
 		}
+	}
 
+	void Scene::OnRender()
+	{
 		// Render 2D
 		Camera* mainCamera = nullptr;
 		glm::mat4* cameraTransform = nullptr;
 		{
-			auto group = m_Registry.group<TransformComponent>(entt::get<CameraComponent>);
-			for (auto entity : group)
+			auto view = m_Registry.view<TransformComponent, CameraComponent>();
+			for (auto entity : view)
 			{
-				auto [transformComponent, cameraComponent] = group.get<TransformComponent, CameraComponent>(entity);
-				if (cameraComponent.bIsPrimary)
+				auto [transformComp, cameraComp] = view.get<TransformComponent, CameraComponent>(entity);
+				if (cameraComp.bIsPrimary)
 				{
-					mainCamera = &cameraComponent.Camera;
-					cameraTransform = &transformComponent.Transform;
+					mainCamera = &cameraComp.Camera;
+					cameraTransform = &transformComp.Transform;
 					break;
 				}
 			}
@@ -67,36 +71,18 @@ namespace ZeoEngine {
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
 			{
-				auto [transformComponent, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				if (spriteComponent.Texture)
+				auto [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				if (spriteComp.Texture)
 				{
-					Renderer2D::DrawRotatedQuad(transformComponent, spriteComponent.Texture, spriteComponent.TextureTiling, { 0.0f, 0.0f }, spriteComponent.TintColor);
+					Renderer2D::DrawRotatedQuad(transformComp, spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
 				}
 				else
 				{
-					Renderer2D::DrawRotatedQuad(transformComponent, spriteComponent.TintColor);
+					Renderer2D::DrawRotatedQuad(transformComp, spriteComp.TintColor);
 				}
 			}
 
 			Renderer2D::EndScene();
-		}
-		
-	}
-
-	void Scene::OnViewportResize(uint32_t width, uint32_t height)
-	{
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
-
-		// Resize non-FixedAspectRatio cameras
-		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
-		{
-			auto& cameraComponent = view.get<CameraComponent>(entity);
-			if (!cameraComponent.bFixedAspectRatio)
-			{
-				cameraComponent.Camera.SetViewportSize(width, height);
-			}
 		}
 	}
 

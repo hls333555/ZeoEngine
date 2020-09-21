@@ -11,7 +11,7 @@ namespace ZeoEngine {
 		virtual ~SceneCamera() = default;
 
 		void SetOrthographic(float size, float nearClip, float farClip);
-		void SetViewportSize(uint32_t width, uint32_t height);
+		void SetViewportSize(const glm::vec2& size);
 
 		float GetOrhographicSize() const { return m_OrthographicSize; }
 		void SetOrhographicSize(float size) { m_OrthographicSize = size; RecalculateProjection(); }

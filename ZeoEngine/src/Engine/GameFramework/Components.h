@@ -25,6 +25,7 @@ namespace ZeoEngine {
 	struct TagComponent
 	{
 		std::string Tag;
+		bool bForInternalUse{ false };
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
@@ -61,7 +62,8 @@ namespace ZeoEngine {
 
 	struct NativeScriptComponent
 	{
-		using InstantiateScriptDef = ScriptableEntity*(*)();
+		// Function pointer does not support lambda with captures
+		using InstantiateScriptDef = std::function<ScriptableEntity*()>;
 		using DestroyScriptDef = void(*)(NativeScriptComponent*);
 
 		ScriptableEntity* Instance = nullptr;
@@ -69,10 +71,10 @@ namespace ZeoEngine {
 		InstantiateScriptDef InstantiateScript;
 		DestroyScriptDef DestroyScript;
 
-		template<typename T>
-		void Bind()
+		template<typename T, typename ... Args>
+		void Bind(Args&& ... args)
 		{
-			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
+			InstantiateScript = [=]() mutable { return static_cast<ScriptableEntity*>(new T(std::forward<Args>(args)...)); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};

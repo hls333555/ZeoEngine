@@ -31,7 +31,22 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
+		// TODO: Remove
 		EngineLayer* GetEngineLayer();
+
+		template<typename T>
+		T* FindLayer()
+		{
+			for (auto* layer : m_LayerStack)
+			{
+				T* layer_cast = dynamic_cast<T*>(layer);
+				if (layer_cast)
+				{
+					return layer_cast;
+				}
+			}
+			return nullptr;
+		}
 
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
@@ -43,7 +58,6 @@ namespace ZeoEngine {
 					return dynamic_cast<T*>(layer);
 				}
 			}
-
 			return nullptr;
 		}
 

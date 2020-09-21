@@ -1,4 +1,4 @@
-#include "SceneOutlinePanel.h"
+#include "Panels/SceneOutlinePanel.h"
 
 #include <imgui.h>
 
@@ -6,35 +6,30 @@
 
 namespace ZeoEngine {
 
-	SceneOutlinePanel::SceneOutlinePanel(const Ref<Scene>& context)
-	{
-		SetContext(context);
-	}
-
-	void SceneOutlinePanel::SetContext(const Ref<Scene>& context)
-	{
-		m_Context = context;
-	}
-
 	void SceneOutlinePanel::OnImGuiRender()
 	{
-		ImGui::Begin("Scene Outline");
+		if (!m_bShow) return;
 
-		m_Context->m_Registry.each([&](auto entityID)
+		ScenePanel::OnImGuiRender();
+
+		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
 		{
-			Entity entity{ entityID, m_Context.get() };
-			DrawEntityNode(entity);
-		});
-
+			GetScene()->m_Registry.each([&](auto entityID)
+			{
+				Entity entity{ entityID, GetScene().get() };
+				DrawEntityNode(entity);
+			});
+		}
 		ImGui::End();
 	}
 
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)
 	{
-		auto& tag = entity.GetComponent<TagComponent>().Tag;
+		auto& tagComp = entity.GetComponent<TagComponent>();
+		if (tagComp.bForInternalUse) return;
 
 		ImGuiTreeNodeFlags flags = (m_SelectedEntity == entity ? ImGuiTreeNodeFlags_OpenOnArrow : 0) | ImGuiTreeNodeFlags_Selected;
-		bool bOpened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		bool bOpened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Tag.c_str());
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectedEntity = entity;

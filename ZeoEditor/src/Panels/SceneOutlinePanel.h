@@ -1,27 +1,24 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-#include "Engine/Core/Log.h"
-#include "Engine/GameFramework/Scene.h"
+#include "Panels/EditorPanel.h"
+
 #include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
-	class SceneOutlinePanel
+	class EditorDockspace;
+
+	class SceneOutlinePanel : public ScenePanel
 	{
 	public:
-		SceneOutlinePanel() = default;
-		SceneOutlinePanel(const Ref<Scene>& context);
+		using ScenePanel::ScenePanel;
 
-		void SetContext(const Ref<Scene>& context);
-
-		void OnImGuiRender();
+		virtual void OnImGuiRender() override;
 
 	private:
 		void DrawEntityNode(Entity entity);
 
 	private:
-		Ref<Scene> m_Context;
 		Entity m_SelectedEntity;
 	};
 

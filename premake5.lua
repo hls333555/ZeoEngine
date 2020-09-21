@@ -159,6 +159,7 @@ project "ZeoEditor"
 
 	includedirs
 	{
+		"%{prj.name}/src",
 		"ZeoEngine/vendor/spdlog/include",
 		"ZeoEngine/src",
 		"ZeoEngine/vendor",

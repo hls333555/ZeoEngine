@@ -5,14 +5,12 @@
 #include <glm/glm.hpp>
 #include <rttr/type>
 
-#include "Engine/Renderer/OrthographicCameraController.h"
-#include "Engine/Renderer/Texture.h"
-#include "Engine/Renderer/Buffer.h"
-#include "Engine/GameFramework/Scene.h"
-#include "Engine/GameFramework/Entity.h"
-#include "Panels/SceneOutlinePanel.h"
+#include "Engine/Events/KeyEvent.h"
+#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
+
+	class EditorDockspace;
 
 	struct RTTRPropertyHashHasher
 	{
@@ -58,35 +56,25 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
-		virtual OrthographicCamera* GetGameCamera() override { return &m_CameraControllers[GAME_VIEW_PIE]->GetCamera(); }
+
+		DockspaceManager& GetDockspaceManager() { return m_DockspaceManager; }
+
+		//virtual OrthographicCamera* GetGameCamera() override { return &m_CameraControllers[GAME_VIEW_PIE]->GetCamera(); }
 
 		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
 
 	private:
-		void BeginFrameBuffer(uint8_t viewportType);
-		void EndFrameBuffer(uint8_t viewportType);
-
-		void LoadEditorTextures();
-
-		void CreateMainEditorDockspace();
-		void ShowGameView(bool* bShow);
 		void ShowLevelOutline(bool* bShow);
 		void ShowObjectInspector(bool* bShow);
 		void ShowClassBrowser(bool* bShow);
-		void ShowConsole(bool* bShow);
 
 		void CreateParticleEditorDockspace(bool* bShow);
 		void ShowParticleEditor(bool* bShow);
-
-		void ShowStats(bool* bShow);
-		void ShowPreferences(bool* bShow);
-		void ShowAbout(bool* bShow);
 
 		void SetNextWindowDefaultPosition();
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 
-		void OnGameViewWindowResized(const glm::vec2& newSize);
 		// TODO: You should check to call this every time you add a new object selection method
 		void OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject);
 		void OnGameViewImGuiRender();
@@ -94,7 +82,6 @@ namespace ZeoEngine {
 		void EditTransform();
 		void DrawCollision();
 
-		void OnParticleViewWindowResized(const glm::vec2& newSize);
 		void LoadParticleSystemFromFile(const char* particleSystemPath);
 		void SaveParticleSystemToFile(std::string& particleSystemPath);
 
@@ -171,31 +158,7 @@ namespace ZeoEngine {
 		std::string ToAbsolutePath(const char* relativePath);
 
 	private:
-		enum ViewportType
-		{
-			GAME_VIEW = 0,
-			PARTICLE_VIEW = 1,
-
-			GAME_VIEW_PIE = 2
-		};
-
-		Scope<OrthographicCameraController> m_CameraControllers[3];
-		Ref<FrameBuffer> m_FBOs[2];
-		bool m_bIsHoveringViews[2] = { false };
-
-		OrthographicCamera* m_ActiveCamera;
-
-		Ref<Scene> m_ActiveScene;
-		Entity m_EditorCameraEntities[2];
-
-		// Panels
-		SceneOutlinePanel m_SceneOutlinePanel;
-
-		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolBarTextures[2],
-			m_LogoTexture;
-
-		glm::vec2 m_LastGameViewSize{ 0.0f, 0.0f };
-		bool m_bResetLayout = false;
+		DockspaceManager m_DockspaceManager;
 
 		std::string m_CurrentLevelPath, m_CurrentLevelName;
 

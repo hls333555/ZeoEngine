@@ -10,7 +10,6 @@
 #include <nfd.h>
 
 #include "Engine/Renderer/Renderer2D.h"
-#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Core/Application.h"
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
@@ -21,14 +20,13 @@
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Core/EditorLog.h"
 #include "Engine/GameFramework/Components.h"
+#include "Dockspaces/MainDockspace.h"
+#include "Dockspaces/ParticleEditorDockspace.h"
 
 namespace ZeoEngine {
 
 #define SHOW_IMGUI_DEMO 0
-#define FRAMEBUFFER_WIDTH 1280
-#define FRAMEBUFFER_HEIGHT 720
 
 	PIEState pieState;
 
@@ -45,59 +43,12 @@ namespace ZeoEngine {
 		level.Init();
 		level.m_OnLevelCleanUp += GET_MEMBER_FUNC(this, &EditorLayer::ClearSelectedGameObject);
 
-		FrameBufferSpec fbSpec;
-		fbSpec.Width = FRAMEBUFFER_WIDTH;
-		fbSpec.Height = FRAMEBUFFER_HEIGHT;
-		m_FBOs[GAME_VIEW] = FrameBuffer::Create(fbSpec);
-		m_FBOs[PARTICLE_VIEW] = FrameBuffer::Create(fbSpec);
-
-		m_ActiveScene = CreateRef<Scene>();
-
-		class SceneCameraController : public ScriptableEntity
-		{
-		public:
-			void OnUpdate(DeltaTime dt)
-			{
-				auto& transform = GetComponent<TransformComponent>().Transform;
-				auto& sceneCamera = GetComponent<CameraComponent>().Camera;
-
-				// Move speed is set based on the zoom level (OrhographicSize)
-				float cameraPanSpeed = sceneCamera.GetOrhographicSize() / 2.0f;
-
-				// Pan camera view by holding middle mouse button
-				// TODO: This does not go well with camera rotation
-				if (Input::IsMouseButtonPressed(2))
-				{
-					auto [x, y] = Input::GetMousePosition();
-					if (!m_IsbMiddleMouseButtonFirstPressed)
-					{
-						transform[3][0] -= (x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
-						transform[3][1] += (y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
-					}
-					m_IsbMiddleMouseButtonFirstPressed = false;
-					m_LastPressedMousePosition = { x, y };
-				}
-
-				if (Input::IsMouseButtonReleased(2))
-				{
-					m_IsbMiddleMouseButtonFirstPressed = true;
-				}
-			}
-
-		private:
-			glm::vec2 m_LastPressedMousePosition{ 0.0f };
-			bool m_IsbMiddleMouseButtonFirstPressed = true;
-		};
-
-		// Create game view camera
-		m_EditorCameraEntities[GAME_VIEW] = m_ActiveScene->CreateEntity("Game View Camera");
-		m_EditorCameraEntities[GAME_VIEW].AddComponent<CameraComponent>();
-		m_EditorCameraEntities[GAME_VIEW].AddComponent<NativeScriptComponent>().Bind<SceneCameraController>();
-
-		m_SceneOutlinePanel.SetContext(m_ActiveScene);
+		MainDockspace* mainDockspace = new MainDockspace("ZeoEditor", 0.0f, 0.0f, ImVec2(5.0f, 5.0f), ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
+		m_DockspaceManager.PushDockspace(mainDockspace);
 
 		ConstructClassInheritanceTree();
-		LoadEditorTextures();
 
 		std::string cachePath = std::filesystem::current_path().string().append("/temp");
 		// Create temp folder on demand
@@ -113,334 +64,256 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnUpdate(dt);
 
-		switch (pieState)
-		{
-		case PIEState::None:
-			if (m_bIsHoveringViews[GAME_VIEW])
-			{
-				m_CameraControllers[GAME_VIEW]->OnUpdate(dt);
-			}
-			// Setting editor camera
-			m_ActiveCamera = &m_CameraControllers[GAME_VIEW]->GetCamera();
-			break;
-		case PIEState::Running:
-			Level::Get().OnUpdate(dt);
-			m_ActiveScene->OnUpdate(dt);
-		case PIEState::Paused:
-			// Setting game camera
-			m_ActiveCamera = &m_CameraControllers[GAME_VIEW_PIE]->GetCamera();
-			break;
-		default:
-			break;
-		}
+		m_DockspaceManager.OnUpdate(dt);
 
 		Renderer2D::ResetStats();
 
-		BeginFrameBuffer(GAME_VIEW);
-		{
-			{
-				ZE_PROFILE_SCOPE("Renderer Prep: GameView");
+		//if (m_bShowParticleEditor)
+		//{
+		//	m_ParticleViewportPanel.OnUpdate(dt);
 
-				RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-				RenderCommand::Clear();
-			}
-			{
-				ZE_PROFILE_SCOPE("Renderer Draw: GameView");
+		//	if (m_EditorParticleSystem)
+		//	{
+		//		bool bAutoDestroy = m_EditorParticleSystem->GetAutoDestroy();
+		//		m_EditorParticleSystem->SetParticleEditorPreviewMode(true, false);
+		//		m_EditorParticleSystem->OnUpdate(dt);
+		//		m_EditorParticleSystem->SetParticleEditorPreviewMode(false, bAutoDestroy);
+		//	}
 
-				Renderer2D::BeginScene(*m_ActiveCamera);
-				Level::Get().OnRender();
-				Renderer2D::EndScene();
-			}
-		}
-		EndFrameBuffer(GAME_VIEW);
-
-		if (m_bShowParticleEditor)
-		{
-			if (m_bIsHoveringViews[PARTICLE_VIEW])
-			{
-				m_CameraControllers[PARTICLE_VIEW]->OnUpdate(dt);
-			}
-			if (m_EditorParticleSystem)
-			{
-				bool bAutoDestroy = m_EditorParticleSystem->GetAutoDestroy();
-				m_EditorParticleSystem->SetParticleEditorPreviewMode(true, false);
-				m_EditorParticleSystem->OnUpdate(dt);
-				m_EditorParticleSystem->SetParticleEditorPreviewMode(false, bAutoDestroy);
-			}
-
-			BeginFrameBuffer(PARTICLE_VIEW);
-			{
-				{
-					ZE_PROFILE_SCOPE("Renderer Prep: ParticleView");
-
-					RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-					RenderCommand::Clear();
-				}
-				{
-					ZE_PROFILE_SCOPE("Renderer Draw: ParticleView");
-
-					Renderer2D::BeginScene(m_CameraControllers[PARTICLE_VIEW]->GetCamera());
-					if (m_EditorParticleSystem)
-					{
-						m_EditorParticleSystem->OnRender();
-					}
-					Renderer2D::EndScene();
-				}
-			}
-			EndFrameBuffer(PARTICLE_VIEW);
-		}
-	}
-
-	void EditorLayer::BeginFrameBuffer(uint8_t viewportType)
-	{
-		m_FBOs[viewportType]->Bind();
-	}
-
-	void EditorLayer::EndFrameBuffer(uint8_t viewportType)
-	{
-		m_FBOs[viewportType]->Unbind();
+		//}
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
 #if SHOW_IMGUI_DEMO
-		bool bShow = false;
+		static bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);
 #endif
 
 		// TODO: These bools are not saved out, so last opened windows cannot restore
 		static bool bShowGameView = true;
-		static bool bShowLevelOutline = true;
+		static bool bShowSceneOutline = true;
 		static bool bShowObjectInspector = true;
 		static bool bShowClassBrowser = true;
-		static bool bShowConsole = true;
-		static bool bShowStats = false;
-		static bool bShowPreferences = false;
-		static bool bShowAbout = false;
 
 		//////////////////////////////////////////////////////////////////////////
 		// EditorDockspace ///////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
-		CreateMainEditorDockspace();
+		m_DockspaceManager.OnImGuiRender();
 
 		//////////////////////////////////////////////////////////////////////////
 		// MainMenuBar ///////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////
 
 		// TODO: Key shortcuts
-		if (ImGui::BeginMainMenuBar())
-		{
-			// TODO: Test these if we have another window containing these named menus
 
-			// File menu
-			if (ImGui::BeginMenu("File"))
-			{
-				static bool bEnableLoadingOrSaving = true;
-				// Loading and saving level during PIE is not allowed
-				if (pieState != PIEState::None)
-				{
-					bEnableLoadingOrSaving = false;
-				}
-				else
-				{
-					bEnableLoadingOrSaving = true;
-				}
-				if (ImGui::MenuItem("New level", "CTRL+N", false, bEnableLoadingOrSaving))
-				{
-					Level::Get().CleanUp();
-					m_CurrentLevelPath.clear();
-					m_CurrentLevelName.clear();
-				}
-				if (ImGui::MenuItem("Open level", "CTRL+O", false, bEnableLoadingOrSaving))
-				{
-					nfdchar_t* outPath = nullptr;
-					nfdresult_t result = NFD_OpenDialog("zlevel", nullptr, &outPath);
-					if (result == NFD_OKAY)
-					{
-						Level::Get().LoadLevelFromFile(outPath);
-						m_CurrentLevelPath = outPath;
-						m_CurrentLevelName = std::filesystem::path(outPath).filename().string();
-						free(outPath);
-					}
-					else if (result == NFD_ERROR)
-					{
-						ZE_CORE_ERROR("Open level failed: {0}", NFD_GetError());
-					}
-				}
-				if (ImGui::MenuItem("Save level", "CTRL+S", false, bEnableLoadingOrSaving))
-				{
-					if (m_CurrentLevelPath.empty())
-					{
-						nfdchar_t* outPath = nullptr;
-						nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
-						if (result == NFD_OKAY)
-						{
-							std::string pathStr = outPath;
-							free(outPath);
-							Level::Get().SaveLevelToFile(pathStr);
-							m_CurrentLevelPath = pathStr;
-							static const char* levelFileSuffix = ".zlevel";
-							if (pathStr.rfind(levelFileSuffix) == std::string::npos)
-							{
-								pathStr += levelFileSuffix;
-							}
-							m_CurrentLevelName = std::filesystem::path(pathStr).filename().string();
-						}
-						else if (result == NFD_ERROR)
-						{
-							ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
-						}
-					}
-					else
-					{
-						Level::Get().SaveLevelToFile(m_CurrentLevelPath);
-					}
-				}
-				if (ImGui::MenuItem("Save level as", "CTRL+ALT+S", false, bEnableLoadingOrSaving))
-				{
-					nfdchar_t* outPath = nullptr;
-					nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
-					if (result == NFD_OKAY)
-					{
-						Level::Get().SaveLevelToFile(std::string(outPath));
-						m_CurrentLevelPath = outPath;
-						m_CurrentLevelName = std::filesystem::path(outPath).filename().string();
-						free(outPath);
-					}
-					else if (result == NFD_ERROR)
-					{
-						ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
-					}
-				}
-				if (ImGui::MenuItem("Exit"))
-				{
-					// TODO: Check if current level needs saving
-					Application::Get().Close();
-				}
-				ImGui::EndMenu();
-			}
-			// TODO: Edit menu
-			if (ImGui::BeginMenu("Edit"))
-			{
-				if (ImGui::MenuItem("Undo", "CTRL+Z"))
-				{
+		//if (ImGui::BeginMainMenuBar())
+		//{
+		//	// TODO: Test these if we have another window containing these named menus
 
-				}
-				if (ImGui::MenuItem("Redo", "CTRL+Y", false, false))
-				{
+		//	// File menu
+		//	if (ImGui::BeginMenu("File"))
+		//	{
+		//		static bool bEnableLoadingOrSaving = true;
+		//		// Loading and saving level during PIE is not allowed
+		//		if (pieState != PIEState::None)
+		//		{
+		//			bEnableLoadingOrSaving = false;
+		//		}
+		//		else
+		//		{
+		//			bEnableLoadingOrSaving = true;
+		//		}
+		//		if (ImGui::MenuItem("New level", "CTRL+N", false, bEnableLoadingOrSaving))
+		//		{
+		//			Level::Get().CleanUp();
+		//			m_CurrentLevelPath.clear();
+		//			m_CurrentLevelName.clear();
+		//		}
+		//		if (ImGui::MenuItem("Open level", "CTRL+O", false, bEnableLoadingOrSaving))
+		//		{
+		//			nfdchar_t* outPath = nullptr;
+		//			nfdresult_t result = NFD_OpenDialog("zlevel", nullptr, &outPath);
+		//			if (result == NFD_OKAY)
+		//			{
+		//				Level::Get().LoadLevelFromFile(outPath);
+		//				m_CurrentLevelPath = outPath;
+		//				m_CurrentLevelName = std::filesystem::path(outPath).filename().string();
+		//				free(outPath);
+		//			}
+		//			else if (result == NFD_ERROR)
+		//			{
+		//				ZE_CORE_ERROR("Open level failed: {0}", NFD_GetError());
+		//			}
+		//		}
+		//		if (ImGui::MenuItem("Save level", "CTRL+S", false, bEnableLoadingOrSaving))
+		//		{
+		//			if (m_CurrentLevelPath.empty())
+		//			{
+		//				nfdchar_t* outPath = nullptr;
+		//				nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
+		//				if (result == NFD_OKAY)
+		//				{
+		//					std::string pathStr = outPath;
+		//					free(outPath);
+		//					Level::Get().SaveLevelToFile(pathStr);
+		//					m_CurrentLevelPath = pathStr;
+		//					static const char* levelFileSuffix = ".zlevel";
+		//					if (pathStr.rfind(levelFileSuffix) == std::string::npos)
+		//					{
+		//						pathStr += levelFileSuffix;
+		//					}
+		//					m_CurrentLevelName = std::filesystem::path(pathStr).filename().string();
+		//				}
+		//				else if (result == NFD_ERROR)
+		//				{
+		//					ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
+		//				}
+		//			}
+		//			else
+		//			{
+		//				Level::Get().SaveLevelToFile(m_CurrentLevelPath);
+		//			}
+		//		}
+		//		if (ImGui::MenuItem("Save level as", "CTRL+ALT+S", false, bEnableLoadingOrSaving))
+		//		{
+		//			nfdchar_t* outPath = nullptr;
+		//			nfdresult_t result = NFD_SaveDialog("zlevel", nullptr, &outPath);
+		//			if (result == NFD_OKAY)
+		//			{
+		//				Level::Get().SaveLevelToFile(std::string(outPath));
+		//				m_CurrentLevelPath = outPath;
+		//				m_CurrentLevelName = std::filesystem::path(outPath).filename().string();
+		//				free(outPath);
+		//			}
+		//			else if (result == NFD_ERROR)
+		//			{
+		//				ZE_CORE_ERROR("Save level failed: {0}", NFD_GetError());
+		//			}
+		//		}
+		//		if (ImGui::MenuItem("Exit"))
+		//		{
+		//			// TODO: Check if current level needs saving
+		//			Application::Get().Close();
+		//		}
+		//		ImGui::EndMenu();
+		//	}
+		//	// TODO: Edit menu
+		//	if (ImGui::BeginMenu("Edit"))
+		//	{
+		//		if (ImGui::MenuItem("Undo", "CTRL+Z"))
+		//		{
 
-				}
-				ImGui::Separator();
-				if (ImGui::MenuItem("Copy", "CTRL+C"))
-				{
+		//		}
+		//		if (ImGui::MenuItem("Redo", "CTRL+Y", false, false))
+		//		{
 
-				}
-				if (ImGui::MenuItem("Paste", "CTRL+V"))
-				{
+		//		}
+		//		ImGui::Separator();
+		//		if (ImGui::MenuItem("Copy", "CTRL+C"))
+		//		{
 
-				}
-				if (ImGui::MenuItem("Cut", "CTRL+X"))
-				{
+		//		}
+		//		if (ImGui::MenuItem("Paste", "CTRL+V"))
+		//		{
 
-				}
-				ImGui::Separator();
-				ImGui::MenuItem("Preferences", nullptr, &bShowPreferences);
-				ImGui::EndMenu();
-			}
-			// Window menu
-			if (ImGui::BeginMenu("Window"))
-			{
-				ImGui::MenuItem("Game View", nullptr, &bShowGameView);
-				ImGui::MenuItem("Level Outline", nullptr, &bShowLevelOutline);
-				ImGui::MenuItem("Object Inspector", nullptr, &bShowObjectInspector);
-				ImGui::MenuItem("Class Browser", nullptr, &bShowClassBrowser);
-				ImGui::MenuItem("Console", nullptr, &bShowConsole);
-				ImGui::MenuItem("Stats", nullptr, &bShowStats);
-				ImGui::MenuItem("Particle Editor", nullptr, &m_bShowParticleEditor);
-				ImGui::Separator();
-				// Reset layout on next frame
-				if (ImGui::MenuItem("Reset layout", nullptr))
-				{
-					m_bResetLayout = true;
-				}
-				ImGui::EndMenu();
-			}
-			// Help
-			if (ImGui::BeginMenu("Help"))
-			{
-				ImGui::Separator();
-				ImGui::MenuItem("About ZeoEngine", nullptr, &bShowAbout);
-				ImGui::EndMenu();
-			}
-			// Display level file name at center of menu bar
-			{
-				ImGui::TextCentered("%s", m_CurrentLevelName.empty() ? "Untitled" : m_CurrentLevelName.c_str());
-			}
-			// Display engine stats at right corner of menu bar
-			{
-				const float statsWidth = 125.0f;
-				ImGui::Indent(ImGui::GetWindowSize().x - statsWidth);
-				ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.f / ImGui::GetIO().Framerate);
-			}
-			ImGui::EndMainMenuBar();
-		}
+		//		}
+		//		if (ImGui::MenuItem("Cut", "CTRL+X"))
+		//		{
 
-		//////////////////////////////////////////////////////////////////////////
-		// Editor Windows ////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
+		//		}
+		//		ImGui::Separator();
+		//		ImGui::MenuItem("Preferences", nullptr, &bShowPreferences);
+		//		ImGui::EndMenu();
+		//	}
+		//	// Window menu
+		//	if (ImGui::BeginMenu("Window"))
+		//	{
+		//		ImGui::MenuItem(GAME_VIEW_NAME, nullptr, &bShowGameView);
+		//		ImGui::MenuItem(SCENE_OUTLINE_NAME, nullptr, &bShowSceneOutline);
+		//		ImGui::MenuItem("Object Inspector", nullptr, &bShowObjectInspector);
+		//		ImGui::MenuItem("Class Browser", nullptr, &bShowClassBrowser);
+		//		ImGui::MenuItem("Console", nullptr, &bShowConsole);
+		//		ImGui::MenuItem("Stats", nullptr, &bShowStats);
+		//		ImGui::MenuItem("Particle Editor", nullptr, &m_bShowParticleEditor);
+		//		ImGui::Separator();
+		//		// Reset layout on next frame
+		//		if (ImGui::MenuItem("Reset layout", nullptr))
+		//		{
+		//			m_bResetLayout = true;
+		//		}
+		//		ImGui::EndMenu();
+		//	}
+		//	// Help
+		//	if (ImGui::BeginMenu("Help"))
+		//	{
+		//		ImGui::Separator();
+		//		ImGui::MenuItem("About ZeoEngine", nullptr, &bShowAbout);
+		//		ImGui::EndMenu();
+		//	}
+		//	// Display level file name at center of menu bar
+		//	{
+		//		ImGui::TextCentered("%s", m_CurrentLevelName.empty() ? "Untitled" : m_CurrentLevelName.c_str());
+		//	}
+		//	// Display engine stats at right corner of menu bar
+		//	{
+		//		const float statsWidth = 125.0f;
+		//		ImGui::Indent(ImGui::GetWindowSize().x - statsWidth);
+		//		ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.f / ImGui::GetIO().Framerate);
+		//	}
+		//	ImGui::EndMainMenuBar();
+		//}
 
-		m_SceneOutlinePanel.OnImGuiRender();
+		////////////////////////////////////////////////////////////////////////////
+		//// Editor Windows ////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////
 
-		if (bShowGameView)
-		{
-			ShowGameView(&bShowGameView);
-		}
-		else
-		{
-			// TODO: Disable framebuffer rendering
+		//if (bShowGameView)
+		//{
+		//	m_GameViewportPanel.OnImGuiRender(&bShowGameView);
+		//}
+		//else
+		//{
+		//	// TODO: Disable framebuffer rendering
 
-		}
-		if (bShowLevelOutline)
-		{
-			ShowLevelOutline(&bShowLevelOutline);
-		}
-		if (bShowObjectInspector)
-		{
-			ShowObjectInspector(&bShowObjectInspector);
-		}
-		if (bShowClassBrowser)
-		{
-			ShowClassBrowser(&bShowClassBrowser);
-		}
-		if (bShowConsole)
-		{
-			ShowConsole(&bShowConsole);
-		}
+		//}
+		//if (bShowSceneOutline)
+		//{
+		//	ShowLevelOutline(&bShowSceneOutline);
+		//}
+		//if (bShowObjectInspector)
+		//{
+		//	ShowObjectInspector(&bShowObjectInspector);
+		//}
+		//if (bShowClassBrowser)
+		//{
+		//	ShowClassBrowser(&bShowClassBrowser);
+		//}
 
-		if (m_bShowParticleEditor)
-		{
-			CreateParticleEditorDockspace(&m_bShowParticleEditor);
-			ShowParticleEditor(&m_bShowParticleEditor);
-		}
+		//if (m_bShowParticleEditor)
+		//{
+		//	CreateParticleEditorDockspace(&m_bShowParticleEditor);
+		//	ShowParticleEditor(&m_bShowParticleEditor);
+		//}
 
-		if (bShowStats)
-		{
-			ShowStats(&bShowStats);
-		}
+		//if (bShowStats)
+		//{
+		//	ShowStats(&bShowStats);
+		//}
 
-		if (bShowPreferences)
-		{
-			ShowPreferences(&bShowPreferences);
-		}
+		//if (bShowPreferences)
+		//{
+		//	ShowPreferences(&bShowPreferences);
+		//}
 
-		if (bShowAbout)
-		{
-			ShowAbout(&bShowAbout);
-		}
+		//if (bShowAbout)
+		//{
+		//	ShowAbout(&bShowAbout);
+		//}
 
-		// Put it at last to prevent GameObject's UI from being covered by GameView
-		Level::Get().OnImGuiRender();
+		//// Put it at last to prevent GameObject's UI from being covered by GameView
+		//Level::Get().OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -448,169 +321,15 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 
-		if (m_bIsHoveringViews[GAME_VIEW] && pieState == PIEState::None)
-		{
-			m_CameraControllers[GAME_VIEW]->OnEvent(event);
-		}
-		if (m_bIsHoveringViews[PARTICLE_VIEW])
-		{
-			m_CameraControllers[PARTICLE_VIEW]->OnEvent(event);
-		}
+		//if (m_bIsHoveringViews[GAME_VIEW] && pieState == PIEState::None)
+		//{
+		//	m_CameraControllers[GAME_VIEW]->OnEvent(event);
+		//}
+		//if (m_bIsHoveringViews[PARTICLE_VIEW])
+		//{
+		//	m_CameraControllers[PARTICLE_VIEW]->OnEvent(event);
+		//}
 
-	}
-
-	void EditorLayer::LoadEditorTextures()
-	{
-		m_ToolBarTextures[0] = m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
-		m_ToolBarTextures[1] = m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
-		m_StopTexture = Texture2D::Create("assets/textures/Stop.png");
-
-		m_LogoTexture = Texture2D::Create("assets/textures/Logo.png");
-
-	}
-
-	void EditorLayer::CreateMainEditorDockspace()
-	{
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->Pos);
-		ImGui::SetNextWindowSize(viewport->Size);
-		ImGui::SetNextWindowViewport(viewport->ID);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		// Setting a little padding here can display intact yellow highlight rectangle when hovering over docked windows (Game View) during drag and drop operations
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
-		windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-
-		static bool bOpen = true;
-		ImGui::Begin("Editor", &bOpen, windowFlags);
-		ImGui::PopStyleVar(3);
-		ImGuiID mainEditorDockspaceId = ImGui::GetID("MainEditorDockspace");
-		// Update docking layout
-		if (ImGui::DockBuilderGetNode(mainEditorDockspaceId) == nullptr || m_bResetLayout)
-		{
-			m_bResetLayout = false;
-
-			// Clear out existing layout
-			ImGui::DockBuilderRemoveNode(mainEditorDockspaceId);
-			// Add empty node
-			ImGui::DockBuilderAddNode(mainEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
-			const auto& window = Application::Get().GetWindow();
-			// Main node should cover entire screen
-			ImGui::DockBuilderSetNodeSize(mainEditorDockspaceId, ImVec2(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight())));
-
-			ImGuiID dockMainLeft;
-			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(mainEditorDockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockMainLeft);
-			ImGuiID dockRightDown;
-			ImGuiID dockRightUp = ImGui::DockBuilderSplitNode(dockMainRight, ImGuiDir_Up, 0.4f, nullptr, &dockRightDown);
-			ImGuiID dockMainLeftUp;
-			ImGuiID dockMainLeftDown = ImGui::DockBuilderSplitNode(dockMainLeft, ImGuiDir_Down, 0.3f, nullptr, &dockMainLeftUp);
-			ImGuiID dockMainLeftRight;
-			ImGuiID dockMainLeftLeft = ImGui::DockBuilderSplitNode(dockMainLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockMainLeftRight);
-
-			ImGui::DockBuilderDockWindow("Game View", dockMainLeftRight);
-			ImGui::DockBuilderDockWindow("Level Outline", dockRightUp);
-			ImGui::DockBuilderDockWindow("Object Inspector", dockRightDown);
-			ImGui::DockBuilderDockWindow("Class Browser", dockMainLeftLeft);
-			ImGui::DockBuilderDockWindow("Console", dockMainLeftDown);
-
-			ImGui::DockBuilderFinish(mainEditorDockspaceId);
-		}
-		// Should be put at last
-		ImGui::DockSpace(mainEditorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-		ImGui::End();
-	}
-
-	void EditorLayer::ShowGameView(bool* bShow)
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
-		if (ImGui::Begin("Game View", bShow))
-		{
-			ImGuiWindow* window = ImGui::GetCurrentWindow();
-			glm::vec2 max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
-			glm::vec2 min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
-			glm::vec2 size = max - min;
-			if (size != m_LastGameViewSize)
-			{
-				OnGameViewWindowResized(size);
-				m_LastGameViewSize = max - min;
-			}
-			// Draw framebuffer texture
-			ImGui::GetWindowDrawList()->AddImage(
-				m_FBOs[GAME_VIEW]->GetColorAttachment(),
-				// Upper left corner for the UVs to be applied at
-				window->InnerRect.Min,
-				// Lower right corner for the UVs to be applied at
-				window->InnerRect.Max,
-				// The UVs have to be flipped
-				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-
-			// Begin drop operation from Class Browser
-			// Note: BeginDragDropTarget() does not support window as target
-			if (ImGui::BeginDragDropTargetCustom(ImGui::GetCurrentWindow()->Rect(), ImGui::GetCurrentWindow()->ID))
-			{
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragGameObjectClass"))
-				{
-					// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
-						// It should be changed back to editor camera if that behavior is disabled
-					const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), m_ActiveCamera);
-
-					// Spawn dragged Game Object to the level at mouse position
-					// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
-					rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ result.x, result.y, 0.1f } });
-					GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
-					if (spawnedGameObject != m_SelectedGameObject)
-					{
-						OnGameObjectSelectionChanged(m_SelectedGameObject);
-					}
-					// Set it selected
-					m_SelectedGameObject = spawnedGameObject;
-					m_SelectedGameObject->m_bIsSelectedInEditor = true;
-				}
-				ImGui::EndDragDropTarget();
-			}
-
-			float padding = 5.0f;
-			ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + padding, ImGui::GetCursorPos().y + padding));
-
-			OnGameViewImGuiRender();
-
-			// ToolBar
-			{
-				// Place buttons at window center
-				ImGui::Indent(ImGui::GetWindowSize().x / 2.0f - 40.0f);
-				// Toggle play / stop
-				if (ImGui::ImageButton(m_ToolBarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
-				{
-					if (pieState == PIEState::None)
-					{
-						StartPIE();
-					}
-					else
-					{
-						StopPIE();
-					}
-				}
-				ImGui::SameLine();
-				// Toggle pause / resume
-				if (ImGui::ImageButton(m_ToolBarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
-				{
-					if (pieState == PIEState::Running)
-					{
-						PausePIE();
-					}
-					else if (pieState == PIEState::Paused)
-					{
-						ResumePIE();
-					}
-				}
-			}
-			
-			m_bIsHoveringViews[GAME_VIEW] = ImGui::IsWindowHovered();
-		}
-		ImGui::End();
-		ImGui::PopStyleVar();
 	}
 
 	void EditorLayer::ShowLevelOutline(bool* bShow)
@@ -1434,51 +1153,41 @@ namespace ZeoEngine {
 		}
 		ImGui::End();
 	}
-	
-	void EditorLayer::ShowConsole(bool* bShow)
-	{
-		EditorLog::s_EditorLog.Draw("Console", bShow);
-		// TODO: Console command
-		if (ImGui::Begin("Console", bShow))
-		{
-		}
-		ImGui::End();
-	}
 
 	void EditorLayer::CreateParticleEditorDockspace(bool* bShow)
 	{
-		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar;
-		SetNextWindowDefaultPosition();
-		ImGui::SetNextWindowSize(ImVec2(700, 500), ImGuiCond_FirstUseEver);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		//ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar;
+		//SetNextWindowDefaultPosition();
+		//ImGui::SetNextWindowSize(ImVec2(700, 500), ImGuiCond_FirstUseEver);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-		ImGui::Begin("Particle Editor", bShow, windowFlags);
-		ImGui::PopStyleVar(2);
-		ImGuiID particleEditorDockspaceId = ImGui::GetID("ParticleEditorDockspace");
-		// Update docking layout
-		if (ImGui::DockBuilderGetNode(particleEditorDockspaceId) == nullptr || m_bResetLayout)
-		{
-			m_bResetLayout = false;
+		//ImGui::Begin("Particle Editor", bShow, windowFlags);
+		//ImGui::PopStyleVar(2);
+		//ImGuiID particleEditorDockspaceId = ImGui::GetID("ParticleEditorDockspace");
+		//// Update docking layout
+		//if (ImGui::DockBuilderGetNode(particleEditorDockspaceId) == nullptr || m_bResetLayout)
+		//{
+		//	m_bResetLayout = false;
 
-			// Clear out existing layout
-			ImGui::DockBuilderRemoveNode(particleEditorDockspaceId);
-			// Add empty node
-			ImGui::DockBuilderAddNode(particleEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
-			// Main node should cover entire window
-			ImGui::DockBuilderSetNodeSize(particleEditorDockspaceId, ImGui::GetWindowSize());
+		//	// Clear out existing layout
+		//	ImGui::DockBuilderRemoveNode(particleEditorDockspaceId);
+		//	// Add empty node
+		//	ImGui::DockBuilderAddNode(particleEditorDockspaceId, ImGuiDockNodeFlags_DockSpace);
+		//	// Main node should cover entire window
+		//	ImGui::DockBuilderSetNodeSize(particleEditorDockspaceId, ImGui::GetWindowSize());
 
-			ImGuiID dockMainLeft;
-			ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(particleEditorDockspaceId, ImGuiDir_Right, 0.5f, nullptr, &dockMainLeft);
+		//	ImGuiID dockMainLeft;
+		//	ImGuiID dockMainRight = ImGui::DockBuilderSplitNode(particleEditorDockspaceId, ImGuiDir_Right, 0.5f, nullptr, &dockMainLeft);
 
-			ImGui::DockBuilderDockWindow("Particle View", dockMainLeft);
-			ImGui::DockBuilderDockWindow("Particle Inspector", dockMainRight);
+		//	ImGui::DockBuilderDockWindow("Particle View", dockMainLeft);
+		//	ImGui::DockBuilderDockWindow("Particle Inspector", dockMainRight);
 
-			ImGui::DockBuilderFinish(particleEditorDockspaceId);
-		}
-		// Should be put at last
-		ImGui::DockSpace(particleEditorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-		ImGui::End();
+		//	ImGui::DockBuilderFinish(particleEditorDockspaceId);
+		//}
+		//// Should be put at last
+		//ImGui::DockSpace(particleEditorDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+		//ImGui::End();
 	}
 
 	void EditorLayer::ShowParticleEditor(bool* bShow)
@@ -1552,12 +1261,12 @@ namespace ZeoEngine {
 
 			if (ImGui::Begin("Particle View", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
 			{
-				if (!m_CameraControllers[PARTICLE_VIEW])
-				{
-					const auto& window = Application::Get().GetWindow();
-					m_CameraControllers[PARTICLE_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
-					m_CameraControllers[PARTICLE_VIEW]->SetZoomLevel(3.0f);
-				}
+				//if (!m_CameraControllers[PARTICLE_VIEW])
+				//{
+				//	const auto& window = Application::Get().GetWindow();
+				//	m_CameraControllers[PARTICLE_VIEW] = CreateScope<OrthographicCameraController>(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+				//	m_CameraControllers[PARTICLE_VIEW]->SetZoomLevel(3.0f);
+				//}
 
 				if (!m_EditorParticleSystem)
 				{
@@ -1570,16 +1279,16 @@ namespace ZeoEngine {
 				glm::vec2 size = max - min;
 				if (size != m_LastParticleViewSize)
 				{
-					OnParticleViewWindowResized(size);
+					//OnParticleViewWindowResized(size);
 				}
 				// Draw framebuffer texture
-				ImGui::Image(m_FBOs[PARTICLE_VIEW]->GetColorAttachment(),
-					ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
-					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-				max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
-				min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
-				m_LastParticleViewSize = max - min;
-				m_bIsHoveringViews[PARTICLE_VIEW] = ImGui::IsItemHovered();
+				//ImGui::Image(m_FBOs[PARTICLE_VIEW]->GetColorAttachment(),
+				//	ImVec2(window->InnerRect.Max.x - window->InnerRect.Min.x, window->InnerRect.Max.y - window->InnerRect.Min.y),
+				//	ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+				//max = { window->InnerRect.Max.x, window->InnerRect.Max.y };
+				//min = { window->InnerRect.Min.x, window->InnerRect.Min.y };
+				//m_LastParticleViewSize = max - min;
+				//m_bIsHoveringViews[PARTICLE_VIEW] = ImGui::IsItemHovered();
 
 				if (m_EditorParticleSystem)
 				{
@@ -1605,60 +1314,6 @@ namespace ZeoEngine {
 				}
 			}
 			ImGui::End();
-		}
-		ImGui::End();
-	}
-
-	void EditorLayer::ShowStats(bool* bShow)
-	{
-		SetNextWindowDefaultPosition();
-		ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-		if (ImGui::Begin("Stats", bShow, ImGuiWindowFlags_NoCollapse))
-		{
-			auto Stats = Renderer2D::GetStats();
-			ImGui::Text("Draw Calls: %d", Stats.DrawCalls);
-			ImGui::Text("Quads: %d", Stats.QuadCount);
-			ImGui::Text("Vertices: %d", Stats.GetTotalVertexCount());
-			ImGui::Text("Indices: %d", Stats.GetTotalIndexCount());
-		}
-		ImGui::End();
-	}
-
-	void EditorLayer::ShowPreferences(bool* bShow)
-	{
-		SetNextWindowDefaultPosition();
-		ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
-		// TODO: Write preferences to a config file
-		if (ImGui::Begin("Preferences", bShow, ImGuiWindowFlags_NoCollapse))
-		{
-			ImGui::ShowStyleSelector("Editor style");
-
-			// VSync
-			{
-				static bool bEnableVSync = true;
-				ImGui::Checkbox("VSync", &bEnableVSync);
-				auto& window = Application::Get().GetWindow();
-				window.SetVSync(bEnableVSync);
-			}
-		}
-		ImGui::End();
-	}
-
-	void EditorLayer::ShowAbout(bool* bShow)
-	{
-		SetNextWindowDefaultPosition();
-		ImGui::SetNextWindowSize(ImVec2(300, 200));
-		if (ImGui::Begin("About", bShow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
-		{
-			ImGui::TextCentered("ZeoEngine 0.1");
-			ImGui::TextCentered("Created by SanSan");
-			ImGui::TextCentered("https://github.com/hls333555/");
-			const float logoSize = 100.0f;
-			// Center the logo
-			ImGui::Indent((ImGui::GetWindowSize().x - logoSize) / 2.0f);
-			ImGui::Image(m_LogoTexture->GetTexture(),
-				ImVec2(logoSize, logoSize),
-				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		}
 		ImGui::End();
 	}
@@ -1690,15 +1345,6 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void EditorLayer::OnGameViewWindowResized(const glm::vec2& newSize)
-	{
-		m_FBOs[GAME_VIEW]->Resize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
-		m_CameraControllers[GAME_VIEW]->OnResize(newSize.x, newSize.y);
-		m_CameraControllers[GAME_VIEW_PIE]->OnResize(newSize.x, newSize.y);
-
-		m_ActiveScene->OnViewportResize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
-	}
-
 	void EditorLayer::OnGameObjectSelectionChanged(GameObject* lastSelectedGameObject)
 	{
 		m_bIsSortedPropertiesDirty[GAMEOBJECT_PROP] = true;
@@ -1728,18 +1374,18 @@ namespace ZeoEngine {
 		static bool bUseBoundSizingSnap = false;
 		static float boundSizingSnap[] = { 0.1f, 0.1f, 0.1f };
 
-		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_W))
-		{
-			currentGizmoOperation = ImGuizmo::TRANSLATE;
-		}
-		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_E))
-		{
-			currentGizmoOperation = ImGuizmo::ROTATE;
-		}
-		if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_R))
-		{
-			currentGizmoOperation = ImGuizmo::SCALE;
-		}
+		//if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_W))
+		//{
+		//	currentGizmoOperation = ImGuizmo::TRANSLATE;
+		//}
+		//if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_E))
+		//{
+		//	currentGizmoOperation = ImGuizmo::ROTATE;
+		//}
+		//if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_R))
+		//{
+		//	currentGizmoOperation = ImGuizmo::SCALE;
+		//}
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 5.0f, 5.0f });
 		ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
 		if (ImGui::Begin("Transform Options", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize))
@@ -1773,10 +1419,10 @@ namespace ZeoEngine {
 
 			// Note: ImGui::IsKeyPressed() will only fire once every frame if key is clicked
 			// while Input::IsKeyPressed() will keep firing until key is released which is not good for toggle behaviors
-			if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_S))
-			{
-				bUseSnap = !bUseSnap;
-			}
+			//if (m_bIsHoveringViews[GAME_VIEW] && ImGui::IsKeyPressed(ZE_KEY_S))
+			//{
+			//	bUseSnap = !bUseSnap;
+			//}
 			ImGui::Checkbox("##UseSnap", &bUseSnap);
 			ImGui::SameLine();
 			switch (currentGizmoOperation)
@@ -1813,13 +1459,13 @@ namespace ZeoEngine {
 			ImGuiWindow* window = ImGui::GetCurrentWindow();
 			ImGuizmo::SetRect(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
 
-			ImGuizmo::Manipulate(glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetViewMatrix()), glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetProjectionMatrix()),
-				currentGizmoOperation, currentGizmoMode,
-				glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
-				bUseSnap ? &snap[0] : nullptr,
-				bUseBoundSizing ? localBounds : nullptr,
-				bUseBoundSizingSnap ? boundSizingSnap : nullptr);
-			m_SelectedGameObject->DecomposeTransformMatrix();
+			//ImGuizmo::Manipulate(glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetViewMatrix()), glm::value_ptr(m_CameraControllers[GAME_VIEW]->GetCamera().GetProjectionMatrix()),
+			//	currentGizmoOperation, currentGizmoMode,
+			//	glm::value_ptr(m_SelectedGameObject->m_TransformMatrix), nullptr,
+			//	bUseSnap ? &snap[0] : nullptr,
+			//	bUseBoundSizing ? localBounds : nullptr,
+			//	bUseBoundSizingSnap ? boundSizingSnap : nullptr);
+			//m_SelectedGameObject->DecomposeTransformMatrix();
 		}
 	}
 
@@ -1828,35 +1474,29 @@ namespace ZeoEngine {
 		if (!m_SelectedGameObject || m_SelectedGameObject->IsPendingDestroy())
 			return;
 
-		const CollisionData* collisionData = m_SelectedGameObject->GetCollisionData();
-		const ObjectCollisionType collisionType = m_SelectedGameObject->GetCollisionType();
-		if (collisionData && collisionData->bDrawCollision)
-		{
-			auto& gameViewCamera = m_CameraControllers[GAME_VIEW]->GetCamera();
-			ImDrawList* dl = ImGui::GetWindowDrawList();
-			const glm::vec2 collisionScreenCenter = ProjectWorldToScreen2D(m_SelectedGameObject->GetPosition2D() + collisionData->CenterOffset, ImGui::GetCurrentWindow(), &gameViewCamera);
-			static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
-			static const float collisionThickness = 2.5f;
-			if (collisionType == ObjectCollisionType::Box)
-			{
-				const float collisionScreenExtentX = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.x / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				const float collisionScreenExtentY = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.y / gameViewCamera.GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
-				dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
-					ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
-					0.0f, 15, collisionThickness);
-			}
-			else if (collisionType == ObjectCollisionType::Sphere)
-			{
-				const float collisionScreenRadius = dynamic_cast<const SphereCollisionData*>(collisionData)->Radius / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
-				dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
-			}
-		}
-	}
-
-	void EditorLayer::OnParticleViewWindowResized(const glm::vec2& newSize)
-	{
-		m_FBOs[PARTICLE_VIEW]->Resize(static_cast<uint32_t>(newSize.x), static_cast<uint32_t>(newSize.y));
-		m_CameraControllers[PARTICLE_VIEW]->OnResize(newSize.x, newSize.y);
+		//const CollisionData* collisionData = m_SelectedGameObject->GetCollisionData();
+		//const ObjectCollisionType collisionType = m_SelectedGameObject->GetCollisionType();
+		//if (collisionData && collisionData->bDrawCollision)
+		//{
+		//	auto& gameViewCamera = m_CameraControllers[GAME_VIEW]->GetCamera();
+		//	ImDrawList* dl = ImGui::GetWindowDrawList();
+		//	const glm::vec2 collisionScreenCenter = ProjectWorldToScreen2D(m_SelectedGameObject->GetPosition2D() + collisionData->CenterOffset, ImGui::GetCurrentWindow(), &gameViewCamera);
+		//	static const ImU32 collisionColor = IM_COL32(255, 136, 0, 255); // Orange color
+		//	static const float collisionThickness = 2.5f;
+		//	if (collisionType == ObjectCollisionType::Box)
+		//	{
+		//		const float collisionScreenExtentX = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.x / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+		//		const float collisionScreenExtentY = dynamic_cast<const BoxCollisionData*>(collisionData)->Extents.y / gameViewCamera.GetCameraBounds().Top * ImGui::GetCurrentWindow()->InnerRect.GetSize().y / 2;
+		//		dl->AddRect(ImVec2(collisionScreenCenter.x - collisionScreenExtentX, collisionScreenCenter.y - collisionScreenExtentY),
+		//			ImVec2(collisionScreenCenter.x + collisionScreenExtentX, collisionScreenCenter.y + collisionScreenExtentY), collisionColor,
+		//			0.0f, 15, collisionThickness);
+		//	}
+		//	else if (collisionType == ObjectCollisionType::Sphere)
+		//	{
+		//		const float collisionScreenRadius = dynamic_cast<const SphereCollisionData*>(collisionData)->Radius / gameViewCamera.GetCameraBounds().Right * ImGui::GetCurrentWindow()->InnerRect.GetSize().x / 2;
+		//		dl->AddCircle(ImVec2(collisionScreenCenter.x, collisionScreenCenter.y), collisionScreenRadius, collisionColor, 36, collisionThickness);
+		//	}
+		//}
 	}
 
 	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
@@ -1889,7 +1529,7 @@ namespace ZeoEngine {
 		// Save level to a temp file
 		Level::Get().SaveLevelToFile(std::string(PIETempFile), true);
 
-		m_ToolBarTextures[0] = m_StopTexture;
+		//m_ToolBarTextures[0] = m_StopTexture;
 		pieState = PIEState::Running;
 		ZE_CORE_TRACE("PIE started");
 	}
@@ -1901,22 +1541,22 @@ namespace ZeoEngine {
 		// Clear cache
 		std::fstream(PIETempFile, std::ios::out);
 
-		m_ToolBarTextures[0] = m_PlayTexture;
-		m_ToolBarTextures[1] = m_PauseTexture;
+		//m_ToolBarTextures[0] = m_PlayTexture;
+		//m_ToolBarTextures[1] = m_PauseTexture;
 		pieState = PIEState::None;
 		ZE_CORE_TRACE("PIE stopped");
 	}
 
 	void EditorLayer::PausePIE()
 	{
-		m_ToolBarTextures[1] = m_PlayTexture;
+		//m_ToolBarTextures[1] = m_PlayTexture;
 		pieState = PIEState::Paused;
 		ZE_CORE_TRACE("PIE paused");
 	}
 
 	void EditorLayer::ResumePIE()
 	{
-		m_ToolBarTextures[1] = m_PauseTexture;
+		//m_ToolBarTextures[1] = m_PauseTexture;
 		pieState = PIEState::Running;
 		ZE_CORE_TRACE("PIE resumed");
 	}

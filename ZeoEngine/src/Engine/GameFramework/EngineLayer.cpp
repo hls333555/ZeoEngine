@@ -20,6 +20,8 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		m_Texture2DLibrary.Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+
 		// TODO: Move it to config file
 		// NOTE: Add missing Chinese characters here!
 		static const char* missingChars = u8"º≠‰÷ƒ‚÷°";

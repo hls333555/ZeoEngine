@@ -18,7 +18,7 @@ namespace ZeoEngine {
 		virtual void OnDetach() override;
 		virtual void OnUpdate(DeltaTime dt) override;
 
-		virtual OrthographicCamera* GetGameCamera() = 0;
+		virtual OrthographicCamera* GetGameCamera() { return nullptr; }
 
 		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		ParticleLibrary* GetParticleLibrary() { return &m_ParticleLibrary; }
