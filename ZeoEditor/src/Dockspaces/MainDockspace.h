@@ -2,12 +2,15 @@
 
 #include "Dockspaces/EditorDockspace.h"
 
-namespace ZeoEngine {
+#include "Engine/GameFramework/Entity.h"
 
-	class Editorpanel;
+namespace ZeoEngine {
 
 	class MainDockspace : public EditorDockspace
 	{
+		friend class SceneOutlinePanel;
+		friend class EntityInspectorPanel;
+
 	public:
 		explicit MainDockspace(const std::string& dockspaceName,
 			float dockspaceRounding = 0.0f, float dockspaceBorderSize = 0.0f, ImVec2 dockspacePadding = ImVec2(0.0f, 0.0f),
@@ -18,6 +21,9 @@ namespace ZeoEngine {
 
 	private:
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
+
+	private:
+		Entity m_SelectedEntity;
 
 	};
 

@@ -4,6 +4,7 @@
 
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
+#include "Panels/EntityInspectorPanel.h"
 #include "Panels/ConsolePanel.h"
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
@@ -33,6 +34,7 @@ namespace ZeoEngine {
 
 		GameViewportPanel* gameViewportPanel = new GameViewportPanel(GAME_VIEW_NAME, this, true);
 		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(SCENE_OUTLINE_NAME, this, true);
+		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(ENTITY_INSPECTOR_NAME, this, true);
 		ConsolePanel* consolePanel = new ConsolePanel(CONSOLE_NAME, true);
 		StatsPanel* statsPanel = new StatsPanel(STATS_NAME, false, ImGuiWindowFlags_NoCollapse, { { 300, 300 }, ImGuiCond_FirstUseEver });
 		PreferencesPanel* preferencesPanel = new PreferencesPanel(PREFERENCES_NAME, false, ImGuiWindowFlags_NoCollapse);
@@ -61,6 +63,7 @@ namespace ZeoEngine {
 			EditorMenu* windowMenu = new EditorMenu("Window");
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(GAME_VIEW_NAME, std::string(), gameViewportPanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(SCENE_OUTLINE_NAME, std::string(), sceneOutlinePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ENTITY_INSPECTOR_NAME, std::string(), entityInspectorPanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(CONSOLE_NAME, std::string(), consolePanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(STATS_NAME, std::string(), statsPanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PREFERENCES_NAME, std::string(), preferencesPanel->GetShowPtr()));
@@ -78,6 +81,7 @@ namespace ZeoEngine {
 
 		PushPanel(gameViewportPanel);
 		PushPanel(sceneOutlinePanel);
+		PushPanel(entityInspectorPanel);
 		PushPanel(consolePanel);
 		PushPanel(statsPanel);
 		PushPanel(preferencesPanel);

@@ -67,6 +67,8 @@ namespace ZeoEngine {
 
 			RenderToolbar();
 
+			m_bIsHovering = ImGui::IsWindowHovered();
+
 		}
 		ImGui::End();
 	}

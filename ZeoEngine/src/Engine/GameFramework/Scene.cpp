@@ -15,14 +15,14 @@ namespace ZeoEngine {
 	{
 	}
 
-	Entity Scene::CreateEntity(const std::string& name, bool bForInternalUse)
+	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
 		Entity entity = { m_Registry.create(), this };
 
 		entity.AddComponent<TransformComponent>();
 		auto& tagComp = entity.AddComponent<TagComponent>();
 		tagComp.Tag = name.empty() ? "Entity" : name;
-		tagComp.bForInternalUse = bForInternalUse;
+		tagComp.bIsInternal = bIsInternal;
 
 		return entity;
 	}

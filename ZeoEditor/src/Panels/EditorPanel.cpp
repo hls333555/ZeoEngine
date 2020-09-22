@@ -32,6 +32,9 @@ namespace ZeoEngine {
 
 		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow, m_PanelWindowFlags))
 		{
+			// NOTE: This should be manually called at the end of ImGui::Begin() to keep the result up-to-date when necessary
+			// In most cases, you should use ImGui::IsWindowHovered() instead of m_bIsHovering inside ImGui::Begin()
+			// A known use case for m_bIsHovering is inside SceneViewportPanel::SceneCameraController which is outside ImGui::Begin() context
 			m_bIsHovering = ImGui::IsWindowHovered();
 		}
 		ImGui::End();

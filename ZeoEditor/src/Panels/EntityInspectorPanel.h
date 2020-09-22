@@ -2,9 +2,11 @@
 
 #include "Panels/EditorPanel.h"
 
+#include "Engine/GameFramework/Entity.h"
+
 namespace ZeoEngine {
 
-	class SceneOutlinePanel : public ScenePanel
+	class EntityInspectorPanel : public ScenePanel
 	{
 	public:
 		using ScenePanel::ScenePanel;
@@ -12,7 +14,7 @@ namespace ZeoEngine {
 		virtual void OnImGuiRender() override;
 
 	private:
-		void DrawEntityNode(Entity entity);
+		void DrawComponents(Entity entity);
 
 	};
 

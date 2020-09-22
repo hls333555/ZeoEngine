@@ -16,8 +16,8 @@ namespace ZeoEngine {
 		Scene();
 		~Scene();
 
-		/** If bForInternalUse is true, this entity will not show in the SceneOutlinePanel. */
-		Entity CreateEntity(const std::string& name = std::string(), bool bForInternalUse = false);
+		/** If bIsInternal is true, this entity will not show in the SceneOutlinePanel. */
+		Entity CreateEntity(const std::string& name = std::string(), bool bIsInternal = false);
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();

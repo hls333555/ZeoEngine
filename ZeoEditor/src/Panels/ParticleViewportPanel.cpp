@@ -12,7 +12,9 @@ namespace ZeoEngine {
 
 		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
 		{
+			
 
+			m_bIsHovering = ImGui::IsWindowHovered();
 		}
 		ImGui::End();
 	}

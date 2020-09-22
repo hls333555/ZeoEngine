@@ -1,8 +1,9 @@
 #include "Panels/SceneOutlinePanel.h"
 
-#include <imgui.h>
+#include <imgui/imgui.h>
 
 #include "Engine/GameFramework/Components.h"
+#include "Dockspaces/MainDockspace.h"
 
 namespace ZeoEngine {
 
@@ -19,6 +20,12 @@ namespace ZeoEngine {
 				Entity entity{ entityID, GetScene().get() };
 				DrawEntityNode(entity);
 			});
+
+			// Deselect entity when blank space is clicked
+			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+			{
+				GetContext<MainDockspace>()->m_SelectedEntity = {};
+			}
 		}
 		ImGui::End();
 	}
@@ -26,13 +33,14 @@ namespace ZeoEngine {
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)
 	{
 		auto& tagComp = entity.GetComponent<TagComponent>();
-		if (tagComp.bForInternalUse) return;
+		if (tagComp.bIsInternal) return;
 
-		ImGuiTreeNodeFlags flags = (m_SelectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		auto& selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
+		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		bool bOpened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Tag.c_str());
 		if (ImGui::IsItemClicked())
 		{
-			m_SelectedEntity = entity;
+			selectedEntity = entity;
 		}
 
 		if (bOpened)

@@ -53,6 +53,8 @@ namespace ZeoEngine {
 			const Vec2Data& initialSize = Vec2Data::DefaultSize, const Vec2Data& initialPos = Vec2Data::CenterPos);
 
 	protected:
+		template<typename T>
+		T* GetContext() { return dynamic_cast<T*>(m_Context); }
 		const Ref<Scene>& GetScene() const;
 		const Ref<FrameBuffer>& GetFrameBuffer() const;
 

@@ -25,7 +25,7 @@ namespace ZeoEngine {
 	struct TagComponent
 	{
 		std::string Tag;
-		bool bForInternalUse{ false };
+		bool bIsInternal{ false };
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
