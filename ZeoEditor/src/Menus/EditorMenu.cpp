@@ -72,6 +72,13 @@ namespace ZeoEngine {
 		{
 			RenderMenus();
 
+			// Display engine stats at right corner of main menu bar
+			{
+				const float statsWidth = 130.0f;
+				ImGui::Indent(ImGui::GetWindowSize().x - statsWidth);
+				ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.f / ImGui::GetIO().Framerate);
+			}
+
 			ImGui::EndMainMenuBar();
 		}
 	}
