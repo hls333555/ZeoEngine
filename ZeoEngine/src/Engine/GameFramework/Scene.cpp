@@ -86,4 +86,15 @@ namespace ZeoEngine {
 		}
 	}
 
+	void Scene::OnEvent(Event& e)
+	{
+		m_Registry.view<NativeScriptComponent>().each([&](auto entity, auto& nsc)
+		{
+			if (nsc.Instance)
+			{
+				nsc.Instance->OnEvent(e);
+			}
+		});
+	}
+
 }

@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		void RecalculateProjection();
 
 	private:
-		float m_OrthographicSize = 10.0f;
+		float m_OrthographicSize = 6.0f;
 		float m_OrthofraphicNear = -1.0f, m_OrthofraphicFar = 1.0f;
 
 		float m_AspectRatio = 0.0f;

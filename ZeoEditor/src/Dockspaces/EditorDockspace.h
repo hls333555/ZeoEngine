@@ -9,6 +9,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Menus/EditorMenu.h"
 #include "Panels/EditorPanel.h"
+#include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
@@ -28,6 +29,7 @@ namespace ZeoEngine {
 		virtual void OnDetach() {}
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
+		void OnEvent(Event& e);
 
 		const std::string& GetDockspaceName() const { return m_DockspaceName; }
 		void SetShow(bool bShow) { m_bShow = bShow; }
@@ -76,6 +78,7 @@ namespace ZeoEngine {
 
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
+		void OnEvent(Event& e);
 
 		void PushDockspace(EditorDockspace* dockspace);
 

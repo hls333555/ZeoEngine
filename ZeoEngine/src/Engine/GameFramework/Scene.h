@@ -3,6 +3,7 @@
 #include "entt.hpp"
 
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
@@ -21,6 +22,7 @@ namespace ZeoEngine {
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
+		void OnEvent(Event& e);
 
 	private:
 		entt::registry m_Registry;

@@ -55,6 +55,11 @@ namespace ZeoEngine {
 		m_PanelManager.OnImGuiRender();
 	}
 
+	void EditorDockspace::OnEvent(Event& e)
+	{
+		m_Scene->OnEvent(e);
+	}
+
 	void EditorDockspace::RenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
@@ -151,6 +156,14 @@ namespace ZeoEngine {
 		for (auto* dockspace : m_Dockspaces)
 		{
 			dockspace->OnImGuiRender();
+		}
+	}
+
+	void DockspaceManager::OnEvent(Event& e)
+	{
+		for (auto* dockspace : m_Dockspaces)
+		{
+			dockspace->OnEvent(e);
 		}
 	}
 

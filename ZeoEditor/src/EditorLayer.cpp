@@ -321,6 +321,8 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 
+		m_DockspaceManager.OnEvent(event);
+
 		//if (m_bIsHoveringViews[GAME_VIEW] && pieState == PIEState::None)
 		//{
 		//	m_CameraControllers[GAME_VIEW]->OnEvent(event);

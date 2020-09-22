@@ -2,6 +2,8 @@
 
 #include "Engine/GameFramework/Entity.h"
 
+#include "Engine/Events/Event.h"
+
 namespace ZeoEngine {
 
 	class ScriptableEntity
@@ -20,6 +22,7 @@ namespace ZeoEngine {
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
 		virtual void OnUpdate(DeltaTime dt) {}
+		virtual void OnEvent(Event& e) {}
 
 	private:
 		Entity m_Entity;
