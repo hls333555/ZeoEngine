@@ -69,6 +69,18 @@ namespace ZeoEngine {
 			Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
 
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+
+			// Sort entities for rendering based on z position or creation order (if z positions are equivalent)
+			group.sort([&](const entt::entity lhs, const entt::entity rhs) {
+				const auto& ltc = group.get<TransformComponent>(lhs);
+				const auto& rtc = group.get<TransformComponent>(rhs);
+				if (ltc.Transform[3][2] == rtc.Transform[3][2])
+				{
+					return entt::registry::entity(lhs) < entt::registry::entity(rhs);
+				}
+				return ltc.Transform[3][2] < rtc.Transform[3][2];
+			});
+
 			for (auto entity : group)
 			{
 				auto [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);

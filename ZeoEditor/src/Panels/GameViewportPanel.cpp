@@ -23,6 +23,8 @@ namespace ZeoEngine {
 		auto& transComp = defaultTextureEntity.GetComponent<TransformComponent>();
 		transComp.Transform = glm::scale(transComp.Transform, glm::vec3(100.0f));
 
+		Entity shipEntity = GetScene()->CreateEntity("Player Ship");
+		shipEntity.AddComponent<SpriteRendererComponent>(GetTexture2DLibrary()->Load("../Sandbox/assets/textures/Ship.png"));
 	}
 
 	void GameViewportPanel::OnImGuiRender()
