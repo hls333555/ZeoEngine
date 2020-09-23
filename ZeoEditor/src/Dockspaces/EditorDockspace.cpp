@@ -2,6 +2,7 @@
 
 #include <imgui_internal.h>
 
+#include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Debug/Instrumentor.h"
 
@@ -26,6 +27,8 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnUpdate(DeltaTime dt)
 	{
+		Renderer2D::ResetStats();
+
 		m_Scene->OnUpdate(dt);
 
 		BeginFrameBuffer();

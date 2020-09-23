@@ -9,7 +9,6 @@
 #include <ImGuizmo.h>
 #include <nfd.h>
 
-#include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Application.h"
 #include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
@@ -65,8 +64,6 @@ namespace ZeoEngine {
 		EngineLayer::OnUpdate(dt);
 
 		m_DockspaceManager.OnUpdate(dt);
-
-		Renderer2D::ResetStats();
 
 		//if (m_bShowParticleEditor)
 		//{
