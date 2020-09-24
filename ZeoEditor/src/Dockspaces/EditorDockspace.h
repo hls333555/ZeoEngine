@@ -10,19 +10,21 @@
 #include "Menus/EditorMenu.h"
 #include "Panels/EditorPanel.h"
 #include "Engine/Events/Event.h"
+#include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {
 
 	class EditorDockspace
 	{
 		friend class DockspaceManager;
+		friend class ScenePanel;
 
-	protected:
+	public:
 		EditorDockspace() = delete;
-		explicit EditorDockspace(const std::string& dockspaceName,
-			float dockspaceRounding = 0.0f, float dockspaceBorderSize = 0.0f, ImVec2 dockspacePadding = ImVec2(0.0f, 0.0f),
+		explicit EditorDockspace(const std::string& dockspaceName, bool bDefaultShow = false,
+			ImVec2 dockspacePadding = ImVec2(0.0f, 0.0f),
 			ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar,
-			ImVec2 dockspacePos = ImVec2(0.0f, 0.0f), ImVec2 dockspaceSize = ImVec2(700.0f, 500.0f));
+			ImVec2Data initialSize = ImVec2Data::DefaultSize, ImVec2Data initialPos = ImVec2Data::DefaultPos);
 
 	public:
 		virtual void OnAttach();
@@ -32,7 +34,7 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		const std::string& GetDockspaceName() const { return m_DockspaceName; }
-		void SetShow(bool bShow) { m_bShow = bShow; }
+		bool* GetShowPtr() { return &m_bShow; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
@@ -54,13 +56,10 @@ namespace ZeoEngine {
 		bool m_bIsMainDockspace{ false };
 	private:
 		std::string m_DockspaceName;
-		ImVec2 m_DockspacePos;
-		ImVec2 m_DockspaceSize;
-		float m_DockspaceRounding;
-		float m_DockspaceBorderSize;
+		ImVec2Data m_InitialPos, m_InitialSize;
 		ImVec2 m_DockspacePadding;
 		ImGuiWindowFlags m_DockspaceWindowFlags;
-		bool m_bShow{ true };
+		bool m_bShow;
 
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;

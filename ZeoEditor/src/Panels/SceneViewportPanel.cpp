@@ -15,35 +15,27 @@ namespace ZeoEngine {
 		CreatePreviewCamera();
 	}
 
-	void SceneViewportPanel::OnImGuiRender()
+	void SceneViewportPanel::RenderPanel()
 	{
-		if (!m_bShow) return;
-
-		ScenePanel::OnImGuiRender();
-
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		glm::vec2 max{ window->InnerRect.Max.x, window->InnerRect.Max.y };
+		glm::vec2 min{ window->InnerRect.Min.x, window->InnerRect.Min.y };
+		glm::vec2 size = max - min;
+		if (size != m_LastViewportSize)
 		{
-			ImGuiWindow* window = ImGui::GetCurrentWindow();
-			glm::vec2 max{ window->InnerRect.Max.x, window->InnerRect.Max.y };
-			glm::vec2 min{ window->InnerRect.Min.x, window->InnerRect.Min.y };
-			glm::vec2 size = max - min;
-			if (size != m_LastViewportSize)
-			{
-				OnViewportResize(size);
-				m_LastViewportSize = size;
-			}
-
-			// Draw framebuffer texture
-			ImGui::GetWindowDrawList()->AddImage(
-				GetFrameBuffer()->GetColorAttachment(),
-				// Upper left corner for the UVs to be applied at
-				window->InnerRect.Min,
-				// Lower right corner for the UVs to be applied at
-				window->InnerRect.Max,
-				// The UVs have to be flipped
-				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			OnViewportResize(size);
+			m_LastViewportSize = size;
 		}
-		ImGui::End();
+
+		// Draw framebuffer texture
+		ImGui::GetWindowDrawList()->AddImage(
+			GetFrameBuffer()->GetColorAttachment(),
+			// Upper left corner for the UVs to be applied at
+			window->InnerRect.Min,
+			// Lower right corner for the UVs to be applied at
+			window->InnerRect.Max,
+			// The UVs have to be flipped
+			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 	}
 
 	void SceneViewportPanel::CreatePreviewCamera()
@@ -127,7 +119,7 @@ namespace ZeoEngine {
 			bool m_bIsMiddleMouseButtonFirstPressed{ true }, m_bIsMiddleMouseButtonFirstPressedWhenHovered{ true };
 		};
 
-		const std::string cameraName = m_PanelName + std::string(" Camera");
+		const std::string cameraName = GetPanelName() + std::string(" Camera");
 		m_PreviewCamera = GetScene()->CreateEntity(cameraName.c_str(), true);
 		m_PreviewCamera.AddComponent<CameraComponent>();
 		NativeScriptComponent& nativeScriptComp = m_PreviewCamera.AddComponent<NativeScriptComponent>();

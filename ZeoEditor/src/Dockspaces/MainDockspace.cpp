@@ -2,10 +2,13 @@
 
 #include <imgui_internal.h>
 
+#include "Engine/Core/Application.h"
+#include "EditorLayer.h"
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
 #include "Panels/EntityInspectorPanel.h"
 #include "Panels/ConsolePanel.h"
+#include "Dockspaces/ParticleEditorDockspace.h"
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
@@ -16,29 +19,32 @@
 #define ENTITY_INSPECTOR_NAME "Entity Inspector"
 #define CLASS_BROWSER_NAME "Class Browser"
 #define CONSOLE_NAME "Console"
+#define PARTICLE_EDITOR_NAME "Particle Editor"
 #define STATS_NAME "Stats"
 #define PREFERENCES_NAME "Preferences"
 #define ABOUT_NAME "About"
 
 namespace ZeoEngine {
 
-	MainDockspace::MainDockspace(const std::string& dockspaceName, float dockspaceRounding, float dockspaceBorderSize, ImVec2 dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2 dockspacePos, ImVec2 dockspaceSize)
-		: EditorDockspace(dockspaceName, dockspaceRounding, dockspaceBorderSize, dockspacePadding, dockspaceWindowFlags, dockspacePos, dockspaceSize)
-	{
-		m_bIsMainDockspace = true;
-	}
-
 	void MainDockspace::OnAttach()
 	{
+		m_bIsMainDockspace = true;
+
 		EditorDockspace::OnAttach();
 
 		GameViewportPanel* gameViewportPanel = new GameViewportPanel(GAME_VIEW_NAME, this, true);
 		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(SCENE_OUTLINE_NAME, this, true);
 		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(ENTITY_INSPECTOR_NAME, this, true);
 		ConsolePanel* consolePanel = new ConsolePanel(CONSOLE_NAME, true);
-		StatsPanel* statsPanel = new StatsPanel(STATS_NAME, false, ImGuiWindowFlags_NoCollapse, { { 300, 300 }, ImGuiCond_FirstUseEver });
+
+		EditorLayer* editor = Application::Get().FindLayer<EditorLayer>();
+		
+		ParticleEditorDockspace* particleEditorDockspace = new ParticleEditorDockspace(PARTICLE_EDITOR_NAME);
+		editor->PushDockspace(particleEditorDockspace);
+
+		StatsPanel* statsPanel = new StatsPanel(STATS_NAME, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking, { { 300, 300 } });
 		PreferencesPanel* preferencesPanel = new PreferencesPanel(PREFERENCES_NAME, false, ImGuiWindowFlags_NoCollapse);
-		AboutPanel* aboutPanel = new AboutPanel(ABOUT_NAME, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 }, ImGuiCond_FirstUseEver });
+		AboutPanel* aboutPanel = new AboutPanel(ABOUT_NAME, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 } });
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
@@ -65,6 +71,7 @@ namespace ZeoEngine {
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(SCENE_OUTLINE_NAME, std::string(), sceneOutlinePanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ENTITY_INSPECTOR_NAME, std::string(), entityInspectorPanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(CONSOLE_NAME, std::string(), consolePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_EDITOR_NAME, std::string(), particleEditorDockspace->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(STATS_NAME, std::string(), statsPanel->GetShowPtr()));
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PREFERENCES_NAME, std::string(), preferencesPanel->GetShowPtr()));
 			

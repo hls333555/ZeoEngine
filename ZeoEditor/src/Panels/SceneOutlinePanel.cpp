@@ -7,27 +7,19 @@
 
 namespace ZeoEngine {
 
-	void SceneOutlinePanel::OnImGuiRender()
+	void SceneOutlinePanel::RenderPanel()
 	{
-		if (!m_bShow) return;
-
-		ScenePanel::OnImGuiRender();
-
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
+		GetScene()->m_Registry.each([&](auto entityID)
 		{
-			GetScene()->m_Registry.each([&](auto entityID)
-			{
-				Entity entity{ entityID, GetScene().get() };
-				DrawEntityNode(entity);
-			});
+			Entity entity{ entityID, GetScene().get() };
+			DrawEntityNode(entity);
+		});
 
-			// Deselect entity when blank space is clicked
-			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
-			{
-				GetContext<MainDockspace>()->m_SelectedEntity = {};
-			}
+		// Deselect entity when blank space is clicked
+		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+		{
+			GetContext<MainDockspace>()->m_SelectedEntity = {};
 		}
-		ImGui::End();
 	}
 
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)

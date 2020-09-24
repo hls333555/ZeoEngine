@@ -8,21 +8,13 @@
 
 namespace ZeoEngine {
 
-	void EntityInspectorPanel::OnImGuiRender()
+	void EntityInspectorPanel::RenderPanel()
 	{
-		if (!m_bShow) return;
-
-		ScenePanel::OnImGuiRender();
-
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
+		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
+		if (selectedEntity)
 		{
-			Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
-			if (selectedEntity)
-			{
-				DrawComponents(selectedEntity);
-			}
+			DrawComponents(selectedEntity);
 		}
-		ImGui::End();
 	}
 
 	void EntityInspectorPanel::DrawComponents(Entity entity)

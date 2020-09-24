@@ -4,11 +4,7 @@
 
 namespace ZeoEngine {
 
-	Vec2Data Vec2Data::DefaultPos;
-	Vec2Data Vec2Data::CenterPos{ { -1.0f, -1.0f } };
-	Vec2Data Vec2Data::DefaultSize{ { 400.0f, 500.0f } };
-
-	EditorPanel::EditorPanel(const std::string& panelName, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const Vec2Data& initialSize, const Vec2Data& initialPos)
+	EditorPanel::EditorPanel(const std::string& panelName, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
 		: m_PanelName(panelName), m_bShow(bDefaultShow), m_PanelWindowFlags(panelWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
 	{
@@ -16,9 +12,9 @@ namespace ZeoEngine {
 
 	void EditorPanel::OnImGuiRender()
 	{
-		if (!m_bShow) return;
+		if (!IsShow()) return;
 
-		if (m_InitialPos.Data.x < 0.0f)
+		if (m_InitialPos == ImVec2Data::DefaultPos)
 		{
 			ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 			ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
@@ -32,18 +28,22 @@ namespace ZeoEngine {
 
 		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow, m_PanelWindowFlags))
 		{
-			// NOTE: This should be manually called at the end of ImGui::Begin() to keep the result up-to-date when necessary
-			// In most cases, you should use ImGui::IsWindowHovered() instead of m_bIsHovering inside ImGui::Begin()
-			// A known use case for m_bIsHovering is inside SceneViewportPanel::SceneCameraController which is outside ImGui::Begin() context
+			RenderPanel();
+
 			m_bIsHovering = ImGui::IsWindowHovered();
 		}
 		ImGui::End();
 	}
 
-	ScenePanel::ScenePanel(const std::string& panelName, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const Vec2Data& initialSize, const Vec2Data& initialPos)
+	ScenePanel::ScenePanel(const std::string& panelName, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
 		: EditorPanel(panelName, bDefaultShow, panelWindowFlags, initialSize, initialPos)
 		, m_Context(context)
 	{
+	}
+
+	bool ScenePanel::IsShow() const
+	{
+		return m_Context->m_bShow && EditorPanel::IsShow();
 	}
 
 	const Ref<Scene>& ScenePanel::GetScene() const

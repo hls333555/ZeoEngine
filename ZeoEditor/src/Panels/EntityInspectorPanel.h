@@ -11,9 +11,9 @@ namespace ZeoEngine {
 	public:
 		using ScenePanel::ScenePanel;
 
-		virtual void OnImGuiRender() override;
-
 	private:
+		virtual void RenderPanel() override;
+
 		void DrawComponents(Entity entity);
 
 	};

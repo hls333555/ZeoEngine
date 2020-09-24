@@ -4,19 +4,11 @@
 
 namespace ZeoEngine {
 
-	void ParticleViewportPanel::OnImGuiRender()
+	void ParticleViewportPanel::RenderPanel()
 	{
-		if (!m_bShow) return;
+		SceneViewportPanel::RenderPanel();
 
-		SceneViewportPanel::OnImGuiRender();
 
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
-		{
-			
-
-			m_bIsHovering = ImGui::IsWindowHovered();
-		}
-		ImGui::End();
 	}
 
 }

@@ -13,7 +13,9 @@ namespace ZeoEngine {
 	public:
 		using ScenePanel::ScenePanel;
 		virtual void OnAttach() override;
-		virtual void OnImGuiRender() override;
+
+	protected:
+		virtual void RenderPanel() override;
 
 	private:
 		void CreatePreviewCamera();

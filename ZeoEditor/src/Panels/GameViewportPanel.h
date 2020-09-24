@@ -12,9 +12,10 @@ namespace ZeoEngine {
 		using SceneViewportPanel::SceneViewportPanel;
 
 		virtual void OnAttach() override;
-		virtual void OnImGuiRender() override;
 
 	private:
+		virtual void RenderPanel() override;
+
 		void RenderToolbar();
 
 	private:

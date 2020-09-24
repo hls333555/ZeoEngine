@@ -60,3 +60,10 @@ namespace ImGui {
 	}
 
 }
+
+namespace ZeoEngine {
+
+	ImVec2Data ImVec2Data::DefaultPos{ { -1.0f, -1.0f } };
+	ImVec2Data ImVec2Data::DefaultSize{ { 800.0f, 600.0f } };
+
+}

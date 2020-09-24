@@ -9,17 +9,17 @@ namespace ZeoEngine {
 	{
 		static EditorLog s_EditorLog;
 
-		ImGuiTextBuffer     Buf;
+		ImGuiTextBuffer     Buffer;
 		ImGuiTextFilter     Filter;
-		ImVector<int>       LineOffsets;        // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
+		ImVector<int>       LineOffsets;	// Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
 		ImVector<int>		LogLevels;
 		ImVector<ImVec4>	LogColors;
-		bool                AutoScroll;     // Keep scrolling if already at the bottom
+		bool                bAutoScroll;	// Keep scrolling if already at the bottom
 		bool				bEnableLogLevelFilters[6];
 
 		EditorLog()
 		{
-			AutoScroll = true;
+			bAutoScroll = true;
 			for (int i = 0; i < 6; ++i)
 			{
 				bEnableLogLevelFilters[i] = true;
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 
 		void Clear()
 		{
-			Buf.clear();
+			Buffer.clear();
 			LineOffsets.clear();
 			LineOffsets.push_back(0);
 			LogColors.clear();
@@ -37,14 +37,14 @@ namespace ZeoEngine {
 
 		void AddLog(int logLevel, const char* fmt, ...) IM_FMTARGS(2)
 		{
-			int old_size = Buf.size();
+			int old_size = Buffer.size();
 			va_list args;
 			va_start(args, fmt);
-			Buf.appendfv(fmt, args);
+			Buffer.appendfv(fmt, args);
 			va_end(args);
-			for (int new_size = Buf.size(); old_size < new_size; old_size++)
+			for (int new_size = Buffer.size(); old_size < new_size; old_size++)
 			{
-				if (Buf[old_size] == '\n')
+				if (Buffer[old_size] == '\n')
 				{
 					LineOffsets.push_back(old_size + 1);
 					LogLevels.push_back(logLevel);
@@ -81,18 +81,12 @@ namespace ZeoEngine {
 			}
 		}
 
-		void Draw(const char* title, bool* p_open = NULL)
+		void Draw()
 		{
-			if (!ImGui::Begin(title, p_open))
-			{
-				ImGui::End();
-				return;
-			}
-
 			// Options menu
 			if (ImGui::BeginPopup("Options"))
 			{
-				ImGui::Checkbox("Auto-scroll", &AutoScroll);
+				ImGui::Checkbox("Auto-scroll", &bAutoScroll);
 				ImGui::EndPopup();
 			}
 			if (ImGui::Button("Options"))
@@ -134,8 +128,8 @@ namespace ZeoEngine {
 				ImGui::LogToClipboard();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-			const char* buf = Buf.begin();
-			const char* buf_end = Buf.end();
+			const char* buf = Buffer.begin();
+			const char* buf_end = Buffer.end();
 			if (Filter.IsActive())
 			{
 				// In this example we don't use the clipper when Filter is enabled.
@@ -185,11 +179,10 @@ namespace ZeoEngine {
 			}
 			ImGui::PopStyleVar();
 
-			if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+			if (bAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
 				ImGui::SetScrollHereY(1.0f);
 
 			ImGui::EndChild();
-			ImGui::End();
 		}
 	};
 

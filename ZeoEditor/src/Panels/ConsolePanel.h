@@ -9,7 +9,8 @@ namespace ZeoEngine {
 	public:
 		using EditorPanel::EditorPanel;
 
-		virtual void OnImGuiRender() override;
+	private:
+		virtual void RenderPanel() override;
 
 	};
 

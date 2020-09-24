@@ -12,7 +12,9 @@ namespace ZeoEngine {
 		using EditorPanel::EditorPanel;
 
 		virtual void OnAttach() override;
-		virtual void OnImGuiRender() override;
+
+	private:
+		virtual void RenderPanel() override;
 
 	private:
 		Ref<Texture2D> m_LogoTexture;

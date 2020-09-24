@@ -11,11 +11,11 @@
 
 namespace ZeoEngine {
 
-	EditorDockspace::EditorDockspace(const std::string& dockspaceName, float dockspaceRounding, float dockspaceBorderSize, ImVec2 dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2 dockspacePos, ImVec2 dockspaceSize)
-		: m_DockspaceName(dockspaceName)
-		, m_DockspaceRounding(dockspaceRounding), m_DockspaceBorderSize(dockspaceBorderSize), m_DockspacePadding(dockspacePadding)
+	EditorDockspace::EditorDockspace(const std::string& dockspaceName, bool bDefaultShow, ImVec2 dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
+		: m_DockspaceName(dockspaceName), m_bShow(bDefaultShow)
+		, m_DockspacePadding(dockspacePadding)
 		, m_DockspaceWindowFlags(dockspaceWindowFlags)
-		, m_DockspacePos(dockspacePos), m_DockspaceSize(dockspaceSize)
+		, m_InitialSize(initialSize), m_InitialPos(initialPos)
 	{
 	}
 
@@ -27,8 +27,6 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnUpdate(DeltaTime dt)
 	{
-		Renderer2D::ResetStats();
-
 		m_Scene->OnUpdate(dt);
 
 		BeginFrameBuffer();
@@ -50,11 +48,9 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnImGuiRender()
 	{
-		// Dockspace
+		// Render dockspace
 		RenderDockspace();
-		// Menus
-		m_MenuManager.OnImGuiRender(m_bIsMainDockspace);
-		// Panels
+		// Render panels
 		m_PanelManager.OnImGuiRender();
 	}
 
@@ -65,17 +61,33 @@ namespace ZeoEngine {
 
 	void EditorDockspace::RenderDockspace()
 	{
+		if (!m_bShow) return;
+
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		// TODO: Needs bFirstOnly? 
-		ImGui::SetNextWindowPos(m_bIsMainDockspace ? mainViewport->Pos : m_DockspacePos);
-		ImGui::SetNextWindowSize(m_bIsMainDockspace ? mainViewport->Size : m_DockspaceSize);
-		//ImGui::SetNextWindowViewport(mainViewport->ID);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, m_DockspaceRounding);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, m_DockspaceBorderSize);
+		if (m_bIsMainDockspace)
+		{
+			ImGui::SetNextWindowViewport(mainViewport->ID);
+			ImGui::SetNextWindowPos(mainViewport->Pos);
+		}
+		else if (m_InitialPos == ImVec2Data::DefaultPos)
+		{
+			ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
+			ImGui::SetNextWindowPos(CenterPos, m_InitialPos.Condition, ImVec2(0.5f, 0.5f));
+		}
+		else
+		{
+			ImGui::SetNextWindowPos(m_InitialPos.Data, m_InitialPos.Condition);
+		}
+		ImGui::SetNextWindowSize(m_bIsMainDockspace ? mainViewport->Size : m_InitialSize.Data, m_bIsMainDockspace ? 0 : m_InitialSize.Condition);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, m_bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, m_bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspacePadding);
 
 		ImGui::Begin(m_DockspaceName.c_str(), &m_bShow, m_DockspaceWindowFlags);
 		ImGui::PopStyleVar(3);
+
+		// Render menus - non-main-menus must be rendered winthin window context
+		m_MenuManager.OnImGuiRender(m_bIsMainDockspace);
 
 		// TODO: Needs separate from window name?
 		ImGuiID dockspaceID = ImGui::GetID(m_DockspaceName.c_str());
@@ -148,9 +160,15 @@ namespace ZeoEngine {
 
 	void DockspaceManager::OnUpdate(DeltaTime dt)
 	{
+		Renderer2D::ResetStats();
+
 		for (auto* dockspace : m_Dockspaces)
 		{
-			dockspace->OnUpdate(dt);
+			// Do not update scene if this dockspace is invisible
+			if (dockspace->m_bShow)
+			{
+				dockspace->OnUpdate(dt);
+			}
 		}
 	}
 

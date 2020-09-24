@@ -6,26 +6,18 @@
 
 namespace ZeoEngine {
 
-	void PreferencesPanel::OnImGuiRender()
+	void PreferencesPanel::RenderPanel()
 	{
-		if (!m_bShow) return;
+		// TODO: Write preferences to a config file
+		ImGui::ShowStyleSelector("Editor style");
 
-		EditorPanel::OnImGuiRender();
-
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow))
+		// VSync
 		{
-			// TODO: Write preferences to a config file
-			ImGui::ShowStyleSelector("Editor style");
-
-			// VSync
-			{
-				static bool bEnableVSync = true;
-				ImGui::Checkbox("VSync", &bEnableVSync);
-				auto& window = Application::Get().GetWindow();
-				window.SetVSync(bEnableVSync);
-			}
+			static bool bEnableVSync = true;
+			ImGui::Checkbox("VSync", &bEnableVSync);
+			auto& window = Application::Get().GetWindow();
+			window.SetVSync(bEnableVSync);
 		}
-		ImGui::End();
 	}
 
 }

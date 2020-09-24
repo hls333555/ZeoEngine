@@ -9,7 +9,8 @@ namespace ZeoEngine {
 	public:
 		using SceneViewportPanel::SceneViewportPanel;
 
-		virtual void OnImGuiRender() override;
+	private:
+		virtual void RenderPanel() override;
 
 	};
 

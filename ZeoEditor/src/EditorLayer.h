@@ -59,6 +59,8 @@ namespace ZeoEngine {
 
 		DockspaceManager& GetDockspaceManager() { return m_DockspaceManager; }
 
+		void PushDockspace(EditorDockspace* dockspace);
+
 		//virtual OrthographicCamera* GetGameCamera() override { return &m_CameraControllers[GAME_VIEW_PIE]->GetCamera(); }
 
 		void ClearSelectedGameObject() { m_SelectedGameObject = nullptr; }
