@@ -32,6 +32,7 @@ namespace ZeoEngine {
 
 			m_bIsHovering = ImGui::IsWindowHovered();
 		}
+
 		ImGui::End();
 	}
 

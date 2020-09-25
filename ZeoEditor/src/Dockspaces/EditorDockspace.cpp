@@ -108,6 +108,7 @@ namespace ZeoEngine {
 
 		// Should be put at last
 		ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+
 		ImGui::End();
 	}
 

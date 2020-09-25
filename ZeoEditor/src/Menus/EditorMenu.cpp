@@ -24,6 +24,7 @@ namespace ZeoEngine {
 		if (ImGui::BeginMenu(m_MenuName.c_str(), m_bEnabled))
 		{
 			RenderMenuItems();
+
 			ImGui::EndMenu();
 		}
 	}

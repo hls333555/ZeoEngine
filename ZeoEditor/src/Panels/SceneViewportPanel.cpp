@@ -66,11 +66,12 @@ namespace ZeoEngine {
 					auto& sceneCamera = GetComponent<CameraComponent>().Camera;
 
 					// Move speed is set based on the zoom level (OrthographicSize)
-					float cameraPanSpeed = sceneCamera.GetOrhographicSize() / 4.0f;
+					float cameraPanSpeed = sceneCamera.GetOrthographicSize() / 4.0f;
 					
 					auto [x, y] = Input::GetMousePosition();
 					if (!m_bIsMiddleMouseButtonFirstPressedWhenHovered)
 					{
+						// TODO: This moves pretty slowly on high framerate
 						transform[3][0] -= (x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
 						transform[3][1] += (y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
 					}
@@ -98,10 +99,10 @@ namespace ZeoEngine {
 				if (m_ContextPanel && m_ContextPanel->IsHovering())
 				{
 					auto& sceneCamera = GetComponent<CameraComponent>().Camera;
-					float size = sceneCamera.GetOrhographicSize();
+					float size = sceneCamera.GetOrthographicSize();
 					size -= e.GetYOffset() * 0.25f;
 					size = std::max(size, 0.25f);
-					sceneCamera.SetOrhographicSize(size);
+					sceneCamera.SetOrthographicSize(size);
 				}
 				
 				return false;
