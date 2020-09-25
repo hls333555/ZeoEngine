@@ -66,6 +66,14 @@ namespace ZeoEngine {
 		}
 	}
 
+	void PanelManager::OnUpdate(DeltaTime dt)
+	{
+		for (auto& [name, panel] : m_Panels)
+		{
+			panel->OnUpdate(dt);
+		}
+	}
+
 	void PanelManager::OnImGuiRender()
 	{
 		for (auto& [name, panel] : m_Panels)

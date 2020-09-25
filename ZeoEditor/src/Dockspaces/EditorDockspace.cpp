@@ -27,6 +27,8 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnUpdate(DeltaTime dt)
 	{
+		m_PanelManager.OnUpdate(dt);
+
 		m_Scene->OnUpdate(dt);
 
 		BeginFrameBuffer();

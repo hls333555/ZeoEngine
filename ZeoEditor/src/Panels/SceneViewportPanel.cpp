@@ -15,17 +15,25 @@ namespace ZeoEngine {
 		CreatePreviewCamera();
 	}
 
+	void SceneViewportPanel::OnUpdate(DeltaTime dt)
+	{
+		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
+		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
+		// This results in never rendering an empty (black) framebuffer
+		if (FrameBufferSpec spec = GetFrameBuffer()->GetSpec();
+			m_LastViewportSize.x > 0.0f && m_LastViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+			(spec.Width != m_LastViewportSize.x || spec.Height != m_LastViewportSize.y))
+		{
+			OnViewportResize(m_LastViewportSize);
+		}
+	}
+
 	void SceneViewportPanel::RenderPanel()
 	{
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		glm::vec2 max{ window->InnerRect.Max.x, window->InnerRect.Max.y };
 		glm::vec2 min{ window->InnerRect.Min.x, window->InnerRect.Min.y };
-		glm::vec2 size = max - min;
-		if (size != m_LastViewportSize)
-		{
-			OnViewportResize(size);
-			m_LastViewportSize = size;
-		}
+		m_LastViewportSize = max - min;
 
 		// Draw framebuffer texture
 		ImGui::GetWindowDrawList()->AddImage(
@@ -41,6 +49,7 @@ namespace ZeoEngine {
 	void SceneViewportPanel::CreatePreviewCamera()
 	{
 		// Camera control
+		// TODO: Add support for perspective camera
 		class SceneCameraController : public ScriptableEntity
 		{
 		public:

@@ -22,6 +22,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
+		virtual void OnUpdate(DeltaTime dt) {}
 		void OnImGuiRender();
 
 		const std::string& GetPanelName() const { return m_PanelName; }
@@ -70,6 +71,7 @@ namespace ZeoEngine {
 		PanelManager() = default;
 		~PanelManager();
 
+		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 
 		void PushPanel(EditorPanel* panel);
