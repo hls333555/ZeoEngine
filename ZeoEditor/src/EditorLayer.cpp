@@ -47,8 +47,6 @@ namespace ZeoEngine {
 			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
 		PushDockspace(mainDockspace);
 
-		ConstructClassInheritanceTree();
-
 		std::string cachePath = std::filesystem::current_path().string().append("/temp");
 		// Create temp folder on demand
 		std::filesystem::create_directory(cachePath);
@@ -1563,32 +1561,6 @@ namespace ZeoEngine {
 		//m_ToolBarTextures[1] = m_PauseTexture;
 		pieState = PIEState::Running;
 		ZE_CORE_TRACE("PIE resumed");
-	}
-
-	void EditorLayer::ConstructClassInheritanceTree()
-	{
-		m_ClassInheritanceTree.clear();
-		rttr::type baseType = rttr::type::get_by_name("GameObject");
-		auto& derivedTypes = baseType.get_derived_classes();
-		ConstructClassInheritanceTreeRecursively(baseType, derivedTypes);
-	}
-
-	void EditorLayer::ConstructClassInheritanceTreeRecursively(const rttr::type& baseType, const rttr::array_range<rttr::type>& derivedTypes)
-	{
-		for (const auto type : derivedTypes)
-		{
-			auto& dTypes = type.get_derived_classes();
-			// We assume the last element in this class's base classes array is this class's (direct) parent class
-			// because we only want to store direct parent-children relations in one key-value pair
-			if (*type.get_base_classes().rbegin() == baseType)
-			{
-				m_ClassInheritanceTree[baseType].push_back(type);
-			}
-			if (!dTypes.empty())
-			{
-				ConstructClassInheritanceTreeRecursively(type, dTypes);
-			}
-		}
 	}
 
 	void EditorLayer::DisplayClassHierarchyRecursively(const std::vector<rttr::type>& derivedTypes)

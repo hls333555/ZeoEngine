@@ -92,8 +92,6 @@ namespace ZeoEngine {
 		void PausePIE();
 		void ResumePIE();
 
-		void ConstructClassInheritanceTree();
-		void ConstructClassInheritanceTreeRecursively(const rttr::type& baseType, const rttr::array_range<rttr::type>& derivedTypes);
 		void DisplayClassHierarchyRecursively(const std::vector<rttr::type>& derivedTypes);
 		void ProcessClassInteraction(const rttr::type& type);
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #include "Engine/Core/Core.h"
 
 namespace ZeoEngine {
