@@ -6,23 +6,6 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 
-#define ENTT_CAT_IMPL(a, b) a##b
-#define ENTT_CAT(a, b) ENTT_CAT_IMPL(a, b)
-#define ENTT_REFL_REGISTRATION                                                      \
-static void entt_auto_register_reflection_function_();                              \
-namespace                                                                           \
-{                                                                                   \
-    struct entt__auto__register__                                                   \
-    {                                                                               \
-        entt__auto__register__()                                                    \
-        {                                                                           \
-            entt_auto_register_reflection_function_();                              \
-        }                                                                           \
-    };                                                                              \
-}                                                                                   \
-static const entt__auto__register__ ENTT_CAT(auto_register__, __LINE__);            \
-static void entt_auto_register_reflection_function_()
-
 namespace ZeoEngine {
 
 	struct TransformComponent

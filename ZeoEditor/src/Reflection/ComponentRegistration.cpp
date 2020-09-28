@@ -1,20 +1,25 @@
 #include "Engine/GameFramework/Components.h"
+#include "Reflection/RegistrationHelper.h"
 
-ENTT_REFL_REGISTRATION
+ZE_REFL_REGISTRATION
 {
 	using namespace ZeoEngine;
-	entt::meta<TransformComponent>().type("TransformComponent"_hs)
-		.data<&TransformComponent::Transform, entt::as_ref_t>("Transform"_hs);
 
-	entt::meta<TagComponent>().type("TagComponent"_hs)
-		.data<&TagComponent::Tag, entt::as_ref_t>("Tag"_hs);
+	ZE_REFL_COMP(TransformComponent)
+		ZE_REFL_DATA_REF(TransformComponent, Transform);
 
-	entt::meta<SpriteRendererComponent>().type("SpriteRendererComponent"_hs)
-		.data<&SpriteRendererComponent::TintColor, entt::as_ref_t>("TintColor"_hs)
-		.data<&SpriteRendererComponent::Texture, entt::as_ref_t>("Texture"_hs)
-		.data<&SpriteRendererComponent::TextureTiling, entt::as_ref_t>("TextureTiling"_hs);
+	ZE_REFL_COMP(TagComponent)
+		ZE_REFL_DATA_REF(TagComponent, Tag);
 
-	entt::meta<CameraComponent>().type("CameraComponent"_hs)
-		.data<&CameraComponent::bIsPrimary>("IsPrimary"_hs)
-		.data<&CameraComponent::bFixedAspectRatio>("FixedAspectRatio"_hs);
+	ZE_REFL_COMP(SpriteRendererComponent)
+		ZE_REFL_DATA_REF(SpriteRendererComponent, TintColor)
+		ZE_REFL_DATA_REF(SpriteRendererComponent, Texture)
+		ZE_REFL_DATA_REF(SpriteRendererComponent, TextureTiling);
+
+	ZE_REFL_COMP(CameraComponent)
+		ZE_REFL_DATA(CameraComponent, bIsPrimary)
+		ZE_REFL_DATA(CameraComponent, bFixedAspectRatio);
+
+	ZE_REFL_COMP(NativeScriptComponent);
+
 }

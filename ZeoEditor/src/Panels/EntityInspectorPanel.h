@@ -14,7 +14,12 @@ namespace ZeoEngine {
 	private:
 		virtual void RenderPanel() override;
 
+		void DrawInherentComponents(Entity entity);
 		void DrawComponents(Entity entity);
+
+		void ProcessIntegralData(entt::meta_data data);
+		void ProcessEnumData(entt::meta_data data);
+		void ProcessOtherData(entt::meta_data data);
 
 	};
 
