@@ -23,7 +23,7 @@ namespace ZeoEngine {
 		{
 			if (ImGui::IsItemHovered())
 			{
-				const char* tooltip = GetPropTooltip(metaObj);
+				const char* tooltip = GetPropData<const char*>(PropertyType::Tooltip, metaObj);
 				if (tooltip != "")
 				{
 					ImGui::SetTooltip(tooltip);
@@ -33,9 +33,12 @@ namespace ZeoEngine {
 		void ProcessType(entt::meta_type type, Entity entity);
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
+		void ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance);
 		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
 		void ProcessOtherData(entt::meta_data data, entt::meta_any instance);
 
+		void ProcessBoolData(entt::meta_data data, entt::meta_any instance);
+		void ProcessFloatData(entt::meta_data data, entt::meta_any instance);
 		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
 	};
 

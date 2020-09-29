@@ -17,8 +17,8 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TextureTiling, "");
 
 	ZE_REFL_TYPE(CameraComponent, "相机组件")
-		ZE_REFL_DATA(CameraComponent, bIsPrimary, "")
-		ZE_REFL_DATA(CameraComponent, bFixedAspectRatio, "");
+		ZE_REFL_DATA_REF(CameraComponent, bIsPrimary, "")
+		ZE_REFL_DATA_REF(CameraComponent, bFixedAspectRatio, "");
 
 	ZE_REFL_TYPE(NativeScriptComponent, "C++脚本组件");
 

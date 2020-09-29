@@ -29,6 +29,10 @@ enum class PropertyType
 {
     Name,
     Tooltip,
+
+	DragSensitivity,
+	Min,
+	Max,
 };
 
 #define ZE_REFL_TYPE(typeName, tooltip)                                             \
@@ -42,7 +46,7 @@ entt::meta<typeName>()                                                          
 .data<&typeName::dataName, policy>(#dataName##_hs)                                  \
     .prop(PropertyType::Name, #dataName)                                            \
     .prop(PropertyType::Tooltip, u8##tooltip)                                                  
-#define ZE_REFL_DATA(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_is_t)
+#define ZE_REFL_DATA(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_is_t) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
 #define ZE_REFL_DATA_REF(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_ref_t)
 
 namespace ZeoEngine {
@@ -56,21 +60,15 @@ namespace ZeoEngine {
 	}
 
 	template<typename T>
-	const char* GetPropName(T metaObj)
-	{
-		return metaObj.prop(PropertyType::Name).value().cast<const char*>();
-	}
-
-	template<typename T>
-	const char* GetPropTooltip(T metaObj)
-	{
-		return metaObj.prop(PropertyType::Tooltip).value().cast<const char*>();
-	}
-
-	template<typename T>
 	T& GetDataValueByRef(entt::meta_data data, entt::meta_any instance)
 	{
 		return data.get(instance).cast<T>();
+	}
+
+	template<typename Ret, typename T>
+	Ret GetPropData(PropertyType propType, T metaObj)
+	{
+		return metaObj.prop(propType).value().cast<Ret>();
 	}
 
 }

@@ -135,7 +135,7 @@ namespace ZeoEngine {
 	void EntityInspectorPanel::ProcessType(entt::meta_type type, Entity entity)
 	{
 		const auto instance = GetTypeInstance(type, GetScene()->m_Registry, entity);
-		if (ImGui::CollapsingHeader(GetPropName(type), ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader(GetPropData<const char*>(PropertyType::Name, type), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ShowPropertyTooltip(type);
 			type.data([this, instance](entt::meta_data data)
@@ -143,6 +143,10 @@ namespace ZeoEngine {
 				if (data.type().is_integral())
 				{
 					ProcessIntegralData(data, instance);
+				}
+				else if (data.type().is_floating_point())
+				{
+					ProcessFloatingPointData(data, instance);
 				}
 				else if (data.type().is_enum())
 				{
@@ -160,9 +164,21 @@ namespace ZeoEngine {
 	{
 		if (IsTypeEqual<bool>(data.type()))
 		{
+			ProcessBoolData(data, instance);
+		}
+		else if (IsTypeEqual<int8_t>(data.type()))
+		{
 			
 		}
 		else if (IsTypeEqual<int32_t>(data.type()))
+		{
+			
+		}
+		else if (IsTypeEqual<int64_t>(data.type()))
+		{
+			
+		}
+		else if (IsTypeEqual<uint8_t>(data.type()))
 		{
 			
 		}
@@ -170,9 +186,17 @@ namespace ZeoEngine {
 		{
 			
 		}
-		else if (IsTypeEqual<float>(data.type()))
+		else if (IsTypeEqual<uint64_t>(data.type()))
 		{
-			
+
+		}
+	}
+
+	void EntityInspectorPanel::ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (IsTypeEqual<float>(data.type()))
+		{
+			ProcessFloatData(data, instance);
 		}
 		else if (IsTypeEqual<double>(data.type()))
 		{
@@ -205,6 +229,32 @@ namespace ZeoEngine {
 		}
 	}
 
+	void EntityInspectorPanel::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
+	{
+		auto& boolRef = GetDataValueByRef<bool>(data, instance);
+
+		auto dataID = data.id();
+		ImGui::PushID(dataID);
+		if (ImGui::Checkbox(GetPropData<const char*>(PropertyType::Name, data), &boolRef))
+		{
+			
+		}
+		ImGui::PopID();
+	}
+
+	void EntityInspectorPanel::ProcessFloatData(entt::meta_data data, entt::meta_any instance)
+	{
+		auto& floatRef = GetDataValueByRef<float>(data, instance);
+
+		auto dataID = data.id();
+		ImGui::PushID(dataID);
+		if (ImGui::DragFloat(GetPropData<const char*>(PropertyType::Name, data), &floatRef))
+		{
+
+		}
+		ImGui::PopID();
+	}
+
 	void EntityInspectorPanel::ProcessStringData(entt::meta_data data, entt::meta_any instance)
 	{
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
@@ -213,7 +263,7 @@ namespace ZeoEngine {
 
 		auto dataID = data.id();
 		ImGui::PushID(dataID);
-		ImGui::InputText("Tag", stringBuffers[dataID].first ? &stringBuffers[dataID].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
+		ImGui::InputText(GetPropData<const char*>(PropertyType::Name, data), stringBuffers[dataID].first ? &stringBuffers[dataID].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
 		ImGui::PopID();
 		// Write changes to cache first
 		if (ImGui::IsItemActivated())
