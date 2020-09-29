@@ -36,6 +36,7 @@ namespace ZeoEngine {
 		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
 		void ProcessOtherData(entt::meta_data data, entt::meta_any instance);
 
+		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
 	};
 
 }

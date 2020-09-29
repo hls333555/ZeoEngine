@@ -1,6 +1,7 @@
 #include "Panels/EntityInspectorPanel.h"
 
 #include <imgui/imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/GameFramework/Components.h"
@@ -181,22 +182,14 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
-
+		
 	}
 
 	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<std::string>(data.type()))
 		{
-			auto& tag = GetDataValueByRef<std::string>(data, instance);
-
-			char buffer[256];
-			memset(buffer, 0, sizeof(buffer));
-			strcpy_s(buffer, sizeof(buffer), tag.c_str());
-			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
-			{
-				tag = std::string(buffer);
-			}
+			ProcessStringData(data, instance);
 		}
 		else if (IsTypeEqual<glm::vec2>(data.type()))
 		{
@@ -207,6 +200,37 @@ namespace ZeoEngine {
 			
 		}
 		else if (IsTypeEqual<glm::vec4>(data.type()))
+		{
+			
+		}
+	}
+
+	void EntityInspectorPanel::ProcessStringData(entt::meta_data data, entt::meta_any instance)
+	{
+		// Map from id to string cache plus a bool flag indicating if we are editing the text
+		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
+		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
+
+		auto dataID = data.id();
+		ImGui::PushID(dataID);
+		ImGui::InputText("Tag", stringBuffers[dataID].first ? &stringBuffers[dataID].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
+		ImGui::PopID();
+		// Write changes to cache first
+		if (ImGui::IsItemActivated())
+		{
+			stringBuffers[dataID].first = true;
+			stringBuffers[dataID].second = stringRef;
+		}
+		bool bStringChanged = false;
+		// Apply cache when user finishes editing
+		if (ImGui::IsItemDeactivated())
+		{
+			bStringChanged = stringBuffers[dataID].second != stringRef;
+			stringBuffers[dataID].first = false;
+			stringRef = std::move(stringBuffers[dataID].second);
+		}
+
+		if (bStringChanged)
 		{
 			
 		}
