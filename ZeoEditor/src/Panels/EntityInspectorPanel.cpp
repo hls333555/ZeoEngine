@@ -5,7 +5,6 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/MainDockspace.h"
-#include "Reflection/RegistrationHelper.h"
 
 namespace ZeoEngine {
 
@@ -21,29 +20,33 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::DrawInherentComponents(Entity entity)
 	{
-		if (entity.HasComponent<TagComponent>() && ImGui::CollapsingHeader(GET_PROP_NAME(entt::resolve<TagComponent>()), ImGuiTreeNodeFlags_DefaultOpen))
+		if (entity.HasComponent<TagComponent>())
 		{
-			auto& tag = entity.GetComponent<TagComponent>().Tag;
+			ProcessType(entt::resolve<TagComponent>());
+			
+			//auto& tag = entity.GetComponent<TagComponent>().Tag;
 
-			char buffer[256];
-			memset(buffer, 0, sizeof(buffer));
-			strcpy_s(buffer, sizeof(buffer), tag.c_str());
-			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
-			{
-				tag = std::string(buffer);
-			}
+			//char buffer[256];
+			//memset(buffer, 0, sizeof(buffer));
+			//strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			//if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
+			//{
+			//	tag = std::string(buffer);
+			//}
 		}
 
-		if (entity.HasComponent<TransformComponent>() && ImGui::CollapsingHeader(GET_PROP_NAME(entt::resolve<TransformComponent>()), ImGuiTreeNodeFlags_DefaultOpen))
+		if (entity.HasComponent<TransformComponent>())
 		{
-			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
-			{
-				auto& transform = entity.GetComponent<TransformComponent>().Transform;
+			ProcessType(entt::resolve<TransformComponent>());
 
-				ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
+			//if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
+			//{
+			//	auto& transform = entity.GetComponent<TransformComponent>().Transform;
 
-				ImGui::TreePop();
-			}
+			//	ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
+
+			//	ImGui::TreePop();
+			//}
 		}
 	}
 
@@ -52,26 +55,9 @@ namespace ZeoEngine {
 		GetScene()->m_Registry.visit(entity, [this](const auto componentId)
 		{
 			auto type = entt::resolve_type(componentId);
-			if (IS_TYPE_EQUAL(type, TagComponent) || IS_TYPE_EQUAL(type, TransformComponent)) return;
+			if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
 
-			if (ImGui::CollapsingHeader(GET_PROP_NAME(type), ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				type.data([this](entt::meta_data data)
-				{
-					if (data.type().is_integral())
-					{
-						ProcessIntegralData(data);
-					}
-					else if (data.type().is_enum())
-					{
-						ProcessEnumData(data);
-					}
-					else
-					{
-						ProcessOtherData(data);
-					}
-				});
-			}
+			ProcessType(type);
 		});
 
 		//if (entity.HasComponent<CameraComponent>())
@@ -155,25 +141,48 @@ namespace ZeoEngine {
 		//}
 	}
 
+	void EntityInspectorPanel::ProcessType(entt::meta_type type)
+	{
+		if (ImGui::CollapsingHeader(GetPropName(type), ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ShowPropertyTooltip(type);
+			type.data([this](entt::meta_data data)
+			{
+				if (data.type().is_integral())
+				{
+					ProcessIntegralData(data);
+				}
+				else if (data.type().is_enum())
+				{
+					ProcessEnumData(data);
+				}
+				else
+				{
+					ProcessOtherData(data);
+				}
+			});
+		}
+	}
+
 	void EntityInspectorPanel::ProcessIntegralData(entt::meta_data data)
 	{
-		if (IS_TYPE_EQUAL(data.type(), bool))
+		if (IsTypeEqual<bool>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), int32_t))
+		else if (IsTypeEqual<int32_t>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), uint32_t))
+		else if (IsTypeEqual<uint32_t>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), float))
+		else if (IsTypeEqual<float>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), double))
+		else if (IsTypeEqual<double>(data.type()))
 		{
 			
 		}
@@ -186,19 +195,19 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data)
 	{
-		if (IS_TYPE_EQUAL(data.type(), std::string))
+		if (IsTypeEqual<std::string>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), glm::vec2))
+		else if (IsTypeEqual<glm::vec2>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), glm::vec3))
+		else if (IsTypeEqual<glm::vec3>(data.type()))
 		{
 			
 		}
-		else if (IS_TYPE_EQUAL(data.type(), glm::vec4))
+		else if (IsTypeEqual<glm::vec4>(data.type()))
 		{
 			
 		}

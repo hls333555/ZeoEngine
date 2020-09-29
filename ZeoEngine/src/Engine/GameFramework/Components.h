@@ -8,6 +8,18 @@
 
 namespace ZeoEngine {
 
+	struct TagComponent
+	{
+		std::string Tag;
+		bool bIsInternal{ false };
+
+		TagComponent() = default;
+		TagComponent(const TagComponent&) = default;
+		TagComponent(const std::string& tag)
+			:Tag(tag) {}
+
+	};
+
 	struct TransformComponent
 	{
 		glm::mat4 Transform{ 1.0f };
@@ -19,18 +31,6 @@ namespace ZeoEngine {
 
 		operator glm::mat4&() { return Transform; }
 		operator const glm::mat4&() const { return Transform; }
-
-	};
-
-	struct TagComponent
-	{
-		std::string Tag;
-		bool bIsInternal{ false };
-
-		TagComponent() = default;
-		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag)
-			:Tag(tag) {}
 
 	};
 
