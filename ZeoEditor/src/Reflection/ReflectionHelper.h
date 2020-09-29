@@ -1,5 +1,7 @@
 #pragma once
 
+#include "entt.hpp"
+
 #define ZE_CAT_IMPL(a, b) a##b
 #define ZE_CAT(a, b) ZE_CAT_IMPL(a, b)
 #define ZE_REFL_REGISTRATION                                                        \
@@ -17,6 +19,12 @@ namespace                                                                       
 static const ze__auto__register__ ZE_CAT(auto_register__, __LINE__);                \
 static void ze_auto_register_reflection_function_()
 
+template<typename T>
+T& get(entt::registry& registry, entt::entity entity)
+{
+	return registry.template get<T>(entity);
+}
+
 enum class PropertyType
 {
     Name,
@@ -27,7 +35,8 @@ enum class PropertyType
 entt::meta<typeName>()                                                              \
     .type()                                                                         \
         .prop(PropertyType::Name, #typeName)                                        \
-        .prop(PropertyType::Tooltip, u8##tooltip)                                             
+        .prop(PropertyType::Tooltip, u8##tooltip)									\
+	.func<&get<typeName>, entt::as_ref_t>("get"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, policy)               \
 .data<&typeName::dataName, policy>(#dataName##_hs)                                  \
@@ -36,20 +45,32 @@ entt::meta<typeName>()                                                          
 #define ZE_REFL_DATA(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_is_t)
 #define ZE_REFL_DATA_REF(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_ref_t)
 
-template<typename Type>
-bool IsTypeEqual(entt::meta_type type)
-{
-    return type.type_id() == entt::type_info<Type>::id();
-}
+namespace ZeoEngine {
 
-template<typename T>
-const char* GetPropName(T metaObj)
-{
-    return metaObj.prop(PropertyType::Name).value().cast<const char*>();
-}
+	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
-template<typename T>
-const char* GetPropTooltip(T metaObj)
-{
-	return metaObj.prop(PropertyType::Tooltip).value().cast<const char*>();
+	template<typename T>
+	bool IsTypeEqual(entt::meta_type type)
+	{
+		return type.type_id() == entt::type_info<T>::id();
+	}
+
+	template<typename T>
+	const char* GetPropName(T metaObj)
+	{
+		return metaObj.prop(PropertyType::Name).value().cast<const char*>();
+	}
+
+	template<typename T>
+	const char* GetPropTooltip(T metaObj)
+	{
+		return metaObj.prop(PropertyType::Tooltip).value().cast<const char*>();
+	}
+
+	template<typename T>
+	T& GetDataValueByRef(entt::meta_data data, entt::meta_any instance)
+	{
+		return data.get(instance).cast<T>();
+	}
+
 }

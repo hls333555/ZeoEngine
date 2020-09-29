@@ -2,8 +2,6 @@
 
 #include "Engine/GameFramework/Scene.h"
 
-#include "entt.hpp"
-
 namespace ZeoEngine {
 
 	class Entity

@@ -1,5 +1,5 @@
 #include "Engine/GameFramework/Components.h"
-#include "Reflection/RegistrationHelper.h"
+#include "Reflection/ReflectionHelper.h"
 
 ZE_REFL_REGISTRATION
 {

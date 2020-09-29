@@ -22,22 +22,12 @@ namespace ZeoEngine {
 	{
 		if (entity.HasComponent<TagComponent>())
 		{
-			ProcessType(entt::resolve<TagComponent>());
-			
-			//auto& tag = entity.GetComponent<TagComponent>().Tag;
-
-			//char buffer[256];
-			//memset(buffer, 0, sizeof(buffer));
-			//strcpy_s(buffer, sizeof(buffer), tag.c_str());
-			//if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
-			//{
-			//	tag = std::string(buffer);
-			//}
+			ProcessType(entt::resolve<TagComponent>(), entity);
 		}
 
 		if (entity.HasComponent<TransformComponent>())
 		{
-			ProcessType(entt::resolve<TransformComponent>());
+			ProcessType(entt::resolve<TransformComponent>(), entity);
 
 			//if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
 			//{
@@ -52,12 +42,12 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::DrawComponents(Entity entity)
 	{
-		GetScene()->m_Registry.visit(entity, [this](const auto componentId)
+		GetScene()->m_Registry.visit(entity, [this, entity](const auto componentId)
 		{
-			auto type = entt::resolve_type(componentId);
+			const auto type = entt::resolve_type(componentId);
 			if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
 
-			ProcessType(type);
+			ProcessType(type, entity);
 		});
 
 		//if (entity.HasComponent<CameraComponent>())
@@ -141,30 +131,31 @@ namespace ZeoEngine {
 		//}
 	}
 
-	void EntityInspectorPanel::ProcessType(entt::meta_type type)
+	void EntityInspectorPanel::ProcessType(entt::meta_type type, Entity entity)
 	{
+		const auto instance = GetTypeInstance(type, GetScene()->m_Registry, entity);
 		if (ImGui::CollapsingHeader(GetPropName(type), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ShowPropertyTooltip(type);
-			type.data([this](entt::meta_data data)
+			type.data([this, instance](entt::meta_data data)
 			{
 				if (data.type().is_integral())
 				{
-					ProcessIntegralData(data);
+					ProcessIntegralData(data, instance);
 				}
 				else if (data.type().is_enum())
 				{
-					ProcessEnumData(data);
+					ProcessEnumData(data, instance);
 				}
 				else
 				{
-					ProcessOtherData(data);
+					ProcessOtherData(data, instance);
 				}
 			});
 		}
 	}
 
-	void EntityInspectorPanel::ProcessIntegralData(entt::meta_data data)
+	void EntityInspectorPanel::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<bool>(data.type()))
 		{
@@ -188,16 +179,24 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessEnumData(entt::meta_data data)
+	void EntityInspectorPanel::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
 
 	}
 
-	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data)
+	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<std::string>(data.type()))
 		{
-			
+			auto& tag = GetDataValueByRef<std::string>(data, instance);
+
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
+			{
+				tag = std::string(buffer);
+			}
 		}
 		else if (IsTypeEqual<glm::vec2>(data.type()))
 		{

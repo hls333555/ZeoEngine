@@ -3,7 +3,7 @@
 #include "Panels/EditorPanel.h"
 
 #include "Engine/GameFramework/Entity.h"
-#include "Reflection/RegistrationHelper.h"
+#include "Reflection/ReflectionHelper.h"
 
 namespace ZeoEngine {
 
@@ -30,10 +30,11 @@ namespace ZeoEngine {
 				}
 			}
 		}
-		void ProcessType(entt::meta_type type);
-		void ProcessIntegralData(entt::meta_data data);
-		void ProcessEnumData(entt::meta_data data);
-		void ProcessOtherData(entt::meta_data data);
+		void ProcessType(entt::meta_type type, Entity entity);
+		// NOTE: Do not pass entt::meta_handle around as it does not support copy
+		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
+		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
+		void ProcessOtherData(entt::meta_data data, entt::meta_any instance);
 
 	};
 

@@ -62,7 +62,7 @@ namespace ZeoEngine {
 
 	struct NativeScriptComponent
 	{
-		// Function pointer does not support lambda with captures
+		// NOTE: Function pointer does not support lambda with captures
 		using InstantiateScriptDef = std::function<ScriptableEntity*()>;
 		using DestroyScriptDef = void(*)(NativeScriptComponent*);
 
