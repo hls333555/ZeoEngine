@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "entt.hpp"
 
 #define ZE_CAT_IMPL(a, b) a##b
@@ -27,27 +29,31 @@ T& get(entt::registry& registry, entt::entity entity)
 
 enum class PropertyType
 {
-    Name,
-    Tooltip,
+    Name,					// const char*
+    Tooltip,				// const char*
 
-	DragSensitivity,
-	Min,
-	Max,
+	DragSensitivity,		// float
+	ClampMin,				// [type_dependent]
+	ClampMax,				// [type_dependent]
 };
 
-#define ZE_REFL_TYPE(typeName, tooltip)                                             \
+#define ZE_REFL_TYPE(typeName, ...)													\
 entt::meta<typeName>()                                                              \
     .type()                                                                         \
         .prop(PropertyType::Name, #typeName)                                        \
-        .prop(PropertyType::Tooltip, u8##tooltip)									\
+        .prop(std::make_tuple(__VA_ARGS__))											\
 	.func<&get<typeName>, entt::as_ref_t>("get"_hs)
 
-#define ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, policy)               \
+#define ZE_REFL_DATA_WITH_POLICY(typeName, dataName, policy, ...)					\
 .data<&typeName::dataName, policy>(#dataName##_hs)                                  \
     .prop(PropertyType::Name, #dataName)                                            \
-    .prop(PropertyType::Tooltip, u8##tooltip)                                                  
-#define ZE_REFL_DATA(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_is_t) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
-#define ZE_REFL_DATA_REF(typeName, dataName, tooltip) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, tooltip, entt::as_ref_t)
+    .prop(std::make_tuple(__VA_ARGS__))                                                  
+#define ZE_REFL_DATA(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_is_t, __VA_ARGS__) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
+#define ZE_REFL_DATA_REF(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_ref_t, __VA_ARGS__)
+
+#define ZE_REFL_PROP(propType) PropertyType::propType
+#define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue) // For certain properties with integral type value (e.g. int8_t), you should use ZE_REFL_PROP_PAIR_WITH_CAST instead to explicitly specify their types during property registration
+#define ZE_REFL_PROP_PAIR_WITH_CAST(propType, propValue, castToType) std::make_pair(PropertyType::propType, static_cast<castToType>(propValue))
 
 namespace ZeoEngine {
 
@@ -66,9 +72,14 @@ namespace ZeoEngine {
 	}
 
 	template<typename Ret, typename T>
-	Ret GetPropData(PropertyType propType, T metaObj)
+	std::optional<Ret> GetPropValue(PropertyType propType, T metaObj)
 	{
-		return metaObj.prop(propType).value().cast<Ret>();
+		auto prop = metaObj.prop(propType);
+		if (prop)
+		{
+			return prop.value().cast<Ret>();
+		}
+		return {};
 	}
 
 }

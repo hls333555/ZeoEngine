@@ -8,10 +8,22 @@
 
 namespace ZeoEngine {
 
+#define TEST 1
+
 	struct TagComponent
 	{
 		std::string Tag;
 		bool bIsInternal{ false };
+#if TEST
+		uint8_t ui8var;
+		uint32_t ui32var;
+		uint64_t ui64var;
+		int8_t i8var = 25;
+		int32_t i32var;
+		int64_t i64var;
+		float floatvar;
+		double doublevar;
+#endif
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;

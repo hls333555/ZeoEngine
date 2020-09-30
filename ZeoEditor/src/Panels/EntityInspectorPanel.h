@@ -23,10 +23,10 @@ namespace ZeoEngine {
 		{
 			if (ImGui::IsItemHovered())
 			{
-				const char* tooltip = GetPropData<const char*>(PropertyType::Tooltip, metaObj);
-				if (tooltip != "")
+				auto tooltip = GetPropValue<const char*>(PropertyType::Tooltip, metaObj);
+				if (tooltip)
 				{
-					ImGui::SetTooltip(tooltip);
+					ImGui::SetTooltip(*tooltip);
 				}
 			}
 		}
@@ -38,7 +38,14 @@ namespace ZeoEngine {
 		void ProcessOtherData(entt::meta_data data, entt::meta_any instance);
 
 		void ProcessBoolData(entt::meta_data data, entt::meta_any instance);
+		void ProcessInt8Data(entt::meta_data data, entt::meta_any instance);
+		void ProcessInt32Data(entt::meta_data data, entt::meta_any instance);
+		void ProcessInt64Data(entt::meta_data data, entt::meta_any instance);
+		void ProcessUInt8Data(entt::meta_data data, entt::meta_any instance);
+		void ProcessUInt32Data(entt::meta_data data, entt::meta_any instance);
+		void ProcessUInt64Data(entt::meta_data data, entt::meta_any instance);
 		void ProcessFloatData(entt::meta_data data, entt::meta_any instance);
+		void ProcessDoubleData(entt::meta_data data, entt::meta_any instance);
 		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
 	};
 
