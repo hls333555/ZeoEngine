@@ -6,9 +6,9 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 
-namespace ZeoEngine {
-
 #define TEST 1
+
+namespace ZeoEngine {
 
 	struct TagComponent
 	{

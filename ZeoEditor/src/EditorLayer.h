@@ -127,14 +127,6 @@ namespace ZeoEngine {
 		void EndDisplayProperty(std::stringstream& ss, const PropertyData& data, rttr::argument insertValue);
 		
 		void ProcessBoolType(bool boolValue,  const PropertyData& data);
-		void ProcessInt8Type(int8_t int8Value, const PropertyData& data);
-		void ProcessInt32Type(int32_t int32Value, const PropertyData& data);
-		void ProcessInt64Type(int64_t int64Value, const PropertyData& data);
-		void ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data);
-		void ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data);
-		void ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data);
-		void ProcessFloatType(float floatValue, const PropertyData& data);
-		void ProcessDoubleType(double doubleValue, const PropertyData& data);
 		void ProcessEnumType(const PropertyData& data);
 		void ProcessStringType(std::string* stringPointerValue, const PropertyData& data);
 		void ProcessVec2Type(glm::vec2* vec2PointerValue, const PropertyData& data);

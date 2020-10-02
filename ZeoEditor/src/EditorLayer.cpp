@@ -14,7 +14,6 @@
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Engine/ImGui/MyImGui.h"
 #include "Engine/Core/EngineUtilities.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
@@ -692,35 +691,35 @@ namespace ZeoEngine {
 			}
 			else if (type == rttr::type::get<int8_t>())
 			{
-				ProcessInt8Type(data.PropertyValue->to_int8(), data);
+				
 			}
 			else if (type == rttr::type::get<int32_t>())
 			{
-				ProcessInt32Type(data.PropertyValue->to_int32(), data);
+				
 			}
 			else if (type == rttr::type::get<int64_t>())
 			{
-				ProcessInt64Type(data.PropertyValue->to_int64(), data);
+				
 			}
 			else if (type == rttr::type::get<uint8_t>())
 			{
-				ProcessUInt8Type(data.PropertyValue->to_uint8(), data);
+				
 			}
 			else if (type == rttr::type::get<uint32_t>())
 			{
-				ProcessUInt32Type(data.PropertyValue->to_uint32(), data);
+				
 			}
 			else if (type == rttr::type::get<uint64_t>())
 			{
-				ProcessUInt64Type(data.PropertyValue->to_uint64(), data);
+				
 			}
 			else if (type == rttr::type::get<float>())
 			{
-				ProcessFloatType(data.PropertyValue->to_float(), data);
+				
 			}
 			else if (type == rttr::type::get<double>())
 			{
-				ProcessDoubleType(data.PropertyValue->to_double(), data);
+				
 			}
 			return true;
 		}
@@ -1803,356 +1802,6 @@ namespace ZeoEngine {
 		BeginDisplayProperty(ss, data);
 		ImGui::Checkbox(ss.str().c_str(), &boolValue);
 		EndDisplayProperty(ss, data, boolValue, false);
-	}
-
-	void EditorLayer::ProcessInt8Type(int8_t int8Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		// Create buffer if not exists
-		static std::unordered_map<std::string, int8_t> valueBuffer;
-		valueBuffer[ss.str()] = int8Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		int8_t min = minVar ? std::max(minVar.to_int8(), static_cast<int8_t>(INT8_MIN)) : static_cast<int8_t>(INT8_MIN);
-		int8_t max = maxVar ? std::min(maxVar.to_int8(), static_cast<int8_t>(INT8_MAX)) : static_cast<int8_t>(INT8_MAX);
-		bool bIsDragging = ImGui::IsMouseDragging();
-		// Write changes to buffer if not dragging
-		// For dragging, the value is applied immediately
-		// For editing, the value is applied after completion
-		bool bChanged = ImGui::DragInt_8(ss.str().c_str(), bIsDragging ? &int8Value : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			// Apply buffer
-			int8Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, int8Value, 0i8);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			// WORKAROUND: Pressing TAB after editing will discard the changes due to ImGui::IsItemDeactivatedAfterEdit() being processed one frame later
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				int8Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, int8Value, 0i8);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				int8Value = glm::clamp(int8Value, min, max);
-				EndDisplayProperty(ss, data, int8Value, 0i8);
-			}
-		}
-		// Put it at last to ensure value is already updated
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessInt32Type(int32_t int32Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, int32_t> valueBuffer;
-		valueBuffer[ss.str()] = int32Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
-		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragInt_32(ss.str().c_str(), bIsDragging ? &int32Value : &valueBuffer[ss.str()], speed, min, max);
-		auto f = [&int32Value](const PropertyData& data) {
-			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-			if (sequentialVar.can_convert<BurstData>())
-			{
-				if (data.Property->get_name() == "Value")
-				{
-					sequentialVar.get_value<BurstData*>()->Amount.Val1 = int32Value;
-				}
-				else if (data.Property->get_name() == "ValueHigh")
-				{
-					sequentialVar.get_value<BurstData*>()->Amount.Val2 = int32Value;
-				}
-			}
-		};
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			int32Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, int32Value, 0i32, f);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				int32Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, int32Value, 0i32, f);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				int32Value = glm::clamp(int32Value, min, max);
-				EndDisplayProperty(ss, data, int32Value, 0i32, f);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessInt64Type(int64_t int64Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, int64_t> valueBuffer;
-		valueBuffer[ss.str()] = int64Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		int64_t min = minVar ? std::max(minVar.to_int64(), INT64_MIN) : INT64_MIN;
-		int64_t max = maxVar ? std::min(maxVar.to_int64(), INT64_MAX) : INT64_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragInt_64(ss.str().c_str(), bIsDragging ? &int64Value : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			int64Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, int64Value, 0i64);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				int64Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, int64Value, 0i64);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				int64Value = glm::clamp(int64Value, min, max);
-				EndDisplayProperty(ss, data, int64Value, 0i64);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessUInt8Type(uint8_t uint8Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, uint8_t> valueBuffer;
-		valueBuffer[ss.str()] = uint8Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		uint8_t min = minVar ? std::max(minVar.to_uint8(), 0ui8) : 0ui8;
-		uint8_t max = maxVar ? std::min(maxVar.to_uint8(), UINT8_MAX) : UINT8_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragUInt_8(ss.str().c_str(), bIsDragging ? &uint8Value : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			uint8Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, uint8Value, 0ui8);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				uint8Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, uint8Value, 0ui8);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				uint8Value = glm::clamp(uint8Value, min, max);
-				EndDisplayProperty(ss, data, uint8Value, 0ui8);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessUInt32Type(uint32_t uint32Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, uint32_t> valueBuffer;
-		valueBuffer[ss.str()] = uint32Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		uint32_t min = minVar ? std::max(minVar.to_uint32(), 0ui32) : 0ui32;
-		uint32_t max = maxVar ? std::min(maxVar.to_uint32(), UINT32_MAX) : UINT32_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragUInt_32(ss.str().c_str(), bIsDragging ? &uint32Value : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			uint32Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, uint32Value, 0ui32);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				uint32Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, uint32Value, 0ui32);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				uint32Value = glm::clamp(uint32Value, min, max);
-				EndDisplayProperty(ss, data, uint32Value, 0ui32);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessUInt64Type(uint64_t uint64Value, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, uint64_t> valueBuffer;
-		valueBuffer[ss.str()] = uint64Value;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		uint64_t min = minVar ? std::max(minVar.to_uint64(), 0ui64) : 0ui64;
-		uint64_t max = maxVar ? std::min(maxVar.to_uint64(), UINT64_MAX) : UINT64_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragUInt_64(ss.str().c_str(), bIsDragging ? &uint64Value : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			uint64Value = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, uint64Value, 0ui64);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				uint64Value = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, uint64Value, 0ui64);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				uint64Value = glm::clamp(uint64Value, min, max);
-				EndDisplayProperty(ss, data, uint64Value, 0ui64);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessFloatType(float floatValue, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, float> valueBuffer;
-		valueBuffer[ss.str()] = floatValue;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		// Note: The min value of float should be -FLT_MAX
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
-		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragFloat(ss.str().c_str(), bIsDragging ? &floatValue : &valueBuffer[ss.str()], speed, min, max, "%.2f");
-		auto f = [&floatValue](const PropertyData& data) {
-			rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-			if (sequentialVar.can_convert<BurstData>())
-			{
-				sequentialVar.get_value<BurstData*>()->Time = floatValue;
-			}
-		};
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			floatValue = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, floatValue, 0.0f, f);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				floatValue = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, floatValue, 0.0f, f);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				floatValue = glm::clamp(floatValue, min, max);
-				EndDisplayProperty(ss, data, floatValue, 0.0f, f);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
-	}
-
-	void EditorLayer::ProcessDoubleType(double doubleValue, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		static std::unordered_map<std::string, double> valueBuffer;
-		valueBuffer[ss.str()] = doubleValue;
-		rttr::variant speedVar = data.Property->get_metadata(PropertyMeta::DragSensitivity);
-		rttr::variant minVar = data.Property->get_metadata(PropertyMeta::Min);
-		rttr::variant maxVar = data.Property->get_metadata(PropertyMeta::Max);
-		// Note: The min value of double should be -DBL_MAX
-		float speed = speedVar ? speedVar.to_float() : 1.0f;
-		double min = minVar ? std::max(minVar.to_double(), -DBL_MAX) : -DBL_MAX;
-		double max = maxVar ? std::min(maxVar.to_double(), DBL_MAX) : DBL_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
-		bool bChanged = ImGui::DragDouble(ss.str().c_str(), bIsDragging ? &doubleValue : &valueBuffer[ss.str()], speed, min, max);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			doubleValue = glm::clamp(valueBuffer[ss.str()], min, max);
-			EndDisplayProperty(ss, data, doubleValue, 0.0);
-			InvokePropertyChangeCallback(data);
-		}
-		else
-		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
-			{
-				doubleValue = glm::clamp(valueBuffer[ss.str()], min, max);
-				EndDisplayProperty(ss, data, doubleValue, 0.0);
-				InvokePropertyChangeCallback(data);
-			}
-			else
-			{
-				doubleValue = glm::clamp(doubleValue, min, max);
-				EndDisplayProperty(ss, data, doubleValue, 0.0);
-			}
-		}
-		if (bChanged && bIsDragging)
-		{
-			InvokePropertyChangeCallback(data, false);
-		}
 	}
 
 	void EditorLayer::ProcessEnumType(const PropertyData& data)

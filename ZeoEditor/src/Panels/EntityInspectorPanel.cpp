@@ -172,27 +172,27 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<int8_t>(data.type()))
 		{
-			ProcessInt8Data(data, instance);
+			ProcessScalarData<int8_t>(data, instance, ImGuiDataType_S8, INT8_MIN, INT8_MAX);
 		}
 		else if (IsTypeEqual<int32_t>(data.type()))
 		{
-			ProcessInt32Data(data, instance);
+			ProcessScalarData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX);
 		}
 		else if (IsTypeEqual<int64_t>(data.type()))
 		{
-			ProcessInt64Data(data, instance);
+			ProcessScalarData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX);
 		}
 		else if (IsTypeEqual<uint8_t>(data.type()))
 		{
-			ProcessUInt8Data(data, instance);
+			ProcessScalarData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX);
 		}
 		else if (IsTypeEqual<uint32_t>(data.type()))
 		{
-			ProcessUInt32Data(data, instance);
+			ProcessScalarData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX);
 		}
 		else if (IsTypeEqual<uint64_t>(data.type()))
 		{
-			ProcessUInt64Data(data, instance);
+			ProcessScalarData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX);
 		}
 	}
 
@@ -200,11 +200,11 @@ namespace ZeoEngine {
 	{
 		if (IsTypeEqual<float>(data.type()))
 		{
-			ProcessFloatData(data, instance);
+			ProcessScalarData<float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<double>(data.type()))
 		{
-			ProcessDoubleData(data, instance);
+			ProcessScalarData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3f");
 		}
 	}
 
@@ -241,201 +241,6 @@ namespace ZeoEngine {
 		auto dataID = data.id();
 		ImGui::PushID(dataID);
 		if (ImGui::Checkbox(*name, &boolRef))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessInt8Data(entt::meta_data data, entt::meta_any instance)
-	{
-		// Map from id to value cache plus a bool flag indicating if value is retrieved from cache
-		static std::unordered_map<uint32_t, std::pair<bool, int8_t>> valueBuffers;
-		auto& int8Ref = GetDataValueByRef<int8_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<int8_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(INT8_MIN);
-		auto max = GetPropValue<int8_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(INT8_MAX);
-		int8Ref = std::clamp(int8Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		bool bResult = ImGui::DragInt_8(*name, valueBuffers[dataID].first ? &valueBuffers[dataID].second : &int8Ref, speed.value_or(1.0f), minValue, maxValue);
-		
-		// TODO: PushID() useful?
-		if (ImGui::GetCurrentContext()->NavJustTabbedId == ImGui::GetCurrentWindow()->GetID(*name))
-		{
-			valueBuffers[dataID].first = true;
-		}
-		if (ImGui::IsItemActivated())
-		{
-			valueBuffers[dataID].second = int8Ref;
-			// Input box is activated by tabbing, double clicking or CTRL-clicking
-			if (ImGui::IsMouseDoubleClicked(0) || (ImGui::GetCurrentContext()->IO.KeyCtrl && ImGui::IsMouseClicked(0)))
-			{
-				valueBuffers[dataID].first = true;
-			}
-		}
-		bool bIsValueChangedAfterEdit = false;
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			bIsValueChangedAfterEdit = valueBuffers[dataID].second != int8Ref;
-			if (valueBuffers[dataID].first)
-			{
-				int8Ref = std::clamp(valueBuffers[dataID].second, minValue, maxValue);
-			}
-			valueBuffers[dataID].first = false;
-		}
-
-		if (bResult && !valueBuffers[dataID].first)
-		{
-			ZE_TRACE("Value changed!");
-		}
-
-		if (bIsValueChangedAfterEdit)
-		{
-			ZE_TRACE("Value changed after edit!");
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessInt32Data(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& int32Ref = GetDataValueByRef<int32_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<int32_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(INT32_MIN);
-		auto max = GetPropValue<int32_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(INT32_MAX);
-		int32Ref = std::clamp(int32Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragInt_32(*name, &int32Ref, speed.value_or(1.0f), minValue, maxValue))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessInt64Data(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& int64Ref = GetDataValueByRef<int64_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<int64_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(INT64_MIN);
-		auto max = GetPropValue<int64_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(INT64_MAX);
-		int64Ref = std::clamp(int64Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragInt_64(*name, &int64Ref, speed.value_or(1.0f), minValue, maxValue))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessUInt8Data(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& uint8Ref = GetDataValueByRef<uint8_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<uint8_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(0ui8);
-		auto max = GetPropValue<uint8_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(UINT8_MAX);
-		uint8Ref = std::clamp(uint8Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragUInt_8(*name, &uint8Ref, speed.value_or(1.0f), minValue, maxValue))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessUInt32Data(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& uint32Ref = GetDataValueByRef<uint32_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<uint32_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(0ui32);
-		auto max = GetPropValue<uint32_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(UINT32_MAX);
-		uint32Ref = std::clamp(uint32Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragUInt_32(*name, &uint32Ref, speed.value_or(1.0f), minValue, maxValue))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessUInt64Data(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& uint64Ref = GetDataValueByRef<uint64_t>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<uint64_t>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(0ui64);
-		auto max = GetPropValue<uint64_t>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(UINT64_MAX);
-		uint64Ref = std::clamp(uint64Ref, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragUInt_64(*name, &uint64Ref, speed.value_or(1.0f), minValue, maxValue))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-	void EntityInspectorPanel::ProcessFloatData(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& floatRef = GetDataValueByRef<float>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<float>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(-FLT_MAX);
-		auto max = GetPropValue<float>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(FLT_MAX);
-		floatRef = std::clamp(floatRef, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragFloat(*name, &floatRef, speed.value_or(1.0f) , minValue, maxValue, "%.2f"))
-		{
-			
-		}
-		ImGui::PopID();
-	}
-
-
-	void EntityInspectorPanel::ProcessDoubleData(entt::meta_data data, entt::meta_any instance)
-	{
-		auto& doubleRef = GetDataValueByRef<double>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-		auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
-		auto min = GetPropValue<double>(PropertyType::ClampMin, data);
-		auto minValue = min.value_or(-DBL_MAX);
-		auto max = GetPropValue<double>(PropertyType::ClampMax, data);
-		auto maxValue = max.value_or(DBL_MAX);
-		doubleRef = std::clamp(doubleRef, minValue, maxValue);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::DragDouble(*name, &doubleRef, speed.value_or(1.0f), minValue, maxValue))
 		{
 			
 		}
