@@ -1887,7 +1887,7 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bIsDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
 		bool bChanged = ImGui::DragFloat2(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec2PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max, "%.2f");
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
@@ -1927,7 +1927,7 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		int32_t min = minVar ? std::max(minVar.to_int32(), INT32_MIN) : INT32_MIN;
 		int32_t max = maxVar ? std::min(maxVar.to_int32(), INT32_MAX) : INT32_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bIsDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
 		bool bChanged = ImGui::DragInt2(ss.str().c_str(), bIsDragging ? glm::value_ptr(*i32vec2PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
@@ -1967,7 +1967,7 @@ namespace ZeoEngine {
 		float speed = speedVar ? speedVar.to_float() : 1.0f;
 		float min = minVar ? std::max(minVar.to_float(), -FLT_MAX) : -FLT_MAX;
 		float max = maxVar ? std::min(maxVar.to_float(), FLT_MAX) : FLT_MAX;
-		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bIsDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
 		bool bChanged = ImGui::DragFloat3(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec3PointerValue) : glm::value_ptr(valueBuffer[ss.str()]), speed, min, max, "%.2f");
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
@@ -2001,7 +2001,7 @@ namespace ZeoEngine {
 		BeginDisplayProperty(ss, data);
 		static std::unordered_map<std::string, glm::vec4> valueBuffer;
 		valueBuffer[ss.str()] = *vec4PointerValue;
-		bool bIsDragging = ImGui::IsMouseDragging();
+		bool bIsDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
 		bool bChanged = ImGui::ColorEdit4(ss.str().c_str(), bIsDragging ? glm::value_ptr(*vec4PointerValue) : glm::value_ptr(valueBuffer[ss.str()]));
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
