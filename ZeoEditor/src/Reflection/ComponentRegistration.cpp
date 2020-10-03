@@ -8,14 +8,17 @@ ZE_REFL_REGISTRATION
 	ZE_REFL_TYPE(TagComponent, ZE_REFL_PROP_PAIR(Tooltip, u8"±êÇ©×é¼þ"))
 		ZE_REFL_DATA_REF(TagComponent, Tag)
 #if TEST
-		ZE_REFL_DATA_REF(TagComponent, ui8var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint8_t))
-		ZE_REFL_DATA_REF(TagComponent, ui32var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint32_t))
-		ZE_REFL_DATA_REF(TagComponent, ui64var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint64_t))
-		ZE_REFL_DATA_REF(TagComponent, i8var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int8_t))
-		ZE_REFL_DATA_REF(TagComponent, i32var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int32_t))
-		ZE_REFL_DATA_REF(TagComponent, i64var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int64_t))
-		ZE_REFL_DATA_REF(TagComponent, floatvar, ZE_REFL_PROP_PAIR(ClampMin, 1.0f))
-		ZE_REFL_DATA_REF(TagComponent, doublevar, ZE_REFL_PROP_PAIR(ClampMin, 1.0))
+		ZE_REFL_DATA_REF(TagComponent, ui8Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint8_t))
+		ZE_REFL_DATA_REF(TagComponent, ui32Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint32_t))
+		ZE_REFL_DATA_REF(TagComponent, ui64Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint64_t))
+		ZE_REFL_DATA_REF(TagComponent, i8Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int8_t))
+		ZE_REFL_DATA_REF(TagComponent, i32Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int32_t))
+		ZE_REFL_DATA_REF(TagComponent, i64Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int64_t))
+		ZE_REFL_DATA_REF(TagComponent, floatVar, ZE_REFL_PROP_PAIR(ClampMin, 1.0f))
+		ZE_REFL_DATA_REF(TagComponent, doubleVar, ZE_REFL_PROP_PAIR(ClampMin, 1.0))
+		ZE_REFL_DATA_REF(TagComponent, vec2Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
+		ZE_REFL_DATA_REF(TagComponent, vec3Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
+		ZE_REFL_DATA_REF(TagComponent, colorVar)
 #endif
 ;
 

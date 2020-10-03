@@ -15,14 +15,18 @@ namespace ZeoEngine {
 		std::string Tag;
 		bool bIsInternal{ false };
 #if TEST
-		uint8_t ui8var;
-		uint32_t ui32var;
-		uint64_t ui64var;
-		int8_t i8var = 25;
-		int32_t i32var;
-		int64_t i64var;
-		float floatvar;
-		double doublevar;
+		uint8_t ui8Var;
+		uint32_t ui32Var;
+		uint64_t ui64Var;
+		int8_t i8Var = 25;
+		int32_t i32Var;
+		int64_t i64Var;
+		float floatVar;
+		double doubleVar;
+		glm::vec2 vec2Var;
+		glm::vec3 vec3Var;
+		glm::vec4 colorVar;
+
 #endif
 
 		TagComponent() = default;

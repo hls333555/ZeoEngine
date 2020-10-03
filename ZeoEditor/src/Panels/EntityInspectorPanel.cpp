@@ -16,9 +16,12 @@ namespace ZeoEngine {
 		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
 		if (selectedEntity)
 		{
+			m_bIsSelectedEntityChanged = selectedEntity != m_LastSelectedEntity;
+			// TODO: This can be removed if we solve the iteration order issue
 			DrawInherentComponents(selectedEntity);
 			DrawComponents(selectedEntity);
 		}
+		m_LastSelectedEntity = selectedEntity;
 	}
 
 	void EntityInspectorPanel::DrawInherentComponents(Entity entity)
@@ -172,27 +175,27 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<int8_t>(data.type()))
 		{
-			ProcessScalarData<int8_t>(data, instance, ImGuiDataType_S8, INT8_MIN, INT8_MAX);
+			ProcessScalarNData<int8_t>(data, instance, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX));
 		}
 		else if (IsTypeEqual<int32_t>(data.type()))
 		{
-			ProcessScalarData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX);
+			ProcessScalarNData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX);
 		}
 		else if (IsTypeEqual<int64_t>(data.type()))
 		{
-			ProcessScalarData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX);
+			ProcessScalarNData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX);
 		}
 		else if (IsTypeEqual<uint8_t>(data.type()))
 		{
-			ProcessScalarData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX);
+			ProcessScalarNData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX);
 		}
 		else if (IsTypeEqual<uint32_t>(data.type()))
 		{
-			ProcessScalarData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX);
+			ProcessScalarNData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX);
 		}
 		else if (IsTypeEqual<uint64_t>(data.type()))
 		{
-			ProcessScalarData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX);
+			ProcessScalarNData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX);
 		}
 	}
 
@@ -200,11 +203,11 @@ namespace ZeoEngine {
 	{
 		if (IsTypeEqual<float>(data.type()))
 		{
-			ProcessScalarData<float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<double>(data.type()))
 		{
-			ProcessScalarData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3f");
+			ProcessScalarNData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3f");
 		}
 	}
 
@@ -221,15 +224,15 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<glm::vec2>(data.type()))
 		{
-			
+			ProcessScalarNData<glm::vec2, 2, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<glm::vec3>(data.type()))
 		{
-			
+			ProcessScalarNData<glm::vec3, 3, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 		}
 		else if (IsTypeEqual<glm::vec4>(data.type()))
 		{
-			
+			ProcessColorData(data, instance);
 		}
 	}
 
@@ -277,6 +280,80 @@ namespace ZeoEngine {
 		if (bIsValueChanged)
 		{
 			
+		}
+	}
+
+	void EntityInspectorPanel::ProcessColorData(entt::meta_data data, entt::meta_any instance)
+	{
+		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
+		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> valueBuffers;
+		if (m_bIsSelectedEntityChanged)
+		{
+			for (auto& [key, value] : valueBuffers)
+			{
+				// When a new entity is selected, reset the flag to retrieve value from instance instead of cache 
+				value.first = false;
+			}
+		}
+		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
+		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+
+		auto dataID = data.id();
+		ImGui::PushID(dataID);
+		bool bResult = ImGui::ColorEdit4(*name, valueBuffers[dataID].first ? glm::value_ptr(valueBuffers[dataID].second) : glm::value_ptr(vec4Ref));
+
+		bool bIsValueChangedAfterEdit = false;
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			bIsValueChangedAfterEdit = valueBuffers[dataID].second != vec4Ref;
+			if (valueBuffers[dataID].first)
+			{
+				// Apply cache when input box is inactive
+				// Dragging will not go here
+				ImGuiContext* context = ImGui::GetCurrentContext();
+				for (int32_t i = 0; i < 4; ++i)
+				{
+					if (context->ColorEditOptions & ImGuiColorEditFlags_Float)
+					{
+						vec4Ref[i] = std::clamp(valueBuffers[dataID].second[i], 0.0f, 1.0f);
+					}
+					else
+					{
+						// Internally, those values are always stored in float[0.0f, 1.0f], so we must convert them back and forth for int[0, 255]
+						vec4Ref[i] = std::clamp(IM_F32_TO_INT8_UNBOUND(valueBuffers[dataID].second[i]), 0, 255) / 255.0f;
+					}
+				}
+			}
+			valueBuffers[dataID].first = false;
+		}
+
+		if (ImGui::IsItemActivated())
+		{
+			//  Update cache when this item is activated
+			valueBuffers[dataID].second = vec4Ref;
+
+			ImGuiContext* context = ImGui::GetCurrentContext();
+			// Input box is activated by double clicking, CTRL-clicking or being tabbed in
+			if (ImGui::IsMouseDoubleClicked(0) ||
+				(context->IO.KeyCtrl && ImGui::IsMouseClicked(0)) ||
+				context->NavJustTabbedId == context->ActiveId)
+			{
+				// Keep writing to cache as long as input box is active
+				valueBuffers[dataID].first = true;
+			}
+		}
+		ImGui::PopID();
+
+		// Value changed during dragging
+		if (bResult && !valueBuffers[dataID].first)
+		{
+			ZE_TRACE("Value changed!");
+		}
+
+		// Value changed after dragging or inputting
+		if (bIsValueChangedAfterEdit)
+		{
+			ZE_TRACE("Value changed after edit!");
 		}
 	}
 
