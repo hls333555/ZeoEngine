@@ -15,7 +15,6 @@ namespace ZeoEngine {
 	private:
 		virtual void RenderPanel() override;
 
-		void DrawInherentComponents(Entity entity);
 		void DrawComponents(Entity entity);
 
 		template<typename T>
@@ -30,6 +29,8 @@ namespace ZeoEngine {
 				}
 			}
 		}
+
+		uint32_t GetUniqueDataID(entt::meta_data data);
 
 		void ProcessType(entt::meta_type type, Entity entity);
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
@@ -46,17 +47,7 @@ namespace ZeoEngine {
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 
 			// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
-			// We use a non-runtime id here so that same variables on different instances share the same id
-			// That's to say, when a new entity is selected, the cache will be overwritten instead of being added a new one, which in turn can save cache space
 			static std::unordered_map<uint32_t, std::pair<bool, T>> valueBuffers;
-			if (m_bIsSelectedEntityChanged)
-			{
-				for (auto& [key, value] : valueBuffers)
-				{
-					// When a new entity is selected, reset the flag to retrieve value from instance instead of cache 
-					value.first = false;
-				}
-			}
 			auto& valueRef = GetDataValueByRef<T>(data, instance);
 			auto name = GetPropValue<const char*>(PropertyType::Name, data);
 			auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
@@ -64,54 +55,42 @@ namespace ZeoEngine {
 			auto minValue = min.value_or(defaultMin);
 			auto max = GetPropValue<CT>(PropertyType::ClampMax, data);
 			auto maxValue = max.value_or(defaultMax);
+			auto id = GetUniqueDataID(data);
 
-			// TODO: Consider unique runtime id?
-			auto dataID = data.id();
-			ImGui::PushID(dataID);
 			void* valuePtr = nullptr;
 			void* cachedValuePtr = nullptr;
 			if constexpr (N == 1) // C++17 constexpr if
 			{
 				valuePtr = &valueRef;
-				cachedValuePtr = &valueBuffers[dataID].second;
+				cachedValuePtr = &valueBuffers[id].second;
 			}
 			else
 			{
 				valuePtr = glm::value_ptr(valueRef);
-				cachedValuePtr = glm::value_ptr(valueBuffers[dataID].second);
+				cachedValuePtr = glm::value_ptr(valueBuffers[id].second);
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
-			bool bResult = ImGui::DragScalarN(*name, scalarType, valueBuffers[dataID].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format);
+			bool bResult = ImGui::DragScalarN(*name, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, ImGuiSliderFlags_AlwaysClamp);
 
 			// For multi-component drag UI, tabbing will automatically switch between those components, so we must handle deactivation first after tabbing to the next component
 			bool bIsValueChangedAfterEdit = false;
 			if (ImGui::IsItemDeactivatedAfterEdit())
 			{
-				bIsValueChangedAfterEdit = valueBuffers[dataID].second != valueRef;
-				if (valueBuffers[dataID].first)
+				bIsValueChangedAfterEdit = valueBuffers[id].second != valueRef;
+				if (valueBuffers[id].first)
 				{
 					// Apply cache when input box is inactive
 					// Dragging will not go here
-					if constexpr (N == 1)
-					{
-						valueRef = std::clamp(valueBuffers[dataID].second, minValue, maxValue);
-					}
-					else
-					{
-						for (int32_t i = 0; i < N; ++i)
-						{
-							valueRef[i] = std::clamp(valueBuffers[dataID].second[i], minValue, maxValue);
-						}
-					}
+					valueRef = valueBuffers[id].second;
 				}
-				valueBuffers[dataID].first = false;
+				valueBuffers[id].first = false;
 			}
 
 			if (ImGui::IsItemActivated())
 			{
 				// Update cache when this item is activated
-				valueBuffers[dataID].second = valueRef;
+				valueBuffers[id].second = valueRef;
 
 				ImGuiContext* context = ImGui::GetCurrentContext();
 				// Input box is activated by double clicking, CTRL-clicking or being tabbed in
@@ -120,13 +99,12 @@ namespace ZeoEngine {
 					context->NavJustTabbedId == context->ActiveId)
 				{
 					// Keep writing to cache as long as input box is active
-					valueBuffers[dataID].first = true;
+					valueBuffers[id].first = true;
 				}
 			}
-			ImGui::PopID();
 
 			// Value changed during dragging
-			if (bResult && !valueBuffers[dataID].first)
+			if (bResult && !valueBuffers[id].first)
 			{
 				ZE_TRACE("Value changed!");
 			}
@@ -141,7 +119,7 @@ namespace ZeoEngine {
 
 	private:
 		Entity m_LastSelectedEntity;
-		bool m_bIsSelectedEntityChanged;
+
 	};
 
 }

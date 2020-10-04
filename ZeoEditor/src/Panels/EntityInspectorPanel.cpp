@@ -14,23 +14,31 @@ namespace ZeoEngine {
 	void EntityInspectorPanel::RenderPanel()
 	{
 		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
+		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
+		{
+			// Sometimes, selected entity is changed when certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
+			// so we have to draw last entity's components once again to ensure all caches are applied
+			DrawComponents(m_LastSelectedEntity);
+			m_LastSelectedEntity = selectedEntity;
+			return;
+		}
 		if (selectedEntity)
 		{
-			m_bIsSelectedEntityChanged = selectedEntity != m_LastSelectedEntity;
-			// TODO: This can be removed if we solve the iteration order issue
-			DrawInherentComponents(selectedEntity);
 			DrawComponents(selectedEntity);
 		}
 		m_LastSelectedEntity = selectedEntity;
 	}
 
-	void EntityInspectorPanel::DrawInherentComponents(Entity entity)
+	void EntityInspectorPanel::DrawComponents(Entity entity)
 	{
+		// Push entity id for later use
+		ImGui::PushID(static_cast<uint32_t>(entity));
+
+		// We want to draw these components first as the iteration order is backward
 		if (entity.HasComponent<TagComponent>())
 		{
 			ProcessType(entt::resolve<TagComponent>(), entity);
 		}
-
 		if (entity.HasComponent<TransformComponent>())
 		{
 			ProcessType(entt::resolve<TransformComponent>(), entity);
@@ -44,10 +52,7 @@ namespace ZeoEngine {
 			//	ImGui::TreePop();
 			//}
 		}
-	}
 
-	void EntityInspectorPanel::DrawComponents(Entity entity)
-	{
 		GetScene()->m_Registry.visit(entity, [this, entity](const auto componentId)
 		{
 			const auto type = entt::resolve_type(componentId);
@@ -55,6 +60,8 @@ namespace ZeoEngine {
 
 			ProcessType(type, entity);
 		});
+
+		ImGui::PopID();
 
 		//if (entity.HasComponent<CameraComponent>())
 		//{
@@ -135,6 +142,11 @@ namespace ZeoEngine {
 		//		ImGui::TreePop();
 		//	}
 		//}
+	}
+
+	uint32_t EntityInspectorPanel::GetUniqueDataID(entt::meta_data data)
+	{
+		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
 	void EntityInspectorPanel::ProcessType(entt::meta_type type, Entity entity)
@@ -245,7 +257,7 @@ namespace ZeoEngine {
 		ImGui::PushID(dataID);
 		if (ImGui::Checkbox(*name, &boolRef))
 		{
-			
+			ZE_TRACE("Value changed!");
 		}
 		ImGui::PopID();
 	}
@@ -256,81 +268,59 @@ namespace ZeoEngine {
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
 		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+		auto id = GetUniqueDataID(data);
 
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		ImGui::InputText(*name, stringBuffers[dataID].first ? &stringBuffers[dataID].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
-		ImGui::PopID();
+		ImGui::InputText(*name, stringBuffers[id].first ? &stringBuffers[id].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
 
 		// Write changes to cache first
 		if (ImGui::IsItemActivated())
 		{
-			stringBuffers[dataID].first = true;
-			stringBuffers[dataID].second = stringRef;
+			stringBuffers[id].first = true;
+			stringBuffers[id].second = stringRef;
 		}
+
 		bool bIsValueChanged = false;
 		// Apply cache when user finishes editing
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChanged = stringBuffers[dataID].second != stringRef;
-			stringBuffers[dataID].first = false;
-			stringRef = std::move(stringBuffers[dataID].second);
+			bIsValueChanged = stringBuffers[id].second != stringRef;
+			stringBuffers[id].first = false;
+			stringRef = std::move(stringBuffers[id].second);
 		}
 
 		if (bIsValueChanged)
 		{
-			
+			ZE_TRACE("Value changed after edit!");
 		}
 	}
 
 	void EntityInspectorPanel::ProcessColorData(entt::meta_data data, entt::meta_any instance)
 	{
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
-		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> valueBuffers;
-		if (m_bIsSelectedEntityChanged)
-		{
-			for (auto& [key, value] : valueBuffers)
-			{
-				// When a new entity is selected, reset the flag to retrieve value from instance instead of cache 
-				value.first = false;
-			}
-		}
+		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
 		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+		auto id = GetUniqueDataID(data);
 
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		bool bResult = ImGui::ColorEdit4(*name, valueBuffers[dataID].first ? glm::value_ptr(valueBuffers[dataID].second) : glm::value_ptr(vec4Ref));
+		bool bResult = ImGui::ColorEdit4(*name, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : glm::value_ptr(vec4Ref));
 
 		bool bIsValueChangedAfterEdit = false;
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChangedAfterEdit = valueBuffers[dataID].second != vec4Ref;
-			if (valueBuffers[dataID].first)
+			bIsValueChangedAfterEdit = vec4Buffers[id].second != vec4Ref;
+			if (vec4Buffers[id].first)
 			{
 				// Apply cache when input box is inactive
 				// Dragging will not go here
-				ImGuiContext* context = ImGui::GetCurrentContext();
-				for (int32_t i = 0; i < 4; ++i)
-				{
-					if (context->ColorEditOptions & ImGuiColorEditFlags_Float)
-					{
-						vec4Ref[i] = std::clamp(valueBuffers[dataID].second[i], 0.0f, 1.0f);
-					}
-					else
-					{
-						// Internally, those values are always stored in float[0.0f, 1.0f], so we must convert them back and forth for int[0, 255]
-						vec4Ref[i] = std::clamp(IM_F32_TO_INT8_UNBOUND(valueBuffers[dataID].second[i]), 0, 255) / 255.0f;
-					}
-				}
+				vec4Ref = vec4Buffers[id].second;
 			}
-			valueBuffers[dataID].first = false;
+			vec4Buffers[id].first = false;
 		}
 
 		if (ImGui::IsItemActivated())
 		{
 			//  Update cache when this item is activated
-			valueBuffers[dataID].second = vec4Ref;
+			vec4Buffers[id].second = vec4Ref;
 
 			ImGuiContext* context = ImGui::GetCurrentContext();
 			// Input box is activated by double clicking, CTRL-clicking or being tabbed in
@@ -339,13 +329,12 @@ namespace ZeoEngine {
 				context->NavJustTabbedId == context->ActiveId)
 			{
 				// Keep writing to cache as long as input box is active
-				valueBuffers[dataID].first = true;
+				vec4Buffers[id].first = true;
 			}
 		}
-		ImGui::PopID();
 
 		// Value changed during dragging
-		if (bResult && !valueBuffers[dataID].first)
+		if (bResult && !vec4Buffers[id].first)
 		{
 			ZE_TRACE("Value changed!");
 		}
