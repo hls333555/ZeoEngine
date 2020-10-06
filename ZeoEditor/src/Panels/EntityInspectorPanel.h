@@ -104,7 +104,7 @@ namespace ZeoEngine {
 			}
 
 			// Value changed during dragging
-			if (bResult && !valueBuffers[id].first)
+			if (bResult && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
 				ZE_TRACE("Value changed!");
 			}
