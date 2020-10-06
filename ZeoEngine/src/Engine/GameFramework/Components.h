@@ -6,9 +6,31 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 
-#define TEST 1
+#define ENABLE_TEST 1
 
 namespace ZeoEngine {
+
+#if ENABLE_TEST
+	struct TestComponent
+	{
+		bool BoolVar;
+		uint8_t Ui8Var;
+		uint32_t Ui32Var;
+		uint64_t Ui64Var;
+		int8_t I8Var = 25;
+		int32_t I32Var;
+		int64_t I64Var;
+		float FloatVar;
+		double DoubleVar;
+		std::string StringVar;
+		glm::vec2 Vec2Var;
+		glm::vec3 Vec3Var;
+		glm::vec4 ColorVar;
+
+		TestComponent() = default;
+		TestComponent(const TestComponent&) = default;
+	};
+#endif
 
 	struct TagComponent
 	{
