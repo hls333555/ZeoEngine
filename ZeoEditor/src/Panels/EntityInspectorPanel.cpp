@@ -252,14 +252,22 @@ namespace ZeoEngine {
 	{
 		auto& boolRef = GetDataValueByRef<bool>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
-
-		auto dataID = data.id();
-		ImGui::PushID(dataID);
-		if (ImGui::Checkbox(*name, &boolRef))
+		bool boolCopy;
+		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		if (bUseCopy)
 		{
+			boolCopy = GetDataValueByRef<bool>(data, instance);
+		}
+
+		if (ImGui::Checkbox(*name, bUseCopy ? &boolCopy : &boolRef))
+		{
+			if (bUseCopy)
+			{
+				SetDataValue(data, instance, boolCopy);
+			}
+
 			ZE_TRACE("Value changed!");
 		}
-		ImGui::PopID();
 	}
 
 	void EntityInspectorPanel::ProcessStringData(entt::meta_data data, entt::meta_any instance)
@@ -269,23 +277,34 @@ namespace ZeoEngine {
 		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
 		auto id = GetUniqueDataID(data);
+		std::string stringCopy;
+		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		if (bUseCopy)
+		{
+			stringCopy = GetDataValueByRef<std::string>(data, instance);
+		}
 
-		ImGui::InputText(*name, stringBuffers[id].first ? &stringBuffers[id].second : &stringRef, ImGuiInputTextFlags_AutoSelectAll);
+		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
+		ImGui::InputText(*name, stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
+		if (bUseCopy && !stringBuffers[id].first)
+		{
+			SetDataValue(data, instance, std::move(stringCopy));
+		}
 
 		// Write changes to cache first
 		if (ImGui::IsItemActivated())
 		{
 			stringBuffers[id].first = true;
-			stringBuffers[id].second = stringRef;
+			stringBuffers[id].second = bUseCopy ? stringCopy : stringRef;
 		}
 
 		bool bIsValueChanged = false;
 		// Apply cache when user finishes editing
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChanged = stringBuffers[id].second != stringRef;
+			bIsValueChanged = stringBuffers[id].second != (bUseCopy ? stringCopy : stringRef);
 			stringBuffers[id].first = false;
-			stringRef = std::move(stringBuffers[id].second);
+			SetDataValue(data, instance, std::move(stringBuffers[id].second));
 		}
 
 		if (bIsValueChanged)
@@ -301,18 +320,29 @@ namespace ZeoEngine {
 		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
 		auto id = GetUniqueDataID(data);
+		glm::vec4 vec4Copy;
+		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		if (bUseCopy)
+		{
+			vec4Copy = GetDataValueByRef<glm::vec4>(data, instance);
+		}
 
-		bool bResult = ImGui::ColorEdit4(*name, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : glm::value_ptr(vec4Ref));
+		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);
+		bool bResult = ImGui::ColorEdit4(*name, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
+		if (bUseCopy && !vec4Buffers[id].first)
+		{
+			SetDataValue(data, instance, std::move(vec4Copy));
+		}
 
 		bool bIsValueChangedAfterEdit = false;
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChangedAfterEdit = vec4Buffers[id].second != vec4Ref;
+			bIsValueChangedAfterEdit = vec4Buffers[id].second != (bUseCopy ? vec4Copy : vec4Ref);
 			if (vec4Buffers[id].first)
 			{
 				// Apply cache when input box is inactive
 				// Dragging will not go here
-				vec4Ref = vec4Buffers[id].second;
+				SetDataValue(data, instance, std::move(vec4Buffers[id].second));
 			}
 			vec4Buffers[id].first = false;
 		}
@@ -320,7 +350,7 @@ namespace ZeoEngine {
 		if (ImGui::IsItemActivated())
 		{
 			//  Update cache when this item is activated
-			vec4Buffers[id].second = vec4Ref;
+			vec4Buffers[id].second = bUseCopy ? vec4Copy : vec4Ref;
 
 			ImGuiContext* context = ImGui::GetCurrentContext();
 			// Input box is activated by double clicking, CTRL-clicking or being tabbed in

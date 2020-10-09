@@ -33,9 +33,16 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(SpriteRendererComponent, Texture)
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TextureTiling);
 
+	ZE_REFL_ENUM(SceneCamera::ProjectionType)
+		ZE_REFL_ENUM_DATA(SceneCamera::ProjectionType, Perspective)
+		ZE_REFL_ENUM_DATA(SceneCamera::ProjectionType, Orthographic);
+
 	ZE_REFL_TYPE(CameraComponent, ZE_REFL_PROP_PAIR(Tooltip, u8"相机组件"))
 		ZE_REFL_DATA_REF(CameraComponent, bIsPrimary)
-		ZE_REFL_DATA_REF(CameraComponent, bFixedAspectRatio);
+		ZE_REFL_DATA_REF(CameraComponent, bFixedAspectRatio)
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, ProjectionType, SetProjectionType, GetProjectionType)
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Vertical FOV, SetPerspectiveVerticalFOV, GetPerspectiveVerticalFOV)
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Size, SetOrthographicSize, GetOrthographicSize);
 
 	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(Tooltip, u8"C++脚本组件"));
 

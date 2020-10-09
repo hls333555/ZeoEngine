@@ -31,6 +31,7 @@ enum class PropertyType
 {
     Name,					// const char*
     Tooltip,				// const char*
+	SetterAndGetter,		// [key_only]
 
 	DragSensitivity,		// float
 	ClampMin,				// [type_dependent]
@@ -47,9 +48,19 @@ entt::meta<typeName>()                                                          
 #define ZE_REFL_DATA_WITH_POLICY(typeName, dataName, policy, ...)					\
 .data<&typeName::dataName, policy>(#dataName##_hs)                                  \
     .prop(PropertyType::Name, #dataName)                                            \
-    .prop(std::make_tuple(__VA_ARGS__))                                                  
+    .prop(std::make_tuple(__VA_ARGS__))
 #define ZE_REFL_DATA(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_is_t, __VA_ARGS__) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
 #define ZE_REFL_DATA_REF(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_ref_t, __VA_ARGS__)
+#define ZE_REFL_DATA_SETTER_GETTER(typeName, dataName, setterName, getterName, ...)	\
+.data<&typeName::setterName, &typeName::getterName>(#dataName##_hs)					\
+    .prop(PropertyType::Name, #dataName)                                            \
+    .prop(PropertyType::SetterAndGetter)                                            \
+    .prop(std::make_tuple(__VA_ARGS__))
+
+#define ZE_REFL_ENUM(enumTypeName)													\
+entt::meta<enumTypeName>()
+#define ZE_REFL_ENUM_DATA(enumTypeName, enumDataName)								\
+.data<enumTypeName::enumDataName>(#enumDataName##_hs)
 
 #define ZE_REFL_PROP(propType) PropertyType::propType
 #define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue) // For certain properties with integral type value (e.g. int8_t), you should use ZE_REFL_PROP_PAIR_WITH_CAST instead to explicitly specify their types during property registration
@@ -69,6 +80,18 @@ namespace ZeoEngine {
 	T& GetDataValueByRef(entt::meta_data data, entt::meta_any instance)
 	{
 		return data.get(instance).cast<T>();
+	}
+
+	template<typename T>
+	void SetDataValue(entt::meta_data data, entt::meta_any instance, T&& value)
+	{
+		data.set(instance, std::forward<T>(value));
+	}
+
+	template<typename T>
+	bool DoesPropExist(PropertyType propType, T metaObj)
+	{
+		return static_cast<bool>(metaObj.prop(propType));
 	}
 
 	template<typename Ret, typename T>

@@ -23,6 +23,9 @@ namespace ZeoEngine {
 		auto& tagComp = entity.AddComponent<TagComponent>();
 		tagComp.Tag = name.empty() ? "Entity" : name;
 		tagComp.bIsInternal = bIsInternal;
+#if ENABLE_TEST
+		entity.AddComponent<TestComponent>();
+#endif
 
 		return entity;
 	}

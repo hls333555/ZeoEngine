@@ -96,6 +96,23 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
+		SceneCamera::ProjectionType GetProjectionType() const { return Camera.GetProjectionType(); }
+		void SetProjectionType(SceneCamera::ProjectionType type) { Camera.SetProjectionType(type); }
+
+		float GetPerspectiveVerticalFOV() const { return Camera.GetPerspectiveVerticalFOV(); }
+		void SetPerspectiveVerticalFOV(float verticalFOV) { Camera.SetPerspectiveVerticalFOV(verticalFOV); }
+		float GetPerspectiveNearClip() const { return Camera.GetPerspectiveNearClip(); }
+		void SetPerspectiveNearClip(float nearClip) { Camera.SetPerspectiveNearClip(nearClip); }
+		float GetPerspectiveFarClip() const { return Camera.GetPerspectiveFarClip(); }
+		void SetPerspectiveFarClip(float farClip) { Camera.SetPerspectiveFarClip(farClip); }
+
+		float GetOrthographicSize() const { return Camera.GetOrthographicSize(); }
+		void SetOrthographicSize(float size) { Camera.SetOrthographicSize(size); }
+		float GetOrthographicNearClip() const { return Camera.GetOrthographicNearClip(); }
+		void SetOrthographicNearClip(float nearClip) { Camera.SetOrthographicNearClip(nearClip); }
+		float GetOrthographicFarClip() const { return Camera.GetOrthographicFarClip(); }
+		void SetOrthographicFarClip(float farClip) { Camera.SetOrthographicFarClip(farClip); }
+
 	};
 
 	struct NativeScriptComponent

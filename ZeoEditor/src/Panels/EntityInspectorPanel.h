@@ -56,33 +56,45 @@ namespace ZeoEngine {
 			auto max = GetPropValue<CT>(PropertyType::ClampMax, data);
 			auto maxValue = max.value_or(defaultMax);
 			auto id = GetUniqueDataID(data);
+			// We assume getters return copy of data
+			T valueCopy;
+			bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+			if (bUseCopy)
+			{
+				// Copy the value
+				valueCopy = GetDataValueByRef<T>(data, instance);
+			}
 
 			void* valuePtr = nullptr;
 			void* cachedValuePtr = nullptr;
 			if constexpr (N == 1) // C++17 constexpr if
 			{
-				valuePtr = &valueRef;
+				valuePtr = bUseCopy ? &valueCopy : &valueRef;
 				cachedValuePtr = &valueBuffers[id].second;
 			}
 			else
 			{
-				valuePtr = glm::value_ptr(valueRef);
+				valuePtr = bUseCopy ? glm::value_ptr(valueCopy) : glm::value_ptr(valueRef);
 				cachedValuePtr = glm::value_ptr(valueBuffers[id].second);
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
 			bool bResult = ImGui::DragScalarN(*name, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, ImGuiSliderFlags_AlwaysClamp);
+			if (bUseCopy && !valueBuffers[id].first)
+			{
+				SetDataValue(data, instance, valueCopy);
+			}
 
 			// For multi-component drag UI, tabbing will automatically switch between those components, so we must handle deactivation first after tabbing to the next component
 			bool bIsValueChangedAfterEdit = false;
 			if (ImGui::IsItemDeactivatedAfterEdit())
 			{
-				bIsValueChangedAfterEdit = valueBuffers[id].second != valueRef;
+				bIsValueChangedAfterEdit = valueBuffers[id].second != (bUseCopy ? valueCopy : valueRef);
 				if (valueBuffers[id].first)
 				{
 					// Apply cache when input box is inactive
 					// Dragging will not go here
-					valueRef = valueBuffers[id].second;
+					SetDataValue(data, instance, valueBuffers[id].second);
 				}
 				valueBuffers[id].first = false;
 			}
@@ -90,7 +102,7 @@ namespace ZeoEngine {
 			if (ImGui::IsItemActivated())
 			{
 				// Update cache when this item is activated
-				valueBuffers[id].second = valueRef;
+				valueBuffers[id].second = bUseCopy ? valueCopy : valueRef;
 
 				ImGuiContext* context = ImGui::GetCurrentContext();
 				// Input box is activated by double clicking, CTRL-clicking or being tabbed in
