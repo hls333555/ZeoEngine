@@ -40,6 +40,8 @@ enum class PropertyType
 	HideCondition,			// const char*
 };
 
+#define ZE_TEXT(text) u8##text
+
 #define ZE_REFL_TYPE(typeName, ...)													\
 entt::meta<typeName>()                                                              \
     .type()                                                                         \
@@ -61,8 +63,10 @@ entt::meta<typeName>()                                                          
 
 #define ZE_REFL_ENUM(enumTypeName)													\
 entt::meta<enumTypeName>()
-#define ZE_REFL_ENUM_DATA(enumTypeName, enumDataName)								\
-.data<enumTypeName::enumDataName>(#enumDataName##_hs)
+#define ZE_REFL_ENUM_DATA(enumTypeName, enumDataName, ...)							\
+.data<enumTypeName::enumDataName>(#enumDataName##_hs)								\
+    .prop(PropertyType::Name, #enumDataName)										\
+	.prop(std::make_tuple(__VA_ARGS__))
 
 #define ZE_REFL_PROP(propType) PropertyType::propType
 #define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue) // For certain properties with integral type value (e.g. int8_t), you should use ZE_REFL_PROP_PAIR_WITH_CAST instead to explicitly specify their types during property registration

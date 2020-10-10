@@ -62,86 +62,6 @@ namespace ZeoEngine {
 		});
 
 		ImGui::PopID();
-
-		//if (entity.HasComponent<CameraComponent>())
-		//{
-		//	if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
-		//	{
-		//		auto& cameraComp = entity.GetComponent<CameraComponent>();
-		//		auto& camera = cameraComp.Camera;
-
-		//		ImGui::Checkbox("Primary", &cameraComp.bIsPrimary);
-
-		//		const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };
-		//		const char* currentProjectionTypeString = projectionTypeStrings[static_cast<int32_t>(camera.GetProjectionType())];
-		//		if (ImGui::BeginCombo("Projection", currentProjectionTypeString))
-		//		{
-		//			for (int32_t i = 0; i < 2; ++i)
-		//			{
-		//				bool bIsSelected = currentProjectionTypeString == projectionTypeStrings[i];
-		//				if (ImGui::Selectable(projectionTypeStrings[i], bIsSelected))
-		//				{
-		//					currentProjectionTypeString = projectionTypeStrings[i];
-		//					camera.SetProjectionType(static_cast<SceneCamera::ProjectionType>(i));
-		//				}
-		//				if (bIsSelected)
-		//				{
-		//					ImGui::SetItemDefaultFocus();
-		//				}
-		//			}
-
-		//			ImGui::EndCombo();
-		//		}
-
-		//		// Perspective camera settings
-		//		if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
-		//		{
-		//			float verticalFov = glm::degrees(camera.GetPerspectiveVerticalFOV());
-		//			if (ImGui::DragFloat("Vertical FOV", &verticalFov))
-		//			{
-		//				camera.SetPerspectiveVerticalFOV(glm::radians(verticalFov));
-		//			}
-
-		//			float perspectiveNear = camera.GetPerspectiveNearClip();
-		//			if (ImGui::DragFloat("Near", &perspectiveNear))
-		//			{
-		//				camera.SetPerspectiveNearClip(perspectiveNear);
-		//			}
-
-		//			float perspectiveFar = camera.GetPerspectiveFarClip();
-		//			if (ImGui::DragFloat("Far", &perspectiveFar))
-		//			{
-		//				camera.SetPerspectiveFarClip(perspectiveFar);
-		//			}
-		//		}
-
-		//		// Orthographic camera settings
-		//		if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
-		//		{
-		//			float orthoSize = camera.GetOrthographicSize();
-		//			if (ImGui::DragFloat("Size", &orthoSize))
-		//			{
-		//				camera.SetOrthographicSize(orthoSize);
-		//			}
-
-		//			float orthoNear = camera.GetOrthographicNearClip();
-		//			if (ImGui::DragFloat("Near", &orthoNear))
-		//			{
-		//				camera.SetOrthographicNearClip(orthoNear);
-		//			}
-
-		//			float orthoFar = camera.GetOrthographicFarClip();
-		//			if (ImGui::DragFloat("Far", &orthoFar))
-		//			{
-		//				camera.SetOrthographicFarClip(orthoFar);
-		//			}
-
-		//			ImGui::Checkbox("Fixed Aspect Ratio", &cameraComp.bFixedAspectRatio);
-		//		}
-
-		//		ImGui::TreePop();
-		//	}
-		//}
 	}
 
 	uint32_t EntityInspectorPanel::GetUniqueDataID(entt::meta_data data)
@@ -198,9 +118,10 @@ namespace ZeoEngine {
 		const auto instance = GetTypeInstance(type, GetScene()->m_Registry, entity);
 		auto name = GetPropValue<const char*>(PropertyType::Name, type);
 
-		if (ImGui::CollapsingHeader(*name, ImGuiTreeNodeFlags_DefaultOpen))
+		bool bIsExpanded = ImGui::CollapsingHeader(*name, ImGuiTreeNodeFlags_DefaultOpen);
+		ShowPropertyTooltip(type);
+		if (bIsExpanded)
 		{
-			ShowPropertyTooltip(type);
 			type.data([this, instance](entt::meta_data data)
 			{
 				if (ShouldHideData(data, instance)) return;
@@ -271,7 +192,41 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
-		
+		// Get current enum value name by iterating all enum values and comparing
+		const char* currentValueName = nullptr;
+		auto currentValue = data.get(instance);
+		data.type().data([currentValue, &currentValueName](entt::meta_data enumData)
+		{
+			if (currentValue == enumData.get({}))
+			{
+				auto valueName = GetPropValue<const char*>(PropertyType::Name, enumData);
+				currentValueName = *valueName;
+			}
+		});
+
+		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
+		if (ImGui::BeginCombo(*dataName, currentValueName))
+		{
+			// Iterate to display all enum values
+			data.type().data([this, data, instance](entt::meta_data enumData)
+			{
+				auto valueName = GetPropValue<const char*>(PropertyType::Name, enumData);
+				bool bIsSelected = ImGui::Selectable(*valueName);
+				ShowPropertyTooltip(enumData);
+				if (bIsSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+					auto currentValue = data.get(instance);
+					auto newValue = enumData.get({});
+					if (newValue != currentValue)
+					{
+						ZE_TRACE("Value changed after edit!");
+					}
+					SetDataValue(data, instance, newValue);
+				}
+			});
+			ImGui::EndCombo();
+		}
 	}
 
 	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
