@@ -149,6 +149,50 @@ namespace ZeoEngine {
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
+	bool EntityInspectorPanel::ShouldHideData(entt::meta_data data, entt::meta_any instance)
+	{
+		auto hideCondition = GetPropValue<const char*>(PropertyType::HideCondition, data);
+		// HideCondition property is not set, show this data normally
+		if (!hideCondition) return false;
+
+		// Map from id to HideCondition results
+		static std::unordered_map<uint32_t, bool> hideConditionBuffers;
+		auto id = GetUniqueDataID(data);
+		if (hideConditionBuffers.find(id) != hideConditionBuffers.end())
+		{
+			return hideConditionBuffers[id];
+		}
+
+		std::string hideConditionStr{ *hideCondition };
+		// TODO: Try regular expression
+		auto tokenPos = hideConditionStr.find("!=");
+		if (tokenPos != std::string::npos)
+		{
+			std::string keyStr = hideConditionStr.substr(0, tokenPos);
+			// Erase tail blanks
+			keyStr.erase(keyStr.find_last_not_of(" ") + 1);
+			std::string valueStr = hideConditionStr.substr(tokenPos + 2, hideConditionStr.size() - 1);
+			// Erase head blanks
+			valueStr.erase(0, valueStr.find_first_not_of(" "));
+			// Extract enum value (e.g. SceneCamera::ProjectionType::Perspective -> Perspective)
+			auto valuePos = valueStr.rfind("::");
+			if (valuePos != std::string::npos)
+			{
+				valueStr.erase(0, valuePos + 2);
+			}
+
+			auto keyData = entt::resolve_type(instance.type().type_id()).data(entt::hashed_string{ keyStr.c_str() });
+			auto keyDataValue = keyData.get(instance);
+			auto keyDataType = keyData.type();
+			auto valueToCompare = keyDataType.data(entt::hashed_string{ valueStr.c_str() }).get({});
+			bool bShouldHide = keyDataValue != valueToCompare;
+			hideConditionBuffers[id] = bShouldHide;
+			return bShouldHide;
+		}
+
+		return false;
+	}
+
 	void EntityInspectorPanel::ProcessType(entt::meta_type type, Entity entity)
 	{
 		const auto instance = GetTypeInstance(type, GetScene()->m_Registry, entity);
@@ -159,6 +203,8 @@ namespace ZeoEngine {
 			ShowPropertyTooltip(type);
 			type.data([this, instance](entt::meta_data data)
 			{
+				if (ShouldHideData(data, instance)) return;
+
 				if (data.type().is_integral())
 				{
 					ProcessIntegralData(data, instance);

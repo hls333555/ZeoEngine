@@ -36,6 +36,8 @@ enum class PropertyType
 	DragSensitivity,		// float
 	ClampMin,				// [type_dependent]
 	ClampMax,				// [type_dependent]
+
+	HideCondition,			// const char*
 };
 
 #define ZE_REFL_TYPE(typeName, ...)													\

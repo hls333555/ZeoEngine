@@ -41,8 +41,12 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(CameraComponent, bIsPrimary)
 		ZE_REFL_DATA_REF(CameraComponent, bFixedAspectRatio)
 		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, ProjectionType, SetProjectionType, GetProjectionType)
-		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Vertical FOV, SetPerspectiveVerticalFOV, GetPerspectiveVerticalFOV)
-		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Size, SetOrthographicSize, GetOrthographicSize);
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Vertical FOV, SetPerspectiveVerticalFOV, GetPerspectiveVerticalFOV, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Perspective"))
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Perspective Near, SetPerspectiveNearClip, GetPerspectiveNearClip, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Perspective"))
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Perspective Far, SetPerspectiveFarClip, GetPerspectiveFarClip, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Perspective"))
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Size, SetOrthographicSize, GetOrthographicSize, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Orthographic"))
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Near, SetOrthographicNearClip, GetOrthographicNearClip, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Orthographic"))
+		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Far, SetOrthographicFarClip, GetOrthographicFarClip, ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Orthographic"));
 
 	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(Tooltip, u8"C++½Å±¾×é¼þ"));
 
