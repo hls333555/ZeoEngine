@@ -75,39 +75,45 @@ namespace ZeoEngine {
 		// HideCondition property is not set, show this data normally
 		if (!hideCondition) return false;
 
-		// Map from id to HideCondition results
-		static std::unordered_map<uint32_t, bool> hideConditionBuffers;
+		// Map from id to HideCondition key-value pair
+		static std::unordered_map<uint32_t, std::pair<std::string, std::string>> hideConditionBuffers;
 		auto id = GetUniqueDataID(data);
-		if (hideConditionBuffers.find(id) != hideConditionBuffers.end())
-		{
-			return hideConditionBuffers[id];
-		}
 
 		std::string hideConditionStr{ *hideCondition };
-		// TODO: Try regular expression
 		auto tokenPos = hideConditionStr.find("!=");
 		if (tokenPos != std::string::npos)
 		{
-			std::string keyStr = hideConditionStr.substr(0, tokenPos);
-			// Erase tail blanks
-			keyStr.erase(keyStr.find_last_not_of(" ") + 1);
-			std::string valueStr = hideConditionStr.substr(tokenPos + 2, hideConditionStr.size() - 1);
-			// Erase head blanks
-			valueStr.erase(0, valueStr.find_first_not_of(" "));
-			// Extract enum value (e.g. SceneCamera::ProjectionType::Perspective -> Perspective)
-			auto valuePos = valueStr.rfind("::");
-			if (valuePos != std::string::npos)
+			std::string keyStr, valueStr;
+			if (hideConditionBuffers.find(id) != hideConditionBuffers.end())
 			{
-				valueStr.erase(0, valuePos + 2);
+				keyStr = hideConditionBuffers[id].first;
+				valueStr = hideConditionBuffers[id].second;
+			}
+			else
+			{
+				keyStr = hideConditionStr.substr(0, tokenPos);
+				// Erase tail blanks
+				keyStr.erase(keyStr.find_last_not_of(" ") + 1);
+
+				valueStr = hideConditionStr.substr(tokenPos + 2, hideConditionStr.size() - 1);
+				// Erase head blanks
+				valueStr.erase(0, valueStr.find_first_not_of(" "));
+				// Extract enum value (e.g. SceneCamera::ProjectionType::Perspective -> Perspective)
+				auto valuePos = valueStr.rfind("::");
+				if (valuePos != std::string::npos)
+				{
+					valueStr.erase(0, valuePos + 2);
+				}
+
+				hideConditionBuffers[id].first = keyStr;
+				hideConditionBuffers[id].second = valueStr;
 			}
 
 			auto keyData = entt::resolve_type(instance.type().type_id()).data(entt::hashed_string{ keyStr.c_str() });
 			auto keyDataValue = keyData.get(instance);
 			auto keyDataType = keyData.type();
 			auto valueToCompare = keyDataType.data(entt::hashed_string{ valueStr.c_str() }).get({});
-			bool bShouldHide = keyDataValue != valueToCompare;
-			hideConditionBuffers[id] = bShouldHide;
-			return bShouldHide;
+			return keyDataValue != valueToCompare;
 		}
 
 		return false;
