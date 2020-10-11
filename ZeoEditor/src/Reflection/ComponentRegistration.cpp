@@ -6,6 +6,16 @@ ZE_REFL_REGISTRATION
 	using namespace ZeoEngine;
 
 #if ENABLE_TEST
+	ZE_REFL_ENUM(TestComponent::TestEnum)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum1)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum2)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum3);
+
+	ZE_REFL_ENUM(TestComponent::TestEnumClass)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass1)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass2)
+		ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass3);
+
 	ZE_REFL_TYPE(TestComponent, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("²âÊÔ×é¼þ")))
 		ZE_REFL_DATA_REF(TestComponent, BoolVar)
 		ZE_REFL_DATA_REF(TestComponent, Ui8Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint8_t))
@@ -16,6 +26,8 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TestComponent, I64Var, ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int64_t))
 		ZE_REFL_DATA_REF(TestComponent, FloatVar, ZE_REFL_PROP_PAIR(ClampMin, 1.0f))
 		ZE_REFL_DATA_REF(TestComponent, DoubleVar, ZE_REFL_PROP_PAIR(ClampMin, 1.0))
+		ZE_REFL_DATA_REF(TestComponent, enumVar)
+		ZE_REFL_DATA_REF(TestComponent, enumClassVar)
 		ZE_REFL_DATA_REF(TestComponent, StringVar)
 		ZE_REFL_DATA_REF(TestComponent, Vec2Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
 		ZE_REFL_DATA_REF(TestComponent, Vec3Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))

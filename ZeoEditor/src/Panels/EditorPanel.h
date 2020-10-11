@@ -55,7 +55,7 @@ namespace ZeoEngine {
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 
 	protected:
-		template<typename T>
+		template<typename T=EditorDockspace>
 		T* GetContext() { return dynamic_cast<T*>(m_Context); }
 		virtual bool IsShow() const override;
 		const Ref<Scene>& GetScene() const;

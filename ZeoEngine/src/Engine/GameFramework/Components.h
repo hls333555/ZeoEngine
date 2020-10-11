@@ -13,6 +13,16 @@ namespace ZeoEngine {
 #if ENABLE_TEST
 	struct TestComponent
 	{
+		enum TestEnum
+		{
+			TestEnum1, TestEnum2, TestEnum3
+		};
+
+		enum class TestEnumClass
+		{
+			TestEnumClass1, TestEnumClass2, TestEnumClass3
+		};
+
 		bool BoolVar;
 		uint8_t Ui8Var;
 		uint32_t Ui32Var;
@@ -22,6 +32,8 @@ namespace ZeoEngine {
 		int64_t I64Var;
 		float FloatVar;
 		double DoubleVar;
+		TestEnum enumVar;
+		TestEnumClass enumClassVar;
 		std::string StringVar;
 		glm::vec2 Vec2Var;
 		glm::vec3 Vec3Var;
@@ -36,20 +48,6 @@ namespace ZeoEngine {
 	{
 		std::string Tag;
 		bool bIsInternal{ false };
-#if TEST
-		uint8_t ui8Var;
-		uint32_t ui32Var;
-		uint64_t ui64Var;
-		int8_t i8Var = 25;
-		int32_t i32Var;
-		int64_t i64Var;
-		float floatVar;
-		double doubleVar;
-		glm::vec2 vec2Var;
-		glm::vec3 vec3Var;
-		glm::vec4 colorVar;
-
-#endif
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entt.hpp"
+#include <entt.hpp>
 
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"

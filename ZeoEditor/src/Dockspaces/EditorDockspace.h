@@ -2,9 +2,11 @@
 
 #include <string>
 #include <unordered_map>
+
 #include <imgui.h>
 
 #include "Engine/Core/Log.h"
+#include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Menus/EditorMenu.h"
@@ -54,6 +56,8 @@ namespace ZeoEngine {
 
 	protected:
 		bool m_bIsMainDockspace{ false };
+		Entity m_ContextEntity;
+
 	private:
 		std::string m_DockspaceName;
 		ImVec2Data m_InitialPos, m_InitialSize;

@@ -79,6 +79,7 @@ namespace ZeoEngine {
 		static std::unordered_map<uint32_t, std::pair<std::string, std::string>> hideConditionBuffers;
 		auto id = GetUniqueDataID(data);
 
+		// TODO: Add more operators
 		std::string hideConditionStr{ *hideCondition };
 		auto tokenPos = hideConditionStr.find("!=");
 		if (tokenPos != std::string::npos)

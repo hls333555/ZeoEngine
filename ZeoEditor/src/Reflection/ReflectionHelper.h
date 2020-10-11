@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#include "entt.hpp"
+#include <entt.hpp>
 
 #define ZE_CAT_IMPL(a, b) a##b
 #define ZE_CAT(a, b) ZE_CAT_IMPL(a, b)

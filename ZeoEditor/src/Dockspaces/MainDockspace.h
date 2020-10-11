@@ -2,8 +2,6 @@
 
 #include "Dockspaces/EditorDockspace.h"
 
-#include "Engine/GameFramework/Entity.h"
-
 namespace ZeoEngine {
 
 	class MainDockspace : public EditorDockspace
@@ -20,7 +18,7 @@ namespace ZeoEngine {
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 
 	private:
-		Entity m_SelectedEntity;
+		Entity& m_SelectedEntity = m_ContextEntity;
 
 	};
 
