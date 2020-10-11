@@ -6,7 +6,7 @@
 #include "EditorLayer.h"
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
-#include "Panels/EntityInspectorPanel.h"
+#include "Panels/DataInspectorPanel.h"
 #include "Panels/ConsolePanel.h"
 #include "Dockspaces/ParticleEditorDockspace.h"
 #include "Panels/StatsPanel.h"

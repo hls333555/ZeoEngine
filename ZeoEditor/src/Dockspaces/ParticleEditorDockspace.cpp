@@ -3,6 +3,7 @@
 #include <imgui_internal.h>
 
 #include "Panels/ParticleViewportPanel.h"
+#include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenuItem.h"
 
 #define PARTICLE_VIEW_NAME "Particle View"
@@ -15,6 +16,7 @@ namespace ZeoEngine {
 		EditorDockspace::OnAttach();
 
 		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(PARTICLE_VIEW_NAME, this, true);
+		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(PARTICLE_INSPECTOR_NAME, this, true);
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
@@ -31,10 +33,12 @@ namespace ZeoEngine {
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
 			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_VIEW_NAME, std::string(), particleViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_INSPECTOR_NAME, std::string(), particleInspectorPanel->GetShowPtr()));
 			PushMenu(windowMenu);
 		}
 
 		PushPanel(particleViewportPanel);
+		PushPanel(particleInspectorPanel);
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)

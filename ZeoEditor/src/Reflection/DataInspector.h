@@ -1,22 +1,21 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
-
 #include "Engine/GameFramework/Entity.h"
 #include "Reflection/ReflectionHelper.h"
+#include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {
 
-	class EntityInspectorPanel : public ScenePanel
+	class DataInspectorPanel;
+
+	class DataInspector
 	{
 	public:
-		using ScenePanel::ScenePanel;
+		DataInspector(DataInspectorPanel* context);
+
+		void ProcessType(entt::meta_type type, Entity entity);
 
 	private:
-		virtual void RenderPanel() override;
-
-		void DrawComponents(Entity entity);
-
 		template<typename T>
 		void ShowPropertyTooltip(T metaObj)
 		{
@@ -35,7 +34,6 @@ namespace ZeoEngine {
 
 		bool ShouldHideData(entt::meta_data data, entt::meta_any instance);
 
-		void ProcessType(entt::meta_type type, Entity entity);
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
 		void ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance);
@@ -133,8 +131,7 @@ namespace ZeoEngine {
 		void ProcessColorData(entt::meta_data data, entt::meta_any instance);
 
 	private:
-		Entity m_LastSelectedEntity;
-
+		DataInspectorPanel* m_Context;
 	};
 
 }

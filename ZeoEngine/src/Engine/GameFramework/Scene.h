@@ -12,7 +12,8 @@ namespace ZeoEngine {
 		friend class Entity;
 		friend class SceneViewportPanel;
 		friend class SceneOutlinePanel;
-		friend class EntityInspectorPanel;
+		friend class DataInspectorPanel;
+		friend class DataInspector;
 
 	public:
 		Scene();

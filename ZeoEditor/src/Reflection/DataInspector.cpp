@@ -1,75 +1,26 @@
-#include "Panels/EntityInspectorPanel.h"
+#include "Reflection/DataInspector.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Engine/GameFramework/Components.h"
-#include "Dockspaces/MainDockspace.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Panels/DataInspectorPanel.h"
 
 namespace ZeoEngine {
 
-	void EntityInspectorPanel::RenderPanel()
+	DataInspector::DataInspector(DataInspectorPanel* context)
+		:m_Context(context)
 	{
-		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
-		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
-		{
-			// Sometimes, selected entity is changed when certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
-			// so we have to draw last entity's components once again to ensure all caches are applied
-			DrawComponents(m_LastSelectedEntity);
-			m_LastSelectedEntity = selectedEntity;
-			return;
-		}
-		if (selectedEntity)
-		{
-			DrawComponents(selectedEntity);
-		}
-		m_LastSelectedEntity = selectedEntity;
 	}
 
-	void EntityInspectorPanel::DrawComponents(Entity entity)
-	{
-		// Push entity id for later use
-		ImGui::PushID(static_cast<uint32_t>(entity));
-
-		// We want to draw these components first as the iteration order is backward
-		if (entity.HasComponent<TagComponent>())
-		{
-			ProcessType(entt::resolve<TagComponent>(), entity);
-		}
-		if (entity.HasComponent<TransformComponent>())
-		{
-			ProcessType(entt::resolve<TransformComponent>(), entity);
-
-			//if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
-			//{
-			//	auto& transform = entity.GetComponent<TransformComponent>().Transform;
-
-			//	ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
-
-			//	ImGui::TreePop();
-			//}
-		}
-
-		GetScene()->m_Registry.visit(entity, [this, entity](const auto componentId)
-		{
-			const auto type = entt::resolve_type(componentId);
-			if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
-
-			ProcessType(type, entity);
-		});
-
-		ImGui::PopID();
-	}
-
-	uint32_t EntityInspectorPanel::GetUniqueDataID(entt::meta_data data)
+	uint32_t DataInspector::GetUniqueDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
-	bool EntityInspectorPanel::ShouldHideData(entt::meta_data data, entt::meta_any instance)
+	bool DataInspector::ShouldHideData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto hideCondition = GetPropValue<const char*>(PropertyType::HideCondition, data);
 		// HideCondition property is not set, show this data normally
@@ -120,9 +71,9 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void EntityInspectorPanel::ProcessType(entt::meta_type type, Entity entity)
+	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
-		const auto instance = GetTypeInstance(type, GetScene()->m_Registry, entity);
+		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
 		auto name = GetPropValue<const char*>(PropertyType::Name, type);
 
 		bool bIsExpanded = ImGui::CollapsingHeader(*name, ImGuiTreeNodeFlags_DefaultOpen);
@@ -153,7 +104,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<bool>(data.type()))
 		{
@@ -185,7 +136,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<float>(data.type()))
 		{
@@ -197,7 +148,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
 		// Get current enum value name by iterating all enum values and comparing
 		const char* currentValueName = nullptr;
@@ -236,7 +187,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (IsTypeEqual<std::string>(data.type()))
 		{
@@ -256,7 +207,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& boolRef = GetDataValueByRef<bool>(data, instance);
 		auto name = GetPropValue<const char*>(PropertyType::Name, data);
@@ -278,7 +229,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessStringData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessStringData(entt::meta_data data, entt::meta_any instance)
 	{
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
@@ -321,7 +272,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EntityInspectorPanel::ProcessColorData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessColorData(entt::meta_data data, entt::meta_any instance)
 	{
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
