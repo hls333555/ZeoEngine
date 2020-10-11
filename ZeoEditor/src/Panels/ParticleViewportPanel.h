@@ -9,6 +9,8 @@ namespace ZeoEngine {
 	public:
 		using SceneViewportPanel::SceneViewportPanel;
 
+		virtual void OnAttach() override;
+
 	private:
 		virtual void RenderPanel() override;
 

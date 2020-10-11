@@ -5,6 +5,7 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 #define ENABLE_TEST 1
 
@@ -130,6 +131,21 @@ namespace ZeoEngine {
 			InstantiateScript = [=]() mutable { return static_cast<ScriptableEntity*>(new T(std::forward<Args>(args)...)); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
+	};
+
+	struct ParticleSystemComponent
+	{
+		Ref<ParticleSystem> ParticleSystem;
+
+		ParticleSystemComponent() = default;
+		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+	};
+
+	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
+	{
+		using ParticleSystemComponent::ParticleSystemComponent;
+
+
 	};
 
 }

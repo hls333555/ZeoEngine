@@ -19,8 +19,10 @@ namespace ZeoEngine {
 		Scene();
 		~Scene();
 
-		/** If bIsInternal is true, this entity will not show in the SceneOutlinePanel. */
+		/** Create an entity with default components. If bIsInternal is true, this entity will not show in the SceneOutlinePanel. */
 		Entity CreateEntity(const std::string& name = std::string(), bool bIsInternal = false);
+		/** Create an entity with no default components. */
+		Entity CreateEmptyEntity();
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();

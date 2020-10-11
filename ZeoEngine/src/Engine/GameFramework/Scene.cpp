@@ -17,7 +17,7 @@ namespace ZeoEngine {
 
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
-		Entity entity = { m_Registry.create(), this };
+		Entity entity = CreateEmptyEntity();
 
 		entity.AddComponent<TransformComponent>();
 		auto& tagComp = entity.AddComponent<TagComponent>();
@@ -28,6 +28,11 @@ namespace ZeoEngine {
 #endif
 
 		return entity;
+	}
+
+	Entity Scene::CreateEmptyEntity()
+	{
+		return { m_Registry.create(), this };
 	}
 
 	void Scene::OnUpdate(DeltaTime dt)

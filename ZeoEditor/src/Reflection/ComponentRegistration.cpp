@@ -62,4 +62,9 @@ ZE_REFL_REGISTRATION
 
 	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("C++脚本组件")));
 
+	ZE_REFL_TYPE(ParticleSystemComponent, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子系统组件")))
+		ZE_REFL_DATA_REF(ParticleSystemComponent, ParticleSystem);
+
+	ZE_REFL_TYPE(ParticleSystemPreviewComponent);
+
 }
