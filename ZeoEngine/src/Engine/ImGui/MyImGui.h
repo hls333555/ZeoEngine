@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	
 	struct ImVec2Data
 	{
-		ImVec2 Data;
+		glm::vec2 Data;
 		ImGuiCond Condition{ ImGuiCond_FirstUseEver };
 
 		bool operator==(const ImVec2Data& other) const

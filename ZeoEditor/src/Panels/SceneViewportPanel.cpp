@@ -31,9 +31,7 @@ namespace ZeoEngine {
 	void SceneViewportPanel::RenderPanel()
 	{
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
-		glm::vec2 max{ window->InnerRect.Max.x, window->InnerRect.Max.y };
-		glm::vec2 min{ window->InnerRect.Min.x, window->InnerRect.Min.y };
-		m_LastViewportSize = max - min;
+		m_LastViewportSize = static_cast<glm::vec2>(window->InnerRect.Max) - static_cast<glm::vec2>(window->InnerRect.Min);
 
 		// Draw framebuffer texture
 		ImGui::GetWindowDrawList()->AddImage(

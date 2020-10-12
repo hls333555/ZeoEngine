@@ -24,7 +24,7 @@ namespace ZeoEngine {
 	public:
 		EditorDockspace() = delete;
 		explicit EditorDockspace(const std::string& dockspaceName, bool bDefaultShow = false,
-			ImVec2 dockspacePadding = ImVec2(0.0f, 0.0f),
+			const glm::vec2& dockspacePadding = glm::vec2(0.0f, 0.0f),
 			ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar,
 			ImVec2Data initialSize = ImVec2Data::DefaultSize, ImVec2Data initialPos = ImVec2Data::DefaultPos);
 
@@ -63,7 +63,7 @@ namespace ZeoEngine {
 	private:
 		std::string m_DockspaceName;
 		ImVec2Data m_InitialPos, m_InitialSize;
-		ImVec2 m_DockspacePadding;
+		glm::vec2 m_DockspacePadding;
 		ImGuiWindowFlags m_DockspaceWindowFlags;
 		bool m_bShow;
 
