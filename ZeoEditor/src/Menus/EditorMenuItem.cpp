@@ -1,6 +1,6 @@
 #include "Menus/EditorMenuItem.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "Engine/Core/Application.h"
 #include "EditorLayer.h"

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <imgui/imgui.h>
 
 #include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Scene.h"

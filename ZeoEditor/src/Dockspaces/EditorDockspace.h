@@ -3,8 +3,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <imgui.h>
-
 #include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Scene.h"

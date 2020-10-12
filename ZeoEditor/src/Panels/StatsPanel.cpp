@@ -1,6 +1,6 @@
 #include "Panels/StatsPanel.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "Engine/Renderer/Renderer2D.h"
 

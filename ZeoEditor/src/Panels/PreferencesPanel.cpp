@@ -1,6 +1,6 @@
 #include "Panels/PreferencesPanel.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "Engine/Core/Application.h"
 

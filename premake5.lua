@@ -66,7 +66,8 @@ project "ZeoEngine"
 
 	defines
 	{
-		"_CRT_SECURE_NO_WARNINGS"
+		"_CRT_SECURE_NO_WARNINGS",
+		"ZE_IMVEC_GLMVEC_CONV"
 	}
 
 	includedirs
@@ -157,6 +158,11 @@ project "ZeoEditor"
 		"Sandbox/src/Game/**.cpp",
 	}
 
+	defines
+	{
+		"ZE_IMVEC_GLMVEC_CONV"
+	}
+
 	includedirs
 	{
 		"%{prj.name}/src",
@@ -214,6 +220,11 @@ project "Sandbox"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+	}
+
+	defines
+	{
+		"ZE_IMVEC_GLMVEC_CONV"
 	}
 
 	includedirs

@@ -1,6 +1,6 @@
 #include "Panels/SceneOutlinePanel.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/MainDockspace.h"
