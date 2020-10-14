@@ -40,8 +40,12 @@ namespace ZeoEngine {
 
 	class Texture2DLibrary
 	{
-		friend class EngineLayer;
-
+	public:
+		static Texture2DLibrary& Get()
+		{
+			static Texture2DLibrary instance;
+			return instance;
+		}
 	private:
 		Texture2DLibrary() = default;
 	public:

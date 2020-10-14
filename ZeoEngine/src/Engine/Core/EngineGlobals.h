@@ -17,12 +17,6 @@ namespace ZeoEngine {
 		return Level::Get().GetGameTimerManager();
 	}
 
-	static Texture2DLibrary* GetTexture2DLibrary()
-	{
-		EngineLayer* engineLayer = Application::Get().GetEngineLayer();
-		return engineLayer ? engineLayer->GetTexture2DLibrary() : nullptr;
-	}
-
 	static ParticleLibrary* GetParticleLibrary()
 	{
 		EngineLayer* engineLayer = Application::Get().GetEngineLayer();

@@ -26,7 +26,7 @@ Player::Player()
 {
 	SetSpeed(5.0f);
 	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
-	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("../Sandbox/assets/textures/Ship.png");
+	m_SpriteTexture = ZeoEngine::Texture2DLibrary::Get().GetOrLoad("../Sandbox/assets/textures/Ship.png");
 }
 
 void Player::Init()

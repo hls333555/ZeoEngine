@@ -4,7 +4,6 @@
 
 #include "Engine/Renderer/OrthographicCamera.h"
 #include "Engine/Core/TimerManager.h"
-#include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
@@ -20,7 +19,6 @@ namespace ZeoEngine {
 
 		virtual OrthographicCamera* GetGameCamera() { return nullptr; }
 
-		Texture2DLibrary* GetTexture2DLibrary() { return &m_Texture2DLibrary; }
 		ParticleLibrary* GetParticleLibrary() { return &m_ParticleLibrary; }
 
 		void AddGameObjectPendingDestroy(GameObject* object) { m_GameObjectsPendingDestroy.insert(object); }
@@ -30,7 +28,6 @@ namespace ZeoEngine {
 
 	private:
 		TimerManager m_CoreTimerManager{ "Core" };
-		Texture2DLibrary m_Texture2DLibrary;
 		ParticleLibrary m_ParticleLibrary;
 
 		float m_GarbageCollectionInterval;

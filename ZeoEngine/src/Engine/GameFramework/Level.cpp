@@ -3,7 +3,6 @@
 
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
-#include "Engine/Core/EngineGlobals.h"
 #include "Engine/Core/Application.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Serializer.h"
@@ -23,10 +22,8 @@ namespace ZeoEngine {
 		m_EngineLayer = Application::Get().GetEngineLayer();
 		ZE_CORE_ASSERT(m_EngineLayer);
 
-		Texture2DLibrary* library = GetTexture2DLibrary();
-		ZE_CORE_ASSERT(library);
 		// Default level background
-		m_backgroundTexture = library->Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+		Texture2DLibrary::Get().Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 
 	}
 

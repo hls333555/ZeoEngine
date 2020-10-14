@@ -8,7 +8,6 @@
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
 
-#include "Engine/Core/EngineGlobals.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/Core/EngineUtilities.h"

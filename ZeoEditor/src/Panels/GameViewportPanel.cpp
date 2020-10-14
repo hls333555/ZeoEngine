@@ -5,7 +5,6 @@
 #include <glm/ext/matrix_transform.hpp>
 
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/EngineGlobals.h"
 
 namespace ZeoEngine {
 
@@ -17,14 +16,14 @@ namespace ZeoEngine {
 		m_ToolbarTextures[1] = m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
 		m_StopTexture = Texture2D::Create("assets/textures/Stop.png");
 
-		// TODO:
+		// TODO: Cleanup
 		Entity defaultTextureEntity = GetScene()->CreateEntity("Default Texture", true);
-		defaultTextureEntity.AddComponent<SpriteRendererComponent>(GetTexture2DLibrary()->Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png"), glm::vec4(1.0f), glm::vec2{ 50.0f, 50.0f });
+		defaultTextureEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png"), glm::vec4(1.0f), glm::vec2{ 50.0f, 50.0f });
 		auto& transComp = defaultTextureEntity.GetComponent<TransformComponent>();
 		transComp.Transform = glm::scale(transComp.Transform, glm::vec3(100.0f));
 
 		Entity shipEntity = GetScene()->CreateEntity("Player Ship");
-		shipEntity.AddComponent<SpriteRendererComponent>(GetTexture2DLibrary()->Load("../Sandbox/assets/textures/Ship.png"));
+		shipEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Load("../Sandbox/assets/textures/Ship.png"));
 	}
 
 	void GameViewportPanel::RenderPanel()

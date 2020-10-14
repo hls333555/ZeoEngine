@@ -19,7 +19,7 @@ Obstacle::Obstacle()
 {
 	SetCollisionType(ZeoEngine::ObjectCollisionType::Sphere);
 	SetGenerateOverlapEvents(true);
-	m_SpriteTexture = ZeoEngine::GetTexture2DLibrary()->GetOrLoad("../Sandbox/assets/textures/Obstacle.png");
+	m_SpriteTexture = ZeoEngine::Texture2DLibrary::Get().GetOrLoad("../Sandbox/assets/textures/Obstacle.png");
 	m_ExplosionParticle = ZeoEngine::GetParticleLibrary()->GetOrLoad("../Sandbox/assets/particles/Explosion.zparticle");
 }
 

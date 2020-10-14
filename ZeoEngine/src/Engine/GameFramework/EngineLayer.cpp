@@ -6,6 +6,7 @@
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/Level.h"
 #include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -20,7 +21,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_Texture2DLibrary.Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+		Texture2DLibrary::Get().Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 
 		// TODO: Move it to config file
 		// NOTE: Add missing Chinese characters here!

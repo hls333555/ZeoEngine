@@ -512,7 +512,7 @@ namespace ZeoEngine {
 						std::string extractedPath = extractedValue.to_string();
 						if (!extractedPath.empty())
 						{
-							prop.set_value(obj, GetTexture2DLibrary()->GetOrLoad(extractedPath));
+							prop.set_value(obj, Texture2DLibrary::Get().GetOrLoad(extractedPath));
 						}
 					}
 					else if (type.is_pointer() && type == rttr::type::get<ParticleSystem*>())

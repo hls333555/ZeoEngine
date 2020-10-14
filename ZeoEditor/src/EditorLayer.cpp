@@ -2089,11 +2089,11 @@ namespace ZeoEngine {
 	{
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
-		Texture2DLibrary* library = GetTexture2DLibrary();
+		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// TODO: Add an right-click option to draw texture smaller
 		// Try to align texture'a width to column's right side
 		float textureWidth = ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - ImGui::GetCursorScreenPos().x - 18.5f;
-		Ref<Texture2D> backgroundTexture = library->Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+		Ref<Texture2D> backgroundTexture = library.Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 		// Draw checkerboard texture as background first
 		ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
 			ImGui::GetCursorScreenPos(),
@@ -2131,7 +2131,7 @@ namespace ZeoEngine {
 				{
 					const std::string relativePath = ToRelativePath(outPath);
 					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library->GetOrLoad(relativePath);
+					Ref<Texture2D> loadedTexture = library.GetOrLoad(relativePath);
 					SetPropertyValue(data, loadedTexture, loadedTexture);
 					if (loadedTexture != texture2DValue)
 					{
@@ -2146,7 +2146,7 @@ namespace ZeoEngine {
 			}
 			ImGui::Separator();
 			// List all loaded textures from Texture2DLibrary
-			for (const auto& [path, texture] : library->GetTexturesMap())
+			for (const auto& [path, texture] : library.GetTexturesMap())
 			{
 				if (ImGui::Selectable(texture->GetFileName().c_str()))
 				{
