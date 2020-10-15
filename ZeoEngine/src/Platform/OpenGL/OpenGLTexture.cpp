@@ -1,6 +1,8 @@
 #include "ZEpch.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 
+#include <filesystem>
+
 #include <stb_image.h>
 
 namespace ZeoEngine {
@@ -24,6 +26,7 @@ namespace ZeoEngine {
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path(path)
+		, m_FileName(std::filesystem::path{ m_Path }.filename().string())
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -70,13 +73,6 @@ namespace ZeoEngine {
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 
 		stbi_image_free(data);
-
-		// Extract name from file path
-		// "assets/textures/Texture.png" -> "Texture.png"
-		auto lastSlash = m_Path.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
-		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto count = m_Path.size() - lastSlash;
-		m_FileName = m_Path.substr(lastSlash, count);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()

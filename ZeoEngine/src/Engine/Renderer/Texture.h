@@ -14,7 +14,7 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
-		virtual const std::string& GetPath() const = 0;
+		virtual const std::string& GetPath() const = 0; // This path is canonical.
 		virtual const std::string& GetFileName() const = 0;
 		virtual bool HasAlpha() const = 0;
 		virtual void* GetTexture() const = 0;
@@ -55,7 +55,6 @@ namespace ZeoEngine {
 		void Add(const std::string& path, const Ref<Texture2D>& texture);
 		void Add(const Ref<Texture2D>& texture);
 		Ref<Texture2D> Load(const std::string& filePath);
-		Ref<Texture2D> Load(const std::string& path, const std::string& filePath);
 
 		Ref<Texture2D> GetOrLoad(const std::string& path);
 
