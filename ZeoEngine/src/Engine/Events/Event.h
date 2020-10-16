@@ -1,6 +1,8 @@
 #pragma once
 
-#include "ZEpch.h"
+#include <string>
+#include <functional>
+
 #include "Engine/Core/Core.h"
 
 namespace ZeoEngine {

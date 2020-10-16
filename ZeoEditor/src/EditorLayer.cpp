@@ -1327,7 +1327,7 @@ namespace ZeoEngine {
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
 		// Start PIE by pressing Alt+P
-		if ((Input::IsKeyPressed(ZE_KEY_LEFT_ALT) || Input::IsKeyPressed(ZE_KEY_RIGHT_ALT)) && Input::IsKeyPressed(ZE_KEY_P))
+		if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
 		{
 			if (pieState == PIEState::None)
 			{
@@ -1335,7 +1335,7 @@ namespace ZeoEngine {
 			}
 		}
 		// Exit PIE by pressing Esc
-		if (Input::IsKeyPressed(ZE_KEY_ESCAPE))
+		if (Input::IsKeyPressed(Key::Escape))
 		{
 			if (pieState != PIEState::None)
 			{
@@ -1896,7 +1896,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			if (ImGui::IsKeyPressed(Key::Tab) && bChanged)
 			{
 				*vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
 				EndDisplayProperty(ss, data, *vec2PointerValue, glm::vec2(0.0f));
@@ -1936,7 +1936,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			if (ImGui::IsKeyPressed(Key::Tab) && bChanged)
 			{
 				*i32vec2PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
 				EndDisplayProperty(ss, data, *i32vec2PointerValue, glm::i32vec2(0));
@@ -1976,7 +1976,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			if (ImGui::IsKeyPressed(Key::Tab) && bChanged)
 			{
 				*vec3PointerValue = std::move(glm::clamp(valueBuffer[ss.str()], min, max));
 				EndDisplayProperty(ss, data, *vec3PointerValue, glm::vec3(0.0f));
@@ -2010,7 +2010,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			if (ImGui::IsKeyPressed(ZE_KEY_TAB) && bChanged)
+			if (ImGui::IsKeyPressed(Key::Tab) && bChanged)
 			{
 				*vec4PointerValue = std::move(valueBuffer[ss.str()]);
 				EndDisplayProperty(ss, data, *vec4PointerValue, glm::vec4(0.0f));

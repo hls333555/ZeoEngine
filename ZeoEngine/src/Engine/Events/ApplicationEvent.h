@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {

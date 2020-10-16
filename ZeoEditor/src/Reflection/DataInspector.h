@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Reflection/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"

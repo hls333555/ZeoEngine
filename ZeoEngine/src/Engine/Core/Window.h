@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ZEpch.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Events/Event.h"
 

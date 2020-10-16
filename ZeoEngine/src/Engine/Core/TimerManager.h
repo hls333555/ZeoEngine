@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/Core/Log.h"
 
 namespace ZeoEngine {
 

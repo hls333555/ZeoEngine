@@ -51,7 +51,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 
 	const auto& cameraBounds = ZeoEngine::GetActiveGameCamera()->GetCameraBounds();
 	// Movement control
-	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_W))
+	if (ZeoEngine::Input::IsKeyPressed(ZeoEngine::Key::W))
 	{
 		SetPosition2D(GetPosition2D() + GetForwardVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().y > cameraBounds.Top - 0.5f)
@@ -59,7 +59,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			SetPosition2D({ GetPosition().x, cameraBounds.Top - 0.5f });
 		}
 	}
-	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_A))
+	if (ZeoEngine::Input::IsKeyPressed(ZeoEngine::Key::A))
 	{
 		SetPosition2D(GetPosition2D() - GetRightVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().x < cameraBounds.Left + 0.5f)
@@ -67,7 +67,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			SetPosition2D({ cameraBounds.Left + 0.5f, GetPosition().y });
 		}
 	}
-	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_S))
+	if (ZeoEngine::Input::IsKeyPressed(ZeoEngine::Key::S))
 	{
 		SetPosition2D(GetPosition2D() - GetForwardVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().y < cameraBounds.Bottom + 0.5f)
@@ -75,7 +75,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 			SetPosition2D({ GetPosition().x, cameraBounds.Bottom + 0.5f });
 		}
 	}
-	if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_D))
+	if (ZeoEngine::Input::IsKeyPressed(ZeoEngine::Key::D))
 	{
 		SetPosition2D(GetPosition2D() + GetRightVector2D() * GetSpeed() * static_cast<float>(dt));
 		if (GetPosition().x > cameraBounds.Right - 0.5f)
@@ -86,7 +86,7 @@ void Player::OnUpdate(ZeoEngine::DeltaTime dt)
 
 	// Shoot bullets
 	{
-		if (ZeoEngine::Input::IsKeyPressed(ZE_KEY_SPACE))
+		if (ZeoEngine::Input::IsKeyPressed(ZeoEngine::Key::Space))
 		{
 			if (m_bCanShoot)
 			{

@@ -7,6 +7,7 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Events/MouseEvent.h"
 #include "Engine/Events/KeyEvent.h"
+#include "Engine/Core/MouseCodes.h"
 
 namespace ZeoEngine {
 
@@ -58,7 +59,7 @@ namespace ZeoEngine {
 			{
 				if (m_bIsMiddleMouseButtonFirstPressed)
 				{
-					if (Input::IsMouseButtonPressed(2))
+					if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 					{
 						m_bIsMiddleMouseButtonFirstPressed = false;
 						// Only allow panning if first press is inside context panel
@@ -75,18 +76,18 @@ namespace ZeoEngine {
 					// Move speed is set based on the zoom level (OrthographicSize)
 					float cameraPanSpeed = sceneCamera.GetOrthographicSize() / 4.0f;
 					
-					auto [x, y] = Input::GetMousePosition();
+					const auto position = Input::GetMousePosition();
 					if (!m_bIsMiddleMouseButtonFirstPressedWhenHovered)
 					{
 						// TODO: This moves pretty slowly on high framerate
-						transform[3][0] -= (x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
-						transform[3][1] += (y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
+						transform[3][0] -= (position.x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
+						transform[3][1] += (position.y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
 					}
 					m_bIsMiddleMouseButtonFirstPressedWhenHovered = false;
-					m_LastPressedMousePosition = { x, y };
+					m_LastPressedMousePosition = position;
 				}
 
-				if (Input::IsMouseButtonReleased(2))
+				if (Input::IsMouseButtonReleased(Mouse::ButtonMiddle))
 				{
 					m_bIsMiddleMouseButtonFirstPressed = true;
 					m_bIsMiddleMouseButtonFirstPressedWhenHovered = true;
