@@ -838,7 +838,6 @@ namespace ZeoEngine {
 		// Ref<Texture2D>
 		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
 		{
-			ProcessTexture2DType(data.PropertyValue->get_value<Ref<Texture2D>>(), data);
 			return true;
 		}
 		// ParticleSystem*
@@ -2083,93 +2082,6 @@ namespace ZeoEngine {
 			ImGui::EndDragDropTarget();
 		}
 		EndDisplayProperty(ss, data, static_cast<GameObject*>(nullptr));
-	}
-
-	void EditorLayer::ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data)
-	{
-		std::stringstream ss;
-		BeginDisplayProperty(ss, data);
-		Texture2DLibrary& library = Texture2DLibrary::Get();
-		// TODO: Add an right-click option to draw texture smaller
-		// Try to align texture'a width to column's right side
-		float textureWidth = ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - ImGui::GetCursorScreenPos().x - 18.5f;
-		Ref<Texture2D> backgroundTexture = library.Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
-		// Draw checkerboard texture as background first
-		ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
-			ImGui::GetCursorScreenPos(),
-			ImVec2(ImGui::GetCursorScreenPos().x + textureWidth, ImGui::GetCursorScreenPos().y + textureWidth),
-			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-		// Draw our texture on top of that
-		ImGui::Image(texture2DValue ? texture2DValue->GetTexture() : nullptr,
-			ImVec2(textureWidth, textureWidth),
-			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
-			texture2DValue ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 0.0f), ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-		// Display texture info tooltip
-		if (texture2DValue && ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DValue->GetWidth(), texture2DValue->GetHeight(), texture2DValue->HasAlpha() ? "true" : "false");
-		}
-		if (data.SequentialIndex == -1)
-		{
-			// Align combo box's width to column's right side
-			ImGui::SetNextItemWidth(-1.0f);
-		}
-		else
-		{
-			// Make room for sequential buttons
-			ImGui::SetNextItemWidth(-25.0f);
-		}
-		// TODO: Add search filter for texture2D
-		if (ImGui::BeginCombo(ss.str().c_str(), texture2DValue ? texture2DValue->GetFileName().c_str() : nullptr))
-		{
-			// Pop up file browser to select a texture
-			if (ImGui::Selectable("Browse texture..."))
-			{
-				nfdchar_t* outPath = nullptr;
-				nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
-				if (result == NFD_OKAY)
-				{
-					const std::string relativePath = ToRelativePath(outPath);
-					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library.GetOrLoad(relativePath);
-					SetPropertyValue(data, loadedTexture, loadedTexture);
-					if (loadedTexture != texture2DValue)
-					{
-						InvokePropertyChangeCallback(data);
-					}
-					free(outPath);
-				}
-				else if (result == NFD_ERROR)
-				{
-					ZE_CORE_ERROR("ProcessTexture2DType: {0}", NFD_GetError());
-				}
-			}
-			ImGui::Separator();
-			// List all loaded textures from Texture2DLibrary
-			for (const auto& [path, texture] : library.GetTexturesMap())
-			{
-				if (ImGui::Selectable(texture->GetFileName().c_str()))
-				{
-					SetPropertyValue(data, texture, texture);
-					if (texture != texture2DValue)
-					{
-						InvokePropertyChangeCallback(data);
-					}
-				}
-				// Display texture path tooltip
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::SetTooltip("%s", texture->GetPath().c_str());
-				}
-			}
-			ImGui::EndCombo();
-		}
-		// Display texture path tooltip
-		if (texture2DValue && ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
-		}
-		EndDisplayProperty(ss, data, Ref<Texture2D>());
 	}
 
 	void EditorLayer::ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data)

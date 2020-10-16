@@ -134,7 +134,6 @@ namespace ZeoEngine {
 		void ProcessVec3Type(glm::vec3* vec3PointerValue, const PropertyData& data);
 		void ProcessColorType(glm::vec4* vec4PointerValue, const PropertyData& data);
 		void ProcessGameObjectType(GameObject* gameObjectValue, const PropertyData& data);
-		void ProcessTexture2DType(const Ref<Texture2D>& texture2DValue, const PropertyData& data);
 		void ProcessParticleSystemType(ParticleSystem* particleSystemValue, const PropertyData& data);
 
 		/**

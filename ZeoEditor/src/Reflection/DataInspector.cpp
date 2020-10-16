@@ -4,9 +4,11 @@
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <nfd.h>
 
 #include "Engine/Core/KeyCodes.h"
 #include "Panels/DataInspectorPanel.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -150,6 +152,8 @@ namespace ZeoEngine {
 
 	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
+		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
+
 		// Get current enum value name by iterating all enum values and comparing
 		const char* currentValueName = nullptr;
 		auto currentValue = data.get(instance);
@@ -162,7 +166,6 @@ namespace ZeoEngine {
 			}
 		});
 
-		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
 		if (ImGui::BeginCombo(*dataName, currentValueName))
 		{
 			// Iterate to display all enum values
@@ -204,6 +207,10 @@ namespace ZeoEngine {
 		else if (IsTypeEqual<glm::vec4>(data.type()))
 		{
 			ProcessColorData(data, instance);
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
+		{
+			ProcessTexture2DData(data, instance);
 		}
 	}
 
@@ -332,6 +339,102 @@ namespace ZeoEngine {
 		if (bIsValueChangedAfterEdit)
 		{
 			ZE_TRACE("Value changed after edit!");
+		}
+	}
+
+	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any instance)
+	{
+		auto& texture2DRef = GetDataValueByRef<Ref<Texture2D>>(data, instance);
+		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
+
+		Texture2DLibrary& library = Texture2DLibrary::Get();
+		// Texture preview
+		{
+			auto backgroundTexture = library.Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+			const float texturePreviewWidth = 100.0f;
+			// Draw checkerboard texture as background first
+			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+				ImGui::GetCursorScreenPos(),
+				ImVec2(ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth),
+				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			// Draw our texture on top of that
+			ImGui::Image(texture2DRef ? texture2DRef->GetTexture() : nullptr,
+				ImVec2(texturePreviewWidth, texturePreviewWidth),
+				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
+				texture2DRef ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 0.0f));
+			// Display texture info tooltip
+			if (texture2DRef && ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DRef->GetWidth(), texture2DRef->GetHeight(), texture2DRef->HasAlpha() ? "true" : "false");
+			}
+		}
+
+		ImGui::SameLine();
+
+		// Texture browser
+		if (ImGui::BeginCombo(*dataName, texture2DRef ? texture2DRef->GetFileName().c_str() : nullptr))
+		{
+			bool bIsValueChangedAfterEdit = false;
+			// Pop up file browser to select a texture from disk
+			if (ImGui::Selectable("Browse texture..."))
+			{
+				nfdchar_t* outPath = nullptr;
+				// TODO: Support more texture format
+				nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
+				if (result == NFD_OKAY)
+				{
+					// Add selected texture to the library
+					Ref<Texture2D> loadedTexture = library.GetOrLoad(outPath);
+					bIsValueChangedAfterEdit = loadedTexture != texture2DRef;
+					SetDataValue(data, instance, loadedTexture);
+					free(outPath);
+				}
+				else if (result == NFD_ERROR)
+				{
+					ZE_CORE_ERROR("ProcessTexture2DData: {0}", NFD_GetError());
+				}
+			}
+			ImGui::Separator();
+			// List all loaded textures from Texture2DLibrary
+			for (const auto& [path, texture] : library.GetTexturesMap())
+			{
+				ImGui::PushID(texture->GetPath().c_str());
+
+				const float textureThumbnailWidth = 30.0f;
+				bool bIsSelected = ImGui::Selectable("##TextureDropdownThumbnail", false, 0, ImVec2(0.0f, textureThumbnailWidth));
+				// Display texture path tooltip for drop-down item
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", texture->GetPath().c_str());
+				}
+				ImGui::SameLine();
+				// Draw texture thumbnail
+				ImGui::Image(texture->GetTexture(),
+					ImVec2(textureThumbnailWidth, textureThumbnailWidth),
+					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+				ImGui::SameLine();
+				// Display texture name
+				ImGui::Text(texture->GetFileName().c_str());
+				if (bIsSelected)
+				{
+					bIsValueChangedAfterEdit = texture != texture2DRef;
+					SetDataValue(data, instance, texture);
+				}
+
+				ImGui::PopID();
+			}
+			ImGui::EndCombo();
+
+			if (bIsValueChangedAfterEdit)
+			{
+				ZE_TRACE("Value changed after edit!");
+			}
+		}
+
+		// Display texture path tooltip for current selection
+		if (texture2DRef && ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("%s", texture2DRef->GetPath().c_str());
 		}
 	}
 

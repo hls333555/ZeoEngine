@@ -129,6 +129,7 @@ namespace ZeoEngine {
 			}
 		}
 		void ProcessColorData(entt::meta_data data, entt::meta_any instance);
+		void ProcessTexture2DData(entt::meta_data data, entt::meta_any instance);
 
 	private:
 		DataInspectorPanel* m_Context;
