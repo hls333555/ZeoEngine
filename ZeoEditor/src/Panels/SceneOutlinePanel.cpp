@@ -29,7 +29,7 @@ namespace ZeoEngine {
 
 		auto& selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
 		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		bool bOpened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Tag.c_str());
+		bool bOpened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Name.c_str());
 		if (ImGui::IsItemClicked())
 		{
 			selectedEntity = entity;

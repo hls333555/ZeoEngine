@@ -76,11 +76,21 @@ namespace ZeoEngine {
 	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
 		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
-		auto name = GetPropValue<const char*>(PropertyType::Name, type);
+		auto typeName = GetMetaObjectDisplayName(type);
 
-		bool bIsExpanded = ImGui::CollapsingHeader(*name, ImGuiTreeNodeFlags_DefaultOpen);
-		ShowPropertyTooltip(type);
-		if (bIsExpanded)
+		bool bShouldDisplayHeader = true;
+		// Do not show CollapsingHeader if DisplayName is empty, see ParticleSystemDetailComponent
+		if (*typeName == "")
+		{
+			bShouldDisplayHeader = false;
+		}
+		bool bIsHeaderExpanded = true;
+		if (bShouldDisplayHeader)
+		{
+			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen);
+			ShowPropertyTooltip(type);
+		}
+		if (bIsHeaderExpanded)
 		{
 			type.data([this, instance](entt::meta_data data)
 			{
@@ -152,7 +162,7 @@ namespace ZeoEngine {
 
 	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
-		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
+		auto dataName = GetMetaObjectDisplayName(data);
 
 		// Get current enum value name by iterating all enum values and comparing
 		const char* currentValueName = nullptr;
@@ -161,7 +171,7 @@ namespace ZeoEngine {
 		{
 			if (currentValue == enumData.get({}))
 			{
-				auto valueName = GetPropValue<const char*>(PropertyType::Name, enumData);
+				auto valueName = GetMetaObjectDisplayName(enumData);
 				currentValueName = *valueName;
 			}
 		});
@@ -171,7 +181,7 @@ namespace ZeoEngine {
 			// Iterate to display all enum values
 			data.type().data([this, data, instance](entt::meta_data enumData)
 			{
-				auto valueName = GetPropValue<const char*>(PropertyType::Name, enumData);
+				auto valueName = GetMetaObjectDisplayName(enumData);
 				bool bIsSelected = ImGui::Selectable(*valueName);
 				ShowPropertyTooltip(enumData);
 				if (bIsSelected)
@@ -217,7 +227,7 @@ namespace ZeoEngine {
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& boolRef = GetDataValueByRef<bool>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+		auto dataName = GetMetaObjectDisplayName(data);
 		bool boolCopy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
 		if (bUseCopy)
@@ -225,7 +235,7 @@ namespace ZeoEngine {
 			boolCopy = GetDataValueByRef<bool>(data, instance);
 		}
 
-		if (ImGui::Checkbox(*name, bUseCopy ? &boolCopy : &boolRef))
+		if (ImGui::Checkbox(*dataName, bUseCopy ? &boolCopy : &boolRef))
 		{
 			if (bUseCopy)
 			{
@@ -241,7 +251,7 @@ namespace ZeoEngine {
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
 		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+		auto dataName = GetMetaObjectDisplayName(data);
 		auto id = GetUniqueDataID(data);
 		std::string stringCopy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
@@ -251,7 +261,7 @@ namespace ZeoEngine {
 		}
 
 		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
-		ImGui::InputText(*name, stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
+		ImGui::InputText(*dataName, stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
 		if (bUseCopy && !stringBuffers[id].first)
 		{
 			SetDataValue(data, instance, std::move(stringCopy));
@@ -284,7 +294,7 @@ namespace ZeoEngine {
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
 		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
-		auto name = GetPropValue<const char*>(PropertyType::Name, data);
+		auto dataName = GetMetaObjectDisplayName(data);
 		auto id = GetUniqueDataID(data);
 		glm::vec4 vec4Copy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
@@ -294,7 +304,7 @@ namespace ZeoEngine {
 		}
 
 		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);
-		bool bResult = ImGui::ColorEdit4(*name, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
+		bool bResult = ImGui::ColorEdit4(*dataName, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
 		if (bUseCopy && !vec4Buffers[id].first)
 		{
 			SetDataValue(data, instance, std::move(vec4Copy));
@@ -345,7 +355,7 @@ namespace ZeoEngine {
 	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& texture2DRef = GetDataValueByRef<Ref<Texture2D>>(data, instance);
-		auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
+		auto dataName = GetMetaObjectDisplayName(data);
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview

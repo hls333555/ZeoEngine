@@ -33,9 +33,9 @@ namespace ZeoEngine {
 		/** EntityID + dataID */
 		uint32_t GetUniqueDataID(entt::meta_data data);
 
+		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, entt::meta_any instance);
 
-		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
 		void ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance);
 		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
@@ -51,7 +51,7 @@ namespace ZeoEngine {
 			// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 			static std::unordered_map<uint32_t, std::pair<bool, T>> valueBuffers;
 			auto& valueRef = GetDataValueByRef<T>(data, instance);
-			auto name = GetPropValue<const char*>(PropertyType::Name, data);
+			auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
 			auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
 			auto min = GetPropValue<CT>(PropertyType::ClampMin, data);
 			auto minValue = min.value_or(defaultMin);
@@ -81,7 +81,7 @@ namespace ZeoEngine {
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
-			bool bResult = ImGui::DragScalarN(*name, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, ImGuiSliderFlags_AlwaysClamp);
+			bool bResult = ImGui::DragScalarN(*dataName, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, ImGuiSliderFlags_AlwaysClamp);
 			if (bUseCopy && !valueBuffers[id].first)
 			{
 				SetDataValue(data, instance, valueCopy);

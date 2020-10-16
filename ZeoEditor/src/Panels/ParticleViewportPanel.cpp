@@ -10,7 +10,7 @@ namespace ZeoEngine {
 		SceneViewportPanel::OnAttach();
 
 		Entity defaultParticleEntity = GetScene()->CreateEmptyEntity();
-		defaultParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		defaultParticleEntity.AddComponent<ParticleSystemDetailComponent>();
 		GetContext()->SetContextEntity(defaultParticleEntity);
 	}
 

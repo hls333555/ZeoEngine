@@ -47,13 +47,13 @@ namespace ZeoEngine {
 
 	struct TagComponent
 	{
-		std::string Tag;
+		std::string Name;
 		bool bIsInternal{ false };
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag)
-			:Tag(tag) {}
+		TagComponent(const std::string& name)
+			:Name(name) {}
 
 	};
 
@@ -141,7 +141,7 @@ namespace ZeoEngine {
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 	};
 
-	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
+	struct ParticleSystemDetailComponent : public ParticleSystemComponent
 	{
 		using ParticleSystemComponent::ParticleSystemComponent;
 

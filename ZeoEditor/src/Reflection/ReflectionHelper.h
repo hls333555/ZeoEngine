@@ -37,6 +37,7 @@ enum class PropertyType
 	ClampMin,				// [type_dependent]
 	ClampMax,				// [type_dependent]
 
+	DisplayName,			// const char*
 	HideCondition,			// const char*
 };
 
@@ -107,6 +108,25 @@ namespace ZeoEngine {
 		if (prop)
 		{
 			return prop.value().cast<Ret>();
+		}
+		return {};
+	}
+
+	template<typename T>
+	std::optional<const char*> GetMetaObjectDisplayName(T metaObj)
+	{
+		auto prop = metaObj.prop(PropertyType::DisplayName);
+		if (prop)
+		{
+			return prop.value().cast<const char*>();
+		}
+		else
+		{
+			prop = metaObj.prop(PropertyType::Name);
+			if (prop)
+			{
+				return prop.value().cast<const char*>();
+			}
 		}
 		return {};
 	}
