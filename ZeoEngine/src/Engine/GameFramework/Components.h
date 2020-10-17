@@ -39,6 +39,7 @@ namespace ZeoEngine {
 		glm::vec2 Vec2Var;
 		glm::vec3 Vec3Var;
 		glm::vec4 ColorVar;
+		Ref<Texture2D> Texture2DVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;

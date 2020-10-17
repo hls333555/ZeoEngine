@@ -43,30 +43,30 @@ enum class PropertyType
 
 #define ZE_TEXT(text) u8##text
 
-#define ZE_REFL_TYPE(typeName, ...)													\
-entt::meta<typeName>()                                                              \
+#define ZE_REFL_TYPE(_type, ...)													\
+entt::meta<_type>()																	\
     .type()                                                                         \
-        .prop(PropertyType::Name, #typeName)                                        \
+        .prop(PropertyType::Name, #_type)											\
         .prop(std::make_tuple(__VA_ARGS__))											\
-	.func<&get<typeName>, entt::as_ref_t>("get"_hs)
+	.func<&get<_type>, entt::as_ref_t>("get"_hs)
 
-#define ZE_REFL_DATA_WITH_POLICY(typeName, dataName, policy, ...)					\
-.data<&typeName::dataName, policy>(#dataName##_hs)                                  \
-    .prop(PropertyType::Name, #dataName)                                            \
+#define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)							\
+.data<&_type::_data, policy>(#_data##_hs)											\
+    .prop(PropertyType::Name, #_data)												\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_is_t, __VA_ARGS__) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
-#define ZE_REFL_DATA_REF(typeName, dataName, ...) ZE_REFL_DATA_WITH_POLICY(typeName, dataName, entt::as_ref_t, __VA_ARGS__)
-#define ZE_REFL_DATA_SETTER_GETTER(typeName, dataName, setterName, getterName, ...)	\
-.data<&typeName::setterName, &typeName::getterName>(#dataName##_hs)					\
+#define ZE_REFL_DATA(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
+#define ZE_REFL_DATA_REF(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_ref_t, __VA_ARGS__)
+#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...)	\
+.data<&_type::setterName, &_type::getterName>(#dataName##_hs)						\
     .prop(PropertyType::Name, #dataName)                                            \
     .prop(PropertyType::SetterAndGetter)                                            \
     .prop(std::make_tuple(__VA_ARGS__))
 
-#define ZE_REFL_ENUM(enumTypeName)													\
-entt::meta<enumTypeName>()
-#define ZE_REFL_ENUM_DATA(enumTypeName, enumDataName, ...)							\
-.data<enumTypeName::enumDataName>(#enumDataName##_hs)								\
-    .prop(PropertyType::Name, #enumDataName)										\
+#define ZE_REFL_ENUM(enumType)														\
+entt::meta<enumType>()
+#define ZE_REFL_ENUM_DATA(enumType, enumData, ...)									\
+.data<enumType::enumData>(#enumData##_hs)											\
+    .prop(PropertyType::Name, #enumData)											\
 	.prop(std::make_tuple(__VA_ARGS__))
 
 #define ZE_REFL_PROP(propType) PropertyType::propType

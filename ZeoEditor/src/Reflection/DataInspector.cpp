@@ -17,6 +17,49 @@ namespace ZeoEngine {
 	{
 	}
 
+	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
+	{
+		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
+		auto typeName = GetMetaObjectDisplayName(type);
+
+		bool bShouldDisplayHeader = true;
+		// Do not show CollapsingHeader if DisplayName is empty, see ParticleSystemDetailComponent
+		if (*typeName == "")
+		{
+			bShouldDisplayHeader = false;
+		}
+		bool bIsHeaderExpanded = true;
+		if (bShouldDisplayHeader)
+		{
+			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen);
+			ShowPropertyTooltip(type);
+		}
+		if (bIsHeaderExpanded)
+		{
+			type.data([this, instance](entt::meta_data data)
+			{
+				if (ShouldHideData(data, instance)) return;
+
+				if (data.type().is_integral())
+				{
+					ProcessIntegralData(data, instance);
+				}
+				else if (data.type().is_floating_point())
+				{
+					ProcessFloatingPointData(data, instance);
+				}
+				else if (data.type().is_enum())
+				{
+					ProcessEnumData(data, instance);
+				}
+				else
+				{
+					ProcessOtherData(data, instance);
+				}
+			});
+		}
+	}
+
 	uint32_t DataInspector::GetUniqueDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
@@ -71,49 +114,6 @@ namespace ZeoEngine {
 		}
 
 		return false;
-	}
-
-	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
-	{
-		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
-		auto typeName = GetMetaObjectDisplayName(type);
-
-		bool bShouldDisplayHeader = true;
-		// Do not show CollapsingHeader if DisplayName is empty, see ParticleSystemDetailComponent
-		if (*typeName == "")
-		{
-			bShouldDisplayHeader = false;
-		}
-		bool bIsHeaderExpanded = true;
-		if (bShouldDisplayHeader)
-		{
-			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen);
-			ShowPropertyTooltip(type);
-		}
-		if (bIsHeaderExpanded)
-		{
-			type.data([this, instance](entt::meta_data data)
-			{
-				if (ShouldHideData(data, instance)) return;
-
-				if (data.type().is_integral())
-				{
-					ProcessIntegralData(data, instance);
-				}
-				else if (data.type().is_floating_point())
-				{
-					ProcessFloatingPointData(data, instance);
-				}
-				else if (data.type().is_enum())
-				{
-					ProcessEnumData(data, instance);
-				}
-				else
-				{
-					ProcessOtherData(data, instance);
-				}
-			});
-		}
 	}
 
 	void DataInspector::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)

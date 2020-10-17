@@ -31,7 +31,8 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TestComponent, StringVar)
 		ZE_REFL_DATA_REF(TestComponent, Vec2Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
 		ZE_REFL_DATA_REF(TestComponent, Vec3Var, ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
-		ZE_REFL_DATA_REF(TestComponent, ColorVar);
+		ZE_REFL_DATA_REF(TestComponent, ColorVar)
+		ZE_REFL_DATA_REF(TestComponent, Texture2DVar);
 #endif
 
 	ZE_REFL_TYPE(TagComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Tag")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("±êÇ©×é¼þ")))
