@@ -19,10 +19,10 @@ namespace ZeoEngine {
 	{
 		Entity entity = CreateEmptyEntity();
 
-		entity.AddComponent<TransformComponent>();
 		auto& tagComp = entity.AddComponent<TagComponent>();
 		tagComp.Name = name.empty() ? "Entity" : name;
 		tagComp.bIsInternal = bIsInternal;
+		entity.AddComponent<TransformComponent>();
 #if ENABLE_TEST
 		entity.AddComponent<TestComponent>();
 #endif

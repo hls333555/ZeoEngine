@@ -12,34 +12,39 @@ namespace ZeoEngine {
 		ImGui::PushID(static_cast<uint32_t>(entity));
 
 		DataInspector dataInspector{ this };
-		// We want to draw these components, if exist, first as the iteration order is backward
-		if (entity.HasComponent<TagComponent>())
+
+		if (m_bIsPreprocessedTypesDirty)
 		{
-			dataInspector.ProcessType(entt::resolve<TagComponent>(), entity);
-		}
-		if (entity.HasComponent<TransformComponent>())
-		{
-			dataInspector.ProcessType(entt::resolve<TransformComponent>(), entity);
-
-			//if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
-			//{
-			//	auto& transform = entity.GetComponent<TransformComponent>().Transform;
-
-			//	ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
-
-			//	ImGui::TreePop();
-			//}
+			GetScene()->m_Registry.visit(entity, [this, &dataInspector, entity](const auto componentId)
+			{
+				const auto type = entt::resolve_type(componentId);
+				PreprocessType(type);
+			});
+			m_bIsPreprocessedTypesDirty = false;
 		}
 
-		GetScene()->m_Registry.visit(entity, [this, &dataInspector, entity](const auto componentId)
+		for (const auto type : m_PreprocessedTypes)
 		{
-			const auto type = entt::resolve_type(componentId);
-			if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
+			// Push type id for later use
+			ImGui::PushID(type.type_id());
 
 			dataInspector.ProcessType(type, entity);
-		});
+
+			ImGui::PopID();
+		}
 
 		ImGui::PopID();
+	}
+
+	void DataInspectorPanel::MarkPreprocessedTypesDirty()
+	{
+		m_PreprocessedTypes.clear();
+		m_bIsPreprocessedTypesDirty = true;
+	}
+
+	void DataInspectorPanel::PreprocessType(entt::meta_type type)
+	{
+		m_PreprocessedTypes.push_front(type);
 	}
 
 	void EntityInspectorPanel::RenderPanel()
@@ -47,10 +52,15 @@ namespace ZeoEngine {
 		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
-			// Sometimes, selected entity is changed when certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
-			// so we have to draw last entity's components once again to ensure all caches are applied
-			DrawComponents(m_LastSelectedEntity);
-			m_LastSelectedEntity = selectedEntity;
+			// For last frame
+			{
+				// Sometimes, selected entity is changed when certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
+				// so we have to draw last entity's components once again to ensure all caches are applied
+				DrawComponents(m_LastSelectedEntity);
+				m_LastSelectedEntity = selectedEntity;
+			}
+
+			MarkPreprocessedTypesDirty();
 			return;
 		}
 		if (selectedEntity)
