@@ -38,6 +38,7 @@ enum class PropertyType
 	ClampMax,				// [type_dependent]
 
 	DisplayName,			// const char*
+	Category,				// const char*
 	HideCondition,			// const char*
 };
 
@@ -74,6 +75,14 @@ entt::meta<enumType>()
 #define ZE_REFL_PROP_PAIR_WITH_CAST(propType, propValue, castToType) std::make_pair(PropertyType::propType, static_cast<castToType>(propValue))
 
 namespace ZeoEngine {
+
+	struct EnttTypeHashFn
+	{
+		std::size_t operator()(const entt::meta_type& type) const
+		{
+			return std::hash<uint32_t>()(type.type_id());
+		}
+	};
 
 	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 

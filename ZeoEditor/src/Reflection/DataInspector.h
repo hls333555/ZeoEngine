@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Reflection/ReflectionHelper.h"
@@ -15,6 +17,9 @@ namespace ZeoEngine {
 		DataInspector(DataInspectorPanel* context);
 
 		void ProcessType(entt::meta_type type, Entity entity);
+
+		void MarkPreprocessedDatasClean();
+		void MarkPreprocessedDatasDirty();
 
 	private:
 		template<typename T>
@@ -33,9 +38,12 @@ namespace ZeoEngine {
 		/** EntityID + dataID */
 		uint32_t GetUniqueDataID(entt::meta_data data);
 
+		void PreprocessData(entt::meta_type type, entt::meta_data data);
+
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, entt::meta_any instance);
 
+		void EvaluateData(entt::meta_data data, entt::meta_any instance);
 		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
 		void ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance);
 		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
@@ -134,6 +142,12 @@ namespace ZeoEngine {
 
 	private:
 		DataInspectorPanel* m_Context;
+
+		/** Map from category to list of data of the same type */
+		using ClassifiedDatas = std::map<std::string, std::list<entt::meta_data>>;
+		/** Map from type to all its data */
+		std::unordered_map<entt::meta_type, ClassifiedDatas, EnttTypeHashFn> m_PreprocessedDatas;
+		bool m_bIsPreprocessedDatasDirty{ true };
 	};
 
 }

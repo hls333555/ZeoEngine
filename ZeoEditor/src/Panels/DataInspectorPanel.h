@@ -3,6 +3,7 @@
 #include "Panels/EditorPanel.h"
 
 #include "Engine/GameFramework/Entity.h"
+#include "Reflection/DataInspector.h"
 
 namespace ZeoEngine {
 
@@ -17,11 +18,14 @@ namespace ZeoEngine {
 		void DrawComponents(Entity entity);
 		
 		void MarkPreprocessedTypesDirty();
+		void MarkPreprocessedDatasDirty();
 
 	private:
 		void PreprocessType(entt::meta_type type);
 
 	private:
+		DataInspector m_DataInspector{ this };
+
 		std::list<entt::meta_type> m_PreprocessedTypes;
 		bool m_bIsPreprocessedTypesDirty{ true };
 

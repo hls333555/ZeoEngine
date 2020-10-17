@@ -1,7 +1,6 @@
 #include "Panels/DataInspectorPanel.h"
 
 #include "Dockspaces/MainDockspace.h"
-#include "Reflection/DataInspector.h"
 #include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
@@ -11,11 +10,9 @@ namespace ZeoEngine {
 		// Push entity id for later use
 		ImGui::PushID(static_cast<uint32_t>(entity));
 
-		DataInspector dataInspector{ this };
-
 		if (m_bIsPreprocessedTypesDirty)
 		{
-			GetScene()->m_Registry.visit(entity, [this, &dataInspector, entity](const auto componentId)
+			GetScene()->m_Registry.visit(entity, [this](const auto componentId)
 			{
 				const auto type = entt::resolve_type(componentId);
 				PreprocessType(type);
@@ -28,10 +25,11 @@ namespace ZeoEngine {
 			// Push type id for later use
 			ImGui::PushID(type.type_id());
 
-			dataInspector.ProcessType(type, entity);
+			m_DataInspector.ProcessType(type, entity);
 
 			ImGui::PopID();
 		}
+		m_DataInspector.MarkPreprocessedDatasClean();
 
 		ImGui::PopID();
 	}
@@ -42,8 +40,14 @@ namespace ZeoEngine {
 		m_bIsPreprocessedTypesDirty = true;
 	}
 
+	void DataInspectorPanel::MarkPreprocessedDatasDirty()
+	{
+		m_DataInspector.MarkPreprocessedDatasDirty();
+	}
+
 	void DataInspectorPanel::PreprocessType(entt::meta_type type)
 	{
+		// Reverse type display order
 		m_PreprocessedTypes.push_front(type);
 	}
 
@@ -61,6 +65,7 @@ namespace ZeoEngine {
 			}
 
 			MarkPreprocessedTypesDirty();
+			MarkPreprocessedDatasDirty();
 			return;
 		}
 		if (selectedEntity)

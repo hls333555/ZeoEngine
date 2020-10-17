@@ -23,7 +23,7 @@ namespace ZeoEngine {
 		auto typeName = GetMetaObjectDisplayName(type);
 
 		bool bShouldDisplayHeader = true;
-		// Do not show CollapsingHeader if DisplayName is empty, see ParticleSystemDetailComponent
+		// Do not show CollapsingHeader if display name is empty, see ParticleSystemDetailComponent
 		if (*typeName == "")
 		{
 			bShouldDisplayHeader = false;
@@ -36,33 +36,70 @@ namespace ZeoEngine {
 		}
 		if (bIsHeaderExpanded)
 		{
-			type.data([this, instance](entt::meta_data data)
+			if (m_bIsPreprocessedDatasDirty)
 			{
-				if (ShouldHideData(data, instance)) return;
+				type.data([this, type](entt::meta_data data)
+				{
+					PreprocessData(type, data);
+				});
+			}
 
-				if (data.type().is_integral())
+			for (const auto& [category, datas] : m_PreprocessedDatas[type])
+			{
+				bool bShouldDisplayTree = false;
+				std::list<entt::meta_data> visibleDatas;
+				// Do not show TreeNode if none of these datas will show or category is not set
+				for (const auto data : datas)
 				{
-					ProcessIntegralData(data, instance);
+					if (!ShouldHideData(data, instance))
+					{
+						bShouldDisplayTree = category != "";
+						visibleDatas.push_back(data);
+					}
 				}
-				else if (data.type().is_floating_point())
+				bool bIsTreeExpanded = true;
+				if (bShouldDisplayTree)
 				{
-					ProcessFloatingPointData(data, instance);
+					bIsTreeExpanded = ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
 				}
-				else if (data.type().is_enum())
+				if (bIsTreeExpanded)
 				{
-					ProcessEnumData(data, instance);
+					for (const auto data : visibleDatas)
+					{
+						EvaluateData(data, instance);
+					}
+
+					if (bShouldDisplayTree)
+					{
+						ImGui::TreePop();
+					}
 				}
-				else
-				{
-					ProcessOtherData(data, instance);
-				}
-			});
+			}
 		}
+	}
+
+	void DataInspector::MarkPreprocessedDatasClean()
+	{
+		m_bIsPreprocessedDatasDirty = false;
+	}
+
+	void DataInspector::MarkPreprocessedDatasDirty()
+	{
+		m_PreprocessedDatas.clear();
+		m_bIsPreprocessedDatasDirty = true;
 	}
 
 	uint32_t DataInspector::GetUniqueDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
+	}
+
+	void DataInspector::PreprocessData(entt::meta_type type, entt::meta_data data)
+	{
+		auto categoryName = GetPropValue<const char*>(PropertyType::Category, data);
+		const char* category = categoryName ? *categoryName : "";
+		// Reverse data display order and categorize them
+		m_PreprocessedDatas[type][category].push_front(data);
 	}
 
 	bool DataInspector::ShouldHideData(entt::meta_data data, entt::meta_any instance)
@@ -114,6 +151,26 @@ namespace ZeoEngine {
 		}
 
 		return false;
+	}
+
+	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (data.type().is_integral())
+		{
+			ProcessIntegralData(data, instance);
+		}
+		else if (data.type().is_floating_point())
+		{
+			ProcessFloatingPointData(data, instance);
+		}
+		else if (data.type().is_enum())
+		{
+			ProcessEnumData(data, instance);
+		}
+		else
+		{
+			ProcessOtherData(data, instance);
+		}
 	}
 
 	void DataInspector::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)
@@ -178,6 +235,7 @@ namespace ZeoEngine {
 
 		if (ImGui::BeginCombo(*dataName, currentValueName))
 		{
+			// TODO: Reverse order
 			// Iterate to display all enum values
 			data.type().data([this, data, instance](entt::meta_data enumData)
 			{
@@ -242,7 +300,7 @@ namespace ZeoEngine {
 				SetDataValue(data, instance, boolCopy);
 			}
 
-			ZE_TRACE("Value changed!");
+			ZE_TRACE("Value changed after edit!");
 		}
 	}
 
