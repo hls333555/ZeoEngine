@@ -181,7 +181,7 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<int8_t>(data.type()))
 		{
-			ProcessScalarNData<int8_t>(data, instance, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX));
+			ProcessScalarNData<int8_t>(data, instance, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
 		}
 		else if (IsTypeEqual<int32_t>(data.type()))
 		{
@@ -189,19 +189,19 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<int64_t>(data.type()))
 		{
-			ProcessScalarNData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX);
+			ProcessScalarNData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 		}
 		else if (IsTypeEqual<uint8_t>(data.type()))
 		{
-			ProcessScalarNData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX);
+			ProcessScalarNData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 		}
 		else if (IsTypeEqual<uint32_t>(data.type()))
 		{
-			ProcessScalarNData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX);
+			ProcessScalarNData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 		}
 		else if (IsTypeEqual<uint64_t>(data.type()))
 		{
-			ProcessScalarNData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX);
+			ProcessScalarNData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 		}
 	}
 
@@ -213,7 +213,7 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<double>(data.type()))
 		{
-			ProcessScalarNData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3f");
+			ProcessScalarNData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
 		}
 	}
 
