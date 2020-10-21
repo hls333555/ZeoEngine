@@ -270,7 +270,7 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<glm::vec3>(data.type()))
 		{
-			ProcessScalarNData<glm::vec3, 3, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
+			ProcessScalarNData<glm::vec3, 3, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<glm::vec4>(data.type()))
 		{
@@ -290,7 +290,7 @@ namespace ZeoEngine {
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
 		if (bUseCopy)
 		{
-			boolCopy = GetDataValueByRef<bool>(data, instance);
+			boolCopy = GetDataValue<bool>(data, instance);
 		}
 
 		if (ImGui::Checkbox(*dataName, bUseCopy ? &boolCopy : &boolRef))
@@ -315,7 +315,7 @@ namespace ZeoEngine {
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
 		if (bUseCopy)
 		{
-			stringCopy = GetDataValueByRef<std::string>(data, instance);
+			stringCopy = GetDataValue<std::string>(data, instance);
 		}
 
 		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
@@ -358,7 +358,7 @@ namespace ZeoEngine {
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
 		if (bUseCopy)
 		{
-			vec4Copy = GetDataValueByRef<glm::vec4>(data, instance);
+			vec4Copy = GetDataValue<glm::vec4>(data, instance);
 		}
 
 		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);

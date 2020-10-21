@@ -73,7 +73,7 @@ namespace ZeoEngine {
 			if (bUseCopy)
 			{
 				// Copy the value
-				valueCopy = GetDataValueByRef<T>(data, instance);
+				valueCopy = GetDataValue<T>(data, instance);
 			}
 
 			void* valuePtr = nullptr;

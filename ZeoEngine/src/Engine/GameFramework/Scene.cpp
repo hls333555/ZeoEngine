@@ -58,7 +58,7 @@ namespace ZeoEngine {
 	{
 		// Render 2D
 		Camera* mainCamera = nullptr;
-		glm::mat4* cameraTransform = nullptr;
+		glm::mat4 cameraTransform;
 		{
 			auto view = m_Registry.view<TransformComponent, CameraComponent>();
 			for (auto entity : view)
@@ -67,14 +67,14 @@ namespace ZeoEngine {
 				if (cameraComp.bIsPrimary)
 				{
 					mainCamera = &cameraComp.Camera;
-					cameraTransform = &transformComp.Transform;
+					cameraTransform = transformComp.GetTransform();
 					break;
 				}
 			}
 		}
 		if (mainCamera)
 		{
-			Renderer2D::BeginScene(*mainCamera, *cameraTransform);
+			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 
@@ -82,11 +82,11 @@ namespace ZeoEngine {
 			group.sort([&](const entt::entity lhs, const entt::entity rhs) {
 				const auto& ltc = group.get<TransformComponent>(lhs);
 				const auto& rtc = group.get<TransformComponent>(rhs);
-				if (ltc.Transform[3][2] == rtc.Transform[3][2])
+				if (ltc.Translation.z == rtc.Translation.z)
 				{
 					return entt::registry::entity(lhs) < entt::registry::entity(rhs);
 				}
-				return ltc.Transform[3][2] < rtc.Transform[3][2];
+				return ltc.Translation.z < rtc.Translation.z;
 			});
 
 			for (auto entity : group)
@@ -94,11 +94,11 @@ namespace ZeoEngine {
 				auto [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 				if (spriteComp.Texture)
 				{
-					Renderer2D::DrawRotatedQuad(transformComp, spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
+					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
 				}
 				else
 				{
-					Renderer2D::DrawRotatedQuad(transformComp, spriteComp.TintColor);
+					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor);
 				}
 			}
 

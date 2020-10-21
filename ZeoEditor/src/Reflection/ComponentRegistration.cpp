@@ -39,7 +39,9 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TagComponent, Name);
 
 	ZE_REFL_TYPE(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")))
-		ZE_REFL_DATA_REF(TransformComponent, Transform);
+		ZE_REFL_DATA_REF(TransformComponent, Translation)
+		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging))
+		ZE_REFL_DATA_REF(TransformComponent, Scale);
 
 	ZE_REFL_TYPE(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")))
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TintColor)

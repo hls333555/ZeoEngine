@@ -100,6 +100,12 @@ namespace ZeoEngine {
 	}
 
 	template<typename T>
+	T GetDataValue(entt::meta_data data, entt::meta_any instance)
+	{
+		return data.get(instance).cast<T>();
+	}
+
+	template<typename T>
 	void SetDataValue(entt::meta_data data, entt::meta_any instance, T&& value)
 	{
 		data.set(instance, std::forward<T>(value));

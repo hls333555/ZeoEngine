@@ -70,7 +70,7 @@ namespace ZeoEngine {
 				// Pan camera view by holding middle mouse button
 				if (m_bShouldUpdate)
 				{
-					auto& transform = GetComponent<TransformComponent>().Transform;
+					auto& translation = GetComponent<TransformComponent>().Translation;
 					auto& sceneCamera = GetComponent<CameraComponent>().Camera;
 
 					// Move speed is set based on the zoom level (OrthographicSize)
@@ -80,8 +80,8 @@ namespace ZeoEngine {
 					if (!m_bIsMiddleMouseButtonFirstPressedWhenHovered)
 					{
 						// TODO: This moves pretty slowly on high framerate
-						transform[3][0] -= (position.x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
-						transform[3][1] += (position.y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
+						translation.x -= (position.x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
+						translation.y += (position.y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
 					}
 					m_bIsMiddleMouseButtonFirstPressedWhenHovered = false;
 					m_LastPressedMousePosition = position;

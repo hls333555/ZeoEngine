@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		Entity defaultTextureEntity = GetScene()->CreateEntity("Default Texture", true);
 		defaultTextureEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png"), glm::vec4(1.0f), glm::vec2{ 50.0f, 50.0f });
 		auto& transComp = defaultTextureEntity.GetComponent<TransformComponent>();
-		transComp.Transform = glm::scale(transComp.Transform, glm::vec3(100.0f));
+		transComp.Scale = glm::vec3(100.0f);
 
 		Entity shipEntity = GetScene()->CreateEntity("Player Ship");
 		shipEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Load("../Sandbox/assets/textures/Ship.png"));
