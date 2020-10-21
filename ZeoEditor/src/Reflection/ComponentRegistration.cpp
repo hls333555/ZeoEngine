@@ -24,7 +24,7 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TestComponent, I8Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Integral")), ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int8_t))
 		ZE_REFL_DATA_REF(TestComponent, I32Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Integral")), ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int32_t))
 		ZE_REFL_DATA_REF(TestComponent, I64Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Integral")), ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, int64_t))
-		ZE_REFL_DATA_REF(TestComponent, FloatVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Floating Point")), ZE_REFL_PROP_PAIR(ClampMin, 1.0f))
+		ZE_REFL_DATA_REF(TestComponent, FloatVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Floating Point")), ZE_REFL_PROP_PAIR(ClampMin, 1.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging))
 		ZE_REFL_DATA_REF(TestComponent, DoubleVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Floating Point")), ZE_REFL_PROP_PAIR(ClampMin, 1.0))
 		ZE_REFL_DATA_REF(TestComponent, enumVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Enum")))
 		ZE_REFL_DATA_REF(TestComponent, enumClassVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Enum")))

@@ -36,6 +36,7 @@ enum class PropertyType
 	DragSensitivity,		// float
 	ClampMin,				// [type_dependent]
 	ClampMax,				// [type_dependent]
+	ClampOnlyDuringDragging,// [key_only]
 
 	DisplayName,			// const char*
 	Category,				// const char*

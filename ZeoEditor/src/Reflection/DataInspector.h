@@ -51,7 +51,7 @@ namespace ZeoEngine {
 
 		void ProcessBoolData(entt::meta_data data, entt::meta_any instance);
 		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
-		template<typename T, int32_t N = 1, typename CT = T>
+		template<typename T, uint32_t N = 1, typename CT = T>
 		void ProcessScalarNData(entt::meta_data data, entt::meta_any instance, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format = "%d")
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
@@ -65,6 +65,7 @@ namespace ZeoEngine {
 			auto minValue = min.value_or(defaultMin);
 			auto max = GetPropValue<CT>(PropertyType::ClampMax, data);
 			auto maxValue = max.value_or(defaultMax);
+			ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			auto id = GetUniqueDataID(data);
 			// We assume getters return copy of data
 			T valueCopy;
@@ -89,7 +90,7 @@ namespace ZeoEngine {
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
-			bool bResult = ImGui::DragScalarN(*dataName, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, ImGuiSliderFlags_AlwaysClamp);
+			bool bResult = ImGui::DragScalarN(*dataName, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
 			if (bUseCopy && !valueBuffers[id].first)
 			{
 				SetDataValue(data, instance, valueCopy);
