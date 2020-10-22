@@ -27,6 +27,18 @@ T& get(entt::registry& registry, entt::entity entity)
 	return registry.template get<T>(entity);
 }
 
+template<typename T, typename... Args>
+void emplace(entt::registry& registry, entt::entity entity, Args&&... args)
+{
+	registry.template emplace<T>(entity, std::forward<Args>(args)...);
+}
+
+template<typename T>
+void remove(entt::registry& registry, entt::entity entity)
+{
+	registry.template remove<T>(entity);
+}
+
 enum class PropertyType
 {
     Name,					// const char*
@@ -50,7 +62,9 @@ entt::meta<_type>()																	\
     .type()                                                                         \
         .prop(PropertyType::Name, #_type)											\
         .prop(std::make_tuple(__VA_ARGS__))											\
-	.func<&get<_type>, entt::as_ref_t>("get"_hs)
+	.func<&get<_type>, entt::as_ref_t>("get"_hs)									\
+	.func<&emplace<_type>, entt::as_ref_t>("emplace"_hs)							\
+	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)							\
 .data<&_type::_data, policy>(#_data##_hs)											\
@@ -86,6 +100,8 @@ namespace ZeoEngine {
 	};
 
 	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	void AddType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	void RemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

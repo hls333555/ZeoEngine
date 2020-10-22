@@ -17,7 +17,7 @@ namespace ZeoEngine {
 	{
 	}
 
-	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
+	bool DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
 		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
 		auto typeName = GetMetaObjectDisplayName(type);
@@ -29,10 +29,31 @@ namespace ZeoEngine {
 			bShouldDisplayHeader = false;
 		}
 		bool bIsHeaderExpanded = true;
+		bool bWillRemoveType = false;
 		if (bShouldDisplayHeader)
 		{
-			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen);
+			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 			ShowPropertyTooltip(type);
+
+			ImGui::SameLine(ImGui::GetCurrentWindow()->InnerRect.GetWidth() - 23.0f);
+
+			// Display component settings
+			{
+				if (ImGui::Button("..."))
+				{
+					ImGui::OpenPopup("ComponentSettings");
+				}
+
+				if (ImGui::BeginPopup("ComponentSettings"))
+				{
+					if (ImGui::MenuItem("Remove Component"))
+					{
+						bWillRemoveType = true;
+					}
+
+					ImGui::EndPopup();
+				}
+			}
 		}
 		if (bIsHeaderExpanded)
 		{
@@ -76,6 +97,13 @@ namespace ZeoEngine {
 				}
 			}
 		}
+
+		if (bWillRemoveType)
+		{
+			RemoveType(type, m_Context->GetScene()->m_Registry, entity);
+		}
+
+		return bWillRemoveType;
 	}
 
 	void DataInspector::MarkPreprocessedDatasClean()

@@ -20,29 +20,60 @@ namespace ZeoEngine {
 			m_bIsPreprocessedTypesDirty = false;
 		}
 
+		bool bIsAnyTypeRemoved = false;
 		for (const auto type : m_PreprocessedTypes)
 		{
 			// Push type id for later use
 			ImGui::PushID(type.type_id());
 
-			m_DataInspector.ProcessType(type, entity);
+			if (m_DataInspector.ProcessType(type, entity))
+			{
+				bIsAnyTypeRemoved = true;
+			}
 
 			ImGui::PopID();
 		}
 		m_DataInspector.MarkPreprocessedDatasClean();
+		if (bIsAnyTypeRemoved)
+		{
+			MarkPreprocessedTypesDirty();
+		}
+
+		// Add component
+		{
+			if (ImGui::Button("Add Component"))
+			{
+				ImGui::OpenPopup("AddComponent");
+			}
+
+			if (ImGui::BeginPopup("AddComponent"))
+			{
+				// List all available components
+				entt::resolve([this, entity](auto type)
+				{
+					auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
+					if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
+
+					if (ImGui::MenuItem(*typeName))
+					{
+						AddType(type, GetScene()->m_Registry, entity);
+						MarkPreprocessedTypesDirty();
+						ImGui::CloseCurrentPopup();
+					}
+				});
+
+				ImGui::EndPopup();
+			}
+		}
 
 		ImGui::PopID();
 	}
 
 	void DataInspectorPanel::MarkPreprocessedTypesDirty()
 	{
+		m_DataInspector.MarkPreprocessedDatasDirty();
 		m_PreprocessedTypes.clear();
 		m_bIsPreprocessedTypesDirty = true;
-	}
-
-	void DataInspectorPanel::MarkPreprocessedDatasDirty()
-	{
-		m_DataInspector.MarkPreprocessedDatasDirty();
 	}
 
 	void DataInspectorPanel::PreprocessType(entt::meta_type type)
@@ -67,7 +98,6 @@ namespace ZeoEngine {
 			m_LastSelectedEntity = selectedEntity;
 
 			MarkPreprocessedTypesDirty();
-			MarkPreprocessedDatasDirty();
 			return;
 		}
 		if (selectedEntity)

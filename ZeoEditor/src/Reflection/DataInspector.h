@@ -16,7 +16,8 @@ namespace ZeoEngine {
 	public:
 		DataInspector(DataInspectorPanel* context);
 
-		void ProcessType(entt::meta_type type, Entity entity);
+		/** Returns true if type is removed during processing. */
+		bool ProcessType(entt::meta_type type, Entity entity);
 
 		void MarkPreprocessedDatasClean();
 		void MarkPreprocessedDatasDirty();

@@ -18,7 +18,6 @@ namespace ZeoEngine {
 		void DrawComponents(Entity entity);
 		
 		void MarkPreprocessedTypesDirty();
-		void MarkPreprocessedDatasDirty();
 
 	private:
 		void PreprocessType(entt::meta_type type);
