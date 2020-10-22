@@ -35,6 +35,11 @@ namespace ZeoEngine {
 		return { m_Registry.create(), this };
 	}
 
+	void Scene::DestroyEntity(Entity entity)
+	{
+		m_Registry.destroy(entity);
+	}
+
 	void Scene::OnUpdate(DeltaTime dt)
 	{
 		// Update scripts

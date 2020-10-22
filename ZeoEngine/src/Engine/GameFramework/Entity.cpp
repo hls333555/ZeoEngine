@@ -8,4 +8,9 @@ namespace ZeoEngine {
 	{
 	}
 
+	bool Entity::IsValid() const
+	{
+		return m_Scene->m_Registry.valid(*this);
+	}
+
 }

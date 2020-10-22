@@ -57,12 +57,14 @@ namespace ZeoEngine {
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
 			// For last frame
+			// We need to check validity as entity may have been destroyed just now
+			if (m_LastSelectedEntity.IsValid())
 			{
 				// Sometimes, selected entity is changed when certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
 				// so we have to draw last entity's components once again to ensure all caches are applied
 				DrawComponents(m_LastSelectedEntity);
-				m_LastSelectedEntity = selectedEntity;
 			}
+			m_LastSelectedEntity = selectedEntity;
 
 			MarkPreprocessedTypesDirty();
 			MarkPreprocessedDatasDirty();

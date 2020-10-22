@@ -4,6 +4,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/MainDockspace.h"
+#include "Engine/Core/KeyCodes.h"
 
 namespace ZeoEngine {
 
@@ -20,6 +21,17 @@ namespace ZeoEngine {
 		{
 			GetContext<MainDockspace>()->m_SelectedEntity = {};
 		}
+
+		// Right-click on blank space
+		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+		{
+			if (ImGui::MenuItem("Create Empty Entity"))
+			{
+				GetScene()->CreateEntity("New Entity");
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)
@@ -35,9 +47,28 @@ namespace ZeoEngine {
 			selectedEntity = entity;
 		}
 
+		bool bIsCurrentEntitySelected = selectedEntity == entity;
+		bool bWillDestroyEntity = false;
+		if (bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
+		{
+			bWillDestroyEntity = true;
+		}
+
 		if (bIsTreeExpanded)
 		{
+			// TODO: Display child entities
+
 			ImGui::TreePop();
+		}
+
+		// Defer entity destruction
+		if (bWillDestroyEntity)
+		{
+			GetScene()->DestroyEntity(entity);
+			if (bIsCurrentEntitySelected)
+			{
+				selectedEntity = {};
+			}
 		}
 		
 	}

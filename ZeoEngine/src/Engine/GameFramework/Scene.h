@@ -23,6 +23,7 @@ namespace ZeoEngine {
 		Entity CreateEntity(const std::string& name = std::string(), bool bIsInternal = false);
 		/** Create an entity with no default components. */
 		Entity CreateEmptyEntity();
+		void DestroyEntity(Entity entity);
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
