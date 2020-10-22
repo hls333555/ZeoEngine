@@ -14,6 +14,8 @@ namespace ZeoEngine {
 	void SceneViewportPanel::OnAttach()
 	{
 		CreatePreviewCamera();
+
+		GetScene()->m_Registry.on_construct<CameraComponent>().connect<&SceneViewportPanel::InitCameraViewportSize>(this);
 	}
 
 	void SceneViewportPanel::OnUpdate(DeltaTime dt)
@@ -150,6 +152,12 @@ namespace ZeoEngine {
 				cameraComp.Camera.SetViewportSize(size);
 			}
 		}
+	}
+
+	void SceneViewportPanel::InitCameraViewportSize(entt::registry& registry, entt::entity entity)
+	{
+		auto& cameraComp = registry.get<CameraComponent>(entity);
+		cameraComp.Camera.SetViewportSize(m_LastViewportSize);
 	}
 
 }

@@ -23,6 +23,8 @@ namespace ZeoEngine {
 
 		void OnViewportResize(const glm::vec2& size);
 
+		void InitCameraViewportSize(entt::registry& registry, entt::entity entity);
+
 	private:
 		Entity m_PreviewCamera;
 		glm::vec2 m_LastViewportSize{ 0.0f };
