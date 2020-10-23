@@ -9,6 +9,9 @@ namespace ImGui {
 
 	/** To draw a progress bar in Game View window, use GetWindowDrawList(); to draw a progress bar in standalone game, use GetForgroundDrawList(). */
 	IMGUI_API void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol);
+
+	/** Version that displays colored labels in front of each component (components > 1). */
+	IMGUI_API bool DragScalarNEx(const char* label, const char* component_labels[], const ImVec4 component_label_colors[], ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags);
 }
 
 namespace ZeoEngine {

@@ -91,7 +91,9 @@ namespace ZeoEngine {
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
-			bool bResult = ImGui::DragScalarN(*dataName, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
+			const char* componentLabels[] = { "X", "Y", "Z" };
+			const ImVec4 componentLabelColors[] = { { 1.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } };
+			bool bResult = ImGui::DragScalarNEx(*dataName, componentLabels, componentLabelColors, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
 			if (bUseCopy && !valueBuffers[id].first)
 			{
 				SetDataValue(data, instance, valueCopy);
