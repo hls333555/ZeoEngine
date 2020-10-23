@@ -59,6 +59,9 @@ namespace ZeoEngine {
 
 			virtual void OnUpdate(DeltaTime dt) override
 			{
+				auto* cameraComp = TryGetComponent<CameraComponent>();
+				if (!cameraComp) return;
+
 				if (m_bIsMiddleMouseButtonFirstPressed)
 				{
 					if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
@@ -73,7 +76,7 @@ namespace ZeoEngine {
 				if (m_bShouldUpdate)
 				{
 					auto& translation = GetComponent<TransformComponent>().Translation;
-					auto& sceneCamera = GetComponent<CameraComponent>().Camera;
+					auto& sceneCamera = cameraComp->Camera;
 
 					// Move speed is set based on the zoom level (OrthographicSize)
 					float cameraPanSpeed = sceneCamera.GetOrthographicSize() / 4.0f;
@@ -93,6 +96,7 @@ namespace ZeoEngine {
 				{
 					m_bIsMiddleMouseButtonFirstPressed = true;
 					m_bIsMiddleMouseButtonFirstPressedWhenHovered = true;
+					m_bShouldUpdate = false;
 				}
 			}
 

@@ -39,6 +39,8 @@ namespace ZeoEngine {
 			MarkPreprocessedTypesDirty();
 		}
 
+		ImGui::Separator();
+
 		// Add component
 		{
 			if (ImGui::Button("Add Component"))

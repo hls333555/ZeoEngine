@@ -19,6 +19,16 @@ namespace ZeoEngine {
 			return m_Entity.GetComponent<T>();
 		}
 
+		template<typename T>
+		T* TryGetComponent()
+		{
+			if (m_Entity.HasComponent<T>())
+			{
+				return &m_Entity.GetComponent<T>();
+			}
+			return nullptr;
+		}
+
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
 		virtual void OnUpdate(DeltaTime dt) {}
