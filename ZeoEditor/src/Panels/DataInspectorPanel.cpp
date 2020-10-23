@@ -41,10 +41,15 @@ namespace ZeoEngine {
 			MarkPreprocessedTypesDirty();
 		}
 
-		ImGui::Separator();
-
+		// TODO: Particle Inspector should not display this button
 		// Add component
 		{
+			ImGui::Separator();
+
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			ImVec2 textSize = ImGui::CalcTextSize("Add Component");
+			ImGui::Indent((contentRegionAvailable.x - textSize.x) / 2.0f);
+
 			if (ImGui::Button("Add Component"))
 			{
 				ImGui::OpenPopup("AddComponent");

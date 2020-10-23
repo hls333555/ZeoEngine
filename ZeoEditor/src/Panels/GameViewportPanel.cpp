@@ -18,7 +18,7 @@ namespace ZeoEngine {
 
 		// TODO: Cleanup
 		Entity defaultTextureEntity = GetScene()->CreateEntity("Default Texture", true);
-		defaultTextureEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png"), glm::vec4(1.0f), glm::vec2{ 50.0f, 50.0f });
+		defaultTextureEntity.AddComponent<SpriteRendererComponent>(Texture2DLibrary::Get().Get("assets/textures/Checkerboard_Alpha.png"), glm::vec4(1.0f), glm::vec2{ 50.0f, 50.0f });
 		auto& transComp = defaultTextureEntity.GetComponent<TransformComponent>();
 		transComp.Scale = glm::vec3(100.0f);
 
@@ -67,10 +67,11 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::RenderToolbar()
 	{
+		const float buttonSize = 32.0f;
 		// Place buttons at window center
-		ImGui::Indent(ImGui::GetWindowSize().x / 2.0f - 40.0f);
+		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - buttonSize - GImGui->Style.FramePadding.x * 3.0f/* Both two sides of button and SameLine() have spacing. */);
 		// Toggle play / stop
-		if (ImGui::ImageButton(m_ToolbarTextures[0]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
+		if (ImGui::ImageButton(m_ToolbarTextures[0]->GetTexture(), { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 		{
 			//if (pieState == PIEState::None)
 			//{
@@ -83,7 +84,7 @@ namespace ZeoEngine {
 		}
 		ImGui::SameLine();
 		// Toggle pause / resume
-		if (ImGui::ImageButton(m_ToolbarTextures[1]->GetTexture(), ImVec2(32.0f, 32.0f), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)))
+		if (ImGui::ImageButton(m_ToolbarTextures[1]->GetTexture(), { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 		{
 			//if (pieState == PIEState::Running)
 			//{

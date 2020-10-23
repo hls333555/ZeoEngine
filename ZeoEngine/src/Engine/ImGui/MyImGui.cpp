@@ -8,7 +8,7 @@ namespace ImGui {
 	void TextCentered(const char* fmt, ...)
 	{
 		ImVec2 textSize = CalcTextSize(fmt);
-		float indent = (GetWindowSize().x - textSize.x) / 2.0f;
+		float indent = (GetContentRegionAvail().x - textSize.x) * 0.5f;
 		Indent(indent);
 		va_list args;
 		va_start(args, fmt);

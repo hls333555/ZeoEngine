@@ -42,6 +42,7 @@ namespace ZeoEngine {
 
 		auto& selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
 		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Name.c_str());
 		if (ImGui::IsItemClicked())
 		{

@@ -24,9 +24,6 @@ namespace ZeoEngine {
 		void AddGameObjectPendingDestroy(GameObject* object) { m_GameObjectsPendingDestroy.insert(object); }
 
 	private:
-		void LoadFont(const char* fontPath, const char* missingChars);
-
-	private:
 		TimerManager m_CoreTimerManager{ "Core" };
 		ParticleLibrary m_ParticleLibrary;
 

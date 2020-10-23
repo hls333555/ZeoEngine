@@ -32,14 +32,18 @@ namespace ZeoEngine {
 		bool bWillRemoveType = false;
 		if (bShouldDisplayHeader)
 		{
+			// Get available content region before adding CollapsingHeader as it will occupy space
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+
 			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 			ShowPropertyTooltip(type);
 
-			ImGui::SameLine(ImGui::GetCurrentWindow()->InnerRect.GetWidth() - 23.0f);
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 
 			// Display component settings
 			{
-				if (ImGui::Button("..."))
+				if (ImGui::Button("...", { lineHeight, lineHeight }))
 				{
 					ImGui::OpenPopup("ComponentSettings");
 				}
@@ -451,13 +455,13 @@ namespace ZeoEngine {
 			// Draw checkerboard texture as background first
 			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
 				ImGui::GetCursorScreenPos(),
-				ImVec2(ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth),
-				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+				{ ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 			// Draw our texture on top of that
 			ImGui::Image(texture2DRef ? texture2DRef->GetTexture() : nullptr,
-				ImVec2(texturePreviewWidth, texturePreviewWidth),
-				ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
-				texture2DRef ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 0.0f));
+				{ texturePreviewWidth, texturePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+				texture2DRef ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
 			// Display texture info tooltip
 			if (texture2DRef && ImGui::IsItemHovered())
 			{

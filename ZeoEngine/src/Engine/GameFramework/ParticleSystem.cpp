@@ -724,7 +724,7 @@ namespace ZeoEngine {
 		if (m_bSystemComplete)
 		{
 			static const ImVec2 textSize = ImGui::CalcTextSize("Completed");
-			const float indent = (ImGui::GetWindowSize().x - textSize.x) / 2.0f;
+			const float indent = (ImGui::GetContentRegionAvail().x - textSize.x) * 0.5f;
 			// Display completed text at the top center of Particle View window
 			ImGui::GetForegroundDrawList()->AddText(ImVec2(particleViewStartDrawPos.x + indent, particleViewStartDrawPos.y), IM_COL32_WHITE, "Completed");
 		}

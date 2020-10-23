@@ -44,7 +44,7 @@ namespace ZeoEngine {
 			// Lower right corner for the UVs to be applied at
 			window->InnerRect.Max,
 			// The UVs have to be flipped
-			ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 	}
 
 	void SceneViewportPanel::CreatePreviewCamera()

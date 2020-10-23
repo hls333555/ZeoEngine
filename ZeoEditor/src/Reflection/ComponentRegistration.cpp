@@ -35,8 +35,8 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TestComponent, Texture2DVar);
 #endif
 
-	ZE_REFL_TYPE(TagComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Tag")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("标签组件")))
-		ZE_REFL_DATA_REF(TagComponent, Name);
+	ZE_REFL_TYPE(TagComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("标签组件")))
+		ZE_REFL_DATA_REF(TagComponent, Name, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("")));
 
 	ZE_REFL_TYPE(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")))
 		ZE_REFL_DATA_REF(TransformComponent, Translation)
