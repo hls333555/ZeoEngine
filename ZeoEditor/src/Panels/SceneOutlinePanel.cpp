@@ -10,6 +10,7 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::RenderPanel()
 	{
+		// TODO: Reverse entity display order
 		GetScene()->m_Registry.each([&](auto entityID)
 		{
 			Entity entity{ entityID, GetScene().get() };

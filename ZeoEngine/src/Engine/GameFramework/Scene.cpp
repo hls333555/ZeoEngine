@@ -19,6 +19,8 @@ namespace ZeoEngine {
 	{
 		Entity entity = CreateEmptyEntity();
 
+		static uint32_t creationId = 0;
+		entity.AddComponent<IdComponent>(creationId++);
 		auto& tagComp = entity.AddComponent<TagComponent>();
 		tagComp.Name = name.empty() ? "Entity" : name;
 		tagComp.bIsInternal = bIsInternal;
@@ -89,7 +91,7 @@ namespace ZeoEngine {
 				const auto& rtc = group.get<TransformComponent>(rhs);
 				if (ltc.Translation.z == rtc.Translation.z)
 				{
-					return entt::registry::entity(lhs) < entt::registry::entity(rhs);
+					return m_Registry.get<IdComponent>(lhs) < m_Registry.get<IdComponent>(rhs);
 				}
 				return ltc.Translation.z < rtc.Translation.z;
 			});

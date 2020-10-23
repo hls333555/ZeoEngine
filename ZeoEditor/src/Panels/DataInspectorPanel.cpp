@@ -14,6 +14,8 @@ namespace ZeoEngine {
 		{
 			GetScene()->m_Registry.visit(entity, [this](const auto componentId)
 			{
+				if (componentId == entt::type_info<IdComponent>::id()) return;
+
 				const auto type = entt::resolve_type(componentId);
 				PreprocessType(type);
 			});
@@ -50,6 +52,7 @@ namespace ZeoEngine {
 
 			if (ImGui::BeginPopup("AddComponent"))
 			{
+				// TODO: Sort types in alphabetical order
 				// List all available components
 				entt::resolve([this, entity](auto type)
 				{

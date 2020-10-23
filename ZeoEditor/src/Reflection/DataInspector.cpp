@@ -263,7 +263,7 @@ namespace ZeoEngine {
 
 		if (ImGui::BeginCombo(*dataName, currentValueName))
 		{
-			// TODO: Reverse order
+			// TODO: Reverse enum display order
 			// Iterate to display all enum values
 			data.type().data([this, data, instance](entt::meta_data enumData)
 			{
