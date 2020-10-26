@@ -29,6 +29,7 @@ IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
 IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
 IncludeDir["entt"] = "ZeoEngine/vendor/entt/include"
+IncludeDir["yaml_cpp"] = "ZeoEngine/vendor/yaml-cpp/include"
 
 -- Include premake files
 group "Dependencies"
@@ -36,6 +37,7 @@ group "Dependencies"
 	include "ZeoEngine/vendor/Glad"
 	include "ZeoEngine/vendor/ImGui"
 	include "ZeoEngine/vendor/rttr"
+	include "ZeoEngine/vendor/yaml-cpp"
 group ""
 
 project "ZeoEngine"
@@ -82,7 +84,8 @@ project "ZeoEngine"
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.rapidjson}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}"
 	}
 
 	libdirs
@@ -95,6 +98,7 @@ project "ZeoEngine"
 		"GLFW",
 		"Glad",
 		"ImGui",
+		"yaml-cpp",
 		"opengl32.lib",
 		"rttr",
 	}
@@ -175,7 +179,8 @@ project "ZeoEditor"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.NFD}",
 		"%{IncludeDir.rapidjson}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}"
 	}
 
 	links
