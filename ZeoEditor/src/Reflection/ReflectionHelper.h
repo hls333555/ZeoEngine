@@ -22,15 +22,9 @@ static const ze__auto__register__ ZE_CAT(auto_register__, __LINE__);            
 static void ze_auto_register_reflection_function_()
 
 template<typename T>
-T& get(entt::registry& registry, entt::entity entity)
+T& emplace(entt::registry& registry, entt::entity entity)
 {
-	return registry.template get<T>(entity);
-}
-
-template<typename T, typename... Args>
-void emplace(entt::registry& registry, entt::entity entity, Args&&... args)
-{
-	registry.template emplace<T>(entity, std::forward<Args>(args)...);
+	return registry.template emplace<T>(entity);
 }
 
 template<typename T>
@@ -39,20 +33,30 @@ void remove(entt::registry& registry, entt::entity entity)
 	registry.template remove<T>(entity);
 }
 
+template<typename T>
+T& get(entt::registry& registry, entt::entity entity)
+{
+	return registry.template get<T>(entity);
+}
+
 enum class PropertyType
 {
-    Name,					// const char*
-    Tooltip,				// const char*
-	SetterAndGetter,		// [key_only]
+    Name,					// [value_type: const char*] Name of type or data.
+    Tooltip,				// [value_type: const char*] Tooltip of type or data.
+	SetterAndGetter,		// [key_only] Indicates this data has setter and getter.
+	HideTypeHeader,			// [key_only] This type will not display CollapsingHeader.
 
-	DragSensitivity,		// float
-	ClampMin,				// [type_dependent]
-	ClampMax,				// [type_dependent]
-	ClampOnlyDuringDragging,// [key_only]
+	DragSensitivity,		// [value_type: float] Speed of dragging.
+	ClampMin,				// [value_type: type_dependent] Min value.
+	ClampMax,				// [value_type: type_dependent] Max value.
+	ClampOnlyDuringDragging,// [key_only] Should value be clamped only during dragging? If this property is not set, inputted value will not get clamped.
 
-	DisplayName,			// const char*
-	Category,				// const char*
-	HideCondition,			// const char*
+	DisplayName,			// [value_type: const char*] Display name of type or data.
+	InherentType,			// [key_only] This type cannot be added or removed within editor.
+	HiddenInEditor,			// [key_only] Should hide this data in editor?
+	Category,				// [value_type: const char*] Category of data.
+	HideCondition,			// [value_type: const char*] Hide this data if provided expression yields true.
+	Transient,				// [key_only] If set, this data will not get serialized.
 };
 
 #define ZE_TEXT(text) u8##text
@@ -62,8 +66,8 @@ entt::meta<_type>()																	\
     .type()                                                                         \
         .prop(PropertyType::Name, #_type)											\
         .prop(std::make_tuple(__VA_ARGS__))											\
+	.ctor<&emplace<_type>, entt::as_ref_t>()										\
 	.func<&get<_type>, entt::as_ref_t>("get"_hs)									\
-	.func<&emplace<_type>, entt::as_ref_t>("emplace"_hs)							\
 	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)							\
@@ -99,9 +103,10 @@ namespace ZeoEngine {
 		}
 	};
 
-	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 	void AddType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	entt::meta_any AddTypeById(entt::id_type typeId, entt::registry& registry, entt::entity entity);
 	void RemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

@@ -40,6 +40,10 @@ namespace ZeoEngine {
 			return m_Scene->m_Registry.has<T>(m_EntityHandle);
 		}
 
+		/** Returns the entity identifier without the version. */
+		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
+
+		/** This only checks if this entity is a null-entity while IsValid() checks if this entity is still alive. */
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }
 		operator uint32_t() const { return static_cast<uint32_t>(m_EntityHandle); }

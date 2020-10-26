@@ -31,6 +31,7 @@ namespace ZeoEngine {
 
 	void EditorMenu::PushMenuItem(EditorMenuItem* menuItem)
 	{
+		menuItem->SetContext(this);
 		m_MenuItems.emplace_back(menuItem);
 	}
 
@@ -79,7 +80,7 @@ namespace ZeoEngine {
 			{
 				const float statsWidth = ImGui::CalcTextSize("%.f FPS (%.2f ms)").x;
 				ImGui::Indent(contentRegionAvailable.x - statsWidth);
-				ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.f / ImGui::GetIO().Framerate);
+				ImGui::Text("%.f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 			}
 
 			ImGui::EndMainMenuBar();

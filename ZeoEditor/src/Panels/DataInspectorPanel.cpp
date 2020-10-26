@@ -7,75 +7,84 @@ namespace ZeoEngine {
 
 	void DataInspectorPanel::DrawComponents(Entity entity)
 	{
-		// Push entity id for later use
+		// Push entity id
 		ImGui::PushID(static_cast<uint32_t>(entity));
-
-		if (m_bIsPreprocessedTypesDirty)
 		{
-			GetScene()->m_Registry.visit(entity, [this](const auto componentId)
+			if (m_bIsPreprocessedTypesDirty)
 			{
-				if (componentId == entt::type_info<IdComponent>::id()) return;
+				ZE_CORE_TRACE("Sorting types on entity with ID = {0}", entity.GetEntityId());
 
-				const auto type = entt::resolve_type(componentId);
-				PreprocessType(type);
-			});
-			m_bIsPreprocessedTypesDirty = false;
-		}
-
-		bool bIsAnyTypeRemoved = false;
-		for (const auto type : m_PreprocessedTypes)
-		{
-			// Push type id for later use
-			ImGui::PushID(type.type_id());
-
-			if (m_DataInspector.ProcessType(type, entity))
-			{
-				bIsAnyTypeRemoved = true;
-			}
-
-			ImGui::PopID();
-		}
-		m_DataInspector.MarkPreprocessedDatasClean();
-		if (bIsAnyTypeRemoved)
-		{
-			MarkPreprocessedTypesDirty();
-		}
-
-		// TODO: Particle Inspector should not display this button
-		// Add component
-		{
-			ImGui::Separator();
-
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-			ImVec2 textSize = ImGui::CalcTextSize("Add Component");
-			ImGui::Indent((contentRegionAvailable.x - textSize.x) / 2.0f);
-
-			if (ImGui::Button("Add Component"))
-			{
-				ImGui::OpenPopup("AddComponent");
-			}
-
-			if (ImGui::BeginPopup("AddComponent"))
-			{
-				// TODO: Sort types in alphabetical order
-				// List all available components
-				entt::resolve([this, entity](auto type)
+				// Iterate all types on this entity and reverse their order
+				GetScene()->m_Registry.visit(entity, [this](const auto typeId)
 				{
-					auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
-					if (IsTypeEqual<TagComponent>(type) || IsTypeEqual<TransformComponent>(type)) return;
-
-					if (ImGui::MenuItem(*typeName))
-					{
-						AddType(type, GetScene()->m_Registry, entity);
-						MarkPreprocessedTypesDirty();
-						ImGui::CloseCurrentPopup();
-					}
+					const auto type = entt::resolve_type(typeId);
+					PreprocessType(type);
 				});
+				m_bIsPreprocessedTypesDirty = false;
+			}
 
-				ImGui::EndPopup();
+			bool bIsAnyTypeRemoved = false;
+			// Process types on this entity
+			for (const auto type : m_PreprocessedTypes)
+			{
+				// Push type id
+				ImGui::PushID(type.type_id());
+				{
+					if (m_DataInspector.ProcessType(type, entity))
+					{
+						bIsAnyTypeRemoved = true;
+					}
+				}
+				ImGui::PopID();
+			}
+			if (bIsAnyTypeRemoved)
+			{
+				MarkPreprocessedTypesDirty();
+			}
+			else
+			{
+				m_DataInspector.MarkPreprocessedDatasClean();
+			}
+
+			// TODO: Particle Inspector should not display this button
+			// Add component button
+			{
+				ImGui::Separator();
+
+				ImGui::Columns(1);
+				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+				ImVec2 textSize = ImGui::CalcTextSize("Add Component");
+				ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);
+				
+				if (ImGui::Button("Add Component"))
+				{
+					ImGui::OpenPopup("AddComponent");
+				}
+
+				if (ImGui::BeginPopup("AddComponent"))
+				{
+					// TODO: Sort types in alphabetical order
+					// List all registered components
+					entt::resolve([this, entity](auto type)
+					{
+						// Inherent types can never be added
+						auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
+						if (bIsInherentType) return;
+
+						// We want to display "full name" here instead of "display name"
+						auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
+						if (ImGui::MenuItem(*typeName))
+						{
+							AddType(type, GetScene()->m_Registry, entity);
+							MarkPreprocessedTypesDirty();
+							ImGui::CloseCurrentPopup();
+						}
+					});
+
+					ImGui::EndPopup();
+				}
 			}
 		}
-
 		ImGui::PopID();
 	}
 
@@ -94,7 +103,7 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::RenderPanel()
 	{
-		Entity selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
+		Entity selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
 			// For last frame

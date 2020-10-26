@@ -22,26 +22,24 @@ namespace ZeoEngine {
 		const auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
 		auto typeName = GetMetaObjectDisplayName(type);
 
-		bool bShouldDisplayHeader = true;
-		// Do not show CollapsingHeader if display name is empty, see ParticleSystemDetailComponent
-		if (*typeName == "")
-		{
-			bShouldDisplayHeader = false;
-		}
+		// Do not show CollapsingHeader if PropertyType::HideTypeHeader is set
+		bool bShouldDisplayHeader = !DoesPropExist(PropertyType::HideTypeHeader, type);
 		bool bIsHeaderExpanded = true;
 		bool bWillRemoveType = false;
 		if (bShouldDisplayHeader)
 		{
+			ImGui::Columns(1);
 			// Get available content region before adding CollapsingHeader as it will occupy space
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-
+			// Type collapsing header
 			bIsHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+			// Type tooltip
 			ShowPropertyTooltip(type);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 
-			// Display component settings
+			// Component settings button
 			{
 				if (ImGui::Button("...", { lineHeight, lineHeight }))
 				{
@@ -50,7 +48,9 @@ namespace ZeoEngine {
 
 				if (ImGui::BeginPopup("ComponentSettings"))
 				{
-					if (ImGui::MenuItem("Remove Component"))
+					// Inherent types can never be removed
+					auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
+					if (ImGui::MenuItem("Remove Component", nullptr, false, !bIsInherentType))
 					{
 						bWillRemoveType = true;
 					}
@@ -63,6 +63,9 @@ namespace ZeoEngine {
 		{
 			if (m_bIsPreprocessedDatasDirty)
 			{
+				ZE_CORE_TRACE("Sorting datas on '{0}'", *typeName);
+
+				// Iterate all datas on this entity, reverse their order and categorize them
 				type.data([this, type](entt::meta_data data)
 				{
 					PreprocessData(type, data);
@@ -85,18 +88,41 @@ namespace ZeoEngine {
 				bool bIsTreeExpanded = true;
 				if (bShouldDisplayTree)
 				{
-					bIsTreeExpanded = ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+					ImGui::Columns(1);
+					// Data category tree
+					bIsTreeExpanded = ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
 				}
 				if (bIsTreeExpanded)
 				{
+					// We want column seperator to keep synced across different entities
+					ImGui::PopID();
+					ImGui::PopID();
+					ImGui::Columns(2);
+					// Re-push entity id
+					ImGui::PushID(static_cast<uint32_t>(entity));
+					// Re-push type id
+					ImGui::PushID(type.type_id());
+
+					ImGui::AlignTextToFramePadding();
 					for (const auto data : visibleDatas)
 					{
-						EvaluateData(data, instance);
-					}
-
-					if (bShouldDisplayTree)
-					{
-						ImGui::TreePop();
+						auto dataName = GetMetaObjectDisplayName(data);
+						// Data name
+						ImGui::TreeNodeEx(*dataName, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);
+						// Data tooltip
+						ShowPropertyTooltip(data);
+						// Switch to the right column
+						ImGui::NextColumn();
+						// Align width to the right side
+						ImGui::SetNextItemWidth(-1.0f);
+						// Push data name as id
+						ImGui::PushID(*dataName);
+						{
+							EvaluateData(data, instance);
+						}
+						ImGui::PopID();
+						// Switch to the next row
+						ImGui::NextColumn();
 					}
 				}
 			}
@@ -136,6 +162,9 @@ namespace ZeoEngine {
 
 	bool DataInspector::ShouldHideData(entt::meta_data data, entt::meta_any instance)
 	{
+		auto bIsHiddenInEditor = DoesPropExist(PropertyType::HiddenInEditor, data);
+		if (bIsHiddenInEditor) return true;
+
 		auto hideCondition = GetPropValue<const char*>(PropertyType::HideCondition, data);
 		// HideCondition property is not set, show this data normally
 		if (!hideCondition) return false;
@@ -175,10 +204,10 @@ namespace ZeoEngine {
 				hideConditionBuffers[id].second = valueStr;
 			}
 
-			auto keyData = entt::resolve_type(instance.type().type_id()).data(entt::hashed_string{ keyStr.c_str() });
+			auto keyData = entt::resolve_type(instance.type().type_id()).data(entt::hashed_string::value(keyStr.c_str()));
 			auto keyDataValue = keyData.get(instance);
 			auto keyDataType = keyData.type();
-			auto valueToCompare = keyDataType.data(entt::hashed_string{ valueStr.c_str() }).get({});
+			auto valueToCompare = keyDataType.data(entt::hashed_string::value(valueStr.c_str())).get({});
 			return keyDataValue != valueToCompare;
 		}
 
@@ -217,7 +246,7 @@ namespace ZeoEngine {
 		}
 		else if (IsTypeEqual<int32_t>(data.type()))
 		{
-			ProcessScalarNData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX);
+			ProcessScalarNData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 		}
 		else if (IsTypeEqual<int64_t>(data.type()))
 		{
@@ -251,8 +280,6 @@ namespace ZeoEngine {
 
 	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
 	{
-		auto dataName = GetMetaObjectDisplayName(data);
-
 		// Get current enum value name by iterating all enum values and comparing
 		const char* currentValueName = nullptr;
 		auto currentValue = data.get(instance);
@@ -265,7 +292,8 @@ namespace ZeoEngine {
 			}
 		});
 
-		if (ImGui::BeginCombo(*dataName, currentValueName))
+		// NOTE: We cannot leave ComboBox's label empty
+		if (ImGui::BeginCombo("##Enum", currentValueName))
 		{
 			// TODO: Reverse enum display order
 			// Iterate to display all enum values
@@ -317,7 +345,6 @@ namespace ZeoEngine {
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& boolRef = GetDataValueByRef<bool>(data, instance);
-		auto dataName = GetMetaObjectDisplayName(data);
 		bool boolCopy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
 		if (bUseCopy)
@@ -325,7 +352,8 @@ namespace ZeoEngine {
 			boolCopy = GetDataValue<bool>(data, instance);
 		}
 
-		if (ImGui::Checkbox(*dataName, bUseCopy ? &boolCopy : &boolRef))
+		// NOTE: We cannot leave Checkbox's label empty
+		if (ImGui::Checkbox("##Bool", bUseCopy ? &boolCopy : &boolRef))
 		{
 			if (bUseCopy)
 			{
@@ -341,7 +369,6 @@ namespace ZeoEngine {
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
 		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
-		auto dataName = GetMetaObjectDisplayName(data);
 		auto id = GetUniqueDataID(data);
 		std::string stringCopy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
@@ -351,7 +378,8 @@ namespace ZeoEngine {
 		}
 
 		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
-		ImGui::InputText(*dataName, stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
+		// NOTE: We cannot leave InputBox's label empty
+		ImGui::InputText("##String", stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
 		if (bUseCopy && !stringBuffers[id].first)
 		{
 			SetDataValue(data, instance, std::move(stringCopy));
@@ -384,7 +412,6 @@ namespace ZeoEngine {
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
 		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
-		auto dataName = GetMetaObjectDisplayName(data);
 		auto id = GetUniqueDataID(data);
 		glm::vec4 vec4Copy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
@@ -394,7 +421,7 @@ namespace ZeoEngine {
 		}
 
 		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);
-		bool bResult = ImGui::ColorEdit4(*dataName, vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
+		bool bResult = ImGui::ColorEdit4("", vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
 		if (bUseCopy && !vec4Buffers[id].first)
 		{
 			SetDataValue(data, instance, std::move(vec4Copy));
@@ -445,12 +472,11 @@ namespace ZeoEngine {
 	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& texture2DRef = GetDataValueByRef<Ref<Texture2D>>(data, instance);
-		auto dataName = GetMetaObjectDisplayName(data);
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
 		{
-			auto backgroundTexture = library.Get("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+			auto backgroundTexture = library.Get("assets/textures/Checkerboard_Alpha.png");
 			const float texturePreviewWidth = 100.0f;
 			// Draw checkerboard texture as background first
 			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
@@ -470,9 +496,10 @@ namespace ZeoEngine {
 		}
 
 		ImGui::SameLine();
+		ImGui::SetNextItemWidth(-1.0f);
 
 		// Texture browser
-		if (ImGui::BeginCombo(*dataName, texture2DRef ? texture2DRef->GetFileName().c_str() : nullptr))
+		if (ImGui::BeginCombo("##Texture2D", texture2DRef ? texture2DRef->GetFileName().c_str() : nullptr))
 		{
 			bool bIsValueChangedAfterEdit = false;
 			// Pop up file browser to select a texture from disk

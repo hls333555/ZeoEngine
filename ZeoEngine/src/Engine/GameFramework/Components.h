@@ -47,28 +47,14 @@ namespace ZeoEngine {
 	};
 #endif
 
-	/** [Internal] Entity creation order used by rendering. */
-	struct IdComponent
-	{
-		uint32_t CreationId;
-
-		IdComponent(uint32_t creationId)
-			: CreationId(creationId) {}
-		IdComponent(const IdComponent&) = default;
-
-		bool operator<(const IdComponent& other) const { return CreationId < other.CreationId; }
-		operator uint32_t() const { return CreationId; }
-	};
-
-	struct TagComponent
+	struct CoreComponent
 	{
 		std::string Name;
+		uint32_t CreationId;
 		bool bIsInternal{ false };
 
-		TagComponent() = default;
-		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& name)
-			:Name(name) {}
+		CoreComponent() = default;
+		CoreComponent(const CoreComponent&) = default;
 
 	};
 

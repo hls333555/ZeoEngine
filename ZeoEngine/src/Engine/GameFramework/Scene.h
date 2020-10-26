@@ -10,6 +10,7 @@ namespace ZeoEngine {
 	class Scene
 	{
 		friend class Entity;
+		friend class SceneSerializer;
 		friend class SceneViewportPanel;
 		friend class SceneOutlinePanel;
 		friend class DataInspectorPanel;
@@ -19,11 +20,16 @@ namespace ZeoEngine {
 		Scene();
 		~Scene();
 
+		void ResetScene();
+
 		/** Create an entity with default components. If bIsInternal is true, this entity will not show in the SceneOutlinePanel. */
-		Entity CreateEntity(const std::string& name = std::string(), bool bIsInternal = false);
+		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
+
 		/** Create an entity with no default components. */
 		Entity CreateEmptyEntity();
 		void DestroyEntity(Entity entity);
+
+		void SortEntities();
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -31,6 +37,7 @@ namespace ZeoEngine {
 
 	private:
 		entt::registry m_Registry;
+		uint32_t m_EntityCount = 0;
 	};
 
 }

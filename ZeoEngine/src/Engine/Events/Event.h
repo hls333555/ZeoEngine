@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <ostream>
 
 #include "Engine/Core/Core.h"
 

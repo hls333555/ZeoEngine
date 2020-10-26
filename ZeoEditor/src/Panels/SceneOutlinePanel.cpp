@@ -10,17 +10,18 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::RenderPanel()
 	{
-		// TODO: Reverse entity display order
-		GetScene()->m_Registry.each([&](auto entityID)
+		// Display entities in creation order, the order is updated when a new entity is created
+		GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
 		{
-			Entity entity{ entityID, GetScene().get() };
+			Entity entity{ entityId, GetScene().get() };
 			DrawEntityNode(entity);
 		});
 
+		auto& selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
 		// Deselect entity when blank space is clicked
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 		{
-			GetContext<MainDockspace>()->m_SelectedEntity = {};
+			selectedEntity = {};
 		}
 
 		// Right-click on blank space
@@ -28,7 +29,7 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem("Create Empty Entity"))
 			{
-				GetScene()->CreateEntity("New Entity");
+				selectedEntity = GetScene()->CreateEntity("New Entity");
 			}
 
 			ImGui::EndPopup();
@@ -37,13 +38,13 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)
 	{
-		auto& tagComp = entity.GetComponent<TagComponent>();
-		if (tagComp.bIsInternal) return;
+		auto& coreComp = entity.GetComponent<CoreComponent>();
+		if (coreComp.bIsInternal) return;
 
-		auto& selectedEntity = GetContext<MainDockspace>()->m_SelectedEntity;
+		auto& selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
 		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tagComp.Name.c_str());
+		bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, coreComp.Name.c_str());
 		if (ImGui::IsItemClicked())
 		{
 			selectedEntity = entity;

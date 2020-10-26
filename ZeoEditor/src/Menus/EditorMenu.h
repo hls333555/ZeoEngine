@@ -6,6 +6,7 @@
 namespace ZeoEngine {
 
 	class EditorMenuItem;
+	class EditorDockspace;
 
 	class EditorMenu
 	{
@@ -17,6 +18,9 @@ namespace ZeoEngine {
 
 		void OnImGuiRender();
 
+		template<typename T = EditorDockspace>
+		T* GetContext() { return dynamic_cast<T*>(m_Context); }
+		void SetContext(EditorDockspace* contextDockspace) { m_Context = contextDockspace; }
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
 		void PushMenuItem(EditorMenuItem* menuItem);
@@ -26,6 +30,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_MenuName;
+		EditorDockspace* m_Context;
 		bool m_bEnabled{ true };
 		std::vector<EditorMenuItem*> m_MenuItems;
 	};

@@ -6,19 +6,15 @@ namespace ZeoEngine {
 
 	class MainDockspace : public EditorDockspace
 	{
-		friend class SceneOutlinePanel;
-		friend class EntityInspectorPanel;
-
 	public:
 		using EditorDockspace::EditorDockspace;
 
 		virtual void OnAttach() override;
 
-	private:
-		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
+		Entity& GetSeletedEntity() { return m_ContextEntity; }
 
 	private:
-		Entity& m_SelectedEntity = m_ContextEntity;
+		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 
 	};
 

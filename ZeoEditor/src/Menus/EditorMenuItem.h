@@ -2,7 +2,12 @@
 
 #include <string>
 
+#include "Engine/GameFramework/Scene.h"
+
 namespace ZeoEngine {
+
+	class EditorMenu;
+	class MainDockspace;
 
 	class EditorMenuItem
 	{
@@ -13,7 +18,12 @@ namespace ZeoEngine {
 
 		virtual void OnImGuiRender();
 
+		void SetContext(EditorMenu* contextMenu) { m_Context = contextMenu; }
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
+
+	protected:
+		MainDockspace* GetEditorContext() const;
+		const Ref<Scene>& GetScene() const;
 
 	private:
 		virtual void OnMenuItemActivated() = 0;
@@ -21,6 +31,7 @@ namespace ZeoEngine {
 	protected:
 		std::string m_MenuItemName;
 		std::string m_ShortcutName; // TODO: Shortcut support
+		EditorMenu* m_Context;
 		bool m_bEnabled{ true };
 	};
 

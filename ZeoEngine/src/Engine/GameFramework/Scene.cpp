@@ -15,19 +15,27 @@ namespace ZeoEngine {
 	{
 	}
 
+	void Scene::ResetScene()
+	{
+		m_EntityCount = 0;
+		m_Registry.clear();
+	}
+
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
 		Entity entity = CreateEmptyEntity();
 
-		static uint32_t creationId = 0;
-		entity.AddComponent<IdComponent>(creationId++);
-		auto& tagComp = entity.AddComponent<TagComponent>();
-		tagComp.Name = name.empty() ? "Entity" : name;
-		tagComp.bIsInternal = bIsInternal;
+		auto& coreComp = entity.AddComponent<CoreComponent>();
+		{
+			coreComp.Name = name;
+			coreComp.CreationId = m_EntityCount++;
+			coreComp.bIsInternal = bIsInternal;
+		}
 		entity.AddComponent<TransformComponent>();
 #if ENABLE_TEST
 		entity.AddComponent<TestComponent>();
 #endif
+		SortEntities(); // TODO: Particle View Camera will also go here
 
 		return entity;
 	}
@@ -40,6 +48,19 @@ namespace ZeoEngine {
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		SortEntities();
+	}
+
+	void Scene::SortEntities()
+	{
+		ZE_CORE_TRACE("Sorting entities");
+
+		// Sort entities by creation order
+		// We assume that every entity has the CoreComponent which will never get removed
+		m_Registry.sort<CoreComponent>([](const auto& lhs, const auto& rhs)
+		{
+			return lhs.CreationId < rhs.CreationId;
+		});
 	}
 
 	void Scene::OnUpdate(DeltaTime dt)
@@ -86,12 +107,13 @@ namespace ZeoEngine {
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 
 			// Sort entities for rendering based on z position or creation order (if z positions are equivalent)
-			group.sort([&](const entt::entity lhs, const entt::entity rhs) {
+			group.sort([&](const entt::entity lhs, const entt::entity rhs)
+			{
 				const auto& ltc = group.get<TransformComponent>(lhs);
 				const auto& rtc = group.get<TransformComponent>(rhs);
 				if (ltc.Translation.z == rtc.Translation.z)
 				{
-					return m_Registry.get<IdComponent>(lhs) < m_Registry.get<IdComponent>(rhs);
+					return m_Registry.get<CoreComponent>(lhs).CreationId < m_Registry.get<CoreComponent>(rhs).CreationId;
 				}
 				return ltc.Translation.z < rtc.Translation.z;
 			});
@@ -115,7 +137,7 @@ namespace ZeoEngine {
 
 	void Scene::OnEvent(Event& e)
 	{
-		m_Registry.view<NativeScriptComponent>().each([&](auto entity, auto& nsc)
+		m_Registry.view<NativeScriptComponent>().each([&e](auto entity, auto& nsc)
 		{
 			if (nsc.Instance)
 			{

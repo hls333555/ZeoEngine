@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	public:
 		DataInspector(DataInspectorPanel* context);
 
-		/** Returns true if type is removed during processing. */
+		/** Returns true if this type is removed during processing. */
 		bool ProcessType(entt::meta_type type, Entity entity);
 
 		void MarkPreprocessedDatasClean();
@@ -53,14 +53,13 @@ namespace ZeoEngine {
 		void ProcessBoolData(entt::meta_data data, entt::meta_any instance);
 		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
 		template<typename T, uint32_t N = 1, typename CT = T>
-		void ProcessScalarNData(entt::meta_data data, entt::meta_any instance, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format = "%d")
+		void ProcessScalarNData(entt::meta_data data, entt::meta_any instance, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 
 			// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 			static std::unordered_map<uint32_t, std::pair<bool, T>> valueBuffers;
 			auto& valueRef = GetDataValueByRef<T>(data, instance);
-			auto dataName = GetPropValue<const char*>(PropertyType::Name, data);
 			auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
 			auto min = GetPropValue<CT>(PropertyType::ClampMin, data);
 			auto minValue = min.value_or(defaultMin);
@@ -91,9 +90,7 @@ namespace ZeoEngine {
 			}
 			// For dragging, the value is applied immediately
 			// For editing, the value is applied after completion
-			const char* componentLabels[] = { "X", "Y", "Z" };
-			const ImVec4 componentLabelColors[] = { { 1.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } };
-			bool bResult = ImGui::DragScalarNEx(*dataName, componentLabels, componentLabelColors, scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
+			bool bResult = ImGui::DragScalarNEx("", scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
 			if (bUseCopy && !valueBuffers[id].first)
 			{
 				SetDataValue(data, instance, valueCopy);

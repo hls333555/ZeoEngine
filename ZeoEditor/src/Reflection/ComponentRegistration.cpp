@@ -35,13 +35,14 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_REF(TestComponent, Texture2DVar);
 #endif
 
-	ZE_REFL_TYPE(TagComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("标签组件")))
-		ZE_REFL_DATA_REF(TagComponent, Name, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("")));
+	ZE_REFL_TYPE(CoreComponent, ZE_REFL_PROP(HideTypeHeader), ZE_REFL_PROP(InherentType))
+		ZE_REFL_DATA_REF(CoreComponent, Name)
+		ZE_REFL_DATA_REF(CoreComponent, bIsInternal, ZE_REFL_PROP(HiddenInEditor));
 
-	ZE_REFL_TYPE(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")))
-		ZE_REFL_DATA_REF(TransformComponent, Translation)
-		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging))
-		ZE_REFL_DATA_REF(TransformComponent, Scale);
+	ZE_REFL_TYPE(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")), ZE_REFL_PROP(InherentType))
+		ZE_REFL_DATA_REF(TransformComponent, Translation, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("平移")))
+		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("旋转")))
+		ZE_REFL_DATA_REF(TransformComponent, Scale, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("缩放")));
 
 	ZE_REFL_TYPE(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")))
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TintColor)
@@ -68,6 +69,6 @@ ZE_REFL_REGISTRATION
 	ZE_REFL_TYPE(ParticleSystemComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Particle System")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子系统组件")))
 		ZE_REFL_DATA_REF(ParticleSystemComponent, ParticleSystem);
 
-	ZE_REFL_TYPE(ParticleSystemDetailComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("")));
+	ZE_REFL_TYPE(ParticleSystemDetailComponent, ZE_REFL_PROP(HideTypeHeader));
 
 }

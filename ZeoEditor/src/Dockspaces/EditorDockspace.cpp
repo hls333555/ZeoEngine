@@ -116,6 +116,7 @@ namespace ZeoEngine {
 
 	void EditorDockspace::PushMenu(EditorMenu* menu)
 	{
+		menu->SetContext(this);
 		m_MenuManager.PushMenu(menu);
 	}
 
@@ -124,7 +125,7 @@ namespace ZeoEngine {
 		m_PanelManager.PushPanel(panel);
 	}
 
-	ZeoEngine::EditorPanel* EditorDockspace::GetPanelByName(const std::string& panelName)
+	EditorPanel* EditorDockspace::GetPanelByName(const std::string& panelName)
 	{
 		return m_PanelManager.GetPanelByName(panelName);
 	}
