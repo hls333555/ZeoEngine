@@ -7,7 +7,6 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <ImGuizmo.h>
-#include <nfd.h>
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/EngineGlobals.h"
@@ -1207,43 +1206,43 @@ namespace ZeoEngine {
 					}
 					if (ImGui::MenuItem("Load particle system"))
 					{
-						nfdchar_t* outPath = nullptr;
-						nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
-						if (result == NFD_OKAY)
-						{
-							LoadParticleSystemFromFile(outPath);
-							m_CurrentParticleSystemPath = outPath;
-							m_CurrentParticleSystemName = std::filesystem::path(outPath).filename().string();
-							free(outPath);
-						}
-						else if (result == NFD_ERROR)
-						{
-							ZE_CORE_ERROR("Load particle system failed: {0}", NFD_GetError());
-						}
+						//nfdchar_t* outPath = nullptr;
+						//nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
+						//if (result == NFD_OKAY)
+						//{
+						//	LoadParticleSystemFromFile(outPath);
+						//	m_CurrentParticleSystemPath = outPath;
+						//	m_CurrentParticleSystemName = std::filesystem::path(outPath).filename().string();
+						//	free(outPath);
+						//}
+						//else if (result == NFD_ERROR)
+						//{
+						//	ZE_CORE_ERROR("Load particle system failed: {0}", NFD_GetError());
+						//}
 					}
 					if (ImGui::MenuItem("Save particle system"))
 					{
 						if (m_CurrentParticleSystemPath.empty())
 						{
-							nfdchar_t* outPath = nullptr;
-							nfdresult_t result = NFD_SaveDialog("zparticle", nullptr, &outPath);
-							if (result == NFD_OKAY)
-							{
-								std::string pathStr = outPath;
-								free(outPath);
-								SaveParticleSystemToFile(pathStr);
-								m_CurrentParticleSystemPath = pathStr;
-								static const char* particleSystemFileSuffix = ".zparticle";
-								if (pathStr.rfind(particleSystemFileSuffix) == std::string::npos)
-								{
-									pathStr += particleSystemFileSuffix;
-								}
-								m_CurrentParticleSystemName = std::filesystem::path(pathStr).filename().string();
-							}
-							else if (result == NFD_ERROR)
-							{
-								ZE_CORE_ERROR("Save particle system failed: {0}", NFD_GetError());
-							}
+							//nfdchar_t* outPath = nullptr;
+							//nfdresult_t result = NFD_SaveDialog("zparticle", nullptr, &outPath);
+							//if (result == NFD_OKAY)
+							//{
+							//	std::string pathStr = outPath;
+							//	free(outPath);
+							//	SaveParticleSystemToFile(pathStr);
+							//	m_CurrentParticleSystemPath = pathStr;
+							//	static const char* particleSystemFileSuffix = ".zparticle";
+							//	if (pathStr.rfind(particleSystemFileSuffix) == std::string::npos)
+							//	{
+							//		pathStr += particleSystemFileSuffix;
+							//	}
+							//	m_CurrentParticleSystemName = std::filesystem::path(pathStr).filename().string();
+							//}
+							//else if (result == NFD_ERROR)
+							//{
+							//	ZE_CORE_ERROR("Save particle system failed: {0}", NFD_GetError());
+							//}
 						}
 						else
 						{
@@ -2095,20 +2094,20 @@ namespace ZeoEngine {
 			// Pop up file browser to select a particle system
 			if (ImGui::Selectable("Browse particle system..."))
 			{
-				nfdchar_t* outPath = nullptr;
-				nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
-				if (result == NFD_OKAY)
-				{
-					const std::string relativePath = ToRelativePath(outPath);
-					// Add selected particle system to the library
-					ParticleSystem* loadedPs = library->GetOrLoad(relativePath);
-					SetPropertyValue(data, loadedPs, loadedPs);
-					free(outPath);
-				}
-				else if (result == NFD_ERROR)
-				{
-					ZE_CORE_ERROR("ProcessParticleSystemType: {0}", NFD_GetError());
-				}
+				//nfdchar_t* outPath = nullptr;
+				//nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
+				//if (result == NFD_OKAY)
+				//{
+				//	const std::string relativePath = ToRelativePath(outPath);
+				//	// Add selected particle system to the library
+				//	ParticleSystem* loadedPs = library->GetOrLoad(relativePath);
+				//	SetPropertyValue(data, loadedPs, loadedPs);
+				//	free(outPath);
+				//}
+				//else if (result == NFD_ERROR)
+				//{
+				//	ZE_CORE_ERROR("ProcessParticleSystemType: {0}", NFD_GetError());
+				//}
 			}
 			ImGui::Separator();
 			// List all loaded particle systems from ParticleLibrary

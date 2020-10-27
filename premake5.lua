@@ -26,7 +26,6 @@ IncludeDir["glm"] = "ZeoEngine/vendor/glm"
 IncludeDir["stb_image"] = "ZeoEngine/vendor/stb_image"
 IncludeDir["rttr"] = "ZeoEngine/vendor/rttr/src/"
 IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
-IncludeDir["NFD"] = "ZeoEngine/vendor/NFD/src/include"
 IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
 IncludeDir["entt"] = "ZeoEngine/vendor/entt/include"
 IncludeDir["yaml_cpp"] = "ZeoEngine/vendor/yaml-cpp/include"
@@ -62,8 +61,7 @@ project "ZeoEngine"
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.ini",
 		"%{prj.name}/vendor/ImGuizmo/**.h",
-		"%{prj.name}/vendor/ImGuizmo/**.cpp",
-		"%{prj.name}/vendor/NFD/src/include/nfd.h"
+		"%{prj.name}/vendor/ImGuizmo/**.cpp"
 	}
 
 	defines
@@ -86,11 +84,6 @@ project "ZeoEngine"
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}"
-	}
-
-	libdirs
-	{
-		"ZeoEngine/vendor/NFD/lib"
 	}
 
 	links 
@@ -119,30 +112,15 @@ project "ZeoEngine"
 		runtime "Debug"
 		symbols "on"
 
-		links 
-		{ 
-			"nfd_d.lib"
-		}
-
 	filter "configurations:Release"
 		defines "ZE_RELEASE"
 		runtime "Release"
 		optimize "on"
 
-		links 
-		{ 
-			"nfd.lib"
-		}
-
 	filter "configurations:Dist"
 		defines "ZE_DIST"
 		runtime "Release"
 		optimize "on"
-
-		links 
-		{ 
-			"nfd.lib"
-		}
 
 project "ZeoEditor"
 	location "ZeoEditor"
@@ -177,7 +155,6 @@ project "ZeoEditor"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.NFD}",
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}"
