@@ -152,8 +152,7 @@ namespace ZeoEngine {
 	{
 		YAML::Emitter out;
 
-		// TODO: Scene name
-		const char* sceneName = "Untitled";
+		const std::string sceneName = m_Scene->GetName();
 		ZE_CORE_TRACE("Serializing scene '{0}'", sceneName);
 
 		out << YAML::BeginMap;

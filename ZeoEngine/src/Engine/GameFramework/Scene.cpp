@@ -1,6 +1,8 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Scene.h"
 
+#include <filesystem>
+
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
@@ -138,6 +140,13 @@ namespace ZeoEngine {
 				nsc.Instance->OnEvent(e);
 			}
 		});
+	}
+
+	void Scene::SetPath(const std::string& path)
+	{
+		m_Path = path;
+		const std::string sceneName = std::filesystem::path{ path }.stem().string();
+		m_Name = sceneName;
 	}
 
 }

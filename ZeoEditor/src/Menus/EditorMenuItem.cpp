@@ -39,28 +39,41 @@ namespace ZeoEngine {
 
 	static void OpenScene(EditorDockspace* editorContext)
 	{
-		std::string filePath = FileDialogs::OpenFile("Zeo Scene (*.zscene)\0*.zscene\0");
-		if (filePath.empty()) return;
+		auto filePath = FileDialogs::OpenFile("Zeo Scene (*.zscene)\0*.zscene\0");
+		if (!filePath) return;
 
 		NewScene(editorContext);
+		// Save scene path
+		editorContext->GetScene()->SetPath(*filePath);
 
 		SceneSerializer serializer(editorContext->GetScene());
-		serializer.Deserialize(filePath);
-	}
-	
-	// TODO: SaveScene
-	static void SaveScene(EditorDockspace* editorContext)
-	{
-		
+		serializer.Deserialize(*filePath);
 	}
 
 	static void SaveSceneAs(EditorDockspace* editorContext)
 	{
-		std::string filePath = FileDialogs::SaveFile("Zeo Scene (*.zscene)\0*.zscene\0");
-		if (filePath.empty()) return;
+		auto filePath = FileDialogs::SaveFile("Zeo Scene (*.zscene)\0*.zscene\0");
+		if (!filePath) return;
+
+		// Save scene path
+		editorContext->GetScene()->SetPath(*filePath);
 
 		SceneSerializer serializer(editorContext->GetScene());
-		serializer.Serialize(filePath);
+		serializer.Serialize(*filePath);
+	}
+
+	static void SaveScene(EditorDockspace* editorContext)
+	{
+		const std::string scenePath = editorContext->GetScene()->GetPath();
+		if (scenePath.empty())
+		{
+			SaveSceneAs(editorContext);
+		}
+		else
+		{
+			SceneSerializer serializer(editorContext->GetScene());
+			serializer.Serialize(scenePath);
+		}
 	}
 
 	bool EditorMenuItem::OnKeyPressed(KeyPressedEvent& e)
@@ -73,7 +86,7 @@ namespace ZeoEngine {
 		{
 			case Key::N:
 			{
-				if (bIsCtrlPressed)
+				if (bIsCtrlPressed && m_ShortcutName == "CTRL+N")
 				{
 					NewScene(GetEditorContext());
 				}
@@ -81,7 +94,7 @@ namespace ZeoEngine {
 			}
 			case Key::O:
 			{
-				if (bIsCtrlPressed)
+				if (bIsCtrlPressed && m_ShortcutName == "CTRL+O")
 				{
 					OpenScene(GetEditorContext());
 				}
@@ -91,11 +104,15 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					SaveScene(GetEditorContext());
-					if (bIsAltPressed)
+					if (bIsAltPressed && m_ShortcutName == "CTRL+ALT+S")
 					{
 						SaveSceneAs(GetEditorContext());
 					}
+					else if (m_ShortcutName == "CTRL+S")
+					{
+						SaveScene(GetEditorContext());
+					}
+
 				}
 				break;
 			}

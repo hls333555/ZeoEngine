@@ -33,9 +33,15 @@ namespace ZeoEngine {
 		void OnRender();
 		void OnEvent(Event& e);
 
+		const std::string& GetName() const { return m_Name; }
+		const std::string& GetPath() const { return m_Path; }
+		void SetPath(const std::string& path);
+
 	private:
 		entt::registry m_Registry;
 		uint32_t m_EntityCount = 0;
+		std::string m_Name{"Untitled"};
+		std::string m_Path;
 	};
 
 }

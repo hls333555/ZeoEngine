@@ -506,11 +506,11 @@ namespace ZeoEngine {
 			if (ImGui::Selectable("Browse texture..."))
 			{
 				// TODO: Support more texture format
-				std::string filePath = FileDialogs::OpenFile("PNG (*.png)\0*.png");
-				if (!filePath.empty())
+				auto filePath = FileDialogs::OpenFile("PNG (*.png)\0*.png");
+				if (filePath)
 				{
 					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library.GetOrLoad(filePath);
+					Ref<Texture2D> loadedTexture = library.GetOrLoad(*filePath);
 					bIsValueChangedAfterEdit = loadedTexture != texture2DRef;
 					SetDataValue(data, instance, loadedTexture);
 				}

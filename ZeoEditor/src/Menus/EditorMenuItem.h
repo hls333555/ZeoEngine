@@ -28,6 +28,7 @@ namespace ZeoEngine {
 		const Ref<Scene>& GetScene() const;
 
 	private:
+		/** Handles key shortcuts. */
 		bool OnKeyPressed(KeyPressedEvent& e);
 		virtual void OnMenuItemActivated() = 0;
 
