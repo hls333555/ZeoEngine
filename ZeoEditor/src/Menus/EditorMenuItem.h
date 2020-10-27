@@ -3,11 +3,12 @@
 #include <string>
 
 #include "Engine/GameFramework/Scene.h"
+#include "Engine/Events/KeyEvent.h"
 
 namespace ZeoEngine {
 
 	class EditorMenu;
-	class MainDockspace;
+	class EditorDockspace;
 
 	class EditorMenuItem
 	{
@@ -17,20 +18,22 @@ namespace ZeoEngine {
 		virtual ~EditorMenuItem() = default;
 
 		virtual void OnImGuiRender();
+		void OnEvent(Event& e);
 
 		void SetContext(EditorMenu* contextMenu) { m_Context = contextMenu; }
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
 	protected:
-		MainDockspace* GetEditorContext() const;
+		EditorDockspace* GetEditorContext() const;
 		const Ref<Scene>& GetScene() const;
 
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
 		virtual void OnMenuItemActivated() = 0;
 
 	protected:
 		std::string m_MenuItemName;
-		std::string m_ShortcutName; // TODO: Shortcut support
+		std::string m_ShortcutName;
 		EditorMenu* m_Context;
 		bool m_bEnabled{ true };
 	};

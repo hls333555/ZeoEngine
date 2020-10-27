@@ -13,7 +13,10 @@ namespace ZeoEngine {
 	public:
 		using ScenePanel::ScenePanel;
 		virtual void OnAttach() override;
+
 		virtual void OnUpdate(DeltaTime dt) override;
+
+		void BindCameraInitFunc();
 
 	protected:
 		virtual void RenderPanel() override;

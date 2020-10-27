@@ -6,6 +6,8 @@
 #include "EditorLayer.h"
 #include "Engine/Core/SceneSerializer.h"
 #include "Dockspaces/MainDockspace.h"
+#include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Core/Input.h"
 
 namespace ZeoEngine {
 
@@ -22,9 +24,91 @@ namespace ZeoEngine {
 		}
 	}
 
-	MainDockspace* EditorMenuItem::GetEditorContext() const
+	void EditorMenuItem::OnEvent(Event& e)
 	{
-		return m_Context->GetContext<MainDockspace>();
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorMenuItem::OnKeyPressed));
+	}
+
+	static void NewScene(EditorDockspace* editorContext)
+	{
+		editorContext->CreateNewScene();
+		// Clear selected entity
+		editorContext->SetContextEntity({});
+	}
+
+	static void OpenScene(EditorDockspace* editorContext)
+	{
+		std::string filePath = FileDialogs::OpenFile("Zeo Scene (*.zscene)\0*.zscene\0");
+		if (filePath.empty()) return;
+
+		NewScene(editorContext);
+
+		SceneSerializer serializer(editorContext->GetScene());
+		serializer.Deserialize(filePath);
+	}
+	
+	// TODO: SaveScene
+	static void SaveScene(EditorDockspace* editorContext)
+	{
+		
+	}
+
+	static void SaveSceneAs(EditorDockspace* editorContext)
+	{
+		std::string filePath = FileDialogs::SaveFile("Zeo Scene (*.zscene)\0*.zscene\0");
+		if (filePath.empty()) return;
+
+		SceneSerializer serializer(editorContext->GetScene());
+		serializer.Serialize(filePath);
+	}
+
+	bool EditorMenuItem::OnKeyPressed(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName.empty() || e.GetRepeatCount() > 0) return false;
+
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (bIsCtrlPressed)
+				{
+					NewScene(GetEditorContext());
+				}
+				break;
+			}
+			case Key::O:
+			{
+				if (bIsCtrlPressed)
+				{
+					OpenScene(GetEditorContext());
+				}
+				break;
+			}
+			case Key::S:
+			{
+				if (bIsCtrlPressed)
+				{
+					SaveScene(GetEditorContext());
+					if (bIsAltPressed)
+					{
+						SaveSceneAs(GetEditorContext());
+					}
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		return true;
+	}
+
+	EditorDockspace* EditorMenuItem::GetEditorContext() const
+	{
+		return m_Context->GetContext();
 	}
 
 	const Ref<Scene>& EditorMenuItem::GetScene() const
@@ -55,28 +139,22 @@ namespace ZeoEngine {
 
 	void MenuItem_NewScene::OnMenuItemActivated()
 	{
-		
+		NewScene(GetEditorContext());
 	}
 
 	void MenuItem_OpenScene::OnMenuItemActivated()
 	{
-		// Reset scene
-		GetScene()->ResetScene();
-		// Clear selected entity
-		GetEditorContext()->GetSeletedEntity() = {};
-		SceneSerializer serializer(GetScene());
-		serializer.Deserialize("assets/scenes/Untitled.zscene");
+		OpenScene(GetEditorContext());
 	}
 
 	void MenuItem_SaveScene::OnMenuItemActivated()
 	{
-		SceneSerializer serializer(GetScene());
-		serializer.Serialize("assets/scenes/Untitled.zscene");
+		SaveScene(GetEditorContext());
 	}
 
 	void MenuItem_SaveSceneAs::OnMenuItemActivated()
 	{
-		
+		SaveSceneAs(GetEditorContext());
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()

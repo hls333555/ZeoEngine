@@ -4,11 +4,11 @@
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <nfd.h>
 
 #include "Engine/Core/KeyCodes.h"
 #include "Panels/DataInspectorPanel.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 namespace ZeoEngine {
 
@@ -505,20 +505,14 @@ namespace ZeoEngine {
 			// Pop up file browser to select a texture from disk
 			if (ImGui::Selectable("Browse texture..."))
 			{
-				nfdchar_t* outPath = nullptr;
 				// TODO: Support more texture format
-				nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
-				if (result == NFD_OKAY)
+				std::string filePath = FileDialogs::OpenFile("PNG (*.png)\0*.png");
+				if (!filePath.empty())
 				{
 					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library.GetOrLoad(outPath);
+					Ref<Texture2D> loadedTexture = library.GetOrLoad(filePath);
 					bIsValueChangedAfterEdit = loadedTexture != texture2DRef;
 					SetDataValue(data, instance, loadedTexture);
-					free(outPath);
-				}
-				else if (result == NFD_ERROR)
-				{
-					ZE_CORE_ERROR("ProcessTexture2DData: {0}", NFD_GetError());
 				}
 			}
 			ImGui::Separator();

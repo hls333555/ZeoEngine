@@ -27,6 +27,14 @@ namespace ZeoEngine {
 
 			ImGui::EndMenu();
 		}
+	}  
+
+	void EditorMenu::OnEvent(Event& e)
+	{
+		for (auto* menuItem : m_MenuItems)
+		{
+			menuItem->OnEvent(e);
+		}
 	}
 
 	void EditorMenu::PushMenuItem(EditorMenuItem* menuItem)
@@ -65,6 +73,14 @@ namespace ZeoEngine {
 		else
 		{
 			RenderMenuBar();
+		}
+	}
+
+	void MenuManager::OnEvent(Event& e)
+	{
+		for (auto* menu : m_Menus)
+		{
+			menu->OnEvent(e);
 		}
 	}
 

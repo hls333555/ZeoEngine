@@ -59,6 +59,7 @@ namespace ZeoEngine {
 	void EditorDockspace::OnEvent(Event& e)
 	{
 		m_Scene->OnEvent(e);
+		m_MenuManager.OnEvent(e);
 	}
 
 	void EditorDockspace::RenderDockspace()
@@ -128,6 +129,15 @@ namespace ZeoEngine {
 	EditorPanel* EditorDockspace::GetPanelByName(const std::string& panelName)
 	{
 		return m_PanelManager.GetPanelByName(panelName);
+	}
+
+	void EditorDockspace::CreateNewScene()
+	{
+		CreateScene();
+		if (m_CameraInitDel)
+		{
+			m_CameraInitDel();
+		}
 	}
 
 	void EditorDockspace::CreateScene()

@@ -44,6 +44,8 @@ namespace ZeoEngine {
 		void PushPanel(EditorPanel* panel);
 		EditorPanel* GetPanelByName(const std::string& panelName);
 
+		/** Create an empty scene and init camera. */
+		void CreateNewScene();
 	private:
 		void CreateScene();
 
@@ -57,6 +59,8 @@ namespace ZeoEngine {
 	protected:
 		bool m_bIsMainDockspace{ false };
 		Entity m_ContextEntity;
+
+		entt::delegate<void()> m_CameraInitDel;
 
 	private:
 		std::string m_DockspaceName;

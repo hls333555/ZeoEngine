@@ -15,12 +15,6 @@ namespace ZeoEngine {
 	{
 	}
 
-	void Scene::ResetScene()
-	{
-		m_EntityCount = 0;
-		m_Registry.clear();
-	}
-
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
 		Entity entity = CreateEmptyEntity();

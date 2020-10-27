@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "Engine/Events/Event.h"
+
 namespace ZeoEngine {
 
 	class EditorMenuItem;
@@ -17,6 +19,7 @@ namespace ZeoEngine {
 		~EditorMenu();
 
 		void OnImGuiRender();
+		void OnEvent(Event& e);
 
 		template<typename T = EditorDockspace>
 		T* GetContext() { return dynamic_cast<T*>(m_Context); }
@@ -44,6 +47,7 @@ namespace ZeoEngine {
 		void PushMenu(EditorMenu* menu);
 
 		void OnImGuiRender(bool bIsMainMenu);
+		void OnEvent(Event& e);
 
 	private:
 		void RenderMainMenuBar();
