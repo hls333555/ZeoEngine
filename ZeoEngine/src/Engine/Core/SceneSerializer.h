@@ -4,8 +4,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-// TODO:
-#include "../../ZeoEditor/src/Reflection/ReflectionHelper.h"
+#include "Engine/Core/ReflectionHelper.h"
 
 namespace ZeoEngine {
 
