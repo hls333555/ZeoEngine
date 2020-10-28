@@ -46,8 +46,8 @@ namespace ZeoEngine {
 				m_DataInspector.MarkPreprocessedDatasClean();
 			}
 
-			// TODO: Particle Inspector should not display this button
 			// Add component button
+			if (m_bAllowAddingComponents)
 			{
 				ImGui::Separator();
 
@@ -99,6 +99,11 @@ namespace ZeoEngine {
 	{
 		// Reverse type display order
 		m_PreprocessedTypes.push_front(type);
+	}
+
+	void EntityInspectorPanel::OnAttach()
+	{
+		m_bAllowAddingComponents = true;
 	}
 
 	void EntityInspectorPanel::RenderPanel()

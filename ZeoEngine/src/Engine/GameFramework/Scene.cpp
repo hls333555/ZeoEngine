@@ -31,7 +31,11 @@ namespace ZeoEngine {
 #if ENABLE_TEST
 		entity.AddComponent<TestComponent>();
 #endif
-		SortEntities(); // TODO: Particle View Camera will also go here
+		// No need to sort on first entity
+		if (m_EntityCount > 1)
+		{
+			SortEntities();
+		}
 
 		return entity;
 	}

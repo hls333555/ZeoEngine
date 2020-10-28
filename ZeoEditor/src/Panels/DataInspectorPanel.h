@@ -22,6 +22,8 @@ namespace ZeoEngine {
 	private:
 		void PreprocessType(entt::meta_type type);
 
+	protected:
+		bool m_bAllowAddingComponents{ false };
 	private:
 		DataInspector m_DataInspector{ this };
 
@@ -34,6 +36,8 @@ namespace ZeoEngine {
 	{
 	public:
 		using DataInspectorPanel::DataInspectorPanel;
+
+		virtual void OnAttach() override;
 
 	private:
 		virtual void RenderPanel() override;
