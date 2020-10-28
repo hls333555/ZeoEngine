@@ -16,19 +16,12 @@ namespace ZeoEngine {
 
 	protected:
 		void DrawComponents(Entity entity);
-		
-		void MarkPreprocessedTypesDirty();
-
-	private:
-		void PreprocessType(entt::meta_type type);
+		void MarkPreprocessedDatasDirty();
 
 	protected:
 		bool m_bAllowAddingComponents{ false };
 	private:
 		DataInspector m_DataInspector{ this };
-
-		std::list<entt::meta_type> m_PreprocessedTypes;
-		bool m_bIsPreprocessedTypesDirty{ true };
 
 	};
 

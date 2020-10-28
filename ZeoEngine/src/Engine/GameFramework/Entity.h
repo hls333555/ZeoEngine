@@ -6,6 +6,10 @@ namespace ZeoEngine {
 
 	class Entity
 	{
+		friend class DataInspectorPanel;
+		friend class DataInspector;
+		friend class SceneSerializer;
+
 	public:
 		Entity() = default;
 		Entity(entt::entity handle, Scene* scene);
@@ -17,6 +21,7 @@ namespace ZeoEngine {
 		T& AddComponent(Args&&... args)
 		{
 			ZE_CORE_ASSERT_INFO(!HasComponent<T>(), "Entity already has component!");
+			AddComponentId(entt::type_info<T>().id());
 			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 		}
 
@@ -24,6 +29,7 @@ namespace ZeoEngine {
 		void RemoveComponent()
 		{
 			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
+			RemoveComponentId(entt::type_info<T>().id());
 			return m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
@@ -50,6 +56,15 @@ namespace ZeoEngine {
 
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
 		bool operator!=(const Entity& other) const { return !(*this == other); }
+
+	private:
+		entt::meta_any AddType(entt::meta_type type, entt::registry& registry);
+		entt::meta_any AddTypeById(entt::id_type typeId, entt::registry& registry);
+		void RemoveType(entt::meta_type type, entt::registry& registry);
+
+		const std::vector<uint32_t>& GetAllComponents() const { return m_Scene->m_Entities[m_EntityHandle]; }
+		void AddComponentId(uint32_t Id);
+		void RemoveComponentId(uint32_t Id);
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };

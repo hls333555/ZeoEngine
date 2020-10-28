@@ -208,11 +208,11 @@ namespace ZeoEngine {
 	void SceneSerializer::SerializeType(YAML::Emitter& out, const entt::meta_type type, const Entity entity)
 	{
 		const auto instance = GetTypeInstance(type, m_Scene->m_Registry, entity);
-		type.data([&](entt::meta_data data)
+		for (auto data : type.data())
 		{
 			// Do not serialize transient data
 			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
-			if (bDiscardSerialize) return;
+			if (bDiscardSerialize) continue;
 
 			if (data.type().is_integral())
 			{
@@ -230,7 +230,7 @@ namespace ZeoEngine {
 			{
 				SerializeOtherData(out, data, instance);
 			}
-		});
+		}
 	}
 
 	void SceneSerializer::SerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
@@ -282,14 +282,14 @@ namespace ZeoEngine {
 		const auto dataName = GetMetaObjectDisplayName(data);
 		const char* enumValueName = nullptr;
 		const auto enumValue = data.get(instance);
-		data.type().data([enumValue, &enumValueName](entt::meta_data enumData)
+		for (auto enumData : data.type().data())
 		{
 			if (enumValue == enumData.get({}))
 			{
 				auto valueName = GetMetaObjectDisplayName(enumData);
 				enumValueName = *valueName;
 			}
-		});
+		}
 		out << YAML::Key << *dataName << YAML::Value << enumValueName;
 	}
 
@@ -375,11 +375,11 @@ namespace ZeoEngine {
 						else
 						{
 							// Add type to that entity
-							instance = AddTypeById(typeId, m_Scene->m_Registry, deserializedEntity);
+							instance = deserializedEntity.AddTypeById(typeId, m_Scene->m_Registry);
 						}
 						
 						// Iterate all datas and deserialize values
-						type.data([this, instance, component](entt::meta_data data)
+						for (auto data : type.data())
 						{
 							auto dataName = GetMetaObjectDisplayName(data);
 							const auto& value = component[*dataName];
@@ -388,7 +388,7 @@ namespace ZeoEngine {
 								// Evaluate serialized data only
 								EvaluateData(data, instance, value);
 							}
-						});
+						}
 					}
 				}
 			}
@@ -471,7 +471,7 @@ namespace ZeoEngine {
 	void SceneSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
 	{
 		auto currentValueName = value.as<std::string>();
-		data.type().data([&](entt::meta_data enumData)
+		for (auto enumData : data.type().data())
 		{
 			auto valueName = GetMetaObjectDisplayName(enumData);
 			if (currentValueName == valueName)
@@ -479,7 +479,7 @@ namespace ZeoEngine {
 				auto newValue = enumData.get({});
 				SetDataValue(data, instance, newValue);
 			}
-		});
+		}
 	}
 
 	void SceneSerializer::DeserializeOtherData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)

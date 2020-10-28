@@ -42,9 +42,10 @@ namespace ZeoEngine {
 
 	private:
 		entt::registry m_Registry;
-		uint32_t m_EntityCount = 0;
 		std::string m_Name{"Untitled"};
 		std::string m_Path;
+		/** Map from entity Id to list of type Id in order */
+		std::unordered_map<entt::entity, std::vector<uint32_t>> m_Entities;
 	};
 
 }

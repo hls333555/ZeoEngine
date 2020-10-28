@@ -4,6 +4,8 @@
 
 #include <entt.hpp>
 
+#include "Engine/GameFramework/Entity.h"
+
 #define ZE_CAT_IMPL(a, b) a##b
 #define ZE_CAT(a, b) ZE_CAT_IMPL(a, b)
 #define ZE_REFL_REGISTRATION                                                        \
@@ -103,9 +105,6 @@ namespace ZeoEngine {
 		}
 	};
 
-	void AddType(entt::meta_type type, entt::registry& registry, entt::entity entity);
-	entt::meta_any AddTypeById(entt::id_type typeId, entt::registry& registry, entt::entity entity);
-	void RemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity);
 	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
 	template<typename T>

@@ -10,26 +10,14 @@ namespace ZeoEngine {
 		// Push entity id
 		ImGui::PushID(static_cast<uint32_t>(entity));
 		{
-			if (m_bIsPreprocessedTypesDirty)
-			{
-				ZE_CORE_TRACE("Sorting types on entity with ID = {0}", entity.GetEntityId());
-
-				// Iterate all types on this entity and reverse their order
-				GetScene()->m_Registry.visit(entity, [this](const auto typeId)
-				{
-					const auto type = entt::resolve_type(typeId);
-					PreprocessType(type);
-				});
-				m_bIsPreprocessedTypesDirty = false;
-			}
-
 			bool bIsAnyTypeRemoved = false;
 			// Process types on this entity
-			for (const auto type : m_PreprocessedTypes)
+			for (const auto typeId : entity.GetAllComponents())
 			{
 				// Push type id
-				ImGui::PushID(type.type_id());
+				ImGui::PushID(typeId);
 				{
+					auto type = entt::resolve_type(typeId);
 					if (m_DataInspector.ProcessType(type, entity))
 					{
 						bIsAnyTypeRemoved = true;
@@ -39,7 +27,7 @@ namespace ZeoEngine {
 			}
 			if (bIsAnyTypeRemoved)
 			{
-				MarkPreprocessedTypesDirty();
+				MarkPreprocessedDatasDirty();
 			}
 			else
 			{
@@ -65,21 +53,21 @@ namespace ZeoEngine {
 				{
 					// TODO: Sort types in alphabetical order
 					// List all registered components
-					entt::resolve([this, entity](auto type)
+					for (auto type : entt::resolve())
 					{
 						// Inherent types can never be added
 						auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
-						if (bIsInherentType) return;
+						if (bIsInherentType) continue;
 
 						// We want to display "full name" here instead of "display name"
 						auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
 						if (ImGui::MenuItem(*typeName))
 						{
-							AddType(type, GetScene()->m_Registry, entity);
-							MarkPreprocessedTypesDirty();
+							entity.AddType(type, GetScene()->m_Registry);
+							MarkPreprocessedDatasDirty();
 							ImGui::CloseCurrentPopup();
 						}
-					});
+					}
 
 					ImGui::EndPopup();
 				}
@@ -88,17 +76,9 @@ namespace ZeoEngine {
 		ImGui::PopID();
 	}
 
-	void DataInspectorPanel::MarkPreprocessedTypesDirty()
+	void DataInspectorPanel::MarkPreprocessedDatasDirty()
 	{
 		m_DataInspector.MarkPreprocessedDatasDirty();
-		m_PreprocessedTypes.clear();
-		m_bIsPreprocessedTypesDirty = true;
-	}
-
-	void DataInspectorPanel::PreprocessType(entt::meta_type type)
-	{
-		// Reverse type display order
-		m_PreprocessedTypes.push_front(type);
 	}
 
 	void EntityInspectorPanel::OnAttach()
@@ -121,7 +101,7 @@ namespace ZeoEngine {
 			}
 			m_LastSelectedEntity = selectedEntity;
 
-			MarkPreprocessedTypesDirty();
+			MarkPreprocessedDatasDirty();
 			return;
 		}
 		if (selectedEntity)

@@ -20,11 +20,14 @@ namespace ZeoEngine {
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
 		Entity entity = CreateEmptyEntity();
+		// Insert entity Id to map
+		m_Entities[entity];
 
+		auto entityCount = m_Entities.size();
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
 			coreComp.Name = name;
-			coreComp.CreationId = m_EntityCount++;
+			coreComp.CreationId = entityCount - 1;
 			coreComp.bIsInternal = bIsInternal;
 		}
 		entity.AddComponent<TransformComponent>();
@@ -32,7 +35,7 @@ namespace ZeoEngine {
 		entity.AddComponent<TestComponent>();
 #endif
 		// No need to sort on first entity
-		if (m_EntityCount > 1)
+		if (entityCount > 1)
 		{
 			SortEntities();
 		}

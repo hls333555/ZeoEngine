@@ -66,10 +66,10 @@ namespace ZeoEngine {
 				ZE_CORE_TRACE("Sorting datas on '{0}'", *typeName);
 
 				// Iterate all datas on this entity, reverse their order and categorize them
-				type.data([this, type](entt::meta_data data)
+				for (auto data : type.data())
 				{
 					PreprocessData(type, data);
-				});
+				}
 			}
 
 			for (const auto& [category, datas] : m_PreprocessedDatas[type])
@@ -130,7 +130,7 @@ namespace ZeoEngine {
 
 		if (bWillRemoveType)
 		{
-			RemoveType(type, m_Context->GetScene()->m_Registry, entity);
+			entity.RemoveType(type, m_Context->GetScene()->m_Registry);
 		}
 
 		return bWillRemoveType;
@@ -283,21 +283,21 @@ namespace ZeoEngine {
 		// Get current enum value name by iterating all enum values and comparing
 		const char* currentValueName = nullptr;
 		auto currentValue = data.get(instance);
-		data.type().data([currentValue, &currentValueName](entt::meta_data enumData)
+		for (auto enumData : data.type().data())
 		{
 			if (currentValue == enumData.get({}))
 			{
 				auto valueName = GetMetaObjectDisplayName(enumData);
 				currentValueName = *valueName;
 			}
-		});
+		}
 
 		// NOTE: We cannot leave ComboBox's label empty
 		if (ImGui::BeginCombo("##Enum", currentValueName))
 		{
 			// TODO: Reverse enum display order
 			// Iterate to display all enum values
-			data.type().data([this, data, instance](entt::meta_data enumData)
+			for (auto enumData : data.type().data())
 			{
 				auto valueName = GetMetaObjectDisplayName(enumData);
 				bool bIsSelected = ImGui::Selectable(*valueName);
@@ -313,7 +313,7 @@ namespace ZeoEngine {
 					}
 					SetDataValue(data, instance, newValue);
 				}
-			});
+			}
 			ImGui::EndCombo();
 		}
 	}
