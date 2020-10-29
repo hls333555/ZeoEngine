@@ -34,46 +34,72 @@ namespace ZeoEngine {
 				m_DataInspector.MarkPreprocessedDatasClean();
 			}
 
-			// Add component button
+			// The following part will not have entity Id pushed into ImGui!
+			ImGui::PopID();
+
 			if (m_bAllowAddingComponents)
 			{
-				ImGui::Separator();
+				// Add component button
+				DrawAddComponentButton(entity);
+			}
 
-				ImGui::Columns(1);
-				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-				ImVec2 textSize = ImGui::CalcTextSize("Add Component");
-				ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);
-				
-				if (ImGui::Button("Add Component"))
+		}
+	}
+
+	void DataInspectorPanel::DrawAddComponentButton(Entity entity)
+	{
+		ImGui::Separator();
+
+		ImGui::Columns(1);
+		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
+		ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);
+
+		if (ImGui::Button("Add Component"))
+		{
+			ImGui::OpenPopup("AddComponent");
+		}
+
+		if (ImGui::BeginPopup("AddComponent"))
+		{
+			if (m_bIsCategorizedTypesDirty)
+			{
+				// Iterate all registered components
+				for (auto type : entt::resolve())
 				{
-					ImGui::OpenPopup("AddComponent");
+					// Inherent types can never be added
+					auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
+					if (bIsInherentType) continue;
+
+					auto category = GetPropValue<const char*>(PropertyType::Category, type);
+					std::string categoryName = category ? *category : "Default";
+					// Categorize types
+					m_CategorizedTypes[categoryName].push_back(type.type_id());
 				}
+				m_bIsCategorizedTypesDirty = false;
+			}
 
-				if (ImGui::BeginPopup("AddComponent"))
+			for (const auto& [category, typeIds] : m_CategorizedTypes)
+			{
+				if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
 				{
-					// TODO: Sort types in alphabetical order
-					// List all registered components
-					for (auto type : entt::resolve())
+					for (const auto typeId : typeIds)
 					{
-						// Inherent types can never be added
-						auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
-						if (bIsInherentType) continue;
-
 						// We want to display "full name" here instead of "display name"
-						auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
-						if (ImGui::MenuItem(*typeName))
+						auto typeName = GetPropValue<const char*>(PropertyType::Name, entt::resolve_type(typeId));
+						if (ImGui::Selectable(*typeName))
 						{
-							entity.AddType(type, GetScene()->m_Registry);
+							entity.AddTypeById(typeId, GetScene()->m_Registry);
 							MarkPreprocessedDatasDirty();
-							ImGui::CloseCurrentPopup();
 						}
 					}
 
-					ImGui::EndPopup();
+					ImGui::TreePop();
 				}
 			}
+
+			ImGui::EndPopup();
 		}
-		ImGui::PopID();
 	}
 
 	void DataInspectorPanel::MarkPreprocessedDatasDirty()

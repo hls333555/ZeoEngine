@@ -72,7 +72,7 @@ namespace ZeoEngine {
 				}
 			}
 
-			for (const auto& [category, datas] : m_PreprocessedDatas[type])
+			for (const auto& [category, datas] : m_PreprocessedDatas[type.type_id()])
 			{
 				bool bShouldDisplayTree = false;
 				std::list<entt::meta_data> visibleDatas;
@@ -157,7 +157,7 @@ namespace ZeoEngine {
 		auto categoryName = GetPropValue<const char*>(PropertyType::Category, data);
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
-		m_PreprocessedDatas[type][category].push_front(data);
+		m_PreprocessedDatas[type.type_id()][category].push_front(data);
 	}
 
 	bool DataInspector::ShouldHideData(entt::meta_data data, entt::meta_any instance)

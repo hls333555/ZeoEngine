@@ -144,10 +144,10 @@ namespace ZeoEngine {
 	private:
 		DataInspectorPanel* m_Context;
 
-		/** Map from category to list of data of the same type */
-		using ClassifiedDatas = std::map<std::string, std::list<entt::meta_data>>;
-		/** Map from type to all its data */
-		std::unordered_map<entt::meta_type, ClassifiedDatas, EnttTypeHashFn> m_PreprocessedDatas;
+		/** Map from category to list of data of the same type in order */
+		using CategorizedDatas = std::map<std::string, std::list<entt::meta_data>>;
+		/** Map from type id to all its data, used to draw registered datas in DataInspectorPanel */
+		std::unordered_map<uint32_t, CategorizedDatas> m_PreprocessedDatas;
 		bool m_bIsPreprocessedDatasDirty{ true };
 	};
 

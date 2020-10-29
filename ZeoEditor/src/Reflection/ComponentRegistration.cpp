@@ -44,7 +44,7 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("旋转")))
 		ZE_REFL_DATA_REF(TransformComponent, Scale, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("缩放")));
 
-	ZE_REFL_TYPE(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")))
+	ZE_REFL_TYPE(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Rendering")))
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TintColor)
 		ZE_REFL_DATA_REF(SpriteRendererComponent, Texture)
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TextureTiling);
@@ -53,7 +53,7 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_ENUM_DATA(SceneCamera::ProjectionType, Perspective, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("透视相机")))
 		ZE_REFL_ENUM_DATA(SceneCamera::ProjectionType, Orthographic, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("正交相机")));
 
-	ZE_REFL_TYPE(CameraComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Camera")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("相机组件")))
+	ZE_REFL_TYPE(CameraComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Camera")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("相机组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Rendering")))
 		ZE_REFL_DATA_REF(CameraComponent, bIsPrimary)
 		ZE_REFL_DATA_REF(CameraComponent, bFixedAspectRatio)
 		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, ProjectionType, SetProjectionType, GetProjectionType)
@@ -64,11 +64,11 @@ ZE_REFL_REGISTRATION
 		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Near, SetOrthographicNearClip, GetOrthographicNearClip, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Orthographic")), ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Orthographic"))
 		ZE_REFL_DATA_SETTER_GETTER(CameraComponent, Orthographic Far, SetOrthographicFarClip, GetOrthographicFarClip, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Orthographic")), ZE_REFL_PROP_PAIR(HideCondition, "ProjectionType != Orthographic"));
 
-	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Native Script")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("C++脚本组件")));
+	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Native Script")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("C++脚本组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Scripts")));
 
-	ZE_REFL_TYPE(ParticleSystemComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Particle System")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子系统组件")))
+	ZE_REFL_TYPE(ParticleSystemComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Particle System")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子系统组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Effects")))
 		ZE_REFL_DATA_REF(ParticleSystemComponent, ParticleSystem);
 
-	ZE_REFL_TYPE(ParticleSystemDetailComponent, ZE_REFL_PROP(HideTypeHeader));
+	ZE_REFL_TYPE(ParticleSystemDetailComponent, ZE_REFL_PROP(HideTypeHeader), ZE_REFL_PROP(InherentType));
 
 }

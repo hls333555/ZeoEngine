@@ -16,12 +16,20 @@ namespace ZeoEngine {
 
 	protected:
 		void DrawComponents(Entity entity);
+
 		void MarkPreprocessedDatasDirty();
+
+	private:
+		void DrawAddComponentButton(Entity entity);
 
 	protected:
 		bool m_bAllowAddingComponents{ false };
 	private:
 		DataInspector m_DataInspector{ this };
+
+		/** Map from category to list of type ids, used to draw categorized types in AddComponent popup */
+		std::map<std::string, std::vector<uint32_t>> m_CategorizedTypes;
+		bool m_bIsCategorizedTypesDirty{ true };
 
 	};
 

@@ -44,7 +44,7 @@ namespace ZeoEngine {
 		entt::registry m_Registry;
 		std::string m_Name{"Untitled"};
 		std::string m_Path;
-		/** Map from entity Id to list of type Id in order */
+		/** Map from entity Id to list of type Id in order, used to draw added components in EntityInspectorPanel */
 		std::unordered_map<entt::entity, std::vector<uint32_t>> m_Entities;
 	};
 

@@ -56,7 +56,7 @@ enum class PropertyType
 	DisplayName,			// [value_type: const char*] Display name of type or data.
 	InherentType,			// [key_only] This type cannot be added or removed within editor.
 	HiddenInEditor,			// [key_only] Should hide this data in editor?
-	Category,				// [value_type: const char*] Category of data.
+	Category,				// [value_type: const char*] Category of type or data.
 	HideCondition,			// [value_type: const char*] Hide this data if provided expression yields true.
 	Transient,				// [key_only] If set, this data will not get serialized.
 };
@@ -96,14 +96,6 @@ entt::meta<enumType>()
 #define ZE_REFL_PROP_PAIR_WITH_CAST(propType, propValue, castToType) std::make_pair(PropertyType::propType, static_cast<castToType>(propValue))
 
 namespace ZeoEngine {
-
-	struct EnttTypeHashFn
-	{
-		std::size_t operator()(const entt::meta_type& type) const
-		{
-			return std::hash<uint32_t>()(type.type_id());
-		}
-	};
 
 	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
