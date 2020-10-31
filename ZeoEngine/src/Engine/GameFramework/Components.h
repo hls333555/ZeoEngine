@@ -29,18 +29,34 @@ namespace ZeoEngine {
 		uint8_t Ui8Var;
 		uint32_t Ui32Var;
 		uint64_t Ui64Var;
-		int8_t I8Var = 25;
+		int8_t I8Var;
 		int32_t I32Var;
 		int64_t I64Var;
 		float FloatVar;
 		double DoubleVar;
-		TestEnum enumVar;
-		TestEnumClass enumClassVar;
+		TestEnum EnumVar;
+		TestEnumClass EnumClassVar;
 		std::string StringVar;
 		glm::vec2 Vec2Var;
 		glm::vec3 Vec3Var;
 		glm::vec4 ColorVar;
 		Ref<Texture2D> Texture2DVar;
+
+		std::deque<bool> BoolDeqVar;
+		std::vector<uint8_t> Ui8VecVar;
+		std::vector<uint32_t> Ui32VecVar;
+		std::vector<uint64_t> Ui64VecVar;
+		std::vector<int8_t> I8VecVar;
+		std::vector<int32_t> I32VecVar;
+		std::vector<int64_t> I64VecVar;
+		std::vector<float> FloatVecVar;
+		std::vector<double> DoubleVecVar;
+		std::vector<TestEnum> EnumVecVar;
+		std::vector<std::string> StringVecVar;
+		std::vector<glm::vec2> Vec2VecVar;
+		std::vector<glm::vec3> Vec3VecVar;
+		std::vector<glm::vec4> ColorVecVar;
+		std::vector<Ref<Texture2D>> Texture2DVecVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;

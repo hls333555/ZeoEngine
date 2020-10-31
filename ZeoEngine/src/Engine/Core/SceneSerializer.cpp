@@ -280,16 +280,8 @@ namespace ZeoEngine {
 	void SceneSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
 	{
 		const auto dataName = GetMetaObjectDisplayName(data);
-		const char* enumValueName = nullptr;
 		const auto enumValue = data.get(instance);
-		for (auto enumData : data.type().data())
-		{
-			if (enumValue == enumData.get({}))
-			{
-				auto valueName = GetMetaObjectDisplayName(enumData);
-				enumValueName = *valueName;
-			}
-		}
+		const char* enumValueName = GetEnumDisplayName(enumValue);
 		out << YAML::Key << *dataName << YAML::Value << enumValueName;
 	}
 

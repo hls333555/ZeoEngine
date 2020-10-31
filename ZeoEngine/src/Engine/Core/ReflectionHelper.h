@@ -2,6 +2,8 @@
 
 #include <optional>
 
+#include <deque>
+
 #include <entt.hpp>
 
 #include "Engine/GameFramework/Entity.h"
@@ -39,6 +41,18 @@ template<typename T>
 T& get(entt::registry& registry, entt::entity entity)
 {
 	return registry.template get<T>(entity);
+}
+
+template<typename T>
+void set_enum_value(entt::meta_any& instance, const entt::meta_any& newValue)
+{
+	instance.cast<T>() = newValue.cast<T>();
+}
+
+template<typename T>
+T create_default_value()
+{
+	return T();
 }
 
 enum class PropertyType
@@ -85,7 +99,9 @@ entt::meta<_type>()																	\
     .prop(std::make_tuple(__VA_ARGS__))
 
 #define ZE_REFL_ENUM(enumType)														\
-entt::meta<enumType>()
+entt::meta<enumType>()																\
+	.func<&set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)			\
+	.func<&create_default_value<enumType>>("create_default_value"_hs)
 #define ZE_REFL_ENUM_DATA(enumType, enumData, ...)									\
 .data<enumType::enumData>(#enumData##_hs)											\
     .prop(PropertyType::Name, #enumData)											\
@@ -95,9 +111,35 @@ entt::meta<enumType>()
 #define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue) // For certain properties with integral type value (e.g. int8_t), you should use ZE_REFL_PROP_PAIR_WITH_CAST instead to explicitly specify their types during property registration
 #define ZE_REFL_PROP_PAIR_WITH_CAST(propType, propValue, castToType) std::make_pair(PropertyType::propType, static_cast<castToType>(propValue))
 
+namespace entt {
+
+	/**
+	 * @brief Meta sequence container traits for `std::deque`s of any type.
+	 * @tparam Type The type of elements.
+	 * @tparam Args Other arguments.
+	 */
+	template<typename Type, typename... Args>
+	struct meta_sequence_container_traits<std::deque<Type, Args...>>
+		: internal::container_traits<
+		std::deque<Type, Args...>,
+		internal::basic_container,
+		internal::basic_dynamic_container,
+		internal::basic_sequence_container,
+		internal::dynamic_sequence_container
+		>
+	{};
+
+}
+
 namespace ZeoEngine {
 
 	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
+
+	const char* GetEnumDisplayName(entt::meta_any enumValue);
+
+	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
+
+	entt::meta_any CreateTypeDefaultValue(entt::meta_type type);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

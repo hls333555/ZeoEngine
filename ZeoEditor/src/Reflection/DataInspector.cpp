@@ -9,6 +9,7 @@
 #include "Panels/DataInspectorPanel.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -106,19 +107,49 @@ namespace ZeoEngine {
 					ImGui::AlignTextToFramePadding();
 					for (const auto data : visibleDatas)
 					{
+						bool bIsSeqContainer = data.type().is_sequence_container();
+						bool bIsAssContainer = data.type().is_associative_container();
+						ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+						if (bIsSeqContainer)
+						{
+							auto size = data.get(instance).as_sequence_container().size();
+							flags = size > 0 ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
+						}
+						if (bIsAssContainer)
+						{
+							auto size = data.get(instance).as_associative_container().size();
+							flags = size > 0 ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
+						}
 						auto dataName = GetMetaObjectDisplayName(data);
 						// Data name
-						ImGui::TreeNodeEx(*dataName, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);
+						bool bIsContainerExpanded = ImGui::TreeNodeEx(*dataName, flags);
 						// Data tooltip
 						ShowPropertyTooltip(data);
 						// Switch to the right column
 						ImGui::NextColumn();
-						// Align width to the right side
-						ImGui::SetNextItemWidth(-1.0f);
+						if (bIsSeqContainer || bIsAssContainer)
+						{
+							// Insert and erase all buttons
+							DrawSeqButtons(data, instance);
+						}
 						// Push data name as id
 						ImGui::PushID(*dataName);
 						{
-							EvaluateData(data, instance);
+							if (bIsSeqContainer || bIsAssContainer)
+							{
+								if (bIsContainerExpanded)
+								{
+									EvaluateSequenceContainerData(data, instance);
+
+									ImGui::TreePop();
+								}
+							}
+							else
+							{
+								// Align width to the right side
+								ImGui::SetNextItemWidth(-1.0f);
+								EvaluateData(data, instance);
+							}
 						}
 						ImGui::PopID();
 						// Switch to the next row
@@ -214,143 +245,292 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any instance)
+	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		if (data.type().is_integral())
+		// "0" value works for "all" types because we have registered their conversion functions
+		auto& [retIt, res] = seqView.insert(it, 0);
+		if (res)
 		{
-			ProcessIntegralData(data, instance);
-		}
-		else if (data.type().is_floating_point())
-		{
-			ProcessFloatingPointData(data, instance);
-		}
-		else if (data.type().is_enum())
-		{
-			ProcessEnumData(data, instance);
+			ZE_TRACE("Value changed after edit!");
 		}
 		else
 		{
-			ProcessOtherData(data, instance);
-		}
-	}
-
-	void DataInspector::ProcessIntegralData(entt::meta_data data, entt::meta_any instance)
-	{
-		if (IsTypeEqual<bool>(data.type()))
-		{
-			ProcessBoolData(data, instance);
-		}
-		else if (IsTypeEqual<int8_t>(data.type()))
-		{
-			ProcessScalarNData<int8_t>(data, instance, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
-		}
-		else if (IsTypeEqual<int32_t>(data.type()))
-		{
-			ProcessScalarNData<int32_t>(data, instance, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
-		}
-		else if (IsTypeEqual<int64_t>(data.type()))
-		{
-			ProcessScalarNData<int64_t>(data, instance, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
-		}
-		else if (IsTypeEqual<uint8_t>(data.type()))
-		{
-			ProcessScalarNData<uint8_t>(data, instance, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
-		}
-		else if (IsTypeEqual<uint32_t>(data.type()))
-		{
-			ProcessScalarNData<uint32_t>(data, instance, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
-		}
-		else if (IsTypeEqual<uint64_t>(data.type()))
-		{
-			ProcessScalarNData<uint64_t>(data, instance, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
-		}
-	}
-
-	void DataInspector::ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance)
-	{
-		if (IsTypeEqual<float>(data.type()))
-		{
-			ProcessScalarNData<float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<double>(data.type()))
-		{
-			ProcessScalarNData<double>(data, instance, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
-		}
-	}
-
-	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance)
-	{
-		// Get current enum value name by iterating all enum values and comparing
-		const char* currentValueName = nullptr;
-		auto currentValue = data.get(instance);
-		for (auto enumData : data.type().data())
-		{
-			if (currentValue == enumData.get({}))
+			// For special types like user-defined enums, we have to invoke a function instead
+			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
+			auto& [retIt, res] = seqView.insert(it, defaultValue);
+			if (res)
 			{
-				auto valueName = GetMetaObjectDisplayName(enumData);
-				currentValueName = *valueName;
+				ZE_TRACE("Value changed after edit!");
+			}
+			else
+			{
+				auto dataName = GetMetaObjectDisplayName(data);
+				ZE_CORE_ERROR("Failed to insert with data: '{0}'!", *dataName);
 			}
 		}
+		return retIt;
+	}
 
-		// NOTE: We cannot leave ComboBox's label empty
-		if (ImGui::BeginCombo("##Enum", currentValueName))
+	static entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
+	{
+		auto& [retIt, res] = seqView.erase(it);
+		if (res)
 		{
-			// TODO: Reverse enum display order
-			// Iterate to display all enum values
-			for (auto enumData : data.type().data())
+			ZE_TRACE("Value changed after edit!");
+		}
+		else
+		{
+			auto dataName = GetMetaObjectDisplayName(data);
+			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
+		}
+		return retIt;
+	}
+
+	void DataInspector::DrawSeqButtons(entt::meta_data data, entt::meta_any instance)
+	{
+		auto& seqView = data.get(instance).as_sequence_container();
+
+		ImGui::Text("%d elements", seqView.size());
+		ImGui::SameLine();
+		if (ImGui::BeginCombo("##SequenceContainerOperation", nullptr, ImGuiComboFlags_NoPreview))
+		{
+			if (ImGui::Selectable("Add"))
 			{
-				auto valueName = GetMetaObjectDisplayName(enumData);
-				bool bIsSelected = ImGui::Selectable(*valueName);
-				ShowPropertyTooltip(enumData);
-				if (bIsSelected)
+				InsertDefaultValueForSeq(data, seqView, seqView.end());
+			}
+			if (ImGui::Selectable("Clear"))
+			{
+				if (seqView.size() > 0 && seqView.clear())
 				{
-					ImGui::SetItemDefaultFocus();
-					auto currentValue = data.get(instance);
-					auto newValue = enumData.get({});
-					if (newValue != currentValue)
-					{
-						ZE_TRACE("Value changed after edit!");
-					}
-					SetDataValue(data, instance, newValue);
+					ZE_TRACE("Value changed after edit!");
 				}
 			}
+
 			ImGui::EndCombo();
 		}
 	}
 
-	void DataInspector::ProcessOtherData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any instance)
 	{
-		if (IsTypeEqual<std::string>(data.type()))
+		auto& seqView = data.get(instance).as_sequence_container();
+		uint32_t i = 0;
+		for (auto it = seqView.begin(); it != seqView.end();)
 		{
-			ProcessStringData(data, instance);
-		}
-		else if (IsTypeEqual<glm::vec2>(data.type()))
-		{
-			ProcessScalarNData<glm::vec2, 2, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<glm::vec3>(data.type()))
-		{
-			ProcessScalarNData<glm::vec3, 3, float>(data, instance, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<glm::vec4>(data.type()))
-		{
-			ProcessColorData(data, instance);
-		}
-		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
-		{
-			ProcessTexture2DData(data, instance);
+			auto element = *it;
+			// Switch to the next row
+			ImGui::NextColumn();
+			// Data index
+			ImGui::TreeNodeEx(std::to_string(i).c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet);
+			// Switch to the right column
+			ImGui::NextColumn();
+			// Push container index
+			ImGui::PushID(i);
+			{
+				// Make sure element widget + dropdown button can reach desired size
+				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+				float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+				ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+				if (element.type().is_integral())
+				{
+					EvaluateSeqIntegralData(element, data);
+				}
+				else if (element.type().is_floating_point())
+				{
+					EvaluateSeqFloatingPointData(element, data);
+				}
+				else if (element.type().is_enum())
+				{
+					ProcessEnumData(data, element, true);
+				}
+				else
+				{
+					EvaluateSeqOtherData(element, data);
+				}
+				ImGui::SameLine();
+				if (ImGui::BeginCombo("##SequenceElementOperation", nullptr, ImGuiComboFlags_NoPreview))
+				{
+					if (ImGui::Selectable("Insert"))
+					{
+						it = InsertDefaultValueForSeq(data, seqView, it);
+					}
+					if (ImGui::Selectable("Erase"))
+					{
+						it = EraseValueForSeq(data, seqView, it);
+					}
+
+					ImGui::EndCombo();
+				}
+			}
+			ImGui::PopID();
+
+			if (it != seqView.end())
+			{
+				++it, ++i;
+			}
 		}
 	}
 
-	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::EvaluateSeqIntegralData(entt::meta_any element, entt::meta_data data)
 	{
-		auto& boolRef = GetDataValueByRef<bool>(data, instance);
-		bool boolCopy;
-		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
-		if (bUseCopy)
+		if (IsTypeEqual<bool>(element.type()))
 		{
-			boolCopy = GetDataValue<bool>(data, instance);
+			ProcessBoolData(data, element, true);
 		}
+		else if (IsTypeEqual<int8_t>(element.type()))
+		{
+			ProcessScalarNData<int8_t>(data, element, true, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+		}
+		else if (IsTypeEqual<int32_t>(element.type()))
+		{
+			ProcessScalarNData<int32_t>(data, element, true, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+		}
+		else if (IsTypeEqual<int64_t>(element.type()))
+		{
+			ProcessScalarNData<int64_t>(data, element, true, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+		}
+		else if (IsTypeEqual<uint8_t>(element.type()))
+		{
+			ProcessScalarNData<uint8_t>(data, element, true, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+		}
+		else if (IsTypeEqual<uint32_t>(element.type()))
+		{
+			ProcessScalarNData<uint32_t>(data, element, true, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+		}
+		else if (IsTypeEqual<uint64_t>(element.type()))
+		{
+			ProcessScalarNData<uint64_t>(data, element, true, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+		}
+	}
+
+	void DataInspector::EvaluateSeqFloatingPointData(entt::meta_any element, entt::meta_data data)
+	{
+		if (IsTypeEqual<float>(element.type()))
+		{
+			ProcessScalarNData<float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<double>(element.type()))
+		{
+			ProcessScalarNData<double>(data, element, true, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+		}
+	}
+
+	void DataInspector::EvaluateSeqOtherData(entt::meta_any element, entt::meta_data data)
+	{
+		if (IsTypeEqual<std::string>(element.type()))
+		{
+			ProcessStringData(data, element, true);
+		}
+		else if (IsTypeEqual<glm::vec2>(element.type()))
+		{
+			ProcessScalarNData<glm::vec2, 2, float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<glm::vec3>(element.type()))
+		{
+			ProcessScalarNData<glm::vec3, 3, float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<glm::vec4>(element.type()))
+		{
+			ProcessColorData(data, element, true);
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(element.type()))
+		{
+			ProcessTexture2DData(data, element, true);
+		}
+	}
+
+	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (data.type().is_integral())
+		{
+			EvaluateIntegralData(data, instance);
+		}
+		else if (data.type().is_floating_point())
+		{
+			EvaluateFloatingPointData(data, instance);
+		}
+		else if (data.type().is_enum())
+		{
+			ProcessEnumData(data, instance, false);
+		}
+		else
+		{
+			EvaluateOtherData(data, instance);
+		}
+	}
+
+	void DataInspector::EvaluateIntegralData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (IsTypeEqual<bool>(data.type()))
+		{
+			ProcessBoolData(data, instance, false);
+		}
+		else if (IsTypeEqual<int8_t>(data.type()))
+		{
+			ProcessScalarNData<int8_t>(data, instance, false, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+		}
+		else if (IsTypeEqual<int32_t>(data.type()))
+		{
+			ProcessScalarNData<int32_t>(data, instance, false, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+		}
+		else if (IsTypeEqual<int64_t>(data.type()))
+		{
+			ProcessScalarNData<int64_t>(data, instance, false, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+		}
+		else if (IsTypeEqual<uint8_t>(data.type()))
+		{
+			ProcessScalarNData<uint8_t>(data, instance, false, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+		}
+		else if (IsTypeEqual<uint32_t>(data.type()))
+		{
+			ProcessScalarNData<uint32_t>(data, instance, false, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+		}
+		else if (IsTypeEqual<uint64_t>(data.type()))
+		{
+			ProcessScalarNData<uint64_t>(data, instance, false, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+		}
+	}
+
+	void DataInspector::EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (IsTypeEqual<float>(data.type()))
+		{
+			ProcessScalarNData<float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<double>(data.type()))
+		{
+			ProcessScalarNData<double>(data, instance, false, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+		}
+	}
+
+	void DataInspector::EvaluateOtherData(entt::meta_data data, entt::meta_any instance)
+	{
+		if (IsTypeEqual<std::string>(data.type()))
+		{
+			ProcessStringData(data, instance, false);
+		}
+		else if (IsTypeEqual<glm::vec2>(data.type()))
+		{
+			ProcessScalarNData<glm::vec2, 2, float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<glm::vec3>(data.type()))
+		{
+			ProcessScalarNData<glm::vec3, 3, float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+		}
+		else if (IsTypeEqual<glm::vec4>(data.type()))
+		{
+			ProcessColorData(data, instance, false);
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
+		{
+			ProcessTexture2DData(data, instance, false);
+		}
+	}
+
+	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
+	{
+		auto& boolRef = bIsSeqContainer ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance);
+		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		bool boolCopy = bUseCopy ? GetDataValue<bool>(data, instance) : false;
 
 		// NOTE: We cannot leave Checkbox's label empty
 		if (ImGui::Checkbox("##Bool", bUseCopy ? &boolCopy : &boolRef))
@@ -364,25 +544,60 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::ProcessStringData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
+	{
+		auto enumValue = bIsSeqContainer ? instance : data.get(instance);
+		const char* currentValueName = GetEnumDisplayName(enumValue);
+
+		// NOTE: We cannot leave ComboBox's label empty
+		if (ImGui::BeginCombo("##Enum", currentValueName))
+		{
+			// TODO: Reverse enum display order
+			// Iterate to display all enum values
+			const auto& datas = bIsSeqContainer ? instance.type().data() : data.type().data();
+			for (auto enumData : datas)
+			{
+				auto valueName = GetMetaObjectDisplayName(enumData);
+				bool bIsSelected = ImGui::Selectable(*valueName);
+				ShowPropertyTooltip(enumData);
+				if (bIsSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+					auto newValue = enumData.get({});
+					if (newValue != enumValue)
+					{
+						if (bIsSeqContainer)
+						{
+							SetEnumValueForSeq(instance, newValue);
+						}
+						else
+						{
+							SetDataValue(data, instance, newValue);
+						}
+						ZE_TRACE("Value changed after edit!");
+					}
+				}
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
+	void DataInspector::ProcessStringData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
-		auto& stringRef = GetDataValueByRef<std::string>(data, instance);
+		auto& stringRef = bIsSeqContainer ? instance.cast<std::string>() : GetDataValueByRef<std::string>(data, instance);
 		auto id = GetUniqueDataID(data);
-		std::string stringCopy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
-		if (bUseCopy)
-		{
-			stringCopy = GetDataValue<std::string>(data, instance);
-		}
+		std::string stringCopy = bUseCopy ? GetDataValue<std::string>(data, instance) : "";
 
 		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
 		// NOTE: We cannot leave InputBox's label empty
 		ImGui::InputText("##String", stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
 		if (bUseCopy && !stringBuffers[id].first)
 		{
-			SetDataValue(data, instance, std::move(stringCopy));
+			SetDataValue(data, instance, stringCopy);
 		}
 
 		// Write changes to cache first
@@ -398,7 +613,14 @@ namespace ZeoEngine {
 		{
 			bIsValueChanged = stringBuffers[id].second != (bUseCopy ? stringCopy : stringRef);
 			stringBuffers[id].first = false;
-			SetDataValue(data, instance, std::move(stringBuffers[id].second));
+			if (bIsSeqContainer)
+			{
+				stringRef = std::move(stringBuffers[id].second);
+			}
+			else
+			{
+				SetDataValue(data, instance, std::move(stringBuffers[id].second));
+			}
 		}
 
 		if (bIsValueChanged)
@@ -407,18 +629,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::ProcessColorData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessColorData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
-		auto& vec4Ref = GetDataValueByRef<glm::vec4>(data, instance);
+		auto& vec4Ref = bIsSeqContainer ? instance.cast<glm::vec4>() : GetDataValueByRef<glm::vec4>(data, instance);
 		auto id = GetUniqueDataID(data);
-		glm::vec4 vec4Copy;
 		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
-		if (bUseCopy)
-		{
-			vec4Copy = GetDataValue<glm::vec4>(data, instance);
-		}
+		glm::vec4 vec4Copy = bUseCopy ? GetDataValue<glm::vec4>(data, instance) : glm::vec4();
 
 		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);
 		bool bResult = ImGui::ColorEdit4("", vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
@@ -435,7 +653,14 @@ namespace ZeoEngine {
 			{
 				// Apply cache when input box is inactive
 				// Dragging will not go here
-				SetDataValue(data, instance, std::move(vec4Buffers[id].second));
+				if (bIsSeqContainer)
+				{
+					vec4Ref = std::move(vec4Buffers[id].second);
+				}
+				else
+				{
+					SetDataValue(data, instance, std::move(vec4Buffers[id].second));
+				}
 			}
 			vec4Buffers[id].first = false;
 		}
@@ -469,15 +694,15 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
-		auto& texture2DRef = GetDataValueByRef<Ref<Texture2D>>(data, instance);
+		auto& texture2DRef = bIsSeqContainer ? instance.cast<Ref<Texture2D>>() : GetDataValueByRef<Ref<Texture2D>>(data, instance);
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
 		{
 			auto backgroundTexture = library.Get("assets/textures/Checkerboard_Alpha.png");
-			const float texturePreviewWidth = 100.0f;
+			const float texturePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
 			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
 				ImGui::GetCursorScreenPos(),
@@ -496,7 +721,18 @@ namespace ZeoEngine {
 		}
 
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(-1.0f);
+		if (bIsSeqContainer)
+		{
+			// Make sure browser widget + dropdown button can reach desired size
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+		}
+		else
+		{
+			// Align width to the right side
+			ImGui::SetNextItemWidth(-1.0f);
+		}
 
 		// Texture browser
 		if (ImGui::BeginCombo("##Texture2D", texture2DRef ? texture2DRef->GetFileName().c_str() : nullptr))
@@ -512,7 +748,7 @@ namespace ZeoEngine {
 					// Add selected texture to the library
 					Ref<Texture2D> loadedTexture = library.GetOrLoad(*filePath);
 					bIsValueChangedAfterEdit = loadedTexture != texture2DRef;
-					SetDataValue(data, instance, loadedTexture);
+					texture2DRef = loadedTexture;
 				}
 			}
 			ImGui::Separator();
@@ -539,7 +775,7 @@ namespace ZeoEngine {
 				if (bIsSelected)
 				{
 					bIsValueChangedAfterEdit = texture != texture2DRef;
-					SetDataValue(data, instance, texture);
+					texture2DRef = texture;
 				}
 
 				ImGui::PopID();

@@ -44,22 +44,27 @@ namespace ZeoEngine {
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, entt::meta_any instance);
 
-		void EvaluateData(entt::meta_data data, entt::meta_any instance);
-		void ProcessIntegralData(entt::meta_data data, entt::meta_any instance);
-		void ProcessFloatingPointData(entt::meta_data data, entt::meta_any instance);
-		void ProcessEnumData(entt::meta_data data, entt::meta_any instance);
-		void ProcessOtherData(entt::meta_data data, entt::meta_any instance);
+		void DrawSeqButtons(entt::meta_data data, entt::meta_any instance);
 
-		void ProcessBoolData(entt::meta_data data, entt::meta_any instance);
-		void ProcessStringData(entt::meta_data data, entt::meta_any instance);
+		void EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any instance);
+		void EvaluateSeqIntegralData(entt::meta_any element, entt::meta_data data);
+		void EvaluateSeqFloatingPointData(entt::meta_any element, entt::meta_data data);
+		void EvaluateSeqOtherData(entt::meta_any element, entt::meta_data data);
+
+		void EvaluateData(entt::meta_data data, entt::meta_any instance);
+		void EvaluateIntegralData(entt::meta_data data, entt::meta_any instance);
+		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance);
+		void EvaluateOtherData(entt::meta_data data, entt::meta_any instance);
+
+		void ProcessBoolData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
 		template<typename T, uint32_t N = 1, typename CT = T>
-		void ProcessScalarNData(entt::meta_data data, entt::meta_any instance, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
+		void ProcessScalarNData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 
 			// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 			static std::unordered_map<uint32_t, std::pair<bool, T>> valueBuffers;
-			auto& valueRef = GetDataValueByRef<T>(data, instance);
+			auto& valueRef = bIsSeqContainer ? instance.cast<T>() : GetDataValueByRef<T>(data, instance);
 			auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
 			auto min = GetPropValue<CT>(PropertyType::ClampMin, data);
 			auto minValue = min.value_or(defaultMin);
@@ -68,13 +73,9 @@ namespace ZeoEngine {
 			ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			auto id = GetUniqueDataID(data);
 			// We assume getters return copy of data
-			T valueCopy;
 			bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
-			if (bUseCopy)
-			{
-				// Copy the value
-				valueCopy = GetDataValue<T>(data, instance);
-			}
+			// Copy the value
+			T valueCopy = bUseCopy ? GetDataValue<T>(data, instance) : T();
 
 			void* valuePtr = nullptr;
 			void* cachedValuePtr = nullptr;
@@ -105,7 +106,14 @@ namespace ZeoEngine {
 				{
 					// Apply cache when input box is inactive
 					// Dragging will not go here
-					SetDataValue(data, instance, valueBuffers[id].second);
+					if (bIsSeqContainer)
+					{
+						valueRef = std::move(valueBuffers[id].second);
+					}
+					else
+					{
+						SetDataValue(data, instance, std::move(valueBuffers[id].second));
+					}
 				}
 				valueBuffers[id].first = false;
 			}
@@ -138,8 +146,10 @@ namespace ZeoEngine {
 				ZE_TRACE("Value changed after edit!");
 			}
 		}
-		void ProcessColorData(entt::meta_data data, entt::meta_any instance);
-		void ProcessTexture2DData(entt::meta_data data, entt::meta_any instance);
+		void ProcessEnumData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
+		void ProcessStringData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
+		void ProcessColorData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
+		void ProcessTexture2DData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
 
 	private:
 		DataInspectorPanel* m_Context;

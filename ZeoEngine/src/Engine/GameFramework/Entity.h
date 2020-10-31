@@ -58,7 +58,6 @@ namespace ZeoEngine {
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	private:
-		entt::meta_any AddType(entt::meta_type type, entt::registry& registry);
 		entt::meta_any AddTypeById(entt::id_type typeId, entt::registry& registry);
 		void RemoveType(entt::meta_type type, entt::registry& registry);
 

@@ -13,12 +13,6 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
-	entt::meta_any Entity::AddType(entt::meta_type type, entt::registry& registry)
-	{
-		AddComponentId(type.type_id());
-		return type.construct(std::ref(registry), m_EntityHandle);
-	}
-
 	entt::meta_any Entity::AddTypeById(entt::id_type typeId, entt::registry& registry)
 	{
 		AddComponentId(typeId);
