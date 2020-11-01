@@ -256,12 +256,12 @@ namespace ZeoEngine {
 
 	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		//TODO: FIXME
 		// "0" value works for "all" types because we have registered their conversion functions
 		auto& [retIt, res] = seqView.insert(it, 0);
 		if (res)
 		{
 			ZE_TRACE("Value changed after edit!");
+			return retIt;
 		}
 		else
 		{
@@ -271,14 +271,15 @@ namespace ZeoEngine {
 			if (res)
 			{
 				ZE_TRACE("Value changed after edit!");
+				return retIt;
 			}
 			else
 			{
 				auto dataName = GetMetaObjectDisplayName(data);
-				ZE_CORE_ERROR("Failed to insert with data: '{0}'!", *dataName);
+				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
 			}
 		}
-		return retIt;
+		return {};
 	}
 
 	static entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
