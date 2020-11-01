@@ -16,7 +16,7 @@ using namespace ZeoEngine;
 		ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass2)
 		ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass3);
 
-	ZE_REFL_TYPE(TestComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Test")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("测试组件")))
+	ZE_REFL_TYPE(TestComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Test")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("测试组件")), ZE_REFL_PROP(InherentType))
 		ZE_REFL_DATA_REF(TestComponent, BoolVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
 		ZE_REFL_DATA_REF(TestComponent, Ui8Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint8_t))
 		ZE_REFL_DATA_REF(TestComponent, Ui32Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR_WITH_CAST(ClampMin, 1, uint32_t))

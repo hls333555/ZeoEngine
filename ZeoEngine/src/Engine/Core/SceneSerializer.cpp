@@ -214,107 +214,173 @@ namespace ZeoEngine {
 			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
 			if (bDiscardSerialize) continue;
 
-			if (data.type().is_integral())
+			if (data.type().is_sequence_container())
 			{
-				SerializeIntegralData(out, data, instance);
+				EvaluateSerializeSequenceContainerData(out, data, instance);
 			}
-			else if (data.type().is_floating_point())
+			else if (data.type().is_associative_container())
 			{
-				SerializeFloatingPointData(out, data, instance);
-			}
-			else if (data.type().is_enum())
-			{
-				SerializeEnumData(out, data, instance);
+				EvaluateSerializeAssociativeContainerData(out, data, instance);
 			}
 			else
 			{
-				SerializeOtherData(out, data, instance);
+				EvaluateSerializeData(out, data, instance);
 			}
 		}
 	}
 
-	void SceneSerializer::SerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	void SceneSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
 	{
-		if (IsTypeEqual<bool>(data.type()))
-		{
-			SerializeData<bool>(out, data, instance);
-		}
-		else if (IsTypeEqual<int8_t>(data.type()))
-		{
-			SerializeData<int8_t>(out, data, instance);
-		}
-		else if (IsTypeEqual<int32_t>(data.type()))
-		{
-			SerializeData<int32_t>(out, data, instance);
-		}
-		else if (IsTypeEqual<int64_t>(data.type()))
-		{
-			SerializeData<int64_t>(out, data, instance);
-		}
-		else if (IsTypeEqual<uint8_t>(data.type()))
-		{
-			SerializeData<uint8_t>(out, data, instance);
-		}
-		else if (IsTypeEqual<uint32_t>(data.type()))
-		{
-			SerializeData<uint32_t>(out, data, instance);
-		}
-		else if (IsTypeEqual<uint64_t>(data.type()))
-		{
-			SerializeData<uint64_t>(out, data, instance);
-		}
-	}
-
-	void SceneSerializer::SerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
-	{
-		if (IsTypeEqual<float>(data.type()))
-		{
-			SerializeData<float>(out, data, instance);
-		}
-		else if (IsTypeEqual<double>(data.type()))
-		{
-			SerializeData<double>(out, data, instance);
-		}
-	}
-
-	void SceneSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
-	{
+		auto& seqView = data.get(instance).as_sequence_container();
 		const auto dataName = GetMetaObjectDisplayName(data);
-		const auto enumValue = data.get(instance);
-		const char* enumValueName = GetEnumDisplayName(enumValue);
-		out << YAML::Key << *dataName << YAML::Value << enumValueName;
+		out << YAML::Key << *dataName << YAML::Value;
+		{
+			out << YAML::Flow;
+			out << YAML::BeginSeq;
+			{
+				for (auto it = seqView.begin(); it != seqView.end(); ++it)
+				{
+					auto element = *it;
+					if (element.type().is_integral())
+					{
+						EvaluateSerializeIntegralData(out, data, element, true);
+					}
+					else if (element.type().is_floating_point())
+					{
+						EvaluateSerializeFloatingPointData(out, data, element, true);
+					}
+					else if (element.type().is_enum())
+					{
+						SerializeEnumData(out, data, element, true);
+					}
+					else
+					{
+						EvaluateSerializeOtherData(out, data, element, true);
+					}
+				}
+			}
+			out << YAML::EndSeq;
+		}
 	}
 
-	void SceneSerializer::SerializeOtherData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	void SceneSerializer::EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
 	{
-		if (IsTypeEqual<std::string>(data.type()))
+		
+	}
+
+	void SceneSerializer::EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	{
+		if (data.type().is_integral())
 		{
-			SerializeData<std::string>(out, data, instance);
+			EvaluateSerializeIntegralData(out, data, instance, false);
+		}
+		else if (data.type().is_floating_point())
+		{
+			EvaluateSerializeFloatingPointData(out, data, instance, false);
+		}
+		else if (data.type().is_enum())
+		{
+			SerializeEnumData(out, data, instance, false);
+		}
+		else
+		{
+			EvaluateSerializeOtherData(out, data, instance, false);
+		}
+	}
+
+	void SceneSerializer::EvaluateSerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<bool>(type))
+		{
+			SerializeData<bool>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int8_t>(type))
+		{
+			SerializeData<int8_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int32_t>(type))
+		{
+			SerializeData<int32_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int64_t>(type))
+		{
+			SerializeData<int64_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint8_t>(type))
+		{
+			SerializeData<uint8_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint32_t>(type))
+		{
+			SerializeData<uint32_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint64_t>(type))
+		{
+			SerializeData<uint64_t>(out, data, instance, bIsSeqContainer);
+		}
+	}
+
+	void SceneSerializer::EvaluateSerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<float>(type))
+		{
+			SerializeData<float>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<double>(type))
+		{
+			SerializeData<double>(out, data, instance, bIsSeqContainer);
+		}
+	}
+
+	void SceneSerializer::EvaluateSerializeOtherData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<std::string>(type))
+		{
+			SerializeData<std::string>(out, data, instance, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec2>(data.type()))
+		else if (IsTypeEqual<glm::vec2>(type))
 		{
-			SerializeData<glm::vec2>(out, data, instance);
+			SerializeData<glm::vec2>(out, data, instance, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec3>(data.type()))
+		else if (IsTypeEqual<glm::vec3>(type))
 		{
-			SerializeData<glm::vec3>(out, data, instance);
+			SerializeData<glm::vec3>(out, data, instance, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec4>(data.type()))
+		else if (IsTypeEqual<glm::vec4>(type))
 		{
-			SerializeData<glm::vec4>(out, data, instance);
+			SerializeData<glm::vec4>(out, data, instance, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
 		{
-			SerializeData<Ref<Texture2D>>(out, data, instance);
+			SerializeData<Ref<Texture2D>>(out, data, instance, bIsSeqContainer);
 			return;
 		}
 
 		auto dataName = GetMetaObjectDisplayName(data);
 		ZE_CORE_ASSERT_INFO(false, "Failed to serialize data: '{0}'", *dataName);
+	}
+
+	void SceneSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		if (bIsSeqContainer)
+		{
+			const char* enumValueName = GetEnumDisplayName(instance);
+			out << enumValueName;
+		}
+		else
+		{
+			const auto dataName = GetMetaObjectDisplayName(data);
+			const auto enumValue = data.get(instance);
+			const char* enumValueName = GetEnumDisplayName(enumValue);
+			out << YAML::Key << *dataName << YAML::Value << enumValueName;
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -342,47 +408,7 @@ namespace ZeoEngine {
 		{
 			for (auto entity : entities)
 			{
-				//uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
-
-				// Create a default entity
-				Entity deserializedEntity = m_Scene->CreateEntity();
-
-				auto components = entity["Components"];
-				if (components)
-				{
-					for (auto component : components)
-					{
-						auto typeId = component["Component"].as<uint32_t>();
-						// TODO: NativeScriptComponent deserialization
-						if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
-
-						auto type = entt::resolve_type(typeId);
-						auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
-						entt::meta_any instance;
-						if (bIsInherentType)
-						{
-							// Get inherent type from that entity as it has already been added on entity creation
-							instance = GetTypeInstance(type, m_Scene->m_Registry, deserializedEntity);
-						}
-						else
-						{
-							// Add type to that entity
-							instance = deserializedEntity.AddTypeById(typeId, m_Scene->m_Registry);
-						}
-						
-						// Iterate all datas and deserialize values
-						for (auto data : type.data())
-						{
-							auto dataName = GetMetaObjectDisplayName(data);
-							const auto& value = component[*dataName];
-							if (value)
-							{
-								// Evaluate serialized data only
-								EvaluateData(data, instance, value);
-							}
-						}
-					}
-				}
+				DeserializeEntity(entity);
 			}
 		}
 
@@ -396,114 +422,211 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void SceneSerializer::EvaluateData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	void SceneSerializer::DeserializeEntity(const YAML::Node& entity)
 	{
-		if (data.type().is_integral())
-		{
-			DeserializeIntegralData(data, instance, value);
-		}
-		else if (data.type().is_floating_point())
-		{
-			DeserializeFloatingPointData(data, instance, value);
-		}
-		else if (data.type().is_enum())
-		{
-			DeserializeEnumData(data, instance, value);
-		}
-		else
-		{
-			DeserializeOtherData(data, instance, value);
-		}
-	}
+		//uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
 
-	void SceneSerializer::DeserializeIntegralData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
-	{
-		if (IsTypeEqual<bool>(data.type()))
-		{
-			DeserializeData<bool>(data, instance, value);
-		}
-		else if (IsTypeEqual<int8_t>(data.type()))
-		{
-			DeserializeData<int8_t>(data, instance, value);
-		}
-		else if (IsTypeEqual<int32_t>(data.type()))
-		{
-			DeserializeData<int32_t>(data, instance, value);
-		}
-		else if (IsTypeEqual<int64_t>(data.type()))
-		{
-			DeserializeData<int64_t>(data, instance, value);
-		}
-		else if (IsTypeEqual<uint8_t>(data.type()))
-		{
-			DeserializeData<uint8_t>(data, instance, value);
-		}
-		else if (IsTypeEqual<uint32_t>(data.type()))
-		{
-			DeserializeData<uint32_t>(data, instance, value);
-		}
-		else if (IsTypeEqual<uint64_t>(data.type()))
-		{
-			DeserializeData<uint64_t>(data, instance, value);
-		}
-	}
+		// Create a default entity
+		Entity deserializedEntity = m_Scene->CreateEntity();
 
-	void SceneSerializer::DeserializeFloatingPointData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
-	{
-		if (IsTypeEqual<float>(data.type()))
+		auto components = entity["Components"];
+		if (components)
 		{
-			DeserializeData<float>(data, instance, value);
-		}
-		else if (IsTypeEqual<double>(data.type()))
-		{
-			DeserializeData<double>(data, instance, value);
-		}
-	}
-
-	void SceneSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
-	{
-		auto currentValueName = value.as<std::string>();
-		for (auto enumData : data.type().data())
-		{
-			auto valueName = GetMetaObjectDisplayName(enumData);
-			if (currentValueName == valueName)
+			for (auto component : components)
 			{
-				auto newValue = enumData.get({});
-				SetDataValue(data, instance, newValue);
+				auto typeId = component["Component"].as<uint32_t>();
+				// TODO: NativeScriptComponent deserialization
+				if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
+
+				auto type = entt::resolve_type(typeId);
+				auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
+				entt::meta_any instance;
+				if (bIsInherentType)
+				{
+					// Get inherent type from that entity as it has already been added on entity creation
+					instance = GetTypeInstance(type, m_Scene->m_Registry, deserializedEntity);
+				}
+				else
+				{
+					// Add type to that entity
+					instance = deserializedEntity.AddTypeById(typeId, m_Scene->m_Registry);
+				}
+
+				// Iterate all datas and deserialize values
+				for (auto data : type.data())
+				{
+					auto dataName = GetMetaObjectDisplayName(data);
+					const auto& value = component[*dataName];
+					// Evaluate serialized data only
+					if (value)
+					{
+						if (data.type().is_sequence_container())
+						{
+							EvaluateDeserializeSequenceContainerData(data, instance, value);
+						}
+						else if (data.type().is_associative_container())
+						{
+							EvaluateDeserializeAssociativeContainerData(data, instance, value);
+						}
+						else
+						{
+							EvaluateDeserializeData(data, instance, value);
+						}
+					}
+				}
 			}
 		}
 	}
 
-	void SceneSerializer::DeserializeOtherData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	void SceneSerializer::EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
 	{
-		if (IsTypeEqual<std::string>(data.type()))
+		const auto type = data.get(instance).as_sequence_container().value_type();
+		for (const auto& element : value)
 		{
-			DeserializeData<std::string>(data, instance, value);
+			if (type.is_integral())
+			{
+				EvaluateDeserializeIntegralData(data, instance, element, true);
+			}
+			else if (type.is_floating_point())
+			{
+				EvaluateDeserializeFloatingPointData(data, instance, element, true);
+			}
+			else if (type.is_enum())
+			{
+				DeserializeEnumData(data, instance, element, true);
+			}
+			else
+			{
+				EvaluateDeserializeOtherData(data, instance, element, true);
+			}
+		}
+	}
+
+	void SceneSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	{
+		
+	}
+
+	void SceneSerializer::EvaluateDeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	{
+		if (data.type().is_integral())
+		{
+			EvaluateDeserializeIntegralData(data, instance, value, false);
+		}
+		else if (data.type().is_floating_point())
+		{
+			EvaluateDeserializeFloatingPointData(data, instance, value, false);
+		}
+		else if (data.type().is_enum())
+		{
+			DeserializeEnumData(data, instance, value, false);
+		}
+		else
+		{
+			EvaluateDeserializeOtherData(data, instance, value, false);
+		}
+	}
+
+	void SceneSerializer::EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
+		if (IsTypeEqual<bool>(type))
+		{
+			DeserializeData<bool>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int8_t>(type))
+		{
+			DeserializeData<int8_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int32_t>(type))
+		{
+			DeserializeData<int32_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int64_t>(type))
+		{
+			DeserializeData<int64_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint8_t>(type))
+		{
+			DeserializeData<uint8_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint32_t>(type))
+		{
+			DeserializeData<uint32_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint64_t>(type))
+		{
+			DeserializeData<uint64_t>(data, instance, value, bIsSeqContainer);
+		}
+	}
+
+	void SceneSerializer::EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
+		if (IsTypeEqual<float>(type))
+		{
+			DeserializeData<float>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<double>(type))
+		{
+			DeserializeData<double>(data, instance, value, bIsSeqContainer);
+		}
+	}
+
+	void SceneSerializer::EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
+		if (IsTypeEqual<std::string>(type))
+		{
+			DeserializeData<std::string>(data, instance, value, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec2>(data.type()))
+		else if (IsTypeEqual<glm::vec2>(type))
 		{
-			DeserializeData<glm::vec2>(data, instance, value);
+			DeserializeData<glm::vec2>(data, instance, value, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec3>(data.type()))
+		else if (IsTypeEqual<glm::vec3>(type))
 		{
-			DeserializeData<glm::vec3>(data, instance, value);
+			DeserializeData<glm::vec3>(data, instance, value, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<glm::vec4>(data.type()))
+		else if (IsTypeEqual<glm::vec4>(type))
 		{
-			DeserializeData<glm::vec4>(data, instance, value);
+			DeserializeData<glm::vec4>(data, instance, value, bIsSeqContainer);
 			return;
 		}
-		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
 		{
-			DeserializeData<Ref<Texture2D>>(data, instance, value);
+			DeserializeData<Ref<Texture2D>>(data, instance, value, bIsSeqContainer);
 			return;
 		}
 
 		auto dataName = GetMetaObjectDisplayName(data);
 		ZE_CORE_ASSERT_INFO(false, "Failed to deserialize data: '{0}'", *dataName);
+	}
+
+	void SceneSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		auto currentValueName = value.as<std::string>();
+		const auto& datas = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type().data() : data.type().data();
+		for (auto enumData : datas)
+		{
+			auto valueName = GetMetaObjectDisplayName(enumData);
+			if (currentValueName == valueName)
+			{
+				auto newValue = enumData.get({});
+				if (bIsSeqContainer)
+				{
+					auto& seqView = data.get(instance).as_sequence_container();
+					seqView.insert(seqView.end(), newValue);
+				}
+				else
+				{
+					SetDataValue(data, instance, newValue);
+				}
+			}
+		}
 	}
 
 }

@@ -47,14 +47,12 @@ namespace ZeoEngine {
 		void DrawSeqButtons(entt::meta_data data, entt::meta_any instance);
 
 		void EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any instance);
-		void EvaluateSeqIntegralData(entt::meta_any element, entt::meta_data data);
-		void EvaluateSeqFloatingPointData(entt::meta_any element, entt::meta_data data);
-		void EvaluateSeqOtherData(entt::meta_any element, entt::meta_data data);
-
+		void EvaluateAssociativeContainerData(entt::meta_data data, entt::meta_any instance);
 		void EvaluateData(entt::meta_data data, entt::meta_any instance);
-		void EvaluateIntegralData(entt::meta_data data, entt::meta_any instance);
-		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance);
-		void EvaluateOtherData(entt::meta_data data, entt::meta_any instance);
+
+		void EvaluateIntegralData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
+		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
+		void EvaluateOtherData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
 
 		void ProcessBoolData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer);
 		template<typename T, uint32_t N = 1, typename CT = T>

@@ -135,11 +135,20 @@ namespace ZeoEngine {
 						// Push data name as id
 						ImGui::PushID(*dataName);
 						{
-							if (bIsSeqContainer || bIsAssContainer)
+							if (bIsSeqContainer)
 							{
 								if (bIsContainerExpanded)
 								{
 									EvaluateSequenceContainerData(data, instance);
+
+									ImGui::TreePop();
+								}
+							}
+							else if (bIsAssContainer)
+							{
+								if (bIsContainerExpanded)
+								{
+									EvaluateAssociativeContainerData(data, instance);
 
 									ImGui::TreePop();
 								}
@@ -247,6 +256,7 @@ namespace ZeoEngine {
 
 	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
+		//TODO: FIXME
 		// "0" value works for "all" types because we have registered their conversion functions
 		auto& [retIt, res] = seqView.insert(it, 0);
 		if (res)
@@ -313,6 +323,7 @@ namespace ZeoEngine {
 	void DataInspector::EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any instance)
 	{
 		auto& seqView = data.get(instance).as_sequence_container();
+		const auto type = seqView.value_type();
 		uint32_t i = 0;
 		for (auto it = seqView.begin(); it != seqView.end();)
 		{
@@ -330,21 +341,21 @@ namespace ZeoEngine {
 				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 				float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 				ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
-				if (element.type().is_integral())
+				if (type.is_integral())
 				{
-					EvaluateSeqIntegralData(element, data);
+					EvaluateIntegralData(data, element, true);
 				}
-				else if (element.type().is_floating_point())
+				else if (type.is_floating_point())
 				{
-					EvaluateSeqFloatingPointData(element, data);
+					EvaluateFloatingPointData(data, element, true);
 				}
-				else if (element.type().is_enum())
+				else if (type.is_enum())
 				{
 					ProcessEnumData(data, element, true);
 				}
 				else
 				{
-					EvaluateSeqOtherData(element, data);
+					EvaluateOtherData(data, element, true);
 				}
 				ImGui::SameLine();
 				if (ImGui::BeginCombo("##SequenceElementOperation", nullptr, ImGuiComboFlags_NoPreview))
@@ -370,83 +381,20 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::EvaluateSeqIntegralData(entt::meta_any element, entt::meta_data data)
+	void DataInspector::EvaluateAssociativeContainerData(entt::meta_data data, entt::meta_any instance)
 	{
-		if (IsTypeEqual<bool>(element.type()))
-		{
-			ProcessBoolData(data, element, true);
-		}
-		else if (IsTypeEqual<int8_t>(element.type()))
-		{
-			ProcessScalarNData<int8_t>(data, element, true, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
-		}
-		else if (IsTypeEqual<int32_t>(element.type()))
-		{
-			ProcessScalarNData<int32_t>(data, element, true, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
-		}
-		else if (IsTypeEqual<int64_t>(element.type()))
-		{
-			ProcessScalarNData<int64_t>(data, element, true, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
-		}
-		else if (IsTypeEqual<uint8_t>(element.type()))
-		{
-			ProcessScalarNData<uint8_t>(data, element, true, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
-		}
-		else if (IsTypeEqual<uint32_t>(element.type()))
-		{
-			ProcessScalarNData<uint32_t>(data, element, true, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
-		}
-		else if (IsTypeEqual<uint64_t>(element.type()))
-		{
-			ProcessScalarNData<uint64_t>(data, element, true, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
-		}
-	}
-
-	void DataInspector::EvaluateSeqFloatingPointData(entt::meta_any element, entt::meta_data data)
-	{
-		if (IsTypeEqual<float>(element.type()))
-		{
-			ProcessScalarNData<float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<double>(element.type()))
-		{
-			ProcessScalarNData<double>(data, element, true, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
-		}
-	}
-
-	void DataInspector::EvaluateSeqOtherData(entt::meta_any element, entt::meta_data data)
-	{
-		if (IsTypeEqual<std::string>(element.type()))
-		{
-			ProcessStringData(data, element, true);
-		}
-		else if (IsTypeEqual<glm::vec2>(element.type()))
-		{
-			ProcessScalarNData<glm::vec2, 2, float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<glm::vec3>(element.type()))
-		{
-			ProcessScalarNData<glm::vec3, 3, float>(data, element, true, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		}
-		else if (IsTypeEqual<glm::vec4>(element.type()))
-		{
-			ProcessColorData(data, element, true);
-		}
-		else if (IsTypeEqual<Ref<Texture2D>>(element.type()))
-		{
-			ProcessTexture2DData(data, element, true);
-		}
+		
 	}
 
 	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any instance)
 	{
 		if (data.type().is_integral())
 		{
-			EvaluateIntegralData(data, instance);
+			EvaluateIntegralData(data, instance, false);
 		}
 		else if (data.type().is_floating_point())
 		{
-			EvaluateFloatingPointData(data, instance);
+			EvaluateFloatingPointData(data, instance, false);
 		}
 		else if (data.type().is_enum())
 		{
@@ -454,75 +402,78 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			EvaluateOtherData(data, instance);
+			EvaluateOtherData(data, instance, false);
 		}
 	}
 
-	void DataInspector::EvaluateIntegralData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::EvaluateIntegralData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
-		if (IsTypeEqual<bool>(data.type()))
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<bool>(type))
 		{
-			ProcessBoolData(data, instance, false);
+			ProcessBoolData(data, instance, bIsSeqContainer);
 		}
-		else if (IsTypeEqual<int8_t>(data.type()))
+		else if (IsTypeEqual<int8_t>(type))
 		{
-			ProcessScalarNData<int8_t>(data, instance, false, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+			ProcessScalarNData<int8_t>(data, instance, bIsSeqContainer, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
 		}
-		else if (IsTypeEqual<int32_t>(data.type()))
+		else if (IsTypeEqual<int32_t>(type))
 		{
-			ProcessScalarNData<int32_t>(data, instance, false, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+			ProcessScalarNData<int32_t>(data, instance, bIsSeqContainer, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 		}
-		else if (IsTypeEqual<int64_t>(data.type()))
+		else if (IsTypeEqual<int64_t>(type))
 		{
-			ProcessScalarNData<int64_t>(data, instance, false, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+			ProcessScalarNData<int64_t>(data, instance, bIsSeqContainer, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 		}
-		else if (IsTypeEqual<uint8_t>(data.type()))
+		else if (IsTypeEqual<uint8_t>(type))
 		{
-			ProcessScalarNData<uint8_t>(data, instance, false, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+			ProcessScalarNData<uint8_t>(data, instance, bIsSeqContainer, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 		}
-		else if (IsTypeEqual<uint32_t>(data.type()))
+		else if (IsTypeEqual<uint32_t>(type))
 		{
-			ProcessScalarNData<uint32_t>(data, instance, false, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+			ProcessScalarNData<uint32_t>(data, instance, bIsSeqContainer, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 		}
-		else if (IsTypeEqual<uint64_t>(data.type()))
+		else if (IsTypeEqual<uint64_t>(type))
 		{
-			ProcessScalarNData<uint64_t>(data, instance, false, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+			ProcessScalarNData<uint64_t>(data, instance, bIsSeqContainer, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 		}
 	}
 
-	void DataInspector::EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::EvaluateFloatingPointData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
-		if (IsTypeEqual<float>(data.type()))
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<float>(type))
 		{
-			ProcessScalarNData<float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
-		else if (IsTypeEqual<double>(data.type()))
+		else if (IsTypeEqual<double>(type))
 		{
-			ProcessScalarNData<double>(data, instance, false, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+			ProcessScalarNData<double>(data, instance, bIsSeqContainer, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
 		}
 	}
 
-	void DataInspector::EvaluateOtherData(entt::meta_data data, entt::meta_any instance)
+	void DataInspector::EvaluateOtherData(entt::meta_data data, entt::meta_any instance, bool bIsSeqContainer)
 	{
-		if (IsTypeEqual<std::string>(data.type()))
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<std::string>(type))
 		{
-			ProcessStringData(data, instance, false);
+			ProcessStringData(data, instance, bIsSeqContainer);
 		}
-		else if (IsTypeEqual<glm::vec2>(data.type()))
+		else if (IsTypeEqual<glm::vec2>(type))
 		{
-			ProcessScalarNData<glm::vec2, 2, float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<glm::vec2, 2, float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
-		else if (IsTypeEqual<glm::vec3>(data.type()))
+		else if (IsTypeEqual<glm::vec3>(type))
 		{
-			ProcessScalarNData<glm::vec3, 3, float>(data, instance, false, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<glm::vec3, 3, float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
-		else if (IsTypeEqual<glm::vec4>(data.type()))
+		else if (IsTypeEqual<glm::vec4>(type))
 		{
-			ProcessColorData(data, instance, false);
+			ProcessColorData(data, instance, bIsSeqContainer);
 		}
-		else if (IsTypeEqual<Ref<Texture2D>>(data.type()))
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
 		{
-			ProcessTexture2DData(data, instance, false);
+			ProcessTexture2DData(data, instance, bIsSeqContainer);
 		}
 	}
 
