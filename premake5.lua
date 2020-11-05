@@ -29,6 +29,7 @@ IncludeDir["ImGuizmo"] = "ZeoEngine/vendor/ImGuizmo"
 IncludeDir["rapidjson"] = "ZeoEngine/vendor/rapidjson"
 IncludeDir["entt"] = "ZeoEngine/vendor/entt/include"
 IncludeDir["yaml_cpp"] = "ZeoEngine/vendor/yaml-cpp/include"
+IncludeDir["magic_enum"] = "ZeoEngine/vendor/magic_enum/include"
 
 -- Include premake files
 group "Dependencies"
@@ -83,7 +84,8 @@ project "ZeoEngine"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}"
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.magic_enum}"
 	}
 
 	links 
