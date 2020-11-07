@@ -61,6 +61,7 @@ enum class PropertyType
     Tooltip,				// [value_type: const char*] Tooltip of type or data.
 	SetterAndGetter,		// [key_only] Indicates this data has setter and getter.
 	HideTypeHeader,			// [key_only] This type will not display CollapsingHeader.
+	NestedClass,			// [key_only] This type has subdatas and will display a special TreeNode.
 
 	DragSensitivity,		// [value_type: float] Speed of dragging.
 	ClampMin,				// [value_type: type_dependent] Min value.
@@ -77,34 +78,47 @@ enum class PropertyType
 
 #define ZE_TEXT(text) u8##text
 
-#define ZE_REFL_TYPE(_type, ...)													\
-entt::meta<_type>()																	\
-    .type()                                                                         \
-        .prop(PropertyType::Name, #_type)											\
-        .prop(std::make_tuple(__VA_ARGS__))											\
-	.ctor<&emplace<_type>, entt::as_ref_t>()										\
-	.func<&get<_type>, entt::as_ref_t>("get"_hs)									\
+#define ZE_REFL_TYPE(_type, ...)																\
+entt::meta<_type>()																				\
+    .type()																						\
+        .prop(PropertyType::Name, #_type)														\
+        .prop(std::make_tuple(__VA_ARGS__))														\
+	.ctor<&emplace<_type>, entt::as_ref_t>()													\
+	.func<&get<_type>, entt::as_ref_t>("get"_hs)												\
 	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
+#define ZE_REFL_TYPE_NESTED(_type, ...)															\
+entt::meta<_type>()																				\
+    .type()																						\
+        .prop(PropertyType::Name, #_type)														\
+        .prop(PropertyType::InherentType)														\
+        .prop(PropertyType::NestedClass)														\
+        .prop(std::make_tuple(__VA_ARGS__))														\
+	.ctor<&emplace<_type>, entt::as_ref_t>()													\
+	.func<&get<_type>, entt::as_ref_t>("get"_hs)												\
+	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)											\
+	.func<&create_default_value<_type>>("create_default_value"_hs)
 
-#define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)							\
-.data<&_type::_data, policy>(#_data##_hs)											\
-    .prop(PropertyType::Name, #_data)												\
+#define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)										\
+.data<&_type::_data, policy>(#_data##_hs)														\
+    .prop(PropertyType::Name, #_data)															\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__) // Registering data this way cannot directly modify the instance value via editor UI, consider using ZE_REFL_DATA_REF instead
+#define ZE_REFL_DATA(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__)
 #define ZE_REFL_DATA_REF(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_ref_t, __VA_ARGS__)
-#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...)	\
-.data<&_type::setterName, &_type::getterName>(#dataName##_hs)						\
-    .prop(PropertyType::Name, #dataName)                                            \
-    .prop(PropertyType::SetterAndGetter)                                            \
+#define ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, setter, getter, policy, ...)	\
+.data<setter, getter, policy>(#dataName##_hs)													\
+    .prop(PropertyType::Name, #dataName)														\
+    .prop(PropertyType::SetterAndGetter)														\
     .prop(std::make_tuple(__VA_ARGS__))
+#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...) ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, &_type::setterName, &_type::getterName, entt::as_is_t, __VA_ARGS__) // Please use ZE_REFL_DATA_SETTER_GETTER_REF instead to register getter-setter for containers
+#define ZE_REFL_DATA_SETTER_GETTER_REF(_type, dataName, getterName, ...) ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, nullptr, &_type::getterName, entt::as_ref_t, __VA_ARGS__)
 
-#define ZE_REFL_ENUM(enumType)														\
-entt::meta<enumType>()																\
-	.func<&set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)			\
+#define ZE_REFL_ENUM(enumType)																	\
+entt::meta<enumType>()																			\
+	.func<&set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)						\
 	.func<&create_default_value<enumType>>("create_default_value"_hs)
-#define ZE_REFL_ENUM_DATA(enumType, enumData, ...)									\
-.data<enumType::enumData>(#enumData##_hs)											\
-    .prop(PropertyType::Name, #enumData)											\
+#define ZE_REFL_ENUM_DATA(enumType, enumData, ...)												\
+.data<enumType::enumData>(#enumData##_hs)														\
+    .prop(PropertyType::Name, #enumData)														\
 	.prop(std::make_tuple(__VA_ARGS__))
 
 #define ZE_REFL_PROP(propType) PropertyType::propType
@@ -148,21 +162,21 @@ namespace ZeoEngine {
 	}
 
 	template<typename T>
-	T& GetDataValueByRef(entt::meta_data data, entt::meta_any instance)
+	T& GetDataValueByRef(entt::meta_data data, entt::meta_handle instance)
 	{
-		return data.get(instance).cast<T>();
+		return data.get(std::move(instance)).cast<T>();
 	}
 
 	template<typename T>
-	T GetDataValue(entt::meta_data data, entt::meta_any instance)
+	T GetDataValue(entt::meta_data data, entt::meta_handle instance)
 	{
-		return data.get(instance).cast<T>();
+		return data.get(std::move(instance)).cast<T>();
 	}
 
 	template<typename T>
-	void SetDataValue(entt::meta_data data, entt::meta_any instance, T&& value)
+	void SetDataValue(entt::meta_data data, entt::meta_handle instance, T&& value)
 	{
-		data.set(instance, std::forward<T>(value));
+		data.set(std::move(instance), std::forward<T>(value));
 	}
 
 	template<typename T>

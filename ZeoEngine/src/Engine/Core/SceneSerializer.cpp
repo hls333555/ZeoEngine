@@ -2,6 +2,7 @@
 #include "Engine/Core/SceneSerializer.h"
 
 #include <glm/glm.hpp>
+#include <magic_enum.hpp>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
@@ -139,8 +140,9 @@ namespace ZeoEngine {
 		return out;
 	}
 
-	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
+	SceneSerializer::SceneSerializer(const Ref<Scene>& scene, SerializerType type)
 		: m_Scene(scene)
+		, m_SerializerType(type)
 	{
 	}
 
@@ -152,12 +154,13 @@ namespace ZeoEngine {
 	{
 		YAML::Emitter out;
 
+		auto typeName = magic_enum::enum_name(m_SerializerType).data();
 		const std::string sceneName = m_Scene->GetName();
-		ZE_CORE_TRACE("Serializing scene '{0}'", sceneName);
+		ZE_CORE_TRACE("Serializing {0} '{1}'", typeName, sceneName);
 
 		out << YAML::BeginMap;
 		{
-			out << YAML::Key << "Scene" << YAML::Value << sceneName;
+			out << YAML::Key << typeName << YAML::Value << sceneName;
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
 				m_Scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
@@ -394,14 +397,15 @@ namespace ZeoEngine {
 		strStream << stream.rdbuf();
 
 		YAML::Node data = YAML::Load(strStream.str());
-		if (!data["Scene"])
+		auto typeName = magic_enum::enum_name(m_SerializerType).data();
+		if (!data[typeName])
 		{
-			ZE_CORE_ERROR("Failed to load scene. Unknown scene format!");
+			ZE_CORE_ERROR("Failed to load {0}. Unknown {0} format!", typeName);
 			return false;
 		}
 
-		std::string sceneName = data["Scene"].as<std::string>();
-		ZE_CORE_TRACE("Deserializing scene '{0}'", sceneName);
+		std::string sceneName = data[typeName].as<std::string>();
+		ZE_CORE_TRACE("Deserializing {0} '{1}'", typeName, sceneName);
 
 		auto entities = data["Entities"];
 		if (entities)

@@ -1501,7 +1501,7 @@ namespace ZeoEngine {
 	void EditorLayer::LoadParticleSystemFromFile(const char* particleSystemPath)
 	{
 		const std::string relativePath = ToRelativePath(particleSystemPath);
-		m_EditorParticleSystem = GetParticleLibrary()->UpdateOrLoad(relativePath);
+		//m_EditorParticleSystem = GetParticleLibrary()->UpdateOrLoad(relativePath);
 	}
 
 	void EditorLayer::SaveParticleSystemToFile(std::string& particleSystemPath)
@@ -2088,57 +2088,57 @@ namespace ZeoEngine {
 		std::stringstream ss;
 		BeginDisplayProperty(ss, data);
 		// TODO: Add search filter for particle system
-		if (ImGui::BeginCombo(ss.str().c_str(), particleSystemValue ? particleSystemValue->GetFileName().c_str() : nullptr))
-		{
-			ParticleLibrary* library = GetParticleLibrary();
-			// Pop up file browser to select a particle system
-			if (ImGui::Selectable("Browse particle system..."))
-			{
-				//nfdchar_t* outPath = nullptr;
-				//nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
-				//if (result == NFD_OKAY)
-				//{
-				//	const std::string relativePath = ToRelativePath(outPath);
-				//	// Add selected particle system to the library
-				//	ParticleSystem* loadedPs = library->GetOrLoad(relativePath);
-				//	SetPropertyValue(data, loadedPs, loadedPs);
-				//	free(outPath);
-				//}
-				//else if (result == NFD_ERROR)
-				//{
-				//	ZE_CORE_ERROR("ProcessParticleSystemType: {0}", NFD_GetError());
-				//}
-			}
-			ImGui::Separator();
-			// List all loaded particle systems from ParticleLibrary
-			for (const auto& [path, ps] : library->GetParticlesMap())
-			{
-				if (ImGui::Selectable(ps->GetFileName().c_str()))
-				{
-					SetPropertyValue(data, ps, ps);
-				}
-				// Display particle system path tooltip
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::SetTooltip("%s", ps->GetPath().c_str());
-				}
-			}
-			ImGui::EndCombo();
-		}
+		//if (ImGui::BeginCombo(ss.str().c_str(), particleSystemValue ? particleSystemValue->GetFileName().c_str() : nullptr))
+		//{
+		//	ParticleLibrary& library = ParticleLibrary::Get();
+		//	// Pop up file browser to select a particle system
+		//	if (ImGui::Selectable("Browse particle system..."))
+		//	{
+		//		//nfdchar_t* outPath = nullptr;
+		//		//nfdresult_t result = NFD_OpenDialog("zparticle", nullptr, &outPath);
+		//		//if (result == NFD_OKAY)
+		//		//{
+		//		//	const std::string relativePath = ToRelativePath(outPath);
+		//		//	// Add selected particle system to the library
+		//		//	ParticleSystem* loadedPs = library->GetOrLoad(relativePath);
+		//		//	SetPropertyValue(data, loadedPs, loadedPs);
+		//		//	free(outPath);
+		//		//}
+		//		//else if (result == NFD_ERROR)
+		//		//{
+		//		//	ZE_CORE_ERROR("ProcessParticleSystemType: {0}", NFD_GetError());
+		//		//}
+		//	}
+		//	ImGui::Separator();
+		//	// List all loaded particle systems from ParticleLibrary
+		//	for (const auto& [path, ps] : library.GetParticleTemplatesMap())
+		//	{
+		//		if (ImGui::Selectable(ps->GetFileName().c_str()))
+		//		{
+		//			SetPropertyValue(data, ps, ps);
+		//		}
+		//		// Display particle system path tooltip
+		//		if (ImGui::IsItemHovered())
+		//		{
+		//			ImGui::SetTooltip("%s", ps->GetPath().c_str());
+		//		}
+		//	}
+		//	ImGui::EndCombo();
+		//}
 		if (particleSystemValue)
 		{
 			// Display particle system path tooltip
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip(u8"%s\n(Ë«»÷Êó±êÓÒ¼ü´ò¿ªÁ£×Ó±à¼­Æ÷)", particleSystemValue->GetPath().c_str());
+				//ImGui::SetTooltip(u8"%s\n(Ë«»÷Êó±êÓÒ¼ü´ò¿ªÁ£×Ó±à¼­Æ÷)", particleSystemValue->GetPath().c_str());
 				// Open Particle Editor on right mouse button double clicked
 				// Note: IsItemHovered() must be true at the same time or multiple combo boxes will be affected
 				if (ImGui::IsMouseDoubleClicked(1))
 				{
 					m_bShowParticleEditor = true;
-					LoadParticleSystemFromFile(particleSystemValue->GetPath().c_str());
-					m_CurrentParticleSystemPath = ToAbsolutePath(particleSystemValue->GetPath().c_str());
-					m_CurrentParticleSystemName = particleSystemValue->GetFileName();
+					//LoadParticleSystemFromFile(particleSystemValue->GetPath().c_str());
+					//m_CurrentParticleSystemPath = ToAbsolutePath(particleSystemValue->GetPath().c_str());
+					//m_CurrentParticleSystemName = particleSystemValue->GetFileName();
 				}
 			}
 		}

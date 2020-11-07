@@ -2,9 +2,10 @@
 
 #include "Engine/Core/Layer.h"
 
+#include <set>
+
 #include "Engine/Renderer/OrthographicCamera.h"
 #include "Engine/Core/TimerManager.h"
-#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
@@ -19,13 +20,10 @@ namespace ZeoEngine {
 
 		virtual OrthographicCamera* GetGameCamera() { return nullptr; }
 
-		ParticleLibrary* GetParticleLibrary() { return &m_ParticleLibrary; }
-
 		void AddGameObjectPendingDestroy(GameObject* object) { m_GameObjectsPendingDestroy.insert(object); }
 
 	private:
 		TimerManager m_CoreTimerManager{ "Core" };
-		ParticleLibrary m_ParticleLibrary;
 
 		float m_GarbageCollectionInterval;
 		std::set<GameObject*> m_GameObjectsPendingDestroy;

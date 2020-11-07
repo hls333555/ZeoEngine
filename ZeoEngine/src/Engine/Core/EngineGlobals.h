@@ -17,10 +17,4 @@ namespace ZeoEngine {
 		return Level::Get().GetGameTimerManager();
 	}
 
-	static ParticleLibrary* GetParticleLibrary()
-	{
-		EngineLayer* engineLayer = Application::Get().GetEngineLayer();
-		return engineLayer ? engineLayer->GetParticleLibrary() : nullptr;
-	}
-
 }

@@ -276,7 +276,7 @@ namespace ZeoEngine {
 		else if (type.is_pointer() && type == rttr::type::get<ParticleSystem*>())
 		{
 			ParticleSystem* ps = var.get_value<ParticleSystem*>();
-			writer.String(ps ? ps->GetPath() : "");
+			//writer.String(ps ? ps->GetPath() : "");
 			return true;
 		}
 		return false;
@@ -520,7 +520,7 @@ namespace ZeoEngine {
 						std::string extractedPath = extractedValue.to_string();
 						if (!extractedPath.empty())
 						{
-							prop.set_value(obj, GetParticleLibrary()->GetOrLoad(extractedPath));
+							prop.set_value(obj, ParticleLibrary::Get().GetOrLoad(extractedPath));
 						}
 					}
 					else

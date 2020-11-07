@@ -7,6 +7,7 @@
 
 #include "Engine/Events/KeyEvent.h"
 #include "Dockspaces/EditorDockspace.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 

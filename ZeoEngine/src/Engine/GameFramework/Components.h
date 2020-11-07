@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -172,7 +174,7 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent
 	{
-		Ref<ParticleSystem> ParticleSystem;
+		Ref<ParticleTemplate> Template;
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
@@ -180,8 +182,46 @@ namespace ZeoEngine {
 
 	struct ParticleSystemDetailComponent : public ParticleSystemComponent
 	{
-		using ParticleSystemComponent::ParticleSystemComponent;
+		ParticleSystemDetailComponent()
+		{
+			Template = CreateRef<ParticleTemplate>();
+		}
 
+		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
+		void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
+		int32_t GetLoopCount() const { return Template->LoopCount; }
+		void SetLoopCount(int32_t count) { Template->LoopCount = count; }
+		float GetLoopDuration() const { return Template->LoopDuration; }
+		void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
+		const ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
+		void SetSpawnRate(const ParticleFloat& value) { Template->SpawnRate = value; }
+		auto& GetBurstList() const { return Template->BurstList; }
+		const ParticleVec2& GetInitialPosition() const { return Template->InitialPosition; }
+		void SetInitialPosition(const ParticleVec2& position) { Template->InitialPosition = position; }
+		const ParticleFloat& GetInitialRotation() const { return Template->InitialRotation; }
+		void SetInitialRotation(const ParticleFloat& rotation) { Template->InitialRotation = rotation; }
+		const ParticleFloat& GetRotationRate() const { return Template->RotationRate; }
+		void SetRotationRate(const ParticleFloat& rotation) { Template->RotationRate = rotation; }
+		const ParticleVec2& GetSizeBegin() const { return Template->SizeBegin; }
+		void SetSizeBegin(const ParticleVec2& size) { Template->SizeBegin = size; }
+		const ParticleVec2& GetSizeEnd() const { return Template->SizeEnd; }
+		void SetSizeEnd(const ParticleVec2& size) { Template->SizeEnd = size; }
+		const ParticleVec2& GetInitialVelocity() const { return Template->InitialVelocity; }
+		void SetInitialVelocity(const ParticleVec2& velocity) { Template->InitialVelocity = velocity; }
+		const glm::vec2& GetInheritVelocity() const { return Template->InheritVelocity; }
+		void SetInheritVelocity(const glm::vec2& velocity) { Template->InheritVelocity = velocity; }
+		const ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
+		void SetColorBegin(const ParticleColor& color) { Template->ColorBegin = color; }
+		const ParticleColor& GetColorEnd() const { return Template->ColorEnd; }
+		void SetColorEnd(const ParticleColor& color) { Template->ColorEnd = color; }
+		const ParticleFloat& GetLifetime() const { return Template->Lifetime; }
+		void SetLifetime(const ParticleFloat& lifetime) { Template->Lifetime = lifetime; }
+		const Ref<Texture2D>& GetTexture() const { return Template->Texture; }
+		void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
+		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
+		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
+		uint32_t GetMaxDrawParticles() const { return Template->MaxDrawParticles; }
+		void SetMaxDrawParticles(uint32_t count) { Template->MaxDrawParticles = count; }
 
 	};
 

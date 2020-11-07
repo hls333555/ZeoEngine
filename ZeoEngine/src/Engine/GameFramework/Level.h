@@ -190,7 +190,7 @@ namespace ZeoEngine {
 		uint32_t m_TranslucentObjectIndex = 0;
 
 		TimerManager m_GameTimerManager{ "Game" };
-		ParticleManager m_ParticleManager;
+		//ParticleManager m_ParticleManager;
 
 		EngineLayer* m_EngineLayer;
 

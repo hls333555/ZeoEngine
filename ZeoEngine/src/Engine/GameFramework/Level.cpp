@@ -54,7 +54,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		m_ParticleManager.OnUpdate(dt);
+		//m_ParticleManager.OnUpdate(dt);
 
 	}
 
@@ -85,7 +85,7 @@ namespace ZeoEngine {
 
 			object->OnRender();
 		}
-		m_ParticleManager.OnRender();
+		//m_ParticleManager.OnRender();
 		RenderCommand::EnableDepthWriting(true);
 
 	}
@@ -153,7 +153,7 @@ namespace ZeoEngine {
 			return nullptr;
 
 		ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), position, bAutoDestroy);
-		m_ParticleManager.AddParticleSystem(ps);
+		//m_ParticleManager.AddParticleSystem(ps);
 		return ps;
 	}
 
@@ -163,7 +163,7 @@ namespace ZeoEngine {
 			return nullptr;
 
 		ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), attachToParent, bAutoDestroy);
-		m_ParticleManager.AddParticleSystem(ps);
+		//m_ParticleManager.AddParticleSystem(ps);
 		return ps;
 	}
 
@@ -201,7 +201,7 @@ namespace ZeoEngine {
 		m_TranslucentObjectIndex = 0;
 		m_OnLevelCleanUp();
 
-		m_ParticleManager.CleanUp();
+		//m_ParticleManager.CleanUp();
 		m_GameTimerManager.CleanUp();
 
 		ZE_CORE_INFO("Level cleanup took {0}s.", bt.GetDuration());

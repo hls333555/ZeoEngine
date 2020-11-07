@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <rttr/registration.h>
-#include <rttr/registration_friend.h>
+
+#include <filesystem>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
@@ -19,214 +19,45 @@ namespace ZeoEngine {
 		UniformInRange
 	};
 
+	template<typename T>
 	struct ParticleVariation
 	{
-		virtual ~ParticleVariation() = 0 {}
+		~ParticleVariation();
+		bool operator==(const ParticleVariation<T>& other) const;
 
+		T Val1, Val2;
 		ParticleVariationType VariationType = ParticleVariationType::Constant;
-
-		RTTR_ENABLE()
 	};
 
-	struct ParticleInt : public ParticleVariation
-	{
-		ParticleInt(int32_t constant = 0)
-		{
-			SetConstant(constant);
-		}
-		ParticleInt(int32_t low, int32_t high)
-		{
-			SetRandom(low, high);
-		}
-
-		void SetConstant(int32_t constant)
-		{
-			VariationType = ParticleVariationType::Constant;
-			Val1 = constant;
-		}
-		void SetRandom(int32_t low, int32_t high)
-		{
-			VariationType = ParticleVariationType::RandomInRange;
-			Val1 = low;
-			Val2 = high;
-		}
-
-		int32_t Val1 = 0, Val2 = 0;
-
-		RTTR_ENABLE(ParticleVariation)
-	};
-
-	struct ParticleFloat : public ParticleVariation
-	{
-		ParticleFloat(float constant = 0.0f)
-		{
-			SetConstant(constant);
-		}
-		ParticleFloat(float low, float high)
-		{
-			SetRandom(low, high);
-		}
-
-		void SetConstant(float constant)
-		{
-			VariationType = ParticleVariationType::Constant;
-			Val1 = constant;
-		}
-		void SetRandom(float low, float high)
-		{
-			VariationType = ParticleVariationType::RandomInRange;
-			Val1 = low;
-			Val2 = high;
-		}
-
-		float Val1 = 0.0f, Val2 = 0.0f;
-
-		RTTR_ENABLE(ParticleVariation)
-	};
-
-	struct ParticleVec2 : public ParticleVariation
-	{
-		ParticleVec2(const glm::vec2& constant = { 0.0f, 0.0f })
-		{
-			SetConstant(constant);
-		}
-		ParticleVec2(const glm::vec2& low, const glm::vec2& high)
-		{
-			SetRandom(low, high);
-		}
-		ParticleVec2(float low, float high)
-		{
-			SetRandom(low, high);
-		}
-
-		void SetConstant(const glm::vec2& constant)
-		{
-			VariationType = ParticleVariationType::Constant;
-			Val1 = constant;
-		}
-		/** Get a random x value and a random y value repectively. */
-		void SetRandom(const glm::vec2& low, const glm::vec2& high)
-		{
-			VariationType = ParticleVariationType::RandomInRange;
-			Val1 = low;
-			Val2 = high;
-		}
-		/** Get a random x, y value uniformly. */
-		void SetRandom(float low, float high)
-		{
-			VariationType = ParticleVariationType::UniformInRange;
-			Val1 = { low, low };
-			Val2 = { high, high };
-		}
-
-		glm::vec2 Val1{ 0.0f }, Val2{ 0.0f };
-
-		RTTR_ENABLE(ParticleVariation)
-	};
-
-	struct ParticleVec3 : public ParticleVariation
-	{
-		ParticleVec3(const glm::vec3& constant = { 0.0f, 0.0f, 0.0f })
-		{
-			SetConstant(constant);
-		}
-		ParticleVec3(const glm::vec3& low, const glm::vec3& high)
-		{
-			SetRandom(low, high);
-		}
-		ParticleVec3(float low, float high)
-		{
-			SetRandom(low, high);
-		}
-
-		void SetConstant(const glm::vec3& constant)
-		{
-			VariationType = ParticleVariationType::Constant;
-			Val1 = constant;
-		}
-		/** Get a random x value, a random y value and a random z value repectively. */
-		void SetRandom(const glm::vec3& low, const glm::vec3& high)
-		{
-			VariationType = ParticleVariationType::RandomInRange;
-			Val1 = low;
-			Val2 = high;
-		}
-		/** Get a random x, y, z value uniformly. */
-		void SetRandom(float low, float high)
-		{
-			VariationType = ParticleVariationType::UniformInRange;
-			Val1 = { low, low, low };
-			Val2 = { high, high, high };
-		}
-
-		glm::vec3 Val1{ 0.0f }, Val2{ 0.0f };
-
-		RTTR_ENABLE(ParticleVariation)
-	};
-
-	struct ParticleColor : public ParticleVariation
-	{
-		ParticleColor(const glm::vec4& constant = { 1.0f, 1.0f, 1.0f, 1.0f })
-		{
-			SetConstant(constant);
-		}
-		ParticleColor(const glm::vec4& low, const glm::vec4& high)
-		{
-			SetRandom(low, high);
-		}
-
-		void SetConstant(const glm::vec4& constant)
-		{
-			VariationType = ParticleVariationType::Constant;
-			Val1 = constant;
-		}
-		void SetRandom(const glm::vec4& low, const glm::vec4& high)
-		{
-			VariationType = ParticleVariationType::RandomInRange;
-			Val1 = low;
-			Val2 = high;
-		}
-
-		glm::vec4 Val1{ 1.0f }, Val2{ 1.0f };
-
-		RTTR_ENABLE(ParticleVariation)
-	};
+	using ParticleInt = ParticleVariation<int32_t>;
+	using ParticleFloat = ParticleVariation<float>;
+	using ParticleVec2 = ParticleVariation<glm::vec2>;
+	using ParticleVec3 = ParticleVariation<glm::vec3>;
+	using ParticleColor = ParticleVariation<glm::vec4>;
 
 	struct BurstData
 	{
-		BurstData() = default;
-		BurstData(float time, ParticleInt amount)
-			: Time(time)
-			, Amount(amount)
+		bool operator==(const BurstData& other) const // <- This "const" is required!
 		{
-		}
-		BurstData(float time, int32_t amount)
-			: Time(time)
-			, Amount(amount)
-		{
-		}
-		BurstData(float time, int32_t amountLow, int32_t amountHigh)
-			: Time(time)
-			, Amount(ParticleInt(amountLow, amountHigh))
-		{
+			return Time == other.Time && Amount == other.Amount;
 		}
 
-		float Time = 0.0f;
-		ParticleInt Amount = 0;
-
-		RTTR_ENABLE()
+		float Time;
+		ParticleInt Amount;
 	};
 
 	struct ParticleTemplate
 	{
-		void AddBurstData(float time, int32_t amount)
+	public:
+		ParticleTemplate() = default;
+		ParticleTemplate(const std::string& path)
+			: Path(path)
+			, FileName(std::filesystem::path{ Path }.filename().string())
 		{
-			BurstList.emplace_back(time, amount);
 		}
-		void AddBurstData(float time, int32_t amountLow, int32_t amountHigh)
-		{
-			BurstList.emplace_back(time, amountLow, amountHigh);
-		}
+
+		const std::string& GetPath() const { return Path; }
+		const std::string& GetFileName() const { return FileName; }
 
 		bool bIsLocalSpace = false;
 
@@ -239,6 +70,7 @@ namespace ZeoEngine {
 		/** List of burst of particles to spawn instantaneously per time. The time should be within (0.0, 1.0) */
 		std::vector<BurstData> BurstList;
 
+		// TODO: Support 3D
 		ParticleVec2 InitialPosition;
 
 		ParticleFloat InitialRotation;
@@ -264,18 +96,16 @@ namespace ZeoEngine {
 		 * By default, subUV animation will animate from left-up sub-image to right-down sub-image uniformly during particle's lifetime.
 		 * So, you can change lifetime to control the animation speed.
 		 */
+		// TODO:
 		glm::i32vec2 SubImageSize{ 0 };
 
 		uint32_t MaxDrawParticles{ 500 };
 
-		RTTR_ENABLE()
+	private:
+		std::string Path;
+		std::string FileName;
 	};
 
-	/**
-	 * Particle system instances are generally stored in ParticleLibrary and ParticleManager.
-	 * ParticleLibrary stores templated particle systems for preview purposes which are generated upon loading particle system assets.
-	 * ParticleManager stores runtime particle systems which are generated from particle templates and will be destroyed on end play.
-	 */
 	class ParticleSystem
 	{
 		friend class ParticleLibrary;
@@ -287,22 +117,20 @@ namespace ZeoEngine {
 	private:
 		/** Construct a particle system from zparticle file. */
 		ParticleSystem(const std::string& filePath, const std::string& processedSrc);
-		ParticleSystem(const ParticleTemplate& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
-		ParticleSystem(const ParticleTemplate& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
+		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
 	public:
 #if WITH_EDITOR
-		void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
+		//void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 #endif
 
-		const std::string& GetPath() const { return m_Path; }
-		const std::string& GetFileName() const { return m_FileName; }
 		bool GetAutoDestroy() const { return m_bAutoDestroy; }
 		void SetAutoDestroy(bool bValue) { m_bAutoDestroy = bValue; }
 
 		void DeserializeProperties(const std::string& processedSrc);
 
-		const ParticleTemplate& GetParticleTemplate() const { return m_ParticleTemplate; }
+		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 		static ParticleSystem* CreateDefaultParticleSystem();
 
@@ -374,10 +202,7 @@ namespace ZeoEngine {
 
 		uint32_t m_ActiveParticleCount = 0;
 
-		std::string m_Path;
-		std::string m_FileName;
-
-		ParticleTemplate m_ParticleTemplate;
+		Ref<ParticleTemplate> m_ParticleTemplate;
 
 		/** Particle's origin in world space */
 		glm::vec2 m_SpawnPosition{ 0.0f };
@@ -425,64 +250,37 @@ namespace ZeoEngine {
 		float m_FiniteLoopRestartTime = 0.0f;
 #endif
 
-		RTTR_ENABLE()
-		RTTR_REGISTRATION_FRIEND
 	};
 
 	class ParticleLibrary
 	{
-		friend class EngineLayer;
-
+	public:
+		static ParticleLibrary& Get()
+		{
+			static ParticleLibrary instance;
+			return instance;
+		}
 	private:
 		ParticleLibrary() = default;
 	public:
 		ParticleLibrary(const ParticleLibrary&) = delete;
 		ParticleLibrary& operator=(const ParticleLibrary&) = delete;
-		~ParticleLibrary();
 
-		void Add(ParticleSystem* ps);
-	private:
-		void Add(const std::string& path, ParticleSystem* ps);
-	public:
-		ParticleSystem* Load(const std::string& filePath);
-		ParticleSystem* GetOrLoad(const std::string& path);
-		ParticleSystem* UpdateOrLoad(const std::string& path);
+		void Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
+		void Add(const Ref<ParticleTemplate>& pTemplate);
+		Ref<ParticleTemplate> Load(const std::string& path);
 
-		ParticleSystem* Get(const std::string& path);
+		Ref<ParticleTemplate> GetOrLoad(const std::string& path);
+
+		Ref<ParticleTemplate> Get(const std::string& path);
 
 		bool Exists(const std::string& path) const;
 
-		const std::unordered_map<std::string, ParticleSystem*>& GetParticlesMap() const { return m_ParticleSystems; }
+		const std::unordered_map<std::string, Ref<ParticleTemplate>>& GetParticleTemplatesMap() const { return m_ParticleTemplates; }
 
 	private:
-		/** The containing particle systems will not be used during gameplay, instead they are regarded as templates for instantiating */
-		std::unordered_map<std::string, ParticleSystem*> m_ParticleSystems;
+		std::unordered_map<std::string, Ref<ParticleTemplate>> m_ParticleTemplates;
 
-	};
-
-	class ParticleManager
-	{
-		friend class Level;
-
-	private:
-		ParticleManager()
-		{
-			ZE_CORE_TRACE("Particle manager initialized!");
-		}
-	public:
-		ParticleManager(const ParticleManager&) = delete;
-		ParticleManager& operator=(const ParticleManager&) = delete;
-		~ParticleManager();
-
-		void OnUpdate(DeltaTime dt);
-		void OnRender();
-
-		void AddParticleSystem(ParticleSystem* particleSystem);
-
-		void CleanUp();
-
-	private:
-		std::vector<ParticleSystem*> m_ParticleSystems;
 	};
 
 }

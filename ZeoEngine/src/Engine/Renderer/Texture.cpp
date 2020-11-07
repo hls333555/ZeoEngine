@@ -8,7 +8,8 @@
 
 namespace ZeoEngine {
 
-	std::string GetCanonicalPath(const std::string& path)
+	// TODO: Move to utils
+	static std::string GetCanonicalPath(const std::string& path)
 	{
 		return std::filesystem::canonical(path).string();
 	}

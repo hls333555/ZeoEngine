@@ -46,7 +46,7 @@ namespace ZeoEngine {
 		// Save scene path
 		editorContext->GetScene()->SetPath(*filePath);
 
-		SceneSerializer serializer(editorContext->GetScene());
+		SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
 		serializer.Deserialize(*filePath);
 	}
 
@@ -58,7 +58,7 @@ namespace ZeoEngine {
 		// Save scene path
 		editorContext->GetScene()->SetPath(*filePath);
 
-		SceneSerializer serializer(editorContext->GetScene());
+		SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
 		serializer.Serialize(*filePath);
 	}
 
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			SceneSerializer serializer(editorContext->GetScene());
+			SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
 			serializer.Serialize(scenePath);
 		}
 	}

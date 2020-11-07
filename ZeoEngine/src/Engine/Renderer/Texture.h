@@ -54,7 +54,7 @@ namespace ZeoEngine {
 
 		void Add(const std::string& path, const Ref<Texture2D>& texture);
 		void Add(const Ref<Texture2D>& texture);
-		Ref<Texture2D> Load(const std::string& filePath);
+		Ref<Texture2D> Load(const std::string& path);
 
 		Ref<Texture2D> GetOrLoad(const std::string& path);
 

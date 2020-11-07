@@ -8,10 +8,16 @@
 
 namespace ZeoEngine {
 
+	enum class SerializerType
+	{
+		Scene,
+		ParticleSystem,
+	};
+
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const Ref<Scene>& scene);
+		SceneSerializer(const Ref<Scene>& scene, SerializerType type);
 
 		void Serialize(const std::string& filePath);
 		void SerializeRuntime(const std::string& filePath);
@@ -92,6 +98,7 @@ namespace ZeoEngine {
 
 	private:
 		Ref<Scene> m_Scene;
+		SerializerType m_SerializerType;
 	};
 
 }
