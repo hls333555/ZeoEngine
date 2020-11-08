@@ -36,7 +36,6 @@ namespace ZeoEngine {
 			}
 		}
 
-		/** EntityID + dataID */
 		uint32_t GetUniqueDataID(entt::meta_data data);
 
 		void PreprocessData(entt::meta_type type, entt::meta_data data);
@@ -69,21 +68,21 @@ namespace ZeoEngine {
 			auto maxValue = max.value_or(defaultMax);
 			ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			auto id = GetUniqueDataID(data);
-			// We assume getters return copy of data
-			bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+			const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 			// Copy the value
 			T valueCopy = bUseCopy ? GetDataValue<T>(data, instance) : T();
+			auto& value = bUseCopy ? valueCopy : valueRef;
 
 			void* valuePtr = nullptr;
 			void* cachedValuePtr = nullptr;
 			if constexpr (N == 1) // C++17 constexpr if
 			{
-				valuePtr = bUseCopy ? &valueCopy : &valueRef;
+				valuePtr = &value;
 				cachedValuePtr = &valueBuffers[id].second;
 			}
 			else
 			{
-				valuePtr = bUseCopy ? glm::value_ptr(valueCopy) : glm::value_ptr(valueRef);
+				valuePtr = glm::value_ptr(value);
 				cachedValuePtr = glm::value_ptr(valueBuffers[id].second);
 			}
 			// For dragging, the value is applied immediately
@@ -91,14 +90,14 @@ namespace ZeoEngine {
 			bool bResult = ImGui::DragScalarNEx("", scalarType, valueBuffers[id].first ? cachedValuePtr : valuePtr, N, speed.value_or(1.0f), &minValue, &maxValue, format, clampMode);
 			if (bUseCopy && !valueBuffers[id].first)
 			{
-				SetDataValue(data, instance, valueCopy);
+				SetDataValue(data, instance, std::move(valueCopy));
 			}
 
 			// For multi-component drag UI, tabbing will automatically switch between those components, so we must handle deactivation first after tabbing to the next component
 			bool bIsValueChangedAfterEdit = false;
 			if (ImGui::IsItemDeactivatedAfterEdit())
 			{
-				bIsValueChangedAfterEdit = valueBuffers[id].second != (bUseCopy ? valueCopy : valueRef);
+				bIsValueChangedAfterEdit = valueBuffers[id].second != value;
 				if (valueBuffers[id].first)
 				{
 					// Apply cache when input box is inactive
@@ -118,7 +117,7 @@ namespace ZeoEngine {
 			if (ImGui::IsItemActivated())
 			{
 				// Update cache when this item is activated
-				valueBuffers[id].second = bUseCopy ? valueCopy : valueRef;
+				valueBuffers[id].second = value;
 
 				ImGuiContext* context = ImGui::GetCurrentContext();
 				// Input box is activated by double clicking, CTRL-clicking or being tabbed in

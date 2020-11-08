@@ -59,7 +59,7 @@ enum class PropertyType
 {
     Name,					// [value_type: const char*] Name of type or data.
     Tooltip,				// [value_type: const char*] Tooltip of type or data.
-	SetterAndGetter,		// [key_only] Indicates this data has setter and getter.
+	AsCopy,					// [key_only] Indicates this data is registered using a copy. This should accord with entt's policy.
 	HideTypeHeader,			// [key_only] This type will not display CollapsingHeader.
 	NestedClass,			// [key_only] This type has subdatas and will display a special TreeNode.
 
@@ -102,14 +102,13 @@ entt::meta<_type>()																				\
 .data<&_type::_data, policy>(#_data##_hs)														\
     .prop(PropertyType::Name, #_data)															\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__)
+#define ZE_REFL_DATA(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy)
 #define ZE_REFL_DATA_REF(_type, _data, ...) ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_ref_t, __VA_ARGS__)
 #define ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, setter, getter, policy, ...)	\
 .data<setter, getter, policy>(#dataName##_hs)													\
     .prop(PropertyType::Name, #dataName)														\
-    .prop(PropertyType::SetterAndGetter)														\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...) ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, &_type::setterName, &_type::getterName, entt::as_is_t, __VA_ARGS__) // Please use ZE_REFL_DATA_SETTER_GETTER_REF instead to register getter-setter for containers
+#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...) ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, &_type::setterName, &_type::getterName, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy) // Please use ZE_REFL_DATA_SETTER_GETTER_REF instead to register getter and setter for containers
 #define ZE_REFL_DATA_SETTER_GETTER_REF(_type, dataName, getterName, ...) ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, nullptr, &_type::getterName, entt::as_ref_t, __VA_ARGS__)
 
 #define ZE_REFL_ENUM(enumType)																	\

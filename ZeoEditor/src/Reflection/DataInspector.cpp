@@ -564,7 +564,7 @@ namespace ZeoEngine {
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
 	{
 		auto& boolRef = bIsSeqContainer ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance);
-		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		bool boolCopy = bUseCopy ? GetDataValue<bool>(data, instance) : false;
 
 		// NOTE: We cannot leave Checkbox's label empty
@@ -624,29 +624,29 @@ namespace ZeoEngine {
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
 		auto& stringRef = bIsSeqContainer ? instance.cast<std::string>() : GetDataValueByRef<std::string>(data, instance);
 		auto id = GetUniqueDataID(data);
-		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
-		std::string stringCopy = bUseCopy ? GetDataValue<std::string>(data, instance) : "";
+		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
+		std::string stringCopy = bUseCopy ? GetDataValue<std::string>(data, instance) : std::string();
+		auto& stringValue = bUseCopy ? stringCopy : stringRef;
 
-		std::string* stringPtr = bUseCopy ? &stringCopy : &stringRef;
 		// NOTE: We cannot leave InputBox's label empty
-		ImGui::InputText("##String", stringBuffers[id].first ? &stringBuffers[id].second : stringPtr, ImGuiInputTextFlags_AutoSelectAll);
+		ImGui::InputText("##String", stringBuffers[id].first ? &stringBuffers[id].second : &stringValue, ImGuiInputTextFlags_AutoSelectAll);
 		if (bUseCopy && !stringBuffers[id].first)
 		{
-			SetDataValue(data, instance, stringCopy);
+			SetDataValue(data, instance, std::move(stringCopy));
 		}
 
 		// Write changes to cache first
 		if (ImGui::IsItemActivated())
 		{
 			stringBuffers[id].first = true;
-			stringBuffers[id].second = bUseCopy ? stringCopy : stringRef;
+			stringBuffers[id].second = stringValue;
 		}
 
 		bool bIsValueChanged = false;
 		// Apply cache when user finishes editing
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChanged = stringBuffers[id].second != (bUseCopy ? stringCopy : stringRef);
+			bIsValueChanged = stringBuffers[id].second != stringValue;
 			stringBuffers[id].first = false;
 			if (bIsSeqContainer)
 			{
@@ -670,11 +670,11 @@ namespace ZeoEngine {
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
 		auto& vec4Ref = bIsSeqContainer ? instance.cast<glm::vec4>() : GetDataValueByRef<glm::vec4>(data, instance);
 		auto id = GetUniqueDataID(data);
-		bool bUseCopy = DoesPropExist(PropertyType::SetterAndGetter, data);
+		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		glm::vec4 vec4Copy = bUseCopy ? GetDataValue<glm::vec4>(data, instance) : glm::vec4();
+		auto& vec4Value = bUseCopy ? vec4Copy : vec4Ref;
 
-		float* vec4Ptr = bUseCopy ? glm::value_ptr(vec4Copy) : glm::value_ptr(vec4Ref);
-		bool bResult = ImGui::ColorEdit4("", vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : vec4Ptr);
+		bool bResult = ImGui::ColorEdit4("", vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : glm::value_ptr(vec4Value));
 		if (bUseCopy && !vec4Buffers[id].first)
 		{
 			SetDataValue(data, instance, std::move(vec4Copy));
@@ -683,7 +683,7 @@ namespace ZeoEngine {
 		bool bIsValueChangedAfterEdit = false;
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			bIsValueChangedAfterEdit = vec4Buffers[id].second != (bUseCopy ? vec4Copy : vec4Ref);
+			bIsValueChangedAfterEdit = vec4Buffers[id].second != vec4Value;
 			if (vec4Buffers[id].first)
 			{
 				// Apply cache when input box is inactive
@@ -703,7 +703,7 @@ namespace ZeoEngine {
 		if (ImGui::IsItemActivated())
 		{
 			//  Update cache when this item is activated
-			vec4Buffers[id].second = bUseCopy ? vec4Copy : vec4Ref;
+			vec4Buffers[id].second = vec4Value;
 
 			ImGuiContext* context = ImGui::GetCurrentContext();
 			// Input box is activated by double clicking, CTRL-clicking or being tabbed in
@@ -732,6 +732,9 @@ namespace ZeoEngine {
 	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
 	{
 		auto& texture2DRef = bIsSeqContainer ? instance.cast<Ref<Texture2D>>() : GetDataValueByRef<Ref<Texture2D>>(data, instance);
+		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
+		Ref<Texture2D> texture2DCopy = bUseCopy ? GetDataValue<Ref<Texture2D>>(data, instance) : Ref<Texture2D>();
+		const auto& texture2DValue = bUseCopy ? texture2DCopy : texture2DRef;
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
@@ -744,14 +747,14 @@ namespace ZeoEngine {
 				{ ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 			// Draw our texture on top of that
-			ImGui::Image(texture2DRef ? texture2DRef->GetTexture() : nullptr,
+			ImGui::Image(texture2DValue ? texture2DValue->GetTexture() : nullptr,
 				{ texturePreviewWidth, texturePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-				texture2DRef ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
+				texture2DValue ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
 			// Display texture info tooltip
-			if (texture2DRef && ImGui::IsItemHovered())
+			if (texture2DValue && ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DRef->GetWidth(), texture2DRef->GetHeight(), texture2DRef->HasAlpha() ? "true" : "false");
+				ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", texture2DValue->GetWidth(), texture2DValue->GetHeight(), texture2DValue->HasAlpha() ? "true" : "false");
 			}
 		}
 
@@ -770,7 +773,7 @@ namespace ZeoEngine {
 		}
 
 		// Texture browser
-		if (ImGui::BeginCombo("##Texture2D", texture2DRef ? texture2DRef->GetFileName().c_str() : nullptr))
+		if (ImGui::BeginCombo("##Texture2D", texture2DValue ? texture2DValue->GetFileName().c_str() : nullptr))
 		{
 			bool bIsValueChangedAfterEdit = false;
 			// Pop up file browser to select a texture from disk
@@ -782,8 +785,18 @@ namespace ZeoEngine {
 				{
 					// Add selected texture to the library
 					Ref<Texture2D> loadedTexture = library.GetOrLoad(*filePath);
-					bIsValueChangedAfterEdit = loadedTexture != texture2DRef;
-					texture2DRef = loadedTexture;
+					bIsValueChangedAfterEdit = loadedTexture != texture2DValue;
+					if (bIsValueChangedAfterEdit)
+					{
+						if (bIsSeqContainer)
+						{
+							texture2DRef = loadedTexture;
+						}
+						else
+						{
+							SetDataValue(data, instance, loadedTexture);
+						}
+					}
 				}
 			}
 			ImGui::Separator();
@@ -809,8 +822,18 @@ namespace ZeoEngine {
 				ImGui::Text(texture->GetFileName().c_str());
 				if (bIsSelected)
 				{
-					bIsValueChangedAfterEdit = texture != texture2DRef;
-					texture2DRef = texture;
+					bIsValueChangedAfterEdit = texture != texture2DValue;
+					if (bIsValueChangedAfterEdit)
+					{
+						if (bIsSeqContainer)
+						{
+							texture2DRef = texture;
+						}
+						else
+						{
+							SetDataValue(data, instance, texture);
+						}
+					}
 				}
 
 				ImGui::PopID();
@@ -824,9 +847,9 @@ namespace ZeoEngine {
 		}
 
 		// Display texture path tooltip for current selection
-		if (texture2DRef && ImGui::IsItemHovered())
+		if (texture2DValue && ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltip("%s", texture2DRef->GetPath().c_str());
+			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
 		}
 	}
 
