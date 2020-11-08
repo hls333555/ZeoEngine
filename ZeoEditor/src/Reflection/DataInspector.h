@@ -108,6 +108,11 @@ namespace ZeoEngine {
 					}
 					else
 					{
+						// For copied value if we tab into the 2nd or later component, we must update the copy first
+						if (bUseCopy)
+						{
+							value = valueBuffers[id].second;
+						}
 						SetDataValue(data, instance, std::move(valueBuffers[id].second));
 					}
 				}

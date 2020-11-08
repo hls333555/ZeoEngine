@@ -331,7 +331,7 @@ namespace ZeoEngine {
 			m_UVAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
 			// Initialize uv animation start point to left-up corner
 			particle.UvOffset.x = 0;
-			particle.UvOffset.y = static_cast<float>(m_ParticleTemplate->SubImageSize.y) - 1.0f;
+			particle.UvOffset.y = m_ParticleTemplate->SubImageSize.y - 1.0f;
 		}
 	}
 

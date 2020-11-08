@@ -96,8 +96,7 @@ namespace ZeoEngine {
 		 * By default, subUV animation will animate from left-up sub-image to right-down sub-image uniformly during particle's lifetime.
 		 * So, you can change lifetime to control the animation speed.
 		 */
-		// TODO:
-		glm::i32vec2 SubImageSize{ 0 };
+		glm::vec2 SubImageSize{ 0.0f };
 
 		uint32_t MaxDrawParticles{ 500 };
 
