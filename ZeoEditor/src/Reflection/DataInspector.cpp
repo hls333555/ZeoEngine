@@ -559,6 +559,10 @@ namespace ZeoEngine {
 		{
 			ProcessTexture2DData(data, instance, bIsSeqContainer);
 		}
+		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
+		{
+			ProcessParticleTemplateData(data, instance, bIsSeqContainer);
+		}
 	}
 
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
@@ -855,6 +859,134 @@ namespace ZeoEngine {
 		if (texture2DValue && ImGui::IsItemHovered())
 		{
 			ImGui::SetTooltip("%s", texture2DValue->GetPath().c_str());
+		}
+	}
+
+	void DataInspector::ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	{
+		auto& particleTemplateRef = bIsSeqContainer ? instance.cast<Ref<ParticleTemplate>>() : GetDataValueByRef<Ref<ParticleTemplate>>(data, instance);
+		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
+		Ref<ParticleTemplate> particleTemplateCopy = bUseCopy ? GetDataValue<Ref<ParticleTemplate>>(data, instance) : Ref<ParticleTemplate>();
+		const auto& particleTemplateValue = bUseCopy ? particleTemplateCopy : particleTemplateRef;
+
+		ParticleLibrary& library = ParticleLibrary::Get();
+		// TODO: Particle template preview
+		{
+			Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
+			auto backgroundTexture = texture2DLib.Get("assets/textures/Checkerboard_Alpha.png");
+			const float pTemplatePreviewWidth = 75.0f;
+			// Draw checkerboard texture as background first
+			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+				ImGui::GetCursorScreenPos(),
+				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+			// Draw our texture on top of that
+			ImGui::Image(particleTemplateValue ? particleTemplateValue->PreviewThumbnail->GetTexture() : nullptr,
+				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+				particleTemplateValue ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
+			// Double-click to open the particle editor
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Double-click to open the particle editor");
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				{
+					
+				}
+			}
+		}
+
+		ImGui::SameLine();
+		if (bIsSeqContainer)
+		{
+			// Make sure browser widget + dropdown button can reach desired size
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+		}
+		else
+		{
+			// Align width to the right side
+			ImGui::SetNextItemWidth(-1.0f);
+		}
+
+		// Particle template browser
+		if (ImGui::BeginCombo("##ParticleTemplate", particleTemplateValue ? particleTemplateValue->GetFileName().c_str() : nullptr))
+		{
+			bool bIsValueChangedAfterEdit = false;
+			// Pop up file browser to select a particle template from disk
+			if (ImGui::Selectable("Browse particle template..."))
+			{
+				auto filePath = FileDialogs::OpenFile("ZPARTICLE (*.zparticle)\0*.zparticle");
+				if (filePath)
+				{
+					// Add selected particle template to the library
+					Ref<ParticleTemplate> loadedTemplate = library.GetOrLoad(*filePath);
+					bIsValueChangedAfterEdit = loadedTemplate != particleTemplateValue;
+					if (bIsValueChangedAfterEdit)
+					{
+						if (bIsSeqContainer)
+						{
+							particleTemplateRef = loadedTemplate;
+						}
+						else
+						{
+							SetDataValue(data, instance, loadedTemplate);
+						}
+					}
+				}
+			}
+			ImGui::Separator();
+			// List all loaded templates from ParticleLibrary
+			for (const auto& [path, pTemplate] : library.GetParticleTemplatesMap())
+			{
+				ImGui::PushID(pTemplate->GetPath().c_str());
+
+				const float pTemplateThumbnailWidth = 30.0f;
+				bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
+				// Display particle template path tooltip for drop-down item
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", pTemplate->GetPath().c_str());
+				}
+				//ImGui::SameLine();
+				//// TODO: Draw particle template thumbnail
+				//ImGui::Image(pTemplate->GetPreviewTexture(),
+				//	ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
+				//	ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+				ImGui::SameLine();
+				// Display particle template name
+				ImGui::Text(pTemplate->GetFileName().c_str());
+				if (bIsSelected)
+				{
+					bIsValueChangedAfterEdit = pTemplate != particleTemplateValue;
+					if (bIsValueChangedAfterEdit)
+					{
+						if (bIsSeqContainer)
+						{
+							particleTemplateRef = pTemplate;
+						}
+						else
+						{
+							SetDataValue(data, instance, pTemplate);
+						}
+					}
+				}
+
+				ImGui::PopID();
+			}
+			ImGui::EndCombo();
+
+			if (bIsValueChangedAfterEdit)
+			{
+				ZE_TRACE("Value changed after edit!");
+			}
+		}
+
+		// Display particle template path tooltip for current selection
+		if (particleTemplateValue && ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("%s", particleTemplateValue->GetPath().c_str());
 		}
 	}
 

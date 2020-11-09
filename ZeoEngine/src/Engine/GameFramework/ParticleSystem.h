@@ -100,6 +100,9 @@ namespace ZeoEngine {
 
 		uint32_t MaxDrawParticles{ 500 };
 
+		// TODO: PreviewThumbnail
+		Ref<Texture2D> PreviewThumbnail;
+
 	private:
 		std::string Path;
 		std::string FileName;

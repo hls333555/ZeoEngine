@@ -83,9 +83,9 @@ entt::meta<_type>()																				\
     .type()																						\
         .prop(PropertyType::Name, #_type)														\
         .prop(std::make_tuple(__VA_ARGS__))														\
-	.ctor<&emplace<_type>, entt::as_ref_t>()													\
-	.func<&get<_type>, entt::as_ref_t>("get"_hs)												\
-	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
+		.ctor<&emplace<_type>, entt::as_ref_t>()												\
+		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
+		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
 #define ZE_REFL_TYPE_NESTED(_type, ...)															\
 entt::meta<_type>()																				\
     .type()																						\
@@ -93,10 +93,10 @@ entt::meta<_type>()																				\
         .prop(PropertyType::InherentType)														\
         .prop(PropertyType::NestedClass)														\
         .prop(std::make_tuple(__VA_ARGS__))														\
-	.ctor<&emplace<_type>, entt::as_ref_t>()													\
-	.func<&get<_type>, entt::as_ref_t>("get"_hs)												\
-	.func<&remove<_type>, entt::as_ref_t>("remove"_hs)											\
-	.func<&create_default_value<_type>>("create_default_value"_hs)
+		.ctor<&emplace<_type>, entt::as_ref_t>()												\
+		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
+		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
+		.func<&create_default_value<_type>>("create_default_value"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)										\
 .data<&_type::_data, policy>(#_data##_hs)														\

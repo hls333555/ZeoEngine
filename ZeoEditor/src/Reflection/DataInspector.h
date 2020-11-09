@@ -151,6 +151,7 @@ namespace ZeoEngine {
 		void ProcessStringData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
 		void ProcessColorData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
 		void ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
 
 	private:
 		DataInspectorPanel* m_Context;
