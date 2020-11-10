@@ -14,7 +14,7 @@ namespace ZeoEngine {
 
 	void ParticleViewportPanel::CreatePreviewParticle()
 	{
-		Entity previewParticleEntity = GetScene()->CreateEmptyEntity();
+		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
 		previewParticleEntity.AddComponent<ParticleSystemDetailComponent>();
 		GetContext()->SetContextEntity(previewParticleEntity);
 	}

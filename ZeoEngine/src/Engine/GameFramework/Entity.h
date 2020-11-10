@@ -34,14 +34,14 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		T& GetComponent()
+		T& GetComponent() const
 		{
 			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
 		template<typename T>
-		bool HasComponent()
+		bool HasComponent() const
 		{
 			return m_Scene->m_Registry.has<T>(m_EntityHandle);
 		}
@@ -58,8 +58,11 @@ namespace ZeoEngine {
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	private:
-		entt::meta_any AddTypeById(entt::id_type typeId, entt::registry& registry);
-		void RemoveType(entt::meta_type type, entt::registry& registry);
+		entt::meta_any AddTypeById(entt::id_type typeId);
+		void RemoveTypeById(entt::id_type typeId);
+		entt::meta_any GetTypeById(entt::id_type typeId) const;
+		entt::meta_any HasTypeById(entt::id_type typeId) const;
+		entt::meta_any GetOrAddTypeById(entt::id_type typeId);
 
 		const std::vector<uint32_t>& GetAllComponents() const { return m_Scene->m_Entities[m_EntityHandle]; }
 		void AddComponentId(uint32_t Id);

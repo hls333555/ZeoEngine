@@ -13,16 +13,31 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
-	entt::meta_any Entity::AddTypeById(entt::id_type typeId, entt::registry& registry)
+	entt::meta_any Entity::AddTypeById(entt::id_type typeId)
 	{
 		AddComponentId(typeId);
-		return entt::resolve_type(typeId).construct(std::ref(registry), m_EntityHandle);
+		return entt::resolve_type(typeId).construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
 
-	void Entity::RemoveType(entt::meta_type type, entt::registry& registry)
+	void Entity::RemoveTypeById(entt::id_type typeId)
 	{
-		RemoveComponentId(type.type_id());
-		type.func("remove"_hs).invoke({}, std::ref(registry), m_EntityHandle);
+		RemoveComponentId(typeId);
+		entt::resolve_type(typeId).func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+	}
+
+	entt::meta_any Entity::GetTypeById(entt::id_type typeId) const
+	{
+		return entt::resolve_type(typeId).func("get"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+	}
+
+	entt::meta_any Entity::HasTypeById(entt::id_type typeId) const
+	{
+		return entt::resolve_type(typeId).func("has"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+	}
+
+	entt::meta_any Entity::GetOrAddTypeById(entt::id_type typeId)
+	{
+		return entt::resolve_type(typeId).func("get_or_emplace"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
 
 	void Entity::AddComponentId(uint32_t Id)

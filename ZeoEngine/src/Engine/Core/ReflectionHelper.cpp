@@ -54,11 +54,6 @@ namespace ZeoEngine {
 			.conv<&i32_to_texture2d>();
 	}
 
-	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity)
-	{
-		return type.func("get"_hs).invoke({}, std::ref(registry), entity);
-	}
-
 	const char* GetEnumDisplayName(entt::meta_any enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing

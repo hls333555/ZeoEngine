@@ -111,7 +111,7 @@ namespace ZeoEngine {
 
 	bool DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
-		auto instance = GetTypeInstance(type, m_Context->GetScene()->m_Registry, entity);
+		auto instance = entity.GetTypeById(type.type_id());
 		auto typeName = GetMetaObjectDisplayName(type);
 
 		// Do not show CollapsingHeader if PropertyType::HideTypeHeader is set
@@ -165,6 +165,7 @@ namespace ZeoEngine {
 				}
 			}
 
+			// TODO: Datas will be cleared if we collapse this type and deselect current entity
 			// Iterate all categories
 			for (const auto& [category, datas] : m_PreprocessedDatas[type.type_id()])
 			{
@@ -280,7 +281,7 @@ namespace ZeoEngine {
 
 		if (bWillRemoveType)
 		{
-			entity.RemoveType(type, m_Context->GetScene()->m_Registry);
+			entity.RemoveTypeById(type.type_id());
 		}
 
 		return bWillRemoveType;

@@ -30,17 +30,25 @@ T& emplace(entt::registry& registry, entt::entity entity)
 {
 	return registry.template emplace<T>(entity);
 }
-
 template<typename T>
 void remove(entt::registry& registry, entt::entity entity)
 {
 	registry.template remove<T>(entity);
 }
-
 template<typename T>
 T& get(entt::registry& registry, entt::entity entity)
 {
 	return registry.template get<T>(entity);
+}
+template<typename T>
+bool has(entt::registry& registry, entt::entity entity) // NOTE: Do not register it by ref!
+{
+	return registry.template has<T>(entity);
+}
+template<typename T>
+T& get_or_emplace(entt::registry& registry, entt::entity entity)
+{
+	return registry.template get_or_emplace<T>(entity);
 }
 
 template<typename T>
@@ -57,23 +65,23 @@ T create_default_value()
 
 enum class PropertyType
 {
-    Name,					// [value_type: const char*] Name of type or data.
-    Tooltip,				// [value_type: const char*] Tooltip of type or data.
-	AsCopy,					// [key_only] Indicates this data is registered using a copy. This should accord with entt's policy.
-	HideTypeHeader,			// [key_only] This type will not display CollapsingHeader.
-	NestedClass,			// [key_only] This type has subdatas and will display a special TreeNode.
+	Name,						// [value_type: const char*] Name of type or data.
+	Tooltip,					// [value_type: const char*] Tooltip of type or data.
+	AsCopy,						// [key_only] Indicates this data is registered using a copy. This should accord with entt's policy.
+	HideTypeHeader,				// [key_only] This type will not display CollapsingHeader.
+	NestedClass,				// [key_only] This type has subdatas and will display a special TreeNode.
 
-	DragSensitivity,		// [value_type: float] Speed of dragging.
-	ClampMin,				// [value_type: type_dependent] Min value.
-	ClampMax,				// [value_type: type_dependent] Max value.
-	ClampOnlyDuringDragging,// [key_only] Should value be clamped only during dragging? If this property is not set, inputted value will not get clamped.
+	DragSensitivity,			// [value_type: float] Speed of dragging.
+	ClampMin,					// [value_type: type_dependent] Min value.
+	ClampMax,					// [value_type: type_dependent] Max value.
+	ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, inputted value will not get clamped.
 
-	DisplayName,			// [value_type: const char*] Display name of type or data.
-	InherentType,			// [key_only] This type cannot be added or removed within editor.
-	HiddenInEditor,			// [key_only] Should hide this data in editor?
-	Category,				// [value_type: const char*] Category of type or data.
-	HideCondition,			// [value_type: const char*] Hide this data if provided expression yields true.
-	Transient,				// [key_only] If set, this data will not get serialized.
+	DisplayName,				// [value_type: const char*] Display name of type or data.
+	InherentType,				// [key_only] This type cannot be added or removed within editor.
+	Category,					// [value_type: const char*] Category of type or data.
+	HiddenInEditor,				// [key_only] Should hide this data in editor?
+	HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true.
+	Transient,					// [key_only] If set, this data will not get serialized.
 };
 
 #define ZE_TEXT(text) u8##text
@@ -85,7 +93,9 @@ entt::meta<_type>()																				\
         .prop(std::make_tuple(__VA_ARGS__))														\
 		.ctor<&emplace<_type>, entt::as_ref_t>()												\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
-		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)
+		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
+		.func<&has<_type>>("has"_hs)															\
+		.func<&get_or_emplace<_type>, entt::as_ref_t>("get_or_emplace"_hs)
 #define ZE_REFL_TYPE_NESTED(_type, ...)															\
 entt::meta<_type>()																				\
     .type()																						\
@@ -96,6 +106,8 @@ entt::meta<_type>()																				\
 		.ctor<&emplace<_type>, entt::as_ref_t>()												\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
+		.func<&has<_type>>("has"_hs)															\
+		.func<&get_or_emplace<_type>, entt::as_ref_t>("get_or_emplace"_hs)									\
 		.func<&create_default_value<_type>>("create_default_value"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)										\
@@ -145,8 +157,6 @@ namespace entt {
 }
 
 namespace ZeoEngine {
-
-	entt::meta_any GetTypeInstance(entt::meta_type type, entt::registry& registry, entt::entity entity);
 
 	const char* GetEnumDisplayName(entt::meta_any enumValue);
 

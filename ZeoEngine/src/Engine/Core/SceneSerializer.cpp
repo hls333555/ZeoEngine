@@ -186,30 +186,16 @@ namespace ZeoEngine {
 
 		out << YAML::BeginMap;
 		{
-			// TODO:
 			out << YAML::Key << assetName << YAML::Value << sceneName;
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
-				if (m_AssetType == AssetType::Scene)
+				m_Scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
 				{
-					m_Scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
-					{
-						Entity entity = { entityId, m_Scene.get() };
-						if (!entity) return;
+					Entity entity = { entityId, m_Scene.get() };
+					if (!entity) return;
 
-						SerializeEntity(out, entity);
-					});
-				}
-				else
-				{
-					m_Scene->m_Registry.each([&](const auto entityId)
-					{
-						Entity entity = { entityId, m_Scene.get() };
-						if (!entity) return;
-
-						SerializeEntity(out, entity);
-					});
-				}
+					SerializeEntity(out, entity);
+				});
 			}
 			out << YAML::EndSeq;
 		}
@@ -250,7 +236,7 @@ namespace ZeoEngine {
 
 	void SceneSerializer::SerializeType(YAML::Emitter& out, const entt::meta_type type, const Entity entity)
 	{
-		const auto instance = GetTypeInstance(type, m_Scene->m_Registry, entity);
+		const auto instance = entity.GetTypeById(type.type_id());
 		for (auto data : type.data())
 		{
 			// Do not serialize transient data
@@ -486,7 +472,6 @@ namespace ZeoEngine {
 			{
 				DeserializeEntity(entity);
 			}
-			m_Scene->SortEntities();
 		}
 
 		return true;
@@ -503,8 +488,8 @@ namespace ZeoEngine {
 	{
 		//uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
 
-		// Create an empty entity
-		Entity deserializedEntity = m_Scene->CreateEmptyEntity();
+		// Create a default entity
+		Entity deserializedEntity = m_Scene->CreateEntity();
 
 		auto components = entity["Components"];
 		if (components)
@@ -515,12 +500,9 @@ namespace ZeoEngine {
 				// TODO: NativeScriptComponent deserialization
 				if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
 
-				auto type = entt::resolve_type(typeId);
-				// Add type to that entity
-				entt::meta_any instance = deserializedEntity.AddTypeById(typeId, m_Scene->m_Registry);
-
+				entt::meta_any instance = deserializedEntity.GetOrAddTypeById(typeId);
 				// Iterate all datas and deserialize values
-				for (auto data : type.data())
+				for (auto data : entt::resolve_type(typeId).data())
 				{
 					auto dataName = GetMetaObjectDisplayName(data);
 					const auto& value = component[*dataName];

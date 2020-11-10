@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		using ScenePanel::ScenePanel;
 
 	protected:
-		void DrawComponents(Entity entity);
+		void DrawComponents(Entity entity, const std::vector<uint32_t>& ignoredTypeIds = {});
 
 		void MarkPreprocessedDatasDirty();
 

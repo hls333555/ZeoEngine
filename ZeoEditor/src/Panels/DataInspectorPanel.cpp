@@ -5,7 +5,7 @@
 
 namespace ZeoEngine {
 
-	void DataInspectorPanel::DrawComponents(Entity entity)
+	void DataInspectorPanel::DrawComponents(Entity entity, const std::vector<uint32_t>& ignoredTypeIds)
 	{
 		// Push entity id
 		ImGui::PushID(static_cast<uint32_t>(entity));
@@ -14,6 +14,8 @@ namespace ZeoEngine {
 			// Process types on this entity
 			for (const auto typeId : entity.GetAllComponents())
 			{
+				if (std::find(ignoredTypeIds.cbegin(), ignoredTypeIds.cend(), typeId) != ignoredTypeIds.cend()) continue;
+
 				// Push type id
 				ImGui::PushID(typeId);
 				{
@@ -89,7 +91,7 @@ namespace ZeoEngine {
 						auto typeName = GetPropValue<const char*>(PropertyType::Name, entt::resolve_type(typeId));
 						if (ImGui::Selectable(*typeName))
 						{
-							entity.AddTypeById(typeId, GetScene()->m_Registry);
+							entity.AddTypeById(typeId);
 							MarkPreprocessedDatasDirty();
 						}
 					}
@@ -137,12 +139,14 @@ namespace ZeoEngine {
 		m_LastSelectedEntity = selectedEntity;
 	}
 
+	#define DEFAULT_IGNORED_TYPEIDS { entt::type_info<CoreComponent>::id(), entt::type_info<TransformComponent>::id() }
+
 	void ParticleInspectorPanel::RenderPanel()
 	{
 		Entity contextEntity = GetContext()->GetContextEntity();
 		if (contextEntity)
 		{
-			DrawComponents(contextEntity);
+			DrawComponents(contextEntity, DEFAULT_IGNORED_TYPEIDS);
 		}
 	}
 
