@@ -58,9 +58,10 @@ namespace ZeoEngine {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 
-		DockspaceManager& GetDockspaceManager() { return m_DockspaceManager; }
-
 		void PushDockspace(EditorDockspace* dockspace);
+		EditorDockspace* GetDockspaceByType(EditorWindowType dockspaceType);
+		/** If dockspaceType is NONE, all dockspaces will be reset layout. */
+		void RebuildDockLayout(EditorWindowType dockspaceType = EditorWindowType::NONE);
 
 		//virtual OrthographicCamera* GetGameCamera() override { return &m_CameraControllers[GAME_VIEW_PIE]->GetCamera(); }
 

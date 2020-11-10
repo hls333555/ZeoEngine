@@ -6,20 +6,24 @@
 #include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenuItem.h"
 
-#define PARTICLE_VIEW_NAME "Particle View"
-#define PARTICLE_INSPECTOR_NAME "Particle Inspector"
-
 namespace ZeoEngine {
 
 	void ParticleEditorDockspace::OnAttach()
 	{
+		m_SerializeAssetType = AssetType::ParticleTemplate;
+
 		EditorDockspace::OnAttach();
 
-		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(PARTICLE_VIEW_NAME, this, true);
-		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(PARTICLE_INSPECTOR_NAME, this, true);
+		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorWindowType::Particle_View, this, true);
+		m_ParticleInitDel.connect<&ParticleViewportPanel::CreatePreviewParticle>(particleViewportPanel);
+		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(EditorWindowType::Particle_Inspector, this, true);
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
+			fileMenu->PushMenuItem(new MenuItem_NewScene("New Scene", "CTRL+N"));
+			fileMenu->PushMenuItem(new MenuItem_OpenScene("Open Scene", "CTRL+O"));
+			fileMenu->PushMenuItem(new MenuItem_SaveScene("Save Scene", "CTRL+S"));
+			fileMenu->PushMenuItem(new MenuItem_SaveSceneAs("Save Scene As", "CTRL+ALT+S"));
 			PushMenu(fileMenu);
 		}
 
@@ -32,8 +36,8 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_VIEW_NAME, std::string(), particleViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_INSPECTOR_NAME, std::string(), particleInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_View, std::string(), particleViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Inspector, std::string(), particleInspectorPanel->GetShowPtr()));
 			PushMenu(windowMenu);
 		}
 
@@ -41,13 +45,23 @@ namespace ZeoEngine {
 		PushPanel(particleInspectorPanel);
 	}
 
+	void ParticleEditorDockspace::CreateNewScene()
+	{
+		EditorDockspace::CreateNewScene();
+
+		if (m_ParticleInitDel)
+		{
+			m_ParticleInitDel();
+		}
+	}
+
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(PARTICLE_VIEW_NAME, dockLeft);
-		ImGui::DockBuilderDockWindow(PARTICLE_INSPECTOR_NAME, dockRight);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Particle_View).c_str(), dockLeft);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Particle_Inspector).c_str(), dockRight);
 	}
 
 }

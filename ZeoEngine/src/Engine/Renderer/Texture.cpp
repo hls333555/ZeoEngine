@@ -1,18 +1,11 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Texture.h"
 
-#include <filesystem>
-
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
-
-	// TODO: Move to utils
-	static std::string GetCanonicalPath(const std::string& path)
-	{
-		return std::filesystem::canonical(path).string();
-	}
 
 	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
 	{

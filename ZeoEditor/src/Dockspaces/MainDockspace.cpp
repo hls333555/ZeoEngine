@@ -2,7 +2,6 @@
 
 #include <imgui_internal.h>
 
-#include "Engine/Core/Application.h"
 #include "EditorLayer.h"
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
@@ -14,38 +13,27 @@
 #include "Panels/AboutPanel.h"
 #include "Menus/EditorMenuItem.h"
 
-#define GAME_VIEW_NAME "Game View"
-#define SCENE_OUTLINE_NAME "Scene Outline"
-#define ENTITY_INSPECTOR_NAME "Entity Inspector"
-#define CLASS_BROWSER_NAME "Class Browser"
-#define CONSOLE_NAME "Console"
-#define PARTICLE_EDITOR_NAME "Particle Editor"
-#define STATS_NAME "Stats"
-#define PREFERENCES_NAME "Preferences"
-#define ABOUT_NAME "About"
-
 namespace ZeoEngine {
 
 	void MainDockspace::OnAttach()
 	{
 		m_bIsMainDockspace = true;
+		m_SerializeAssetType = AssetType::Scene;
 
 		EditorDockspace::OnAttach();
 
-		GameViewportPanel* gameViewportPanel = new GameViewportPanel(GAME_VIEW_NAME, this, true);
+		GameViewportPanel* gameViewportPanel = new GameViewportPanel(EditorWindowType::Game_View, this, true);
 		m_CameraInitDel.connect<&SceneViewportPanel::BindCameraInitFunc>(gameViewportPanel);
-		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(SCENE_OUTLINE_NAME, this, true);
-		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(ENTITY_INSPECTOR_NAME, this, true);
-		ConsolePanel* consolePanel = new ConsolePanel(CONSOLE_NAME, true);
+		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(EditorWindowType::Scene_Outline, this, true);
+		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(EditorWindowType::Entity_Inspector, this, true);
+		ConsolePanel* consolePanel = new ConsolePanel(EditorWindowType::Console, true);
 
-		EditorLayer* editor = Application::Get().FindLayer<EditorLayer>();
-		
-		ParticleEditorDockspace* particleEditorDockspace = new ParticleEditorDockspace(PARTICLE_EDITOR_NAME);
-		editor->PushDockspace(particleEditorDockspace);
+		ParticleEditorDockspace* particleEditorDockspace = new ParticleEditorDockspace(EditorWindowType::Particle_Editor, m_EditorContext);
+		PushDockspace(particleEditorDockspace);
 
-		StatsPanel* statsPanel = new StatsPanel(STATS_NAME, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking, { { 300, 300 } });
-		PreferencesPanel* preferencesPanel = new PreferencesPanel(PREFERENCES_NAME, false, ImGuiWindowFlags_NoCollapse);
-		AboutPanel* aboutPanel = new AboutPanel(ABOUT_NAME, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 } });
+		StatsPanel* statsPanel = new StatsPanel(EditorWindowType::Stats, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking, { { 300, 300 } });
+		PreferencesPanel* preferencesPanel = new PreferencesPanel(EditorWindowType::Preferences, false, ImGuiWindowFlags_NoCollapse);
+		AboutPanel* aboutPanel = new AboutPanel(EditorWindowType::About, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 } });
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
@@ -68,13 +56,13 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(GAME_VIEW_NAME, std::string(), gameViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(SCENE_OUTLINE_NAME, std::string(), sceneOutlinePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ENTITY_INSPECTOR_NAME, std::string(), entityInspectorPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(CONSOLE_NAME, std::string(), consolePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PARTICLE_EDITOR_NAME, std::string(), particleEditorDockspace->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(STATS_NAME, std::string(), statsPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(PREFERENCES_NAME, std::string(), preferencesPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Game_View, std::string(), gameViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Scene_Outline, std::string(), sceneOutlinePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Entity_Inspector, std::string(), entityInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Console, std::string(), consolePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Editor, std::string(), particleEditorDockspace->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Stats, std::string(), statsPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Preferences, std::string(), preferencesPanel->GetShowPtr()));
 			
 			windowMenu->PushMenuItem(new MenuItem_Seperator());
 			windowMenu->PushMenuItem(new MenuItem_ResetLayout("Reset layout", std::string()));
@@ -83,7 +71,7 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* helpMenu = new EditorMenu("Help");
-			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(ABOUT_NAME, std::string(), aboutPanel->GetShowPtr()));
+			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::About, std::string(), aboutPanel->GetShowPtr()));
 			PushMenu(helpMenu);
 		}
 
@@ -97,6 +85,14 @@ namespace ZeoEngine {
 
 	}
 
+	void MainDockspace::CreateNewScene()
+	{
+		EditorDockspace::CreateNewScene();
+
+		// Clear selected entity
+		m_ContextEntity = {};
+	}
+
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
@@ -108,11 +104,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
 
-		ImGui::DockBuilderDockWindow(GAME_VIEW_NAME, dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(SCENE_OUTLINE_NAME, dockRightUp);
-		ImGui::DockBuilderDockWindow(ENTITY_INSPECTOR_NAME, dockRightDown);
-		ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
-		ImGui::DockBuilderDockWindow(CONSOLE_NAME, dockLeftDown);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Game_View).c_str(), dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Scene_Outline).c_str(), dockRightUp);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Entity_Inspector).c_str(), dockRightDown);
+		//ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Console).c_str(), dockLeftDown);
 	}
 
 }

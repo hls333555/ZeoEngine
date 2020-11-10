@@ -159,7 +159,8 @@ project "ZeoEditor"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}"
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.magic_enum}"
 	}
 
 	links

@@ -5,14 +5,16 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Debug/Instrumentor.h"
+#include "EditorLayer.h"
+#include "Engine/Core/SceneSerializer.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
 
 namespace ZeoEngine {
 
-	EditorDockspace::EditorDockspace(const std::string& dockspaceName, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
-		: m_DockspaceName(dockspaceName), m_bShow(bDefaultShow)
+	EditorDockspace::EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
+		: m_DockspaceName(ResolveEditorNameFromEnum(dockspaceType)), m_EditorContext(context), m_bShow(bDefaultShow)
 		, m_DockspacePadding(dockspacePadding)
 		, m_DockspaceWindowFlags(dockspaceWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
@@ -115,6 +117,11 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
+	void EditorDockspace::PushDockspace(EditorDockspace* dockspace)
+	{
+		m_EditorContext->PushDockspace(dockspace);
+	}
+
 	void EditorDockspace::PushMenu(EditorMenu* menu)
 	{
 		menu->SetContext(this);
@@ -126,9 +133,16 @@ namespace ZeoEngine {
 		m_PanelManager.PushPanel(panel);
 	}
 
-	EditorPanel* EditorDockspace::GetPanelByName(const std::string& panelName)
+	EditorPanel* EditorDockspace::GetPanelByType(EditorWindowType panelType)
 	{
-		return m_PanelManager.GetPanelByName(panelName);
+		return m_PanelManager.GetPanelByName(ResolveEditorNameFromEnum(panelType));
+	}
+
+	EditorDockspace* EditorDockspace::OpenEditor(EditorWindowType dockspaceType)
+	{
+		auto* editor = m_EditorContext->GetDockspaceByType(dockspaceType);
+		*editor->GetShowPtr() = true;
+		return editor;
 	}
 
 	void EditorDockspace::CreateNewScene()
@@ -137,6 +151,45 @@ namespace ZeoEngine {
 		if (m_CameraInitDel)
 		{
 			m_CameraInitDel();
+		}
+	}
+
+	void EditorDockspace::OpenScene()
+	{
+		auto filePath = FileDialogs::OpenFile(m_SerializeAssetType);
+		if (!filePath) return;
+
+		CreateNewScene();
+		// Save scene path
+		m_Scene->SetPath(*filePath);
+
+		SceneSerializer serializer(m_Scene, m_SerializeAssetType);
+		serializer.Deserialize(*filePath);
+	}
+
+	void EditorDockspace::SaveSceneAs()
+	{
+		auto filePath = FileDialogs::SaveFile(m_SerializeAssetType);
+		if (!filePath) return;
+
+		// Save scene path
+		m_Scene->SetPath(*filePath);
+
+		SceneSerializer serializer(m_Scene, m_SerializeAssetType);
+		serializer.Serialize(*filePath);
+	}
+
+	void EditorDockspace::SaveScene()
+	{
+		const std::string scenePath = m_Scene->GetPath();
+		if (scenePath.empty())
+		{
+			SaveSceneAs();
+		}
+		else
+		{
+			SceneSerializer serializer(m_Scene, m_SerializeAssetType);
+			serializer.Serialize(scenePath);
 		}
 	}
 
@@ -165,7 +218,7 @@ namespace ZeoEngine {
 
 	DockspaceManager::~DockspaceManager()
 	{
-		for (auto* dockspace : m_Dockspaces)
+		for (auto& [name, dockspace] : m_Dockspaces)
 		{
 			dockspace->OnDetach();
 			delete dockspace;
@@ -176,7 +229,7 @@ namespace ZeoEngine {
 	{
 		Renderer2D::ResetStats();
 
-		for (auto* dockspace : m_Dockspaces)
+		for (auto& [name, dockspace] : m_Dockspaces)
 		{
 			// Do not update scene if this dockspace is invisible
 			if (dockspace->m_bShow)
@@ -188,7 +241,7 @@ namespace ZeoEngine {
 
 	void DockspaceManager::OnImGuiRender()
 	{
-		for (auto* dockspace : m_Dockspaces)
+		for (auto& [name, dockspace] : m_Dockspaces)
 		{
 			dockspace->OnImGuiRender();
 		}
@@ -196,7 +249,7 @@ namespace ZeoEngine {
 
 	void DockspaceManager::OnEvent(Event& e)
 	{
-		for (auto* dockspace : m_Dockspaces)
+		for (auto& [name, dockspace] : m_Dockspaces)
 		{
 			dockspace->OnEvent(e);
 		}
@@ -204,14 +257,20 @@ namespace ZeoEngine {
 
 	void DockspaceManager::PushDockspace(EditorDockspace* dockspace)
 	{
-		m_Dockspaces.emplace_back(dockspace);
+		m_Dockspaces.emplace(dockspace->GetDockspaceName(), dockspace);
 		dockspace->OnAttach();
+	}
+
+	EditorDockspace* DockspaceManager::GetDockspaceByName(const std::string& dockspaceName)
+	{
+		auto result = m_Dockspaces.find(dockspaceName);
+		return result == m_Dockspaces.end() ? nullptr : result->second;
 	}
 
 	void DockspaceManager::RebuildDockLayout(const std::string& dockspaceName)
 	{
 		bool bShouldRebuildAll = dockspaceName.empty();
-		for (auto* dockspace : m_Dockspaces)
+		for (auto& [name, dockspace] : m_Dockspaces)
 		{
 			if (bShouldRebuildAll || dockspace->GetDockspaceName() == dockspaceName)
 			{

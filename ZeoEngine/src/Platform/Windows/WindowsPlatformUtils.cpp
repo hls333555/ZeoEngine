@@ -10,7 +10,7 @@
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::OpenFile(const char* filter)
+	std::optional<std::string> FileDialogs::OpenFile(AssetType type)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter;
+		ofn.lpstrFilter = GetAssetFilterFromAssetType(type);
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		if (GetOpenFileNameA(&ofn) == TRUE)
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	std::optional<std::string> FileDialogs::SaveFile(const char* filter)
+	std::optional<std::string> FileDialogs::SaveFile(AssetType type)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter;
+		ofn.lpstrFilter = GetAssetFilterFromAssetType(type);
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		if (GetSaveFileNameA(&ofn) == TRUE)
@@ -46,6 +46,22 @@ namespace ZeoEngine {
 			return ofn.lpstrFile;
 		}
 		return {};
+	}
+
+	const char* FileDialogs::GetAssetFilterFromAssetType(AssetType type)
+	{
+		switch (type)
+		{
+		case AssetType::Scene:
+			return "Zeo Scene (*.zscene)\0*.zscene\0";
+		case AssetType::ParticleTemplate:
+			return "Zeo Particle Template (*.zparticle)\0*.zparticle";
+		case AssetType::Texture:
+			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
+		default:
+			break;
+		}
+		return nullptr;
 	}
 
 }

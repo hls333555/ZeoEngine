@@ -20,8 +20,6 @@ namespace ZeoEngine {
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
 	{
 		Entity entity = CreateEmptyEntity();
-		// Insert entity Id to map
-		m_Entities[entity];
 
 		auto entityCount = m_Entities.size();
 		auto& coreComp = entity.AddComponent<CoreComponent>();
@@ -45,7 +43,10 @@ namespace ZeoEngine {
 
 	Entity Scene::CreateEmptyEntity()
 	{
-		return { m_Registry.create(), this };
+		Entity entity{ m_Registry.create(), this };
+		// Insert entity Id to map
+		m_Entities[entity];
+		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)

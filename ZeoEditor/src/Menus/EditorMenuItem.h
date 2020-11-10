@@ -4,6 +4,7 @@
 
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Events/KeyEvent.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -53,7 +54,7 @@ namespace ZeoEngine {
 	class MenuItem_ToggleWindow : public EditorMenuItem
 	{
 	public:
-		MenuItem_ToggleWindow(const std::string& menuItemName, const std::string& shortcutName, bool* bShowWindowPtr);
+		MenuItem_ToggleWindow(EditorWindowType windowType, const std::string& shortcutName, bool* bShowWindowPtr);
 
 		virtual void OnImGuiRender() override;
 

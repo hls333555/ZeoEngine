@@ -11,17 +11,22 @@
 #include "Panels/EditorPanel.h"
 #include "Engine/Events/Event.h"
 #include "Engine/ImGui/MyImGui.h"
+#include "Utils/EditorUtils.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 namespace ZeoEngine {
+
+	class EditorLayer;
 
 	class EditorDockspace
 	{
 		friend class DockspaceManager;
 		friend class ScenePanel;
+		friend class MainDockspace;
 
 	public:
 		EditorDockspace() = delete;
-		explicit EditorDockspace(const std::string& dockspaceName, bool bDefaultShow = false,
+		EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow = false,
 			const glm::vec2& dockspacePadding = glm::vec2(0.0f, 0.0f),
 			ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar,
 			ImVec2Data initialSize = ImVec2Data::DefaultSize, ImVec2Data initialPos = ImVec2Data::DefaultPos);
@@ -40,12 +45,21 @@ namespace ZeoEngine {
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
+	protected:
+		void PushDockspace(EditorDockspace* dockspace);
+	public:
 		void PushMenu(EditorMenu* menu);
 		void PushPanel(EditorPanel* panel);
-		EditorPanel* GetPanelByName(const std::string& panelName);
+		EditorPanel* GetPanelByType(EditorWindowType panelType);
+
+		EditorDockspace* OpenEditor(EditorWindowType dockspaceType);
 
 		/** Create an empty scene and init camera. */
-		void CreateNewScene();
+		virtual void CreateNewScene();
+		void OpenScene();
+		void SaveScene();
+		void SaveSceneAs();
+
 	private:
 		void CreateScene();
 
@@ -58,6 +72,7 @@ namespace ZeoEngine {
 
 	protected:
 		bool m_bIsMainDockspace{ false };
+		AssetType m_SerializeAssetType{ AssetType::NONE };
 		Entity m_ContextEntity;
 
 		entt::delegate<void()> m_CameraInitDel;
@@ -67,6 +82,7 @@ namespace ZeoEngine {
 		ImVec2Data m_InitialPos, m_InitialSize;
 		glm::vec2 m_DockspacePadding;
 		ImGuiWindowFlags m_DockspaceWindowFlags;
+		EditorLayer* m_EditorContext;
 		bool m_bShow;
 
 		Ref<Scene> m_Scene;
@@ -88,12 +104,12 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		void PushDockspace(EditorDockspace* dockspace);
+		EditorDockspace* GetDockspaceByName(const std::string& dockspaceName);
 
-		/** If dockspaceName is not specified, all dockspaces will be reset layout. */
-		void RebuildDockLayout(const std::string& dockspaceName = std::string());
+		void RebuildDockLayout(const std::string& dockspaceName);
 
 	private:
-		std::vector<EditorDockspace*> m_Dockspaces;
+		std::unordered_map<std::string, EditorDockspace*> m_Dockspaces;
 	};
 
 }

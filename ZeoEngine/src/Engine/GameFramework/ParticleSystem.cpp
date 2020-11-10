@@ -1,8 +1,6 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
-#include <filesystem>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
@@ -10,7 +8,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/GameObject.h"
-#include "Engine/Core/Serializer.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -89,9 +87,9 @@ namespace ZeoEngine {
 
 	void ParticleSystem::DeserializeProperties(const std::string& processedSrc)
 	{
-		Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
-			return rttr::variant(this);
-		});
+		//Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
+		//	return rttr::variant(this);
+		//});
 	}
 
 	ParticleSystem* ParticleSystem::CreateDefaultParticleSystem()
@@ -586,12 +584,6 @@ namespace ZeoEngine {
 #endif
 	}
 
-	// TODO: Move to utils
-	static std::string GetCanonicalPath(const std::string& path)
-	{
-		return std::filesystem::canonical(path).string();
-	}
-
 	void ParticleLibrary::Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
 	{
 		if (!Exists(path))
@@ -608,10 +600,6 @@ namespace ZeoEngine {
 
 	Ref<ParticleTemplate> ParticleLibrary::Load(const std::string& path)
 	{
-		std::string result;
-		if (!Serializer::Get().ValidateFile(path, ParticleSystem::ParticleSystemFileToken, result))
-			return nullptr;
-
 		auto pTemplate = CreateRef<ParticleTemplate>(path);
 		Add(pTemplate);
 		return pTemplate;

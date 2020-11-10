@@ -4,9 +4,7 @@
 
 #include "Engine/Core/Application.h"
 #include "EditorLayer.h"
-#include "Engine/Core/SceneSerializer.h"
 #include "Dockspaces/MainDockspace.h"
-#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Core/Input.h"
 
 namespace ZeoEngine {
@@ -30,52 +28,6 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorMenuItem::OnKeyPressed));
 	}
 
-	static void NewScene(EditorDockspace* editorContext)
-	{
-		editorContext->CreateNewScene();
-		// Clear selected entity
-		editorContext->SetContextEntity({});
-	}
-
-	static void OpenScene(EditorDockspace* editorContext)
-	{
-		auto filePath = FileDialogs::OpenFile("Zeo Scene (*.zscene)\0*.zscene\0");
-		if (!filePath) return;
-
-		NewScene(editorContext);
-		// Save scene path
-		editorContext->GetScene()->SetPath(*filePath);
-
-		SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
-		serializer.Deserialize(*filePath);
-	}
-
-	static void SaveSceneAs(EditorDockspace* editorContext)
-	{
-		auto filePath = FileDialogs::SaveFile("Zeo Scene (*.zscene)\0*.zscene\0");
-		if (!filePath) return;
-
-		// Save scene path
-		editorContext->GetScene()->SetPath(*filePath);
-
-		SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
-		serializer.Serialize(*filePath);
-	}
-
-	static void SaveScene(EditorDockspace* editorContext)
-	{
-		const std::string scenePath = editorContext->GetScene()->GetPath();
-		if (scenePath.empty())
-		{
-			SaveSceneAs(editorContext);
-		}
-		else
-		{
-			SceneSerializer serializer(editorContext->GetScene(), SerializerType::Scene);
-			serializer.Serialize(scenePath);
-		}
-	}
-
 	bool EditorMenuItem::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName.empty() || e.GetRepeatCount() > 0) return false;
@@ -88,7 +40,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed && m_ShortcutName == "CTRL+N")
 				{
-					NewScene(GetEditorContext());
+					GetEditorContext()->CreateNewScene();
 				}
 				break;
 			}
@@ -96,7 +48,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed && m_ShortcutName == "CTRL+O")
 				{
-					OpenScene(GetEditorContext());
+					GetEditorContext()->OpenScene();
 				}
 				break;
 			}
@@ -106,11 +58,11 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed && m_ShortcutName == "CTRL+ALT+S")
 					{
-						SaveSceneAs(GetEditorContext());
+						GetEditorContext()->SaveSceneAs();
 					}
 					else if (m_ShortcutName == "CTRL+S")
 					{
-						SaveScene(GetEditorContext());
+						GetEditorContext()->SaveScene();
 					}
 
 				}
@@ -143,8 +95,8 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	MenuItem_ToggleWindow::MenuItem_ToggleWindow(const std::string& menuItemName, const std::string& shortcutName, bool* bShowWindowPtr)
-		: EditorMenuItem(menuItemName, shortcutName)
+	MenuItem_ToggleWindow::MenuItem_ToggleWindow(EditorWindowType windowType, const std::string& shortcutName, bool* bShowWindowPtr)
+		: EditorMenuItem(ResolveEditorNameFromEnum(windowType), shortcutName)
 		, m_bShowWindowPtr(bShowWindowPtr)
 	{
 	}
@@ -156,22 +108,22 @@ namespace ZeoEngine {
 
 	void MenuItem_NewScene::OnMenuItemActivated()
 	{
-		NewScene(GetEditorContext());
+		GetEditorContext()->CreateNewScene();
 	}
 
 	void MenuItem_OpenScene::OnMenuItemActivated()
 	{
-		OpenScene(GetEditorContext());
+		GetEditorContext()->OpenScene();
 	}
 
 	void MenuItem_SaveScene::OnMenuItemActivated()
 	{
-		SaveScene(GetEditorContext());
+		GetEditorContext()->SaveScene();
 	}
 
 	void MenuItem_SaveSceneAs::OnMenuItemActivated()
 	{
-		SaveSceneAs(GetEditorContext());
+		GetEditorContext()->SaveSceneAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -202,7 +154,7 @@ namespace ZeoEngine {
 	void MenuItem_ResetLayout::OnMenuItemActivated()
 	{
 		EditorLayer* editorLayer = Application::Get().FindLayer<EditorLayer>();
-		editorLayer->GetDockspaceManager().RebuildDockLayout();
+		editorLayer->RebuildDockLayout();
 	}
 
 }

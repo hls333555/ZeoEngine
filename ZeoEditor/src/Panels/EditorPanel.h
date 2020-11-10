@@ -6,6 +6,7 @@
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/ImGui/MyImGui.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -15,7 +16,7 @@ namespace ZeoEngine {
 	{
 	public:
 		EditorPanel() = delete;
-		EditorPanel(const std::string& panelName, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
+		EditorPanel(EditorWindowType panelType, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 		virtual ~EditorPanel() = default;
 
@@ -50,7 +51,7 @@ namespace ZeoEngine {
 	{
 	public:
 		ScenePanel() = delete;
-		ScenePanel(const std::string& panelName, EditorDockspace* context, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
+		ScenePanel(EditorWindowType panelType, EditorDockspace* context, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 
 	protected:

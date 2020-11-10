@@ -4,8 +4,8 @@
 
 namespace ZeoEngine {
 
-	EditorPanel::EditorPanel(const std::string& panelName, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
-		: m_PanelName(panelName), m_bShow(bDefaultShow), m_PanelWindowFlags(panelWindowFlags)
+	EditorPanel::EditorPanel(EditorWindowType panelType, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
+		: m_PanelName(ResolveEditorNameFromEnum(panelType)), m_bShow(bDefaultShow), m_PanelWindowFlags(panelWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
 	{
 	}
@@ -36,8 +36,8 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	ScenePanel::ScenePanel(const std::string& panelName, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
-		: EditorPanel(panelName, bDefaultShow, panelWindowFlags, initialSize, initialPos)
+	ScenePanel::ScenePanel(EditorWindowType panelType, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
+		: EditorPanel(panelType, bDefaultShow, panelWindowFlags, initialSize, initialPos)
 		, m_Context(context)
 	{
 	}

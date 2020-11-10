@@ -5,19 +5,14 @@
 #include <yaml-cpp/yaml.h>
 
 #include "Engine/Core/ReflectionHelper.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 namespace ZeoEngine {
-
-	enum class SerializerType
-	{
-		Scene,
-		ParticleSystem,
-	};
 
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const Ref<Scene>& scene, SerializerType type);
+		SceneSerializer(const Ref<Scene>& scene, AssetType type);
 
 		void Serialize(const std::string& filePath);
 		void SerializeRuntime(const std::string& filePath);
@@ -28,7 +23,8 @@ namespace ZeoEngine {
 
 		void EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance);
 		void EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance);
-		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance);
+		void EvaluateSerializeNestedData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
+		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
 
 		void EvaluateSerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
 		void EvaluateSerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
@@ -75,7 +71,8 @@ namespace ZeoEngine {
 
 		void EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value);
 		void EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value);
-		void EvaluateDeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value);
+		void EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
 
 		void EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
 		void EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
@@ -98,7 +95,7 @@ namespace ZeoEngine {
 
 	private:
 		Ref<Scene> m_Scene;
-		SerializerType m_SerializerType;
+		AssetType m_AssetType;
 	};
 
 }

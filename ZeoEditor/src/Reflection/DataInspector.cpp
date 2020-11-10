@@ -10,6 +10,8 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/GameFramework/Components.h"
+#include "Dockspaces/EditorDockspace.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -425,9 +427,8 @@ namespace ZeoEngine {
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
 		// TODO: Reverse subdata order
-		for (auto it = type.data().begin(); it != type.data().end(); ++it)
+		for (auto subData : type.data())
 		{
-			auto subData = *it;
 			auto subDataName = GetMetaObjectDisplayName(subData);
 			bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
 			ImGuiTreeNodeFlags flags = bIsNestedClass ? NestedDataFlags : DefaultDataFlags;
@@ -788,8 +789,7 @@ namespace ZeoEngine {
 			// Pop up file browser to select a texture from disk
 			if (ImGui::Selectable("Browse texture..."))
 			{
-				// TODO: Support more texture format
-				auto filePath = FileDialogs::OpenFile("PNG (*.png)\0*.png");
+				auto filePath = FileDialogs::OpenFile(AssetType::Texture);
 				if (filePath)
 				{
 					// Add selected texture to the library
@@ -891,7 +891,10 @@ namespace ZeoEngine {
 				ImGui::SetTooltip("Double-click to open the particle editor");
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
-					
+					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorWindowType::Particle_Editor);
+					Entity entity = editor->GetContextEntity();
+					auto& psdc = entity.GetComponent<ParticleSystemDetailComponent>();
+					psdc.Template = particleTemplateValue ? particleTemplateValue : CreateRef<ParticleTemplate>();
 				}
 			}
 		}
@@ -917,7 +920,7 @@ namespace ZeoEngine {
 			// Pop up file browser to select a particle template from disk
 			if (ImGui::Selectable("Browse particle template..."))
 			{
-				auto filePath = FileDialogs::OpenFile("ZPARTICLE (*.zparticle)\0*.zparticle");
+				auto filePath = FileDialogs::OpenFile(AssetType::ParticleTemplate);
 				if (filePath)
 				{
 					// Add selected particle template to the library
