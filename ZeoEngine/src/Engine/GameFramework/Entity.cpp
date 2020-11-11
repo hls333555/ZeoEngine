@@ -1,5 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/ReflectionHelper.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 	
@@ -13,32 +15,71 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
+	std::string Entity::GetEntityName() const
+	{
+		if (HasComponent<CoreComponent>())
+		{
+			return GetComponent<CoreComponent>().Name;
+		}
+		return {};
+	}
+
 	entt::meta_any Entity::AddTypeById(entt::id_type typeId)
 	{
+		auto type = entt::resolve_type(typeId);
+		if (!type)
+		{
+			ZE_CORE_WARN("Failed to add component with invalid type ID = {0}!", typeId);
+			return {};
+		}
+
+		if (HasTypeById(typeId))
+		{
+			auto typeName = GetMetaObjectDisplayName(type);
+			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *typeName);
+			return {};
+		}
 		AddComponentId(typeId);
-		return entt::resolve_type(typeId).construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
+		return type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
 
 	void Entity::RemoveTypeById(entt::id_type typeId)
 	{
+		auto type = entt::resolve_type(typeId);
+		if (!type)
+		{
+			ZE_CORE_WARN("Failed to remove component with invalid type ID = {0}!", typeId);
+			return;
+		}
+
 		RemoveComponentId(typeId);
-		entt::resolve_type(typeId).func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		type.func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
 
 	entt::meta_any Entity::GetTypeById(entt::id_type typeId) const
 	{
-		return entt::resolve_type(typeId).func("get"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto type = entt::resolve_type(typeId);
+		if (!type)
+		{
+			ZE_CORE_WARN("Failed to get component with invalid type ID = {0}!", typeId);
+			return {};
+		}
+
+		return type.func("get"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
 
-	entt::meta_any Entity::HasTypeById(entt::id_type typeId) const
+	bool Entity::HasTypeById(entt::id_type typeId) const
 	{
-		return entt::resolve_type(typeId).func("has"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto type = entt::resolve_type(typeId);
+		if (!type) return false;
+
+		auto res = type.func("has"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		return res.cast<bool>();
 	}
 
 	entt::meta_any Entity::GetOrAddTypeById(entt::id_type typeId)
 	{
-		bool bHas = HasTypeById(typeId).cast<bool>();
-		if (bHas)
+		if (HasTypeById(typeId))
 		{
 			return GetTypeById(typeId);
 		}

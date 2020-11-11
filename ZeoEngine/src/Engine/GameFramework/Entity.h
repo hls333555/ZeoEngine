@@ -53,6 +53,8 @@ namespace ZeoEngine {
 			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 
+		std::string GetEntityName() const;
+
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
 
@@ -68,7 +70,7 @@ namespace ZeoEngine {
 		entt::meta_any AddTypeById(entt::id_type typeId);
 		void RemoveTypeById(entt::id_type typeId);
 		entt::meta_any GetTypeById(entt::id_type typeId) const;
-		entt::meta_any HasTypeById(entt::id_type typeId) const;
+		bool HasTypeById(entt::id_type typeId) const;
 		entt::meta_any GetOrAddTypeById(entt::id_type typeId);
 
 		const std::vector<uint32_t>& GetAllComponents() const { return m_Scene->m_Entities[m_EntityHandle]; }

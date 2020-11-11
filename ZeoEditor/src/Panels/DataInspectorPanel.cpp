@@ -91,8 +91,12 @@ namespace ZeoEngine {
 						auto typeName = GetPropValue<const char*>(PropertyType::Name, entt::resolve_type(typeId));
 						if (ImGui::Selectable(*typeName))
 						{
-							entity.AddTypeById(typeId);
-							MarkPreprocessedDatasDirty();
+							auto instance = entity.AddTypeById(typeId);
+							// Instance may be null as AddTypeById() failed
+							if (instance)
+							{
+								MarkPreprocessedDatasDirty();
+							}
 						}
 					}
 

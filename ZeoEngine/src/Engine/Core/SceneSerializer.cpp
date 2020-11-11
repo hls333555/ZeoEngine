@@ -763,7 +763,11 @@ namespace ZeoEngine {
 				if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
 
 				entt::meta_any instance = deserializedEntity.GetOrAddTypeById(typeId);
-				DeserializeType(instance, component);
+				// Instance may be null as typeId is invalid
+				if (instance)
+				{
+					DeserializeType(instance, component);
+				}
 			}
 		}
 	}

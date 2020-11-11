@@ -156,7 +156,7 @@ namespace ZeoEngine {
 			// Preprocess datas if needed
 			if (m_bIsPreprocessedDatasDirty)
 			{
-				ZE_CORE_TRACE("Sorting datas on '{0}'", *typeName);
+				ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *typeName, entity.GetEntityName());
 
 				// Iterate all datas on this entity, reverse their order and categorize them
 				for (auto data : type.data())
