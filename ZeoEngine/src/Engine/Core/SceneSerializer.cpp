@@ -701,7 +701,8 @@ namespace ZeoEngine {
 			out << YAML::Key << "Entity" << YAML::Value << entity; // TODO: Entity ID goes here
 			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
 			{
-				m_Scene->m_Registry.visit(entity, [&](const auto typeId)
+				// Do not call entt::registry::visit() as the order is reversed
+				for (auto typeId : m_Scene->m_Entities[entity])
 				{
 					out << YAML::BeginMap;
 					{
@@ -711,7 +712,7 @@ namespace ZeoEngine {
 						SerializeType(out, instance);
 					}
 					out << YAML::EndMap;
-				});
+				}
 			}
 			out << YAML::EndSeq;
 		}
