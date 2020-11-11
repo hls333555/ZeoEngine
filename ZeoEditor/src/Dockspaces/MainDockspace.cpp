@@ -23,7 +23,7 @@ namespace ZeoEngine {
 		EditorDockspace::OnAttach();
 
 		GameViewportPanel* gameViewportPanel = new GameViewportPanel(EditorWindowType::Game_View, this, true);
-		m_CameraInitDel.connect<&SceneViewportPanel::BindCameraInitFunc>(gameViewportPanel);
+		m_OnSceneCreate.connect<&SceneViewportPanel::CreatePreviewCamera>(gameViewportPanel);
 		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(EditorWindowType::Scene_Outline, this, true);
 		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(EditorWindowType::Entity_Inspector, this, true);
 		ConsolePanel* consolePanel = new ConsolePanel(EditorWindowType::Console, true);

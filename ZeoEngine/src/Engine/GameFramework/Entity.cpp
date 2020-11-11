@@ -37,7 +37,15 @@ namespace ZeoEngine {
 
 	entt::meta_any Entity::GetOrAddTypeById(entt::id_type typeId)
 	{
-		return entt::resolve_type(typeId).func("get_or_emplace"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		bool bHas = HasTypeById(typeId).cast<bool>();
+		if (bHas)
+		{
+			return GetTypeById(typeId);
+		}
+		else
+		{
+			return AddTypeById(typeId);
+		}
 	}
 
 	void Entity::AddComponentId(uint32_t Id)

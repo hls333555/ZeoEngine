@@ -69,17 +69,17 @@ namespace ZeoEngine {
 	private:
 		void DeserializeEntity(const YAML::Node& entity);
 
-		void EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value);
-		void EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value);
-		void EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
 
-		void EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
 
 		template<typename T>
-		void DeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 		{
 			if (bIsSeqContainer)
 			{
@@ -91,7 +91,7 @@ namespace ZeoEngine {
 				SetDataValue(data, instance, value.as<T>());
 			}
 		}
-		void DeserializeEnumData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer);
+		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
 
 	private:
 		Ref<Scene> m_Scene;

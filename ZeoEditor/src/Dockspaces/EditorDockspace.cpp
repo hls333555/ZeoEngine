@@ -7,6 +7,7 @@
 #include "Engine/Debug/Instrumentor.h"
 #include "EditorLayer.h"
 #include "Engine/Core/SceneSerializer.h"
+#include "Panels/SceneViewportPanel.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
@@ -148,10 +149,7 @@ namespace ZeoEngine {
 	void EditorDockspace::CreateNewScene()
 	{
 		CreateScene();
-		if (m_CameraInitDel)
-		{
-			m_CameraInitDel();
-		}
+		m_OnSceneCreateDel.publish();
 	}
 
 	void EditorDockspace::OpenScene()

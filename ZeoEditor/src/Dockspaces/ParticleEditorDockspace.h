@@ -11,8 +11,6 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual void CreateNewScene() override;
-
 	private:
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 

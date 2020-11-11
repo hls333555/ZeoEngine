@@ -45,11 +45,6 @@ bool has(entt::registry& registry, entt::entity entity) // NOTE: Do not register
 {
 	return registry.template has<T>(entity);
 }
-template<typename T>
-T& get_or_emplace(entt::registry& registry, entt::entity entity)
-{
-	return registry.template get_or_emplace<T>(entity);
-}
 
 template<typename T>
 void set_enum_value(entt::meta_any& instance, const entt::meta_any& newValue)
@@ -94,8 +89,7 @@ entt::meta<_type>()																				\
 		.ctor<&emplace<_type>, entt::as_ref_t>()												\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
-		.func<&has<_type>>("has"_hs)															\
-		.func<&get_or_emplace<_type>, entt::as_ref_t>("get_or_emplace"_hs)
+		.func<&has<_type>>("has"_hs)
 #define ZE_REFL_TYPE_NESTED(_type, ...)															\
 entt::meta<_type>()																				\
     .type()																						\
@@ -107,7 +101,6 @@ entt::meta<_type>()																				\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
 		.func<&has<_type>>("has"_hs)															\
-		.func<&get_or_emplace<_type>, entt::as_ref_t>("get_or_emplace"_hs)									\
 		.func<&create_default_value<_type>>("create_default_value"_hs)
 
 #define ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)										\

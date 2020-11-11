@@ -486,10 +486,14 @@ namespace ZeoEngine {
 
 	void SceneSerializer::DeserializeEntity(const YAML::Node& entity)
 	{
-		//uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
-
-		// Create a default entity
-		Entity deserializedEntity = m_Scene->CreateEntity();
+		uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
+		// Some entities including preview camera are created by default on scene creation
+		Entity deserializedEntity{ static_cast<entt::entity>(uuid), m_Scene.get() };
+		if (!deserializedEntity.IsValid())
+		{
+			// Create a default entity if not exists
+			deserializedEntity = m_Scene->CreateEntity();
+		}
 
 		auto components = entity["Components"];
 		if (components)
@@ -532,7 +536,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	void SceneSerializer::EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
 	{
 		const auto type = data.get(instance).as_sequence_container().value_type();
 		for (const auto& element : value)
@@ -549,38 +553,45 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value)
+	void SceneSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
 	{
 		
 	}
 
-	void SceneSerializer::EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
 		// Iterate all subdatas and deserialize values
+		uint32_t i = 0;
 		for (auto subData : type.data())
 		{
 			auto subDataName = GetMetaObjectDisplayName(subData);
-			const auto& subValue = value[*subDataName];
 			// Evaluate serialized subdata only
-			if (subValue)
+			if (value[i])
 			{
-				bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
-				if (bIsNestedClass)
+				const auto& subValue = value[i][*subDataName];
+				// Evaluate serialized subdata only
+				if (subValue)
 				{
-					EvaluateDeserializeNestedData(subData, subInstance, subValue, false);
-				}
-				else
-				{
-					EvaluateDeserializeData(subData, subInstance, subValue, false);
+					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
+					if (bIsNestedClass)
+					{
+						EvaluateDeserializeNestedData(subData, subInstance, subValue, false);
+					}
+					else
+					{
+						EvaluateDeserializeData(subData, subInstance, subValue, false);
+					}
 				}
 			}
-			
+			++i;
 		}
+		// We must set subInstance value back to instance
+		SetDataValue(data, instance, subInstance);
 	}
 
-	void SceneSerializer::EvaluateDeserializeData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::EvaluateDeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		if (type.is_integral())
@@ -601,7 +612,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
 		if (IsTypeEqual<bool>(type))
@@ -634,7 +645,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
 		if (IsTypeEqual<float>(type))
@@ -647,7 +658,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type() : data.type();
 		if (IsTypeEqual<std::string>(type))
@@ -685,7 +696,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT_INFO(false, "Failed to deserialize data: '{0}'", *dataName);
 	}
 
-	void SceneSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any instance, const YAML::Node& value, bool bIsSeqContainer)
+	void SceneSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 	{
 		auto currentValueName = value.as<std::string>();
 		const auto& datas = bIsSeqContainer ? data.get(instance).as_sequence_container().value_type().data() : data.type().data();

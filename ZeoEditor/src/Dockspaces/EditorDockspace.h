@@ -74,8 +74,10 @@ namespace ZeoEngine {
 		bool m_bIsMainDockspace{ false };
 		AssetType m_SerializeAssetType{ AssetType::NONE };
 		Entity m_ContextEntity;
-
-		entt::delegate<void()> m_CameraInitDel;
+	private:
+		entt::sigh<void()> m_OnSceneCreateDel;
+	protected:
+		entt::sink<void()> m_OnSceneCreate{ m_OnSceneCreateDel };
 
 	private:
 		std::string m_DockspaceName;

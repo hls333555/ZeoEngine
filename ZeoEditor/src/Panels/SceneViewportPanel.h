@@ -16,14 +16,12 @@ namespace ZeoEngine {
 
 		virtual void OnUpdate(DeltaTime dt) override;
 
-		void BindCameraInitFunc();
+		void CreatePreviewCamera();
 
 	protected:
 		virtual void RenderPanel() override;
 
 	private:
-		void CreatePreviewCamera();
-
 		void OnViewportResize(const glm::vec2& size);
 
 		void InitCameraViewportSize(entt::registry& registry, entt::entity entity);

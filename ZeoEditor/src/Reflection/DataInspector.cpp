@@ -467,6 +467,7 @@ namespace ZeoEngine {
 				ImGui::PopID();
 			}
 		}
+		// We must set subInstance value back to instance
 		SetDataValue(data, instance, subInstance);
 	}
 

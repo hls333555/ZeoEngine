@@ -14,7 +14,6 @@ namespace ZeoEngine {
 	void SceneViewportPanel::OnAttach()
 	{
 		CreatePreviewCamera();
-		BindCameraInitFunc();
 	}
 
 	void SceneViewportPanel::OnUpdate(DeltaTime dt)
@@ -28,11 +27,6 @@ namespace ZeoEngine {
 		{
 			OnViewportResize(m_LastViewportSize);
 		}
-	}
-
-	void SceneViewportPanel::BindCameraInitFunc()
-	{
-		GetScene()->m_Registry.on_construct<CameraComponent>().connect<&SceneViewportPanel::InitCameraViewportSize>(this);
 	}
 
 	void SceneViewportPanel::RenderPanel()
@@ -140,6 +134,7 @@ namespace ZeoEngine {
 
 		const std::string cameraName = GetPanelName() + std::string(" Camera");
 		m_PreviewCamera = GetScene()->CreateEntity(cameraName.c_str(), true);
+		GetScene()->m_Registry.on_construct<CameraComponent>().connect<&SceneViewportPanel::InitCameraViewportSize>(this);
 		m_PreviewCamera.AddComponent<CameraComponent>();
 		NativeScriptComponent& nativeScriptComp = m_PreviewCamera.AddComponent<NativeScriptComponent>();
 		nativeScriptComp.Bind<SceneCameraController>(this);
