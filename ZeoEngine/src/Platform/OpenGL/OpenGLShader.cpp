@@ -2,11 +2,11 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 
 #include <fstream>
-#include <filesystem>
 
 #include <glad/glad.h>
-
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
-		: m_Name(std::filesystem::path{ filePath }.stem().string())
+		: m_Name(GetNameFromPath(filePath))
 	{
 		ZE_PROFILE_FUNCTION();
 

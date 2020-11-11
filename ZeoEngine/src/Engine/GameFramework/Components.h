@@ -43,6 +43,7 @@ namespace ZeoEngine {
 		glm::vec3 Vec3Var;
 		glm::vec4 ColorVar;
 		Ref<Texture2D> Texture2DVar;
+		Ref<ParticleTemplate> ParticleTemplateVar;
 
 		std::deque<bool> BoolDeqVar;
 		std::vector<uint8_t> Ui8VecVar;
@@ -58,7 +59,7 @@ namespace ZeoEngine {
 		std::vector<glm::vec2> Vec2VecVar;
 		std::vector<glm::vec3> Vec3VecVar;
 		std::vector<glm::vec4> ColorVecVar;
-		std::vector<Ref<Texture2D>> Texture2DVecVar;
+		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;
@@ -185,6 +186,10 @@ namespace ZeoEngine {
 		ParticleSystemDetailComponent()
 		{
 			Template = CreateRef<ParticleTemplate>();
+		}
+		ParticleSystemDetailComponent(const Ref<ParticleTemplate>& pTemplate)
+		{
+			Template = pTemplate;
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }

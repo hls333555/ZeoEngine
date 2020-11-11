@@ -10,4 +10,14 @@ namespace ZeoEngine {
 		return std::filesystem::canonical(path).string();
 	}
 
+	std::string GetFileNameFromPath(const std::string& path)
+	{
+		return std::filesystem::path{ path }.filename().string();
+	}
+
+	std::string GetNameFromPath(const std::string& path)
+	{
+		return std::filesystem::path{ path }.stem().string();
+	}
+
 }

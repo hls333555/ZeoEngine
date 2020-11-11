@@ -1,9 +1,9 @@
 #include "ZEpch.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 
-#include <filesystem>
-
 #include <stb_image.h>
+
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
@@ -26,7 +26,7 @@ namespace ZeoEngine {
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path(path)
-		, m_FileName(std::filesystem::path{ m_Path }.filename().string())
+		, m_FileName(GetFileNameFromPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 

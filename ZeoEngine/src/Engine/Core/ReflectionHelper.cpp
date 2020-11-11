@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Renderer/Texture.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
@@ -32,6 +33,11 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	static Ref<ParticleTemplate> i32_to_particletemplate(const int32_t& value)
+	{
+		return {};
+	}
+
 	ZE_REFL_REGISTRATION
 	{
 		// Register conversions from int32_t to various basic types to be used by container insertion
@@ -51,7 +57,8 @@ namespace ZeoEngine {
 			.conv<&i32_to_vec2>()
 			.conv<&i32_to_vec3>()
 			.conv<&i32_to_vec4>()
-			.conv<&i32_to_texture2d>();
+			.conv<&i32_to_texture2d>()
+			.conv<&i32_to_particletemplate>();
 	}
 
 	const char* GetEnumDisplayName(entt::meta_any enumValue)

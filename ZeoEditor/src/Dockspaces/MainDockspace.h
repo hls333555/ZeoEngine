@@ -16,6 +16,10 @@ namespace ZeoEngine {
 		Entity& GetSeletedEntity() { return m_ContextEntity; }
 
 	private:
+		virtual AssetType GetAssetType() const override { return AssetType::Scene; }
+		virtual void Serialize(const std::string& filePath) override;
+		virtual void Deserialize(const std::string& filePath) override;
+
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 
 	};

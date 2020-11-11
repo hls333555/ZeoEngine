@@ -12,13 +12,13 @@
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
 #include "Menus/EditorMenuItem.h"
+#include "Engine/Core/SceneSerializer.h"
 
 namespace ZeoEngine {
 
 	void MainDockspace::OnAttach()
 	{
 		m_bIsMainDockspace = true;
-		m_SerializeAssetType = AssetType::Scene;
 
 		EditorDockspace::OnAttach();
 
@@ -91,6 +91,18 @@ namespace ZeoEngine {
 
 		// Clear selected entity
 		m_ContextEntity = {};
+	}
+
+	void MainDockspace::Serialize(const std::string& filePath)
+	{
+		SceneSerializer serializer(filePath, GetScene());
+		serializer.Serialize();
+	}
+
+	void MainDockspace::Deserialize(const std::string& filePath)
+	{
+		SceneSerializer serializer(filePath, GetScene());
+		serializer.Deserialize();
 	}
 
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)

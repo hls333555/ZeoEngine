@@ -46,6 +46,13 @@ namespace ZeoEngine {
 			return m_Scene->m_Registry.has<T>(m_EntityHandle);
 		}
 
+		template<typename T, typename... Func>
+		void PatchComponent(Func&&... func)
+		{
+			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
+			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
+		}
+
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
 

@@ -59,8 +59,11 @@ namespace ZeoEngine {
 		void OpenScene();
 		void SaveScene();
 		void SaveSceneAs();
-
 	private:
+		virtual AssetType GetAssetType() const { return AssetType::NONE; }
+		virtual void Serialize(const std::string& filePath) {}
+		virtual void Deserialize(const std::string& filePath) {}
+
 		void CreateScene();
 
 		void CreateFrameBuffer();
@@ -72,7 +75,6 @@ namespace ZeoEngine {
 
 	protected:
 		bool m_bIsMainDockspace{ false };
-		AssetType m_SerializeAssetType{ AssetType::NONE };
 		Entity m_ContextEntity;
 	private:
 		entt::sigh<void()> m_OnSceneCreateDel;

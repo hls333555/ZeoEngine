@@ -33,6 +33,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(TestComponent, Vec3Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
 		ZE_REFL_DATA_REF(TestComponent, ColorVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
 		ZE_REFL_DATA_REF(TestComponent, Texture2DVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
+		ZE_REFL_DATA_REF(TestComponent, ParticleTemplateVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
 		ZE_REFL_DATA_REF(TestComponent, BoolDeqVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, Ui8VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, Ui32VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
@@ -47,7 +48,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(TestComponent, Vec2VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, Vec3VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, ColorVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
-		ZE_REFL_DATA_REF(TestComponent, Texture2DVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")));
+		ZE_REFL_DATA_REF(TestComponent, ParticleTemplateVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")));
 #endif
 
 	ZE_REFL_TYPE(CoreComponent, ZE_REFL_PROP(HideTypeHeader), ZE_REFL_PROP(InherentType))

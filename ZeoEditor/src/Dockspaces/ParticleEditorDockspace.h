@@ -12,10 +12,11 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
+		virtual AssetType GetAssetType() const override { return AssetType::ParticleTemplate; }
+		virtual void Serialize(const std::string& filePath) override;
+		virtual void Deserialize(const std::string& filePath) override;
 
-	private:
-		entt::delegate<void()> m_ParticleInitDel;
+		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 
 	};
 

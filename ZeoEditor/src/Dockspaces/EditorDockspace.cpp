@@ -6,7 +6,6 @@
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "EditorLayer.h"
-#include "Engine/Core/SceneSerializer.h"
 #include "Panels/SceneViewportPanel.h"
 
 #define FRAMEBUFFER_WIDTH 1280
@@ -154,27 +153,23 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OpenScene()
 	{
-		auto filePath = FileDialogs::OpenFile(m_SerializeAssetType);
+		auto filePath = FileDialogs::OpenFile(GetAssetType());
 		if (!filePath) return;
 
 		CreateNewScene();
 		// Save scene path
 		m_Scene->SetPath(*filePath);
-
-		SceneSerializer serializer(m_Scene, m_SerializeAssetType);
-		serializer.Deserialize(*filePath);
+		Deserialize(*filePath);
 	}
 
 	void EditorDockspace::SaveSceneAs()
 	{
-		auto filePath = FileDialogs::SaveFile(m_SerializeAssetType);
+		auto filePath = FileDialogs::SaveFile(GetAssetType());
 		if (!filePath) return;
 
 		// Save scene path
 		m_Scene->SetPath(*filePath);
-
-		SceneSerializer serializer(m_Scene, m_SerializeAssetType);
-		serializer.Serialize(*filePath);
+		Serialize(*filePath);
 	}
 
 	void EditorDockspace::SaveScene()
@@ -186,8 +181,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			SceneSerializer serializer(m_Scene, m_SerializeAssetType);
-			serializer.Serialize(scenePath);
+			Serialize(scenePath);
 		}
 	}
 

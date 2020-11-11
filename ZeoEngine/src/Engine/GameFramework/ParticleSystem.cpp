@@ -8,7 +8,8 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/GameFramework/GameObject.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Core/SceneSerializer.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -601,6 +602,8 @@ namespace ZeoEngine {
 	Ref<ParticleTemplate> ParticleLibrary::Load(const std::string& path)
 	{
 		auto pTemplate = CreateRef<ParticleTemplate>(path);
+		TypeSerializer serializer(path);
+		serializer.Deserialize(ParticleSystemDetailComponent{ pTemplate }, AssetType::ParticleTemplate);
 		Add(pTemplate);
 		return pTemplate;
 	}

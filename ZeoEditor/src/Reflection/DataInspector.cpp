@@ -882,8 +882,8 @@ namespace ZeoEngine {
 				ImGui::GetCursorScreenPos(),
 				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-			// Draw our texture on top of that
-			ImGui::Image(particleTemplateValue ? particleTemplateValue->PreviewThumbnail->GetTexture() : nullptr,
+			// Draw preview thumbnail on top of that
+			ImGui::Image(particleTemplateValue && particleTemplateValue->PreviewThumbnail ? particleTemplateValue->PreviewThumbnail->GetTexture() : backgroundTexture->GetTexture(),
 				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				particleTemplateValue ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
@@ -894,9 +894,10 @@ namespace ZeoEngine {
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
 					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorWindowType::Particle_Editor);
-					Entity entity = editor->GetContextEntity();
-					auto& psdc = entity.GetComponent<ParticleSystemDetailComponent>();
-					psdc.Template = particleTemplateValue ? particleTemplateValue : CreateRef<ParticleTemplate>();
+					editor->GetContextEntity().PatchComponent<ParticleSystemDetailComponent>([&particleTemplateValue](auto& psdc)
+					{
+						psdc.Template = particleTemplateValue ? particleTemplateValue : CreateRef<ParticleTemplate>();
+					});
 				}
 			}
 		}
@@ -916,7 +917,7 @@ namespace ZeoEngine {
 		}
 
 		// Particle template browser
-		if (ImGui::BeginCombo("##ParticleTemplate", particleTemplateValue ? particleTemplateValue->GetFileName().c_str() : nullptr))
+		if (ImGui::BeginCombo("##ParticleTemplate", particleTemplateValue ? particleTemplateValue->GetName().c_str() : nullptr))
 		{
 			bool bIsValueChangedAfterEdit = false;
 			// Pop up file browser to select a particle template from disk
@@ -961,7 +962,7 @@ namespace ZeoEngine {
 				//	ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 				ImGui::SameLine();
 				// Display particle template name
-				ImGui::Text(pTemplate->GetFileName().c_str());
+				ImGui::Text(pTemplate->GetName().c_str());
 				if (bIsSelected)
 				{
 					bIsValueChangedAfterEdit = pTemplate != particleTemplateValue;

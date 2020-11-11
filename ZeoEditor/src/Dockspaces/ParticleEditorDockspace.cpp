@@ -5,13 +5,13 @@
 #include "Panels/ParticleViewportPanel.h"
 #include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenuItem.h"
+#include "Engine/Core/SceneSerializer.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
 	void ParticleEditorDockspace::OnAttach()
 	{
-		m_SerializeAssetType = AssetType::ParticleTemplate;
-
 		EditorDockspace::OnAttach();
 
 		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorWindowType::Particle_View, this, true);
@@ -21,10 +21,10 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
-			fileMenu->PushMenuItem(new MenuItem_NewScene("New Scene", "CTRL+N"));
-			fileMenu->PushMenuItem(new MenuItem_OpenScene("Open Scene", "CTRL+O"));
-			fileMenu->PushMenuItem(new MenuItem_SaveScene("Save Scene", "CTRL+S"));
-			fileMenu->PushMenuItem(new MenuItem_SaveSceneAs("Save Scene As", "CTRL+ALT+S"));
+			fileMenu->PushMenuItem(new MenuItem_NewScene("New particle template", "CTRL+N"));
+			fileMenu->PushMenuItem(new MenuItem_OpenScene("Open particle template", "CTRL+O"));
+			fileMenu->PushMenuItem(new MenuItem_SaveScene("Save particle template", "CTRL+S"));
+			fileMenu->PushMenuItem(new MenuItem_SaveSceneAs("Save particle template As", "CTRL+ALT+S"));
 			PushMenu(fileMenu);
 		}
 
@@ -44,6 +44,20 @@ namespace ZeoEngine {
 
 		PushPanel(particleViewportPanel);
 		PushPanel(particleInspectorPanel);
+	}
+
+	void ParticleEditorDockspace::Serialize(const std::string& filePath)
+	{
+		TypeSerializer serializer(filePath);
+		auto& psdc = m_ContextEntity.GetComponent<ParticleSystemDetailComponent>();
+		serializer.Serialize(psdc, GetAssetType());
+	}
+
+	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
+	{
+		TypeSerializer serializer(filePath);
+		auto& psdc = m_ContextEntity.GetComponent<ParticleSystemDetailComponent>();
+		serializer.Deserialize(psdc, GetAssetType());
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)

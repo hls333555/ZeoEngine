@@ -2,11 +2,10 @@
 
 #include <glm/glm.hpp>
 
-#include <filesystem>
-
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Core/Delegate.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -52,12 +51,12 @@ namespace ZeoEngine {
 		ParticleTemplate() = default;
 		ParticleTemplate(const std::string& path)
 			: Path(path)
-			, FileName(std::filesystem::path{ Path }.filename().string())
+			, Name(GetNameFromPath(path))
 		{
 		}
 
 		const std::string& GetPath() const { return Path; }
-		const std::string& GetFileName() const { return FileName; }
+		const std::string& GetName() const { return Name; }
 
 		bool bIsLocalSpace = false;
 
@@ -105,7 +104,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string Path;
-		std::string FileName;
+		std::string Name;
 	};
 
 	class ParticleSystem
