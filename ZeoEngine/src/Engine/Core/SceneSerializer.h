@@ -81,14 +81,14 @@ namespace ZeoEngine {
 		template<typename T>
 		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
 		{
+			const auto& dataValue = value.as<T>();
 			if (bIsSeqContainer)
 			{
-				auto& seqView = data.get(instance).as_sequence_container();
-				seqView.insert(seqView.end(), value.as<T>());
+				instance.cast<T>() = dataValue;
 			}
 			else
 			{
-				SetDataValue(data, instance, value.as<T>());
+				SetDataValue(data, instance, dataValue);
 			}
 		}
 		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
