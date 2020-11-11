@@ -403,11 +403,7 @@ namespace ZeoEngine {
 
 	std::optional<YAML::Node> TypeSerializer::PreDeserialize(AssetType assetType)
 	{
-		std::ifstream stream(m_Path);
-		std::stringstream strStream;
-		strStream << stream.rdbuf();
-
-		YAML::Node data = YAML::Load(strStream.str());
+		YAML::Node data = YAML::LoadFile(m_Path);
 		auto assetTypeName = magic_enum::enum_name(assetType).data();
 		if (!data[assetTypeName])
 		{

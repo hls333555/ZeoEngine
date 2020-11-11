@@ -40,6 +40,8 @@ namespace ZeoEngine {
 		ofn.nMaxFile = sizeof(szFile);
 		ofn.lpstrFilter = GetAssetFilterFromAssetType(type);
 		ofn.nFilterIndex = 1;
+		// Sets the default extension by extracting it from the filter
+		ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		if (GetSaveFileNameA(&ofn) == TRUE)
 		{
