@@ -151,17 +151,15 @@ namespace ZeoEngine {
 				}
 			}
 		}
+		// Preprocess datas if needed
+		if (m_bIsPreprocessedDatasDirty)
+		{
+			ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *typeName, entity.GetEntityName());
+
+			PreprocessType(type);
+		}
 		if (bIsTypeHeaderExpanded)
 		{
-			// Preprocess datas if needed
-			if (m_bIsPreprocessedDatasDirty)
-			{
-				ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *typeName, entity.GetEntityName());
-
-				PreprocessType(type);
-			}
-
-			// TODO: Datas will be cleared if we collapse this type and deselect current entity
 			// Iterate all categories
 			for (const auto& [category, datas] : m_PreprocessedDatas[type.type_id()])
 			{
