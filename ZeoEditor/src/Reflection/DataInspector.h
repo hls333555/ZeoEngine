@@ -16,8 +16,9 @@ namespace ZeoEngine {
 	public:
 		DataInspector(DataInspectorPanel* context);
 
-		/** Returns true if this type is removed during processing. */
-		bool ProcessType(entt::meta_type type, Entity entity);
+		void ProcessType(entt::meta_type type, Entity entity);
+		/** Iterate all datas of this type, reverse their order and categorize them. */
+		void PreprocessType(entt::meta_type type);
 
 		void MarkPreprocessedDatasClean();
 		void MarkPreprocessedDatasDirty();
@@ -158,7 +159,7 @@ namespace ZeoEngine {
 
 		/** Map from category to list of data of the same type in order */
 		using CategorizedDatas = std::map<std::string, std::list<entt::meta_data>>;
-		/** Map from type id to all its data, used to draw registered datas in DataInspectorPanel */
+		/** Map from type id to all its data, used to draw ordered registered datas in DataInspectorPanel */
 		std::unordered_map<uint32_t, CategorizedDatas> m_PreprocessedDatas;
 		bool m_bIsPreprocessedDatasDirty{ true };
 	};

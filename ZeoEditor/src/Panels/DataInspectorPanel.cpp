@@ -10,7 +10,6 @@ namespace ZeoEngine {
 		// Push entity id
 		ImGui::PushID(static_cast<uint32_t>(entity));
 		{
-			bool bIsAnyTypeRemoved = false;
 			// Process types on this entity
 			for (const auto typeId : entity.GetAllComponents())
 			{
@@ -19,22 +18,12 @@ namespace ZeoEngine {
 				// Push type id
 				ImGui::PushID(typeId);
 				{
-					auto type = entt::resolve_type(typeId);
-					if (m_DataInspector.ProcessType(type, entity))
-					{
-						bIsAnyTypeRemoved = true;
-					}
+					const auto type = entt::resolve_type(typeId);
+					m_DataInspector.ProcessType(type, entity);
 				}
 				ImGui::PopID();
 			}
-			if (bIsAnyTypeRemoved)
-			{
-				MarkPreprocessedDatasDirty();
-			}
-			else
-			{
-				m_DataInspector.MarkPreprocessedDatasClean();
-			}
+			m_DataInspector.MarkPreprocessedDatasClean();
 
 			// The following part will not have entity Id pushed into ImGui!
 			ImGui::PopID();
@@ -67,7 +56,7 @@ namespace ZeoEngine {
 			if (m_bIsCategorizedTypesDirty)
 			{
 				// Iterate all registered components
-				for (auto type : entt::resolve())
+				for (const auto type : entt::resolve())
 				{
 					// Inherent types can never be added
 					auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
@@ -87,15 +76,17 @@ namespace ZeoEngine {
 				{
 					for (const auto typeId : typeIds)
 					{
+						const auto type = entt::resolve_type(typeId);
 						// We want to display "full name" here instead of "display name"
-						auto typeName = GetPropValue<const char*>(PropertyType::Name, entt::resolve_type(typeId));
+						auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
 						if (ImGui::Selectable(*typeName))
 						{
 							auto instance = entity.AddTypeById(typeId);
 							// Instance may be null as AddTypeById() failed
 							if (instance)
 							{
-								MarkPreprocessedDatasDirty();
+								// Categorize datas on this newly added type
+								m_DataInspector.PreprocessType(type);
 							}
 						}
 					}

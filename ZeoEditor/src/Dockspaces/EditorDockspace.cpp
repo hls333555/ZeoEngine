@@ -14,7 +14,7 @@
 namespace ZeoEngine {
 
 	EditorDockspace::EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
-		: m_DockspaceName(ResolveEditorNameFromEnum(dockspaceType)), m_EditorContext(context), m_bShow(bDefaultShow)
+		: m_DockspaceName(ResolveEditorNameFromEnum(dockspaceType)), m_bIsMainDockspace(dockspaceType == EditorWindowType::Zeo_Editor), m_EditorContext(context), m_bShow(bDefaultShow)
 		, m_DockspacePadding(dockspacePadding)
 		, m_DockspaceWindowFlags(dockspaceWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)

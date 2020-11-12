@@ -18,8 +18,6 @@ namespace ZeoEngine {
 
 	void MainDockspace::OnAttach()
 	{
-		m_bIsMainDockspace = true;
-
 		EditorDockspace::OnAttach();
 
 		GameViewportPanel* gameViewportPanel = new GameViewportPanel(EditorWindowType::Game_View, this, true);

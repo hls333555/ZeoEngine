@@ -74,7 +74,6 @@ namespace ZeoEngine {
 		virtual void BuildDockWindows(ImGuiID dockspaceID) = 0;
 
 	protected:
-		bool m_bIsMainDockspace{ false };
 		Entity m_ContextEntity;
 	private:
 		entt::sigh<void()> m_OnSceneCreateDel;
@@ -83,6 +82,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_DockspaceName;
+		bool m_bIsMainDockspace;
 		ImVec2Data m_InitialPos, m_InitialSize;
 		glm::vec2 m_DockspacePadding;
 		ImGuiWindowFlags m_DockspaceWindowFlags;

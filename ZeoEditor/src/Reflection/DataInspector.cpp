@@ -109,7 +109,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool DataInspector::ProcessType(entt::meta_type type, Entity entity)
+	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
 		auto instance = entity.GetTypeById(type.type_id());
 		auto typeName = GetMetaObjectDisplayName(type);
@@ -158,11 +158,7 @@ namespace ZeoEngine {
 			{
 				ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *typeName, entity.GetEntityName());
 
-				// Iterate all datas on this entity, reverse their order and categorize them
-				for (auto data : type.data())
-				{
-					PreprocessData(type, data);
-				}
+				PreprocessType(type);
 			}
 
 			// TODO: Datas will be cleared if we collapse this type and deselect current entity
@@ -170,7 +166,7 @@ namespace ZeoEngine {
 			for (const auto& [category, datas] : m_PreprocessedDatas[type.type_id()])
 			{
 				bool bShouldDisplayCategoryTree = false;
-				std::list<entt::meta_data> visibleDatas;
+				std::vector<entt::meta_data> visibleDatas;
 				// Do not show TreeNode if none of these datas will show or category is not set
 				for (const auto data : datas)
 				{
@@ -281,10 +277,18 @@ namespace ZeoEngine {
 
 		if (bWillRemoveType)
 		{
-			entity.RemoveTypeById(type.type_id());
+			auto typeId = type.type_id();
+			entity.RemoveTypeById(typeId);
+			m_PreprocessedDatas.erase(typeId);
 		}
+	}
 
-		return bWillRemoveType;
+	void DataInspector::PreprocessType(entt::meta_type type)
+	{
+		for (const auto data : type.data())
+		{
+			PreprocessData(type, data);
+		}
 	}
 
 	void DataInspector::MarkPreprocessedDatasClean()
