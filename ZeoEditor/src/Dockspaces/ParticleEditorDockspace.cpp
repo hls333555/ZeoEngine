@@ -49,15 +49,15 @@ namespace ZeoEngine {
 	void ParticleEditorDockspace::Serialize(const std::string& filePath)
 	{
 		TypeSerializer serializer(filePath);
-		auto& psdc = m_ContextEntity.GetComponent<ParticleSystemDetailComponent>();
-		serializer.Serialize(psdc, GetAssetType());
+		auto& pspc = m_ContextEntity.GetComponent<ParticleSystemPreviewComponent>();
+		serializer.Serialize(pspc, GetAssetType());
 	}
 
 	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
 	{
 		TypeSerializer serializer(filePath);
-		auto& psdc = m_ContextEntity.GetComponent<ParticleSystemDetailComponent>();
-		serializer.Deserialize(psdc, GetAssetType());
+		auto& pspc = m_ContextEntity.GetComponent<ParticleSystemPreviewComponent>();
+		serializer.Deserialize(pspc, GetAssetType());
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)

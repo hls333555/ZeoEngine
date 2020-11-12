@@ -14,16 +14,93 @@
 namespace ZeoEngine {
 
 	// Template definition
-	// This dtor is required!
+	// Ctor or dtor is required!
 	template<typename T>
-	ParticleVariation<T>::~ParticleVariation()
-	{
-	}
+	ParticleVariation<T>::ParticleVariation() {}
 
 	template<typename T>
 	bool ParticleVariation<T>::operator==(const ParticleVariation<T>& other) const
 	{
 		return Val1 == other.Val1 && Val2 == other.Val2 && VariationType == other.VariationType;
+	}
+
+	template<typename T>
+	void ParticleVariation<T>::SetConstant(T value)
+	{
+		VariationType = ParticleVariationType::Constant;
+		Val1 = value;
+	}
+	template<typename T>
+	void ParticleVariation<T>::SetUniform(T valueLow, T valueHigh)
+	{
+		VariationType = ParticleVariationType::UniformInRange;
+		Val1 = valueLow;
+		Val2 = valueHigh;
+	}
+	template<typename T>
+	void ParticleVariation<T>::SetRandom(T valueLow, T valueHigh)
+	{
+		VariationType = ParticleVariationType::RandomInRange;
+		Val1 = valueLow;
+		Val2 = valueHigh;
+	}
+
+	template<typename T>
+	T ParticleVariation<T>::Evaluate() const
+	{
+		switch (VariationType)
+		{
+		case ParticleVariationType::Constant:
+			return Val1;
+		case ParticleVariationType::RandomInRange:
+			return EvaluateRandom();
+		case ParticleVariationType::UniformInRange:
+			return EvaluateUniform();
+		default:
+			break;
+		}
+		return T();
+	}
+	template<>
+	float ParticleVariation<float>::EvaluateRandom() const
+	{
+		return RandomEngine::RandFloatInRange(Val1, Val2);
+	}
+	template<>
+	int32_t ParticleVariation<int32_t>::EvaluateRandom() const
+	{
+		return RandomEngine::RandIntInRange(Val1, Val2);
+	}
+	template<>
+	glm::vec2 ParticleVariation<glm::vec2>::EvaluateRandom() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		float y = RandomEngine::RandFloatInRange(Val1.y, Val2.y);
+		return { x, y };
+	}
+	template<>
+	glm::vec3 ParticleVariation<glm::vec3>::EvaluateRandom() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		float y = RandomEngine::RandFloatInRange(Val1.y, Val2.y);
+		float z = RandomEngine::RandFloatInRange(Val1.z, Val2.z);
+		return { x, y, z };
+	}
+	template<>
+	glm::vec4 ParticleVariation<glm::vec4>::EvaluateRandom() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		float y = RandomEngine::RandFloatInRange(Val1.y, Val2.y);
+		float z = RandomEngine::RandFloatInRange(Val1.z, Val2.z);
+		float w = RandomEngine::RandFloatInRange(Val1.w, Val2.w);
+		return { x, y, z, w };
+	}
+	template<typename T>
+	T ParticleVariation<T>::EvaluateUniform() const
+	{
+		// Not implemented
+		ZE_CORE_ASSERT(false);
+		return T();
 	}
 
 	// Template explicit specialization
@@ -34,37 +111,37 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec4>;
 	// Trying to instantiate other types will cause linking error!
 
-	ParticleSystem::ParticleSystem(const std::string& filePath, const std::string& processedSrc)
-		: m_PoolIndex(0)
-		, m_SpawnRate(30.0f)
-	{
-		DeserializeProperties(processedSrc);
-		m_PoolIndex = m_ParticleTemplate->MaxDrawParticles - 1;
-		ResizeParticlePool();
-		EvaluateEmitterProperties();
-	}
-
-	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position, bool bAutoDestroy)
+	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate)
 		: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
 		, m_ParticleTemplate(particleTemplate)
-		, m_SpawnPosition(position)
-		, m_bAutoDestroy(bAutoDestroy)
-		, m_SpawnRate(30.0f)
+		, m_SpawnPosition({ 0.0f })
+		, m_bAutoDestroy(true)
 	{
 		ResizeParticlePool();
 		EvaluateEmitterProperties();
 	}
 
-	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)
-		: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
-		, m_ParticleTemplate(particleTemplate)
-		, m_Parent(attachToParent)
-		, m_bAutoDestroy(bAutoDestroy)
-		, m_SpawnRate(30.0f)
-	{
-		ResizeParticlePool();
-		EvaluateEmitterProperties();
-	}
+	//ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position, bool bAutoDestroy)
+	//	: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
+	//	, m_ParticleTemplate(particleTemplate)
+	//	, m_SpawnPosition(position)
+	//	, m_bAutoDestroy(bAutoDestroy)
+	//	, m_SpawnRate(30.0f)
+	//{
+	//	ResizeParticlePool();
+	//	EvaluateEmitterProperties();
+	//}
+
+	//ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)
+	//	: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
+	//	, m_ParticleTemplate(particleTemplate)
+	//	, m_Parent(attachToParent)
+	//	, m_bAutoDestroy(bAutoDestroy)
+	//	, m_SpawnRate(30.0f)
+	//{
+	//	ResizeParticlePool();
+	//	EvaluateEmitterProperties();
+	//}
 
 #if WITH_EDITOR
 	//void ParticleSystem::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
@@ -86,29 +163,6 @@ namespace ZeoEngine {
 	//}
 #endif
 
-	void ParticleSystem::DeserializeProperties(const std::string& processedSrc)
-	{
-		//Serializer::Get().Deserialize<ParticleSystem*>(processedSrc, [&]() {
-		//	return rttr::variant(this);
-		//});
-	}
-
-	ParticleSystem* ParticleSystem::CreateDefaultParticleSystem()
-	{
-		//ParticleTemplate m_DefaultEmitter;
-		//m_DefaultEmitter.Lifetime.SetRandom(0.75f, 1.5f);
-		//m_DefaultEmitter.SpawnRate.SetConstant(30.0f);
-		//m_DefaultEmitter.InitialRotation.SetRandom(0.0f, 360.0f);
-		//m_DefaultEmitter.RotationRate.SetRandom(10.0f, 50.0f);
-		//m_DefaultEmitter.InitialVelocity.SetRandom({ -0.5f, 0.5f }, { 0.5f, 2.0f });
-		//m_DefaultEmitter.SizeBegin.SetRandom(0.1f, 0.2f);
-		//m_DefaultEmitter.SizeEnd.SetConstant({ 0.0f, 0.0f });
-		//m_DefaultEmitter.ColorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
-		//m_DefaultEmitter.ColorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
-		//return new ParticleSystem(m_DefaultEmitter, nullptr, false);
-		return nullptr;
-	}
-
 	void ParticleSystem::ResizeParticlePool()
 	{
 		m_ParticlePool.resize(m_ParticleTemplate->MaxDrawParticles);
@@ -117,76 +171,74 @@ namespace ZeoEngine {
 
 	void ParticleSystem::EvaluateEmitterProperties()
 	{
-		m_LoopCount = m_ParticleTemplate->LoopCount;
-		m_bInfiniteLoop = m_LoopCount <= 0;
+		// Loop
+		{
+			m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
+			m_EmitterSpec.bIsInfiniteLoop = m_EmitterSpec.LoopCount <= 0;
+			m_EmitterSpec.LoopDuration = m_ParticleTemplate->LoopDuration;
+		}
 
 		// Spawn rate
 		{
-			switch (m_ParticleTemplate->SpawnRate.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				m_SpawnRate = m_ParticleTemplate->SpawnRate.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				m_SpawnRate = RandomEngine::RandFloatInRange(m_ParticleTemplate->SpawnRate.Val1, m_ParticleTemplate->SpawnRate.Val2);
-				break;
-			default:
-				break;
-			}
-			m_SpawnRate = m_SpawnRate < 0.0f ? 0.0f : m_SpawnRate;
+			float spawnRate = m_ParticleTemplate->SpawnRate.Evaluate();
+			m_EmitterSpec.SpawnRate = spawnRate < 0.0f ? 0.0f : spawnRate;
 		}
 
 		// Burst list
 		{
-			m_BurstList.clear();
+			m_EmitterSpec.BurstList.clear();
 			for (const auto& burstData : m_ParticleTemplate->BurstList)
 			{
-				uint32_t value = 0;
-				switch (burstData.Amount.VariationType)
-				{
-				case ParticleVariationType::Constant:
-				{
-					value = burstData.Amount.Val1 > 0 ? burstData.Amount.Val1 : 0;
-					m_BurstList.emplace(burstData.Time, value);
-					break;
-				}
-				case ParticleVariationType::RandomInRange:
-				{
-					float tempValue = RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2));
-					value = tempValue > 0.0f ? static_cast<uint32_t>(tempValue) : 0;
-					m_BurstList.emplace(burstData.Time, value);
-					break;
-				}
-				default:
-					break;
-				}
+				int32_t value = burstData.Amount.Evaluate();
+				value = value < 0 ? 0 : value;
+				m_EmitterSpec.BurstList.push_back({ burstData.Time, static_cast<uint32_t>(value), false });
 			}
 		}
 
 		// Texture
 		{
+			m_EmitterSpec.Texture = m_ParticleTemplate->Texture;
+			m_EmitterSpec.SubImageSize = m_ParticleTemplate->SubImageSize;
 			float x = m_ParticleTemplate->SubImageSize.x == 0 ? 1.0f : 1.0f / m_ParticleTemplate->SubImageSize.x;
 			float y = m_ParticleTemplate->SubImageSize.y == 0 ? 1.0f : 1.0f / m_ParticleTemplate->SubImageSize.y;
-			m_TilingFactor = { x, y };
+			m_EmitterSpec.TilingFactor = { x, y };
+		}
+
+		// Velocity
+		{
+			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec2(0.0f), glm::vec2(1.0f));
+		}
+
+		// Misc
+		{
+			m_EmitterSpec.bIsLocalSpace = m_ParticleTemplate->bIsLocalSpace;
+			m_EmitterSpec.MaxDrawParticles = m_ParticleTemplate->MaxDrawParticles;
+		}
+	}
+
+	void ParticleSystem::ReevaluateBurstList()
+	{
+		for (int32_t i = 0; i < m_ParticleTemplate->BurstList.size(); ++i)
+		{
+			const auto& amountData = m_ParticleTemplate->BurstList[i].Amount;
+			if (amountData.VariationType == ParticleVariationType::RandomInRange)
+			{
+				int32_t value = amountData.Evaluate();
+				value = value < 0 ? 0 : value;
+				m_EmitterSpec.BurstList[i].Amount = static_cast<uint32_t>(value);
+			}
+		}
+		for (auto& burstSpec : m_EmitterSpec.BurstList)
+		{
+			burstSpec.bIsProcessed = false;
 		}
 	}
 
 	void ParticleSystem::EvaluateParticleProperties(Particle& particle)
 	{
-		// Position
+		// TODO: Position
 		{
-			switch (m_ParticleTemplate->InitialPosition.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.Position = m_ParticleTemplate->InitialPosition.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.Position.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->InitialPosition.Val1.x, m_ParticleTemplate->InitialPosition.Val2.x);
-				particle.Position.y = RandomEngine::RandFloatInRange(m_ParticleTemplate->InitialPosition.Val1.y, m_ParticleTemplate->InitialPosition.Val2.y);
-				break;
-			default:
-				break;
-			}
+			particle.Position = m_ParticleTemplate->InitialPosition.Evaluate();
 			if (m_Parent)
 			{
 				particle.Position += m_Parent->GetPosition2D();
@@ -199,132 +251,34 @@ namespace ZeoEngine {
 
 		// Rotation
 		{
-			switch (m_ParticleTemplate->InitialRotation.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.Rotation = m_ParticleTemplate->InitialRotation.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.Rotation = RandomEngine::RandFloatInRange(m_ParticleTemplate->InitialRotation.Val1, m_ParticleTemplate->InitialRotation.Val2);
-				break;
-			default:
-				break;
-			}
-			switch (m_ParticleTemplate->RotationRate.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.RotationRate = m_ParticleTemplate->RotationRate.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.RotationRate = RandomEngine::RandFloatInRange(m_ParticleTemplate->RotationRate.Val1, m_ParticleTemplate->RotationRate.Val2);
-				break;
-			default:
-				break;
-			}
+			particle.Rotation = m_ParticleTemplate->InitialRotation.Evaluate();
+			particle.RotationRate = m_ParticleTemplate->RotationRate.Evaluate();
 		}
 
 		// Size
 		{
-			switch (m_ParticleTemplate->SizeBegin.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.SizeBegin = m_ParticleTemplate->SizeBegin.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.SizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeBegin.Val1.x, m_ParticleTemplate->SizeBegin.Val2.x);
-				particle.SizeBegin.y = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeBegin.Val1.y, m_ParticleTemplate->SizeBegin.Val2.y);
-				break;
-			case ParticleVariationType::UniformInRange:
-				particle.SizeBegin.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeBegin.Val1.x, m_ParticleTemplate->SizeBegin.Val2.x);
-				particle.SizeBegin.y = particle.SizeBegin.x;
-				break;
-			default:
-				break;
-			}
-			switch (m_ParticleTemplate->SizeEnd.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.SizeEnd = m_ParticleTemplate->SizeEnd.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.SizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeEnd.Val1.x, m_ParticleTemplate->SizeEnd.Val2.x);
-				particle.SizeEnd.y = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeEnd.Val1.y, m_ParticleTemplate->SizeEnd.Val2.y);
-				break;
-			case ParticleVariationType::UniformInRange:
-				particle.SizeEnd.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->SizeEnd.Val1.x, m_ParticleTemplate->SizeEnd.Val2.x);
-				particle.SizeEnd.y = particle.SizeEnd.x;
-				break;
-			default:
-				break;
-			}
+			particle.SizeBegin = m_ParticleTemplate->SizeBegin.Evaluate();
+			particle.SizeEnd = m_ParticleTemplate->SizeEnd.Evaluate();
 		}
 
 		// Velocity
 		{
-			switch (m_ParticleTemplate->InitialVelocity.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.Velocity = m_ParticleTemplate->InitialVelocity.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.Velocity.x = RandomEngine::RandFloatInRange(m_ParticleTemplate->InitialVelocity.Val1.x, m_ParticleTemplate->InitialVelocity.Val2.x);
-				particle.Velocity.y = RandomEngine::RandFloatInRange(m_ParticleTemplate->InitialVelocity.Val1.y, m_ParticleTemplate->InitialVelocity.Val2.y);
-				break;
-			default:
-				break;
-			}
-			m_ParticleTemplate->InheritVelocity = glm::clamp(m_ParticleTemplate->InheritVelocity, { 0.0f, 0.0f }, { 1.0f, 1.0f });
+			particle.Velocity = m_ParticleTemplate->InitialVelocity.Evaluate();
 		}
 
 		// Color
 		{
-			switch (m_ParticleTemplate->ColorBegin.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.ColorBegin = m_ParticleTemplate->ColorBegin.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.ColorBegin.r = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorBegin.Val1.r, m_ParticleTemplate->ColorBegin.Val2.r);
-				particle.ColorBegin.g = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorBegin.Val1.g, m_ParticleTemplate->ColorBegin.Val2.g);
-				particle.ColorBegin.b = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorBegin.Val1.b, m_ParticleTemplate->ColorBegin.Val2.b);
-				particle.ColorBegin.a = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorBegin.Val1.a, m_ParticleTemplate->ColorBegin.Val2.a);
-				break;
-			default:
-				break;
-			}
-			switch (m_ParticleTemplate->ColorEnd.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.ColorEnd = m_ParticleTemplate->ColorEnd.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.ColorEnd.r = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorEnd.Val1.r, m_ParticleTemplate->ColorEnd.Val2.r);
-				particle.ColorEnd.g = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorEnd.Val1.g, m_ParticleTemplate->ColorEnd.Val2.g);
-				particle.ColorEnd.b = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorEnd.Val1.b, m_ParticleTemplate->ColorEnd.Val2.b);
-				particle.ColorEnd.a = RandomEngine::RandFloatInRange(m_ParticleTemplate->ColorEnd.Val1.a, m_ParticleTemplate->ColorEnd.Val2.a);
-				break;
-			default:
-				break;
-			}
+			particle.ColorBegin = m_ParticleTemplate->ColorBegin.Evaluate();
+			particle.ColorEnd = m_ParticleTemplate->ColorEnd.Evaluate();
 		}
 
 		// Life
 		{
-			switch (m_ParticleTemplate->Lifetime.VariationType)
-			{
-			case ParticleVariationType::Constant:
-				particle.Lifetime = m_ParticleTemplate->Lifetime.Val1;
-				break;
-			case ParticleVariationType::RandomInRange:
-				particle.Lifetime = RandomEngine::RandFloatInRange(m_ParticleTemplate->Lifetime.Val1, m_ParticleTemplate->Lifetime.Val2);
-				break;
-			default:
-				break;
-			}
+			particle.Lifetime = m_ParticleTemplate->Lifetime.Evaluate();
 			particle.LifeRemaining = particle.Lifetime;
 		}
 
-		// Texture
+		// TODO: Texture
 		{
 			auto count = m_ParticleTemplate->SubImageSize.x * m_ParticleTemplate->SubImageSize.y;
 			m_UVAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
@@ -343,7 +297,7 @@ namespace ZeoEngine {
 			CalculateNextPoolIndex();
 			if (m_PoolIndex == OldPoolIndex)
 			{
-				// Fail to find one, skip emitting
+				// Failed to find one, skip emitting
 				return;
 			}
 		}
@@ -359,7 +313,7 @@ namespace ZeoEngine {
 	{
 		if (m_PoolIndex == 0)
 		{
-			m_PoolIndex = m_ParticleTemplate->MaxDrawParticles - 1;
+			m_PoolIndex = m_EmitterSpec.MaxDrawParticles - 1;
 		}
 		else
 		{
@@ -377,34 +331,24 @@ namespace ZeoEngine {
 		m_Time += dt;
 		if (m_bActive)
 		{
-			if (m_Time - m_LoopStartTime >= m_ParticleTemplate->LoopDuration)
+			if (m_Time - m_LoopStartTime >= m_EmitterSpec.LoopDuration)
 			{
-				if (m_LoopCount != 0)
+				if (m_EmitterSpec.LoopCount != 0)
 				{
-					--m_LoopCount;
+					--m_EmitterSpec.LoopCount;
 				}
 				m_LoopStartTime = m_Time;
 				m_BurstTime = m_Time;
-				for (const auto& burstData : m_ParticleTemplate->BurstList)
-				{
-					if (burstData.Amount.VariationType == ParticleVariationType::RandomInRange)
-					{
-						m_BurstList[burstData.Time] = static_cast<int32_t>(RandomEngine::RandFloatInRange(static_cast<float>(burstData.Amount.Val1), static_cast<float>(burstData.Amount.Val2)));
-					}
-				}
-				for (auto& [data, amount] : m_BurstList)
-				{
-					const_cast<BurstTimeData&>(data).bProcessed = false;
-				}
+				ReevaluateBurstList();
 			}
 
-			if ((m_bInfiniteLoop || m_LoopCount != 0))
+			if ((m_EmitterSpec.bIsInfiniteLoop || m_EmitterSpec.LoopCount != 0))
 			{
 				// Process SpawnRate
-				if (m_SpawnRate != 0.0f && (m_SpawnTime == 0.0f || m_Time - m_SpawnTime > 1.0f / m_SpawnRate))
+				if (m_EmitterSpec.SpawnRate != 0.0f && (m_SpawnTime == 0.0f || m_Time - m_SpawnTime > 1.0f / m_EmitterSpec.SpawnRate))
 				{
 					uint32_t i = 0;
-					uint32_t imax = static_cast<uint32_t>(m_SpawnRate * dt);
+					uint32_t imax = static_cast<uint32_t>(m_EmitterSpec.SpawnRate * dt);
 					do 
 					{
 						Emit();
@@ -413,14 +357,14 @@ namespace ZeoEngine {
 					m_SpawnTime = m_Time;
 				}
 				// Process BurstList
-				for (auto& [data, amount] : m_BurstList)
+				for (auto& burstSpec : m_EmitterSpec.BurstList)
 				{
-					if (m_Time - m_BurstTime >= data.Time * m_ParticleTemplate->LoopDuration)
+					if (m_Time - m_BurstTime >= burstSpec.Time * m_EmitterSpec.LoopDuration)
 					{
-						if (!data.bProcessed && amount > 0)
+						if (!burstSpec.bIsProcessed && burstSpec.Amount > 0)
 						{
-							const_cast<BurstTimeData&>(data).bProcessed = true;
-							for (uint32_t i = 0; i < amount; ++i)
+							burstSpec.bIsProcessed = true;
+							for (uint32_t i = 0; i < burstSpec.Amount; ++i)
 							{
 								Emit();
 							}
@@ -448,9 +392,9 @@ namespace ZeoEngine {
 			glm::vec2 velocity{ 0.0f, 0.0f };
 			if (m_Parent)
 			{
-				velocity = m_ParticleTemplate->bIsLocalSpace ?
+				velocity = m_EmitterSpec.bIsLocalSpace ?
 					m_Parent->GetVelocity() + particle.Velocity :
-					m_Parent->GetVelocity() * m_ParticleTemplate->InheritVelocity + particle.Velocity;
+					m_Parent->GetVelocity() * m_EmitterSpec.InheritVelocity + particle.Velocity;
 			}
 			else
 			{
@@ -465,14 +409,14 @@ namespace ZeoEngine {
 			if (m_UVAnimationInterval != 0.0f && m_Time - m_UVAnimationTime >= m_UVAnimationInterval)
 			{
 				// When animation reaches the last sub-image, deactivate this particle immediately
-				if (particle.UvOffset.x == m_ParticleTemplate->SubImageSize.x - 1.0f && particle.UvOffset.y == 0.0f)
+				if (particle.UvOffset.x == m_EmitterSpec.SubImageSize.x - 1.0f && particle.UvOffset.y == 0.0f)
 				{
 					particle.bActive = false;
 					continue;
 				}
 				// Next column
 				particle.UvOffset.x += 1.0f;
-				if (particle.UvOffset.x == m_ParticleTemplate->SubImageSize.x)
+				if (particle.UvOffset.x == m_EmitterSpec.SubImageSize.x)
 				{
 					particle.UvOffset.x = 0.0f;
 					// Next row
@@ -482,7 +426,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		m_bSystemComplete = m_bSystemComplete && ((!m_bInfiniteLoop && m_LoopCount == 0) || !m_bActive);
+		m_bSystemComplete = m_bSystemComplete && ((!m_EmitterSpec.bIsInfiniteLoop && m_EmitterSpec.LoopCount == 0) || !m_bActive);
 
 #if WITH_EDITOR
 		// If this completed particle system is previewed in ParticleSystem Editor, just restart it after a while
@@ -524,7 +468,7 @@ namespace ZeoEngine {
 			++m_ActiveParticleCount;
 			if (m_ParticleTemplate->Texture)
 			{
-				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_ParticleTemplate->Texture, m_TilingFactor, particle.UvOffset, particle.Color);
+				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_ParticleTemplate->Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
 			}
 			else
 			{
@@ -555,19 +499,13 @@ namespace ZeoEngine {
 	}
 #endif
 
-	void ParticleSystem::OnDeserialized()
-	{
-		EvaluateEmitterProperties();
-		Resimulate();
-	}
-
 	void ParticleSystem::Activate()
 	{
 		if (m_bPendingDestroy || m_bActive)
 			return;
 
 		m_bActive = true;
-		m_LoopCount = m_ParticleTemplate->LoopCount;
+		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
 	}
 
@@ -578,7 +516,7 @@ namespace ZeoEngine {
 
 	void ParticleSystem::Resimulate()
 	{
-		m_LoopCount = m_ParticleTemplate->LoopCount;
+		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
 #if WITH_EDITOR
 		m_bFiniteLoopPrepareToRestart = true;
@@ -603,7 +541,7 @@ namespace ZeoEngine {
 	{
 		auto pTemplate = CreateRef<ParticleTemplate>(path);
 		TypeSerializer serializer(path);
-		serializer.Deserialize(ParticleSystemDetailComponent{ pTemplate }, AssetType::ParticleTemplate);
+		serializer.Deserialize(ParticleSystemPreviewComponent{ pTemplate }, AssetType::ParticleTemplate);
 		Add(pTemplate);
 		return pTemplate;
 	}
@@ -619,24 +557,6 @@ namespace ZeoEngine {
 			return Load(path);
 		}
 	}
-
-	//Ref<ParticleTemplate> ParticleLibrary::UpdateOrLoad(const std::string& path)
-	//{
-	//	if (Exists(path))
-	//	{
-	//		std::string result;
-	//		if (!Serializer::Get().ValidateFile(path, ParticleSystem::ParticleSystemFileToken, result))
-	//			return nullptr;
-
-	//		const Ref<ParticleTemplate>& pTemplate = m_ParticleTemplates[GetCanonicalPath(path)];
-	//		pTemplate->DeserializeProperties(result);
-	//		return pTemplate;
-	//	}
-	//	else
-	//	{
-	//		return Load(path);
-	//	}
-	//}
 
 	Ref<ParticleTemplate> ParticleLibrary::Get(const std::string& path)
 	{

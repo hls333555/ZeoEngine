@@ -149,22 +149,24 @@ namespace ZeoEngine {
 
 	ParticleSystem* Level::SpawnParticleSystemAtPosition(ParticleSystem* psTemplate, const glm::vec2& position, bool bAutoDestroy)
 	{
-		if (!psTemplate)
-			return nullptr;
+		//if (!psTemplate)
+		//	return nullptr;
 
-		ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), position, bAutoDestroy);
-		//m_ParticleManager.AddParticleSystem(ps);
-		return ps;
+		//ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), position, bAutoDestroy);
+		////m_ParticleManager.AddParticleSystem(ps);
+		//return ps;
+		return nullptr;
 	}
 
 	ParticleSystem* Level::SpawnParticleSystemAttached(ParticleSystem* psTemplate, GameObject* attachToParent, bool bAutoDestroy)
 	{
-		if (!psTemplate)
-			return nullptr;
+		//if (!psTemplate)
+		//	return nullptr;
 
-		ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), attachToParent, bAutoDestroy);
-		//m_ParticleManager.AddParticleSystem(ps);
-		return ps;
+		//ParticleSystem* ps = new ParticleSystem(psTemplate->GetParticleTemplate(), attachToParent, bAutoDestroy);
+		////m_ParticleManager.AddParticleSystem(ps);
+		//return ps;
+		return nullptr;
 	}
 
 	void Level::OnTranslucentObjectsDirty(GameObject* dirtyGameObject)

@@ -68,21 +68,25 @@ namespace ZeoEngine {
 
 	void Scene::OnUpdate(DeltaTime dt)
 	{
-		// Update scripts
+		// Update particle system for particle editor
+		m_Registry.view<ParticleSystemPreviewComponent>().each([dt](auto entity, auto& pspc)
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
-			{
-				// TODO: Move to Scene::OnBeginPlay
-				if (!nsc.Instance)
-				{
-					nsc.Instance = nsc.InstantiateScript();
-					nsc.Instance->m_Entity = Entity{ entity, this };
-					nsc.Instance->OnCreate();
-				}
+			pspc.ParticleSystemRuntime->OnUpdate(dt);
+		});
 
-				nsc.Instance->OnUpdate(dt);
-			});
-		}
+		// Update scripts
+		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		{
+			// TODO: Move to Scene::OnBeginPlay
+			if (!nsc.Instance)
+			{
+				nsc.Instance = nsc.InstantiateScript();
+				nsc.Instance->m_Entity = Entity{ entity, this };
+				nsc.Instance->OnCreate();
+			}
+
+			nsc.Instance->OnUpdate(dt);
+		});
 	}
 
 	void Scene::OnRender()
@@ -91,10 +95,10 @@ namespace ZeoEngine {
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
 		{
-			auto view = m_Registry.view<TransformComponent, CameraComponent>();
-			for (auto entity : view)
+			auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
+			for (auto entity : cameraView)
 			{
-				auto [transformComp, cameraComp] = view.get<TransformComponent, CameraComponent>(entity);
+				auto [transformComp, cameraComp] = cameraView.get<TransformComponent, CameraComponent>(entity);
 				if (cameraComp.bIsPrimary)
 				{
 					mainCamera = &cameraComp.Camera;
@@ -107,13 +111,13 @@ namespace ZeoEngine {
 		{
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 
 			// Sort entities for rendering based on z position or creation order (if z positions are equivalent)
-			group.sort([&](const entt::entity lhs, const entt::entity rhs)
+			spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
 			{
-				const auto& ltc = group.get<TransformComponent>(lhs);
-				const auto& rtc = group.get<TransformComponent>(rhs);
+				const auto& ltc = spriteGroup.get<TransformComponent>(lhs);
+				const auto& rtc = spriteGroup.get<TransformComponent>(rhs);
 				if (ltc.Translation.z == rtc.Translation.z)
 				{
 					return m_Registry.get<CoreComponent>(lhs).CreationId < m_Registry.get<CoreComponent>(rhs).CreationId;
@@ -121,9 +125,9 @@ namespace ZeoEngine {
 				return ltc.Translation.z < rtc.Translation.z;
 			});
 
-			for (auto entity : group)
+			for (auto entity : spriteGroup)
 			{
-				auto [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
 				if (spriteComp.Texture)
 				{
 					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
@@ -133,6 +137,12 @@ namespace ZeoEngine {
 					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor);
 				}
 			}
+
+			// Render particle system for particle editor
+			m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
+			{
+				pspc.ParticleSystemRuntime->OnRender();
+			});
 
 			Renderer2D::EndScene();
 		}

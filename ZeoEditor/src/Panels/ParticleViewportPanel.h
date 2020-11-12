@@ -4,6 +4,8 @@
 
 namespace ZeoEngine {
 
+	struct ParticleSystemPreviewComponent;
+
 	class ParticleViewportPanel : public SceneViewportPanel
 	{
 	public:
@@ -15,6 +17,8 @@ namespace ZeoEngine {
 
 	private:
 		virtual void RenderPanel() override;
+
+		void CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particleComp);
 
 	};
 

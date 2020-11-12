@@ -896,9 +896,9 @@ namespace ZeoEngine {
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
 					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorWindowType::Particle_Editor);
-					editor->GetContextEntity().PatchComponent<ParticleSystemDetailComponent>([&particleTemplateValue](auto& psdc)
+					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&particleTemplateValue](auto& psdc)
 					{
-						psdc.Template = particleTemplateValue ? particleTemplateValue : CreateRef<ParticleTemplate>();
+						psdc.SetTemplate(particleTemplateValue);
 					});
 				}
 			}

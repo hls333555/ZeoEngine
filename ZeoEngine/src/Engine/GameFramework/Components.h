@@ -10,7 +10,7 @@
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
-#define ENABLE_TEST 1
+#define ENABLE_TEST 0
 
 namespace ZeoEngine {
 
@@ -176,18 +176,26 @@ namespace ZeoEngine {
 	struct ParticleSystemComponent
 	{
 		Ref<ParticleTemplate> Template;
+		Ref<ParticleSystem> ParticleSystemRuntime;
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+
+		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
+		{
+			Template = pTemplate;
+			ParticleSystemRuntime = CreateRef<ParticleSystem>(pTemplate);
+		}
 	};
 
-	struct ParticleSystemDetailComponent : public ParticleSystemComponent
+	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
 	{
-		ParticleSystemDetailComponent()
+		ParticleSystemPreviewComponent()
 		{
 			Template = CreateRef<ParticleTemplate>();
 		}
-		ParticleSystemDetailComponent(const Ref<ParticleTemplate>& pTemplate)
+		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
+		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
 		}

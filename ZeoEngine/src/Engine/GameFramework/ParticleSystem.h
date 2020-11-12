@@ -21,9 +21,21 @@ namespace ZeoEngine {
 	template<typename T>
 	struct ParticleVariation
 	{
-		~ParticleVariation();
+	public:
+		ParticleVariation();
+
 		bool operator==(const ParticleVariation<T>& other) const;
 
+		void SetConstant(T value);
+		void SetUniform(T valueLow, T valueHigh);
+		void SetRandom(T valueLow, T valueHigh);
+
+		T Evaluate() const;
+	private:
+		T EvaluateRandom() const;
+		T EvaluateUniform() const;
+
+	public:
 		T Val1, Val2;
 		ParticleVariationType VariationType = ParticleVariationType::Constant;
 	};
@@ -64,9 +76,9 @@ namespace ZeoEngine {
 		int32_t LoopCount = 0;
 		float LoopDuration = 1.0f;
 
-		/** Number of particles to spawn per second in total. < 0 means spawn at fps rate */
+		/** Number of particles to spawn per second in total, < 0 means nothing */
 		ParticleFloat SpawnRate;
-		/** List of burst of particles to spawn instantaneously per time. The time should be within (0.0, 1.0) */
+		/** List of particles to spawn instantaneously per time. The time should be within [0.0, 1.0] */
 		std::vector<BurstData> BurstList;
 
 		// TODO: Support 3D
@@ -80,7 +92,7 @@ namespace ZeoEngine {
 		ParticleVec2 InitialVelocity;
 		/**
 		 * How much velocity one particle will inherit. This param is only useful when bIsLocalSpace is false.
-		 * This value will be clamp between (0.0f, 0.0f) and (1.0f, 1.0f)
+		 * This value should be in [(0.0, 0.0), (1.0, 1.0)]
 		 */
 		glm::vec2 InheritVelocity{ 0.0f };
 
@@ -90,10 +102,10 @@ namespace ZeoEngine {
 
 		Ref<Texture2D> Texture;
 		/**
-		 * Defines how to divide texture into sub-images for use by UV animation.
+		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
 		 * By default, subUV animation will animate from left-up sub-image to right-down sub-image uniformly during particle's lifetime.
-		 * So, you can change lifetime to control the animation speed.
+		 * Thus, you can change lifetime to control the animation speed.
 		 */
 		glm::vec2 SubImageSize{ 0.0f };
 
@@ -109,17 +121,12 @@ namespace ZeoEngine {
 
 	class ParticleSystem
 	{
-		friend class ParticleLibrary;
-		friend class ParticleManager;
-		friend class Level;
-
 		using SystemFinishedDel = Delegate<void()>;
 
-	private:
-		/** Construct a particle system from zparticle file. */
-		ParticleSystem(const std::string& filePath, const std::string& processedSrc);
-		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
-		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+	public:
+		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate);
+		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
+		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
 	public:
 #if WITH_EDITOR
@@ -128,18 +135,51 @@ namespace ZeoEngine {
 
 		bool GetAutoDestroy() const { return m_bAutoDestroy; }
 		void SetAutoDestroy(bool bValue) { m_bAutoDestroy = bValue; }
-
-		void DeserializeProperties(const std::string& processedSrc);
-
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 
-		static ParticleSystem* CreateDefaultParticleSystem();
+		void OnUpdate(DeltaTime dt);
+		void OnRender();
+#if WITH_EDITOR
+		void OnParticleViewImGuiRender();
+
+		void SetParticleEditorPreviewMode(bool bIsInParticleEditor, bool bAutoDestroy)
+		{
+			m_bIsInParticleEditor = bIsInParticleEditor;
+			m_bAutoDestroy = bAutoDestroy;
+		}
+#endif
+
+		void Activate();
+		void Deactivate();
+
+		void Resimulate();
 
 	private:
-		void ResizeParticlePool();
+		// Burst data specification
+		struct BurstDataSpec
+		{
+			float Time;
+			uint32_t Amount;
+			bool bIsProcessed;
+		};
 
-	private:
-		// Particle properties
+		// Emitter specification
+		struct EmitterSpec
+		{
+			bool bIsLocalSpace;
+			int32_t LoopCount;
+			bool bIsInfiniteLoop;
+			float LoopDuration;
+			float SpawnRate;
+			std::vector<BurstDataSpec> BurstList;
+			Ref<Texture2D> Texture;
+			glm::vec2 SubImageSize;
+			glm::vec2 TilingFactor;
+			glm::vec2 InheritVelocity;
+			uint32_t MaxDrawParticles;
+		};
+
+		// Particle runtime properties
 		struct Particle
 		{
 			glm::vec2 Position{ 0.0f };
@@ -163,32 +203,13 @@ namespace ZeoEngine {
 			bool bActive = false;
 		};
 
-	public:
+		void ResizeParticlePool();
+
 		void EvaluateEmitterProperties();
+		void ReevaluateBurstList();
 		void EvaluateParticleProperties(Particle& particle);
 
-		void OnUpdate(DeltaTime dt);
-		void OnRender();
-#if WITH_EDITOR
-		void OnParticleViewImGuiRender();
-
-		void SetParticleEditorPreviewMode(bool bIsInParticleEditor, bool bAutoDestroy)
-		{
-			m_bIsInParticleEditor = bIsInParticleEditor;
-			m_bAutoDestroy = bAutoDestroy;
-		}
-#endif
-
-		void OnDeserialized();
-
-		void Activate();
-		void Deactivate();
-
-		void Resimulate();
-
-	private:
 		void Emit();
-
 		void CalculateNextPoolIndex();
 
 	public:
@@ -198,41 +219,19 @@ namespace ZeoEngine {
 		static constexpr const char* ParticleSystemFileToken = "ParticleSystem";
 
 	private:
+		Ref<ParticleTemplate> m_ParticleTemplate;
+
+		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
 		uint32_t m_PoolIndex;
 
 		uint32_t m_ActiveParticleCount = 0;
-
-		Ref<ParticleTemplate> m_ParticleTemplate;
 
 		/** Particle's origin in world space */
 		glm::vec2 m_SpawnPosition{ 0.0f };
 		/** Parent GameObject this particle system attaches to, particle's position is affected by parent's position */
 		GameObject* m_Parent = nullptr;
 		bool m_bAutoDestroy = true;
-
-		// Emitter properties
-		float m_SpawnRate;
-		struct BurstTimeData
-		{
-			BurstTimeData(float time)
-				: Time(time)
-				, bProcessed(false)
-			{
-			}
-
-			bool operator<(const BurstTimeData& other) const
-			{
-				return Time < other.Time;
-			}
-
-			float Time;
-			bool bProcessed;
-		};
-		std::map<BurstTimeData, uint32_t> m_BurstList;
-		int32_t m_LoopCount;
-		bool m_bInfiniteLoop;
-		glm::vec2 m_TilingFactor{ 1.0f };
 
 		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */
 		float m_UVAnimationInterval = 0.0f;

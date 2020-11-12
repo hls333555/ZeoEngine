@@ -1211,7 +1211,7 @@ namespace ZeoEngine {
 				{
 					if (ImGui::MenuItem("New particle system"))
 					{
-						m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
+						//m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 						m_CurrentParticleSystemPath.clear();
 						m_CurrentParticleSystemName.clear();
 					}
@@ -1280,7 +1280,7 @@ namespace ZeoEngine {
 
 				if (!m_EditorParticleSystem)
 				{
-					m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
+					//m_EditorParticleSystem = ParticleSystem::CreateDefaultParticleSystem();
 				}
 
 				ImGuiWindow* window = ImGui::GetCurrentWindow();
