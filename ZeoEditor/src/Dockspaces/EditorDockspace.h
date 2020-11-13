@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		EditorDockspace* OpenEditor(EditorWindowType dockspaceType);
 
 		/** Create an empty scene and init camera. */
-		virtual void CreateNewScene();
+		virtual void CreateNewScene(bool bIsFromOpenScene = false);
 		void OpenScene();
 		void SaveScene();
 		void SaveSceneAs();
@@ -76,9 +76,13 @@ namespace ZeoEngine {
 	protected:
 		Entity m_ContextEntity;
 	private:
-		entt::sigh<void()> m_OnSceneCreateDel;
+		entt::sigh<void(bool)> m_OnSceneCreateDel;
 	protected:
-		entt::sink<void()> m_OnSceneCreate{ m_OnSceneCreateDel };
+		/**
+		 * Called when scene is created.
+		 * The bool argument indicates whether the scene is created by "OpenScene" or "NewScene"
+		 */
+		entt::sink<void(bool)> m_OnSceneCreate{ m_OnSceneCreateDel };
 
 	private:
 		std::string m_DockspaceName;

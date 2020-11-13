@@ -145,10 +145,10 @@ namespace ZeoEngine {
 		return editor;
 	}
 
-	void EditorDockspace::CreateNewScene()
+	void EditorDockspace::CreateNewScene(bool bIsFromOpenScene)
 	{
 		CreateScene();
-		m_OnSceneCreateDel.publish();
+		m_OnSceneCreateDel.publish(bIsFromOpenScene);
 	}
 
 	void EditorDockspace::OpenScene()
@@ -156,7 +156,7 @@ namespace ZeoEngine {
 		auto filePath = FileDialogs::OpenFile(GetAssetType());
 		if (!filePath) return;
 
-		CreateNewScene();
+		CreateNewScene(true);
 		// Save scene path
 		m_Scene->SetPath(*filePath);
 		Deserialize(*filePath);

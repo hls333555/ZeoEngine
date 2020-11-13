@@ -1528,7 +1528,7 @@ namespace ZeoEngine {
 			return;
 		}
 
-		out << "#type " << ParticleSystem::ParticleSystemFileToken << std::endl;
+		//out << "#type " << ParticleSystem::ParticleSystemFileToken << std::endl;
 		out << Serializer::Get().Serialize(m_EditorParticleSystem);
 	}
 

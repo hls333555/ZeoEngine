@@ -111,11 +111,11 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec4>;
 	// Trying to instantiate other types will cause linking error!
 
-	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate)
-		: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
-		, m_ParticleTemplate(particleTemplate)
+	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, bool bIsPreview)
+		: m_ParticleTemplate(particleTemplate)
 		, m_SpawnPosition({ 0.0f })
-		, m_bAutoDestroy(true)
+		, m_bIsPreview(bIsPreview)
+		, m_bAutoDestroy(false)
 	{
 		ResizeParticlePool();
 		EvaluateEmitterProperties();
@@ -171,6 +171,8 @@ namespace ZeoEngine {
 
 	void ParticleSystem::EvaluateEmitterProperties()
 	{
+		m_EmitterSpec.bIsLocalSpace = m_ParticleTemplate->bIsLocalSpace;
+
 		// Loop
 		{
 			m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
@@ -178,7 +180,7 @@ namespace ZeoEngine {
 			m_EmitterSpec.LoopDuration = m_ParticleTemplate->LoopDuration;
 		}
 
-		// Spawn rate
+		// TODO: Spawn rate
 		{
 			float spawnRate = m_ParticleTemplate->SpawnRate.Evaluate();
 			m_EmitterSpec.SpawnRate = spawnRate < 0.0f ? 0.0f : spawnRate;
@@ -190,8 +192,7 @@ namespace ZeoEngine {
 			for (const auto& burstData : m_ParticleTemplate->BurstList)
 			{
 				int32_t value = burstData.Amount.Evaluate();
-				value = value < 0 ? 0 : value;
-				m_EmitterSpec.BurstList.push_back({ burstData.Time, static_cast<uint32_t>(value), false });
+				m_EmitterSpec.BurstList.push_back({ burstData.Time, value, false });
 			}
 		}
 
@@ -209,11 +210,7 @@ namespace ZeoEngine {
 			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec2(0.0f), glm::vec2(1.0f));
 		}
 
-		// Misc
-		{
-			m_EmitterSpec.bIsLocalSpace = m_ParticleTemplate->bIsLocalSpace;
-			m_EmitterSpec.MaxDrawParticles = m_ParticleTemplate->MaxDrawParticles;
-		}
+		m_EmitterSpec.MaxDrawParticles = m_ParticleTemplate->MaxDrawParticles;
 	}
 
 	void ParticleSystem::ReevaluateBurstList()
@@ -221,12 +218,9 @@ namespace ZeoEngine {
 		for (int32_t i = 0; i < m_ParticleTemplate->BurstList.size(); ++i)
 		{
 			const auto& amountData = m_ParticleTemplate->BurstList[i].Amount;
-			if (amountData.VariationType == ParticleVariationType::RandomInRange)
-			{
-				int32_t value = amountData.Evaluate();
-				value = value < 0 ? 0 : value;
-				m_EmitterSpec.BurstList[i].Amount = static_cast<uint32_t>(value);
-			}
+			if (amountData.VariationType == ParticleVariationType::Constant) continue;
+			
+			m_EmitterSpec.BurstList[i].Amount = amountData.Evaluate();
 		}
 		for (auto& burstSpec : m_EmitterSpec.BurstList)
 		{
@@ -290,12 +284,12 @@ namespace ZeoEngine {
 
 	void ParticleSystem::Emit()
 	{
-		uint32_t OldPoolIndex = m_PoolIndex;
+		uint32_t oldPoolIndex = m_PoolIndex;
 		// Iterate until we find an available (inactive) particle to activate
 		while (m_ParticlePool[m_PoolIndex].bActive)
 		{
 			CalculateNextPoolIndex();
-			if (m_PoolIndex == OldPoolIndex)
+			if (m_PoolIndex == oldPoolIndex)
 			{
 				// Failed to find one, skip emitting
 				return;
@@ -364,7 +358,7 @@ namespace ZeoEngine {
 						if (!burstSpec.bIsProcessed && burstSpec.Amount > 0)
 						{
 							burstSpec.bIsProcessed = true;
-							for (uint32_t i = 0; i < burstSpec.Amount; ++i)
+							for (int32_t i = 0; i < burstSpec.Amount; ++i)
 							{
 								Emit();
 							}
@@ -430,7 +424,7 @@ namespace ZeoEngine {
 
 #if WITH_EDITOR
 		// If this completed particle system is previewed in ParticleSystem Editor, just restart it after a while
-		if (m_bSystemComplete && m_bIsInParticleEditor)
+		if (m_bSystemComplete && m_bIsPreview)
 		{
 			if (m_bFiniteLoopPrepareToRestart)
 			{
@@ -448,7 +442,7 @@ namespace ZeoEngine {
 		if (m_bAutoDestroy && m_bSystemComplete)
 		{
 			m_bPendingDestroy = true;
-			m_OnSystemFinished();
+			m_OnSystemFinishedDel.publish();
 		}
 	}
 
@@ -458,17 +452,16 @@ namespace ZeoEngine {
 			return;
 
 		m_bStartUpdate = true;
-
 		m_ActiveParticleCount = 0;
-		for (auto& particle : m_ParticlePool)
+		for (const auto& particle : m_ParticlePool)
 		{
 			if (!particle.bActive)
 				continue;
 
 			++m_ActiveParticleCount;
-			if (m_ParticleTemplate->Texture)
+			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_ParticleTemplate->Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
+				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
 			}
 			else
 			{

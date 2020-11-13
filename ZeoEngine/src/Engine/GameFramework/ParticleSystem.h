@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <entt.hpp>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
@@ -121,10 +122,8 @@ namespace ZeoEngine {
 
 	class ParticleSystem
 	{
-		using SystemFinishedDel = Delegate<void()>;
-
 	public:
-		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate);
+		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, bool bIsPreview);
 		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
 		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
 
@@ -141,12 +140,6 @@ namespace ZeoEngine {
 		void OnRender();
 #if WITH_EDITOR
 		void OnParticleViewImGuiRender();
-
-		void SetParticleEditorPreviewMode(bool bIsInParticleEditor, bool bAutoDestroy)
-		{
-			m_bIsInParticleEditor = bIsInParticleEditor;
-			m_bAutoDestroy = bAutoDestroy;
-		}
 #endif
 
 		void Activate();
@@ -159,7 +152,7 @@ namespace ZeoEngine {
 		struct BurstDataSpec
 		{
 			float Time;
-			uint32_t Amount;
+			int32_t Amount;
 			bool bIsProcessed;
 		};
 
@@ -173,9 +166,9 @@ namespace ZeoEngine {
 			float SpawnRate;
 			std::vector<BurstDataSpec> BurstList;
 			Ref<Texture2D> Texture;
-			glm::vec2 SubImageSize;
-			glm::vec2 TilingFactor;
-			glm::vec2 InheritVelocity;
+			glm::vec2 SubImageSize{ 0.0f };
+			glm::vec2 TilingFactor{ 1.0f };
+			glm::vec2 InheritVelocity{ 0.0f };
 			uint32_t MaxDrawParticles;
 		};
 
@@ -212,11 +205,11 @@ namespace ZeoEngine {
 		void Emit();
 		void CalculateNextPoolIndex();
 
+	private:
+		entt::sigh<void()> m_OnSystemFinishedDel;
 	public:
 		/** Called when this particle system is about to be destroyed */
-		SystemFinishedDel m_OnSystemFinished;
-
-		static constexpr const char* ParticleSystemFileToken = "ParticleSystem";
+		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
 		Ref<ParticleTemplate> m_ParticleTemplate;
@@ -243,8 +236,8 @@ namespace ZeoEngine {
 		bool m_bSystemComplete = false;
 		bool m_bPendingDestroy = false;
 
+		bool m_bIsPreview = false;
 #if WITH_EDITOR
-		bool m_bIsInParticleEditor = false;
 		bool m_bFiniteLoopPrepareToRestart = true;
 		float m_FiniteLoopRestartInterval = 1.0f;
 		float m_FiniteLoopRestartTime = 0.0f;

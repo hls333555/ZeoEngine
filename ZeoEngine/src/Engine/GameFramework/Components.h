@@ -177,6 +177,7 @@ namespace ZeoEngine {
 	{
 		Ref<ParticleTemplate> Template;
 		Ref<ParticleSystem> ParticleSystemRuntime;
+		bool bIsPreview = false;
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
@@ -184,7 +185,12 @@ namespace ZeoEngine {
 		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
-			ParticleSystemRuntime = CreateRef<ParticleSystem>(pTemplate);
+			CreateParticleSystem();
+		}
+
+		void CreateParticleSystem()
+		{
+			ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, bIsPreview);
 		}
 	};
 
@@ -193,11 +199,13 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent()
 		{
 			Template = CreateRef<ParticleTemplate>();
+			bIsPreview = true;
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
+			bIsPreview = true;
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }

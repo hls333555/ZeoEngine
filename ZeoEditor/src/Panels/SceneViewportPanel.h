@@ -16,7 +16,7 @@ namespace ZeoEngine {
 
 		virtual void OnUpdate(DeltaTime dt) override;
 
-		void CreatePreviewCamera();
+		void CreatePreviewCamera(bool bIsFromOpenScene = false);
 
 	protected:
 		virtual void RenderPanel() override;

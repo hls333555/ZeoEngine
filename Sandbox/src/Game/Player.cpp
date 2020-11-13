@@ -155,5 +155,5 @@ void Player::Explode()
 {
 	ZeoEngine::Level::Get().SpawnParticleSystemAtPosition(m_ExplosionParticle, GetPosition2D());
 	m_SpawnedShipFlameParticle->Deactivate();
-	m_SpawnedShipFlameParticle->m_OnSystemFinished += GET_MEMBER_FUNC(static_cast<GameObject*>(this), &Player::Destroy);
+	//m_SpawnedShipFlameParticle->m_OnSystemFinished += GET_MEMBER_FUNC(static_cast<GameObject*>(this), &Player::Destroy);
 }

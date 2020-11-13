@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual void CreateNewScene() override;
+		virtual void CreateNewScene(bool bIsFromOpenScene = false) override;
 
 		Entity& GetSeletedEntity() { return m_ContextEntity; }
 

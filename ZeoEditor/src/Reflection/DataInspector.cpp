@@ -889,8 +889,8 @@ namespace ZeoEngine {
 				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				particleTemplateValue ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
-			// Double-click to open the particle editor
-			if (ImGui::IsItemHovered())
+			// Double-click to open the particle editor only when particle template is valid
+			if (particleTemplateValue && ImGui::IsItemHovered())
 			{
 				ImGui::SetTooltip("Double-click to open the particle editor");
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))

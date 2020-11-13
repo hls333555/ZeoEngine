@@ -13,7 +13,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		void CreatePreviewParticle();
+		void CreatePreviewParticle(bool bIsFromOpenScene = false);
 
 	private:
 		virtual void RenderPanel() override;

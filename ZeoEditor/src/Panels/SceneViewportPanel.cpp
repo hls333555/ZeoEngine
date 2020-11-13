@@ -45,7 +45,7 @@ namespace ZeoEngine {
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 	}
 
-	void SceneViewportPanel::CreatePreviewCamera()
+	void SceneViewportPanel::CreatePreviewCamera(bool bIsFromOpenScene)
 	{
 		// Camera control
 		// TODO: Add support for perspective camera

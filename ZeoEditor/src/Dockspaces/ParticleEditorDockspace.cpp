@@ -58,6 +58,7 @@ namespace ZeoEngine {
 		TypeSerializer serializer(filePath);
 		auto& pspc = m_ContextEntity.GetComponent<ParticleSystemPreviewComponent>();
 		serializer.Deserialize(pspc, GetAssetType());
+		pspc.CreateParticleSystem();
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)

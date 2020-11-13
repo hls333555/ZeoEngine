@@ -83,9 +83,9 @@ namespace ZeoEngine {
 
 	}
 
-	void MainDockspace::CreateNewScene()
+	void MainDockspace::CreateNewScene(bool bIsFromOpenScene)
 	{
-		EditorDockspace::CreateNewScene();
+		EditorDockspace::CreateNewScene(bIsFromOpenScene);
 
 		// Clear selected entity
 		m_ContextEntity = {};

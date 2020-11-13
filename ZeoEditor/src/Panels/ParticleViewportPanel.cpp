@@ -12,12 +12,15 @@ namespace ZeoEngine {
 		CreatePreviewParticle();
 	}
 
-	void ParticleViewportPanel::CreatePreviewParticle()
+	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
 	{
 		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
 		ParticleSystemPreviewComponent& particleComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
 		GetContext()->SetContextEntity(previewParticleEntity);
-		CreateDefaultParticleSystem(particleComp);
+		if (!bIsFromOpenScene)
+		{
+			CreateDefaultParticleSystem(particleComp);
+		}
 	}
 
 	void ParticleViewportPanel::CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particleComp)
@@ -31,7 +34,7 @@ namespace ZeoEngine {
 		particleComp.Template->SizeEnd.SetConstant({ 0.0f, 0.0f });
 		particleComp.Template->ColorBegin.SetConstant({ 1.0f, 1.0f, 1.0f, 1.0f });
 		particleComp.Template->ColorEnd.SetConstant({ 0.0f, 0.0f, 0.0f, 0.0f });
-		particleComp.ParticleSystemRuntime = CreateRef<ParticleSystem>(particleComp.Template);
+		particleComp.CreateParticleSystem();
 	}
 
 	void ParticleViewportPanel::RenderPanel()
