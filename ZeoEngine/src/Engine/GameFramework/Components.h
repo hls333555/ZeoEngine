@@ -9,6 +9,7 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/ReflectionHelper.h"
 
 #define ENABLE_TEST 0
 
@@ -20,6 +21,12 @@ namespace ZeoEngine {
 
 		Component() = default;
 		Component(const Component&) = default;
+
+		// Callbacks
+		/** Called every time this data is changed in the editor. (e.g. during dragging a slider to tweak the value) */
+		virtual void OnDataValueEditChange(uint32_t dataId) {}
+		/** Called only when this data is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the value) */
+		virtual void PostDataValueEditChange(uint32_t dataId) {}
 	};
 
 #if ENABLE_TEST
@@ -190,6 +197,11 @@ namespace ZeoEngine {
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
+		virtual void PostDataValueEditChange(uint32_t dataId) override
+		{
+			CreateParticleSystem();
+		}
+
 		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
@@ -212,6 +224,18 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
+		}
+
+		virtual void PostDataValueEditChange(uint32_t dataId) override
+		{
+			if (dataId == ZE_DATA_ID(MaxDrawParticles))
+			{
+				ParticleSystemRuntime->ResizeParticlePool();
+			}
+			else
+			{
+				ParticleSystemRuntime->Reset();
+			}
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }

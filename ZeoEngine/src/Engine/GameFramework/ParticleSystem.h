@@ -122,24 +122,21 @@ namespace ZeoEngine {
 	class ParticleSystem
 	{
 		friend class ParticleViewportPanel;
+		friend struct ParticleSystemPreviewComponent;
 
 	public:
 		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
 
 	public:
-#if WITH_EDITOR
-		//void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
-#endif
-
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
 
+		void Reset();
+
 		void Activate();
 		void Deactivate();
-
-		void Resimulate();
 
 	private:
 		// Burst data specification
@@ -198,6 +195,8 @@ namespace ZeoEngine {
 
 		void Emit();
 		void CalculateNextPoolIndex();
+
+		void Resimulate();
 
 	private:
 		entt::sigh<void()> m_OnSystemFinishedDel;

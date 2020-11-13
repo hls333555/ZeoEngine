@@ -138,34 +138,19 @@ namespace ZeoEngine {
 		, m_OwnerEntity(ownerEntity)
 	{
 		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
-		ResizeParticlePool();
-		EvaluateEmitterProperties();
+		Reset();
 	}
-
-#if WITH_EDITOR
-	//void ParticleSystem::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
-	//{
-	//	ZE_CORE_ASSERT(prop);
-
-	//	if (prop->get_name() == "LoopCount" ||
-	//		outerProp->get_name() == "SpawnRate" ||
-	//		outerProp->get_name() == "BurstList" /* e.g. BurstData.Time */ || outerProp->get_declaring_type().get_name() == "BurstData" /* e.g. BurstData.Amount.Value */ ||
-	//		prop->get_name() == "SubImageSize")
-	//	{
-	//		EvaluateEmitterProperties();
-	//		Resimulate();
-	//	}
-	//	else if (prop->get_name() == "MaxDrawParticles")
-	//	{
-	//		ResizeParticlePool();
-	//	}
-	//}
-#endif
 
 	void ParticleSystem::ResizeParticlePool()
 	{
 		m_ParticlePool.resize(m_ParticleTemplate->MaxDrawParticles);
 		m_PoolIndex = m_ParticleTemplate->MaxDrawParticles - 1;
+	}
+
+	void ParticleSystem::Reset()
+	{
+		ResizeParticlePool();
+		EvaluateEmitterProperties();
 	}
 
 	void ParticleSystem::EvaluateEmitterProperties()
@@ -309,6 +294,15 @@ namespace ZeoEngine {
 		{
 			m_PoolIndex = --m_PoolIndex % m_ParticlePool.size();
 		}
+	}
+
+	void ParticleSystem::Resimulate()
+	{
+		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
+#if WITH_EDITOR
+		m_bFiniteLoopPrepareToRestart = true;
+#endif
 	}
 
 	void ParticleSystem::OnUpdate(DeltaTime dt)
@@ -482,15 +476,6 @@ namespace ZeoEngine {
 	void ParticleSystem::Deactivate()
 	{
 		m_bActive = false;
-	}
-
-	void ParticleSystem::Resimulate()
-	{
-		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
-		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
-#if WITH_EDITOR
-		m_bFiniteLoopPrepareToRestart = true;
-#endif
 	}
 
 	void ParticleLibrary::Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate)

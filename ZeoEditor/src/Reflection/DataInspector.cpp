@@ -25,93 +25,10 @@ namespace ZeoEngine {
 	static ImGuiTreeNodeFlags ContainerDataFlags = ImGuiTreeNodeFlags_DefaultOpen;
 	static ImGuiTreeNodeFlags NestedDataFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;;
 
-	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
-	{
-		// "0" value works for "all" types because we have registered their conversion functions
-		auto& [retIt, res] = seqView.insert(it, 0);
-		if (res)
-		{
-			ZE_TRACE("Value changed after edit!");
-			return retIt;
-		}
-		else
-		{
-			// For special types like user-defined enums, we have to invoke a function instead
-			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
-			auto& [retIt, res] = seqView.insert(it, defaultValue);
-			if (res)
-			{
-				ZE_TRACE("Value changed after edit!");
-				return retIt;
-			}
-			else
-			{
-				auto dataName = GetMetaObjectDisplayName(data);
-				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
-			}
-		}
-		return {};
-	}
-
-	static entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
-	{
-		auto& [retIt, res] = seqView.erase(it);
-		if (res)
-		{
-			ZE_TRACE("Value changed after edit!");
-		}
-		else
-		{
-			auto dataName = GetMetaObjectDisplayName(data);
-			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
-		}
-		return retIt;
-	}
-
-	static void DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance)
-	{
-		auto& seqView = data.get(instance).as_sequence_container();
-
-		ImGui::Text("%d elements", seqView.size());
-		ImGui::SameLine();
-		if (ImGui::BeginCombo("##ContainerOperation", nullptr, ImGuiComboFlags_NoPreview))
-		{
-			if (ImGui::Selectable("Add"))
-			{
-				InsertDefaultValueForSeq(data, seqView, seqView.end());
-			}
-			if (ImGui::Selectable("Clear"))
-			{
-				if (seqView.size() > 0 && seqView.clear())
-				{
-					ZE_TRACE("Value changed after edit!");
-				}
-			}
-
-			ImGui::EndCombo();
-		}
-	}
-
-	static void DrawButtonsForContainerElement(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
-	{
-		if (ImGui::BeginCombo("##ContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
-		{
-			if (ImGui::Selectable("Insert"))
-			{
-				it = InsertDefaultValueForSeq(data, seqView, it);
-			}
-			if (ImGui::Selectable("Erase"))
-			{
-				it = EraseValueForSeq(data, seqView, it);
-			}
-
-			ImGui::EndCombo();
-		}
-	}
-
 	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
 		auto instance = entity.GetTypeById(type.type_id());
+		m_ComponentInstance = instance;
 		auto typeName = GetMetaObjectDisplayName(type);
 
 		// Do not show CollapsingHeader if PropertyType::HideTypeHeader is set
@@ -367,6 +284,90 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	entt::meta_sequence_container::iterator DataInspector::InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
+	{
+		// "0" value works for "all" types because we have registered their conversion functions
+		auto& [retIt, res] = seqView.insert(it, 0);
+		if (res)
+		{
+			InvokePostDataValueEditChangeCallback(data);
+			return retIt;
+		}
+		else
+		{
+			// For special types like user-defined enums, we have to invoke a function instead
+			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
+			auto& [retIt, res] = seqView.insert(it, defaultValue);
+			if (res)
+			{
+				InvokePostDataValueEditChangeCallback(data);
+				return retIt;
+			}
+			else
+			{
+				auto dataName = GetMetaObjectDisplayName(data);
+				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
+			}
+		}
+		return {};
+	}
+
+	entt::meta_sequence_container::iterator DataInspector::EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
+	{
+		auto& [retIt, res] = seqView.erase(it);
+		if (res)
+		{
+			InvokePostDataValueEditChangeCallback(data);
+		}
+		else
+		{
+			auto dataName = GetMetaObjectDisplayName(data);
+			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
+		}
+		return retIt;
+	}
+
+	void DataInspector::DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance)
+	{
+		auto& seqView = data.get(instance).as_sequence_container();
+
+		ImGui::Text("%d elements", seqView.size());
+		ImGui::SameLine();
+		if (ImGui::BeginCombo("##ContainerOperation", nullptr, ImGuiComboFlags_NoPreview))
+		{
+			if (ImGui::Selectable("Add"))
+			{
+				InsertDefaultValueForSeq(data, seqView, seqView.end());
+			}
+			if (ImGui::Selectable("Clear"))
+			{
+				if (seqView.size() > 0 && seqView.clear())
+				{
+					InvokePostDataValueEditChangeCallback(data);
+				}
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
+	void DataInspector::DrawButtonsForContainerElement(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
+	{
+		if (ImGui::BeginCombo("##ContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
+		{
+			if (ImGui::Selectable("Insert"))
+			{
+				it = InsertDefaultValueForSeq(data, seqView, it);
+			}
+			if (ImGui::Selectable("Erase"))
+			{
+				it = EraseValueForSeq(data, seqView, it);
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
 	void DataInspector::EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any& instance)
 	{
 		auto& seqView = data.get(instance).as_sequence_container();
@@ -429,6 +430,8 @@ namespace ZeoEngine {
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
+		// Clear before iterating subdatas
+		m_ChangedSubData = {};
 		// TODO: Reverse subdata order
 		for (auto subData : type.data())
 		{
@@ -461,7 +464,7 @@ namespace ZeoEngine {
 					{
 						// Align width to the right side
 						ImGui::SetNextItemWidth(-1.0f);
-						EvaluateData(subData, subInstance, false);
+						EvaluateData(subData, subInstance, false, true);
 						// Switch to the next row
 						ImGui::NextColumn();
 					}
@@ -471,106 +474,122 @@ namespace ZeoEngine {
 		}
 		// We must set subInstance value back to instance
 		SetDataValue(data, instance, subInstance);
+		if (m_ChangedSubData)
+		{
+			InvokePostDataValueEditChangeCallback(m_ChangedSubData);
+		}
 	}
 
 	// NOTE: Column is not switched inside this method and you should switch to the next row after this call
-	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		if (type.is_integral())
 		{
-			EvaluateIntegralData(data, instance, bIsSeqContainer);
+			EvaluateIntegralData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (type.is_floating_point())
 		{
-			EvaluateFloatingPointData(data, instance, bIsSeqContainer);
+			EvaluateFloatingPointData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (type.is_enum())
 		{
-			ProcessEnumData(data, instance, bIsSeqContainer);
+			ProcessEnumData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else
 		{
-			EvaluateOtherData(data, instance, bIsSeqContainer);
+			EvaluateOtherData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 	}
 
-	void DataInspector::EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		if (IsTypeEqual<bool>(type))
 		{
-			ProcessBoolData(data, instance, bIsSeqContainer);
+			ProcessBoolData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (IsTypeEqual<int8_t>(type))
 		{
-			ProcessScalarNData<int8_t>(data, instance, bIsSeqContainer, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+			ProcessScalarNData<int8_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
 		}
 		else if (IsTypeEqual<int32_t>(type))
 		{
-			ProcessScalarNData<int32_t>(data, instance, bIsSeqContainer, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+			ProcessScalarNData<int32_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 		}
 		else if (IsTypeEqual<int64_t>(type))
 		{
-			ProcessScalarNData<int64_t>(data, instance, bIsSeqContainer, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+			ProcessScalarNData<int64_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 		}
 		else if (IsTypeEqual<uint8_t>(type))
 		{
-			ProcessScalarNData<uint8_t>(data, instance, bIsSeqContainer, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+			ProcessScalarNData<uint8_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 		}
 		else if (IsTypeEqual<uint32_t>(type))
 		{
-			ProcessScalarNData<uint32_t>(data, instance, bIsSeqContainer, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+			ProcessScalarNData<uint32_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 		}
 		else if (IsTypeEqual<uint64_t>(type))
 		{
-			ProcessScalarNData<uint64_t>(data, instance, bIsSeqContainer, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+			ProcessScalarNData<uint64_t>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 		}
 	}
 
-	void DataInspector::EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		if (IsTypeEqual<float>(type))
 		{
-			ProcessScalarNData<float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<float>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<double>(type))
 		{
-			ProcessScalarNData<double>(data, instance, bIsSeqContainer, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+			ProcessScalarNData<double>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
 		}
 	}
 
-	void DataInspector::EvaluateOtherData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::EvaluateOtherData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		if (IsTypeEqual<std::string>(type))
 		{
-			ProcessStringData(data, instance, bIsSeqContainer);
+			ProcessStringData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (IsTypeEqual<glm::vec2>(type))
 		{
-			ProcessScalarNData<glm::vec2, 2, float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<glm::vec2, 2, float>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<glm::vec3>(type))
 		{
-			ProcessScalarNData<glm::vec3, 3, float>(data, instance, bIsSeqContainer, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			ProcessScalarNData<glm::vec3, 3, float>(data, instance, bIsSeqContainer, bIsSubData, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		}
 		else if (IsTypeEqual<glm::vec4>(type))
 		{
-			ProcessColorData(data, instance, bIsSeqContainer);
+			ProcessColorData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (IsTypeEqual<Ref<Texture2D>>(type))
 		{
-			ProcessTexture2DData(data, instance, bIsSeqContainer);
+			ProcessTexture2DData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
 		{
-			ProcessParticleTemplateData(data, instance, bIsSeqContainer);
+			ProcessParticleTemplateData(data, instance, bIsSeqContainer, bIsSubData);
 		}
 	}
 
-	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::InvokeOnDataValueEditChangeCallback(entt::meta_data data)
+	{
+		ZE_TRACE("Value changed!");
+		m_ComponentInstance.type().func("OnDataValueEditChange"_hs).invoke(m_ComponentInstance, data.id());
+	}
+
+	void DataInspector::InvokePostDataValueEditChangeCallback(entt::meta_data data)
+	{
+		ZE_TRACE("Value changed after edit!");
+		m_ComponentInstance.type().func("PostDataValueEditChange"_hs).invoke(m_ComponentInstance, data.id());
+	}
+
+	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		auto& boolRef = bIsSeqContainer ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
@@ -584,11 +603,18 @@ namespace ZeoEngine {
 				SetDataValue(data, instance, boolCopy);
 			}
 
-			ZE_TRACE("Value changed after edit!");
+			if (bIsSubData)
+			{
+				m_ChangedSubData = data;
+			}
+			else
+			{
+				InvokePostDataValueEditChangeCallback(data);
+			}
 		}
 	}
 
-	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::ProcessEnumData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		auto enumValue = bIsSeqContainer ? instance : data.get(instance);
 		const char* currentValueName = GetEnumDisplayName(enumValue);
@@ -618,7 +644,14 @@ namespace ZeoEngine {
 						{
 							SetDataValue(data, instance, newValue);
 						}
-						ZE_TRACE("Value changed after edit!");
+						if (bIsSubData)
+						{
+							m_ChangedSubData = data;
+						}
+						else
+						{
+							InvokePostDataValueEditChangeCallback(data);
+						}
 					}
 				}
 			}
@@ -627,7 +660,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::ProcessStringData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::ProcessStringData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
@@ -669,11 +702,18 @@ namespace ZeoEngine {
 
 		if (bIsValueChanged)
 		{
-			ZE_TRACE("Value changed after edit!");
+			if (bIsSubData)
+			{
+				m_ChangedSubData = data;
+			}
+			else
+			{
+				InvokePostDataValueEditChangeCallback(data);
+			}
 		}
 	}
 
-	void DataInspector::ProcessColorData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::ProcessColorData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
@@ -733,17 +773,24 @@ namespace ZeoEngine {
 		// Value changed during dragging
 		if (bResult && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 		{
-			ZE_TRACE("Value changed!");
+			InvokeOnDataValueEditChangeCallback(data);
 		}
 
 		// Value changed after dragging or inputting
 		if (bIsValueChangedAfterEdit)
 		{
-			ZE_TRACE("Value changed after edit!");
+			if (bIsSubData)
+			{
+				m_ChangedSubData = data;
+			}
+			else
+			{
+				InvokePostDataValueEditChangeCallback(data);
+			}
 		}
 	}
 
-	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		auto& texture2DRef = bIsSeqContainer ? instance.cast<Ref<Texture2D>>() : GetDataValueByRef<Ref<Texture2D>>(data, instance);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
@@ -855,7 +902,14 @@ namespace ZeoEngine {
 
 			if (bIsValueChangedAfterEdit)
 			{
-				ZE_TRACE("Value changed after edit!");
+				if (bIsSubData)
+				{
+					m_ChangedSubData = data;
+				}
+				else
+				{
+					InvokePostDataValueEditChangeCallback(data);
+				}
 			}
 		}
 
@@ -866,7 +920,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		auto& particleTemplateRef = bIsSeqContainer ? instance.cast<Ref<ParticleTemplate>>() : GetDataValueByRef<Ref<ParticleTemplate>>(data, instance);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
@@ -987,7 +1041,14 @@ namespace ZeoEngine {
 
 			if (bIsValueChangedAfterEdit)
 			{
-				ZE_TRACE("Value changed after edit!");
+				if (bIsSubData)
+				{
+					m_ChangedSubData = data;
+				}
+				else
+				{
+					InvokePostDataValueEditChangeCallback(data);
+				}
 			}
 		}
 

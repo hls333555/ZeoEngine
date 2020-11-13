@@ -44,18 +44,26 @@ namespace ZeoEngine {
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, const entt::meta_any& instance);
 
+		entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);
+		entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);
+		void DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance);
+		void DrawButtonsForContainerElement(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it);
+
 		void EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any& instance);
 		void EvaluateAssociativeContainerData(entt::meta_data data, entt::meta_any& instance);
 		void EvaluateNestedData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData = false);
 
-		void EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void EvaluateOtherData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void EvaluateOtherData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 
-		void ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void InvokeOnDataValueEditChangeCallback(entt::meta_data data);
+		void InvokePostDataValueEditChangeCallback(entt::meta_data data);
+
+		void ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 		template<typename T, uint32_t N = 1, typename CT = T>
-		void ProcessScalarNData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
+		void ProcessScalarNData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 
@@ -139,20 +147,27 @@ namespace ZeoEngine {
 			// Value changed during dragging
 			if (bResult && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
-				ZE_TRACE("Value changed!");
+				InvokeOnDataValueEditChangeCallback(data);
 			}
 
 			// Value changed after dragging or inputting
 			if (bIsValueChangedAfterEdit)
 			{
-				ZE_TRACE("Value changed after edit!");
+				if (bIsSubData)
+				{
+					m_ChangedSubData = data;
+				}
+				else
+				{
+					InvokePostDataValueEditChangeCallback(data);
+				}
 			}
 		}
-		void ProcessEnumData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void ProcessStringData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void ProcessColorData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void ProcessEnumData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void ProcessStringData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void ProcessColorData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void ProcessTexture2DData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
+		void ProcessParticleTemplateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 
 	private:
 		DataInspectorPanel* m_Context;
@@ -162,6 +177,11 @@ namespace ZeoEngine {
 		/** Map from type id to all its data, used to draw ordered registered datas in DataInspectorPanel */
 		std::unordered_map<uint32_t, CategorizedDatas> m_PreprocessedDatas;
 		bool m_bIsPreprocessedDatasDirty{ true };
+
+		/** Records current processed component, used for value change callback */
+		entt::meta_any m_ComponentInstance;
+		/** Records subdata whose value is changed, used for value change callback */
+		entt::meta_data m_ChangedSubData{};
 	};
 
 }

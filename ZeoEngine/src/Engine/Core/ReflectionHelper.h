@@ -5,8 +5,6 @@
 
 #include <entt.hpp>
 
-#include "Engine/GameFramework/Entity.h"
-
 #define ZE_CAT_IMPL(a, b) a##b
 #define ZE_CAT(a, b) ZE_CAT_IMPL(a, b)
 #define ZE_REFL_REGISTRATION                                                        \
@@ -79,6 +77,7 @@ enum class PropertyType
 };
 
 #define ZE_TEXT(text) u8##text
+#define ZE_DATA_ID(data) #data##_hs
 
 #define ZE_REFL_TYPE(_type, ...)																\
 entt::meta<_type>()																				\
@@ -89,6 +88,8 @@ entt::meta<_type>()																				\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
 		.func<&has<_type>>("has"_hs)															\
+		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)					\
+		.func<&Component::PostDataValueEditChange>("PostDataValueEditChange"_hs)				\
 		.base<Component>()
 #define ZE_REFL_TYPE_NESTED(_type, ...)															\
 entt::meta<_type>()																				\
