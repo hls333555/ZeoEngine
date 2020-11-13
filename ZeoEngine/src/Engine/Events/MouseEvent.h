@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Engine/Events/Event.h"
+
+#include <sstream>
+
 #include "Engine/Core/MouseCodes.h"
 
 namespace ZeoEngine {

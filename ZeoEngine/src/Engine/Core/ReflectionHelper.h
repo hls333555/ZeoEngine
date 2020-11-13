@@ -88,7 +88,8 @@ entt::meta<_type>()																				\
 		.ctor<&emplace<_type>, entt::as_ref_t>()												\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
-		.func<&has<_type>>("has"_hs)
+		.func<&has<_type>>("has"_hs)															\
+		.base<Component>()
 #define ZE_REFL_TYPE_NESTED(_type, ...)															\
 entt::meta<_type>()																				\
     .type()																						\

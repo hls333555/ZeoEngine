@@ -1302,7 +1302,7 @@ namespace ZeoEngine {
 
 				if (m_EditorParticleSystem)
 				{
-					m_EditorParticleSystem->OnParticleViewImGuiRender();
+					//m_EditorParticleSystem->OnParticleViewImGuiRender();
 				}
 			}
 			ImGui::End();

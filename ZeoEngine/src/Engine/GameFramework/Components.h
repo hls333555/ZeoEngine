@@ -14,8 +14,16 @@
 
 namespace ZeoEngine {
 
+	struct Component
+	{
+		Entity OwnerEntity;
+
+		Component() = default;
+		Component(const Component&) = default;
+	};
+
 #if ENABLE_TEST
-	struct TestComponent
+	struct TestComponent : public Component
 	{
 		enum TestEnum
 		{
@@ -66,7 +74,7 @@ namespace ZeoEngine {
 	};
 #endif
 
-	struct CoreComponent
+	struct CoreComponent : public Component
 	{
 		std::string Name;
 		uint32_t CreationId;
@@ -77,7 +85,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct TransformComponent
+	struct TransformComponent : public Component
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
@@ -111,7 +119,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct SpriteRendererComponent
+	struct SpriteRendererComponent : public Component
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 		Ref<Texture2D> Texture;
@@ -126,7 +134,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct CameraComponent
+	struct CameraComponent : public Component
 	{
 		SceneCamera Camera;
 		bool bIsPrimary = true;
@@ -154,7 +162,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct NativeScriptComponent
+	struct NativeScriptComponent : public Component
 	{
 		// NOTE: Function pointer does not support lambda with captures
 		using InstantiateScriptDef = std::function<ScriptableEntity*()>;
@@ -173,11 +181,11 @@ namespace ZeoEngine {
 		}
 	};
 
-	struct ParticleSystemComponent
+	struct ParticleSystemComponent : public Component
 	{
 		Ref<ParticleTemplate> Template;
 		Ref<ParticleSystem> ParticleSystemRuntime;
-		bool bIsPreview = false;
+		glm::vec3 PositionOffset{ 0.0f };
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
@@ -190,7 +198,7 @@ namespace ZeoEngine {
 
 		void CreateParticleSystem()
 		{
-			ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, bIsPreview);
+			ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
 		}
 	};
 
@@ -199,13 +207,11 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent()
 		{
 			Template = CreateRef<ParticleTemplate>();
-			bIsPreview = true;
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
-			bIsPreview = true;
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
@@ -217,20 +223,20 @@ namespace ZeoEngine {
 		const ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
 		void SetSpawnRate(const ParticleFloat& value) { Template->SpawnRate = value; }
 		auto& GetBurstList() const { return Template->BurstList; }
-		const ParticleVec2& GetInitialPosition() const { return Template->InitialPosition; }
-		void SetInitialPosition(const ParticleVec2& position) { Template->InitialPosition = position; }
-		const ParticleFloat& GetInitialRotation() const { return Template->InitialRotation; }
-		void SetInitialRotation(const ParticleFloat& rotation) { Template->InitialRotation = rotation; }
-		const ParticleFloat& GetRotationRate() const { return Template->RotationRate; }
-		void SetRotationRate(const ParticleFloat& rotation) { Template->RotationRate = rotation; }
-		const ParticleVec2& GetSizeBegin() const { return Template->SizeBegin; }
-		void SetSizeBegin(const ParticleVec2& size) { Template->SizeBegin = size; }
-		const ParticleVec2& GetSizeEnd() const { return Template->SizeEnd; }
-		void SetSizeEnd(const ParticleVec2& size) { Template->SizeEnd = size; }
-		const ParticleVec2& GetInitialVelocity() const { return Template->InitialVelocity; }
-		void SetInitialVelocity(const ParticleVec2& velocity) { Template->InitialVelocity = velocity; }
-		const glm::vec2& GetInheritVelocity() const { return Template->InheritVelocity; }
-		void SetInheritVelocity(const glm::vec2& velocity) { Template->InheritVelocity = velocity; }
+		const ParticleVec3& GetInitialPosition() const { return Template->InitialPosition; }
+		void SetInitialPosition(const ParticleVec3& position) { Template->InitialPosition = position; }
+		const ParticleVec3& GetInitialRotation() const { return Template->InitialRotation; }
+		void SetInitialRotation(const ParticleVec3& rotation) { Template->InitialRotation = rotation; }
+		const ParticleVec3& GetRotationRate() const { return Template->RotationRate; }
+		void SetRotationRate(const ParticleVec3& rotationRate) { Template->RotationRate = rotationRate; }
+		const ParticleVec3& GetSizeBegin() const { return Template->SizeBegin; }
+		void SetSizeBegin(const ParticleVec3& size) { Template->SizeBegin = size; }
+		const ParticleVec3& GetSizeEnd() const { return Template->SizeEnd; }
+		void SetSizeEnd(const ParticleVec3& size) { Template->SizeEnd = size; }
+		const ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
+		void SetInitialVelocity(const ParticleVec3& velocity) { Template->InitialVelocity = velocity; }
+		const glm::vec3& GetInheritVelocity() const { return Template->InheritVelocity; }
+		void SetInheritVelocity(const glm::vec3& velocity) { Template->InheritVelocity = velocity; }
 		const ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
 		void SetColorBegin(const ParticleColor& color) { Template->ColorBegin = color; }
 		const ParticleColor& GetColorEnd() const { return Template->ColorEnd; }

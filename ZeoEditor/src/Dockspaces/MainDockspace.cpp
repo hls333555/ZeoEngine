@@ -101,6 +101,7 @@ namespace ZeoEngine {
 	{
 		SceneSerializer serializer(filePath, GetScene());
 		serializer.Deserialize();
+		GetScene()->OnSceneDeserialized();
 	}
 
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)

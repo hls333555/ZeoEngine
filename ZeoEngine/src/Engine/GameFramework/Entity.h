@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "Engine/GameFramework/Scene.h"
 
 namespace ZeoEngine {
@@ -22,7 +24,9 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ASSERT_INFO(!HasComponent<T>(), "Entity already has component!");
 			AddComponentId(entt::type_info<T>().id());
-			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			comp.OwnerEntity = *this;
+			return comp;
 		}
 
 		template<typename T>
@@ -54,6 +58,10 @@ namespace ZeoEngine {
 		}
 
 		std::string GetEntityName() const;
+		glm::mat4 GetEntityTransform() const;
+		glm::vec3 GetEntityTranslation() const;
+		glm::vec3 GetEntityRotation() const;
+		glm::vec3 GetEntityScale() const;
 
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }

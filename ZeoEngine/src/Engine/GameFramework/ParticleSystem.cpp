@@ -3,11 +3,11 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/GameFramework/GameObject.h"
 #include "Engine/Core/SceneSerializer.h"
 #include "Engine/GameFramework/Components.h"
 
@@ -62,14 +62,14 @@ namespace ZeoEngine {
 		return T();
 	}
 	template<>
-	float ParticleVariation<float>::EvaluateRandom() const
-	{
-		return RandomEngine::RandFloatInRange(Val1, Val2);
-	}
-	template<>
 	int32_t ParticleVariation<int32_t>::EvaluateRandom() const
 	{
 		return RandomEngine::RandIntInRange(Val1, Val2);
+	}
+	template<>
+	float ParticleVariation<float>::EvaluateRandom() const
+	{
+		return RandomEngine::RandFloatInRange(Val1, Val2);
 	}
 	template<>
 	glm::vec2 ParticleVariation<glm::vec2>::EvaluateRandom() const
@@ -95,12 +95,33 @@ namespace ZeoEngine {
 		float w = RandomEngine::RandFloatInRange(Val1.w, Val2.w);
 		return { x, y, z, w };
 	}
-	template<typename T>
-	T ParticleVariation<T>::EvaluateUniform() const
+	template<>
+	int32_t ParticleVariation<int32_t>::EvaluateUniform() const
 	{
-		// Not implemented
-		ZE_CORE_ASSERT(false);
-		return T();
+		return RandomEngine::RandIntInRange(Val1, Val2);
+	}
+	template<>
+	float ParticleVariation<float>::EvaluateUniform() const
+	{
+		return RandomEngine::RandFloatInRange(Val1, Val2);
+	}
+	template<>
+	glm::vec2 ParticleVariation<glm::vec2>::EvaluateUniform() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		return { x, x };
+	}
+	template<>
+	glm::vec3 ParticleVariation<glm::vec3>::EvaluateUniform() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		return { x, x, x };
+	}
+	template<>
+	glm::vec4 ParticleVariation<glm::vec4>::EvaluateUniform() const
+	{
+		float x = RandomEngine::RandFloatInRange(Val1.x, Val2.x);
+		return { x, x, x, x };
 	}
 
 	// Template explicit specialization
@@ -111,37 +132,15 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec4>;
 	// Trying to instantiate other types will cause linking error!
 
-	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, bool bIsPreview)
+	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
 		: m_ParticleTemplate(particleTemplate)
-		, m_SpawnPosition({ 0.0f })
-		, m_bIsPreview(bIsPreview)
-		, m_bAutoDestroy(false)
+		, m_PositionOffset(positionOffset)
+		, m_OwnerEntity(ownerEntity)
 	{
+		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
 		ResizeParticlePool();
 		EvaluateEmitterProperties();
 	}
-
-	//ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position, bool bAutoDestroy)
-	//	: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
-	//	, m_ParticleTemplate(particleTemplate)
-	//	, m_SpawnPosition(position)
-	//	, m_bAutoDestroy(bAutoDestroy)
-	//	, m_SpawnRate(30.0f)
-	//{
-	//	ResizeParticlePool();
-	//	EvaluateEmitterProperties();
-	//}
-
-	//ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent, bool bAutoDestroy)
-	//	: m_PoolIndex(particleTemplate->MaxDrawParticles - 1)
-	//	, m_ParticleTemplate(particleTemplate)
-	//	, m_Parent(attachToParent)
-	//	, m_bAutoDestroy(bAutoDestroy)
-	//	, m_SpawnRate(30.0f)
-	//{
-	//	ResizeParticlePool();
-	//	EvaluateEmitterProperties();
-	//}
 
 #if WITH_EDITOR
 	//void ParticleSystem::PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp)
@@ -207,7 +206,7 @@ namespace ZeoEngine {
 
 		// Velocity
 		{
-			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec2(0.0f), glm::vec2(1.0f));
+			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
 		}
 
 		m_EmitterSpec.MaxDrawParticles = m_ParticleTemplate->MaxDrawParticles;
@@ -215,7 +214,7 @@ namespace ZeoEngine {
 
 	void ParticleSystem::ReevaluateBurstList()
 	{
-		for (int32_t i = 0; i < m_ParticleTemplate->BurstList.size(); ++i)
+		for (auto i = 0; i < m_ParticleTemplate->BurstList.size(); ++i)
 		{
 			const auto& amountData = m_ParticleTemplate->BurstList[i].Amount;
 			if (amountData.VariationType == ParticleVariationType::Constant) continue;
@@ -230,16 +229,13 @@ namespace ZeoEngine {
 
 	void ParticleSystem::EvaluateParticleProperties(Particle& particle)
 	{
-		// TODO: Position
+		// Position
 		{
 			particle.Position = m_ParticleTemplate->InitialPosition.Evaluate();
-			if (m_Parent)
+			if (m_OwnerEntity)
 			{
-				particle.Position += m_Parent->GetPosition2D();
-			}
-			if (m_SpawnPosition != glm::vec2(0.0f))
-			{
-				particle.Position += m_SpawnPosition;
+				particle.Position += m_OwnerEntity.GetEntityTranslation();
+				particle.Position += m_PositionOffset;
 			}
 		}
 
@@ -383,19 +379,16 @@ namespace ZeoEngine {
 			m_bSystemComplete = false;
 
 			particle.LifeRemaining -= dt;
-			glm::vec2 velocity{ 0.0f, 0.0f };
-			if (m_Parent)
-			{
-				velocity = m_EmitterSpec.bIsLocalSpace ?
-					m_Parent->GetVelocity() + particle.Velocity :
-					m_Parent->GetVelocity() * m_EmitterSpec.InheritVelocity + particle.Velocity;
-			}
-			else
-			{
-				velocity = particle.Velocity;
-			}
+			glm::vec3 velocity = particle.Velocity;
+			// TODO: Inherit owner entity's velocity
+			//if (m_OwnerEntity)
+			//{
+			//	velocity = m_EmitterSpec.bIsLocalSpace ?
+			//		m_Parent->GetVelocity() + particle.Velocity :
+			//		m_Parent->GetVelocity() * m_EmitterSpec.InheritVelocity + particle.Velocity;
+			//}
 			particle.Position += velocity * static_cast<float>(dt);
-			particle.Rotation += particle.RotationRate * dt;
+			particle.Rotation += particle.RotationRate * static_cast<float>(dt);
 			float lifeRatio = particle.LifeRemaining / particle.Lifetime;
 			particle.Size = glm::lerp(particle.SizeEnd, particle.SizeBegin, lifeRatio);
 			particle.Color = glm::lerp(particle.ColorEnd, particle.ColorBegin, lifeRatio);
@@ -439,7 +432,7 @@ namespace ZeoEngine {
 		}
 #endif
 
-		if (m_bAutoDestroy && m_bSystemComplete)
+		if (m_bSystemComplete && !m_bIsPreview)
 		{
 			m_bPendingDestroy = true;
 			m_OnSystemFinishedDel.publish();
@@ -459,38 +452,22 @@ namespace ZeoEngine {
 				continue;
 
 			++m_ActiveParticleCount;
+			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(particle.Rotation.x), { 1, 0, 0 }) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(particle.Rotation.y), { 0, 1, 0 }) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(particle.Rotation.z), { 0, 0, 1 });
+			glm::mat4 transform = glm::translate(glm::mat4(1.0f), particle.Position) *
+				rotation *
+				glm::scale(glm::mat4(1.0f), particle.Size);
 			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
+				Renderer2D::DrawRotatedQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
 			}
 			else
 			{
-				Renderer2D::DrawRotatedQuad(particle.Position, particle.Size, glm::radians(particle.Rotation), particle.Color);
+				Renderer2D::DrawRotatedQuad(transform, particle.Color);
 			}
 		}
 	}
-
-#if WITH_EDITOR
-	void ParticleSystem::OnParticleViewImGuiRender()
-	{
-		// The last item should be full windowed framebuffer texture
-		const ImVec2 particleViewStartDrawPos = ImGui::GetItemRectMin();
-
-		char particleCount[16];
-		_itoa(m_ActiveParticleCount, particleCount, 10);
-		const ImVec2 textSize = ImGui::CalcTextSize(particleCount);
-		// Display particle count at the top right corner of Particle View window
-		ImGui::GetForegroundDrawList()->AddText(ImVec2(ImGui::GetItemRectMax().x - textSize.x - 15.0f, particleViewStartDrawPos.y), IM_COL32(255, 255, 0, 255), particleCount);
-
-		if (m_bSystemComplete)
-		{
-			static const ImVec2 textSize = ImGui::CalcTextSize("Completed");
-			const float indent = (ImGui::GetContentRegionAvail().x - textSize.x) * 0.5f;
-			// Display completed text at the top center of Particle View window
-			ImGui::GetForegroundDrawList()->AddText(ImVec2(particleViewStartDrawPos.x + indent, particleViewStartDrawPos.y), IM_COL32_WHITE, "Completed");
-		}
-	}
-#endif
 
 	void ParticleSystem::Activate()
 	{

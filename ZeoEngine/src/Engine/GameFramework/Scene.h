@@ -26,8 +26,10 @@ namespace ZeoEngine {
 		 */
 		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
 
+	private:
 		/** Create an entity with no default components. */
 		Entity CreateEmptyEntity();
+	public:
 		void DestroyEntity(Entity entity);
 
 		void SortEntities();
@@ -35,6 +37,9 @@ namespace ZeoEngine {
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
 		void OnEvent(Event& e);
+
+		/** Called when scene is deserialized. */
+		void OnSceneDeserialized();
 
 		const std::string& GetName() const { return m_Name; }
 		const std::string& GetPath() const { return m_Path; }

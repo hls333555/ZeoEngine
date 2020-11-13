@@ -56,9 +56,9 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(CoreComponent, bIsInternal, ZE_REFL_PROP(HiddenInEditor));
 
 	ZE_REFL_TYPE(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")), ZE_REFL_PROP(InherentType))
-		ZE_REFL_DATA_REF(TransformComponent, Translation, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("平移")))
+		ZE_REFL_DATA_REF(TransformComponent, Translation, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("平移")), ZE_REFL_PROP_PAIR(DragSensitivity, 0.1f))
 		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("旋转")))
-		ZE_REFL_DATA_REF(TransformComponent, Scale, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("缩放")));
+		ZE_REFL_DATA_REF(TransformComponent, Scale, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("缩放")), ZE_REFL_PROP_PAIR(DragSensitivity, 0.1f));
 
 	ZE_REFL_TYPE(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Rendering")))
 		ZE_REFL_DATA_REF(SpriteRendererComponent, TintColor)
@@ -83,7 +83,8 @@ using namespace ZeoEngine;
 	ZE_REFL_TYPE(NativeScriptComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Native Script")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("C++脚本组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Scripts")));
 
 	ZE_REFL_TYPE(ParticleSystemComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Particle System")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子系统组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Effects")))
-		ZE_REFL_DATA_REF(ParticleSystemComponent, Template);
+		ZE_REFL_DATA_REF(ParticleSystemComponent, Template)
+		ZE_REFL_DATA_REF(ParticleSystemComponent, PositionOffset);
 
 	ZE_REFL_ENUM(ParticleVariationType)
 		ZE_REFL_ENUM_DATA(ParticleVariationType, Constant)

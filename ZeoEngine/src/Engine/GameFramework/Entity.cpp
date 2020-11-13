@@ -24,6 +24,26 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	glm::mat4 Entity::GetEntityTransform() const
+	{
+		return GetComponent<TransformComponent>().GetTransform();
+	}
+
+	glm::vec3 Entity::GetEntityTranslation() const
+	{
+		return GetComponent<TransformComponent>().Translation;
+	}
+
+	glm::vec3 Entity::GetEntityRotation() const
+	{
+		return GetComponent<TransformComponent>().Rotation;
+	}
+
+	glm::vec3 Entity::GetEntityScale() const
+	{
+		return GetComponent<TransformComponent>().Scale;
+	}
+
 	entt::meta_any Entity::AddTypeById(entt::id_type typeId)
 	{
 		auto type = entt::resolve_type(typeId);
@@ -40,7 +60,10 @@ namespace ZeoEngine {
 			return {};
 		}
 		AddComponentId(typeId);
-		return type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto comp = type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto& baseComp = comp.cast<Component>();
+		baseComp.OwnerEntity = *this;
+		return comp;
 	}
 
 	void Entity::RemoveTypeById(entt::id_type typeId)

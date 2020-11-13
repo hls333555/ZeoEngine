@@ -74,6 +74,15 @@ namespace ZeoEngine {
 			pspc.ParticleSystemRuntime->OnUpdate(dt);
 		});
 
+		// Update particle system for runtime
+		m_Registry.view<ParticleSystemComponent>().each([dt](auto entity, auto& psc)
+		{
+			if (psc.ParticleSystemRuntime)
+			{
+				psc.ParticleSystemRuntime->OnUpdate(dt);
+			}
+		});
+
 		// Update scripts
 		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 		{
@@ -144,6 +153,15 @@ namespace ZeoEngine {
 				pspc.ParticleSystemRuntime->OnRender();
 			});
 
+			// Render particle system for runtime
+			m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
+			{
+				if (psc.ParticleSystemRuntime)
+				{
+					psc.ParticleSystemRuntime->OnRender();
+				}
+			});
+
 			Renderer2D::EndScene();
 		}
 	}
@@ -156,6 +174,14 @@ namespace ZeoEngine {
 			{
 				nsc.Instance->OnEvent(e);
 			}
+		});
+	}
+
+	void Scene::OnSceneDeserialized()
+	{
+		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
+		{
+			psc.CreateParticleSystem();
 		});
 	}
 

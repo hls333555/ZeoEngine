@@ -5,8 +5,8 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Core/Delegate.h"
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -82,20 +82,19 @@ namespace ZeoEngine {
 		/** List of particles to spawn instantaneously per time. The time should be within [0.0, 1.0] */
 		std::vector<BurstData> BurstList;
 
-		// TODO: Support 3D
-		ParticleVec2 InitialPosition;
+		ParticleVec3 InitialPosition;
 
-		ParticleFloat InitialRotation;
-		ParticleFloat RotationRate;
+		ParticleVec3 InitialRotation;
+		ParticleVec3 RotationRate;
 
-		ParticleVec2 SizeBegin, SizeEnd;
+		ParticleVec3 SizeBegin, SizeEnd;
 
-		ParticleVec2 InitialVelocity;
+		ParticleVec3 InitialVelocity;
 		/**
 		 * How much velocity one particle will inherit. This param is only useful when bIsLocalSpace is false.
 		 * This value should be in [(0.0, 0.0), (1.0, 1.0)]
 		 */
-		glm::vec2 InheritVelocity{ 0.0f };
+		glm::vec3 InheritVelocity{ 0.0f };
 
 		ParticleColor ColorBegin, ColorEnd;
 
@@ -110,7 +109,7 @@ namespace ZeoEngine {
 		 */
 		glm::vec2 SubImageSize{ 0.0f };
 
-		uint32_t MaxDrawParticles{ 500 };
+		uint32_t MaxDrawParticles = 500;
 
 		// TODO: PreviewThumbnail
 		Ref<Texture2D> PreviewThumbnail;
@@ -122,25 +121,20 @@ namespace ZeoEngine {
 
 	class ParticleSystem
 	{
+		friend class ParticleViewportPanel;
+
 	public:
-		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, bool bIsPreview);
-		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec2& position = glm::vec2(0.0f), bool bAutoDestroy = true);
-		//ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, GameObject* attachToParent = nullptr, bool bAutoDestroy = true);
+		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
 
 	public:
 #if WITH_EDITOR
 		//void PostPropertyValueEditChange(const rttr::property* prop, const rttr::property* outerProp);
 #endif
 
-		bool GetAutoDestroy() const { return m_bAutoDestroy; }
-		void SetAutoDestroy(bool bValue) { m_bAutoDestroy = bValue; }
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
-#if WITH_EDITOR
-		void OnParticleViewImGuiRender();
-#endif
 
 		void Activate();
 		void Deactivate();
@@ -168,22 +162,22 @@ namespace ZeoEngine {
 			Ref<Texture2D> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
-			glm::vec2 InheritVelocity{ 0.0f };
+			glm::vec3 InheritVelocity{ 0.0f };
 			uint32_t MaxDrawParticles;
 		};
 
 		// Particle runtime properties
 		struct Particle
 		{
-			glm::vec2 Position{ 0.0f };
+			glm::vec3 Position{ 0.0f };
 
-			float Rotation = 0.0f;
-			float RotationRate = 0.0f;
+			glm::vec3 Rotation{ 0.0f };
+			glm::vec3 RotationRate{ 0.0f };
 
-			glm::vec2 SizeBegin{ 1.0f }, SizeEnd{ 1.0f };
-			glm::vec2 Size{ 1.0f };
+			glm::vec3 SizeBegin{ 1.0f }, SizeEnd{ 1.0f };
+			glm::vec3 Size{ 1.0f };
 
-			glm::vec2 Velocity{ 0.0f };
+			glm::vec3 Velocity{ 0.0f };
 
 			glm::vec4 ColorBegin{ 1.0f }, ColorEnd{ 1.0f };
 			glm::vec4 Color{ 1.0f };
@@ -220,11 +214,10 @@ namespace ZeoEngine {
 
 		uint32_t m_ActiveParticleCount = 0;
 
-		/** Particle's origin in world space */
-		glm::vec2 m_SpawnPosition{ 0.0f };
-		/** Parent GameObject this particle system attaches to, particle's position is affected by parent's position */
-		GameObject* m_Parent = nullptr;
-		bool m_bAutoDestroy = true;
+		/** Particle's spawn offset from owner entity's translation */
+		glm::vec3 m_PositionOffset{ 0.0f };
+		/** Entity that contains the ParticleSystemComponent */
+		Entity m_OwnerEntity;
 
 		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */
 		float m_UVAnimationInterval = 0.0f;
