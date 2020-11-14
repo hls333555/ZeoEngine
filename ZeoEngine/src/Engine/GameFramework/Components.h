@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <any>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,10 +24,12 @@ namespace ZeoEngine {
 		Component(const Component&) = default;
 
 		// Callbacks
+		/** Called before this component has been removed from the owner entity. */
+		virtual void OnDestroy() {}
 		/** Called every time this data is changed in the editor. (e.g. during dragging a slider to tweak the value) */
-		virtual void OnDataValueEditChange(uint32_t dataId) {}
+		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 		/** Called only when this data is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the value) */
-		virtual void PostDataValueEditChange(uint32_t dataId) {}
+		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 	};
 
 #if ENABLE_TEST
@@ -197,21 +200,34 @@ namespace ZeoEngine {
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
-		virtual void PostDataValueEditChange(uint32_t dataId) override
+		virtual void OnDestroy() override
 		{
-			CreateParticleSystem();
+			// Clear particle system reference before this component has been removed
+			Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
 		}
 
-		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
+		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
 		{
-			Template = pTemplate;
-			CreateParticleSystem();
+			Ref<ParticleTemplate> oldTemplate;
+			if (dataId == ZE_DATA_ID(Template))
+			{
+				oldTemplate = (*oldValue._Cast<Ref<ParticleTemplate>>());
+			}
+			CreateParticleSystem(oldTemplate);
 		}
 
-		void CreateParticleSystem()
+		void CreateParticleSystem(const Ref<ParticleTemplate>& oldTemplate)
 		{
+			// Clear last reference before creating new instance
+			if (oldTemplate)
+			{
+				oldTemplate->RemoveParticleSystemInstance(ParticleSystemRuntime);
+			}
 			ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
+			// Add newly created instance to cache
+			Template->AddParticleSystemInstance(ParticleSystemRuntime);
 		}
+
 	};
 
 	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
@@ -226,16 +242,27 @@ namespace ZeoEngine {
 			Template = pTemplate;
 		}
 
-		virtual void PostDataValueEditChange(uint32_t dataId) override
+		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
 		{
-			if (dataId == ZE_DATA_ID(MaxDrawParticles))
+			// Notify all alive instances to reset
+			for (const auto& ps : Template->ParticleSystemInstances)
 			{
-				ParticleSystemRuntime->ResizeParticlePool();
+				if (dataId == ZE_DATA_ID(MaxDrawParticles))
+				{
+					ps->ResizeParticlePool();
+				}
+				else
+				{
+					ps->Reset();
+				}
 			}
-			else
-			{
-				ParticleSystemRuntime->Reset();
-			}
+		}
+
+		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
+		{
+			auto oldTemplate = Template;
+			Template = pTemplate;
+			CreateParticleSystem(oldTemplate);
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }

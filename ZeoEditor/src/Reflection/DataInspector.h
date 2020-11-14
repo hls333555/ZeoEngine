@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <any>
 
 #include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Entity.h"
@@ -51,15 +52,15 @@ namespace ZeoEngine {
 
 		void EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any& instance);
 		void EvaluateAssociativeContainerData(entt::meta_data data, entt::meta_any& instance);
-		void EvaluateNestedData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
+		void EvaluateSubData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
 		void EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData = false);
 
 		void EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 		void EvaluateOtherData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 
-		void InvokeOnDataValueEditChangeCallback(entt::meta_data data);
-		void InvokePostDataValueEditChangeCallback(entt::meta_data data);
+		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
+		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
 
 		void ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 		template<typename T, uint32_t N = 1, typename CT = T>
@@ -81,6 +82,7 @@ namespace ZeoEngine {
 			// Copy the value
 			T valueCopy = bUseCopy ? GetDataValue<T>(data, instance) : T();
 			auto& value = bUseCopy ? valueCopy : valueRef;
+			auto oldValue = value;
 
 			void* valuePtr = nullptr;
 			void* cachedValuePtr = nullptr;
@@ -147,7 +149,15 @@ namespace ZeoEngine {
 			// Value changed during dragging
 			if (bResult && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
-				InvokeOnDataValueEditChangeCallback(data);
+				if (bIsSubData)
+				{
+					m_DataCallbackInfo.ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
+				}
+				else
+				{
+					InvokeOnDataValueEditChangeCallback(data, oldValue);
+				}
 			}
 
 			// Value changed after dragging or inputting
@@ -155,11 +165,12 @@ namespace ZeoEngine {
 			{
 				if (bIsSubData)
 				{
-					m_ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 				}
 				else
 				{
-					InvokePostDataValueEditChangeCallback(data);
+					InvokePostDataValueEditChangeCallback(data, oldValue);
 				}
 			}
 		}
@@ -178,10 +189,21 @@ namespace ZeoEngine {
 		std::unordered_map<uint32_t, CategorizedDatas> m_PreprocessedDatas;
 		bool m_bIsPreprocessedDatasDirty{ true };
 
-		/** Records current processed component, used for value change callback */
-		entt::meta_any m_ComponentInstance;
-		/** Records subdata whose value is changed, used for value change callback */
-		entt::meta_data m_ChangedSubData{};
+		struct DataValueEditChangeCallbackInfo
+		{
+			void ResetForSubData()
+			{
+				ChangedSubData = {};
+				ChangedSubDataOldValue = {};
+			}
+
+			/** Records current processed component, used for value change callback */
+			entt::meta_any ComponentInstance;
+			/** Records subdata whose value is changed, used for subdata value change callback */
+			entt::meta_data ChangedSubData{};
+			/** Records subdata's old value, used for subdata value change callback */
+			entt::meta_any ChangedSubDataOldValue;
+		} m_DataCallbackInfo;
 	};
 
 }

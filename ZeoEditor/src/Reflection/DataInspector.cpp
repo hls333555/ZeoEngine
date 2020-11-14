@@ -28,7 +28,7 @@ namespace ZeoEngine {
 	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
 	{
 		auto instance = entity.GetTypeById(type.type_id());
-		m_ComponentInstance = instance;
+		m_DataCallbackInfo.ComponentInstance = instance;
 		auto typeName = GetMetaObjectDisplayName(type);
 
 		// Do not show CollapsingHeader if PropertyType::HideTypeHeader is set
@@ -170,7 +170,7 @@ namespace ZeoEngine {
 								}
 								else if (bIsNestedClass)
 								{
-									EvaluateNestedData(data, instance, false);
+									EvaluateSubData(data, instance, false);
 
 									ImGui::TreePop();
 								}
@@ -290,7 +290,7 @@ namespace ZeoEngine {
 		auto& [retIt, res] = seqView.insert(it, 0);
 		if (res)
 		{
-			InvokePostDataValueEditChangeCallback(data);
+			//InvokePostDataValueEditChangeCallback(data, {});
 			return retIt;
 		}
 		else
@@ -300,7 +300,7 @@ namespace ZeoEngine {
 			auto& [retIt, res] = seqView.insert(it, defaultValue);
 			if (res)
 			{
-				InvokePostDataValueEditChangeCallback(data);
+				//InvokePostDataValueEditChangeCallback(data, {});
 				return retIt;
 			}
 			else
@@ -317,7 +317,7 @@ namespace ZeoEngine {
 		auto& [retIt, res] = seqView.erase(it);
 		if (res)
 		{
-			InvokePostDataValueEditChangeCallback(data);
+			//InvokePostDataValueEditChangeCallback(data, {});
 		}
 		else
 		{
@@ -343,7 +343,7 @@ namespace ZeoEngine {
 			{
 				if (seqView.size() > 0 && seqView.clear())
 				{
-					InvokePostDataValueEditChangeCallback(data);
+					//InvokePostDataValueEditChangeCallback(data, {});
 				}
 			}
 
@@ -393,7 +393,7 @@ namespace ZeoEngine {
 					ImGui::NextColumn();
 					if (bIsTreeExpanded)
 					{
-						EvaluateNestedData(data, element, true);
+						EvaluateSubData(data, element, true);
 
 						ImGui::TreePop();
 					}
@@ -426,12 +426,12 @@ namespace ZeoEngine {
 		
 	}
 
-	void DataInspector::EvaluateNestedData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
+	void DataInspector::EvaluateSubData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer)
 	{
 		const auto type = bIsSeqContainer ? instance.type() : data.type();
 		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
 		// Clear before iterating subdatas
-		m_ChangedSubData = {};
+		m_DataCallbackInfo.ResetForSubData();
 		// TODO: Reverse subdata order
 		for (auto subData : type.data())
 		{
@@ -456,7 +456,7 @@ namespace ZeoEngine {
 				{
 					if (bIsNestedClass)
 					{
-						EvaluateNestedData(subData, subInstance, false);
+						EvaluateSubData(subData, subInstance, false);
 
 						ImGui::TreePop();
 					}
@@ -474,9 +474,9 @@ namespace ZeoEngine {
 		}
 		// We must set subInstance value back to instance
 		SetDataValue(data, instance, subInstance);
-		if (m_ChangedSubData)
+		if (m_DataCallbackInfo.ChangedSubData)
 		{
-			InvokePostDataValueEditChangeCallback(m_ChangedSubData);
+			InvokePostDataValueEditChangeCallback(m_DataCallbackInfo.ChangedSubData, m_DataCallbackInfo.ChangedSubDataOldValue);
 		}
 	}
 
@@ -577,26 +577,28 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::InvokeOnDataValueEditChangeCallback(entt::meta_data data)
+	void DataInspector::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed!");
-		m_ComponentInstance.type().func("OnDataValueEditChange"_hs).invoke(m_ComponentInstance, data.id());
+		m_DataCallbackInfo.ComponentInstance.type().func("OnDataValueEditChange"_hs).invoke(m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
-	void DataInspector::InvokePostDataValueEditChangeCallback(entt::meta_data data)
+	void DataInspector::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed after edit!");
-		m_ComponentInstance.type().func("PostDataValueEditChange"_hs).invoke(m_ComponentInstance, data.id());
+		m_DataCallbackInfo.ComponentInstance.type().func("PostDataValueEditChange"_hs).invoke(m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
 		auto& boolRef = bIsSeqContainer ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
-		bool boolCopy = bUseCopy ? GetDataValue<bool>(data, instance) : false;
+		auto boolCopy = bUseCopy ? GetDataValue<bool>(data, instance) : false;
+		auto& boolValue = bUseCopy ? boolCopy : boolRef;
+		auto oldValue = boolValue;
 
 		// NOTE: We cannot leave Checkbox's label empty
-		if (ImGui::Checkbox("##Bool", bUseCopy ? &boolCopy : &boolRef))
+		if (ImGui::Checkbox("##Bool", &boolValue))
 		{
 			if (bUseCopy)
 			{
@@ -605,11 +607,12 @@ namespace ZeoEngine {
 
 			if (bIsSubData)
 			{
-				m_ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 			}
 			else
 			{
-				InvokePostDataValueEditChangeCallback(data);
+				InvokePostDataValueEditChangeCallback(data, oldValue);
 			}
 		}
 	}
@@ -636,6 +639,7 @@ namespace ZeoEngine {
 					auto newValue = enumData.get({});
 					if (newValue != enumValue)
 					{
+						auto oldValue = enumValue;
 						if (bIsSeqContainer)
 						{
 							SetEnumValueForSeq(instance, newValue);
@@ -646,11 +650,12 @@ namespace ZeoEngine {
 						}
 						if (bIsSubData)
 						{
-							m_ChangedSubData = data;
+							m_DataCallbackInfo.ChangedSubData = data;
+							m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 						}
 						else
 						{
-							InvokePostDataValueEditChangeCallback(data);
+							InvokePostDataValueEditChangeCallback(data, oldValue);
 						}
 					}
 				}
@@ -669,6 +674,7 @@ namespace ZeoEngine {
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		std::string stringCopy = bUseCopy ? GetDataValue<std::string>(data, instance) : std::string();
 		auto& stringValue = bUseCopy ? stringCopy : stringRef;
+		auto oldValue = stringValue;
 
 		// NOTE: We cannot leave InputBox's label empty
 		ImGui::InputText("##String", stringBuffers[id].first ? &stringBuffers[id].second : &stringValue, ImGuiInputTextFlags_AutoSelectAll);
@@ -704,11 +710,12 @@ namespace ZeoEngine {
 		{
 			if (bIsSubData)
 			{
-				m_ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 			}
 			else
 			{
-				InvokePostDataValueEditChangeCallback(data);
+				InvokePostDataValueEditChangeCallback(data, oldValue);
 			}
 		}
 	}
@@ -722,6 +729,7 @@ namespace ZeoEngine {
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		glm::vec4 vec4Copy = bUseCopy ? GetDataValue<glm::vec4>(data, instance) : glm::vec4();
 		auto& vec4Value = bUseCopy ? vec4Copy : vec4Ref;
+		auto oldValue = vec4Value;
 
 		bool bResult = ImGui::ColorEdit4("", vec4Buffers[id].first ? glm::value_ptr(vec4Buffers[id].second) : glm::value_ptr(vec4Value));
 		if (bUseCopy && !vec4Buffers[id].first)
@@ -773,7 +781,15 @@ namespace ZeoEngine {
 		// Value changed during dragging
 		if (bResult && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 		{
-			InvokeOnDataValueEditChangeCallback(data);
+			if (bIsSubData)
+			{
+				m_DataCallbackInfo.ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
+			}
+			else
+			{
+				InvokeOnDataValueEditChangeCallback(data, oldValue);
+			}
 		}
 
 		// Value changed after dragging or inputting
@@ -781,11 +797,12 @@ namespace ZeoEngine {
 		{
 			if (bIsSubData)
 			{
-				m_ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubData = data;
+				m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 			}
 			else
 			{
-				InvokePostDataValueEditChangeCallback(data);
+				InvokePostDataValueEditChangeCallback(data, oldValue);
 			}
 		}
 	}
@@ -796,6 +813,7 @@ namespace ZeoEngine {
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		Ref<Texture2D> texture2DCopy = bUseCopy ? GetDataValue<Ref<Texture2D>>(data, instance) : Ref<Texture2D>();
 		const auto& texture2DValue = bUseCopy ? texture2DCopy : texture2DRef;
+		auto oldValue = texture2DValue;
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
@@ -904,11 +922,12 @@ namespace ZeoEngine {
 			{
 				if (bIsSubData)
 				{
-					m_ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 				}
 				else
 				{
-					InvokePostDataValueEditChangeCallback(data);
+					InvokePostDataValueEditChangeCallback(data, oldValue);
 				}
 			}
 		}
@@ -926,6 +945,7 @@ namespace ZeoEngine {
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		Ref<ParticleTemplate> particleTemplateCopy = bUseCopy ? GetDataValue<Ref<ParticleTemplate>>(data, instance) : Ref<ParticleTemplate>();
 		const auto& particleTemplateValue = bUseCopy ? particleTemplateCopy : particleTemplateRef;
+		auto oldValue = particleTemplateValue;
 
 		ParticleLibrary& library = ParticleLibrary::Get();
 		// TODO: Particle template preview
@@ -950,9 +970,9 @@ namespace ZeoEngine {
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
 					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorWindowType::Particle_Editor);
-					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&particleTemplateValue](auto& psdc)
+					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&particleTemplateValue](auto& pspc)
 					{
-						psdc.SetTemplate(particleTemplateValue);
+						pspc.SetTemplate(particleTemplateValue);
 					});
 				}
 			}
@@ -1043,11 +1063,12 @@ namespace ZeoEngine {
 			{
 				if (bIsSubData)
 				{
-					m_ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubData = data;
+					m_DataCallbackInfo.ChangedSubDataOldValue = oldValue;
 				}
 				else
 				{
-					InvokePostDataValueEditChangeCallback(data);
+					InvokePostDataValueEditChangeCallback(data, oldValue);
 				}
 			}
 		}

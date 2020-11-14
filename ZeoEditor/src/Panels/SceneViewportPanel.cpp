@@ -8,12 +8,14 @@
 #include "Engine/Events/MouseEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/MouseCodes.h"
+#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
 
 	void SceneViewportPanel::OnAttach()
 	{
 		CreatePreviewCamera();
+		GetContext()->m_OnSceneCreate.connect<&SceneViewportPanel::CreatePreviewCamera>(this);
 	}
 
 	void SceneViewportPanel::OnUpdate(DeltaTime dt)

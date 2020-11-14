@@ -77,7 +77,7 @@ namespace ZeoEngine {
 		Entity m_ContextEntity;
 	private:
 		entt::sigh<void(bool)> m_OnSceneCreateDel;
-	protected:
+	public:
 		/**
 		 * Called when scene is created.
 		 * The bool argument indicates whether the scene is created by "OpenScene" or "NewScene"

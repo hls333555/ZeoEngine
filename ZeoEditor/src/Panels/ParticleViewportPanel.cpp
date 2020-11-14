@@ -10,31 +10,33 @@ namespace ZeoEngine {
 		SceneViewportPanel::OnAttach();
 
 		CreatePreviewParticle();
+		GetContext()->m_OnSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
 	}
 
 	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
 	{
 		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
-		ParticleSystemPreviewComponent& particleComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		ParticleSystemPreviewComponent& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
 		GetContext()->SetContextEntity(previewParticleEntity);
 		if (!bIsFromOpenScene)
 		{
-			CreateDefaultParticleSystem(particleComp);
+			CreateDefaultParticleSystem(particlePreviewComp);
 		}
 	}
 
-	void ParticleViewportPanel::CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particleComp)
+	void ParticleViewportPanel::CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particlePreviewComp)
 	{
-		particleComp.Template->Lifetime.SetRandom(0.75f, 1.5f);
-		particleComp.Template->SpawnRate.SetConstant(30.0f);
-		particleComp.Template->InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
-		particleComp.Template->RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3 { 0.0f, 0.0f, 50.0f });
-		particleComp.Template->InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
-		particleComp.Template->SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
-		particleComp.Template->SizeEnd.SetConstant(glm::vec3{ 0.0f });
-		particleComp.Template->ColorBegin.SetConstant(glm::vec4{ 1.0f });
-		particleComp.Template->ColorEnd.SetConstant(glm::vec4{ 0.0f });
-		particleComp.CreateParticleSystem();
+		particlePreviewComp.Template->Lifetime.SetRandom(0.75f, 1.5f);
+		particlePreviewComp.Template->SpawnRate.SetConstant(30.0f);
+		particlePreviewComp.Template->InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
+		particlePreviewComp.Template->RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3 { 0.0f, 0.0f, 50.0f });
+		particlePreviewComp.Template->InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
+		particlePreviewComp.Template->SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
+		particlePreviewComp.Template->SizeEnd.SetConstant(glm::vec3{ 0.0f });
+		particlePreviewComp.Template->ColorBegin.SetConstant(glm::vec4{ 1.0f });
+		particlePreviewComp.Template->ColorEnd.SetConstant(glm::vec4{ 0.0f });
+		// Old template's particle system reference is cleared on old scene's destruction, so just pass null here
+		particlePreviewComp.CreateParticleSystem({});
 	}
 
 	void ParticleViewportPanel::RenderPanel()

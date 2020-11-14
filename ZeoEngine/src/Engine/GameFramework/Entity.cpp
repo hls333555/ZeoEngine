@@ -75,6 +75,7 @@ namespace ZeoEngine {
 			return;
 		}
 
+		type.func("on_destroy"_hs).invoke(GetTypeById(typeId));
 		RemoveComponentId(typeId);
 		type.func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}

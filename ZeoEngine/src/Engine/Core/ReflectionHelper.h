@@ -88,6 +88,7 @@ entt::meta<_type>()																				\
 		.func<&get<_type>, entt::as_ref_t>("get"_hs)											\
 		.func<&remove<_type>, entt::as_ref_t>("remove"_hs)										\
 		.func<&has<_type>>("has"_hs)															\
+		.func<&_type::OnDestroy>("on_destroy"_hs)												\
 		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)					\
 		.func<&Component::PostDataValueEditChange>("PostDataValueEditChange"_hs)				\
 		.base<Component>()

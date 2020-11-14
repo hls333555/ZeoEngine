@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		void OnRender();
 		void OnEvent(Event& e);
 
-		/** Called when scene is deserialized. */
+		/** Called after scene has been deserialized. */
 		void OnSceneDeserialized();
 
 		const std::string& GetName() const { return m_Name; }

@@ -58,6 +58,8 @@ namespace ZeoEngine {
 		ParticleInt Amount;
 	};
 
+	class ParticleSystem;
+
 	struct ParticleTemplate
 	{
 	public:
@@ -70,6 +72,19 @@ namespace ZeoEngine {
 
 		const std::string& GetPath() const { return Path; }
 		const std::string& GetName() const { return Name; }
+
+		void AddParticleSystemInstance(const Ref<ParticleSystem>& psInstance)
+		{
+			ParticleSystemInstances.push_back(psInstance);
+		}
+		void RemoveParticleSystemInstance(const Ref<ParticleSystem>& psInstance)
+		{
+			auto it = std::find(ParticleSystemInstances.cbegin(), ParticleSystemInstances.cend(), psInstance);
+			if (it != ParticleSystemInstances.cend())
+			{
+				ParticleSystemInstances.erase(it);
+			}
+		}
 
 		bool bIsLocalSpace = false;
 
@@ -113,6 +128,9 @@ namespace ZeoEngine {
 
 		// TODO: PreviewThumbnail
 		Ref<Texture2D> PreviewThumbnail;
+
+		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
+		std::vector<Ref<ParticleSystem>> ParticleSystemInstances;
 
 	private:
 		std::string Path;

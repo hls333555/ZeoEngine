@@ -14,6 +14,17 @@ namespace ZeoEngine {
 
 	Scene::~Scene()
 	{
+		// Clear particle system reference for particle editor before scene construction
+		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
+		{
+			pspc.Template->RemoveParticleSystemInstance(pspc.ParticleSystemRuntime);
+		});
+
+		// Clear particle system reference for runtime before scene construction
+		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
+		{
+			psc.Template->RemoveParticleSystemInstance(psc.ParticleSystemRuntime);
+		});
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
@@ -181,7 +192,7 @@ namespace ZeoEngine {
 	{
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
 		{
-			psc.CreateParticleSystem();
+			psc.CreateParticleSystem({});
 		});
 	}
 

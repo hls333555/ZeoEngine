@@ -15,8 +15,6 @@ namespace ZeoEngine {
 		EditorDockspace::OnAttach();
 
 		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorWindowType::Particle_View, this, true);
-		m_OnSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(particleViewportPanel);
-		m_OnSceneCreate.before<&ParticleViewportPanel::CreatePreviewParticle>(particleViewportPanel).connect<&SceneViewportPanel::CreatePreviewCamera>(particleViewportPanel);
 		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(EditorWindowType::Particle_Inspector, this, true);
 
 		{
@@ -55,10 +53,12 @@ namespace ZeoEngine {
 
 	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
 	{
-		TypeSerializer serializer(filePath);
-		auto& pspc = m_ContextEntity.GetComponent<ParticleSystemPreviewComponent>();
-		serializer.Deserialize(pspc, GetAssetType());
-		pspc.CreateParticleSystem();
+		// Deserialize particle template data and create particle system instance
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& pspc)
+		{
+			const auto& pTemplate = ParticleLibrary::Get().GetOrLoad(filePath);
+			pspc.SetTemplate(pTemplate);
+		});
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
