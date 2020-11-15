@@ -227,7 +227,7 @@ namespace ZeoEngine {
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
-		uint32_t m_PoolIndex;
+		int32_t m_PoolIndex;
 
 		uint32_t m_ActiveParticleCount = 0;
 

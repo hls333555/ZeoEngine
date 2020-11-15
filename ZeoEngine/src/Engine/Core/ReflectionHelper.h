@@ -128,8 +128,7 @@ entt::meta<enumType>()																			\
 	.prop(std::make_tuple(__VA_ARGS__))
 
 #define ZE_REFL_PROP(propType) PropertyType::propType
-#define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue) // For certain properties with integral type value (e.g. int8_t), you should use ZE_REFL_PROP_PAIR_WITH_CAST instead to explicitly specify their types during property registration
-#define ZE_REFL_PROP_PAIR_WITH_CAST(propType, propValue, castToType) std::make_pair(PropertyType::propType, static_cast<castToType>(propValue))
+#define ZE_REFL_PROP_PAIR(propType, propValue) std::make_pair(PropertyType::propType, propValue)
 
 namespace entt {
 
@@ -192,10 +191,12 @@ namespace ZeoEngine {
 	template<typename Ret, typename T>
 	std::optional<Ret> GetPropValue(PropertyType propType, T metaObj)
 	{
-		auto prop = metaObj.prop(propType);
+		const auto prop = metaObj.prop(propType);
 		if (prop)
 		{
-			return prop.value().cast<Ret>();
+			const auto value = prop.value();
+			// As int32_t conversions are already registered, the system can convert to all registered integral types seamlessly
+			return value.convert<Ret>().cast<Ret>();
 		}
 		return {};
 	}

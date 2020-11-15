@@ -265,6 +265,8 @@ namespace ZeoEngine {
 
 	void ParticleSystem::Emit()
 	{
+		if (m_PoolIndex < 0) return;
+
 		uint32_t oldPoolIndex = m_PoolIndex;
 		// Iterate until we find an available (inactive) particle to activate
 		while (m_ParticlePool[m_PoolIndex].bActive)

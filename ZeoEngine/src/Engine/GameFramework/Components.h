@@ -247,14 +247,7 @@ namespace ZeoEngine {
 			// Notify all alive instances to reset
 			for (const auto& ps : Template->ParticleSystemInstances)
 			{
-				if (dataId == ZE_DATA_ID(MaxDrawParticles))
-				{
-					ps->ResizeParticlePool();
-				}
-				else
-				{
-					ps->Reset();
-				}
+				ps->Reset();
 			}
 		}
 
