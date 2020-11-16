@@ -1,0 +1,54 @@
+Scene: Test
+Entities:
+  - Entity: 0
+    Components:
+      - Component: 4805901
+        bIsInternal: true
+        Name: Game View Camera
+      - Component: 1400689804
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [0, 0, 0]
+      - Component: 4187426141
+        OrthographicFar: 1
+        OrthographicNear: -1
+        Size: 6
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        VerticalFOV: 0.785398185
+        ProjectionType: Orthographic
+        bFixedAspectRatio: false
+        bIsPrimary: true
+      - Component: 216021526
+  - Entity: 1
+    Components:
+      - Component: 4805901
+        bIsInternal: false
+        Name: Player Ship
+      - Component: 1400689804
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [-1, 0, 0]
+      - Component: 2848967052
+        TextureTiling: [1, 1]
+        Texture: C:\Users\10366\source\repos\ZeoEngine\Sandbox\assets\textures\Ship.png
+        TintColor: [1, 1, 1, 1]
+      - Component: 3062797389
+        PositionOffset: [0, 0, 0]
+        Template: C:\Users\10366\source\repos\ZeoEngine\ZeoEditor\assets\particles\Test.zparticle
+  - Entity: 2
+    Components:
+      - Component: 4805901
+        bIsInternal: false
+        Name: Enemy Ship
+      - Component: 1400689804
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [1, 0, 0]
+      - Component: 2848967052
+        TextureTiling: [1, 1]
+        Texture: C:\Users\10366\source\repos\ZeoEngine\Sandbox\assets\textures\Ship2.png
+        TintColor: [1, 1, 1, 1]
+      - Component: 3062797389
+        PositionOffset: [0, 0, 0]
+        Template: C:\Users\10366\source\repos\ZeoEngine\ZeoEditor\assets\particles\Test.zparticle

@@ -1,0 +1,49 @@
+ParticleTemplate: Test
+MaxDrawParticles: 500
+SubImageSize: [0, 0]
+Texture: ""
+Lifetime:
+  - ValueHigh: 1.5
+  - Value: 0.75
+  - VariationType: RandomInRange
+ColorEnd:
+  - ValueHigh: [1, 1, 1, 1]
+  - Value: [0.899999976, 0.800000012, 0.5, 0]
+  - VariationType: Constant
+ColorBegin:
+  - ValueHigh: [0.899999976, 0.800000012, 0.200000003, 1]
+  - Value: [0.899999976, 0.400000006, 0.200000003, 1]
+  - VariationType: RandomInRange
+InheritVelocity: [0.100000001, 0.100000001, 0.100000001]
+InitialVelocity:
+  - ValueHigh: [0.5, -2, 0]
+  - Value: [-0.5, -0.5, 0]
+  - VariationType: RandomInRange
+SizeEnd:
+  - ValueHigh: [0, 0, 0]
+  - Value: [0, 0, 0]
+  - VariationType: Constant
+SizeBegin:
+  - ValueHigh: [0.200000003, 0.200000003, 0]
+  - Value: [0.075000003, 0.075000003, 0]
+  - VariationType: RandomInRange
+RotationRate:
+  - ValueHigh: [0, 0, 50]
+  - Value: [0, 0, 10]
+  - VariationType: RandomInRange
+InitialRotation:
+  - ValueHigh: [0, 0, 360]
+  - Value: [0, 0, 0]
+  - VariationType: RandomInRange
+InitialPosition:
+  - ValueHigh: [0, 0, 0]
+  - Value: [0, -0.5, 0]
+  - VariationType: Constant
+BurstList: []
+SpawnRate:
+  - ValueHigh: 0
+  - Value: 30
+  - VariationType: RandomInRange
+LoopDuration: 1
+LoopCount: 0
+IsLocalSpace: true
