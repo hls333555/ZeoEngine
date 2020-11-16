@@ -484,7 +484,7 @@ namespace ZeoEngine {
 	{
 		if (!Exists(path))
 		{
-			m_ParticleTemplates[GetCanonicalPath(path)] = pTemplate;
+			m_ParticleTemplates[GetRelativePath(path)] = pTemplate;
 		}
 	}
 
@@ -507,7 +507,7 @@ namespace ZeoEngine {
 	{
 		if (Exists(path))
 		{
-			return m_ParticleTemplates[GetCanonicalPath(path)];
+			return m_ParticleTemplates[GetRelativePath(path)];
 		}
 		else
 		{
@@ -518,12 +518,12 @@ namespace ZeoEngine {
 	Ref<ParticleTemplate> ParticleLibrary::Get(const std::string& path)
 	{
 		ZE_CORE_ASSERT_INFO(Exists(path), "Particle template not found!");
-		return m_ParticleTemplates[GetCanonicalPath(path)];
+		return m_ParticleTemplates[GetRelativePath(path)];
 	}
 
 	bool ParticleLibrary::Exists(const std::string& path) const
 	{
-		return m_ParticleTemplates.find(GetCanonicalPath(path)) != m_ParticleTemplates.end();
+		return m_ParticleTemplates.find(GetRelativePath(path)) != m_ParticleTemplates.end();
 	}
 
 }

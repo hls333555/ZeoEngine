@@ -1,7 +1,7 @@
 ParticleTemplate: Test2
 MaxDrawParticles: 500
 SubImageSize: [4, 2]
-Texture: C:\Users\10366\source\repos\ZeoEngine\Sandbox\assets\textures\Explosion_2x4.png
+Texture: ..\Sandbox\assets\textures\Explosion_2x4.png
 Lifetime:
   - ValueHigh: 0
   - Value: 0.400000006

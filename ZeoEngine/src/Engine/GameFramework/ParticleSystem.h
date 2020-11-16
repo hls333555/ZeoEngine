@@ -65,7 +65,7 @@ namespace ZeoEngine {
 	public:
 		ParticleTemplate() = default;
 		ParticleTemplate(const std::string& path)
-			: Path(path)
+			: Path(GetRelativePath(path))
 			, Name(GetNameFromPath(path))
 		{
 		}

@@ -31,11 +31,11 @@ Entities:
         Translation: [-1, 0, 0]
       - Component: 2848967052
         TextureTiling: [1, 1]
-        Texture: C:\Users\10366\source\repos\ZeoEngine\Sandbox\assets\textures\Ship.png
+        Texture: ..\Sandbox\assets\textures\Ship.png
         TintColor: [1, 1, 1, 1]
       - Component: 3062797389
         PositionOffset: [0, 0, 0]
-        Template: C:\Users\10366\source\repos\ZeoEngine\ZeoEditor\assets\particles\Test.zparticle
+        Template: assets\particles\Test.zparticle
   - Entity: 2
     Components:
       - Component: 4805901
@@ -47,8 +47,8 @@ Entities:
         Translation: [1, 0, 0]
       - Component: 2848967052
         TextureTiling: [1, 1]
-        Texture: C:\Users\10366\source\repos\ZeoEngine\Sandbox\assets\textures\Ship2.png
+        Texture: ..\Sandbox\assets\textures\Ship2.png
         TintColor: [1, 1, 1, 1]
       - Component: 3062797389
         PositionOffset: [0, 0, 0]
-        Template: C:\Users\10366\source\repos\ZeoEngine\ZeoEditor\assets\particles\Test.zparticle
+        Template: assets\particles\Test.zparticle

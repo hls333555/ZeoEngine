@@ -24,7 +24,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2D::Create(const std::string& path)
 	{
-		const auto canonicalPath = GetCanonicalPath(path);
+		const auto canonicalPath = GetRelativePath(path);
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 	{
 		if (!Exists(path))
 		{
-			m_Textures[GetCanonicalPath(path)] = texture;
+			m_Textures[GetRelativePath(path)] = texture;
 		}
 	}
 
@@ -63,7 +63,7 @@ namespace ZeoEngine {
 	{
 		if (Exists(path))
 		{
-			return m_Textures[GetCanonicalPath(path)];
+			return m_Textures[GetRelativePath(path)];
 		}
 		else
 		{
@@ -74,12 +74,12 @@ namespace ZeoEngine {
 	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)
 	{
 		ZE_CORE_ASSERT_INFO(Exists(path), "Texture not found!");
-		return m_Textures[GetCanonicalPath(path)];
+		return m_Textures[GetRelativePath(path)];
 	}
 
 	bool Texture2DLibrary::Exists(const std::string& path) const
 	{
-		return m_Textures.find(GetCanonicalPath(path)) != m_Textures.end();
+		return m_Textures.find(GetRelativePath(path)) != m_Textures.end();
 	}
 
 }
