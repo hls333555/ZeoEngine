@@ -202,8 +202,11 @@ namespace ZeoEngine {
 
 		virtual void OnDestroy() override
 		{
-			// Clear particle system reference before this component has been removed
-			Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
+			if (Template)
+			{
+				// Clear particle system reference before this component has been removed
+				Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
+			}
 		}
 
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
@@ -223,9 +226,12 @@ namespace ZeoEngine {
 			{
 				oldTemplate->RemoveParticleSystemInstance(ParticleSystemRuntime);
 			}
-			ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
-			// Add newly created instance to cache
-			Template->AddParticleSystemInstance(ParticleSystemRuntime);
+			if (Template)
+			{
+				ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
+				// Add newly created instance to cache
+				Template->AddParticleSystemInstance(ParticleSystemRuntime);
+			}
 		}
 
 	};

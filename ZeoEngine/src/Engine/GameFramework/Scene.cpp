@@ -23,7 +23,10 @@ namespace ZeoEngine {
 		// Clear particle system reference for runtime before scene construction
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
 		{
-			psc.Template->RemoveParticleSystemInstance(psc.ParticleSystemRuntime);
+			if (psc.Template)
+			{
+				psc.Template->RemoveParticleSystemInstance(psc.ParticleSystemRuntime);
+			}
 		});
 	}
 
