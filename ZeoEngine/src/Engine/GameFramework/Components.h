@@ -87,7 +87,7 @@ namespace ZeoEngine {
 	struct CoreComponent : public Component
 	{
 		std::string Name;
-		uint32_t CreationId;
+		size_t CreationId;
 		bool bIsInternal{ false };
 
 		CoreComponent() = default;

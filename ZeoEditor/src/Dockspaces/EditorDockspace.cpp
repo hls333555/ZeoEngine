@@ -133,11 +133,6 @@ namespace ZeoEngine {
 		m_PanelManager.PushPanel(panel);
 	}
 
-	EditorPanel* EditorDockspace::GetPanelByType(EditorWindowType panelType)
-	{
-		return m_PanelManager.GetPanelByName(ResolveEditorNameFromEnum(panelType));
-	}
-
 	EditorDockspace* EditorDockspace::OpenEditor(EditorWindowType dockspaceType)
 	{
 		auto* editor = m_EditorContext->GetDockspaceByType(dockspaceType);

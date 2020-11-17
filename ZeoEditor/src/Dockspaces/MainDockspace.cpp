@@ -53,22 +53,22 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Game_View, std::string(), gameViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Scene_Outline, std::string(), sceneOutlinePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Entity_Inspector, std::string(), entityInspectorPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Console, std::string(), consolePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Editor, std::string(), particleEditorDockspace->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Stats, std::string(), statsPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Preferences, std::string(), preferencesPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Game_View, "", gameViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Scene_Outline, "", sceneOutlinePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Entity_Inspector, "", entityInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Console, "", consolePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Editor, "", particleEditorDockspace->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Stats, "", statsPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Preferences, "", preferencesPanel->GetShowPtr()));
 			
 			windowMenu->PushMenuItem(new MenuItem_Seperator());
-			windowMenu->PushMenuItem(new MenuItem_ResetLayout("Reset layout", std::string()));
+			windowMenu->PushMenuItem(new MenuItem_ResetLayout("Reset layout", ""));
 			PushMenu(windowMenu);
 		}
 
 		{
 			EditorMenu* helpMenu = new EditorMenu("Help");
-			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::About, std::string(), aboutPanel->GetShowPtr()));
+			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::About, "", aboutPanel->GetShowPtr()));
 			PushMenu(helpMenu);
 		}
 

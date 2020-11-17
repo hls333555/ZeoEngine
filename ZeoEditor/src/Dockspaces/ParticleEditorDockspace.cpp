@@ -30,13 +30,14 @@ namespace ZeoEngine {
 			EditorMenu* editMenu = new EditorMenu("Edit");
 			editMenu->PushMenuItem(new MenuItem_Undo("Undo", "CTRL+Z"));
 			editMenu->PushMenuItem(new MenuItem_Redo("Redo", "CTRL+Y"));
+			editMenu->PushMenuItem(new MenuItem_Snapshot("Snapshot", ""));
 			PushMenu(editMenu);
 		}
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_View, std::string(), particleViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Inspector, std::string(), particleInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_View, "", particleViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Inspector, "", particleInspectorPanel->GetShowPtr()));
 			PushMenu(windowMenu);
 		}
 

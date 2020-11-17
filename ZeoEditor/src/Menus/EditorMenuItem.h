@@ -156,4 +156,13 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
+	class MenuItem_Snapshot : public EditorMenuItem
+	{
+	public:
+		using EditorMenuItem::EditorMenuItem;
+
+	private:
+		virtual void OnMenuItemActivated() override;
+	};
+
 }

@@ -2,6 +2,7 @@
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 #include <glad/glad.h>
+#include <stb_image_write.h>
 
 namespace ZeoEngine {
 
@@ -189,6 +190,23 @@ namespace ZeoEngine {
 		m_Spec.Width = width;
 		m_Spec.Height = height;
 		Invalidate();
+	}
+
+	void OpenGLFrameBuffer::Snapshot(const std::string& fileName, uint32_t width, uint32_t height)
+	{
+		int numOfComponents = 3; // RGB
+		// Read from the framebuffer into the data array
+		GLubyte* data = new GLubyte[numOfComponents * width * height];
+		memset(data, 0, numOfComponents * width * height);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+		// Write the PNG image
+		int strideInBytes = width * numOfComponents;
+		stbi_flip_vertically_on_write(1);
+		stbi_write_png(fileName.c_str(), width, height, numOfComponents, data, strideInBytes);
+		delete[] data;
 	}
 
 }

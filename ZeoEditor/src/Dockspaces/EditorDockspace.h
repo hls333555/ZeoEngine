@@ -50,7 +50,11 @@ namespace ZeoEngine {
 	public:
 		void PushMenu(EditorMenu* menu);
 		void PushPanel(EditorPanel* panel);
-		EditorPanel* GetPanelByType(EditorWindowType panelType);
+		template<typename T = EditorPanel>
+		T* GetPanelByType(EditorWindowType panelType)
+		{
+			return dynamic_cast<T*>(m_PanelManager.GetPanelByName(ResolveEditorNameFromEnum(panelType)));
+		}
 
 		EditorDockspace* OpenEditor(EditorWindowType dockspaceType);
 

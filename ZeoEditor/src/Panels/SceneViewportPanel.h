@@ -18,6 +18,8 @@ namespace ZeoEngine {
 
 		void CreatePreviewCamera(bool bIsFromOpenScene = false);
 
+		void Snapshot(const std::string& fileName);
+
 	protected:
 		virtual void RenderPanel() override;
 

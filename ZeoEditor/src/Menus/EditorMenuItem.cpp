@@ -6,6 +6,7 @@
 #include "EditorLayer.h"
 #include "Dockspaces/MainDockspace.h"
 #include "Engine/Core/Input.h"
+#include "Panels/SceneViewportPanel.h"
 
 namespace ZeoEngine {
 
@@ -155,6 +156,17 @@ namespace ZeoEngine {
 	{
 		EditorLayer* editorLayer = Application::Get().FindLayer<EditorLayer>();
 		editorLayer->RebuildDockLayout();
+	}
+
+	void MenuItem_Snapshot::OnMenuItemActivated()
+	{
+		const std::string scenePath = GetEditorContext()->GetScene()->GetPath();
+		// This may be null e.g. default particle system
+		if (scenePath == "") return;
+
+		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(EditorWindowType::Particle_View);
+		std::string snapshotName = scenePath + ".png";
+		viewportPanel->Snapshot(snapshotName);
 	}
 
 }
