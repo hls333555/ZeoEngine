@@ -142,9 +142,9 @@ namespace ZeoEngine {
 		nativeScriptComp.Bind<SceneCameraController>(this);
 	}
 
-	void SceneViewportPanel::Snapshot(const std::string& fileName)
+	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
 	{
-		GetFrameBuffer()->Snapshot(fileName, m_LastViewportSize.x, m_LastViewportSize.y);
+		GetFrameBuffer()->Snapshot(imageName, m_LastViewportSize.x, m_LastViewportSize.y, imageWidth);
 	}
 
 	void SceneViewportPanel::OnViewportResize(const glm::vec2& size)

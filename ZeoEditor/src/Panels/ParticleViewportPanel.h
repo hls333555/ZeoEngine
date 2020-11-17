@@ -15,6 +15,8 @@ namespace ZeoEngine {
 
 		void CreatePreviewParticle(bool bIsFromOpenScene = false);
 
+		virtual void Snapshot(const std::string& imageName, uint32_t imageWidth = 0) override;
+
 	private:
 		virtual void RenderPanel() override;
 

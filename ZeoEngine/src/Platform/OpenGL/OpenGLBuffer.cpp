@@ -192,20 +192,28 @@ namespace ZeoEngine {
 		Invalidate();
 	}
 
-	void OpenGLFrameBuffer::Snapshot(const std::string& fileName, uint32_t width, uint32_t height)
+	void OpenGLFrameBuffer::Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth)
 	{
-		int numOfComponents = 3; // RGB
+		constexpr int numOfComponents = 4; // RGBA
+		uint32_t snapshotWidth = width, snapshotHeight = height;
+		if (imageWidth != 0)
+		{
+			snapshotWidth = snapshotHeight = imageWidth;
+		}
+
 		// Read from the framebuffer into the data array
-		GLubyte* data = new GLubyte[numOfComponents * width * height];
-		memset(data, 0, numOfComponents * width * height);
+		const uint32_t dataSize = numOfComponents * snapshotWidth * snapshotHeight;
+		GLubyte* data = new GLubyte[dataSize];
+		memset(data, 0, dataSize);
+		// Resize viewport to center-squared if imageWidth is non-zero
+		glViewport((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glReadPixels((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 		// Write the PNG image
-		int strideInBytes = width * numOfComponents;
+		int strideInBytes = snapshotWidth * numOfComponents;
 		stbi_flip_vertically_on_write(1);
-		stbi_write_png(fileName.c_str(), width, height, numOfComponents, data, strideInBytes);
+		stbi_write_png(imageName.c_str(), snapshotWidth, snapshotHeight, numOfComponents, data, strideInBytes);
 		delete[] data;
 	}
 

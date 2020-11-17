@@ -86,6 +86,11 @@ namespace ZeoEngine {
 			}
 		}
 
+		void UpdatePreviewThumbnail(const std::string& imageName)
+		{
+			PreviewThumbnail = Texture2D::Create(imageName);
+		}
+
 		bool bIsLocalSpace = false;
 
 		/** <= 0 means infinite loop */
@@ -126,7 +131,6 @@ namespace ZeoEngine {
 
 		uint32_t MaxDrawParticles = 500;
 
-		// TODO: PreviewThumbnail
 		Ref<Texture2D> PreviewThumbnail;
 
 		/** Caches all alive instances this template has instantiated, used to sync updates on value change */

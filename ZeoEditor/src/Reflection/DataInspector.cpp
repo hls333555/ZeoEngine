@@ -948,10 +948,10 @@ namespace ZeoEngine {
 		auto oldValue = particleTemplateValue;
 
 		ParticleLibrary& library = ParticleLibrary::Get();
-		// TODO: Particle template preview
+		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
+		auto backgroundTexture = texture2DLib.Get("assets/textures/Checkerboard_Alpha.png");
+		// Particle template preview
 		{
-			Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
-			auto backgroundTexture = texture2DLib.Get("assets/textures/Checkerboard_Alpha.png");
 			const float pTemplatePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
 			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
@@ -959,7 +959,8 @@ namespace ZeoEngine {
 				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 			// Draw preview thumbnail on top of that
-			ImGui::Image(particleTemplateValue && particleTemplateValue->PreviewThumbnail ? particleTemplateValue->PreviewThumbnail->GetTexture() : backgroundTexture->GetTexture(),
+			auto thumbnailTexture = particleTemplateValue && particleTemplateValue->PreviewThumbnail ? particleTemplateValue->PreviewThumbnail : backgroundTexture;
+			ImGui::Image(thumbnailTexture->GetTexture(),
 				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				particleTemplateValue ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
@@ -1031,11 +1032,12 @@ namespace ZeoEngine {
 				{
 					ImGui::SetTooltip("%s", pTemplate->GetPath().c_str());
 				}
-				//ImGui::SameLine();
-				//// TODO: Draw particle template thumbnail
-				//ImGui::Image(pTemplate->GetPreviewTexture(),
-				//	ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
-				//	ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+				ImGui::SameLine();
+				// Draw particle template thumbnail
+				auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
+				ImGui::Image(thumbnailTexture->GetTexture(),
+					ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
+					ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 				ImGui::SameLine();
 				// Display particle template name
 				ImGui::Text(pTemplate->GetName().c_str());

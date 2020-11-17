@@ -14,7 +14,7 @@
 namespace ZeoEngine {
 
 	EditorDockspace::EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
-		: m_DockspaceName(ResolveEditorNameFromEnum(dockspaceType)), m_bIsMainDockspace(dockspaceType == EditorWindowType::Zeo_Editor), m_EditorContext(context), m_bShow(bDefaultShow)
+		: m_DockspaceType(dockspaceType), m_bIsMainDockspace(dockspaceType == EditorWindowType::Zeo_Editor), m_EditorContext(context), m_bShow(bDefaultShow)
 		, m_DockspacePadding(dockspacePadding)
 		, m_DockspaceWindowFlags(dockspaceWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
@@ -88,14 +88,14 @@ namespace ZeoEngine {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, m_bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspacePadding);
 
-		ImGui::Begin(m_DockspaceName.c_str(), &m_bShow, m_DockspaceWindowFlags);
+		ImGui::Begin(GetDockspaceName().c_str(), &m_bShow, m_DockspaceWindowFlags);
 		ImGui::PopStyleVar(3);
 
 		// Render menus - non-main-menus must be rendered winthin window context
 		m_MenuManager.OnImGuiRender(m_bIsMainDockspace);
 
 		// TODO: Needs separate from window name?
-		ImGuiID dockspaceID = ImGui::GetID(m_DockspaceName.c_str());
+		ImGuiID dockspaceID = ImGui::GetID(GetDockspaceName().c_str());
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)
 		{
 			m_bShouldRebuildDockLayout = false;

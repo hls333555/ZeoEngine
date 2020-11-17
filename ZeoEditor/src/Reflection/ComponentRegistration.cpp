@@ -125,6 +125,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, Lifetime, SetLifetime, GetLifetime, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Particle")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子的生命周期")))
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, Texture, SetTexture, GetTexture, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("粒子的材质贴图")))
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, SubImageSize, SetSubImageSize, GetSubImageSize, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("决定如何分割贴图来用于UV动画。x为列数，y为行数")), ZE_REFL_PROP_PAIR(ClampMin, 0.0f))
-		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, MaxDrawParticles, SetMaxDrawParticles, GetMaxDrawParticles, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Emitter")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("最多生成的粒子数")), ZE_REFL_PROP_PAIR(ClampMin, 0));
+		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, MaxDrawParticles, SetMaxDrawParticles, GetMaxDrawParticles, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Emitter")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("最多生成的粒子数")), ZE_REFL_PROP_PAIR(ClampMin, 0))
+		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, PreviewThumbnail, SetPreviewThumbnail, GetPreviewThumbnail, ZE_REFL_PROP(HiddenInEditor));
 
 }

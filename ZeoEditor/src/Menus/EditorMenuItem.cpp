@@ -160,13 +160,13 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string scenePath = GetEditorContext()->GetScene()->GetPath();
+		const std::string filePath = GetEditorContext()->GetScene()->GetPath();
 		// This may be null e.g. default particle system
-		if (scenePath == "") return;
+		if (filePath == "") return;
 
-		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(EditorWindowType::Particle_View);
-		std::string snapshotName = scenePath + ".png";
-		viewportPanel->Snapshot(snapshotName);
+		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(GetEditorContext()->GetDockspaceType());
+		std::string snapshotName = filePath + ".png";
+		viewportPanel->Snapshot(snapshotName, 256);
 	}
 
 }

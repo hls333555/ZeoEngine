@@ -24,6 +24,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void ParticleViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
+	{
+		SceneViewportPanel::Snapshot(imageName, imageWidth);
+
+		GetContext()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Template->UpdatePreviewThumbnail(imageName);
+	}
+
 	void ParticleViewportPanel::CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particlePreviewComp)
 	{
 		particlePreviewComp.Template->Lifetime.SetRandom(0.75f, 1.5f);

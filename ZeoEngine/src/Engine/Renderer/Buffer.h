@@ -176,7 +176,7 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
-		virtual void Snapshot(const std::string& fileName, uint32_t width, uint32_t height) = 0;
+		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) = 0;
 
 		virtual void* GetColorAttachment() const = 0;
 

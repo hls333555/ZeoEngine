@@ -57,7 +57,7 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual void Snapshot(const std::string& fileName, uint32_t width, uint32_t height) override;
+		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
 
 		virtual void* GetColorAttachment() const override { return (void*)(intptr_t)m_ColorAttachment; }
 

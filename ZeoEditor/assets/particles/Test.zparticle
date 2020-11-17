@@ -1,4 +1,5 @@
 ParticleTemplate: Test
+PreviewThumbnail: assets\particles\Test.zparticle.png
 MaxDrawParticles: 500
 SubImageSize: [0, 0]
 Texture: ""
@@ -43,7 +44,7 @@ BurstList: []
 SpawnRate:
   - ValueHigh: 0
   - Value: 30
-  - VariationType: RandomInRange
+  - VariationType: Constant
 LoopDuration: 1
 LoopCount: 0
 IsLocalSpace: true

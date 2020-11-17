@@ -38,7 +38,8 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		const std::string& GetDockspaceName() const { return m_DockspaceName; }
+		EditorWindowType GetDockspaceType() const { return m_DockspaceType; }
+		std::string GetDockspaceName() const { return std::move(ResolveEditorNameFromEnum(m_DockspaceType)); }
 		bool* GetShowPtr() { return &m_bShow; }
 		Entity GetContextEntity() const { return m_ContextEntity; }
 		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
@@ -89,7 +90,7 @@ namespace ZeoEngine {
 		entt::sink<void(bool)> m_OnSceneCreate{ m_OnSceneCreateDel };
 
 	private:
-		std::string m_DockspaceName;
+		EditorWindowType m_DockspaceType;
 		bool m_bIsMainDockspace;
 		ImVec2Data m_InitialPos, m_InitialSize;
 		glm::vec2 m_DockspacePadding;
