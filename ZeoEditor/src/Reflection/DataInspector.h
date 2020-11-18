@@ -44,6 +44,7 @@ namespace ZeoEngine {
 
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, const entt::meta_any& instance);
+		void ParseHideCondition(entt::meta_data data, const entt::meta_any& instance, const std::string& hideConditionStr, const char* token, std::optional<bool>& result);
 
 		entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);
 		entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);

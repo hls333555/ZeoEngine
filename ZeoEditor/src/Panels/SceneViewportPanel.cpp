@@ -144,7 +144,7 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
 	{
-		GetFrameBuffer()->Snapshot(imageName, m_LastViewportSize.x, m_LastViewportSize.y, imageWidth);
+		GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
 	}
 
 	void SceneViewportPanel::OnViewportResize(const glm::vec2& size)

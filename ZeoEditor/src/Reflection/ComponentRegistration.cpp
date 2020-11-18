@@ -95,7 +95,7 @@ using namespace ZeoEngine;
 	ZE_REFL_TYPE_NESTED(_type)															\
 		ZE_REFL_DATA_REF(_type, VariationType)											\
 		ZE_REFL_DATA_REF(_type, Val1, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Value")))	\
-		ZE_REFL_DATA_REF(_type, Val2, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("ValueHigh")), ZE_REFL_PROP_PAIR(HideCondition, "Val1 == Constant"))
+		ZE_REFL_DATA_REF(_type, Val2, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("ValueHigh")), ZE_REFL_PROP_PAIR(HideCondition, "VariationType == Constant"))
 
 	ZE_REFL_PARTICLE_VARIATION_TYPE(ParticleInt);
 	ZE_REFL_PARTICLE_VARIATION_TYPE(ParticleFloat);

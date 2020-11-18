@@ -72,7 +72,7 @@ enum class PropertyType
 	InherentType,				// [key_only] This type cannot be added or removed within editor.
 	Category,					// [value_type: const char*] Category of type or data.
 	HiddenInEditor,				// [key_only] Should hide this data in editor?
-	HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true.
+	HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
 	Transient,					// [key_only] If set, this data will not get serialized.
 };
 
