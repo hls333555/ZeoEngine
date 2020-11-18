@@ -164,7 +164,7 @@ namespace ZeoEngine {
 		// This may be null e.g. default particle system
 		if (filePath == "") return;
 
-		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(GetEditorContext()->GetDockspaceType());
+		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(GetEditorContext()->GetViewportPanelType());
 		std::string snapshotName = filePath + ".png";
 		viewportPanel->Snapshot(snapshotName, 256);
 	}

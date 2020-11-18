@@ -16,11 +16,11 @@ namespace ZeoEngine {
 	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
 	{
 		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
-		ParticleSystemPreviewComponent& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		m_ParticlePreviewComp = &previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
 		GetContext()->SetContextEntity(previewParticleEntity);
 		if (!bIsFromOpenScene)
 		{
-			CreateDefaultParticleSystem(particlePreviewComp);
+			CreateDefaultParticleSystem();
 		}
 	}
 
@@ -28,22 +28,22 @@ namespace ZeoEngine {
 	{
 		SceneViewportPanel::Snapshot(imageName, imageWidth);
 
-		GetContext()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Template->UpdatePreviewThumbnail(imageName);
+		m_ParticlePreviewComp->Template->UpdatePreviewThumbnail(imageName);
 	}
 
-	void ParticleViewportPanel::CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particlePreviewComp)
+	void ParticleViewportPanel::CreateDefaultParticleSystem()
 	{
-		particlePreviewComp.Template->Lifetime.SetRandom(0.75f, 1.5f);
-		particlePreviewComp.Template->SpawnRate.SetConstant(30.0f);
-		particlePreviewComp.Template->InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
-		particlePreviewComp.Template->RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3 { 0.0f, 0.0f, 50.0f });
-		particlePreviewComp.Template->InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
-		particlePreviewComp.Template->SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
-		particlePreviewComp.Template->SizeEnd.SetConstant(glm::vec3{ 0.0f });
-		particlePreviewComp.Template->ColorBegin.SetConstant(glm::vec4{ 1.0f });
-		particlePreviewComp.Template->ColorEnd.SetConstant(glm::vec4{ 0.0f });
+		m_ParticlePreviewComp->Template->Lifetime.SetRandom(0.75f, 1.5f);
+		m_ParticlePreviewComp->Template->SpawnRate.SetConstant(30.0f);
+		m_ParticlePreviewComp->Template->InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
+		m_ParticlePreviewComp->Template->RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3 { 0.0f, 0.0f, 50.0f });
+		m_ParticlePreviewComp->Template->InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
+		m_ParticlePreviewComp->Template->SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
+		m_ParticlePreviewComp->Template->SizeEnd.SetConstant(glm::vec3{ 0.0f });
+		m_ParticlePreviewComp->Template->ColorBegin.SetConstant(glm::vec4{ 1.0f });
+		m_ParticlePreviewComp->Template->ColorEnd.SetConstant(glm::vec4{ 0.0f });
 		// Old template's particle system reference is cleared on old scene's destruction, so just pass null here
-		particlePreviewComp.CreateParticleSystem({});
+		m_ParticlePreviewComp->CreateParticleSystem({});
 	}
 
 	void ParticleViewportPanel::RenderPanel()
@@ -52,7 +52,7 @@ namespace ZeoEngine {
 
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		const auto& ps = GetContext()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().ParticleSystemRuntime;
+		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
 
 		// Display "Completed" text at the top center of Particle View window
 		if (ps->m_bSystemComplete)

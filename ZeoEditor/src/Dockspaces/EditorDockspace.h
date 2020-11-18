@@ -45,6 +45,7 @@ namespace ZeoEngine {
 		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
+		virtual EditorWindowType GetViewportPanelType() const = 0;
 
 	protected:
 		void PushDockspace(EditorDockspace* dockspace);

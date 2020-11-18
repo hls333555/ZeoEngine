@@ -20,7 +20,10 @@ namespace ZeoEngine {
 	private:
 		virtual void RenderPanel() override;
 
-		void CreateDefaultParticleSystem(ParticleSystemPreviewComponent& particleComp);
+		void CreateDefaultParticleSystem();
+
+	private:
+		ParticleSystemPreviewComponent* m_ParticlePreviewComp;
 
 	};
 
