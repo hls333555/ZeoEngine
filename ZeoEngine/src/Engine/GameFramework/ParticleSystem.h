@@ -155,8 +155,6 @@ namespace ZeoEngine {
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
 
-		void Reset();
-
 		void Activate();
 		void Deactivate();
 
@@ -209,16 +207,17 @@ namespace ZeoEngine {
 			bool bActive = false;
 		};
 
-		void ResizeParticlePool();
+		void Resimulate();
+		void ResetParticlePool();
+		void Reset();
 
+		void Reevaluate();
 		void EvaluateEmitterProperties();
 		void ReevaluateBurstList();
 		void EvaluateParticleProperties(Particle& particle);
 
 		void Emit();
 		void CalculateNextPoolIndex();
-
-		void Resimulate();
 
 	private:
 		entt::sigh<void()> m_OnSystemFinishedDel;

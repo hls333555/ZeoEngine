@@ -2,6 +2,8 @@
 
 #include "Panels/SceneViewportPanel.h"
 
+#include "Engine/Renderer/Texture.h"
+
 namespace ZeoEngine {
 
 	struct ParticleSystemPreviewComponent;
@@ -19,10 +21,14 @@ namespace ZeoEngine {
 
 	private:
 		virtual void RenderPanel() override;
+		virtual void RenderToolbar() override;
 
 		void CreateDefaultParticleSystem();
 
 	private:
+		Ref<Texture2D> m_PauseTexture, m_ResumeTexture, m_ResimulateTexture;
+		void* m_ToolbarTextures[2];
+
 		ParticleSystemPreviewComponent* m_ParticlePreviewComp;
 
 	};

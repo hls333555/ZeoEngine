@@ -13,10 +13,11 @@ namespace ZeoEngine {
 	{
 		SceneViewportPanel::OnAttach();
 
-		m_ToolbarTextures[0] = m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
-		m_ToolbarTextures[1] = m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
+		m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
+		m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
 		m_StopTexture = Texture2D::Create("assets/textures/Stop.png");
-
+		m_ToolbarTextures[0] = m_PlayTexture->GetTexture();
+		m_ToolbarTextures[1] = m_PauseTexture->GetTexture();
 	}
 
 	void GameViewportPanel::RenderPanel()
@@ -54,8 +55,6 @@ namespace ZeoEngine {
 		//ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + padding, ImGui::GetCursorPos().y + padding));
 
 		//OnGameViewImGuiRender();
-
-		RenderToolbar();
 	}
 
 	void GameViewportPanel::RenderToolbar()
@@ -64,7 +63,7 @@ namespace ZeoEngine {
 		// Place buttons at window center
 		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - buttonSize - GImGui->Style.FramePadding.x * 3.0f/* Both two sides of button and SameLine() have spacing. */);
 		// Toggle play / stop
-		if (ImGui::ImageButton(m_ToolbarTextures[0]->GetTexture(), { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::ImageButton(m_ToolbarTextures[0], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 		{
 			//if (pieState == PIEState::None)
 			//{
@@ -77,7 +76,7 @@ namespace ZeoEngine {
 		}
 		ImGui::SameLine();
 		// Toggle pause / resume
-		if (ImGui::ImageButton(m_ToolbarTextures[1]->GetTexture(), { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::ImageButton(m_ToolbarTextures[1], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 		{
 			//if (pieState == PIEState::Running)
 			//{

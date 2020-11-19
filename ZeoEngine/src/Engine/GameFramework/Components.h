@@ -250,10 +250,10 @@ namespace ZeoEngine {
 
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
 		{
-			// Notify all alive instances to reset
+			// Notify all alive instances to reflect the change
 			for (const auto& ps : Template->ParticleSystemInstances)
 			{
-				ps->Reset();
+				ps->Reevaluate();
 			}
 		}
 

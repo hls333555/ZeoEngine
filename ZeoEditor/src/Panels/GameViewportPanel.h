@@ -15,11 +15,11 @@ namespace ZeoEngine {
 
 	private:
 		virtual void RenderPanel() override;
-
-		void RenderToolbar();
+		virtual void RenderToolbar() override;
 
 	private:
-		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture, m_ToolbarTextures[2];
+		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture;
+		void* m_ToolbarTextures[2];
 	};
 
 }

@@ -1,5 +1,7 @@
 #include "Panels/ParticleViewportPanel.h"
 
+#include <imgui_internal.h>
+
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/EditorDockspace.h"
 
@@ -8,6 +10,12 @@ namespace ZeoEngine {
 	void ParticleViewportPanel::OnAttach()
 	{
 		SceneViewportPanel::OnAttach();
+
+		m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
+		m_ResumeTexture = Texture2D::Create("assets/textures/Play.png");
+		m_ResimulateTexture = Texture2D::Create("assets/textures/Restart.png");
+		m_ToolbarTextures[0] = m_PauseTexture->GetTexture();
+		m_ToolbarTextures[1] = m_ResimulateTexture->GetTexture();
 
 		CreatePreviewParticle();
 		GetContext()->m_OnSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
@@ -48,19 +56,13 @@ namespace ZeoEngine {
 
 	void ParticleViewportPanel::RenderPanel()
 	{
+		// Get default available region before drawing any widgets
+		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
 		SceneViewportPanel::RenderPanel();
 
-		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
 		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
-
-		// Display "Completed" text at the top center of Particle View window
-		if (ps->m_bSystemComplete)
-		{
-			static const float completedWidth = ImGui::CalcTextSize("Completed").x;
-			ImGui::Indent((contentRegionAvailable.x - completedWidth) * 0.5f);
-			ImGui::Text("Complete");
-		}
+		
 		// Display particle count at the top right corner of Particle View window
 		{
 			char particleCount[16];
@@ -68,6 +70,35 @@ namespace ZeoEngine {
 			const float particleCountWidth = ImGui::CalcTextSize(particleCount).x;
 			ImGui::SameLine(contentRegionAvailable.x - particleCountWidth);
 			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, particleCount);
+		}
+
+		// Display "Completed" text at the bottom center of Particle View window
+		if (ps->m_bSystemComplete)
+		{
+			static const float completedWidth = ImGui::CalcTextSize("Completed").x;
+			ImGui::SetCursorPos({ (ImGui::GetWindowWidth() - completedWidth) * 0.5f + GImGui->Style.FramePadding.x, contentRegionAvailable.y });
+			ImGui::Text("Complete");
+		}
+	}
+
+	void ParticleViewportPanel::RenderToolbar()
+	{
+		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
+
+		const float buttonSize = 32.0f;
+		// Place buttons at window center
+		ImGui::Indent(contentRegionAvailable.x * 0.5f - buttonSize - GImGui->Style.FramePadding.x * 3.0f/* Both two sides of button and SameLine() have spacing. */);
+		// Toggle pause / resume
+		if (ImGui::ImageButton(m_ToolbarTextures[0], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		{
+
+		}
+		ImGui::SameLine();
+		// Resimulate
+		if (ImGui::ImageButton(m_ToolbarTextures[1], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		{
+			ps->Resimulate();
 		}
 	}
 

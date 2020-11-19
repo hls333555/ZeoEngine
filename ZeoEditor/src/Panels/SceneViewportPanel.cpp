@@ -45,6 +45,8 @@ namespace ZeoEngine {
 			window->InnerRect.Max,
 			// The UVs have to be flipped
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+			RenderToolbar();
 	}
 
 	void SceneViewportPanel::CreatePreviewCamera(bool bIsFromOpenScene)

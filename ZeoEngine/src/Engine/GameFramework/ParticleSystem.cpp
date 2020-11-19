@@ -138,19 +138,13 @@ namespace ZeoEngine {
 		, m_OwnerEntity(ownerEntity)
 	{
 		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
-		Reset();
+		Reevaluate();
 	}
 
-	void ParticleSystem::ResizeParticlePool()
+	void ParticleSystem::Reevaluate()
 	{
-		m_ParticlePool.resize(m_ParticleTemplate->MaxDrawParticles);
-		m_PoolIndex = m_ParticleTemplate->MaxDrawParticles - 1;
-	}
-
-	void ParticleSystem::Reset()
-	{
-		ResizeParticlePool();
 		EvaluateEmitterProperties();
+		Resimulate();
 	}
 
 	void ParticleSystem::EvaluateEmitterProperties()
@@ -298,15 +292,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::Resimulate()
-	{
-		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
-		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
-#if WITH_EDITOR
-		m_bFiniteLoopPrepareToRestart = true;
-#endif
-	}
-
 	void ParticleSystem::OnUpdate(DeltaTime dt)
 	{
 		if (m_bPendingDestroy)
@@ -422,7 +407,7 @@ namespace ZeoEngine {
 			}
 			if (m_Time - m_FiniteLoopRestartTime >= m_FiniteLoopRestartInterval)
 			{
-				Resimulate();
+				Reset();
 				return;
 			}
 		}
@@ -463,6 +448,28 @@ namespace ZeoEngine {
 				Renderer2D::DrawRotatedQuad(transform, particle.Color);
 			}
 		}
+	}
+
+	void ParticleSystem::ResetParticlePool()
+	{
+		m_ParticlePool.clear();
+		m_ParticlePool.resize(m_EmitterSpec.MaxDrawParticles);
+		m_PoolIndex = m_EmitterSpec.MaxDrawParticles - 1;
+	}
+
+	void ParticleSystem::Resimulate()
+	{
+		ResetParticlePool();
+		Reset();
+	}
+
+	void ParticleSystem::Reset()
+	{
+		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
+#if WITH_EDITOR
+		m_bFiniteLoopPrepareToRestart = true;
+#endif
 	}
 
 	void ParticleSystem::Activate()

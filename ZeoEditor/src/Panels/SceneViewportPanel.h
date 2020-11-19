@@ -27,8 +27,9 @@ namespace ZeoEngine {
 
 	protected:
 		virtual void RenderPanel() override;
-
 	private:
+		virtual void RenderToolbar() {};
+
 		void OnViewportResize(const glm::vec2& size);
 
 		void InitCameraViewportSize(entt::registry& registry, entt::entity entity);
