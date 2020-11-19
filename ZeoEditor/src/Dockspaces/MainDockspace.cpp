@@ -12,7 +12,7 @@
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
 #include "Menus/EditorMenuItem.h"
-#include "Engine/Core/SceneSerializer.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 

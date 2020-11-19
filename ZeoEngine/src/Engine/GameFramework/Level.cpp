@@ -5,7 +5,6 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Application.h"
 #include "Engine/Debug/BenchmarkTimer.h"
-#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
@@ -212,8 +211,8 @@ namespace ZeoEngine {
 	void Level::LoadLevelFromFile(const char* levelPath, bool bIsTemp)
 	{
 		std::string result;
-		if (!Serializer::Get().ValidateFile(levelPath, LevelFileToken, result))
-			return;
+		//if (!Serializer::Get().ValidateFile(levelPath, LevelFileToken, result))
+		//	return;
 
 		CleanUp();
 
@@ -252,9 +251,9 @@ namespace ZeoEngine {
 			classNameStartPos = src.find(classNameStart, classNameLineStartPos);
 			std::string extractedObjectJson = src.substr(nextLinePos, classNameLineStartPos - nextLinePos);
 
-			Serializer::Get().Deserialize<GameObject*>(extractedObjectJson, [&className]() {
-				return rttr::type::get_by_name(className).create({ glm::vec3{ 0.0f, 0.0f, 0.1f } });
-			});
+			//Serializer::Get().Deserialize<GameObject*>(extractedObjectJson, [&className]() {
+			//	return rttr::type::get_by_name(className).create({ glm::vec3{ 0.0f, 0.0f, 0.1f } });
+			//});
 		}
 	}
 
@@ -285,7 +284,7 @@ namespace ZeoEngine {
 			// e.g. #Player_2(Player)
 			out << "#" << object->GetUniqueName() << "(" << rttr::type::get(*object).get_name() << ")" << std::endl;
 			// TODO: Save camera position
-			out << Serializer::Get().Serialize(object) << std::endl;
+			//out << Serializer::Get().Serialize(object) << std::endl;
 		}
 		if (!bIsTemp)
 		{

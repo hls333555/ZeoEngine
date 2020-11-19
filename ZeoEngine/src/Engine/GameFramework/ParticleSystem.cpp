@@ -8,7 +8,7 @@
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/Core/SceneSerializer.h"
+#include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {

@@ -15,7 +15,6 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/EngineUtilities.h"
 #include "Engine/Debug/BenchmarkTimer.h"
-#include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/MainDockspace.h"
@@ -1529,7 +1528,7 @@ namespace ZeoEngine {
 		}
 
 		//out << "#type " << ParticleSystem::ParticleSystemFileToken << std::endl;
-		out << Serializer::Get().Serialize(m_EditorParticleSystem);
+		//out << Serializer::Get().Serialize(m_EditorParticleSystem);
 	}
 
 	constexpr const char* PIETempFile = "temp/PIE.tmp";

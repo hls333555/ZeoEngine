@@ -5,7 +5,7 @@
 #include <glm/ext/matrix_transform.hpp>
 
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/SceneSerializer.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 

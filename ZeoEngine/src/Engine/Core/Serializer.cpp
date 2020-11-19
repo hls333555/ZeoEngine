@@ -1,675 +1,771 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
-#include "Engine/GameFramework/GameObject.h"
+#include <glm/glm.hpp>
+#include <magic_enum.hpp>
+
 #include "Engine/Renderer/Texture.h"
-#include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Core/EngineGlobals.h"
+#include "Engine/GameFramework/Components.h"
+
+namespace YAML {
+
+	using namespace ZeoEngine;
+
+	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::vec3>
+	{
+		static Node encode(const glm::vec3& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.push_back(rhs.z);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec3& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 3)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			rhs.z = node[2].as<float>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::vec4>
+	{
+		static Node encode(const glm::vec4& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.push_back(rhs.z);
+			node.push_back(rhs.w);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec4& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 4)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			rhs.z = node[2].as<float>();
+			rhs.w = node[3].as<float>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<Ref<Texture2D>>
+	{
+		static Node encode(const Ref<Texture2D>& rhs)
+		{
+			Node node;
+			node.push_back(rhs ? rhs->GetPath() : "");
+			return node;
+		}
+
+		static bool decode(const Node& node, Ref<Texture2D>& rhs)
+		{
+			const auto& path = node.as<std::string>();
+			if (path.empty()) return true;
+
+			rhs = Texture2DLibrary::Get().GetOrLoad(path);
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<Ref<ParticleTemplate>>
+	{
+		static Node encode(const Ref<ParticleTemplate>& rhs)
+		{
+			Node node;
+			node.push_back(rhs ? rhs->GetPath() : "");
+			return node;
+		}
+
+		static bool decode(const Node& node, Ref<ParticleTemplate>& rhs)
+		{
+			const auto& path = node.as<std::string>();
+			if (path.empty()) return true;
+
+			rhs = ParticleLibrary::Get().GetOrLoad(path);
+			return true;
+		}
+	};
+
+}
 
 namespace ZeoEngine {
 
-	//////////////////////////////////////////////////////////////////////////
-	// Serialization /////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	std::string Serializer::Serialize(const rttr::instance& object)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
 	{
-		rapidjson::StringBuffer sb;
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-
-		SerializeRecursively(object, writer);
-		return sb.GetString();
+		out << e.GetEntityId();
+		return out;
 	}
 
-	void Serializer::SerializeRecursively(const rttr::instance& object, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
 	{
-		writer.StartObject();
-		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
-		const auto& properties = obj.get_derived_type().get_properties();
-		for (auto prop : properties)
-		{
-			if (prop.get_metadata(PropertyMeta::Transient))
-				continue;
-
-			rttr::variant var = prop.get_value(obj);
-			// Cannot serialize, because we cannot retrieve the value
-			if (!var)
-				continue;
-
-			const auto name = prop.get_name();
-			writer.String(name.data(), static_cast<rapidjson::SizeType>(name.length()), false);
-			if (!SerializeValue(var, writer))
-			{
-				ZE_CORE_ERROR("Failed to serialize property: {0}", name);
-			}
-		}
-		writer.EndObject();
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+		return out;
 	}
 
-	bool Serializer::SerializeValue(const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
-		rttr::type valueType = var.get_type();
-		rttr::type wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
-		bool is_wrapper = wrappedType != valueType;
-		if (SerializeAtomicTypes(wrappedType, is_wrapper ? var.extract_wrapped_value() : var, writer))
-		{
-		}
-		else if (var.is_sequential_container())
-		{
-			SerializeSequentialContainerTypes(var.create_sequential_view(), writer);
-		}
-		else if (var.is_associative_container())
-		{
-			SerializeAssociativeContainerTypes(var.create_associative_view(), writer);
-		}
-		else
-		{
-			auto& childProps = is_wrapper ? wrappedType.get_properties() : valueType.get_properties();
-			if (!childProps.empty())
-			{
-				SerializeRecursively(var, writer);
-			}
-			else
-			{
-				bool bOk = false;
-				std::string stringValue = var.to_string(&bOk);
-				if (!bOk)
-				{
-					writer.String(stringValue);
-					return false;
-				}
-				writer.String(stringValue);
-			}
-		}
-		return true;
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
+		return out;
 	}
 
-	bool Serializer::SerializeAtomicTypes(const rttr::type& type, const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
 	{
-		if (type.is_arithmetic())
-		{
-			if (type == rttr::type::get<bool>())
-			{
-				writer.Bool(var.to_bool());
-			}
-			else if (type == rttr::type::get<char>())
-			{
-				writer.Bool(var.to_bool());
-			}
-			else if (type == rttr::type::get<int8_t>())
-			{
-				writer.Int(var.to_int8());
-			}
-			else if (type == rttr::type::get<int16_t>())
-			{
-				writer.Int(var.to_int16());
-			}
-			else if (type == rttr::type::get<int32_t>())
-			{
-				writer.Int(var.to_int32());
-			}
-			else if (type == rttr::type::get<int64_t>())
-			{
-				writer.Int64(var.to_int64());
-			}
-			else if (type == rttr::type::get<uint8_t>())
-			{
-				writer.Uint(var.to_uint8());
-			}
-			else if (type == rttr::type::get<uint16_t>())
-			{
-				writer.Uint(var.to_uint16());
-			}
-			else if (type == rttr::type::get<uint32_t>())
-			{
-				writer.Uint(var.to_uint32());
-			}
-			else if (type == rttr::type::get<uint64_t>())
-			{
-				writer.Uint64(var.to_uint64());
-			}
-			else if (type == rttr::type::get<float>())
-			{
-				writer.Double(var.to_double());
-			}
-			else if (type == rttr::type::get<double>())
-			{
-				writer.Double(var.to_double());
-			}
-			return true;
-		}
-		// enum
-		else if (type.is_enumeration())
-		{
-			bool bOk = false;
-			const std::string stringValue = var.to_string(&bOk);
-			if (bOk)
-			{
-				writer.String(stringValue);
-			}
-			else
-			{
-				bOk = false;
-				uint64_t uint64Value = var.to_uint64(&bOk);
-				if (bOk)
-				{
-					writer.Uint64(uint64Value);
-				}
-				else
-				{
-					writer.Null();
-				}
-			}
-			return true;
-		}
-		// std::string
-		else if (type.get_raw_type() == rttr::type::get<std::string>())
-		{
-			if (type.is_pointer())
-			{
-				writer.String(*var.get_value<std::string*>());
-			}
-			else
-			{
-				writer.String(var.to_string());
-			}
-			return true;
-		}
-		// glm::i32vec2
-		else if (type.get_raw_type() == rttr::type::get<glm::i32vec2>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Int(var.get_value<glm::i32vec2*>()->x);
-				writer.Int(var.get_value<glm::i32vec2*>()->y);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Int(var.get_value<glm::i32vec2>().x);
-				writer.Int(var.get_value<glm::i32vec2>().y);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// glm::vec2
-		else if (type.get_raw_type() == rttr::type::get<glm::vec2>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec2*>()->x);
-				writer.Double(var.get_value<glm::vec2*>()->y);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec2>().x);
-				writer.Double(var.get_value<glm::vec2>().y);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// glm::vec3
-		else if (type.get_raw_type() == rttr::type::get<glm::vec3>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec3*>()->x);
-				writer.Double(var.get_value<glm::vec3*>()->y);
-				writer.Double(var.get_value<glm::vec3*>()->z);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec3>().x);
-				writer.Double(var.get_value<glm::vec3>().y);
-				writer.Double(var.get_value<glm::vec3>().z);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// glm::vec4
-		else if (type.get_raw_type() == rttr::type::get<glm::vec4>())
-		{
-			if (type.is_pointer())
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec4*>()->x);
-				writer.Double(var.get_value<glm::vec4*>()->y);
-				writer.Double(var.get_value<glm::vec4*>()->z);
-				writer.Double(var.get_value<glm::vec4*>()->w);
-				writer.EndArray();
-			}
-			else
-			{
-				writer.StartArray();
-				writer.Double(var.get_value<glm::vec4>().x);
-				writer.Double(var.get_value<glm::vec4>().y);
-				writer.Double(var.get_value<glm::vec4>().z);
-				writer.Double(var.get_value<glm::vec4>().w);
-				writer.EndArray();
-			}
-			return true;
-		}
-		// TODO: Serialize GameObject*
-		// GameObject*
-		else if (type.is_pointer() && type == rttr::type::get<GameObject*>())
-		{
-			ZE_CORE_WARN("Serializing GameObject* is currently not supported!");
-			writer.String(var.get_value<GameObject*>()->GetUniqueName());
-			return true;
-		}
-		// Ref<Texture2D>
-		else if (type.get_raw_type() == rttr::type::get<Texture2D>())
-		{
-			const auto& texture = var.get_value<Ref<Texture2D>>();
-			writer.String(texture ? texture->GetPath() : "");
-			return true;
-		}
-		// ParticleSystem*
-		else if (type.is_pointer() && type == rttr::type::get<ParticleSystem*>())
-		{
-			ParticleSystem* ps = var.get_value<ParticleSystem*>();
-			//writer.String(ps ? ps->GetPath() : "");
-			return true;
-		}
-		return false;
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
+		return out;
 	}
 
-	void Serializer::SerializeSequentialContainerTypes(const rttr::variant_sequential_view& sequentialView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Ref<Texture2D>& texture)
 	{
-		writer.StartArray();
-		for (const auto& item : sequentialView)
-		{
-			if (item.is_sequential_container())
-			{
-				SerializeSequentialContainerTypes(item.create_sequential_view(), writer);
-			}
-			else
-			{
-				rttr::variant wrappedVar = item.extract_wrapped_value();
-				rttr::type valueType = wrappedVar.get_type();
-				if (SerializeAtomicTypes(valueType, wrappedVar, writer))
-				{
-				}
-				else
-				{
-					SerializeRecursively(wrappedVar, writer);
-				}
-			}
-		}
-		writer.EndArray();
+		out << (texture ? texture->GetPath() : "");
+		return out;
 	}
 
-	void Serializer::SerializeAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Ref<ParticleTemplate>& pTemplate)
 	{
-		static const std::string keyName("key");
-		static const std::string valueName("value");
-
-		writer.StartArray();
-		if (associativeView.is_key_only_type())
-		{
-			for (auto& item : associativeView)
-			{
-				SerializeValue(item.first, writer);
-			}
-		}
-		else
-		{
-			for (auto& item : associativeView)
-			{
-				writer.StartObject();
-				writer.String(keyName.c_str(), static_cast<rapidjson::SizeType>(keyName.size()), false);
-				SerializeValue(item.first, writer);
-				writer.String(valueName.c_str(), static_cast<rapidjson::SizeType>(valueName.size()), false);
-				SerializeValue(item.second, writer);
-				writer.EndObject();
-			}
-		}
-		writer.EndArray();
+		out << (pTemplate ? pTemplate->GetPath() : "");
+		return out;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// Deserialization ///////////////////////////////////////////////////////
+	// TypeSerializer ////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	bool Serializer::ValidateFile(const std::string& filePath, const std::string& validationStr, std::string& outProcessedStr)
+	TypeSerializer::TypeSerializer(const std::string& filePath)
+		: m_Path(filePath)
 	{
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
-		if (in)
+	}
+
+	void TypeSerializer::Serialize(entt::meta_any instance, AssetType assetType)
+	{
+		Serialize_t(assetType, [&](YAML::Emitter& out)
 		{
-			std::string firstLine;
-			// Type token is supposed to be the FIRST line
-			std::getline(in, firstLine);
-			if (firstLine.empty())
-			{
-				ZE_CORE_ERROR("Validation failed: Unrecognized {0} file format!", validationStr.c_str());
-				return false;
-			}
+			SerializeType(out, instance);
+		});
+	}
 
-			const char* typeToken = "#type";
-			size_t typeTokenLength = strlen(typeToken);
-			// Location of file type
-			size_t typeTokenPos = firstLine.find(typeToken, 0);
-			if (typeTokenPos == std::string::npos)
-			{
-				ZE_CORE_ERROR("Validation failed: Unrecognized {0} file format!", validationStr.c_str());
-				return false;
-			}
+	void TypeSerializer::SerializeType(YAML::Emitter& out, entt::meta_any instance)
+	{
+		for (auto data : instance.type().data())
+		{
+			// Do not serialize transient data
+			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
+			if (bDiscardSerialize) continue;
 
-			// End of line
-			size_t eol = firstLine.find_first_of("\r\n", typeTokenPos);
-			size_t typePos = typeTokenPos + typeTokenLength + 1;
-			// Get file type
-			std::string type = firstLine.substr(typePos, eol - typePos);
-			if (type != validationStr)
+			const auto dataType = data.type();
+			if (dataType.is_sequence_container())
 			{
-				ZE_CORE_ERROR("Validation failed: Unrecognized {0} file format!", validationStr.c_str());
-				return false;
+				EvaluateSerializeSequenceContainerData(out, data, instance);
 			}
-
-			in.seekg(0, std::ios::end);
-			auto size = in.tellg();
-			if (size == -1)
+			else if (dataType.is_associative_container())
 			{
-				ZE_CORE_ERROR("Validation failed: Could not read from file {0}!", filePath);
-				return false;
+				EvaluateSerializeAssociativeContainerData(out, data, instance);
+			}
+			else if (DoesPropExist(PropertyType::NestedClass, dataType))
+			{
+				EvaluateSerializeNestedData(out, data, instance, false);
 			}
 			else
 			{
-				outProcessedStr.resize(size);
-				// "1" should be '\n'
-				in.seekg(firstLine.size() + 1, std::ios::beg);
-				// Read from second line till end of file
-				in.read(&outProcessedStr[0], size);
-				in.close();
+				EvaluateSerializeData(out, data, instance, false);
 			}
 		}
-		else
-		{
-			ZE_CORE_ERROR("Validation failed: Could not open file {0}!", filePath);
-			return false;
-		}
-
-		return true;
 	}
 
-	void Serializer::DeserializeRecursively(const rttr::instance& object, rapidjson::Value& jsonObject)
+	void TypeSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
 	{
-		rttr::instance obj = object.get_type().get_raw_type().is_wrapper() ? object.get_wrapped_instance() : object;
-		const auto& properties = obj.get_derived_type().get_properties();
-		for (auto prop : properties)
+		auto& seqView = data.get(instance).as_sequence_container();
+		const auto type = seqView.value_type();
+		const auto dataName = GetMetaObjectDisplayName(data);
+		out << YAML::Key << *dataName << YAML::Value;
 		{
-			auto it = jsonObject.FindMember(prop.get_name().data());
-			if (it == jsonObject.MemberEnd())
-				continue;
-
-			const rttr::type type = prop.get_type();
-			auto& jsonValue = it->value;
-			switch (jsonValue.GetType())
+			out << YAML::Flow;
+			out << YAML::BeginSeq;
 			{
-				case rapidjson::kArrayType:
+				for (auto it = seqView.begin(); it != seqView.end(); ++it)
 				{
-					rttr::variant var = prop.get_value(obj);
-					// Note: type.is_sequential_container() will not work properly
-					if (var.is_sequential_container())
+					auto element = *it;
+					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, type);
+					if (bIsNestedClass)
 					{
-						DeserializeSequentialContainerTypes(var.create_sequential_view(), jsonValue);
-					}
-					else if (var.is_associative_container())
-					{
-						DeserializeAssociativeContainerTypes(var.create_associative_view(), jsonValue);
-					}
-					// These vectors are stored as json arrays
-					else if (type.get_raw_type() == rttr::type::get<glm::i32vec2>())
-					{
-						if (type.is_pointer())
-						{
-							var.get_value<glm::i32vec2*>()->x = jsonValue[0].GetInt();
-							var.get_value<glm::i32vec2*>()->y = jsonValue[1].GetInt();
-						}
-						else
-						{
-							var.get_value<glm::i32vec2>().x = jsonValue[0].GetInt();
-							var.get_value<glm::i32vec2>().y = jsonValue[1].GetInt();
-						}
-					}
-					else if (type.get_raw_type() == rttr::type::get<glm::vec2>())
-					{
-						if (type.is_pointer())
-						{
-							var.get_value<glm::vec2*>()->x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec2*>()->y = static_cast<float>(jsonValue[1].GetDouble());
-						}
-						else
-						{
-							var.get_value<glm::vec2>().x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec2>().y = static_cast<float>(jsonValue[1].GetDouble());
-						}
-					}
-					else if (type.get_raw_type() == rttr::type::get<glm::vec3>())
-					{
-						if (type.is_pointer())
-						{
-							var.get_value<glm::vec3*>()->x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec3*>()->y = static_cast<float>(jsonValue[1].GetDouble());
-							var.get_value<glm::vec3*>()->z = static_cast<float>(jsonValue[2].GetDouble());
-						}
-						else
-						{
-							var.get_value<glm::vec3>().x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec3>().y = static_cast<float>(jsonValue[1].GetDouble());
-							var.get_value<glm::vec3>().z = static_cast<float>(jsonValue[2].GetDouble());
-						}
-					}
-					else if (type.get_raw_type() == rttr::type::get<glm::vec4>())
-					{
-						if (type.is_pointer())
-						{
-							var.get_value<glm::vec4*>()->x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec4*>()->y = static_cast<float>(jsonValue[1].GetDouble());
-							var.get_value<glm::vec4*>()->z = static_cast<float>(jsonValue[2].GetDouble());
-							var.get_value<glm::vec4*>()->w = static_cast<float>(jsonValue[3].GetDouble());
-						}
-						else
-						{
-							var.get_value<glm::vec4>().x = static_cast<float>(jsonValue[0].GetDouble());
-							var.get_value<glm::vec4>().y = static_cast<float>(jsonValue[1].GetDouble());
-							var.get_value<glm::vec4>().z = static_cast<float>(jsonValue[2].GetDouble());
-							var.get_value<glm::vec4>().w = static_cast<float>(jsonValue[3].GetDouble());
-						}
-					}
-					prop.set_value(obj, var);
-					break;
-				}
-				case rapidjson::kObjectType:
-				{
-					rttr::variant var = prop.get_value(obj);
-					DeserializeRecursively(var, jsonValue);
-					prop.set_value(obj, var);
-					break;
-				}
-				default:
-				{
-					rttr::variant extractedValue = DeserializeBasicTypes(jsonValue);
-					// TODO: CONVERSION WORKS ONLY WITH "const type", check whether this is correct or not!
-					if (extractedValue.convert(type))
-					{
-						prop.set_value(obj, extractedValue);
-					}
-					else if (type == rttr::type::get<std::string*>())
-					{
-						*prop.get_value(obj).get_value<std::string*>() = extractedValue.to_string();
-					}
-					else if (type.get_raw_type() == rttr::type::get<Ref<Texture2D>>())
-					{
-						std::string extractedPath = extractedValue.to_string();
-						if (!extractedPath.empty())
-						{
-							prop.set_value(obj, Texture2DLibrary::Get().GetOrLoad(extractedPath));
-						}
-					}
-					else if (type.is_pointer() && type == rttr::type::get<ParticleSystem*>())
-					{
-						std::string extractedPath = extractedValue.to_string();
-						if (!extractedPath.empty())
-						{
-							prop.set_value(obj, ParticleLibrary::Get().GetOrLoad(extractedPath));
-						}
+						EvaluateSerializeNestedData(out, data, element, true);
 					}
 					else
 					{
-						ZE_CORE_ERROR("Failed to deserialize property: {0}!", prop.get_name());
+						EvaluateSerializeData(out, data, element, true);
 					}
+				}
+			}
+			out << YAML::EndSeq;
+		}
+	}
+
+	void TypeSerializer::EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	{
+
+	}
+
+	void TypeSerializer::EvaluateSerializeNestedData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto dataName = GetMetaObjectDisplayName(data);
+		bIsSeqContainer ? out << YAML::BeginSeq : out << YAML::Key << *dataName << YAML::Value << YAML::BeginSeq;
+		{
+			const auto type = bIsSeqContainer ? instance.type() : data.type();
+			auto subInstance = bIsSeqContainer ? instance : data.get(instance);
+			for (auto subData : type.data())
+			{
+				out << YAML::BeginMap;
+				{
+					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
+					if (bIsNestedClass)
+					{
+						EvaluateSerializeNestedData(out, subData, subInstance, false);
+					}
+					else
+					{
+						EvaluateSerializeData(out, subData, subInstance, false);
+					}
+				}
+				out << YAML::EndMap;
+			}
+		}
+		out << YAML::EndSeq;
+	}
+
+	void TypeSerializer::EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (type.is_integral())
+		{
+			EvaluateSerializeIntegralData(out, data, instance, bIsSeqContainer);
+		}
+		else if (type.is_floating_point())
+		{
+			EvaluateSerializeFloatingPointData(out, data, instance, bIsSeqContainer);
+		}
+		else if (type.is_enum())
+		{
+			SerializeEnumData(out, data, instance, bIsSeqContainer);
+		}
+		else
+		{
+			EvaluateSerializeOtherData(out, data, instance, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateSerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<bool>(type))
+		{
+			SerializeData<bool>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int8_t>(type))
+		{
+			SerializeData<int8_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int32_t>(type))
+		{
+			SerializeData<int32_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int64_t>(type))
+		{
+			SerializeData<int64_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint8_t>(type))
+		{
+			SerializeData<uint8_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint32_t>(type))
+		{
+			SerializeData<uint32_t>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint64_t>(type))
+		{
+			SerializeData<uint64_t>(out, data, instance, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateSerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<float>(type))
+		{
+			SerializeData<float>(out, data, instance, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<double>(type))
+		{
+			SerializeData<double>(out, data, instance, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateSerializeOtherData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<std::string>(type))
+		{
+			SerializeData<std::string>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec2>(type))
+		{
+			SerializeData<glm::vec2>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec3>(type))
+		{
+			SerializeData<glm::vec3>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec4>(type))
+		{
+			SerializeData<glm::vec4>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
+		{
+			SerializeData<Ref<Texture2D>>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
+		{
+			SerializeData<Ref<ParticleTemplate>>(out, data, instance, bIsSeqContainer);
+			return;
+		}
+
+		auto dataName = GetMetaObjectDisplayName(data);
+		ZE_CORE_ASSERT_INFO(false, "Failed to serialize data: '{0}'", *dataName);
+	}
+
+	void TypeSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	{
+		if (bIsSeqContainer)
+		{
+			const char* enumValueName = GetEnumDisplayName(instance);
+			out << enumValueName;
+		}
+		else
+		{
+			const auto dataName = GetMetaObjectDisplayName(data);
+			const auto enumValue = data.get(instance);
+			const char* enumValueName = GetEnumDisplayName(enumValue);
+			out << YAML::Key << *dataName << YAML::Value << enumValueName;
+		}
+	}
+
+	bool TypeSerializer::Deserialize(entt::meta_any instance, AssetType assetType)
+	{
+		auto data = PreDeserialize(assetType);
+		if (!data) return false;
+
+		DeserializeType(instance, *data);
+		return true;
+	}
+
+	std::optional<YAML::Node> TypeSerializer::PreDeserialize(AssetType assetType)
+	{
+		YAML::Node data = YAML::LoadFile(m_Path);
+		auto assetTypeName = magic_enum::enum_name(assetType).data();
+		if (!data[assetTypeName])
+		{
+			const std::string fileName = GetFileNameFromPath(m_Path);
+			ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", fileName, assetTypeName);
+			return {};
+		}
+
+		std::string assetName = data[assetTypeName].as<std::string>();
+		ZE_CORE_TRACE("Deserializing {0} '{1}'", assetTypeName, assetName);
+		return data;
+	}
+
+	void TypeSerializer::DeserializeType(entt::meta_any& instance, const YAML::Node& value)
+	{
+		for (auto data : instance.type().data())
+		{
+			auto dataName = GetMetaObjectDisplayName(data);
+			const auto& dataValue = value[*dataName];
+			// Evaluate serialized data only
+			if (dataValue)
+			{
+				const auto dataType = data.type();
+				if (dataType.is_sequence_container())
+				{
+					EvaluateDeserializeSequenceContainerData(data, instance, dataValue);
+				}
+				else if (dataType.is_associative_container())
+				{
+					EvaluateDeserializeAssociativeContainerData(data, instance, dataValue);
+				}
+				else if (DoesPropExist(PropertyType::NestedClass, dataType))
+				{
+					EvaluateDeserializeNestedData(data, instance, dataValue, false);
+				}
+				else
+				{
+					EvaluateDeserializeData(data, instance, dataValue, false);
 				}
 			}
 		}
 	}
 
-	rttr::variant Serializer::DeserializeBasicTypes(rapidjson::Value& jsonValue)
+	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView)
 	{
-		switch (jsonValue.GetType())
+		// "0" value works for "all" types because we have registered their conversion functions
+		auto& [retIt, res] = seqView.insert(seqView.end(), 0);
+		if (res)
 		{
-		case rapidjson::kNullType:
-		{
-			break;
+			return retIt;
 		}
-		case rapidjson::kFalseType:
-		case rapidjson::kTrueType:
+		else
 		{
-			return jsonValue.GetBool();
-		}
-		case rapidjson::kNumberType:
-		{
-			if (jsonValue.IsInt())
+			// For special types like user-defined enums, we have to invoke a function instead
+			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
+			auto& [retIt, res] = seqView.insert(seqView.end(), defaultValue);
+			if (res)
 			{
-				return jsonValue.GetInt();
-			}
-			else if (jsonValue.IsInt64())
-			{
-				return jsonValue.GetInt64();
-			}
-			else if (jsonValue.IsUint())
-			{
-				return jsonValue.GetUint();
-			}
-			else if (jsonValue.IsUint64())
-			{
-				return jsonValue.GetUint64();
-			}
-			else if (jsonValue.IsDouble())
-			{
-				return jsonValue.GetDouble();
-			}
-			break;
-		}
-		case rapidjson::kStringType:
-		{
-			return std::string(jsonValue.GetString());
-		}
-		// We handle only the basic types here
-		case rapidjson::kObjectType:
-		case rapidjson::kArrayType:
-		{
-			return rttr::variant();
-		}
-		}
-
-		return rttr::variant();
-	}
-
-	void Serializer::DeserializeSequentialContainerTypes(rttr::variant_sequential_view& sequentialView, rapidjson::Value& jsonArrayValue)
-	{
-		sequentialView.set_size(jsonArrayValue.Size());
-		const rttr::type arrayValueType = sequentialView.get_rank_type(1);
-		for (rapidjson::SizeType i = 0; i < jsonArrayValue.Size(); ++i)
-		{
-			auto& jsonIndexValue = jsonArrayValue[i];
-			if (jsonIndexValue.IsArray())
-			{
-				auto& subSequentialView = sequentialView.get_value(i).create_sequential_view();
-				DeserializeSequentialContainerTypes(subSequentialView, jsonIndexValue);
-			}
-			else if (jsonIndexValue.IsObject())
-			{
-				rttr::variant var = sequentialView.get_value(i);
-				rttr::variant wrappedVar = var.extract_wrapped_value();
-				DeserializeRecursively(wrappedVar, jsonIndexValue);
-				sequentialView.set_value(i, wrappedVar);
+				return retIt;
 			}
 			else
 			{
-				rttr::variant extractedValue = DeserializeBasicTypes(jsonIndexValue);
-				if (extractedValue.convert(arrayValueType))
-				{
-					sequentialView.set_value(i, extractedValue);
-				}
+				auto dataName = GetMetaObjectDisplayName(data);
+				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
 			}
 		}
+		return {};
 	}
 
-	void Serializer::DeserializeAssociativeContainerTypes(rttr::variant_associative_view& associativeView, rapidjson::Value& jsonArrayValue)
+	void TypeSerializer::EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
 	{
-		for (rapidjson::SizeType i = 0; i < jsonArrayValue.Size(); ++i)
+		const auto type = data.get(instance).as_sequence_container().value_type();
+		for (const auto& element : value)
 		{
-			auto& jsonIndexValue = jsonArrayValue[i];
-			// A key-value associative view
-			if (jsonIndexValue.IsObject())
+			auto& seqView = data.get(instance).as_sequence_container();
+			auto it = InsertDefaultValueForSeq(data, seqView);
+			bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, type);
+			if (bIsNestedClass)
 			{
-				auto keyIt = jsonIndexValue.FindMember("key");
-				auto valueIt = jsonIndexValue.FindMember("value");
-
-				if (keyIt != jsonIndexValue.MemberEnd() && valueIt != jsonIndexValue.MemberEnd())
-				{
-					rttr::variant keyVar = ExtractValue(keyIt, associativeView.get_key_type());
-					rttr::variant valueVar = ExtractValue(valueIt, associativeView.get_value_type());
-					if (keyVar && valueVar)
-					{
-						associativeView.insert(keyVar, valueVar);
-					}
-				}
+				EvaluateDeserializeNestedData(data, *it, element, true);
 			}
-			// A key-only associative view
 			else
 			{
-				rttr::variant extractedValue = DeserializeBasicTypes(jsonIndexValue);
-				if (extractedValue && extractedValue.convert(associativeView.get_key_type()))
+				EvaluateDeserializeData(data, *it, element, true);
+			}
+		}
+	}
+
+	void TypeSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
+	{
+
+	}
+
+	void TypeSerializer::EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
+		uint32_t i = 0;
+		for (auto subData : type.data())
+		{
+			auto subDataName = GetMetaObjectDisplayName(subData);
+			// Evaluate serialized subdata only
+			if (value[i])
+			{
+				const auto& subValue = value[i][*subDataName];
+				// Evaluate serialized subdata only
+				if (subValue)
 				{
-					associativeView.insert(extractedValue);
+					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
+					if (bIsNestedClass)
+					{
+						EvaluateDeserializeNestedData(subData, subInstance, subValue, false);
+					}
+					else
+					{
+						EvaluateDeserializeData(subData, subInstance, subValue, false);
+					}
+				}
+			}
+			++i;
+		}
+		// We must set subInstance value back to instance
+		SetDataValue(data, instance, subInstance);
+	}
+
+	void TypeSerializer::EvaluateDeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (type.is_integral())
+		{
+			EvaluateDeserializeIntegralData(data, instance, value, bIsSeqContainer);
+		}
+		else if (type.is_floating_point())
+		{
+			EvaluateDeserializeFloatingPointData(data, instance, value, bIsSeqContainer);
+		}
+		else if (type.is_enum())
+		{
+			DeserializeEnumData(data, instance, value, bIsSeqContainer);
+		}
+		else
+		{
+			EvaluateDeserializeOtherData(data, instance, value, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<bool>(type))
+		{
+			DeserializeData<bool>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int8_t>(type))
+		{
+			DeserializeData<int8_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int32_t>(type))
+		{
+			DeserializeData<int32_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<int64_t>(type))
+		{
+			DeserializeData<int64_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint8_t>(type))
+		{
+			DeserializeData<uint8_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint32_t>(type))
+		{
+			DeserializeData<uint32_t>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<uint64_t>(type))
+		{
+			DeserializeData<uint64_t>(data, instance, value, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<float>(type))
+		{
+			DeserializeData<float>(data, instance, value, bIsSeqContainer);
+		}
+		else if (IsTypeEqual<double>(type))
+		{
+			DeserializeData<double>(data, instance, value, bIsSeqContainer);
+		}
+	}
+
+	void TypeSerializer::EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		if (IsTypeEqual<std::string>(type))
+		{
+			DeserializeData<std::string>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec2>(type))
+		{
+			DeserializeData<glm::vec2>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec3>(type))
+		{
+			DeserializeData<glm::vec3>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<glm::vec4>(type))
+		{
+			DeserializeData<glm::vec4>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
+		{
+			DeserializeData<Ref<Texture2D>>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
+		{
+			DeserializeData<Ref<ParticleTemplate>>(data, instance, value, bIsSeqContainer);
+			return;
+		}
+
+		auto dataName = GetMetaObjectDisplayName(data);
+		ZE_CORE_ASSERT_INFO(false, "Failed to deserialize data: '{0}'", *dataName);
+	}
+
+	void TypeSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	{
+		const auto currentValueName = value.as<std::string>();
+		const auto& datas = bIsSeqContainer ? instance.type().data() : data.type().data();
+		for (auto enumData : datas)
+		{
+			auto valueName = GetMetaObjectDisplayName(enumData);
+			if (currentValueName == valueName)
+			{
+				auto newValue = enumData.get({});
+				if (bIsSeqContainer)
+				{
+					SetEnumValueForSeq(instance, newValue);
+				}
+				else
+				{
+					SetDataValue(data, instance, newValue);
 				}
 			}
 		}
 	}
-	// TODO: ExtractValue
-	rttr::variant Serializer::ExtractValue(rapidjson::Value::MemberIterator& it, const rttr::type& type)
+
+	//////////////////////////////////////////////////////////////////////////
+	// SceneSerializer ///////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	SceneSerializer::SceneSerializer(const std::string& filePath, const Ref<Scene>& scene)
+		: TypeSerializer(filePath)
+		, m_Scene(scene)
 	{
-		auto& jsonValue = it->value;
-		rttr::variant extractedValue = DeserializeBasicTypes(jsonValue);
-		const bool bCanConvert = extractedValue.convert(type);
-		if (!bCanConvert)
+	}
+
+	void SceneSerializer::Serialize()
+	{
+		Serialize_t(AssetType::Scene, [&](YAML::Emitter& out)
 		{
-			if (jsonValue.IsObject())
+			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
-				rttr::constructor ctor = type.get_constructor();
-				for (auto& item : type.get_constructors())
+				m_Scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
 				{
-					if (item.get_instantiated_type() == type)
+					Entity entity = { entityId, m_Scene.get() };
+					if (!entity) return;
+
+					SerializeEntity(out, entity);
+				});
+			}
+			out << YAML::EndSeq;
+		});
+	}
+
+	void SceneSerializer::SerializeRuntime()
+	{
+		// Not implemented
+		ZE_CORE_ASSERT(false);
+	}
+
+	void SceneSerializer::SerializeEntity(YAML::Emitter& out, const Entity entity)
+	{
+		out << YAML::BeginMap;
+		{
+			out << YAML::Key << "Entity" << YAML::Value << entity; // TODO: Entity ID goes here
+			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
+			{
+				// Do not call entt::registry::visit() as the order is reversed
+				for (auto typeId : m_Scene->m_Entities[entity])
+				{
+					out << YAML::BeginMap;
 					{
-						ctor = item;
+						const auto type = entt::resolve_type(typeId);
+						out << YAML::Key << "Component" << YAML::Value << typeId; // TODO: Type ID goes here
+						const auto instance = entity.GetTypeById(type.type_id());
+						SerializeType(out, instance);
 					}
+					out << YAML::EndMap;
 				}
-				extractedValue = ctor.invoke();
-				DeserializeRecursively(extractedValue, jsonValue);
+			}
+			out << YAML::EndSeq;
+		}
+		out << YAML::EndMap;
+	}
+
+	bool SceneSerializer::Deserialize()
+	{
+		auto data = PreDeserialize(AssetType::Scene);
+		if (!data) return false;
+
+		auto entities = (*data)["Entities"];
+		if (entities)
+		{
+			for (auto entity : entities)
+			{
+				DeserializeEntity(entity);
 			}
 		}
+		return true;
+	}
 
-		return extractedValue;
+	bool SceneSerializer::DeserializeRuntime()
+	{
+		// Not implemented
+		ZE_CORE_ASSERT(false);
+		return false;
+	}
+
+	void SceneSerializer::DeserializeEntity(const YAML::Node& entity)
+	{
+		uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
+		// Some entities including preview camera are created by default on scene creation
+		Entity deserializedEntity{ static_cast<entt::entity>(uuid), m_Scene.get() };
+		if (!deserializedEntity.IsValid())
+		{
+			// Create a default entity if not exists
+			deserializedEntity = m_Scene->CreateEntity();
+		}
+
+		auto components = entity["Components"];
+		if (components)
+		{
+			for (auto component : components)
+			{
+				auto typeId = component["Component"].as<uint32_t>();
+				// TODO: NativeScriptComponent deserialization
+				if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
+
+				entt::meta_any instance = deserializedEntity.GetOrAddTypeById(typeId);
+				// Instance may be null as typeId is invalid
+				if (instance)
+				{
+					DeserializeType(instance, component);
+				}
+			}
+		}
 	}
 
 }
