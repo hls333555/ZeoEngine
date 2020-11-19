@@ -10,7 +10,7 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Core/ReflectionHelper.h"
+#include "Engine/Core/ReflectionCore.h"
 
 #define ENABLE_TEST 0
 

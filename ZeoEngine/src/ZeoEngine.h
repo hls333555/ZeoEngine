@@ -26,6 +26,7 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Core/ReflectionCore.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"
 

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <magic_enum.hpp>
 
+#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
 

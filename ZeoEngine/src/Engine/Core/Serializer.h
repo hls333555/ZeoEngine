@@ -4,7 +4,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Utils/EngineUtils.h"
 
