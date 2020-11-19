@@ -216,7 +216,7 @@ namespace ZeoEngine {
 		void ReevaluateBurstList();
 		void EvaluateParticleProperties(Particle& particle);
 
-		void Emit();
+		bool Emit();
 		void CalculateNextPoolIndex();
 
 	private:

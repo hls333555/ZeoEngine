@@ -257,9 +257,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::Emit()
+	bool ParticleSystem::Emit()
 	{
-		if (m_PoolIndex < 0) return;
+		if (m_PoolIndex < 0) return false;
 
 		uint32_t oldPoolIndex = m_PoolIndex;
 		// Iterate until we find an available (inactive) particle to activate
@@ -269,7 +269,7 @@ namespace ZeoEngine {
 			if (m_PoolIndex == oldPoolIndex)
 			{
 				// Failed to find one, skip emitting
-				return;
+				return false;
 			}
 		}
 
@@ -278,6 +278,7 @@ namespace ZeoEngine {
 		EvaluateParticleProperties(particle);
 
 		CalculateNextPoolIndex();
+		return true;
 	}
 
 	void ParticleSystem::CalculateNextPoolIndex()
@@ -322,7 +323,8 @@ namespace ZeoEngine {
 					uint32_t imax = static_cast<uint32_t>(m_EmitterSpec.SpawnRate * dt);
 					do 
 					{
-						Emit();
+						if (!Emit()) break;
+
 						++i;
 					} while (i < imax);
 					m_SpawnTime = m_Time;
