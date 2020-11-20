@@ -188,7 +188,7 @@ namespace ZeoEngine {
 			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
 		}
 
-		m_EmitterSpec.MaxDrawParticles = m_ParticleTemplate->MaxDrawParticles;
+		m_EmitterSpec.MaxParticles = m_ParticleTemplate->MaxParticles;
 	}
 
 	void ParticleSystem::ReevaluateBurstList()
@@ -285,7 +285,7 @@ namespace ZeoEngine {
 	{
 		if (m_PoolIndex == 0)
 		{
-			m_PoolIndex = m_EmitterSpec.MaxDrawParticles - 1;
+			m_PoolIndex = m_EmitterSpec.MaxParticles - 1;
 		}
 		else
 		{
@@ -455,8 +455,8 @@ namespace ZeoEngine {
 	void ParticleSystem::ResetParticlePool()
 	{
 		m_ParticlePool.clear();
-		m_ParticlePool.resize(m_EmitterSpec.MaxDrawParticles);
-		m_PoolIndex = m_EmitterSpec.MaxDrawParticles - 1;
+		m_ParticlePool.resize(m_EmitterSpec.MaxParticles);
+		m_PoolIndex = m_EmitterSpec.MaxParticles - 1;
 	}
 
 	void ParticleSystem::Resimulate()

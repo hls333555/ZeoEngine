@@ -297,8 +297,8 @@ namespace ZeoEngine {
 		void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
 		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
 		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
-		uint32_t GetMaxDrawParticles() const { return Template->MaxDrawParticles; }
-		void SetMaxDrawParticles(uint32_t count) { Template->MaxDrawParticles = count; }
+		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
+		void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
 		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; }
 		void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
 

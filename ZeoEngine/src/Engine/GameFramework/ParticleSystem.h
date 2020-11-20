@@ -129,7 +129,7 @@ namespace ZeoEngine {
 		 */
 		glm::vec2 SubImageSize{ 0.0f };
 
-		uint32_t MaxDrawParticles = 500;
+		uint32_t MaxParticles = 500;
 
 		Ref<Texture2D> PreviewThumbnail;
 
@@ -180,7 +180,7 @@ namespace ZeoEngine {
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
 			glm::vec3 InheritVelocity{ 0.0f };
-			uint32_t MaxDrawParticles;
+			uint32_t MaxParticles;
 		};
 
 		// Particle runtime properties

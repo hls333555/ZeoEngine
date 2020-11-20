@@ -1,6 +1,6 @@
 ParticleTemplate: Test
 PreviewThumbnail: assets\particles\Test.zparticle.png
-MaxDrawParticles: 500
+MaxParticles: 500
 SubImageSize: [0, 0]
 Texture: ""
 Lifetime:
