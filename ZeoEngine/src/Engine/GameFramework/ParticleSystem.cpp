@@ -185,10 +185,12 @@ namespace ZeoEngine {
 
 		// Velocity
 		{
-			m_EmitterSpec.InheritVelocity = glm::clamp(m_EmitterSpec.InheritVelocity, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
+			m_EmitterSpec.InheritVelocityRatio = glm::clamp(m_ParticleTemplate->InheritVelocityRatio, glm::vec3{ 0.0f }, glm::vec3{ 1.0f });
 		}
 
 		m_EmitterSpec.MaxParticles = m_ParticleTemplate->MaxParticles;
+
+		m_OwnerLastPosition = m_OwnerEntity.GetEntityTranslation();
 	}
 
 	void ParticleSystem::ReevaluateBurstList()
@@ -211,11 +213,7 @@ namespace ZeoEngine {
 		// Position
 		{
 			particle.Position = m_ParticleTemplate->InitialPosition.Evaluate();
-			if (m_OwnerEntity)
-			{
-				particle.Position += m_OwnerEntity.GetEntityTranslation();
-				particle.Position += m_PositionOffset;
-			}
+			particle.Position += m_OwnerEntity.GetEntityTranslation() + m_PositionOffset;
 		}
 
 		// Rotation
@@ -250,7 +248,7 @@ namespace ZeoEngine {
 		// TODO: Texture
 		{
 			auto count = m_ParticleTemplate->SubImageSize.x * m_ParticleTemplate->SubImageSize.y;
-			m_UVAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
+			m_UvAnimationInterval = count == 0 ? 0.0f : particle.Lifetime / count;
 			// Initialize uv animation start point to left-up corner
 			particle.UvOffset.x = 0;
 			particle.UvOffset.y = m_ParticleTemplate->SubImageSize.y - 1.0f;
@@ -345,6 +343,10 @@ namespace ZeoEngine {
 		}
 
 		m_bSystemComplete = true;
+
+		glm::vec3 ownerPosition = m_OwnerEntity.GetEntityTranslation();
+		glm::vec3 ownerVelocity = (ownerPosition - m_OwnerLastPosition) / static_cast<float>(dt);
+		glm::vec3 inheritVelocity = m_EmitterSpec.bIsLocalSpace ? ownerVelocity : ownerVelocity * m_EmitterSpec.InheritVelocityRatio;
 		for (auto& particle : m_ParticlePool)
 		{
 			if (!particle.bActive) continue;
@@ -358,21 +360,13 @@ namespace ZeoEngine {
 			m_bSystemComplete = false;
 
 			particle.LifeRemaining -= dt;
-			glm::vec3 velocity = particle.Velocity;
-			// TODO: Inherit owner entity's velocity
-			//if (m_OwnerEntity)
-			//{
-			//	velocity = m_EmitterSpec.bIsLocalSpace ?
-			//		m_Parent->GetVelocity() + particle.Velocity :
-			//		m_Parent->GetVelocity() * m_EmitterSpec.InheritVelocity + particle.Velocity;
-			//}
-			particle.Position += velocity * static_cast<float>(dt);
+			particle.Position += (particle.Velocity + inheritVelocity) * static_cast<float>(dt);
 			particle.Rotation += particle.RotationRate * static_cast<float>(dt);
 			float lifeRatio = particle.LifeRemaining / particle.Lifetime;
 			particle.Size = glm::lerp(particle.SizeEnd, particle.SizeBegin, lifeRatio);
 			particle.Color = glm::lerp(particle.ColorEnd, particle.ColorBegin, lifeRatio);
 			// Process UV animation
-			if (m_UVAnimationInterval != 0.0f && m_Time - m_UVAnimationTime >= m_UVAnimationInterval)
+			if (m_UvAnimationInterval != 0.0f && m_Time - m_UvAnimationTime >= m_UvAnimationInterval)
 			{
 				// When animation reaches the last sub-image, deactivate this particle immediately
 				if (particle.UvOffset.x == m_EmitterSpec.SubImageSize.x - 1.0f && particle.UvOffset.y == 0.0f)
@@ -388,9 +382,10 @@ namespace ZeoEngine {
 					// Next row
 					particle.UvOffset.y -= 1.0f;
 				}
-				m_UVAnimationTime = m_Time;
+				m_UvAnimationTime = m_Time;
 			}
 		}
+		m_OwnerLastPosition = ownerPosition;
 
 		m_bSystemComplete = m_bSystemComplete && ((!m_EmitterSpec.bIsInfiniteLoop && m_EmitterSpec.LoopCount == 0) || !m_bActive);
 
@@ -467,7 +462,7 @@ namespace ZeoEngine {
 	void ParticleSystem::Reset()
 	{
 		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
-		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
 #if WITH_EDITOR
 		m_bFiniteLoopPrepareToRestart = true;
 #endif
@@ -480,7 +475,7 @@ namespace ZeoEngine {
 
 		m_bActive = true;
 		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
-		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UVAnimationTime = 0.0f;
+		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
 	}
 
 	void ParticleSystem::Deactivate()

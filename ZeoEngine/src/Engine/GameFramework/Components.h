@@ -285,8 +285,8 @@ namespace ZeoEngine {
 		void SetSizeEnd(const ParticleVec3& size) { Template->SizeEnd = size; }
 		const ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
 		void SetInitialVelocity(const ParticleVec3& velocity) { Template->InitialVelocity = velocity; }
-		const glm::vec3& GetInheritVelocity() const { return Template->InheritVelocity; }
-		void SetInheritVelocity(const glm::vec3& velocity) { Template->InheritVelocity = velocity; }
+		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; }
+		void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
 		const ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
 		void SetColorBegin(const ParticleColor& color) { Template->ColorBegin = color; }
 		const ParticleColor& GetColorEnd() const { return Template->ColorEnd; }

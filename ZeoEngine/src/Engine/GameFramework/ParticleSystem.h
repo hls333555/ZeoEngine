@@ -111,10 +111,10 @@ namespace ZeoEngine {
 
 		ParticleVec3 InitialVelocity;
 		/**
-		 * How much velocity one particle will inherit. This param is only useful when bIsLocalSpace is false.
+		 * How much velocity one particle will inherit from emitter. This param is only useful when bIsLocalSpace is false.
 		 * This value should be in [(0.0, 0.0), (1.0, 1.0)]
 		 */
-		glm::vec3 InheritVelocity{ 0.0f };
+		glm::vec3 InheritVelocityRatio{ 0.0f };
 
 		ParticleColor ColorBegin, ColorEnd;
 
@@ -179,7 +179,7 @@ namespace ZeoEngine {
 			Ref<Texture2D> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
-			glm::vec3 InheritVelocity{ 0.0f };
+			glm::vec3 InheritVelocityRatio{ 0.0f };
 			uint32_t MaxParticles;
 		};
 
@@ -237,12 +237,13 @@ namespace ZeoEngine {
 
 		/** Particle's spawn offset from owner entity's translation */
 		glm::vec3 m_PositionOffset{ 0.0f };
-		/** Entity that contains the ParticleSystemComponent */
+		/** Entity that contains the ParticleSystemComponent or ParticleSystemPreviewComponent */
 		Entity m_OwnerEntity;
+		glm::vec3 m_OwnerLastPosition{ 0.0f };
 
 		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */
-		float m_UVAnimationInterval = 0.0f;
-		float m_Time = 0.0f, m_LoopStartTime = 0.0f, m_SpawnTime = 0.0f, m_BurstTime = 0.0f, m_UVAnimationTime = 0.0f;
+		float m_UvAnimationInterval = 0.0f;
+		float m_Time = 0.0f, m_LoopStartTime = 0.0f, m_SpawnTime = 0.0f, m_BurstTime = 0.0f, m_UvAnimationTime = 0.0f;
 
 		/** Used to guarantee that initial emitted particles can be rendered properly */
 		bool m_bStartUpdate = false;
