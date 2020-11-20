@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -33,6 +34,10 @@ namespace ZeoEngine {
 		void OnViewportResize(const glm::vec2& size);
 
 		void InitCameraViewportSize(entt::registry& registry, entt::entity entity);
+
+	protected:
+		Ref<Texture2D> m_PlayTexture, m_PauseTexture;
+		void* m_ToolbarTextures[2];
 
 	private:
 		Entity m_PreviewCamera;

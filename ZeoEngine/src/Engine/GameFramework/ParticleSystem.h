@@ -207,6 +207,7 @@ namespace ZeoEngine {
 			bool bActive = false;
 		};
 
+		void TogglePause();
 		void Resimulate();
 		void ResetParticlePool();
 		void Reset();
@@ -245,6 +246,7 @@ namespace ZeoEngine {
 
 		/** Used to guarantee that initial emitted particles can be rendered properly */
 		bool m_bStartUpdate = false;
+		bool m_bPauseUpdate = false;
 		bool m_bActive = true;
 		bool m_bSystemComplete = false;
 		bool m_bPendingDestroy = false;

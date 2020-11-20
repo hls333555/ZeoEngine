@@ -2,8 +2,6 @@
 
 #include "Panels/SceneViewportPanel.h"
 
-#include "Engine/Renderer/Texture.h"
-
 namespace ZeoEngine {
 
 	class GameViewportPanel : public SceneViewportPanel
@@ -17,9 +15,12 @@ namespace ZeoEngine {
 		virtual void RenderPanel() override;
 		virtual void RenderToolbar() override;
 
+		void ToggleStopTexture();
+		void ToggleResumeTexture();
+
 	private:
-		Ref<Texture2D> m_PlayTexture, m_PauseTexture, m_StopTexture;
-		void* m_ToolbarTextures[2];
+		Ref<Texture2D> m_StopTexture;
+		
 	};
 
 }

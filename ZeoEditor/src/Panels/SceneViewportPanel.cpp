@@ -14,6 +14,9 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::OnAttach()
 	{
+		m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
+		m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
+
 		CreatePreviewCamera();
 		GetContext()->m_OnSceneCreate.connect<&SceneViewportPanel::CreatePreviewCamera>(this);
 	}

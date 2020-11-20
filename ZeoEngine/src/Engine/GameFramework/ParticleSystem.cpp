@@ -295,10 +295,7 @@ namespace ZeoEngine {
 
 	void ParticleSystem::OnUpdate(DeltaTime dt)
 	{
-		if (m_bPendingDestroy)
-			return;
-		if (!m_bStartUpdate)
-			return;
+		if (m_bPendingDestroy || !m_bStartUpdate || m_bPauseUpdate) return;
 
 		m_Time += dt;
 		if (m_bActive)
@@ -350,8 +347,7 @@ namespace ZeoEngine {
 		m_bSystemComplete = true;
 		for (auto& particle : m_ParticlePool)
 		{
-			if (!particle.bActive)
-				continue;
+			if (!particle.bActive) continue;
 
 			if (particle.LifeRemaining <= 0.0f)
 			{
@@ -424,15 +420,13 @@ namespace ZeoEngine {
 
 	void ParticleSystem::OnRender()
 	{
-		if (m_bPendingDestroy)
-			return;
+		if (m_bPendingDestroy) return;
 
 		m_bStartUpdate = true;
 		m_ActiveParticleCount = 0;
 		for (const auto& particle : m_ParticlePool)
 		{
-			if (!particle.bActive)
-				continue;
+			if (!particle.bActive) continue;
 
 			++m_ActiveParticleCount;
 			glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(particle.Rotation.x), { 1, 0, 0 }) *
@@ -457,6 +451,11 @@ namespace ZeoEngine {
 		m_ParticlePool.clear();
 		m_ParticlePool.resize(m_EmitterSpec.MaxParticles);
 		m_PoolIndex = m_EmitterSpec.MaxParticles - 1;
+	}
+
+	void ParticleSystem::TogglePause()
+	{
+		m_bPauseUpdate = !m_bPauseUpdate;
 	}
 
 	void ParticleSystem::Resimulate()

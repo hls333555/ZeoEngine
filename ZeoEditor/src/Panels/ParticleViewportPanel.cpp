@@ -11,8 +11,6 @@ namespace ZeoEngine {
 	{
 		SceneViewportPanel::OnAttach();
 
-		m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
-		m_ResumeTexture = Texture2D::Create("assets/textures/Play.png");
 		m_ResimulateTexture = Texture2D::Create("assets/textures/Restart.png");
 		m_ToolbarTextures[0] = m_PauseTexture->GetTexture();
 		m_ToolbarTextures[1] = m_ResimulateTexture->GetTexture();
@@ -92,7 +90,8 @@ namespace ZeoEngine {
 		// Toggle pause / resume
 		if (ImGui::ImageButton(m_ToolbarTextures[0], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
 		{
-
+			ToggleResumeTexture();
+			ps->TogglePause();
 		}
 		ImGui::SameLine();
 		// Resimulate
@@ -100,6 +99,11 @@ namespace ZeoEngine {
 		{
 			ps->Resimulate();
 		}
+	}
+
+	void ParticleViewportPanel::ToggleResumeTexture()
+	{
+		m_ToolbarTextures[0] = m_ToolbarTextures[0] == m_PauseTexture->GetTexture() ? m_PlayTexture->GetTexture() : m_PauseTexture->GetTexture();
 	}
 
 }
