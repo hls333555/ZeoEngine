@@ -20,6 +20,10 @@ namespace ZeoEngine {
 		Scene();
 		~Scene();
 
+		const std::string& GetName() const { return m_Name; }
+		const std::string& GetPath() const { return m_Path; }
+		void SetPath(const std::string& path);
+
 		/**
 		 * Create an entity with default components.
 		 * @param bIsInternal - If true, this entity will not show in the SceneOutlinePanel.
@@ -39,11 +43,10 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		/** Called after scene has been deserialized. */
-		void OnSceneDeserialized();
+		void OnDeserialized();
 
-		const std::string& GetName() const { return m_Name; }
-		const std::string& GetPath() const { return m_Path; }
-		void SetPath(const std::string& path);
+	private:
+		void OnClenup();
 
 	private:
 		entt::registry m_Registry;

@@ -26,6 +26,18 @@ namespace ZeoReflection {
 	}
 
 	template<typename T>
+	void on_destroy(entt::registry& registry, entt::entity entity)
+	{
+		registry.get<T>(entity).OnDestroy();
+	}
+
+	template<typename T>
+	void bind_on_destroy(entt::registry& registry)
+	{
+		registry.on_destroy<T>().template connect<&ZeoReflection::on_destroy<T>>();
+	}
+
+	template<typename T>
 	void set_enum_value(entt::meta_any& instance, const entt::meta_any& newValue)
 	{
 		instance.cast<T>() = newValue.cast<T>();
@@ -97,7 +109,7 @@ entt::meta<_type>()																						\
 		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
 		.func<&ZeoReflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
 		.func<&ZeoReflection::has<_type>>("has"_hs)														\
-		.func<&_type::OnDestroy>("on_destroy"_hs)														\
+		.func<&ZeoReflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)								\
 		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)							\
 		.func<&Component::PostDataValueEditChange>("PostDataValueEditChange"_hs)						\
 		.base<Component>()

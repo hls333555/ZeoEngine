@@ -10,8 +10,6 @@
 
 namespace ZeoEngine {
 
-	class GameObject;
-
 	enum class ParticleVariationType
 	{
 		Constant,

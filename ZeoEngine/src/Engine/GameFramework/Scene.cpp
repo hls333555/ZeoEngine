@@ -14,20 +14,13 @@ namespace ZeoEngine {
 
 	Scene::~Scene()
 	{
-		// Clear particle system reference for particle editor before scene construction
-		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
-		{
-			pspc.Template->RemoveParticleSystemInstance(pspc.ParticleSystemRuntime);
-		});
+		OnClenup();
+	}
 
-		// Clear particle system reference for runtime before scene construction
-		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
-		{
-			if (psc.Template)
-			{
-				psc.Template->RemoveParticleSystemInstance(psc.ParticleSystemRuntime);
-			}
-		});
+	void Scene::SetPath(const std::string& path)
+	{
+		m_Path = path;
+		m_Name = GetNameFromPath(path);
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
@@ -191,7 +184,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void Scene::OnSceneDeserialized()
+	void Scene::OnDeserialized()
 	{
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
 		{
@@ -199,10 +192,22 @@ namespace ZeoEngine {
 		});
 	}
 
-	void Scene::SetPath(const std::string& path)
+	void Scene::OnClenup()
 	{
-		m_Path = path;
-		m_Name = GetNameFromPath(path);
+		// Clear particle system reference for particle editor before scene construction
+		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
+		{
+			pspc.Template->RemoveParticleSystemInstance(pspc.ParticleSystemRuntime);
+		});
+
+		// Clear particle system reference for runtime before scene construction
+		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
+		{
+			if (psc.Template)
+			{
+				psc.Template->RemoveParticleSystemInstance(psc.ParticleSystemRuntime);
+			}
+		});
 	}
 
 }

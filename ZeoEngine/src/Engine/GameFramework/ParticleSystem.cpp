@@ -3,8 +3,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/compatibility.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"

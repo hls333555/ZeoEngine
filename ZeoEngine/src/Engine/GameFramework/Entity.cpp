@@ -17,11 +17,7 @@ namespace ZeoEngine {
 
 	std::string Entity::GetEntityName() const
 	{
-		if (HasComponent<CoreComponent>())
-		{
-			return GetComponent<CoreComponent>().Name;
-		}
-		return {};
+		return GetComponent<CoreComponent>().Name;
 	}
 
 	glm::mat4 Entity::GetEntityTransform() const
@@ -63,6 +59,7 @@ namespace ZeoEngine {
 		auto comp = type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
 		auto& baseComp = comp.cast<Component>();
 		baseComp.OwnerEntity = *this;
+		type.func("bind_on_destroy"_hs).invoke({}, std::ref(m_Scene->m_Registry));
 		return comp;
 	}
 
@@ -75,7 +72,6 @@ namespace ZeoEngine {
 			return;
 		}
 
-		type.func("on_destroy"_hs).invoke(GetTypeById(typeId));
 		RemoveComponentId(typeId);
 		type.func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
 	}
