@@ -2,6 +2,26 @@
 
 #include <entt.hpp>
 
+namespace entt {
+
+	/**
+	 * @brief Meta sequence container traits for `std::deque`s of any type.
+	 * @tparam Type The type of elements.
+	 * @tparam Args Other arguments.
+	 */
+	template<typename Type, typename... Args>
+	struct meta_sequence_container_traits<std::deque<Type, Args...>>
+		: internal::container_traits<
+		std::deque<Type, Args...>,
+		internal::basic_container,
+		internal::basic_dynamic_container,
+		internal::basic_sequence_container,
+		internal::dynamic_sequence_container
+		>
+	{};
+
+}
+
 namespace ZeoReflection {
 
 	template<typename T>
