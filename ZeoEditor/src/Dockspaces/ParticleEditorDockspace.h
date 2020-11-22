@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual EditorWindowType GetViewportPanelType() const override { return EditorWindowType::Particle_View; }
+		virtual EditorPanelType GetViewportPanelType() const override { return EditorPanelType::Particle_View; }
 
 	private:
 		virtual AssetType GetAssetType() const override { return AssetType::ParticleTemplate; }

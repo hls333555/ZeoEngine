@@ -20,17 +20,17 @@ namespace ZeoEngine {
 	{
 		EditorDockspace::OnAttach();
 
-		GameViewportPanel* gameViewportPanel = new GameViewportPanel(EditorWindowType::Game_View, this, true);
-		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(EditorWindowType::Scene_Outline, this, true);
-		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(EditorWindowType::Entity_Inspector, this, true);
-		ConsolePanel* consolePanel = new ConsolePanel(EditorWindowType::Console, true);
+		GameViewportPanel* gameViewportPanel = new GameViewportPanel(EditorPanelType::Game_View, this, true);
+		SceneOutlinePanel* sceneOutlinePanel = new SceneOutlinePanel(EditorPanelType::Scene_Outline, this, true);
+		EntityInspectorPanel* entityInspectorPanel = new EntityInspectorPanel(EditorPanelType::Entity_Inspector, this, true);
+		ConsolePanel* consolePanel = new ConsolePanel(EditorPanelType::Console, true);
 
-		ParticleEditorDockspace* particleEditorDockspace = new ParticleEditorDockspace(EditorWindowType::Particle_Editor, m_EditorContext);
+		ParticleEditorDockspace* particleEditorDockspace = new ParticleEditorDockspace(EditorDockspaceType::Particle_Editor, m_EditorContext);
 		PushDockspace(particleEditorDockspace);
 
-		StatsPanel* statsPanel = new StatsPanel(EditorWindowType::Stats, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking, { { 300, 300 } });
-		PreferencesPanel* preferencesPanel = new PreferencesPanel(EditorWindowType::Preferences, false, ImGuiWindowFlags_NoCollapse);
-		AboutPanel* aboutPanel = new AboutPanel(EditorWindowType::About, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 } });
+		StatsPanel* statsPanel = new StatsPanel(EditorPanelType::Stats, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking, { { 300, 300 } });
+		PreferencesPanel* preferencesPanel = new PreferencesPanel(EditorPanelType::Preferences, false, ImGuiWindowFlags_NoCollapse);
+		AboutPanel* aboutPanel = new AboutPanel(EditorPanelType::About, false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize, { { 300, 200 } });
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
@@ -53,13 +53,13 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Game_View, "", gameViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Scene_Outline, "", sceneOutlinePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Entity_Inspector, "", entityInspectorPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Console, "", consolePanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Editor, "", particleEditorDockspace->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Stats, "", statsPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Preferences, "", preferencesPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Game_View), "", gameViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Scene_Outline), "", sceneOutlinePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Entity_Inspector), "", entityInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Console), "", consolePanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorDockspaceType::Particle_Editor), "", particleEditorDockspace->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Stats), "", statsPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Preferences), "", preferencesPanel->GetShowPtr()));
 			
 			windowMenu->PushMenuItem(new MenuItem_Seperator());
 			windowMenu->PushMenuItem(new MenuItem_ResetLayout("Reset layout", ""));
@@ -68,7 +68,7 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* helpMenu = new EditorMenu("Help");
-			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::About, "", aboutPanel->GetShowPtr()));
+			helpMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::About), "", aboutPanel->GetShowPtr()));
 			PushMenu(helpMenu);
 		}
 
@@ -100,7 +100,6 @@ namespace ZeoEngine {
 	{
 		SceneSerializer serializer(filePath, GetScene());
 		serializer.Deserialize();
-		GetScene()->OnDeserialized();
 	}
 
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)
@@ -114,11 +113,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
 
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Game_View).c_str(), dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Scene_Outline).c_str(), dockRightUp);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Entity_Inspector).c_str(), dockRightDown);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Game_View).c_str(), dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Scene_Outline).c_str(), dockRightUp);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Entity_Inspector).c_str(), dockRightDown);
 		//ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Console).c_str(), dockLeftDown);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Console).c_str(), dockLeftDown);
 	}
 
 }

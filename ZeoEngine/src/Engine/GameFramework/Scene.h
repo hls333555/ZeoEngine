@@ -17,8 +17,8 @@ namespace ZeoEngine {
 		friend class DataInspector;
 
 	public:
-		Scene();
-		~Scene();
+		Scene() = default;
+		virtual ~Scene();
 
 		const std::string& GetName() const { return m_Name; }
 		const std::string& GetPath() const { return m_Path; }
@@ -38,18 +38,23 @@ namespace ZeoEngine {
 
 		void SortEntities();
 
-		void OnUpdate(DeltaTime dt);
+		virtual void OnUpdate(DeltaTime dt);
 		void OnRender();
+	private:
+		virtual void OnSceneRender() {}
+	public:
 		void OnEvent(Event& e);
 
 		/** Called after scene has been deserialized. */
-		void OnDeserialized();
+		virtual void OnDeserialized() {}
 
-	private:
-		void OnClenup();
+	protected:
+		virtual void OnClenup() {}
 
-	private:
+	protected:
 		entt::registry m_Registry;
+
+	private:
 		std::string m_Name{"Untitled"};
 		std::string m_Path;
 		/** Map from entity Id to list of type Id in order, used to draw added components in EntityInspectorPanel */

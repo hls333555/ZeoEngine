@@ -96,8 +96,8 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	MenuItem_ToggleWindow::MenuItem_ToggleWindow(EditorWindowType windowType, const std::string& shortcutName, bool* bShowWindowPtr)
-		: EditorMenuItem(ResolveEditorNameFromEnum(windowType), shortcutName)
+	MenuItem_ToggleWindow::MenuItem_ToggleWindow(const std::string windowName, const std::string& shortcutName, bool* bShowWindowPtr)
+		: EditorMenuItem(windowName, shortcutName)
 		, m_bShowWindowPtr(bShowWindowPtr)
 	{
 	}

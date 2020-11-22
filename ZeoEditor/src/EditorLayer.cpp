@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		level.Init();
 		level.m_OnLevelCleanUp += GET_MEMBER_FUNC(this, &EditorLayer::ClearSelectedGameObject);
 
-		MainDockspace* mainDockspace = new MainDockspace(EditorWindowType::Zeo_Editor, this, true, { 5.0f, 5.0f }, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+		MainDockspace* mainDockspace = new MainDockspace(EditorDockspaceType::Main_Editor, this, true, { 5.0f, 5.0f }, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
 			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
 		PushDockspace(mainDockspace);
@@ -331,14 +331,14 @@ namespace ZeoEngine {
 		m_DockspaceManager.PushDockspace(dockspace);
 	}
 
-	EditorDockspace* EditorLayer::GetDockspaceByType(EditorWindowType dockspaceType)
+	EditorDockspace* EditorLayer::GetDockspaceByType(EditorDockspaceType dockspaceType)
 	{
 		return m_DockspaceManager.GetDockspaceByName(ResolveEditorNameFromEnum(dockspaceType));
 	}
 
-	void EditorLayer::RebuildDockLayout(EditorWindowType dockspaceType)
+	void EditorLayer::RebuildDockLayout(EditorDockspaceType dockspaceType)
 	{
-		std::string name = dockspaceType == EditorWindowType::NONE ? "" : ResolveEditorNameFromEnum(dockspaceType);
+		std::string name = dockspaceType == EditorDockspaceType::NONE ? "" : ResolveEditorNameFromEnum(dockspaceType);
 		m_DockspaceManager.RebuildDockLayout(name);
 	}
 

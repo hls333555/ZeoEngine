@@ -8,10 +8,6 @@
 
 namespace ZeoEngine {
 
-	Scene::Scene()
-	{
-	}
-
 	Scene::~Scene()
 	{
 		OnClenup();
@@ -75,21 +71,6 @@ namespace ZeoEngine {
 
 	void Scene::OnUpdate(DeltaTime dt)
 	{
-		// Update particle system for particle editor
-		m_Registry.view<ParticleSystemPreviewComponent>().each([dt](auto entity, auto& pspc)
-		{
-			pspc.ParticleSystemRuntime->OnUpdate(dt);
-		});
-
-		// Update particle system for runtime
-		m_Registry.view<ParticleSystemComponent>().each([dt](auto entity, auto& psc)
-		{
-			if (psc.ParticleSystemRuntime)
-			{
-				psc.ParticleSystemRuntime->OnUpdate(dt);
-			}
-		});
-
 		// Update scripts
 		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 		{
@@ -126,49 +107,9 @@ namespace ZeoEngine {
 		if (mainCamera)
 		{
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
-
-			auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-
-			// Sort entities for rendering based on z position or creation order (if z positions are equivalent)
-			spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
 			{
-				const auto& ltc = spriteGroup.get<TransformComponent>(lhs);
-				const auto& rtc = spriteGroup.get<TransformComponent>(rhs);
-				if (ltc.Translation.z == rtc.Translation.z)
-				{
-					return m_Registry.get<CoreComponent>(lhs).CreationId < m_Registry.get<CoreComponent>(rhs).CreationId;
-				}
-				return ltc.Translation.z < rtc.Translation.z;
-			});
-
-			for (auto entity : spriteGroup)
-			{
-				auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-				if (spriteComp.Texture)
-				{
-					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
-				}
-				else
-				{
-					Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor);
-				}
+				OnSceneRender();
 			}
-
-			// Render particle system for particle editor
-			m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
-			{
-				pspc.ParticleSystemRuntime->OnRender();
-			});
-
-			// Render particle system for runtime
-			m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
-			{
-				if (psc.ParticleSystemRuntime)
-				{
-					psc.ParticleSystemRuntime->OnRender();
-				}
-			});
-
 			Renderer2D::EndScene();
 		}
 	}
@@ -181,29 +122,6 @@ namespace ZeoEngine {
 			{
 				nsc.Instance->OnEvent(e);
 			}
-		});
-	}
-
-	void Scene::OnDeserialized()
-	{
-		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
-		{
-			psc.CreateParticleSystem({});
-		});
-	}
-
-	void Scene::OnClenup()
-	{
-		// Clear particle system reference for particle editor before scene construction
-		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
-		{
-			pspc.RemoveParticleSystemInstance();
-		});
-
-		// Clear particle system reference for runtime before scene construction
-		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
-		{
-			psc.RemoveParticleSystemInstance();
 		});
 	}
 

@@ -14,7 +14,7 @@ namespace ZeoEngine {
 		virtual void CreateNewScene(bool bIsFromOpenScene = false) override;
 
 		Entity& GetSeletedEntity() { return m_ContextEntity; }
-		virtual EditorWindowType GetViewportPanelType() const override { return EditorWindowType::Game_View; }
+		virtual EditorPanelType GetViewportPanelType() const override { return EditorPanelType::Game_View; }
 
 	private:
 		virtual AssetType GetAssetType() const override { return AssetType::Scene; }

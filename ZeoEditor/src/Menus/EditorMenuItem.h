@@ -54,7 +54,7 @@ namespace ZeoEngine {
 	class MenuItem_ToggleWindow : public EditorMenuItem
 	{
 	public:
-		MenuItem_ToggleWindow(EditorWindowType windowType, const std::string& shortcutName, bool* bShowWindowPtr);
+		MenuItem_ToggleWindow(const std::string windowName, const std::string& shortcutName, bool* bShowWindowPtr);
 
 		virtual void OnImGuiRender() override;
 

@@ -7,12 +7,20 @@
 namespace ZeoEngine {
 
 	// NOTE: All enums should use '_' to concatenate words
-	enum class EditorWindowType
+	enum class EditorDockspaceType
+	{
+		NONE,
+
+		Main_Editor,
+		Particle_Editor,
+	};
+
+	// NOTE: All enums should use '_' to concatenate words
+	enum class EditorPanelType
 	{
 		NONE,
 
 		// Main editor windows
-		Zeo_Editor,
 		Game_View,
 		Scene_Outline,
 		Entity_Inspector,
@@ -22,7 +30,6 @@ namespace ZeoEngine {
 		About,
 
 		// Particle editor windows
-		Particle_Editor,
 		Particle_View,
 		Particle_Inspector,
 	};

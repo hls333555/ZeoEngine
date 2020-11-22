@@ -26,7 +26,7 @@ namespace ZeoEngine {
 
 	public:
 		EditorDockspace() = delete;
-		EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow = false,
+		EditorDockspace(EditorDockspaceType dockspaceType, EditorLayer* context, bool bDefaultShow = false,
 			const glm::vec2& dockspacePadding = glm::vec2(0.0f, 0.0f),
 			ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar,
 			ImVec2Data initialSize = ImVec2Data::DefaultSize, ImVec2Data initialPos = ImVec2Data::DefaultPos);
@@ -38,14 +38,14 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		EditorWindowType GetDockspaceType() const { return m_DockspaceType; }
+		EditorDockspaceType GetDockspaceType() const { return m_DockspaceType; }
 		std::string GetDockspaceName() const { return std::move(ResolveEditorNameFromEnum(m_DockspaceType)); }
 		bool* GetShowPtr() { return &m_bShow; }
 		Entity GetContextEntity() const { return m_ContextEntity; }
 		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
-		virtual EditorWindowType GetViewportPanelType() const = 0;
+		virtual EditorPanelType GetViewportPanelType() const = 0;
 
 	protected:
 		void PushDockspace(EditorDockspace* dockspace);
@@ -53,12 +53,12 @@ namespace ZeoEngine {
 		void PushMenu(EditorMenu* menu);
 		void PushPanel(EditorPanel* panel);
 		template<typename T = EditorPanel>
-		T* GetPanelByType(EditorWindowType panelType)
+		T* GetPanelByType(EditorPanelType panelType)
 		{
 			return dynamic_cast<T*>(m_PanelManager.GetPanelByName(ResolveEditorNameFromEnum(panelType)));
 		}
 
-		EditorDockspace* OpenEditor(EditorWindowType dockspaceType);
+		EditorDockspace* OpenEditor(EditorDockspaceType dockspaceType);
 
 		/** Create an empty scene and init camera. */
 		virtual void CreateNewScene(bool bIsFromOpenScene = false);
@@ -91,8 +91,7 @@ namespace ZeoEngine {
 		entt::sink<void(bool)> m_OnSceneCreate{ m_OnSceneCreateDel };
 
 	private:
-		EditorWindowType m_DockspaceType;
-		bool m_bIsMainDockspace;
+		EditorDockspaceType m_DockspaceType;
 		ImVec2Data m_InitialPos, m_InitialSize;
 		glm::vec2 m_DockspacePadding;
 		ImGuiWindowFlags m_DockspaceWindowFlags;

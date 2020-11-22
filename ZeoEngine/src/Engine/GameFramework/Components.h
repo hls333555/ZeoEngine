@@ -230,6 +230,22 @@ namespace ZeoEngine {
 			}
 		}
 
+		void UpdateParticleSystem(DeltaTime dt)
+		{
+			if (ParticleSystemRuntime)
+			{
+				ParticleSystemRuntime->OnUpdate(dt);
+			}
+		}
+
+		void RenderParticleSystem()
+		{
+			if (ParticleSystemRuntime)
+			{
+				ParticleSystemRuntime->OnRender();
+			}
+		}
+
 		void RemoveParticleSystemInstance()
 		{
 			if (Template)

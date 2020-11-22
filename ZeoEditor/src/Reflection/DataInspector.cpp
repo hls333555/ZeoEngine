@@ -1024,7 +1024,7 @@ namespace ZeoEngine {
 				ImGui::SetTooltip("Double-click to open the particle editor");
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
-					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorWindowType::Particle_Editor);
+					EditorDockspace* editor = m_Context->GetContext()->OpenEditor(EditorDockspaceType::Particle_Editor);
 					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&particleTemplateValue](auto& pspc)
 					{
 						pspc.SetTemplate(particleTemplateValue);

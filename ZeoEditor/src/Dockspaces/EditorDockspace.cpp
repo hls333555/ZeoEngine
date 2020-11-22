@@ -7,14 +7,16 @@
 #include "Engine/Debug/Instrumentor.h"
 #include "EditorLayer.h"
 #include "Panels/SceneViewportPanel.h"
+#include "Scenes/MainEditorScene.h"
+#include "Scenes/ParticleEditorScene.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
 
 namespace ZeoEngine {
 
-	EditorDockspace::EditorDockspace(EditorWindowType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
-		: m_DockspaceType(dockspaceType), m_bIsMainDockspace(dockspaceType == EditorWindowType::Zeo_Editor), m_EditorContext(context), m_bShow(bDefaultShow)
+	EditorDockspace::EditorDockspace(EditorDockspaceType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
+		: m_DockspaceType(dockspaceType), m_EditorContext(context), m_bShow(bDefaultShow)
 		, m_DockspacePadding(dockspacePadding)
 		, m_DockspaceWindowFlags(dockspaceWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
@@ -69,7 +71,8 @@ namespace ZeoEngine {
 		if (!m_bShow) return;
 
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		if (m_bIsMainDockspace)
+		bool bIsMainDockspace = m_DockspaceType == EditorDockspaceType::Main_Editor;
+		if (bIsMainDockspace)
 		{
 			ImGui::SetNextWindowViewport(mainViewport->ID);
 			ImGui::SetNextWindowPos(mainViewport->Pos);
@@ -83,16 +86,16 @@ namespace ZeoEngine {
 		{
 			ImGui::SetNextWindowPos(m_InitialPos.Data, m_InitialPos.Condition);
 		}
-		ImGui::SetNextWindowSize(m_bIsMainDockspace ? mainViewport->Size : m_InitialSize.Data, m_bIsMainDockspace ? 0 : m_InitialSize.Condition);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, m_bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowRounding);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, m_bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
+		ImGui::SetNextWindowSize(bIsMainDockspace ? mainViewport->Size : m_InitialSize.Data, bIsMainDockspace ? 0 : m_InitialSize.Condition);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspacePadding);
 
 		ImGui::Begin(GetDockspaceName().c_str(), &m_bShow, m_DockspaceWindowFlags);
 		ImGui::PopStyleVar(3);
 
 		// Render menus - non-main-menus must be rendered winthin window context
-		m_MenuManager.OnImGuiRender(m_bIsMainDockspace);
+		m_MenuManager.OnImGuiRender(bIsMainDockspace);
 
 		// TODO: Needs separate from window name?
 		ImGuiID dockspaceID = ImGui::GetID(GetDockspaceName().c_str());
@@ -133,7 +136,7 @@ namespace ZeoEngine {
 		m_PanelManager.PushPanel(panel);
 	}
 
-	EditorDockspace* EditorDockspace::OpenEditor(EditorWindowType dockspaceType)
+	EditorDockspace* EditorDockspace::OpenEditor(EditorDockspaceType dockspaceType)
 	{
 		auto* editor = m_EditorContext->GetDockspaceByType(dockspaceType);
 		*editor->GetShowPtr() = true;
@@ -155,6 +158,7 @@ namespace ZeoEngine {
 		// Save scene path
 		m_Scene->SetPath(*filePath);
 		Deserialize(*filePath);
+		m_Scene->OnDeserialized();
 	}
 
 	void EditorDockspace::SaveSceneAs()
@@ -182,7 +186,18 @@ namespace ZeoEngine {
 
 	void EditorDockspace::CreateScene()
 	{
-		m_Scene = CreateRef<Scene>();
+		switch (m_DockspaceType)
+		{
+		case EditorDockspaceType::Main_Editor:
+			m_Scene = CreateRef<MainEditorScene>();
+			break;
+		case EditorDockspaceType::Particle_Editor:
+			m_Scene = CreateRef<ParticleEditorScene>();
+			break;
+		default:
+			ZE_CORE_ASSERT(false);
+			break;
+		}
 	}
 
 	void EditorDockspace::CreateFrameBuffer()

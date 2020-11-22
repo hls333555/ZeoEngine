@@ -4,8 +4,8 @@
 
 namespace ZeoEngine {
 
-	EditorPanel::EditorPanel(EditorWindowType panelType, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
-		: m_PanelName(ResolveEditorNameFromEnum(panelType)), m_bShow(bDefaultShow), m_PanelWindowFlags(panelWindowFlags)
+	EditorPanel::EditorPanel(EditorPanelType panelType, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
+		: m_PanelType(panelType), m_bShow(bDefaultShow), m_PanelWindowFlags(panelWindowFlags)
 		, m_InitialSize(initialSize), m_InitialPos(initialPos)
 	{
 	}
@@ -26,7 +26,7 @@ namespace ZeoEngine {
 		}
 		ImGui::SetNextWindowSize(m_InitialSize.Data, m_InitialSize.Condition);
 
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow, m_PanelWindowFlags))
+		if (ImGui::Begin(GetPanelName().c_str(), &m_bShow, m_PanelWindowFlags))
 		{
 			RenderPanel();
 
@@ -36,7 +36,7 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	ScenePanel::ScenePanel(EditorWindowType panelType, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
+	ScenePanel::ScenePanel(EditorPanelType panelType, EditorDockspace* context, bool bDefaultShow, ImGuiWindowFlags panelWindowFlags, const ImVec2Data& initialSize, const ImVec2Data& initialPos)
 		: EditorPanel(panelType, bDefaultShow, panelWindowFlags, initialSize, initialPos)
 		, m_Context(context)
 	{

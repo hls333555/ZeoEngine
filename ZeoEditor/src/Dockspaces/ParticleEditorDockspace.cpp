@@ -14,8 +14,8 @@ namespace ZeoEngine {
 	{
 		EditorDockspace::OnAttach();
 
-		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorWindowType::Particle_View, this, true);
-		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(EditorWindowType::Particle_Inspector, this, true);
+		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorPanelType::Particle_View, this, true);
+		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(EditorPanelType::Particle_Inspector, this, true);
 
 		{
 			EditorMenu* fileMenu = new EditorMenu("File");
@@ -36,8 +36,8 @@ namespace ZeoEngine {
 
 		{
 			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_View, "", particleViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(EditorWindowType::Particle_Inspector, "", particleInspectorPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_View), "", particleViewportPanel->GetShowPtr()));
+			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_Inspector), "", particleInspectorPanel->GetShowPtr()));
 			PushMenu(windowMenu);
 		}
 
@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		// Only snapshot on save when thumbnail texture is null
 		if (!pspc.Template->PreviewThumbnail)
 		{
-			ParticleViewportPanel* viewportPanel = GetPanelByType<ParticleViewportPanel>(EditorWindowType::Particle_View);
+			ParticleViewportPanel* viewportPanel = GetPanelByType<ParticleViewportPanel>(EditorPanelType::Particle_View);
 			std::string snapshotName = filePath + ".png";
 			viewportPanel->Snapshot(snapshotName, 256);
 		}
@@ -74,8 +74,8 @@ namespace ZeoEngine {
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Particle_View).c_str(), dockLeft);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorWindowType::Particle_Inspector).c_str(), dockRight);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_View).c_str(), dockLeft);
+		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_Inspector).c_str(), dockRight);
 	}
 
 }

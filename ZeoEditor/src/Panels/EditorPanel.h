@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	{
 	public:
 		EditorPanel() = delete;
-		EditorPanel(EditorWindowType panelType, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
+		EditorPanel(EditorPanelType panelType, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 		virtual ~EditorPanel() = default;
 
@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) {}
 		void OnImGuiRender();
 
-		const std::string& GetPanelName() const { return m_PanelName; }
+		std::string GetPanelName() const { return std::move(ResolveEditorNameFromEnum(m_PanelType)); }
 	protected:
 		virtual bool IsShow() const { return m_bShow; }
 	public:
@@ -40,7 +40,7 @@ namespace ZeoEngine {
 		virtual void RenderPanel() = 0;
 
 	private:
-		std::string m_PanelName;
+		EditorPanelType m_PanelType;
 		bool m_bShow;
 		ImGuiWindowFlags m_PanelWindowFlags;
 		ImVec2Data m_InitialPos, m_InitialSize;
@@ -51,7 +51,7 @@ namespace ZeoEngine {
 	{
 	public:
 		ScenePanel() = delete;
-		ScenePanel(EditorWindowType panelType, EditorDockspace* context, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
+		ScenePanel(EditorPanelType panelType, EditorDockspace* context, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 
 	protected:
