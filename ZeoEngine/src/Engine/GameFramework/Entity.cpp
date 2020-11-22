@@ -59,7 +59,7 @@ namespace ZeoEngine {
 		auto comp = type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
 		auto& baseComp = comp.cast<Component>();
 		baseComp.OwnerEntity = *this;
-		type.func("bind_on_destroy"_hs).invoke({}, std::ref(m_Scene->m_Registry));
+		BindOnDestroyFunc(type, m_Scene->m_Registry);
 		return comp;
 	}
 
@@ -73,7 +73,7 @@ namespace ZeoEngine {
 		}
 
 		RemoveComponentId(typeId);
-		type.func("remove"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		InternalRemoveType(type, m_Scene->m_Registry, m_EntityHandle);
 	}
 
 	entt::meta_any Entity::GetTypeById(entt::id_type typeId) const
@@ -85,7 +85,7 @@ namespace ZeoEngine {
 			return {};
 		}
 
-		return type.func("get"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		return InternalGetType(type, m_Scene->m_Registry, m_EntityHandle);
 	}
 
 	bool Entity::HasTypeById(entt::id_type typeId) const
@@ -93,7 +93,7 @@ namespace ZeoEngine {
 		auto type = entt::resolve_type(typeId);
 		if (!type) return false;
 
-		auto res = type.func("has"_hs).invoke({}, std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto res = InternalHasType(type, m_Scene->m_Registry, m_EntityHandle);
 		return res.cast<bool>();
 	}
 

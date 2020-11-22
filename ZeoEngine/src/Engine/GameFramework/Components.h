@@ -1,6 +1,5 @@
 #pragma once
 
-#include <deque>
 #include <any>
 
 #include <glm/glm.hpp>
@@ -202,11 +201,8 @@ namespace ZeoEngine {
 
 		virtual void OnDestroy() override
 		{
-			if (Template)
-			{
-				// Clear particle system reference before this component has been removed
-				Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
-			}
+			// Clear particle system reference before this component has been removed
+			RemoveParticleSystemInstance();
 		}
 
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
@@ -231,6 +227,14 @@ namespace ZeoEngine {
 				ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
 				// Add newly created instance to cache
 				Template->AddParticleSystemInstance(ParticleSystemRuntime);
+			}
+		}
+
+		void RemoveParticleSystemInstance()
+		{
+			if (Template)
+			{
+				Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
 			}
 		}
 

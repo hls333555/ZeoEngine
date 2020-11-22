@@ -1,17 +1,25 @@
 #pragma once
 
+#include <any>
 #include <optional>
-#include <deque>
 
 #include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
+
+	void InternalRemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	entt::meta_any InternalGetType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	entt::meta_any InternalHasType(entt::meta_type type, entt::registry& registry, entt::entity entity);
+	void BindOnDestroyFunc(entt::meta_type type, entt::registry& registry);
 
 	const char* GetEnumDisplayName(entt::meta_any enumValue);
 
 	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
 
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type);
+
+	void InternalInvokeOnDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
+	void InternalInvokePostDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

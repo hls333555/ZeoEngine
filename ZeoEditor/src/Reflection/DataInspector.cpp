@@ -634,13 +634,13 @@ namespace ZeoEngine {
 	void DataInspector::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed!");
-		m_DataCallbackInfo.ComponentInstance.type().func("OnDataValueEditChange"_hs).invoke(m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
+		InternalInvokeOnDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
 	void DataInspector::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed after edit!");
-		m_DataCallbackInfo.ComponentInstance.type().func("PostDataValueEditChange"_hs).invoke(m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
+		InternalInvokePostDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)

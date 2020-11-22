@@ -61,6 +61,26 @@ namespace ZeoEngine {
 			.conv<&i32_to_particletemplate>();
 	}
 
+	void InternalRemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	{
+		type.func("remove"_hs).invoke({}, std::ref(registry), entity);
+	}
+
+	entt::meta_any InternalGetType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	{
+		return type.func("get"_hs).invoke({}, std::ref(registry), entity);
+	}
+
+	entt::meta_any InternalHasType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	{
+		return type.func("has"_hs).invoke({}, std::ref(registry), entity);
+	}
+
+	void BindOnDestroyFunc(entt::meta_type type, entt::registry& registry)
+	{
+		type.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
+	}
+
 	const char* GetEnumDisplayName(entt::meta_any enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing
@@ -84,6 +104,16 @@ namespace ZeoEngine {
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type)
 	{
 		return type.func("create_default_value"_hs).invoke({});
+	}
+
+	void InternalInvokeOnDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue)
+	{
+		type.func("OnDataValueEditChange"_hs).invoke(std::move(instance), dataId, oldValue);
+	}
+
+	void InternalInvokePostDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue)
+	{
+		type.func("PostDataValueEditChange"_hs).invoke(std::move(instance), dataId, oldValue);
 	}
 
 }

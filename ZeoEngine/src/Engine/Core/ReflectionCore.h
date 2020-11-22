@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include <entt.hpp>
 
 namespace entt {
@@ -126,8 +128,8 @@ entt::meta<_type>()																						\
         .prop(PropertyType::Name, #_type)																\
         .prop(std::make_tuple(__VA_ARGS__))																\
 		.ctor<&ZeoReflection::emplace<_type>, entt::as_ref_t>()											\
-		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
 		.func<&ZeoReflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
+		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
 		.func<&ZeoReflection::has<_type>>("has"_hs)														\
 		.func<&ZeoReflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)								\
 		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)							\
@@ -146,8 +148,8 @@ entt::meta<_type>()																						\
         .prop(PropertyType::NestedClass)																\
         .prop(std::make_tuple(__VA_ARGS__))																\
 		.ctor<&ZeoReflection::emplace<_type>, entt::as_ref_t>()											\
-		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
 		.func<&ZeoReflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
+		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
 		.func<&ZeoReflection::has<_type>>("has"_hs)														\
 		.func<&ZeoReflection::create_default_value<_type>>("create_default_value"_hs)
 
