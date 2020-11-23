@@ -85,13 +85,14 @@ namespace ZeoEngine {
 
 					// Move speed is set based on the zoom level (OrthographicSize)
 					float cameraPanSpeed = sceneCamera.GetOrthographicSize() / 4.0f;
+					float MouseSensitivity = 1 / 60.0f;
 					
 					const auto position = Input::GetMousePosition();
 					if (!m_bIsMiddleMouseButtonFirstPressedWhenHovered)
 					{
-						// TODO: This moves pretty slowly on high framerate
-						translation.x -= (position.x - m_LastPressedMousePosition.x) * cameraPanSpeed * dt;
-						translation.y += (position.y - m_LastPressedMousePosition.y) * cameraPanSpeed * dt;
+						// NOTE: These delta positions are already v*deltatime!
+						translation.x -= (position.x - m_LastPressedMousePosition.x) * cameraPanSpeed * MouseSensitivity;
+						translation.y += (position.y - m_LastPressedMousePosition.y) * cameraPanSpeed * MouseSensitivity;
 					}
 					m_bIsMiddleMouseButtonFirstPressedWhenHovered = false;
 					m_LastPressedMousePosition = position;
