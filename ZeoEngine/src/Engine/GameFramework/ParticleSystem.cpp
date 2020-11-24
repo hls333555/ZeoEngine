@@ -211,7 +211,7 @@ namespace ZeoEngine {
 		// Position
 		{
 			particle.Position = m_ParticleTemplate->InitialPosition.Evaluate();
-			particle.Position += m_OwnerEntity.GetEntityTranslation() + m_PositionOffset;
+			particle.Position += m_OwnerLastPosition + m_PositionOffset;
 		}
 
 		// Rotation
