@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Core/Log.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/ImGui/MyImGui.h"

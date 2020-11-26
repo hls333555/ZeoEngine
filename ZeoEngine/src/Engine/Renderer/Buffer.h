@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Engine/Core/Log.h"
-
 namespace ZeoEngine {
 
 	enum class ShaderDataType

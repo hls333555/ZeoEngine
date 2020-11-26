@@ -21,18 +21,6 @@
 	#define ZE_ENABLE_ASSERTS
 #endif // ZE_DEBUG
 
-#ifdef ZE_ENABLE_ASSERTS
-	#define ZE_ASSERT(x) { if(!(x)) { ZE_ERROR("Assertion Failed!"); __debugbreak(); } }
-	#define ZE_ASSERT_INFO(x, ...) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed:"); ZE_ERROR(__VA_ARGS__); __debugbreak(); } }
-	#define ZE_CORE_ASSERT(x) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed!"); __debugbreak(); } }
-	#define ZE_CORE_ASSERT_INFO(x, ...) { if(!(x)) { ZE_CORE_ERROR("Assertion Failed:"); ZE_CORE_ERROR(__VA_ARGS__); __debugbreak(); } }
-#else
-	#define ZE_ASSERT(x)
-	#define ZE_ASSERT_INFO(x, ...)
-	#define ZE_CORE_ASSERT(x)
-	#define ZE_CORE_ASSERT_INFO(x, ...)
-#endif // ZE_ENABLE_ASSERTS
-
 #define BIT(x) (1 << x)
 
 #define ZE_BIND_EVENT_FUNC(func) [this](auto&&... args) -> decltype(auto) { return this->func(std::forward<decltype(args)>(args)...); }
@@ -43,8 +31,6 @@
 // Set to 0 when toggling standalone game mode
 	#define WITH_EDITOR	1
 #endif // WITH_EDITOR
-
-//#define ENUMCLASS_TO_INT(enumVar) static_cast<int32_t>(enumVar)
 
 namespace ZeoEngine {
 
@@ -64,3 +50,6 @@ namespace ZeoEngine {
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 }
+
+#include "Engine/Core/Log.h"
+#include "Engine/Core/Assert.h"
