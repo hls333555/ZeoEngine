@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		case ShaderDataType::Bool:
 			return GL_BOOL;
 		default:
-			ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
+			ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			return 0;
 		}
 	}
@@ -61,7 +61,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		ZE_CORE_ASSERT_INFO(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
+		ZE_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 				break;
 			}
 			default:
-				ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
+				ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			}
 		}
 

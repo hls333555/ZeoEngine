@@ -374,7 +374,7 @@ namespace ZeoEngine {
 		}
 
 		auto dataName = GetMetaObjectDisplayName(data);
-		ZE_CORE_ASSERT_INFO(false, "Failed to serialize data: '{0}'", *dataName);
+		ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", *dataName);
 	}
 
 	void TypeSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
@@ -468,7 +468,7 @@ namespace ZeoEngine {
 			else
 			{
 				auto dataName = GetMetaObjectDisplayName(data);
-				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
+				ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'!", *dataName);
 			}
 		}
 		return {};
@@ -632,7 +632,7 @@ namespace ZeoEngine {
 		}
 
 		auto dataName = GetMetaObjectDisplayName(data);
-		ZE_CORE_ASSERT_INFO(false, "Failed to deserialize data: '{0}'", *dataName);
+		ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", *dataName);
 	}
 
 	void TypeSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)

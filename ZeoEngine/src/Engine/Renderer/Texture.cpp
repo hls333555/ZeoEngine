@@ -12,12 +12,12 @@ namespace ZeoEngine {
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture2D>(width, height);
 		default:
-			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
@@ -28,12 +28,12 @@ namespace ZeoEngine {
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture2D>(canonicalPath);
 		default:
-			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
@@ -73,7 +73,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)
 	{
-		ZE_CORE_ASSERT_INFO(Exists(path), "Texture not found!");
+		ZE_CORE_ASSERT(Exists(path), "Texture not found!");
 		return m_Textures[GetRelativePath(path)];
 	}
 

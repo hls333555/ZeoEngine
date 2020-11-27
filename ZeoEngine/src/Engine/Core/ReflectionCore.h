@@ -157,18 +157,18 @@ entt::meta<_type>()																						\
 // Data Registration /////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-#define INTERNAL_ZE_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)									\
+#define ZE_INTERNAL_REFL_DATA_WITH_POLICY(_type, _data, policy, ...)									\
 .data<&_type::_data, policy>(#_data##_hs)																\
     .prop(PropertyType::Name, #_data)																	\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA(_type, _data, ...) INTERNAL_ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy)
-#define ZE_REFL_DATA_REF(_type, _data, ...) INTERNAL_ZE_REFL_DATA_WITH_POLICY(_type, _data, entt::as_ref_t, __VA_ARGS__)
-#define INTERNAL_ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, setter, getter, policy, ...)	\
+#define ZE_REFL_DATA(_type, _data, ...) ZE_INTERNAL_REFL_DATA_WITH_POLICY(_type, _data, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy)
+#define ZE_REFL_DATA_REF(_type, _data, ...) ZE_INTERNAL_REFL_DATA_WITH_POLICY(_type, _data, entt::as_ref_t, __VA_ARGS__)
+#define ZE_INTERNAL_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, setter, getter, policy, ...)	\
 .data<setter, getter, policy>(#dataName##_hs)															\
     .prop(PropertyType::Name, #dataName)																\
     .prop(std::make_tuple(__VA_ARGS__))
-#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...) INTERNAL_ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, &_type::setterName, &_type::getterName, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy) // Please use ZE_REFL_DATA_SETTER_GETTER_REF instead to register getter and setter for containers
-#define ZE_REFL_DATA_SETTER_GETTER_REF(_type, dataName, getterName, ...) INTERNAL_ZE_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, nullptr, &_type::getterName, entt::as_ref_t, __VA_ARGS__)
+#define ZE_REFL_DATA_SETTER_GETTER(_type, dataName, setterName, getterName, ...) ZE_INTERNAL_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, &_type::setterName, &_type::getterName, entt::as_is_t, __VA_ARGS__).prop(PropertyType::AsCopy) // Please use ZE_REFL_DATA_SETTER_GETTER_REF instead to register getter and setter for containers
+#define ZE_REFL_DATA_SETTER_GETTER_REF(_type, dataName, getterName, ...) ZE_INTERNAL_REFL_DATA_SETTER_GETTER_WITH_POLICY(_type, dataName, nullptr, &_type::getterName, entt::as_ref_t, __VA_ARGS__)
 
 //////////////////////////////////////////////////////////////////////////
 // Enum Registration /////////////////////////////////////////////////////

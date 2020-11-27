@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		ZE_CORE_ASSERT_INFO(!s_Instance, "Application already exists!");
+		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		m_Window = Window::Create(WindowProps(name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));

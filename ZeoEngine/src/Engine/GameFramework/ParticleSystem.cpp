@@ -518,7 +518,7 @@ namespace ZeoEngine {
 
 	Ref<ParticleTemplate> ParticleLibrary::Get(const std::string& path)
 	{
-		ZE_CORE_ASSERT_INFO(Exists(path), "Particle template not found!");
+		ZE_CORE_ASSERT(Exists(path), "Particle template not found!");
 		return m_ParticleTemplates[GetRelativePath(path)];
 	}
 

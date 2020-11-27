@@ -358,7 +358,7 @@ namespace ZeoEngine {
 			else
 			{
 				auto dataName = GetMetaObjectDisplayName(data);
-				ZE_CORE_ASSERT_INFO(false, "Failed to insert with data: '{0}'!", *dataName);
+				ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'!", *dataName);
 			}
 		}
 		return {};

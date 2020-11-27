@@ -27,7 +27,7 @@ namespace ZeoEngine {
 			case ShaderDataType::Int4:		return 4 * 4;
 			case ShaderDataType::Bool:		return 1;
 			default:
-				ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
+				ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
 				return 0;
 		}
 	}
@@ -61,7 +61,7 @@ namespace ZeoEngine {
 				case ShaderDataType::Int4:		return 4;
 				case ShaderDataType::Bool:		return 1;
 					default:
-					ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
+					ZE_CORE_ASSERT(false, "Unknown ShaderDataType!");
 					return 0;
 			}
 		}

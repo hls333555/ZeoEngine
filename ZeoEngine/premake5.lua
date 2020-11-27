@@ -25,6 +25,7 @@ project "ZeoEngine"
 	defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE", -- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
 		"ZE_IMVEC_GLMVEC_CONV"
 	}
 
@@ -57,14 +58,6 @@ project "ZeoEngine"
 
 	filter "system:windows"
 		systemversion "latest"
-
-		defines
-		{
-			"ZE_PLATFORM_WINDOWS",
-			"ZE_BUILD_DLL",
-			-- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
-			"GLFW_INCLUDE_NONE"
-		}
 
 	filter "configurations:Debug"
 		defines "ZE_DEBUG"

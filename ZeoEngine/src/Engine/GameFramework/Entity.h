@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{
-			ZE_CORE_ASSERT_INFO(!HasComponent<T>(), "Entity already has component!");
+			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			AddComponentId(entt::type_info<T>().id());
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		template<typename T>
 		void RemoveComponent()
 		{
-			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
+			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			RemoveComponentId(entt::type_info<T>().id());
 			return m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		template<typename T>
 		T& GetComponent() const
 		{
-			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
+			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
@@ -54,7 +54,7 @@ namespace ZeoEngine {
 		template<typename T, typename... Func>
 		void PatchComponent(Func&&... func)
 		{
-			ZE_CORE_ASSERT_INFO(HasComponent<T>(), "Entity does not have component!");
+			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 

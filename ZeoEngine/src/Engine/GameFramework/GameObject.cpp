@@ -268,7 +268,7 @@ namespace ZeoEngine {
 	void GameObject::FillBoxCollisionData(const glm::vec2& extents, const glm::vec2& centerOffset)
 	{
 		BoxCollisionData* boxCollision = dynamic_cast<BoxCollisionData*>(m_CollisionData);
-		ZE_CORE_ASSERT_INFO(boxCollision, "Collision data has not been generated or it is not a box collision data!");
+		ZE_CORE_ASSERT(boxCollision, "Collision data has not been generated or it is not a box collision data!");
 		boxCollision->CenterOffset = centerOffset;
 		boxCollision->Extents = extents;
 		boxCollision->UpdateData();
@@ -277,7 +277,7 @@ namespace ZeoEngine {
 	void GameObject::FillSphereCollisionData(float radius, const glm::vec2& centerOffset)
 	{
 		SphereCollisionData* sphereCollision = dynamic_cast<SphereCollisionData*>(m_CollisionData);
-		ZE_CORE_ASSERT_INFO(sphereCollision, "Collision data has not been generated or it is not a sphere collision data!");
+		ZE_CORE_ASSERT(sphereCollision, "Collision data has not been generated or it is not a sphere collision data!");
 		sphereCollision->CenterOffset = centerOffset;
 		sphereCollision->Radius = radius;
 		sphereCollision->UpdateData();

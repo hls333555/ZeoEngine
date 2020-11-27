@@ -37,11 +37,6 @@ project "Sandbox"
 	filter "system:windows"
 		systemversion "latest"
 
-		defines
-		{
-			"ZE_PLATFORM_WINDOWS"
-		}
-
 	filter "configurations:Debug"
 		defines "ZE_DEBUG"
 		runtime "Debug"

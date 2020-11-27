@@ -2,24 +2,24 @@
 
 #include <memory>
 
-#ifdef ZE_PLATFORM_WINDOWS
-	// Static linking is used from now on!
-	#if ZE_DYNAMIC_LINK
-		#ifdef ZE_BUILD_DLL
-			#define ZE_API __declspec(dllexport)
-		#else
-			#define ZE_API __declspec(dllimport)
-		#endif // ZE_BUILD_DLL
-	#else
-		#define ZE_API
-	#endif // ZE_DYNAMIC_LINK
-#else
-	#error ZeoEngine only supports Windows!
-#endif // ZE_PLATFORM_WINDOWS
+#include "Engine/Core/PlatformDetection.h"
 
 #ifdef ZE_DEBUG
+	#if defined(ZE_PLATFORM_WINDOWS)
+		#define ZE_DEBUGBREAK() __debugbreak()
+	#elif defined(ZE_PLATFORM_LINUX)
+		#include <signal.h>
+		#define ZE_DEBUGBREAK() raise(SIGTRAP)
+	#else
+		#error "Platform doesn't support debugbreak yet!"
+	#endif
 	#define ZE_ENABLE_ASSERTS
-#endif // ZE_DEBUG
+#else
+	#define ZE_DEBUGBREAK()
+#endif
+
+#define ZE_EXPAND_MACRO(x) x
+#define ZE_STRINGIFY_MACRO(x) #x
 
 #define BIT(x) (1 << x)
 
