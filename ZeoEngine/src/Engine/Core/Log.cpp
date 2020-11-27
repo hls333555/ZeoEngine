@@ -27,10 +27,12 @@ namespace ZeoEngine {
 		spdlog::register_logger(s_CoreLogger);
 		// Only messages whose level >= log_level will be logged to the console, in this case, all types of messages will be logged
 		s_CoreLogger->set_level(spdlog::level::trace);
+		s_CoreLogger->flush_on(spdlog::level::trace);
 
 		s_ClientLogger = std::make_shared<spdlog::logger>("APP", begin(sinks), end(sinks));
 		spdlog::register_logger(s_ClientLogger);
 		s_ClientLogger->set_level(spdlog::level::trace);
+		s_ClientLogger->flush_on(spdlog::level::trace);
 
 		// Set the global pattern, check https://github.com/gabime/spdlog/wiki/3.-Custom-formatting for more information about formatting
 		// Call this after loggers being registered
