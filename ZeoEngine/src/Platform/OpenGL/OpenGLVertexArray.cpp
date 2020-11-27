@@ -61,24 +61,57 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		ZE_CORE_ASSERT_INFO(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
+
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
-		ZE_CORE_ASSERT_INFO(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
-
 		const auto& layout = vertexBuffer->GetLayout();
-		const auto& elements = layout.GetElements();
-		for (uint32_t i = 0; i < elements.size(); ++i)
+		for (const auto& element : layout)
 		{
-			const auto& element = elements[i];
-			// TODO: There may be a issue when adding multiple VertexBuffers. It was all adding them on top of each other instead of after each other.
-			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i,
-				element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.bNormalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset);
+			switch (element.Type)
+			{
+			case ShaderDataType::Float:
+			case ShaderDataType::Float2:
+			case ShaderDataType::Float3:
+			case ShaderDataType::Float4:
+			case ShaderDataType::Int:
+			case ShaderDataType::Int2:
+			case ShaderDataType::Int3:
+			case ShaderDataType::Int4:
+			case ShaderDataType::Bool:
+			{
+				glEnableVertexAttribArray(m_VertexBufferIndex);
+				glVertexAttribPointer(m_VertexBufferIndex,
+					element.GetComponentCount(),
+					ShaderDataTypeToOpenGLBaseType(element.Type),
+					element.bNormalized ? GL_TRUE : GL_FALSE,
+					layout.GetStride(),
+					reinterpret_cast<const void*>(element.Offset));
+				++m_VertexBufferIndex;
+				break;
+			}
+			case ShaderDataType::Mat3:
+			case ShaderDataType::Mat4:
+			{
+				uint8_t count = element.GetComponentCount();
+				for (uint8_t i = 0; i < count; i++)
+				{
+					glEnableVertexAttribArray(m_VertexBufferIndex);
+					glVertexAttribPointer(m_VertexBufferIndex,
+						count,
+						ShaderDataTypeToOpenGLBaseType(element.Type),
+						element.bNormalized ? GL_TRUE : GL_FALSE,
+						layout.GetStride(),
+						reinterpret_cast<const void*>(element.Offset + sizeof(float) * count * i));
+					glVertexAttribDivisor(m_VertexBufferIndex, 1);
+					++m_VertexBufferIndex;
+				}
+				break;
+			}
+			default:
+				ZE_CORE_ASSERT_INFO(false, "Unknown ShaderDataType!");
+			}
 		}
 
 		m_VBOs.push_back(vertexBuffer);
