@@ -155,8 +155,8 @@ namespace ZeoEngine {
 		SceneCamera::ProjectionType GetProjectionType() const { return Camera.GetProjectionType(); }
 		void SetProjectionType(SceneCamera::ProjectionType type) { Camera.SetProjectionType(type); }
 
-		float GetPerspectiveVerticalFOV() const { return Camera.GetPerspectiveVerticalFOV(); }
-		void SetPerspectiveVerticalFOV(float verticalFOV) { Camera.SetPerspectiveVerticalFOV(verticalFOV); }
+		float GetPerspectiveVerticalFOV() const { return glm::degrees(Camera.GetPerspectiveVerticalFOV()); }
+		void SetPerspectiveVerticalFOV(float verticalFOV) { Camera.SetPerspectiveVerticalFOV(glm::radians(verticalFOV)); }
 		float GetPerspectiveNearClip() const { return Camera.GetPerspectiveNearClip(); }
 		void SetPerspectiveNearClip(float nearClip) { Camera.SetPerspectiveNearClip(nearClip); }
 		float GetPerspectiveFarClip() const { return Camera.GetPerspectiveFarClip(); }

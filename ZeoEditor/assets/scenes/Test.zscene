@@ -15,7 +15,7 @@ Entities:
         Size: 6
         PerspectiveFar: 1000
         PerspectiveNear: 0.00999999978
-        VerticalFOV: 0.785398185
+        VerticalFOV: 45
         ProjectionType: Orthographic
         bFixedAspectRatio: false
         bIsPrimary: true

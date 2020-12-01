@@ -57,7 +57,7 @@ using namespace ZeoEngine;
 
 	ZE_REFL_COMPONENT(TransformComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Transform")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("变换组件")), ZE_REFL_PROP(InherentType))
 		ZE_REFL_DATA_REF(TransformComponent, Translation, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("平移")), ZE_REFL_PROP_PAIR(DragSensitivity, 0.1f))
-		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("旋转")))
+		ZE_REFL_DATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZE_REFL_PROP_PAIR(ClampMin, -360.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("旋转")))
 		ZE_REFL_DATA_REF(TransformComponent, Scale, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("缩放")), ZE_REFL_PROP_PAIR(DragSensitivity, 0.1f));
 
 	ZE_REFL_COMPONENT(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Rendering")))
