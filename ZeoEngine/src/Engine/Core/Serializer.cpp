@@ -2,9 +2,7 @@
 #include "Engine/Core/Serializer.h"
 
 #include <glm/glm.hpp>
-#include <magic_enum.hpp>
 
-#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
 
@@ -214,7 +212,7 @@ namespace ZeoEngine {
 
 	void TypeSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
 	{
-		auto& seqView = data.get(instance).as_sequence_container();
+		auto seqView = data.get(instance).as_sequence_container();
 		const auto type = seqView.value_type();
 		const auto dataName = GetMetaObjectDisplayName(data);
 		out << YAML::Key << *dataName << YAML::Value;
@@ -451,7 +449,7 @@ namespace ZeoEngine {
 	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView)
 	{
 		// "0" value works for "all" types because we have registered their conversion functions
-		auto& [retIt, res] = seqView.insert(seqView.end(), 0);
+		auto [retIt, res] = seqView.insert(seqView.end(), 0);
 		if (res)
 		{
 			return retIt;
@@ -460,7 +458,7 @@ namespace ZeoEngine {
 		{
 			// For special types like user-defined enums, we have to invoke a function instead
 			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
-			auto& [retIt, res] = seqView.insert(seqView.end(), defaultValue);
+			auto [retIt, res] = seqView.insert(seqView.end(), defaultValue);
 			if (res)
 			{
 				return retIt;
@@ -479,15 +477,17 @@ namespace ZeoEngine {
 		const auto type = data.get(instance).as_sequence_container().value_type();
 		for (const auto& element : value)
 		{
-			auto& seqView = data.get(instance).as_sequence_container();
+			auto seqView = data.get(instance).as_sequence_container();
 			auto it = InsertDefaultValueForSeq(data, seqView);
 			bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, type);
 			if (bIsNestedClass)
 			{
+				// TODO: Fix: cannot convert argument 2 from 'entt::meta_sequence_container::meta_iterator::reference' to 'entt::meta_any &'
 				EvaluateDeserializeNestedData(data, *it, element, true);
 			}
 			else
 			{
+				// TODO: Fix: cannot convert argument 2 from 'entt::meta_sequence_container::meta_iterator::reference' to 'entt::meta_any &'
 				EvaluateDeserializeData(data, *it, element, true);
 			}
 		}

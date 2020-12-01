@@ -595,7 +595,7 @@ namespace ZeoEngine {
 		bool bIsWrapper = wrappedType != valueType;
 		// Backup variant value
 		rttr::variant& propertyValue = *data.PropertyValue;
-		data.PropertyValue = bIsWrapper ? &data.PropertyValue->extract_wrapped_value() : data.PropertyValue;
+		//data.PropertyValue = bIsWrapper ? &data.PropertyValue->extract_wrapped_value() : data.PropertyValue;
 		// Atomic types
 		if (ProcessAtomicTypes(wrappedType, data))
 		{
@@ -615,7 +615,7 @@ namespace ZeoEngine {
 				{
 					LogPropertyMessage(*data.Property, "Avoid registering sequential container {0} by value. Try 'policy::prop::bind_as_ptr'!", 2);
 				}
-				data.SequentialView = &propertyValue.create_sequential_view();
+				//data.SequentialView = &propertyValue.create_sequential_view();
 				if (data.SequentialView->get_rank() > 1)
 				{
 					LogPropertyMessage(*data.Property, "Registering a nested sequential container {0} is not supported!", 3);
@@ -1007,7 +1007,7 @@ namespace ZeoEngine {
 				bool bIsWrapper = wrappedType != valueType;
 				// Backup variant value
 				rttr::variant& propertyValue = *data.PropertyValue;
-				data.PropertyValue = bIsWrapper ? &wrappedVar.extract_wrapped_value() : &wrappedVar;
+				//data.PropertyValue = bIsWrapper ? &wrappedVar.extract_wrapped_value() : &wrappedVar;
 				data.SequentialIndex = i;
 				if (ProcessAtomicTypes(wrappedType, data))
 				{
@@ -1536,7 +1536,7 @@ namespace ZeoEngine {
 	void EditorLayer::StartPIE()
 	{
 		// Save level to a temp file
-		Level::Get().SaveLevelToFile(std::string(PIETempFile), true);
+		//Level::Get().SaveLevelToFile(std::string(PIETempFile), true);
 
 		//m_ToolBarTextures[0] = m_StopTexture;
 		pieState = PIEState::Running;
@@ -1603,11 +1603,11 @@ namespace ZeoEngine {
 					else
 					{
 						// Even if this node is closed, we do not want to display its child classes later as they are hidden inside this node
-						auto& derivedTypes = type.get_derived_classes();
-						for (const auto& dType : derivedTypes)
-						{
-							m_DisplayedClasses.insert(dType);
-						}
+						//auto& derivedTypes = type.get_derived_classes();
+						//for (const auto& dType : derivedTypes)
+						//{
+						//	m_DisplayedClasses.insert(dType);
+						//}
 					}
 				}
 			}
@@ -1823,30 +1823,30 @@ namespace ZeoEngine {
 			LogPropertyMessage(*data.Property, "Failed to convert an enum value of property {0} to string!", 3);
 		}
 		rttr::enumeration enumType = data.PropertyValue->get_type().get_enumeration();
-		auto& enumValues = enumType.get_values();
-		if (ImGui::BeginCombo(ss.str().c_str(), stringValue.c_str()))
-		{
-			for (const auto& enumValue : enumValues)
-			{
-				if (ImGui::Selectable(enumType.value_to_name(enumValue).data()))
-				{
-					SetPropertyValue(data, enumValue, enumValue, [&enumValue](const PropertyData& data) {
-						rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
-						if (sequentialVar.can_convert<BurstData>())
-						{
-							sequentialVar.get_value<BurstData*>()->Amount.VariationType = enumValue.get_value<ParticleVariationType>();
-						}
-					});
-					// Selection changes, call the callback
-					if (enumValue != enumType.name_to_value(stringValue))
-					{
-						InvokePropertyChangeCallback(data);
-					}
-				}
-			}
-			ImGui::EndCombo();
-		}
-		EndDisplayProperty(ss, data, *enumValues.cbegin());
+		//auto& enumValues = enumType.get_values();
+		//if (ImGui::BeginCombo(ss.str().c_str(), stringValue.c_str()))
+		//{
+		//	for (const auto& enumValue : enumValues)
+		//	{
+		//		if (ImGui::Selectable(enumType.value_to_name(enumValue).data()))
+		//		{
+		//			SetPropertyValue(data, enumValue, enumValue, [&enumValue](const PropertyData& data) {
+		//				rttr::variant& sequentialVar = data.SequentialView->get_value(data.SequentialIndex);
+		//				if (sequentialVar.can_convert<BurstData>())
+		//				{
+		//					sequentialVar.get_value<BurstData*>()->Amount.VariationType = enumValue.get_value<ParticleVariationType>();
+		//				}
+		//			});
+		//			// Selection changes, call the callback
+		//			if (enumValue != enumType.name_to_value(stringValue))
+		//			{
+		//				InvokePropertyChangeCallback(data);
+		//			}
+		//		}
+		//	}
+		//	ImGui::EndCombo();
+		//}
+		//EndDisplayProperty(ss, data, *enumValues.cbegin());
 	}
 
 	void EditorLayer::ProcessStringType(std::string* stringPointerValue, const PropertyData& data)

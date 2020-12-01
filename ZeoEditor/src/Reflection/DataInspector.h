@@ -3,6 +3,10 @@
 #include <map>
 #include <any>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"

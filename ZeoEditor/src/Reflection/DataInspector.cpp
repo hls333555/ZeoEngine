@@ -1,9 +1,6 @@
 #include "Reflection/DataInspector.h"
 
-#include <imgui.h>
-#include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/Core/KeyCodes.h"
 #include "Panels/DataInspectorPanel.h"
@@ -339,7 +336,7 @@ namespace ZeoEngine {
 	entt::meta_sequence_container::iterator DataInspector::InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
 		// "0" value works for "all" types because we have registered their conversion functions
-		auto& [retIt, res] = seqView.insert(it, 0);
+		auto [retIt, res] = seqView.insert(it, 0);
 		if (res)
 		{
 			//InvokePostDataValueEditChangeCallback(data, {});
@@ -349,7 +346,7 @@ namespace ZeoEngine {
 		{
 			// For special types like user-defined enums, we have to invoke a function instead
 			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
-			auto& [retIt, res] = seqView.insert(it, defaultValue);
+			auto [retIt, res] = seqView.insert(it, defaultValue);
 			if (res)
 			{
 				//InvokePostDataValueEditChangeCallback(data, {});
@@ -366,7 +363,7 @@ namespace ZeoEngine {
 
 	entt::meta_sequence_container::iterator DataInspector::EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		auto& [retIt, res] = seqView.erase(it);
+		auto [retIt, res] = seqView.erase(it);
 		if (res)
 		{
 			//InvokePostDataValueEditChangeCallback(data, {});
@@ -381,7 +378,7 @@ namespace ZeoEngine {
 
 	void DataInspector::DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance)
 	{
-		auto& seqView = data.get(instance).as_sequence_container();
+		auto seqView = data.get(instance).as_sequence_container();
 
 		ImGui::Text("%d elements", seqView.size());
 		ImGui::SameLine();
@@ -422,7 +419,7 @@ namespace ZeoEngine {
 
 	void DataInspector::EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any& instance)
 	{
-		auto& seqView = data.get(instance).as_sequence_container();
+		auto seqView = data.get(instance).as_sequence_container();
 		const auto type = seqView.value_type();
 		uint32_t i = 0;
 		for (auto it = seqView.begin(); it != seqView.end();)

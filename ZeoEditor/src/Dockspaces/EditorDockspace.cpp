@@ -86,7 +86,7 @@ namespace ZeoEngine {
 		{
 			ImGui::SetNextWindowPos(m_InitialPos.Data, m_InitialPos.Condition);
 		}
-		ImGui::SetNextWindowSize(bIsMainDockspace ? mainViewport->Size : m_InitialSize.Data, bIsMainDockspace ? 0 : m_InitialSize.Condition);
+		ImGui::SetNextWindowSize(bIsMainDockspace ? mainViewport->Size : static_cast<ImVec2>(m_InitialSize.Data), bIsMainDockspace ? 0 : m_InitialSize.Condition);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowRounding);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspacePadding);

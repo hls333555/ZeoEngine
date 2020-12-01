@@ -3,7 +3,9 @@
 #include "Engine/GameFramework/Entity.h"
 
 #include <yaml-cpp/yaml.h>
+#include <magic_enum.hpp>
 
+#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Utils/EngineUtils.h"
 

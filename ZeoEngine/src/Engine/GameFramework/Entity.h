@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Scene.h"
+#include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
 
