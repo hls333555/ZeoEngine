@@ -212,7 +212,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -220,6 +220,11 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
@@ -273,7 +278,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -281,6 +286,11 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
@@ -377,7 +387,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -385,6 +395,11 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
@@ -439,7 +454,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -447,6 +462,11 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
