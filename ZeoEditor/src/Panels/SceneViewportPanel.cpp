@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include "Engine/Core/Application.h"
+#include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Events/MouseEvent.h"
@@ -36,6 +38,10 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::RenderPanel()
 	{
+		m_IsViewportFocused = ImGui::IsWindowFocused();
+		m_IsViewportHovered = ImGui::IsWindowHovered();
+		Application::Get().GetImGuiLayer()->BlockEvents(!m_IsViewportFocused || !m_IsViewportHovered);
+
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		m_LastViewportSize = static_cast<glm::vec2>(window->InnerRect.Max) - static_cast<glm::vec2>(window->InnerRect.Min);
 
@@ -49,7 +55,7 @@ namespace ZeoEngine {
 			// The UVs have to be flipped
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
-			RenderToolbar();
+		RenderToolbar();
 	}
 
 	void SceneViewportPanel::CreatePreviewCamera(bool bIsFromOpenScene)

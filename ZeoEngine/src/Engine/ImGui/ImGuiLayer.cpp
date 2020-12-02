@@ -66,6 +66,16 @@ namespace ZeoEngine {
 		ImGui::DestroyContext();
 	}
 
+	void ImGuiLayer::OnEvent(Event& e)
+	{
+		if (m_bBlockEvents)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			e.m_bHandled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			e.m_bHandled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
+	}
+
 	void ImGuiLayer::Begin()
 	{
 		ZE_PROFILE_FUNCTION();

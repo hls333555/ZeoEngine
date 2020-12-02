@@ -44,11 +44,13 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
 
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
-		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
-			(*--it)->OnEvent(e);
-			if (e.m_bHandled)
-				break;
+			// As of now, Application::OnWindowClose(WindowCloseEvent& e) will always return true,
+			// so in this case, we want to first check if it is handled, and breaking before passing it through that layer
+			if (e.m_bHandled) break;
+
+			(*it)->OnEvent(e);
 		}
 	}
 

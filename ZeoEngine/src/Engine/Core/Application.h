@@ -31,9 +31,12 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
+		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
 		// TODO: Remove
 		EngineLayer* GetEngineLayer();
 
+		// TODO:
 		template<typename T>
 		T* FindLayer()
 		{
@@ -48,6 +51,7 @@ namespace ZeoEngine {
 			return nullptr;
 		}
 
+		// TODO:
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
 		{

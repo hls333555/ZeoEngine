@@ -62,8 +62,8 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnEvent(Event& e)
 	{
-		m_Scene->OnEvent(e);
 		m_MenuManager.OnEvent(e);
+		m_Scene->OnEvent(e);
 	}
 
 	void EditorDockspace::RenderDockspace()

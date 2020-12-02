@@ -310,8 +310,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		EventDispatcher dispatcher(event);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
+		//EventDispatcher dispatcher(event);
+		//dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 
 		m_DockspaceManager.OnEvent(event);
 
