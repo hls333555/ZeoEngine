@@ -9,20 +9,22 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/GameFramework/EngineLayer.h"
 
+int main(int argc, char** argv);
+
 namespace ZeoEngine {
 
 	class ImGuiLayer;
 
 	class Application
 	{
+		friend int ::main(int argc, char** argv);
+
 	public:
 		Application(const std::string& name = "Zeo App");
 		virtual ~Application();
 
 		static Application& Get() { return *s_Instance; }
 		Window& GetWindow() { return *m_Window; }
-
-		void Run();
 
 		void Close();
 
@@ -66,6 +68,8 @@ namespace ZeoEngine {
 		}
 
 	private:
+		void Run();
+
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
