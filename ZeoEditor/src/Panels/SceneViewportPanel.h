@@ -39,8 +39,9 @@ namespace ZeoEngine {
 		Ref<Texture2D> m_PlayTexture, m_PauseTexture;
 		void* m_ToolbarTextures[2];
 
-	private:
 		Entity m_PreviewCamera;
+
+	private:
 		bool m_IsViewportFocused = false, m_IsViewportHovered = false;
 		glm::vec2 m_LastViewportSize{ 0.0f };
 

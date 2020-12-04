@@ -3,9 +3,15 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <ImGuizmo.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/Serializer.h"
+#include "Dockspaces/EditorDockspace.h"
+#include "Engine/Math/Math.h"
+#include "Engine/Core/Input.h"
+#include "Engine/Core/KeyCodes.h"
 
 namespace ZeoEngine {
 
@@ -21,6 +27,8 @@ namespace ZeoEngine {
 	void GameViewportPanel::RenderPanel()
 	{
 		SceneViewportPanel::RenderPanel();
+
+		RenderGizmo();
 
 		//ImGuiWindow* window = ImGui::GetCurrentWindow();
 
@@ -100,6 +108,56 @@ namespace ZeoEngine {
 		if (m_ToolbarTextures[0] == m_StopTexture->GetTexture())
 		{
 			m_ToolbarTextures[1] = m_ToolbarTextures[1] == m_PauseTexture->GetTexture() ? m_PlayTexture->GetTexture() : m_PauseTexture->GetTexture();
+		}
+	}
+
+	void GameViewportPanel::RenderGizmo()
+	{
+		Entity selectedEntity = GetContext()->GetContextEntity();
+		if (selectedEntity && m_GizmoType != -1)
+		{
+			const auto& cameraComp = m_PreviewCamera.GetComponent<CameraComponent>();
+
+			ImGuizmo::SetOrthographic(cameraComp.GetProjectionType() == SceneCamera::ProjectionType::Orthographic);
+			ImGuizmo::SetDrawlist();
+			const ImRect InnerRect = ImGui::GetCurrentWindow()->InnerRect;
+			ImGuizmo::SetRect(InnerRect.Min.x, InnerRect.Min.y, InnerRect.GetSize().x, InnerRect.GetSize().y);
+
+			// Camera
+			const glm::mat4& cameraProjection = cameraComp.Camera.GetProjection();
+			glm::mat4 cameraView = glm::inverse(m_PreviewCamera.GetComponent<TransformComponent>().GetTransform());
+
+			// Selected entity
+			auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4 entityTransform = transformComp.GetTransform();
+
+			// Snapping
+			bool bSnap = Input::IsKeyPressed(Key::LeftControl);
+			// Snap to 0.5m for translation/scale
+			float snapValue = 0.5f;
+			// Snap to 45 degrees for rotation
+			if (m_GizmoType == ImGuizmo::ROTATE)
+			{
+				snapValue = 45.0f;
+			}
+			float snapValues[3] = { snapValue, snapValue, snapValue };
+
+			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+				static_cast<ImGuizmo::OPERATION>(m_GizmoType), ImGuizmo::LOCAL,
+				glm::value_ptr(entityTransform),
+				nullptr, bSnap ? snapValues : nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 outTranslation, outRotation, outScale;
+				Math::DecomposeTransform(entityTransform, outTranslation, outRotation, outScale);
+
+				// This delta rotation prevents gimbal lock situation
+				glm::vec3 deltaRotation = outRotation - transformComp.Rotation;
+				transformComp.Translation = outTranslation;
+				transformComp.Rotation += deltaRotation;
+				transformComp.Scale = outScale;
+			}
 		}
 	}
 
