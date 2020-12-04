@@ -16,3 +16,6 @@
 [submodule "ZeoEngine/vendor/yaml-cpp"]
 	path = ZeoEngine/vendor/yaml-cpp
 	url = https://github.com/hls333555/yaml-cpp.git
+[submodule "ZeoEngine/vendor/ImGuizmo"]
+	path = ZeoEngine/vendor/ImGuizmo
+	url = https://github.com/hls333555/ImGuizmo.git

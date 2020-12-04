@@ -18,8 +18,8 @@ project "ZeoEngine"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.ini",
-		"vendor/ImGuizmo/**.h",
-		"vendor/ImGuizmo/**.cpp"
+		"vendor/ImGuizmo/ImGuizmo.h",
+		"vendor/ImGuizmo/ImGuizmo.cpp"
 	}
 
 	defines
@@ -55,6 +55,9 @@ project "ZeoEngine"
 		"opengl32.lib",
 		"rttr",
 	}
+
+	filter "files:vendor/ImGuizmo/**.cpp"
+	flags { "NoPCH" }
 
 	filter "system:windows"
 		systemversion "latest"
