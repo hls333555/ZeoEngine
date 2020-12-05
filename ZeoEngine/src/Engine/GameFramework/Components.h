@@ -173,8 +173,7 @@ namespace ZeoEngine {
 
 	struct NativeScriptComponent : public Component
 	{
-		// NOTE: Function pointer does not support lambda with captures
-		using InstantiateScriptDef = std::function<ScriptableEntity*()>;
+		using InstantiateScriptDef = ScriptableEntity*(*)();
 		using DestroyScriptDef = void(*)(NativeScriptComponent*);
 
 		ScriptableEntity* Instance = nullptr;
@@ -185,7 +184,7 @@ namespace ZeoEngine {
 		template<typename T, typename ... Args>
 		void Bind(Args&& ... args)
 		{
-			InstantiateScript = [=]() mutable { return static_cast<ScriptableEntity*>(new T(std::forward<Args>(args)...)); };
+			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};

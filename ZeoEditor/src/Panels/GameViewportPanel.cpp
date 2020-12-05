@@ -26,6 +26,8 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::OnEvent(Event& e)
 	{
+		SceneViewportPanel::OnEvent(e);
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnKeyPressed));
 	}

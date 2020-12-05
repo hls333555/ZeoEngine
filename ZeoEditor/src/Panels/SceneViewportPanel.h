@@ -6,6 +6,8 @@
 
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Events/KeyEvent.h"
+#include "Engine/Events/MouseEvent.h"
 
 namespace ZeoEngine {
 
@@ -14,8 +16,8 @@ namespace ZeoEngine {
 	public:
 		using ScenePanel::ScenePanel;
 		virtual void OnAttach() override;
-
 		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnEvent(Event& e) override;
 
 		void CreatePreviewCamera(bool bIsFromOpenScene = false);
 
@@ -29,6 +31,10 @@ namespace ZeoEngine {
 	protected:
 		virtual void RenderPanel() override;
 	private:
+		void UpdatePreviewCamera(DeltaTime dt);
+		bool OnMouseScrolled(MouseScrolledEvent& e);
+		bool OnKeyPressed(KeyPressedEvent& e);
+
 		virtual void RenderToolbar() {};
 
 		void OnViewportResize(const glm::vec2& size);
@@ -43,6 +49,10 @@ namespace ZeoEngine {
 
 	private:
 		glm::vec2 m_LastViewportSize{ 0.0f };
+
+		bool m_bShouldUpdateCameraPan = false;
+		glm::vec2 m_LastPressedMousePosition{ 0.0f };
+		bool m_bIsMiddleMouseButtonFirstPressed = true, m_bIsMiddleMouseButtonFirstPressedWhenHovered = true;
 
 	};
 
