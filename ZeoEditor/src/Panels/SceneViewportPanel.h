@@ -42,7 +42,6 @@ namespace ZeoEngine {
 		Entity m_PreviewCamera;
 
 	private:
-		bool m_IsViewportFocused = false, m_IsViewportHovered = false;
 		glm::vec2 m_LastViewportSize{ 0.0f };
 
 	};

@@ -68,6 +68,7 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::OnEvent(Event& e)
 	{
+		// TODO: Not used for now
 		if (m_bBlockEvents)
 		{
 			ImGuiIO& io = ImGui::GetIO();

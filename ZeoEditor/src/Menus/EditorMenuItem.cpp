@@ -33,47 +33,7 @@ namespace ZeoEngine {
 	{
 		if (m_ShortcutName.empty() || e.GetRepeatCount() > 0) return false;
 
-		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
-		switch (e.GetKeyCode())
-		{
-			case Key::N:
-			{
-				if (bIsCtrlPressed && m_ShortcutName == "CTRL+N")
-				{
-					GetEditorContext()->CreateNewScene();
-				}
-				break;
-			}
-			case Key::O:
-			{
-				if (bIsCtrlPressed && m_ShortcutName == "CTRL+O")
-				{
-					GetEditorContext()->OpenScene();
-				}
-				break;
-			}
-			case Key::S:
-			{
-				if (bIsCtrlPressed)
-				{
-					if (bIsAltPressed && m_ShortcutName == "CTRL+ALT+S")
-					{
-						GetEditorContext()->SaveSceneAs();
-					}
-					else if (m_ShortcutName == "CTRL+S")
-					{
-						GetEditorContext()->SaveScene();
-					}
-
-				}
-				break;
-			}
-			default:
-				break;
-		}
-
-		return true;
+		return OnKeyPressedOverride(e);
 	}
 
 	EditorDockspace* EditorMenuItem::GetEditorContext() const
@@ -107,9 +67,53 @@ namespace ZeoEngine {
 		ImGui::MenuItem(m_MenuItemName.c_str(), m_ShortcutName.c_str(), m_bShowWindowPtr, m_bEnabled);
 	}
 
+	bool MenuItem_NewScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName != "CTRL+N" || !GetEditorContext()->IsDockspaceFocused()) return false;
+
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (bIsCtrlPressed)
+				{
+					GetEditorContext()->CreateNewScene();
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		return true;
+	}
+
 	void MenuItem_NewScene::OnMenuItemActivated()
 	{
 		GetEditorContext()->CreateNewScene();
+	}
+
+	bool MenuItem_OpenScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName != "CTRL+O" || !GetEditorContext()->IsDockspaceFocused()) return false;
+
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		switch (e.GetKeyCode())
+		{
+			case Key::O:
+			{
+				if (bIsCtrlPressed)
+				{
+					GetEditorContext()->OpenScene();
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		return true;
 	}
 
 	void MenuItem_OpenScene::OnMenuItemActivated()
@@ -117,9 +121,57 @@ namespace ZeoEngine {
 		GetEditorContext()->OpenScene();
 	}
 
+	bool MenuItem_SaveScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName != "CTRL+S" || !GetEditorContext()->IsDockspaceFocused()) return false;
+
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		switch (e.GetKeyCode())
+		{
+			case Key::S:
+			{
+				if (bIsCtrlPressed)
+				{
+					GetEditorContext()->SaveScene();
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		return true;
+	}
+
 	void MenuItem_SaveScene::OnMenuItemActivated()
 	{
 		GetEditorContext()->SaveScene();
+	}
+
+	bool MenuItem_SaveSceneAs::OnKeyPressedOverride(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName != "CTRL+ALT+S" || !GetEditorContext()->IsDockspaceFocused()) return false;
+
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		switch (e.GetKeyCode())
+		{
+			case Key::S:
+			{
+				if (bIsCtrlPressed)
+				{
+					if (bIsAltPressed)
+					{
+						GetEditorContext()->SaveSceneAs();
+					}
+				}
+				break;
+			}
+			default:
+				break;
+		}
+
+		return true;
 	}
 
 	void MenuItem_SaveSceneAs::OnMenuItemActivated()

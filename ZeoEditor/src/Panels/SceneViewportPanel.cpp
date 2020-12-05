@@ -3,8 +3,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include "Engine/Core/Application.h"
-#include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Events/MouseEvent.h"
@@ -38,12 +36,10 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::RenderPanel()
 	{
-		m_IsViewportFocused = ImGui::IsWindowFocused();
-		m_IsViewportHovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->BlockEvents(!m_IsViewportFocused || !m_IsViewportHovered);
-
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		m_LastViewportSize = static_cast<glm::vec2>(window->InnerRect.Max) - static_cast<glm::vec2>(window->InnerRect.Min);
+
+		GetContext()->BlockEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
 		ImGui::GetWindowDrawList()->AddImage(
@@ -79,7 +75,7 @@ namespace ZeoEngine {
 					{
 						m_bIsMiddleMouseButtonFirstPressed = false;
 						// Only allow panning if first press is inside context panel
-						m_bShouldUpdate = m_ContextPanel && m_ContextPanel->IsHovering();
+						m_bShouldUpdate = m_ContextPanel && m_ContextPanel->IsPanelHovered();
 					}
 				}
 				
@@ -122,7 +118,7 @@ namespace ZeoEngine {
 		private:
 			bool OnMouseScrolled(MouseScrolledEvent& e)
 			{
-				if (m_ContextPanel && m_ContextPanel->IsHovering())
+				if (m_ContextPanel && m_ContextPanel->IsPanelHovered())
 				{
 					auto& sceneCamera = GetComponent<CameraComponent>().Camera;
 					float size = sceneCamera.GetOrthographicSize();

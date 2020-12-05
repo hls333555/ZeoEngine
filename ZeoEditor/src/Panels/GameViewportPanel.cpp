@@ -24,6 +24,45 @@ namespace ZeoEngine {
 		m_ToolbarTextures[1] = m_PauseTexture->GetTexture();
 	}
 
+	void GameViewportPanel::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnKeyPressed));
+	}
+
+	bool GameViewportPanel::OnKeyPressed(KeyPressedEvent& e)
+	{
+		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
+
+		switch (e.GetKeyCode())
+		{
+			case Key::W:
+			{
+				m_GizmoType = ImGuizmo::TRANSLATE;
+				break;
+			}
+			case Key::E:
+			{
+				m_GizmoType = ImGuizmo::ROTATE;
+				break;
+			}
+			case Key::R:
+			{
+				m_GizmoType = ImGuizmo::SCALE;
+				break;
+			}
+			case Key::Space:
+			{
+				m_GizmoType = m_GizmoType + 1 > ImGuizmo::SCALE ? ImGuizmo::TRANSLATE : m_GizmoType + 1;
+				break;
+			}
+			default:
+				return false;
+		}
+
+		return true;
+	}
+
 	void GameViewportPanel::RenderPanel()
 	{
 		SceneViewportPanel::RenderPanel();

@@ -63,7 +63,12 @@ namespace ZeoEngine {
 	void EditorDockspace::OnEvent(Event& e)
 	{
 		m_MenuManager.OnEvent(e);
-		m_Scene->OnEvent(e);
+		m_PanelManager.OnEvent(e);
+
+		if (!m_bBlockEvents)
+		{
+			m_Scene->OnEvent(e);
+		}
 	}
 
 	void EditorDockspace::RenderDockspace()
@@ -93,6 +98,9 @@ namespace ZeoEngine {
 
 		ImGui::Begin(GetDockspaceName().c_str(), &m_bShow, m_DockspaceWindowFlags);
 		ImGui::PopStyleVar(3);
+
+		m_bIsDockspaceFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+		m_bIsDockspaceHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 		// Render menus - non-main-menus must be rendered winthin window context
 		m_MenuManager.OnImGuiRender(bIsMainDockspace);

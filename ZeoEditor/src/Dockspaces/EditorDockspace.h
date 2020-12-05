@@ -40,6 +40,8 @@ namespace ZeoEngine {
 		EditorDockspaceType GetDockspaceType() const { return m_DockspaceType; }
 		std::string GetDockspaceName() const { return std::move(ResolveEditorNameFromEnum(m_DockspaceType)); }
 		bool* GetShowPtr() { return &m_bShow; }
+		bool IsDockspaceFocused() const { return m_bIsDockspaceFocused; }
+		bool IsDockspaceHovered() const { return m_bIsDockspaceHovered; }
 		Entity GetContextEntity() const { return m_ContextEntity; }
 		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
@@ -58,6 +60,8 @@ namespace ZeoEngine {
 		}
 
 		EditorDockspace* OpenEditor(EditorDockspaceType dockspaceType);
+
+		void BlockEvents(bool bBlock) { m_bBlockEvents = bBlock; }
 
 		/** Create an empty scene and init camera. */
 		virtual void CreateNewScene(bool bIsFromOpenScene = false);
@@ -96,6 +100,8 @@ namespace ZeoEngine {
 		ImGuiWindowFlags m_DockspaceWindowFlags;
 		EditorLayer* m_EditorContext;
 		bool m_bShow;
+		bool m_bIsDockspaceFocused = false, m_bIsDockspaceHovered = false;
+		bool m_bBlockEvents = true;
 
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;

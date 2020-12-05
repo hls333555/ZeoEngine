@@ -28,7 +28,7 @@ namespace ZeoEngine {
 		void SetDarkThemeColors();
 
 	private:
-		bool m_bBlockEvents = true;
+		bool m_bBlockEvents = false;
 	};
 
 }

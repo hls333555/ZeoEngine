@@ -31,6 +31,7 @@ namespace ZeoEngine {
 	private:
 		/** Handles key shortcuts. */
 		bool OnKeyPressed(KeyPressedEvent& e);
+		virtual bool OnKeyPressedOverride(KeyPressedEvent& e) { return false; };
 		virtual void OnMenuItemActivated() = 0;
 
 	protected:
@@ -72,6 +73,7 @@ namespace ZeoEngine {
 		using EditorMenuItem::EditorMenuItem;
 
 	private:
+		virtual bool OnKeyPressedOverride(KeyPressedEvent& e) override;
 		virtual void OnMenuItemActivated() override;
 	};
 
@@ -81,6 +83,7 @@ namespace ZeoEngine {
 		using EditorMenuItem::EditorMenuItem;
 
 	private:
+		virtual bool OnKeyPressedOverride(KeyPressedEvent& e) override;
 		virtual void OnMenuItemActivated() override;
 	};
 
@@ -90,6 +93,7 @@ namespace ZeoEngine {
 		using EditorMenuItem::EditorMenuItem;
 
 	private:
+		virtual bool OnKeyPressedOverride(KeyPressedEvent& e) override;
 		virtual void OnMenuItemActivated() override;
 	};
 
@@ -99,6 +103,7 @@ namespace ZeoEngine {
 		using EditorMenuItem::EditorMenuItem;
 
 	private:
+		virtual bool OnKeyPressedOverride(KeyPressedEvent& e) override;
 		virtual void OnMenuItemActivated() override;
 	};
 

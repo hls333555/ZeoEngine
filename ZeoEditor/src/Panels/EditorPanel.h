@@ -23,17 +23,15 @@ namespace ZeoEngine {
 		virtual void OnDetach() {}
 		virtual void OnUpdate(DeltaTime dt) {}
 		void OnImGuiRender();
+		virtual void OnEvent(Event& e) {}
 
 		std::string GetPanelName() const { return std::move(ResolveEditorNameFromEnum(m_PanelType)); }
 	protected:
 		virtual bool IsShow() const { return m_bShow; }
 	public:
 		bool* GetShowPtr() { return &m_bShow; }
-		/**
-		  * In most cases, you should use ImGui::IsWindowHovered() instead of this inside ImGui::Begin()
-		  * A known use case for this is inside SceneViewportPanel::SceneCameraController which is outside ImGui::Begin() context
-		  */
-		bool IsHovering() const { return m_bIsHovering; }
+		bool IsPanelFocused() const { return m_bIsPanelFocused; }
+		bool IsPanelHovered() const { return m_bIsPanelHovered; }
 
 	private:
 		virtual void RenderPanel() = 0;
@@ -43,7 +41,7 @@ namespace ZeoEngine {
 		bool m_bShow;
 		ImGuiWindowFlags m_PanelWindowFlags;
 		ImVec2Data m_InitialPos, m_InitialSize;
-		bool m_bIsHovering{ false };
+		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;
 	};
 
 	class ScenePanel : public EditorPanel
@@ -72,6 +70,7 @@ namespace ZeoEngine {
 
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
+		void OnEvent(Event& e);
 
 		void PushPanel(EditorPanel* panel);
 		EditorPanel* GetPanelByName(const std::string& panelName);

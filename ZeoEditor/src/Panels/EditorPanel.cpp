@@ -28,9 +28,10 @@ namespace ZeoEngine {
 
 		if (ImGui::Begin(GetPanelName().c_str(), &m_bShow, m_PanelWindowFlags))
 		{
-			RenderPanel();
+			m_bIsPanelFocused = ImGui::IsWindowFocused();
+			m_bIsPanelHovered = ImGui::IsWindowHovered();
 
-			m_bIsHovering = ImGui::IsWindowHovered();
+			RenderPanel();
 		}
 
 		ImGui::End();
@@ -79,6 +80,14 @@ namespace ZeoEngine {
 		for (auto& [name, panel] : m_Panels)
 		{
 			panel->OnImGuiRender();
+		}
+	}
+
+	void PanelManager::OnEvent(Event& e)
+	{
+		for (auto& [name, panel] : m_Panels)
+		{
+			panel->OnEvent(e);
 		}
 	}
 
