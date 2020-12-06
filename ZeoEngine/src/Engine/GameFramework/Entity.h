@@ -27,7 +27,7 @@ namespace ZeoEngine {
 			AddComponentId(entt::type_info<T>().id());
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
-			m_Scene->m_Registry.on_destroy<T>().template connect<&ZeoReflection::on_destroy<T>>();
+			m_Scene->m_Registry.on_destroy<T>().template connect<&ZeoEngine::Reflection::on_destroy<T>>();
 			return comp;
 		}
 

@@ -24,7 +24,7 @@ namespace entt {
 
 }
 
-namespace ZeoReflection {
+namespace ZeoEngine::Reflection {
 
 	template<typename T>
 	T& emplace(entt::registry& registry, entt::entity entity)
@@ -56,7 +56,7 @@ namespace ZeoReflection {
 	template<typename T>
 	void bind_on_destroy(entt::registry& registry)
 	{
-		registry.on_destroy<T>().template connect<&ZeoReflection::on_destroy<T>>();
+		registry.on_destroy<T>().template connect<&on_destroy<T>>();
 	}
 
 	template<typename T>
@@ -127,11 +127,11 @@ entt::meta<_type>()																						\
     .type()																								\
         .prop(PropertyType::Name, #_type)																\
         .prop(std::make_tuple(__VA_ARGS__))																\
-		.ctor<&ZeoReflection::emplace<_type>, entt::as_ref_t>()											\
-		.func<&ZeoReflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
-		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
-		.func<&ZeoReflection::has<_type>>("has"_hs)														\
-		.func<&ZeoReflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)								\
+		.ctor<&ZeoEngine::Reflection::emplace<_type>, entt::as_ref_t>()											\
+		.func<&ZeoEngine::Reflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
+		.func<&ZeoEngine::Reflection::get<_type>, entt::as_ref_t>("get"_hs)										\
+		.func<&ZeoEngine::Reflection::has<_type>>("has"_hs)														\
+		.func<&ZeoEngine::Reflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)								\
 		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)							\
 		.func<&Component::PostDataValueEditChange>("PostDataValueEditChange"_hs)						\
 		.base<Component>()
@@ -147,11 +147,11 @@ entt::meta<_type>()																						\
         .prop(PropertyType::InherentType)																\
         .prop(PropertyType::NestedClass)																\
         .prop(std::make_tuple(__VA_ARGS__))																\
-		.ctor<&ZeoReflection::emplace<_type>, entt::as_ref_t>()											\
-		.func<&ZeoReflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
-		.func<&ZeoReflection::get<_type>, entt::as_ref_t>("get"_hs)										\
-		.func<&ZeoReflection::has<_type>>("has"_hs)														\
-		.func<&ZeoReflection::create_default_value<_type>>("create_default_value"_hs)
+		.ctor<&ZeoEngine::Reflection::emplace<_type>, entt::as_ref_t>()											\
+		.func<&ZeoEngine::Reflection::remove<_type>, entt::as_ref_t>("remove"_hs)								\
+		.func<&ZeoEngine::Reflection::get<_type>, entt::as_ref_t>("get"_hs)										\
+		.func<&ZeoEngine::Reflection::has<_type>>("has"_hs)														\
+		.func<&ZeoEngine::Reflection::create_default_value<_type>>("create_default_value"_hs)
 
 //////////////////////////////////////////////////////////////////////////
 // Data Registration /////////////////////////////////////////////////////
@@ -176,8 +176,8 @@ entt::meta<_type>()																						\
 
 #define ZE_REFL_ENUM(enumType)																			\
 entt::meta<enumType>()																					\
-	.func<&ZeoReflection::set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)				\
-	.func<&ZeoReflection::create_default_value<enumType>>("create_default_value"_hs)
+	.func<&ZeoEngine::Reflection::set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)				\
+	.func<&ZeoEngine::Reflection::create_default_value<enumType>>("create_default_value"_hs)
 #define ZE_REFL_ENUM_DATA(enumType, enumData, ...)														\
 .data<enumType::enumData>(#enumData##_hs)																\
     .prop(PropertyType::Name, #enumData)																\
