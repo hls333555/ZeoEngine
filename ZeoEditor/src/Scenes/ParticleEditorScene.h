@@ -8,7 +8,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual void OnUpdate(DeltaTime dt) override;
-		virtual void OnSceneRender() override;
+		virtual void OnRender(const EditorCamera& camera) override;
 
 	private:
 		virtual void OnClenup() override;

@@ -90,6 +90,17 @@ namespace ZeoEngine {
 		Reset();
 	}
 
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetViewProjection();
+
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		Reset();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		ZE_PROFILE_FUNCTION();

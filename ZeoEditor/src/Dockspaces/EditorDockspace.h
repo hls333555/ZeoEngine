@@ -16,6 +16,7 @@
 namespace ZeoEngine {
 
 	class EditorLayer;
+	class EditorCamera;
 
 	class EditorDockspace
 	{
@@ -47,6 +48,9 @@ namespace ZeoEngine {
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 		virtual EditorPanelType GetViewportPanelType() const = 0;
+
+		EditorCamera* GetEditorCamera() const { return m_EditorCamera; }
+		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
 	protected:
 		void PushDockspace(EditorDockspace* dockspace);
@@ -102,6 +106,8 @@ namespace ZeoEngine {
 		bool m_bShow;
 		bool m_bIsDockspaceFocused = false, m_bIsDockspaceHovered = false;
 		bool m_bBlockEvents = true;
+
+		EditorCamera* m_EditorCamera;
 
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;

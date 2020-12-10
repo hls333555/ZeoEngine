@@ -7,7 +7,6 @@
 #include <ImGuizmo.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/Serializer.h"
 #include "Dockspaces/EditorDockspace.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
@@ -157,16 +156,14 @@ namespace ZeoEngine {
 		Entity selectedEntity = GetContext()->GetContextEntity();
 		if (selectedEntity && m_GizmoType != -1)
 		{
-			const auto& cameraComp = m_PreviewCamera.GetComponent<CameraComponent>();
-
-			ImGuizmo::SetOrthographic(cameraComp.GetProjectionType() == SceneCamera::ProjectionType::Orthographic);
+			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 			const ImRect InnerRect = ImGui::GetCurrentWindow()->InnerRect;
 			ImGuizmo::SetRect(InnerRect.Min.x, InnerRect.Min.y, InnerRect.GetSize().x, InnerRect.GetSize().y);
 
-			// Camera
-			const glm::mat4& cameraProjection = cameraComp.Camera.GetProjection();
-			glm::mat4 cameraView = glm::inverse(m_PreviewCamera.GetComponent<TransformComponent>().GetTransform());
+			// Editor camera
+			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
+			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
 			// Selected entity
 			auto& transformComp = selectedEntity.GetComponent<TransformComponent>();

@@ -6,6 +6,7 @@
 
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
 
@@ -40,12 +41,9 @@ namespace ZeoEngine {
 
 		void SortEntities();
 
-		virtual void OnUpdate(DeltaTime dt);
-		void OnRender();
-	private:
-		virtual void OnSceneRender() {}
-	public:
-		void OnEvent(Event& e);
+		virtual void OnUpdate(DeltaTime dt) {}
+		virtual void OnRender(const EditorCamera& camera) {}
+		virtual void OnEvent(Event& e) {}
 
 		/** Called after scene has been deserialized. */
 		virtual void OnDeserialized() {}

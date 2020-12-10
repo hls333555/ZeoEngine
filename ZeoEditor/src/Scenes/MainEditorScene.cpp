@@ -7,16 +7,98 @@ namespace ZeoEngine {
 
 	void MainEditorScene::OnUpdate(DeltaTime dt)
 	{
-		Scene::OnUpdate(dt);
+		// TODO:
+		OnUpdateEditor(dt);
+	}
 
-		// Update particle system for runtime
+	void MainEditorScene::OnRender(const EditorCamera& camera)
+	{
+		// TODO:
+		OnRenderEditor(camera);
+	}
+
+	void MainEditorScene::OnEvent(Event& e)
+	{
+		// TODO:
+		m_Registry.view<NativeScriptComponent>().each([&e](auto entity, auto& nsc)
+		{
+			if (nsc.Instance)
+			{
+				nsc.Instance->OnEvent(e);
+			}
+		});
+	}
+
+	void MainEditorScene::OnUpdateEditor(DeltaTime dt)
+	{
+		UpdateParticleSystem(dt);
+	}
+
+	void MainEditorScene::OnUpdateRuntime(DeltaTime dt)
+	{
+		// Update scripts
+		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		{
+			// TODO: Move to Scene::OnBeginPlay
+			if (!nsc.Instance)
+			{
+				nsc.Instance = nsc.InstantiateScript();
+				nsc.Instance->m_Entity = Entity{ entity, this };
+				nsc.Instance->OnCreate();
+			}
+
+			nsc.Instance->OnUpdate(dt);
+		});
+
+		UpdateParticleSystem(dt);
+	}
+
+	void MainEditorScene::UpdateParticleSystem(DeltaTime dt)
+	{
 		m_Registry.view<ParticleSystemComponent>().each([dt](auto entity, auto& psc)
 		{
 			psc.UpdateParticleSystem(dt);
 		});
 	}
 
-	void MainEditorScene::OnSceneRender()
+	void MainEditorScene::OnRenderEditor(const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+		{
+			RenderPrimitives();
+		}
+		Renderer2D::EndScene();
+	}
+
+	void MainEditorScene::OnRenderRuntime()
+	{
+		// Render 2D
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
+		{
+			auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
+			for (auto entity : cameraView)
+			{
+				auto [transformComp, cameraComp] = cameraView.get<TransformComponent, CameraComponent>(entity);
+				if (cameraComp.bIsPrimary)
+				{
+					mainCamera = &cameraComp.Camera;
+					cameraTransform = transformComp.GetTransform();
+					break;
+				}
+			}
+		}
+		if (mainCamera)
+		{
+			Renderer2D::BeginScene(*mainCamera, cameraTransform);
+			{
+				RenderPrimitives();
+			}
+			Renderer2D::EndScene();
+		}
+	}
+
+	void MainEditorScene::RenderPrimitives()
 	{
 		auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 
@@ -45,7 +127,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		// Render particle system for runtime
+		// Render particle system
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
 		{
 			psc.RenderParticleSystem();

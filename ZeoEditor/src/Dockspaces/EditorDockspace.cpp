@@ -46,7 +46,7 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
-				m_Scene->OnRender();
+				m_Scene->OnRender(*m_EditorCamera);
 			}
 		}
 		EndFrameBuffer();

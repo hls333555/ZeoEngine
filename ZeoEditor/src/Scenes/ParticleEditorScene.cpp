@@ -1,13 +1,12 @@
 #include "Scenes/ParticleEditorScene.h"
 
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
 
 	void ParticleEditorScene::OnUpdate(DeltaTime dt)
 	{
-		Scene::OnUpdate(dt);
-
 		// Update particle system for particle editor
 		m_Registry.view<ParticleSystemPreviewComponent>().each([dt](auto entity, auto& pspc)
 		{
@@ -15,13 +14,17 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticleEditorScene::OnSceneRender()
+	void ParticleEditorScene::OnRender(const EditorCamera& camera)
 	{
-		// Render particle system for particle editor
-		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
+		Renderer2D::BeginScene(camera);
 		{
-			pspc.RenderParticleSystem();
-		});
+			// Render particle system for particle editor
+			m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
+			{
+				pspc.RenderParticleSystem();
+			});
+		}
+		Renderer2D::EndScene();
 	}
 
 	void ParticleEditorScene::OnClenup()

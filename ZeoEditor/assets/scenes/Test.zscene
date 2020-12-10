@@ -3,8 +3,8 @@ Entities:
   - Entity: 0
     Components:
       - Component: 4805901
-        bIsInternal: true
-        Name: Game View Camera
+        bIsInternal: false
+        Name: Test Camera
       - Component: 1400689804
         Scale: [1, 1, 1]
         Rotation: [0, 0, 0]
