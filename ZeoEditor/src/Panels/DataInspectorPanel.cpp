@@ -41,7 +41,6 @@ namespace ZeoEngine {
 	{
 		ImGui::Separator();
 
-		ImGui::Columns(1);
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
 		ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);

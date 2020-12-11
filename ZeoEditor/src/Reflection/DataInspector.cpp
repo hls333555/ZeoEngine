@@ -34,7 +34,6 @@ namespace ZeoEngine {
 		bool bWillRemoveType = false;
 		if (bShouldDisplayTypeHeader)
 		{
-			ImGui::Columns(1);
 			// Get available content region before adding CollapsingHeader as it will occupy space
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
@@ -91,7 +90,6 @@ namespace ZeoEngine {
 				bool bIsCategoryTreeExpanded = true;
 				if (bShouldDisplayCategoryTree)
 				{
-					ImGui::Columns(1);
 					// Data category tree
 					bIsCategoryTreeExpanded = ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
 				}
@@ -100,89 +98,101 @@ namespace ZeoEngine {
 					// We want column seperator to keep synced across different entities
 					ImGui::PopID();
 					ImGui::PopID();
-					ImGui::Columns(2);
+					if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+					{
+						ImGui::TableNextColumn();
+						// Re-push entity id
+						ImGui::PushID(static_cast<uint32_t>(entity));
+						// Re-push type id
+						ImGui::PushID(type.type_id());
+
+						ImGui::AlignTextToFramePadding();
+						// Iterate all shown datas
+						for (const auto data : visibleDatas)
+						{
+							const auto dataType = data.type();
+							bool bIsSeqContainer = dataType.is_sequence_container();
+							bool bIsAssContainer = dataType.is_associative_container();
+							bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, dataType);
+							ImGuiTreeNodeFlags flags = DefaultDataFlags;
+							if (bIsSeqContainer)
+							{
+								auto size = data.get(instance).as_sequence_container().size();
+								flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
+							}
+							else if (bIsAssContainer)
+							{
+								auto size = data.get(instance).as_associative_container().size();
+								flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
+							}
+							else if (bIsNestedClass)
+							{
+								flags = NestedDataFlags;
+							}
+							auto dataName = GetMetaObjectDisplayName(data);
+							// Data name
+							bool bIsTreeExpanded = ImGui::TreeNodeEx(*dataName, flags);
+							// Data tooltip
+							ShowPropertyTooltip(data);
+							// Switch to the right column
+							ImGui::TableNextColumn();
+							// Push data name as id
+							ImGui::PushID(*dataName);
+							{
+								if (bIsSeqContainer || bIsAssContainer)
+								{
+									// Add and clear buttons
+									DrawButtonsForContainer(data, instance);
+									// Switch to the next row
+									ImGui::TableNextColumn();
+								}
+								else if (bIsNestedClass)
+								{
+									// Switch to the next row
+									ImGui::TableNextColumn();
+								}
+								if (bIsTreeExpanded)
+								{
+									if (bIsSeqContainer)
+									{
+										EvaluateSequenceContainerData(data, instance);
+
+										ImGui::TreePop();
+									}
+									else if (bIsAssContainer)
+									{
+										EvaluateAssociativeContainerData(data, instance);
+
+										ImGui::TreePop();
+									}
+									else if (bIsNestedClass)
+									{
+										EvaluateSubData(data, instance, false);
+
+										ImGui::TreePop();
+									}
+									else
+									{
+										// Align width to the right side
+										ImGui::SetNextItemWidth(-1.0f);
+										EvaluateData(data, instance, false);
+										// Switch to the next row
+										ImGui::TableNextColumn();
+									}
+								}
+							}
+							ImGui::PopID();
+						}
+
+						// When EndTable() is called, the ID stack must be the same as when BeginTable() is called!
+						ImGui::PopID();
+						ImGui::PopID();
+						ImGui::EndTable();
+					}
 					// Re-push entity id
 					ImGui::PushID(static_cast<uint32_t>(entity));
 					// Re-push type id
 					ImGui::PushID(type.type_id());
-
-					ImGui::AlignTextToFramePadding();
-					// Iterate all shown datas
-					for (const auto data : visibleDatas)
-					{
-						const auto dataType = data.type();
-						bool bIsSeqContainer = dataType.is_sequence_container();
-						bool bIsAssContainer = dataType.is_associative_container();
-						bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, dataType);
-						ImGuiTreeNodeFlags flags = DefaultDataFlags;
-						if (bIsSeqContainer)
-						{
-							auto size = data.get(instance).as_sequence_container().size();
-							flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
-						}
-						else if (bIsAssContainer)
-						{
-							auto size = data.get(instance).as_associative_container().size();
-							flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
-						}
-						else if (bIsNestedClass)
-						{
-							flags = NestedDataFlags;
-						}
-						auto dataName = GetMetaObjectDisplayName(data);
-						// Data name
-						bool bIsTreeExpanded = ImGui::TreeNodeEx(*dataName, flags);
-						// Data tooltip
-						ShowPropertyTooltip(data);
-						// Switch to the right column
-						ImGui::NextColumn();
-						// Push data name as id
-						ImGui::PushID(*dataName);
-						{
-							if (bIsSeqContainer || bIsAssContainer)
-							{
-								// Add and clear buttons
-								DrawButtonsForContainer(data, instance);
-								// Switch to the next row
-								ImGui::NextColumn();
-							}
-							else if (bIsNestedClass)
-							{
-								// Switch to the next row
-								ImGui::NextColumn();
-							}
-							if (bIsTreeExpanded)
-							{
-								if (bIsSeqContainer)
-								{
-									EvaluateSequenceContainerData(data, instance);
-
-									ImGui::TreePop();
-								}
-								else if (bIsAssContainer)
-								{
-									EvaluateAssociativeContainerData(data, instance);
-
-									ImGui::TreePop();
-								}
-								else if (bIsNestedClass)
-								{
-									EvaluateSubData(data, instance, false);
-
-									ImGui::TreePop();
-								}
-								else
-								{
-									// Align width to the right side
-									ImGui::SetNextItemWidth(-1.0f);
-									EvaluateData(data, instance, false);
-									// Switch to the next row
-									ImGui::NextColumn();
-								}
-							}
-						}
-						ImGui::PopID();
-					}
 				}
 			}
 		}
@@ -430,7 +440,7 @@ namespace ZeoEngine {
 			// Data index
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(std::to_string(i).c_str(), flags);
 			// Switch to the right column
-			ImGui::NextColumn();
+			ImGui::TableNextColumn();
 			// Push data index as id
 			ImGui::PushID(i);
 			{
@@ -439,7 +449,7 @@ namespace ZeoEngine {
 					// Insert and erase buttons
 					DrawButtonsForContainerElement(data, seqView, it);
 					// Switch to the next row
-					ImGui::NextColumn();
+					ImGui::TableNextColumn();
 					if (bIsTreeExpanded)
 					{
 						EvaluateSubData(data, element, true);
@@ -458,7 +468,7 @@ namespace ZeoEngine {
 					// Insert and erase buttons
 					DrawButtonsForContainerElement(data, seqView, it);
 					// Switch to the next row
-					ImGui::NextColumn();
+					ImGui::TableNextColumn();
 				}
 			}
 			ImGui::PopID();
@@ -494,11 +504,11 @@ namespace ZeoEngine {
 			// Subdata tooltip
 			ShowPropertyTooltip(subData);
 			// Switch to the right column
-			ImGui::NextColumn();
+			ImGui::TableNextColumn();
 			if (bIsNestedClass)
 			{
 				// Switch to the next row
-				ImGui::NextColumn();
+				ImGui::TableNextColumn();
 			}
 			if (bIsTreeExpanded)
 			{
@@ -517,7 +527,7 @@ namespace ZeoEngine {
 						ImGui::SetNextItemWidth(-1.0f);
 						EvaluateData(subData, subInstance, false, true);
 						// Switch to the next row
-						ImGui::NextColumn();
+						ImGui::TableNextColumn();
 					}
 				}
 				ImGui::PopID();
