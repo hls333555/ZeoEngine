@@ -41,7 +41,7 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::OnEvent(Event& e)
 	{
-		if ((!IsPanelFocused() && !IsPanelHovered())) return;
+		if (!IsPanelHovered()) return;
 
 		m_EditorCamera.OnEvent(e);
 	}
