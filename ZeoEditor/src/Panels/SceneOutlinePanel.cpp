@@ -52,7 +52,7 @@ namespace ZeoEngine {
 
 		bool bIsCurrentEntitySelected = selectedEntity == entity;
 		bool bWillDestroyEntity = false;
-		if (bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
+		if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
 		{
 			bWillDestroyEntity = true;
 		}
