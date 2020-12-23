@@ -52,6 +52,7 @@ namespace ZeoEngine {
 
 		bool bIsCurrentEntitySelected = selectedEntity == entity;
 		bool bWillDestroyEntity = false;
+		// TODO: Support viewport deletion
 		if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
 		{
 			bWillDestroyEntity = true;

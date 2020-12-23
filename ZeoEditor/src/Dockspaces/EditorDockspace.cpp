@@ -26,7 +26,7 @@ namespace ZeoEngine {
 	void EditorDockspace::OnAttach()
 	{
 		CreateScene();
-		CreateFrameBuffer();
+		CreateFrameBuffers();
 	}
 
 	void EditorDockspace::OnUpdate(DeltaTime dt)
@@ -42,11 +42,14 @@ namespace ZeoEngine {
 
 				RenderCommand::SetClearColor({ 0.25f, 0.25f, 0.25f, 1.0f });
 				RenderCommand::Clear();
+				// TODO: This fixes ReadPixels() != -1 when nothing selected
+				BeginFrameBuffer();
 			}
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
 				m_Scene->OnRender(*m_EditorCamera);
+				PostSceneRender();
 			}
 		}
 		EndFrameBuffer();
@@ -208,7 +211,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorDockspace::CreateFrameBuffer()
+	void EditorDockspace::CreateFrameBuffers()
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Width = FRAMEBUFFER_WIDTH;

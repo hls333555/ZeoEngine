@@ -25,6 +25,7 @@ namespace ZeoEngine {
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float2, "a_TilingFactor" },
 			{ ShaderDataType::Float2, "a_UVOffset" },
+			{ ShaderDataType::Int, "a_ObjectID" },
 		};
 		s_Data.QuadVBO->SetLayout(squareLayout);
 		s_Data.QuadVAO->AddVertexBuffer(s_Data.QuadVBO);
@@ -338,7 +339,7 @@ namespace ZeoEngine {
 		DrawRotatedQuad(transform, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -362,6 +363,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -386,7 +388,7 @@ namespace ZeoEngine {
 		DrawRotatedQuad(transform, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, uint32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -426,6 +428,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -450,7 +453,7 @@ namespace ZeoEngine {
 		DrawRotatedQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -498,14 +501,14 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	Statistics Renderer2D::GetStats()
+	Statistics& Renderer2D::GetStats()
 	{
 		return s_Data.Stats;
 	}
 
 	void Renderer2D::ResetStats()
 	{
-		memset(&s_Data.Stats, 0, sizeof(Statistics));
+		s_Data.Stats.Reset();
 	}
 
 }

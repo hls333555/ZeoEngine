@@ -50,6 +50,7 @@ namespace ZeoEngine {
 	{
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		m_LastViewportSize = static_cast<glm::vec2>(window->InnerRect.Max) - static_cast<glm::vec2>(window->InnerRect.Min);
+		SetViewportBounds(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
 
 		GetContext()->BlockEvents(!IsPanelFocused() && !IsPanelHovered());
 
@@ -69,6 +70,22 @@ namespace ZeoEngine {
 	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
 	{
 		GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
+	}
+
+	void SceneViewportPanel::SetViewportBounds(float x, float y, float width, float height)
+	{
+		m_ViewportBounds[0].x = x;
+		m_ViewportBounds[0].y = y;
+		m_ViewportBounds[1].x = x + width;
+		m_ViewportBounds[1].y = y + height;
+	}
+
+	std::pair<float, float> SceneViewportPanel::GetMouseViewportPosition()
+	{
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		return { mx, my };
 	}
 
 	void SceneViewportPanel::OnViewportResize(const glm::vec2& size)

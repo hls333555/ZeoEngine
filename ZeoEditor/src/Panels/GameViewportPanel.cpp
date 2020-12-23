@@ -8,9 +8,13 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/MainDockspace.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/Core/MouseCodes.h"
+#include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
 
@@ -29,6 +33,7 @@ namespace ZeoEngine {
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnMouseButtonPressed));
 	}
 
 	bool GameViewportPanel::OnKeyPressed(KeyPressedEvent& e)
@@ -62,6 +67,33 @@ namespace ZeoEngine {
 		}
 
 		return true;
+	}
+
+	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsUsing() && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+		{
+			GetContext()->SetContextEntity(m_HoveredEntity);
+		}
+
+		return false;
+	}
+
+	void GameViewportPanel::ReadPixelDataFromIDBuffer()
+	{
+		auto [mx, my] = GetMouseViewportPosition();
+		auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
+		auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
+		// Y coordinate for framebuffer texture is from bottom to up
+		my = viewportHeight - my;
+		if (mx >= 0.0f && my >= 0.0f && mx < viewportWidth && my < viewportHeight)
+		{
+			int32_t pixel = RenderCommand::ReadPixel(static_cast<int32_t>(mx), static_cast<int32_t>(my));
+			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetScene().get());
+
+			auto& Stats = Renderer2D::GetStats();
+			Stats.HoveredEntity = m_HoveredEntity;
+		}
 	}
 
 	void GameViewportPanel::RenderPanel()

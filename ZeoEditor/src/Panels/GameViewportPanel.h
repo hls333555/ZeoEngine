@@ -3,6 +3,8 @@
 #include "Panels/SceneViewportPanel.h"
 
 #include "Engine/Events/KeyEvent.h"
+#include "Engine/Events/MouseEvent.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -14,8 +16,11 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 		virtual void OnEvent(Event& e) override;
 
+		void ReadPixelDataFromIDBuffer();
+
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		virtual void RenderPanel() override;
 
@@ -30,6 +35,8 @@ namespace ZeoEngine {
 		Ref<Texture2D> m_StopTexture;
 		
 		int32_t m_GizmoType = 0;
+
+		Entity m_HoveredEntity;
 	};
 
 }

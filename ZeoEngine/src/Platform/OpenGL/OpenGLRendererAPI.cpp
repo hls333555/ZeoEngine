@@ -72,4 +72,12 @@ namespace ZeoEngine {
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
 	}
 
+	int32_t OpenGLRendererAPI::ReadPixel(int32_t x, int32_t y)
+	{
+		glReadBuffer(GL_COLOR_ATTACHMENT1);
+		int32_t pixelData;
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+		return pixelData;
+	}
+
 }

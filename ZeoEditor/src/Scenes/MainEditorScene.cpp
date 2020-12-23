@@ -119,11 +119,11 @@ namespace ZeoEngine {
 			auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
 			if (spriteComp.Texture)
 			{
-				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor);
+				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor, static_cast<uint32_t>(entity));
 			}
 			else
 			{
-				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor);
+				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor, static_cast<uint32_t>(entity));
 			}
 		}
 
