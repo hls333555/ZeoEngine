@@ -55,10 +55,10 @@ namespace ZeoEngine {
 			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *typeName);
 			return {};
 		}
-		AddComponentId(typeId);
 		auto comp = type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
 		auto& baseComp = comp.cast<Component>();
 		baseComp.OwnerEntity = *this;
+		AddComponentId(typeId);
 		BindOnDestroyFunc(type, m_Scene->m_Registry);
 		return comp;
 	}
@@ -109,17 +109,24 @@ namespace ZeoEngine {
 		}
 	}
 
+	const std::vector<glm::uint32_t>& Entity::GetOrderedComponentIds() const
+	{
+		return GetComponent<CoreComponent>().OrderedComponents;
+	}
+
 	void Entity::AddComponentId(uint32_t Id)
 	{
-		m_Scene->m_Entities[m_EntityHandle].push_back(Id);
+		CoreComponent& coreComp = GetComponent<CoreComponent>();
+		coreComp.OrderedComponents.push_back(Id);
 	}
 
 	void Entity::RemoveComponentId(uint32_t Id)
 	{
-		m_Scene->m_Entities[m_EntityHandle].erase(
-			std::remove_if(m_Scene->m_Entities[m_EntityHandle].begin(), m_Scene->m_Entities[m_EntityHandle].end(),
+		CoreComponent& coreComp = GetComponent<CoreComponent>();
+		coreComp.OrderedComponents.erase(
+			std::remove_if(coreComp.OrderedComponents.begin(), coreComp.OrderedComponents.end(),
 				[Id](uint32_t componentId) { return componentId == Id; }),
-			m_Scene->m_Entities[m_EntityHandle].end());
+			coreComp.OrderedComponents.end());
 	}
 
 }

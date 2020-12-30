@@ -699,7 +699,7 @@ namespace ZeoEngine {
 			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
 			{
 				// Do not call entt::registry::visit() as the order is reversed
-				for (auto typeId : m_Scene->m_Entities[entity])
+				for (const auto typeId : entity.GetOrderedComponentIds())
 				{
 					out << YAML::BeginMap;
 					{

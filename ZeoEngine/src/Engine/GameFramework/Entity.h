@@ -24,9 +24,9 @@ namespace ZeoEngine {
 		T& AddComponent(Args&&... args)
 		{
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
-			AddComponentId(entt::type_info<T>().id());
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
+			AddComponentId(entt::type_info<T>().id());
 			m_Scene->m_Registry.on_destroy<T>().template connect<&ZeoEngine::Reflection::on_destroy<T>>();
 			return comp;
 		}
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 		bool HasTypeById(entt::id_type typeId) const;
 		entt::meta_any GetOrAddTypeById(entt::id_type typeId);
 
-		const std::vector<uint32_t>& GetAllComponents() const { return m_Scene->m_Entities[m_EntityHandle]; }
+		const std::vector<uint32_t>& GetOrderedComponentIds() const;
 		void AddComponentId(uint32_t Id);
 		void RemoveComponentId(uint32_t Id);
 

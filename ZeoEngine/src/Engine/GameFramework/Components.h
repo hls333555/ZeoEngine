@@ -89,7 +89,8 @@ namespace ZeoEngine {
 	{
 		std::string Name;
 		size_t CreationId;
-		bool bIsInternal{ false };
+		bool bIsInternal = false;
+		std::vector<uint32_t> OrderedComponents;
 
 		CoreComponent() = default;
 		CoreComponent(const CoreComponent&) = default;

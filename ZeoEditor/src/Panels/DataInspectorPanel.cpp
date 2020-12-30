@@ -11,7 +11,7 @@ namespace ZeoEngine {
 		ImGui::PushID(static_cast<uint32_t>(entity));
 		{
 			// Process types on this entity
-			for (const auto typeId : entity.GetAllComponents())
+			for (const auto typeId : entity.GetOrderedComponentIds())
 			{
 				if (std::find(ignoredTypeIds.cbegin(), ignoredTypeIds.cend(), typeId) != ignoredTypeIds.cend()) continue;
 
