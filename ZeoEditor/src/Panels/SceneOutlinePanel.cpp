@@ -17,11 +17,10 @@ namespace ZeoEngine {
 			DrawEntityNode(entity);
 		});
 
-		auto& selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
 		// Deselect entity when blank space is clicked
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 		{
-			selectedEntity = {};
+			GetContext()->SetContextEntity({});
 		}
 
 		// Right-click on blank space
@@ -29,7 +28,8 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem("Create Empty Entity"))
 			{
-				selectedEntity = GetScene()->CreateEntity("New Entity");
+				auto selectedEntity = GetScene()->CreateEntity("New Entity");
+				GetContext()->SetContextEntity(selectedEntity);
 			}
 
 			ImGui::EndPopup();
@@ -41,13 +41,13 @@ namespace ZeoEngine {
 		auto& coreComp = entity.GetComponent<CoreComponent>();
 		if (coreComp.bIsInternal) return;
 
-		auto& selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
+		auto selectedEntity = GetContext()->GetContextEntity();
 		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, coreComp.Name.c_str());
 		if (ImGui::IsItemClicked())
 		{
-			selectedEntity = entity;
+			GetContext()->SetContextEntity(entity);
 		}
 
 		bool bIsCurrentEntitySelected = selectedEntity == entity;
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 			GetScene()->DestroyEntity(entity);
 			if (bIsCurrentEntitySelected)
 			{
-				selectedEntity = {};
+				GetContext()->SetContextEntity({});
 			}
 		}
 		

@@ -26,7 +26,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
-			AddComponentId(entt::type_info<T>().id());
+			AddComponentId(entt::type_hash<T>::value());
 			m_Scene->m_Registry.on_destroy<T>().template connect<&ZeoEngine::Reflection::on_destroy<T>>();
 			return comp;
 		}
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		void RemoveComponent()
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			RemoveComponentId(entt::type_info<T>().id());
+			RemoveComponentId(entt::type_hash<T>::value());
 			return m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
@@ -76,12 +76,12 @@ namespace ZeoEngine {
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
-	private:
-		entt::meta_any AddTypeById(entt::id_type typeId);
-		void RemoveTypeById(entt::id_type typeId);
-		entt::meta_any GetTypeById(entt::id_type typeId) const;
-		bool HasTypeById(entt::id_type typeId) const;
-		entt::meta_any GetOrAddTypeById(entt::id_type typeId);
+	public:
+		entt::meta_any AddComponentById(entt::id_type compId);
+		void RemoveComponentById(entt::id_type compId);
+		entt::meta_any GetComponentById(entt::id_type compId) const;
+		bool HasComponentById(entt::id_type compId) const;
+		entt::meta_any GetOrAddComponentById(entt::id_type compId);
 
 		const std::vector<uint32_t>& GetOrderedComponentIds() const;
 		void AddComponentId(uint32_t Id);

@@ -5,42 +5,40 @@
 
 namespace ZeoEngine {
 
-	void DataInspectorPanel::DrawComponents(Entity entity, const std::vector<uint32_t>& ignoredTypeIds)
+	void DataInspectorPanel::DrawComponents(Entity entity, const std::set<uint32_t>& ignoredCompIds)
 	{
 		// Push entity id
 		ImGui::PushID(static_cast<uint32_t>(entity));
 		{
-			// Process types on this entity
-			for (const auto typeId : entity.GetOrderedComponentIds())
+			// Process components on this entity
+			for (const auto compId : entity.GetOrderedComponentIds())
 			{
-				if (std::find(ignoredTypeIds.cbegin(), ignoredTypeIds.cend(), typeId) != ignoredTypeIds.cend()) continue;
+				if (ignoredCompIds.find(compId) != ignoredCompIds.cend()) continue;
 
-				// Push type id
-				ImGui::PushID(typeId);
+				// Push component id
+				ImGui::PushID(compId);
 				{
-					const auto type = entt::resolve_type(typeId);
-					m_DataInspector.ProcessType(type, entity);
+					const auto compType = entt::resolve(compId);
+					m_DataInspector.ProcessComponent(compType, entity);
 				}
 				ImGui::PopID();
 			}
-			m_DataInspector.MarkPreprocessedDatasClean();
+			m_DataInspector.OnDrawComponentsComplete();
+		}
+		ImGui::PopID();
 
-			// The following part will not have entity Id pushed into ImGui!
-			ImGui::PopID();
+		// The following part will not have entity id pushed into ImGui!
+		if (m_bAllowAddingComponents)
+		{
+			ImGui::Separator();
 
-			if (m_bAllowAddingComponents)
-			{
-				// Add component button
-				DrawAddComponentButton(entity);
-			}
-
+			// Add component button
+			DrawAddComponentButton(entity);
 		}
 	}
 
 	void DataInspectorPanel::DrawAddComponentButton(Entity entity)
 	{
-		ImGui::Separator();
-
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
 		ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);
@@ -52,40 +50,40 @@ namespace ZeoEngine {
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			if (m_bIsCategorizedTypesDirty)
+			if (m_bIsCategorizedComponentsDirty)
 			{
 				// Iterate all registered components
-				for (const auto type : entt::resolve())
+				for (const auto compType : entt::resolve())
 				{
-					// Inherent types can never be added
-					auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
-					if (bIsInherentType) continue;
+					// Inherent components can never be added
+					auto bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);
+					if (bIsInherentComp) continue;
 
-					auto category = GetPropValue<const char*>(PropertyType::Category, type);
+					auto category = GetPropValue<const char*>(PropertyType::Category, compType);
 					std::string categoryName = category ? *category : "Default";
-					// Categorize types
-					m_CategorizedTypes[categoryName].push_back(type.type_id());
+					// Categorize components
+					m_CategorizedComponents[categoryName].push_back(compType.info().hash());
 				}
-				m_bIsCategorizedTypesDirty = false;
+				m_bIsCategorizedComponentsDirty = false;
 			}
 
-			for (const auto& [category, typeIds] : m_CategorizedTypes)
+			for (const auto& [category, compIds] : m_CategorizedComponents)
 			{
 				if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
 				{
-					for (const auto typeId : typeIds)
+					for (const auto compId : compIds)
 					{
-						const auto type = entt::resolve_type(typeId);
+						const auto compType = entt::resolve(compId);
 						// We want to display "full name" here instead of "display name"
-						auto typeName = GetPropValue<const char*>(PropertyType::Name, type);
-						if (ImGui::Selectable(*typeName))
+						auto compName = GetPropValue<const char*>(PropertyType::Name, compType);
+						if (ImGui::Selectable(*compName))
 						{
-							auto instance = entity.AddTypeById(typeId);
-							// Instance may be null as AddTypeById() failed
-							if (instance)
+							auto compInstance = entity.AddComponentById(compId);
+							// Instance may be null as AddComponentById() failed
+							if (compInstance)
 							{
-								// Categorize datas on this newly added type
-								m_DataInspector.PreprocessType(type);
+								// Categorize datas on this newly added component
+								m_DataInspector.PreprocessComponent(compType);
 							}
 						}
 					}
@@ -98,11 +96,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspectorPanel::MarkPreprocessedDatasDirty()
-	{
-		m_DataInspector.MarkPreprocessedDatasDirty();
-	}
-
 	void EntityInspectorPanel::OnAttach()
 	{
 		m_bAllowAddingComponents = true;
@@ -110,7 +103,7 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::RenderPanel()
 	{
-		Entity selectedEntity = GetContext<MainDockspace>()->GetSeletedEntity();
+		Entity selectedEntity = GetContext()->GetContextEntity();
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
 			// For last frame
@@ -123,7 +116,7 @@ namespace ZeoEngine {
 			}
 			m_LastSelectedEntity = selectedEntity;
 
-			MarkPreprocessedDatasDirty();
+			m_DataInspector.OnSelectedEntityChanged();
 			return;
 		}
 		if (selectedEntity)
@@ -133,14 +126,14 @@ namespace ZeoEngine {
 		m_LastSelectedEntity = selectedEntity;
 	}
 
-	#define DEFAULT_IGNORED_TYPEIDS { entt::type_info<CoreComponent>::id(), entt::type_info<TransformComponent>::id() }
+	#define DEFAULT_IGNORED_COMPIDS { entt::type_hash<CoreComponent>::value(), entt::type_hash<TransformComponent>::value() }
 
 	void ParticleInspectorPanel::RenderPanel()
 	{
 		Entity contextEntity = GetContext()->GetContextEntity();
 		if (contextEntity)
 		{
-			DrawComponents(contextEntity, DEFAULT_IGNORED_TYPEIDS);
+			DrawComponents(contextEntity, DEFAULT_IGNORED_COMPIDS);
 		}
 	}
 

@@ -15,21 +15,19 @@ namespace ZeoEngine {
 		using ScenePanel::ScenePanel;
 
 	protected:
-		void DrawComponents(Entity entity, const std::vector<uint32_t>& ignoredTypeIds = {});
-
-		void MarkPreprocessedDatasDirty();
+		void DrawComponents(Entity entity, const std::set<uint32_t>& ignoredComponentIds = {});
 
 	private:
 		void DrawAddComponentButton(Entity entity);
 
 	protected:
-		bool m_bAllowAddingComponents{ false };
-	private:
+		bool m_bAllowAddingComponents = false;
 		DataInspector m_DataInspector{ this };
 
-		/** Map from category to list of type ids, used to draw categorized types in AddComponent popup */
-		std::map<std::string, std::vector<uint32_t>> m_CategorizedTypes;
-		bool m_bIsCategorizedTypesDirty{ true };
+	private:
+		/** Map from category to list of component ids, used to draw categorized components in AddComponent popup */
+		std::map<std::string, std::vector<uint32_t>> m_CategorizedComponents;
+		bool m_bIsCategorizedComponentsDirty = true;
 
 	};
 

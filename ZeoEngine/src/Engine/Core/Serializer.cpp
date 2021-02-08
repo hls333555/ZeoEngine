@@ -703,9 +703,9 @@ namespace ZeoEngine {
 				{
 					out << YAML::BeginMap;
 					{
-						const auto type = entt::resolve_type(typeId);
+						const auto type = entt::resolve(typeId);
 						out << YAML::Key << "Component" << YAML::Value << typeId; // TODO: Type ID goes here
-						const auto instance = entity.GetTypeById(type.type_id());
+						const auto instance = entity.GetComponentById(typeId);
 						SerializeType(out, instance);
 					}
 					out << YAML::EndMap;
@@ -757,9 +757,9 @@ namespace ZeoEngine {
 			{
 				auto typeId = component["Component"].as<uint32_t>();
 				// TODO: NativeScriptComponent deserialization
-				if (typeId == entt::type_info<NativeScriptComponent>().id()) continue;
+				if (typeId == entt::type_hash<NativeScriptComponent>::value()) continue;
 
-				entt::meta_any instance = deserializedEntity.GetOrAddTypeById(typeId);
+				entt::meta_any instance = deserializedEntity.GetOrAddComponentById(typeId);
 				// Instance may be null as typeId is invalid
 				if (instance)
 				{

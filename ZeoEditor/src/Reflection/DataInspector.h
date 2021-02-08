@@ -10,54 +10,47 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"
+#include "Reflection/DataWidget.h"
 
 namespace ZeoEngine {
 
 	class DataInspectorPanel;
+	class DataWidget;
 
 	class DataInspector
 	{
 	public:
 		DataInspector(DataInspectorPanel* context);
 
-		void ProcessType(entt::meta_type type, Entity entity);
-		/** Iterate all datas of this type, reverse their order and categorize them. */
-		void PreprocessType(entt::meta_type type);
+		void ProcessComponent(entt::meta_type compType, Entity entity);
+		/** Iterate all datas on this component, reverse their order and categorize them. */
+		void PreprocessComponent(entt::meta_type compType);
 
-		void MarkPreprocessedDatasClean();
-		void MarkPreprocessedDatasDirty();
+		void OnDrawComponentsComplete();
+		void OnSelectedEntityChanged();
 
 	private:
-		template<typename T>
-		void ShowPropertyTooltip(T metaObj)
-		{
-			if (ImGui::IsItemHovered())
-			{
-				auto tooltip = GetPropValue<const char*>(PropertyType::Tooltip, metaObj);
-				if (tooltip)
-				{
-					ImGui::SetTooltip(*tooltip);
-				}
-			}
-		}
+		uint32_t GetAggregatedDataID(entt::meta_data data);
 
-		uint32_t GetUniqueDataID(entt::meta_data data);
-
-		void PreprocessData(entt::meta_type type, entt::meta_data data);
+		void PreprocessData(entt::meta_type compType, entt::meta_data data);
 
 		// NOTE: Do not pass entt::meta_handle around as it does not support copy
 		bool ShouldHideData(entt::meta_data data, const entt::meta_any& instance);
 		void ParseHideCondition(entt::meta_data data, const entt::meta_any& instance, const std::string& hideConditionStr, const char* token, std::optional<bool>& result);
 
+		void MarkCachesDirty();
+
 		entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);
 		entt::meta_sequence_container::iterator EraseValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it);
-		void DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance);
-		void DrawButtonsForContainerElement(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it);
+		void DrawContainerOperationWidget(entt::meta_data data, entt::meta_any& instance);
+		void DrawContainerElementOperationWidget(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it);
 
 		void EvaluateSequenceContainerData(entt::meta_data data, entt::meta_any& instance);
 		void EvaluateAssociativeContainerData(entt::meta_data data, entt::meta_any& instance);
 		void EvaluateSubData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer);
-		void EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData = false);
+		void EvaluateData(entt::meta_data data, entt::meta_any& compInstance, bool bIsSeqContainer, bool bIsSubData = false);
+
+		void DrawDataWidget(entt::meta_data data, const entt::meta_any& compInstance);
 
 		void EvaluateIntegralData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
 		void EvaluateFloatingPointData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData);
@@ -74,14 +67,14 @@ namespace ZeoEngine {
 
 			// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 			static std::unordered_map<uint32_t, std::pair<bool, T>> valueBuffers;
-			auto& valueRef = bIsSeqContainer ? instance.cast<T>() : GetDataValueByRef<T>(data, instance);
+			auto valueRef = bIsSeqContainer ? instance.cast<T>() : GetDataValueByRef<T>(data, instance);
 			auto speed = GetPropValue<float>(PropertyType::DragSensitivity, data);
 			auto min = GetPropValue<CT>(PropertyType::ClampMin, data);
 			auto minValue = min.value_or(defaultMin);
 			auto max = GetPropValue<CT>(PropertyType::ClampMax, data);
 			auto maxValue = max.value_or(defaultMax);
 			ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
-			auto id = GetUniqueDataID(data);
+			auto id = GetAggregatedDataID(data);
 			const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 			// Copy the value
 			T valueCopy = bUseCopy ? GetDataValue<T>(data, instance) : T();
@@ -187,11 +180,14 @@ namespace ZeoEngine {
 	private:
 		DataInspectorPanel* m_Context;
 
-		/** Map from category to list of data of the same type in order */
-		using CategorizedDatas = std::map<std::string, std::list<entt::meta_data>>;
-		/** Map from type id to all its data, used to draw ordered registered datas in DataInspectorPanel */
+		/** Map from aggregated data id to DataWidget instance */
+		std::unordered_map<uint32_t, Ref<DataWidget>> m_DataWidgets;
+
+		/** Map from category to list of data ids of component in order */
+		using CategorizedDatas = std::map<std::string, std::list<uint32_t>>;
+		/** Map from component id to all its data, used to draw ordered registered datas in DataInspectorPanel */
 		std::unordered_map<uint32_t, CategorizedDatas> m_PreprocessedDatas;
-		bool m_bIsPreprocessedDatasDirty{ true };
+		bool m_bIsPreprocessedDatasDirty = true;
 
 		struct DataValueEditChangeCallbackInfo
 		{

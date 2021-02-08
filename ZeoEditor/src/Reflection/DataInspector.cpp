@@ -22,25 +22,27 @@ namespace ZeoEngine {
 	static ImGuiTreeNodeFlags ContainerDataFlags = ImGuiTreeNodeFlags_DefaultOpen;
 	static ImGuiTreeNodeFlags NestedDataFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;;
 
-	void DataInspector::ProcessType(entt::meta_type type, Entity entity)
+	void DataInspector::ProcessComponent(entt::meta_type compType, Entity entity)
 	{
-		auto instance = entity.GetTypeById(type.type_id());
-		m_DataCallbackInfo.ComponentInstance = instance;
-		auto typeName = GetMetaObjectDisplayName(type);
+		auto compInstance = entity.GetComponentById(compType.info().hash());
+		// TODO:
+		//m_DataCallbackInfo.ComponentInstance = compInstance;
+		const auto compId = compType.info().hash();
+		const auto compName = GetMetaObjectDisplayName(compType);
 
-		// Do not show CollapsingHeader if PropertyType::HideTypeHeader is set
-		bool bShouldDisplayTypeHeader = !DoesPropExist(PropertyType::HideTypeHeader, type);
-		bool bIsTypeHeaderExpanded = true;
+		bool bShouldDisplayCompHeader = compId != entt::type_hash<CoreComponent>::value();
+		bool bIsCompHeaderExpanded = true;
 		bool bWillRemoveType = false;
-		if (bShouldDisplayTypeHeader)
+		// Display component header
+		if (bShouldDisplayCompHeader)
 		{
 			// Get available content region before adding CollapsingHeader as it will occupy space
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-			// Type collapsing header
-			bIsTypeHeaderExpanded = ImGui::CollapsingHeader(*typeName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
-			// Type tooltip
-			ShowPropertyTooltip(type);
+			// Component collapsing header
+			bIsCompHeaderExpanded = ImGui::CollapsingHeader(*compName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+			// Header tooltip
+			ShowPropertyTooltip(compType);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 
@@ -53,9 +55,9 @@ namespace ZeoEngine {
 
 				if (ImGui::BeginPopup("ComponentSettings"))
 				{
-					// Inherent types can never be removed
-					auto bIsInherentType = DoesPropExist(PropertyType::InherentType, type);
-					if (ImGui::MenuItem("Remove Component", nullptr, false, !bIsInherentType))
+					// Inherent components can never be removed
+					bool bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);
+					if (ImGui::MenuItem("Remove Component", nullptr, false, !bIsInherentComp))
 					{
 						bWillRemoveType = true;
 					}
@@ -67,21 +69,22 @@ namespace ZeoEngine {
 		// Preprocess datas if needed
 		if (m_bIsPreprocessedDatasDirty)
 		{
-			ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *typeName, entity.GetEntityName());
-
-			PreprocessType(type);
+			ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *compName, entity.GetEntityName());
+			PreprocessComponent(compType);
 		}
-		if (bIsTypeHeaderExpanded)
+		if (bIsCompHeaderExpanded)
 		{
 			// Iterate all categories
-			for (const auto& [category, datas] : m_PreprocessedDatas[type.type_id()])
+			for (const auto& [category, dataIds] : m_PreprocessedDatas[compId])
 			{
 				bool bShouldDisplayCategoryTree = false;
 				std::vector<entt::meta_data> visibleDatas;
 				// Do not show TreeNode if none of these datas will show or category is not set
-				for (const auto data : datas)
+				for (const auto dataId : dataIds)
 				{
-					if (!ShouldHideData(data, instance))
+					entt::meta_data data = compType.data(dataId);
+					// TODO:
+					if (!ShouldHideData(data, compInstance))
 					{
 						bShouldDisplayCategoryTree = category != "";
 						visibleDatas.push_back(data);
@@ -95,91 +98,35 @@ namespace ZeoEngine {
 				}
 				if (bIsCategoryTreeExpanded)
 				{
-					// We want column seperator to keep synced across different entities
+					// We want column seperator to keep synced across different entities...
+					// so we pop component id...
 					ImGui::PopID();
+					// and pop entity id
 					ImGui::PopID();
 					if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 					{
 						ImGui::TableNextColumn();
 						// Re-push entity id
 						ImGui::PushID(static_cast<uint32_t>(entity));
-						// Re-push type id
-						ImGui::PushID(type.type_id());
+						// Re-push component id
+						ImGui::PushID(compId);
 
 						ImGui::AlignTextToFramePadding();
-						// Iterate all shown datas
+						// Iterate all visible datas
 						for (const auto data : visibleDatas)
 						{
-							const auto dataType = data.type();
-							bool bIsSeqContainer = dataType.is_sequence_container();
-							bool bIsAssContainer = dataType.is_associative_container();
-							bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, dataType);
-							ImGuiTreeNodeFlags flags = DefaultDataFlags;
-							if (bIsSeqContainer)
+							// Push data id
+							ImGui::PushID(data.id());
 							{
-								auto size = data.get(instance).as_sequence_container().size();
-								flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
-							}
-							else if (bIsAssContainer)
-							{
-								auto size = data.get(instance).as_associative_container().size();
-								flags = size > 0 ? ContainerDataFlags : EmptyContainerDataFlags;
-							}
-							else if (bIsNestedClass)
-							{
-								flags = NestedDataFlags;
-							}
-							auto dataName = GetMetaObjectDisplayName(data);
-							// Data name
-							bool bIsTreeExpanded = ImGui::TreeNodeEx(*dataName, flags);
-							// Data tooltip
-							ShowPropertyTooltip(data);
-							// Switch to the right column
-							ImGui::TableNextColumn();
-							// Push data name as id
-							ImGui::PushID(*dataName);
-							{
-								if (bIsSeqContainer || bIsAssContainer)
-								{
-									// Add and clear buttons
-									DrawButtonsForContainer(data, instance);
-									// Switch to the next row
-									ImGui::TableNextColumn();
-								}
-								else if (bIsNestedClass)
-								{
-									// Switch to the next row
-									ImGui::TableNextColumn();
-								}
-								if (bIsTreeExpanded)
-								{
-									if (bIsSeqContainer)
-									{
-										EvaluateSequenceContainerData(data, instance);
+								// Draw widget based on data type
+								DrawDataWidget(data, compInstance);
 
-										ImGui::TreePop();
-									}
-									else if (bIsAssContainer)
-									{
-										EvaluateAssociativeContainerData(data, instance);
-
-										ImGui::TreePop();
-									}
-									else if (bIsNestedClass)
-									{
-										EvaluateSubData(data, instance, false);
-
-										ImGui::TreePop();
-									}
-									else
-									{
-										// Align width to the right side
-										ImGui::SetNextItemWidth(-1.0f);
-										EvaluateData(data, instance, false);
-										// Switch to the next row
-										ImGui::TableNextColumn();
-									}
-								}
+								// TODO:
+								//bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, dataType);
+								//if (bIsNestedClass)
+								//{
+								//	flags = NestedDataFlags;
+								//}
 							}
 							ImGui::PopID();
 						}
@@ -191,50 +138,48 @@ namespace ZeoEngine {
 					}
 					// Re-push entity id
 					ImGui::PushID(static_cast<uint32_t>(entity));
-					// Re-push type id
-					ImGui::PushID(type.type_id());
+					// Re-push component id
+					ImGui::PushID(compId);
 				}
 			}
 		}
 
 		if (bWillRemoveType)
 		{
-			auto typeId = type.type_id();
-			entity.RemoveTypeById(typeId);
-			m_PreprocessedDatas.erase(typeId);
+			entity.RemoveComponentById(compId);
+			m_PreprocessedDatas.erase(compId);
 		}
 	}
 
-	void DataInspector::PreprocessType(entt::meta_type type)
+	void DataInspector::PreprocessComponent(entt::meta_type compType)
 	{
-		for (const auto data : type.data())
+		for (const auto data : compType.data())
 		{
-			PreprocessData(type, data);
+			PreprocessData(compType, data);
 		}
 	}
 
-	void DataInspector::MarkPreprocessedDatasClean()
+	void DataInspector::OnDrawComponentsComplete()
 	{
 		m_bIsPreprocessedDatasDirty = false;
 	}
 
-	void DataInspector::MarkPreprocessedDatasDirty()
+	void DataInspector::OnSelectedEntityChanged()
 	{
-		m_PreprocessedDatas.clear();
-		m_bIsPreprocessedDatasDirty = true;
+		MarkCachesDirty();
 	}
 
-	uint32_t DataInspector::GetUniqueDataID(entt::meta_data data)
+	uint32_t DataInspector::GetAggregatedDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
-	void DataInspector::PreprocessData(entt::meta_type type, entt::meta_data data)
+	void DataInspector::PreprocessData(entt::meta_type compType, entt::meta_data data)
 	{
 		auto categoryName = GetPropValue<const char*>(PropertyType::Category, data);
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
-		m_PreprocessedDatas[type.type_id()][category].push_front(data);
+		m_PreprocessedDatas[compType.info().hash()][category].push_front(data.id());
 	}
 
 	bool DataInspector::ShouldHideData(entt::meta_data data, const entt::meta_any& instance)
@@ -267,7 +212,7 @@ namespace ZeoEngine {
 		if (tokenPos == std::string::npos) return;
 
 		std::string keyStr, valueStr;
-		auto id = GetUniqueDataID(data);
+		auto id = GetAggregatedDataID(data);
 		if (hideConditionBuffers.find(id) != hideConditionBuffers.end())
 		{
 			keyStr = hideConditionBuffers[id].first;
@@ -293,7 +238,7 @@ namespace ZeoEngine {
 			hideConditionBuffers[id].second = valueStr;
 		}
 
-		auto keyData = entt::resolve_type(instance.type().type_id()).data(entt::hashed_string::value(keyStr.c_str()));
+		auto keyData = entt::resolve(instance.type().info().hash()).data(entt::hashed_string::value(keyStr.c_str()));
 		auto keyDataValue = keyData.get(instance);
 
 		// Bool
@@ -343,6 +288,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void DataInspector::MarkCachesDirty()
+	{
+		m_DataWidgets.clear();
+		m_PreprocessedDatas.clear();
+		m_bIsPreprocessedDatasDirty = true;
+	}
+
 	entt::meta_sequence_container::iterator DataInspector::InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
 		// "0" value works for "all" types because we have registered their conversion functions
@@ -386,7 +338,7 @@ namespace ZeoEngine {
 		return retIt;
 	}
 
-	void DataInspector::DrawButtonsForContainer(entt::meta_data data, entt::meta_any& instance)
+	void DataInspector::DrawContainerOperationWidget(entt::meta_data data, entt::meta_any& instance)
 	{
 		auto seqView = data.get(instance).as_sequence_container();
 
@@ -402,6 +354,7 @@ namespace ZeoEngine {
 			{
 				if (seqView.size() > 0 && seqView.clear())
 				{
+					// TODO:
 					//InvokePostDataValueEditChangeCallback(data, {});
 				}
 			}
@@ -410,7 +363,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataInspector::DrawButtonsForContainerElement(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
+	void DataInspector::DrawContainerElementOperationWidget(entt::meta_data data, entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
 	{
 		if (ImGui::BeginCombo("##ContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
 		{
@@ -447,7 +400,7 @@ namespace ZeoEngine {
 				if (bIsNestedClass)
 				{
 					// Insert and erase buttons
-					DrawButtonsForContainerElement(data, seqView, it);
+					DrawContainerElementOperationWidget(data, seqView, it);
 					// Switch to the next row
 					ImGui::TableNextColumn();
 					if (bIsTreeExpanded)
@@ -466,7 +419,7 @@ namespace ZeoEngine {
 					EvaluateData(data, element, true);
 					ImGui::SameLine();
 					// Insert and erase buttons
-					DrawButtonsForContainerElement(data, seqView, it);
+					DrawContainerElementOperationWidget(data, seqView, it);
 					// Switch to the next row
 					ImGui::TableNextColumn();
 				}
@@ -512,8 +465,8 @@ namespace ZeoEngine {
 			}
 			if (bIsTreeExpanded)
 			{
-				// Push subdata name as id
-				ImGui::PushID(*subDataName);
+				// Push subdata id
+				ImGui::PushID(subData.id());
 				{
 					if (bIsNestedClass)
 					{
@@ -542,24 +495,96 @@ namespace ZeoEngine {
 	}
 
 	// NOTE: Column is not switched inside this method and you should switch to the next row after this call
-	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
+	void DataInspector::EvaluateData(entt::meta_data data, entt::meta_any& compInstance, bool bIsSeqContainer, bool bIsSubData)
 	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
+		const auto type = bIsSeqContainer ? compInstance.type() : data.type();
 		if (type.is_integral())
 		{
-			EvaluateIntegralData(data, instance, bIsSeqContainer, bIsSubData);
+			EvaluateIntegralData(data, compInstance, bIsSeqContainer, bIsSubData);
 		}
 		else if (type.is_floating_point())
 		{
-			EvaluateFloatingPointData(data, instance, bIsSeqContainer, bIsSubData);
+			EvaluateFloatingPointData(data, compInstance, bIsSeqContainer, bIsSubData);
 		}
 		else if (type.is_enum())
 		{
-			ProcessEnumData(data, instance, bIsSeqContainer, bIsSubData);
+			ProcessEnumData(data, compInstance, bIsSeqContainer, bIsSubData);
 		}
 		else
 		{
-			EvaluateOtherData(data, instance, bIsSeqContainer, bIsSubData);
+			EvaluateOtherData(data, compInstance, bIsSeqContainer, bIsSubData);
+		}
+	}
+
+	void DataInspector::DrawDataWidget(entt::meta_data data, const entt::meta_any& compInstance)
+	{
+		uint32_t aggregatedDataId = GetAggregatedDataID(data);
+		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
+		{
+			m_DataWidgets[aggregatedDataId]->Draw(compInstance);
+		}
+		else
+		{
+			DataSpec dataSpec{ data, compInstance };
+			switch (dataSpec.Evaluate())
+			{
+			case BasicDataType::SEQCON:
+				m_DataWidgets[aggregatedDataId] = CreateRef<SequenceContainerWidget>(dataSpec);
+				break;
+			case BasicDataType::ASSCON:
+				m_DataWidgets[aggregatedDataId] = CreateRef<AssociativeContainerWidget>(dataSpec);
+				break;
+			case BasicDataType::BOOL:
+				m_DataWidgets[aggregatedDataId] = CreateRef<BoolDataWidget>(dataSpec);
+				break;
+			case BasicDataType::I8:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+				break;
+			case BasicDataType::I32:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+				break;
+			case BasicDataType::I64:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+				break;
+			case BasicDataType::UI8:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+				break;
+			case BasicDataType::UI32:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+				break;
+			case BasicDataType::UI64:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+				break;
+			case BasicDataType::FLOAT:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				break;
+			case BasicDataType::DOUBLE:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<double>>(dataSpec, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+				break;
+			case BasicDataType::ENUM:
+				m_DataWidgets[aggregatedDataId] = CreateRef<EnumDataWidget>(dataSpec);
+				break;
+			case BasicDataType::STRING:
+				m_DataWidgets[aggregatedDataId] = CreateRef<StringDataWidget>(dataSpec);
+				break;
+			case BasicDataType::VEC2:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				break;
+			case BasicDataType::VEC3:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				break;
+			case BasicDataType::VEC4:
+				m_DataWidgets[aggregatedDataId] = CreateRef<ColorDataWidget>(dataSpec);
+				break;
+			case BasicDataType::TEXTURE:
+				m_DataWidgets[aggregatedDataId] = CreateRef<Texture2DDataWidget>(dataSpec);
+				break;
+			case BasicDataType::PARTICLE:
+				
+				break;
+			default:
+				break;
+			}
 		}
 	}
 
@@ -652,7 +677,7 @@ namespace ZeoEngine {
 
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
 	{
-		auto& boolRef = bIsSeqContainer ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance);
+		auto& boolRef = bIsSeqContainer/* ? instance.cast<bool>() : GetDataValueByRef<bool>(data, instance)*/;
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		auto boolCopy = bUseCopy ? GetDataValue<bool>(data, instance) : false;
 		auto& boolValue = bUseCopy ? boolCopy : boolRef;
@@ -731,7 +756,7 @@ namespace ZeoEngine {
 		// Map from id to string cache plus a bool flag indicating if we are editing the text
 		static std::unordered_map<uint32_t, std::pair<bool, std::string>> stringBuffers;
 		auto& stringRef = bIsSeqContainer ? instance.cast<std::string>() : GetDataValueByRef<std::string>(data, instance);
-		auto id = GetUniqueDataID(data);
+		auto id = GetAggregatedDataID(data);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		std::string stringCopy = bUseCopy ? GetDataValue<std::string>(data, instance) : std::string();
 		auto& stringValue = bUseCopy ? stringCopy : stringRef;
@@ -786,7 +811,7 @@ namespace ZeoEngine {
 		// Map from id to value cache plus a bool flag indicating if displayed value is retrieved from cache
 		static std::unordered_map<uint32_t, std::pair<bool, glm::vec4>> vec4Buffers;
 		auto& vec4Ref = bIsSeqContainer ? instance.cast<glm::vec4>() : GetDataValueByRef<glm::vec4>(data, instance);
-		auto id = GetUniqueDataID(data);
+		auto id = GetAggregatedDataID(data);
 		const bool bUseCopy = DoesPropExist(PropertyType::AsCopy, data);
 		glm::vec4 vec4Copy = bUseCopy ? GetDataValue<glm::vec4>(data, instance) : glm::vec4();
 		auto& vec4Value = bUseCopy ? vec4Copy : vec4Ref;

@@ -8,43 +8,113 @@
 
 namespace ZeoEngine {
 
-	static std::string i32_to_string(const int32_t& value)
+	BasicDataType DataSpec::Evaluate() const
 	{
-		return {};
-	}
+		auto DataType = Data.type();
+		if (DataType.is_sequence_container())
+		{
+			return BasicDataType::SEQCON;
+		}
+		else if (DataType.is_associative_container())
+		{
+			return BasicDataType::ASSCON;
+		}
+		else if (DataType.is_integral())
+		{
+			if (IsTypeEqual<bool>(DataType))
+			{
+				return BasicDataType::BOOL;
+			}
+			else if (IsTypeEqual<int8_t>(DataType))
+			{
+				return BasicDataType::I8;
+			}
+			else if (IsTypeEqual<int32_t>(DataType))
+			{
+				return BasicDataType::I32;
+			}
+			else if (IsTypeEqual<int64_t>(DataType))
+			{
+				return BasicDataType::I64;
+			}
+			else if (IsTypeEqual<uint8_t>(DataType))
+			{
+				return BasicDataType::UI8;
+			}
+			else if (IsTypeEqual<uint32_t>(DataType))
+			{
+				return BasicDataType::UI32;
+			}
+			else if (IsTypeEqual<uint64_t>(DataType))
+			{
+				return BasicDataType::UI64;
+			}
+		}
+		else if (DataType.is_floating_point())
+		{
+			if (IsTypeEqual<float>(DataType))
+			{
+				return BasicDataType::FLOAT;
+			}
+			else if (IsTypeEqual<double>(DataType))
+			{
+				return BasicDataType::DOUBLE;
+			}
+		}
+		else if (DataType.is_enum())
+		{
+			return BasicDataType::ENUM;
+		}
+		else if (IsTypeEqual<std::string>(DataType))
+		{
+			return BasicDataType::STRING;
+		}
+		else if (IsTypeEqual<glm::vec2>(DataType))
+		{
+			return BasicDataType::VEC2;
+		}
+		else if (IsTypeEqual<glm::vec3>(DataType))
+		{
+			return BasicDataType::VEC3;
+		}
+		else if (IsTypeEqual<glm::vec4>(DataType))
+		{
+			return BasicDataType::VEC4;
+		}
+		else if (IsTypeEqual<Ref<Texture2D>>(DataType))
+		{
+			return BasicDataType::TEXTURE;
+		}
+		else if (IsTypeEqual<Ref<ParticleTemplate>>(DataType))
+		{
+			return BasicDataType::PARTICLE;
+		}
 
-	static glm::vec2 i32_to_vec2(const int32_t& value)
-	{
-		return {};
-	}
-
-	static glm::vec3 i32_to_vec3(const int32_t& value)
-	{
-		return {};
-	}
-
-	static glm::vec4 i32_to_vec4(const int32_t& value)
-	{
-		return {};
-	}
-
-	static Ref<Texture2D> i32_to_texture2d(const int32_t& value)
-	{
-		return {};
-	}
-
-	static Ref<ParticleTemplate> i32_to_particletemplate(const int32_t& value)
-	{
-		return {};
+		return BasicDataType::NONE;
 	}
 
 	ZE_REFL_REGISTRATION
 	{
-		// Register conversions from int32_t to various basic types to be used by container insertion
+		entt::meta<bool>().ctor<>();
+		entt::meta<uint8_t>().ctor<>();
+		entt::meta<uint32_t>().ctor<>();
+		entt::meta<uint64_t>().ctor<>();
+		entt::meta<int8_t>().ctor<>();
+		entt::meta<int32_t>().ctor<>();
+		entt::meta<int64_t>().ctor<>();
+		entt::meta<float>().ctor<>();
+		entt::meta<double>().ctor<>();
+		entt::meta<std::string>().ctor<>();
+		entt::meta<glm::vec2>().ctor<>();
+		entt::meta<glm::vec3>().ctor<>();
+		entt::meta<glm::vec4>().ctor<>();
+		entt::meta<Ref<Texture2D>>().ctor<>();
+		entt::meta<Ref<ParticleTemplate>>().ctor<>();
+
+		// Register common numeric conversions for registration purpose
 		entt::meta<int32_t>()
 			.type()
-			.prop(PropertyType::InherentType)
-			.conv<bool>()
+			.prop(PropertyType::Inherent)
 			.conv<uint8_t>()
 			.conv<uint32_t>()
 			.conv<uint64_t>()
@@ -52,39 +122,43 @@ namespace ZeoEngine {
 			.conv<int32_t>()
 			.conv<int64_t>()
 			.conv<float>()
-			.conv<double>()
-			.conv<&i32_to_string>()
-			.conv<&i32_to_vec2>()
-			.conv<&i32_to_vec3>()
-			.conv<&i32_to_vec4>()
-			.conv<&i32_to_texture2d>()
-			.conv<&i32_to_particletemplate>();
+			.conv<double>();
+
+		entt::meta<float>()
+			.type()
+			.prop(PropertyType::Inherent)
+			.conv<double>();
+
+		entt::meta<double>()
+			.type()
+			.prop(PropertyType::Inherent)
+			.conv<float>();
 	}
 
-	void InternalRemoveType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	void InternalRemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 	{
-		type.func("remove"_hs).invoke({}, std::ref(registry), entity);
+		compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
 	}
 
-	entt::meta_any InternalGetType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	entt::meta_any InternalGetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 	{
-		return type.func("get"_hs).invoke({}, std::ref(registry), entity);
+		return compType.func("get"_hs).invoke({}, std::ref(registry), entity);
 	}
 
-	entt::meta_any InternalHasType(entt::meta_type type, entt::registry& registry, entt::entity entity)
+	entt::meta_any InternalHasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 	{
-		return type.func("has"_hs).invoke({}, std::ref(registry), entity);
+		return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
 	}
 
-	void BindOnDestroyFunc(entt::meta_type type, entt::registry& registry)
+	void BindOnDestroyFunc(entt::meta_type compType, entt::registry& registry)
 	{
-		type.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
+		compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
 	}
 
 	const char* GetEnumDisplayName(entt::meta_any enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing
-		for (auto enumData : enumValue.type().data())
+		for (const auto enumData : enumValue.type().data())
 		{
 			if (enumValue == enumData.get({}))
 			{
@@ -101,6 +175,7 @@ namespace ZeoEngine {
 		instance.type().func("set_enum_value"_hs).invoke({}, std::ref(instance), std::ref(newValue));
 	}
 
+	// TODO:
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type)
 	{
 		return type.func("create_default_value"_hs).invoke({});

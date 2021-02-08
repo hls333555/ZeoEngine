@@ -105,7 +105,7 @@ namespace ZeoEngine {
 			const auto& dataValue = value.as<T>();
 			if (bIsSeqContainer)
 			{
-				instance.cast<T>() = dataValue;
+				instance.set(data.id(), dataValue);
 			}
 			else
 			{

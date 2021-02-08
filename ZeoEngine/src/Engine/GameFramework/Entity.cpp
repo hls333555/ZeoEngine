@@ -40,72 +40,72 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().Scale;
 	}
 
-	entt::meta_any Entity::AddTypeById(entt::id_type typeId)
+	entt::meta_any Entity::AddComponentById(entt::id_type compId)
 	{
-		auto type = entt::resolve_type(typeId);
-		if (!type)
+		auto compType = entt::resolve(compId);
+		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to add component with invalid type ID = {0}!", typeId);
+			ZE_CORE_WARN("Failed to add component with invalid component ID = {0}!", compId);
 			return {};
 		}
 
-		if (HasTypeById(typeId))
+		if (HasComponentById(compId))
 		{
-			auto typeName = GetMetaObjectDisplayName(type);
-			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *typeName);
+			auto compName = GetMetaObjectDisplayName(compType);
+			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *compName);
 			return {};
 		}
-		auto comp = type.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
-		auto& baseComp = comp.cast<Component>();
-		baseComp.OwnerEntity = *this;
-		AddComponentId(typeId);
-		BindOnDestroyFunc(type, m_Scene->m_Registry);
-		return comp;
+		auto compInstance = compType.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
+		// TODO:
+		static_cast<CoreComponent*>(compInstance.data())->OwnerEntity = *this;
+		AddComponentId(compId);
+		BindOnDestroyFunc(compType, m_Scene->m_Registry);
+		return compInstance;
 	}
 
-	void Entity::RemoveTypeById(entt::id_type typeId)
+	void Entity::RemoveComponentById(entt::id_type compId)
 	{
-		auto type = entt::resolve_type(typeId);
-		if (!type)
+		auto compType = entt::resolve(compId);
+		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to remove component with invalid type ID = {0}!", typeId);
+			ZE_CORE_WARN("Failed to remove component with invalid component ID = {0}!", compId);
 			return;
 		}
 
-		RemoveComponentId(typeId);
-		InternalRemoveType(type, m_Scene->m_Registry, m_EntityHandle);
+		RemoveComponentId(compId);
+		InternalRemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 	}
 
-	entt::meta_any Entity::GetTypeById(entt::id_type typeId) const
+	entt::meta_any Entity::GetComponentById(entt::id_type compId) const
 	{
-		auto type = entt::resolve_type(typeId);
-		if (!type)
+		auto compType = entt::resolve(compId);
+		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to get component with invalid type ID = {0}!", typeId);
+			ZE_CORE_WARN("Failed to get component with invalid component ID = {0}!", compId);
 			return {};
 		}
 
-		return InternalGetType(type, m_Scene->m_Registry, m_EntityHandle);
+		return InternalGetComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 	}
 
-	bool Entity::HasTypeById(entt::id_type typeId) const
+	bool Entity::HasComponentById(entt::id_type compId) const
 	{
-		auto type = entt::resolve_type(typeId);
-		if (!type) return false;
+		auto compType = entt::resolve(compId);
+		if (!compType) return false;
 
-		auto res = InternalHasType(type, m_Scene->m_Registry, m_EntityHandle);
-		return res.cast<bool>();
+		auto bHas = InternalHasComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		return bHas.cast<bool>();
 	}
 
-	entt::meta_any Entity::GetOrAddTypeById(entt::id_type typeId)
+	entt::meta_any Entity::GetOrAddComponentById(entt::id_type compId)
 	{
-		if (HasTypeById(typeId))
+		if (HasComponentById(compId))
 		{
-			return GetTypeById(typeId);
+			return GetComponentById(compId);
 		}
 		else
 		{
-			return AddTypeById(typeId);
+			return AddComponentById(compId);
 		}
 	}
 
