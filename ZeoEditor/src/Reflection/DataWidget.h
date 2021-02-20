@@ -8,6 +8,7 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/ReflectionHelper.h"
+#include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/KeyCodes.h"
 
@@ -26,6 +27,8 @@ namespace ZeoEngine {
 		}
 	}
 
+	Ref<class DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec);
+
 	static const ImGuiTreeNodeFlags DefaultDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags EmptyContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags DefaultContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen;
@@ -33,12 +36,12 @@ namespace ZeoEngine {
 	class DataWidget
 	{
 	public:
-		// NOTE: Component instance must be retrieved every frame!
-		virtual void Draw(const entt::meta_any& compInstance) = 0;
+		// NOTE: Component instance should be updated as it will may get invalidated when a new entity's same type of component gets constructed
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) = 0;
 
 	private:
 		// Call this at the beginning of drawing!
-		virtual bool PreDraw(const entt::meta_any& compInstance) = 0;
+		virtual bool PreDraw(const entt::meta_any& compInstance, int32_t elementIndex = -1) = 0;
 		// Call this in the end of drawing!
 		virtual void PostDraw() = 0;
 
@@ -46,7 +49,10 @@ namespace ZeoEngine {
 		void Init(const DataSpec& dataSpec)
 		{
 			m_DataSpec = dataSpec;
-			Draw(dataSpec.ComponentInstance);
+			if (!m_DataSpec.bIsSeqElement)
+			{
+				Draw(m_DataSpec.ComponentInstance);
+			}
 		}
 
 	protected:
@@ -57,10 +63,12 @@ namespace ZeoEngine {
 	class BasicDataWidgetT : public DataWidget
 	{
 	public:
-		virtual bool PreDraw(const entt::meta_any& compInstance) override
+		virtual bool PreDraw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override
 		{
-			m_DataSpec.ComponentInstance = compInstance;
+			m_DataSpec.Update(compInstance, elementIndex);
 			UpdateBuffer();
+
+			if (elementIndex != -1) return true;
 
 			// Data name
 			bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultDataTreeNodeFlags);
@@ -76,8 +84,11 @@ namespace ZeoEngine {
 
 		virtual void PostDraw() override
 		{
-			// Switch to the next row
-			ImGui::TableNextColumn();
+			if (!m_DataSpec.bIsSeqElement)
+			{
+				// Switch to the next row
+				ImGui::TableNextColumn();
+			}
 		}
 
 	protected:
@@ -111,7 +122,7 @@ namespace ZeoEngine {
 	public:
 		BoolDataWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
 
 	template<typename T, uint32_t N = 1, typename CT = T>
@@ -128,9 +139,9 @@ namespace ZeoEngine {
 			Init(dataSpec);
 		}
 
-		virtual void Draw(const entt::meta_any& compInstance) override
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override
 		{
-			if (!PreDraw(compInstance)) return;
+			if (!PreDraw(compInstance, elementIndex)) return;
 
 			const auto data = m_DataSpec.Data;
 			const auto dragSpeed = GetPropValue<float>(PropertyType::DragSensitivity, data);
@@ -188,7 +199,7 @@ namespace ZeoEngine {
 	public:
 		EnumDataWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 
 	protected:
 		void InitEnumDatas();
@@ -210,7 +221,7 @@ namespace ZeoEngine {
 	public:
 		StringDataWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
 
 	class ColorDataWidget : public BasicDataWidgetT<glm::vec4>
@@ -218,7 +229,7 @@ namespace ZeoEngine {
 	public:
 		ColorDataWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
 
 	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
@@ -226,13 +237,13 @@ namespace ZeoEngine {
 	public:
 		Texture2DDataWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
 
 	class ContainerWidget : public DataWidget
 	{
 	public:
-		virtual bool PreDraw(const entt::meta_any& compInstance) override;
+		virtual bool PreDraw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 		virtual void PostDraw() override;
 
 	private:
@@ -244,7 +255,7 @@ namespace ZeoEngine {
 	public:
 		SequenceContainerWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 
 	private:
 		virtual void DrawContainerOperationWidget() override;
@@ -253,7 +264,7 @@ namespace ZeoEngine {
 		entt::meta_sequence_container::iterator EraseValue(entt::meta_sequence_container::iterator it);
 
 	private:
-		entt::meta_sequence_container m_SeqView;
+		Ref<DataWidget> m_ElementWidgetTemplate;
 	};
 
 	class AssociativeContainerWidget : public ContainerWidget
@@ -261,7 +272,7 @@ namespace ZeoEngine {
 	public:
 		AssociativeContainerWidget(const DataSpec& dataSpec);
 
-		virtual void Draw(const entt::meta_any& compInstance) override;
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 
 	private:
 		virtual void DrawContainerOperationWidget() override;
@@ -269,8 +280,6 @@ namespace ZeoEngine {
 		entt::meta_associative_container::iterator InsertValue(entt::meta_associative_container::iterator it);
 		entt::meta_associative_container::iterator EraseValue(entt::meta_associative_container::iterator it);
 
-	private:
-		entt::meta_associative_container m_AssView;
 	};
 
 }

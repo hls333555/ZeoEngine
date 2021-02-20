@@ -58,7 +58,7 @@ namespace ZeoEngine::Reflection {
 	{
 		registry.on_destroy<T>().template connect<&on_destroy<T>>();
 	}
-
+	// TODO: Remove
 	template<typename T>
 	T create_default_value()
 	{
@@ -66,9 +66,9 @@ namespace ZeoEngine::Reflection {
 	}
 
 	template<typename T>
-	void set_enum_value(entt::meta_any& instance, const entt::meta_any& newValue)
+	void set_enum_value_for_seq(entt::meta_any& instance, const entt::meta_any& newValue)
 	{
-		//instance.cast<T>() = newValue.cast<T>();
+		instance.cast<T&>() = newValue.cast<T>();
 	}
 
 }
@@ -177,7 +177,7 @@ entt::meta<_type>()																						\
 #define ZE_REFL_ENUM(enumType)																			\
 entt::meta<enumType>()																					\
 	.ctor<>()																							\
-	.func<&ZeoEngine::Reflection::set_enum_value<enumType>, entt::as_ref_t>("set_enum_value"_hs)
+	.func<&ZeoEngine::Reflection::set_enum_value_for_seq<enumType>, entt::as_ref_t>("set_enum_value_for_seq"_hs)
 #define ZE_REFL_ENUM_DATA(enumType, enumData, ...)														\
 .data<enumType::enumData>(#enumData##_hs)																\
     .prop(PropertyType::Name, #enumData)																\

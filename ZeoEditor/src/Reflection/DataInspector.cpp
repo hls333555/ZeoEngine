@@ -521,70 +521,15 @@ namespace ZeoEngine {
 		uint32_t aggregatedDataId = GetAggregatedDataID(data);
 		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
 		{
-			m_DataWidgets[aggregatedDataId]->Draw(compInstance);
+			if (m_DataWidgets[aggregatedDataId])
+			{
+				m_DataWidgets[aggregatedDataId]->Draw(compInstance);
+			}
 		}
 		else
 		{
-			DataSpec dataSpec{ data, compInstance };
-			switch (dataSpec.Evaluate())
-			{
-			case BasicDataType::SEQCON:
-				m_DataWidgets[aggregatedDataId] = CreateRef<SequenceContainerWidget>(dataSpec);
-				break;
-			case BasicDataType::ASSCON:
-				m_DataWidgets[aggregatedDataId] = CreateRef<AssociativeContainerWidget>(dataSpec);
-				break;
-			case BasicDataType::BOOL:
-				m_DataWidgets[aggregatedDataId] = CreateRef<BoolDataWidget>(dataSpec);
-				break;
-			case BasicDataType::I8:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
-				break;
-			case BasicDataType::I32:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
-				break;
-			case BasicDataType::I64:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
-				break;
-			case BasicDataType::UI8:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
-				break;
-			case BasicDataType::UI32:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
-				break;
-			case BasicDataType::UI64:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
-				break;
-			case BasicDataType::FLOAT:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-				break;
-			case BasicDataType::DOUBLE:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<double>>(dataSpec, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
-				break;
-			case BasicDataType::ENUM:
-				m_DataWidgets[aggregatedDataId] = CreateRef<EnumDataWidget>(dataSpec);
-				break;
-			case BasicDataType::STRING:
-				m_DataWidgets[aggregatedDataId] = CreateRef<StringDataWidget>(dataSpec);
-				break;
-			case BasicDataType::VEC2:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-				break;
-			case BasicDataType::VEC3:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-				break;
-			case BasicDataType::VEC4:
-				m_DataWidgets[aggregatedDataId] = CreateRef<ColorDataWidget>(dataSpec);
-				break;
-			case BasicDataType::TEXTURE:
-				m_DataWidgets[aggregatedDataId] = CreateRef<Texture2DDataWidget>(dataSpec);
-				break;
-			case BasicDataType::PARTICLE:
-				
-				break;
-			default:
-				break;
-			}
+			DataSpec dataSpec{ data, compInstance, false };
+			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec);
 		}
 	}
 

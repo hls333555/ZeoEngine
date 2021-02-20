@@ -7,7 +7,7 @@
 
 namespace ZeoEngine {
 
-	enum class BasicDataType
+	enum class BasicMetaType
 	{
 		NONE,
 		SEQCON, // Sequence container
@@ -37,39 +37,93 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	BasicMetaType EvaluateMetaType(const entt::meta_type type);
+
 	struct DataSpec
 	{
+	public:
 		const char* DataName;
 		entt::meta_data Data;
 		entt::meta_any ComponentInstance;
 
+		int32_t ElementIndex;
+		bool bIsSeqElement;
+		entt::meta_sequence_container SeqView;
+
 		DataSpec() = default;
-		DataSpec(entt::meta_data data, const entt::meta_any& compInstance)
+		DataSpec(entt::meta_data data, const entt::meta_any& compInstance, bool IsSeqElement)
 			: Data(data)
 			, ComponentInstance(compInstance)
+			, bIsSeqElement(IsSeqElement)
 		{
 			const auto dataName = GetMetaObjectDisplayName(Data);
 			DataName = *dataName;
+			TryUpdateSeqView();
 		}
 
-		BasicDataType Evaluate() const;
+		void Update(const entt::meta_any& compInstance, int32_t elementIndex)
+		{
+			// NOTE: After this (meta_any) assignment, "compInstance" may be invalid! Use "ComponentInstance" instead!
+			ComponentInstance = compInstance;
+			TryUpdateSeqView();
+			ElementIndex = elementIndex;
+		}
+
+		size_t GetContainerSize() const
+		{
+			if (SeqView)
+			{
+				return SeqView.size();
+			}
+
+			return 0;
+		}
 
 		entt::meta_any GetValue()
 		{
-			return Data.get(ComponentInstance);
+			if (bIsSeqElement)
+			{
+				return SeqView[ElementIndex];
+			}
+			else
+			{
+				return Data.get(ComponentInstance);
+			}
 		}
 
-		// NOTE: This function cannot be const or crash will occur!
 		template<typename T>
 		T GetValue()
 		{
-			return Data.get(ComponentInstance).cast<T>();
+			if (bIsSeqElement)
+			{
+				return SeqView[ElementIndex].cast<T>();
+			}
+			else
+			{
+				return Data.get(ComponentInstance).cast<T>();
+			}
 		}
 
 		template<typename T>
 		void SetValue(T&& value)
 		{
-			Data.set(ComponentInstance, std::forward<T>(value));
+			if (bIsSeqElement)
+			{
+				SeqView[ElementIndex].cast<T>() = value;
+			}
+			else
+			{
+				Data.set(ComponentInstance, std::forward<T>(value));
+			}
+		}
+
+	private:
+		void TryUpdateSeqView()
+		{
+			if (Data.type().is_sequence_container())
+			{
+				SeqView = Data.get(ComponentInstance).as_sequence_container();
+			}
 		}
 	};
 
@@ -79,14 +133,13 @@ namespace ZeoEngine {
 	void BindOnDestroyFunc(entt::meta_type compType, entt::registry& registry);
 
 	const char* GetEnumDisplayName(entt::meta_any enumValue);
-
 	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
 
+	// TODO: Remove
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type);
 
 	void InternalInvokeOnDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
 	void InternalInvokePostDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
-
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

@@ -78,6 +78,7 @@ namespace ZeoEngine {
 		std::vector<glm::vec2> Vec2VecVar;
 		std::vector<glm::vec3> Vec3VecVar;
 		std::vector<glm::vec4> ColorVecVar;
+		std::vector<Ref<Texture2D>> Texture2DVecVar;
 		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
 
 		TestComponent() = default;

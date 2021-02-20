@@ -8,89 +8,88 @@
 
 namespace ZeoEngine {
 
-	BasicDataType DataSpec::Evaluate() const
+	BasicMetaType EvaluateMetaType(const entt::meta_type type)
 	{
-		auto DataType = Data.type();
-		if (DataType.is_sequence_container())
+		if (type.is_sequence_container())
 		{
-			return BasicDataType::SEQCON;
+			return BasicMetaType::SEQCON;
 		}
-		else if (DataType.is_associative_container())
+		else if (type.is_associative_container())
 		{
-			return BasicDataType::ASSCON;
+			return BasicMetaType::ASSCON;
 		}
-		else if (DataType.is_integral())
+		else if (type.is_integral())
 		{
-			if (IsTypeEqual<bool>(DataType))
+			if (IsTypeEqual<bool>(type))
 			{
-				return BasicDataType::BOOL;
+				return BasicMetaType::BOOL;
 			}
-			else if (IsTypeEqual<int8_t>(DataType))
+			else if (IsTypeEqual<int8_t>(type))
 			{
-				return BasicDataType::I8;
+				return BasicMetaType::I8;
 			}
-			else if (IsTypeEqual<int32_t>(DataType))
+			else if (IsTypeEqual<int32_t>(type))
 			{
-				return BasicDataType::I32;
+				return BasicMetaType::I32;
 			}
-			else if (IsTypeEqual<int64_t>(DataType))
+			else if (IsTypeEqual<int64_t>(type))
 			{
-				return BasicDataType::I64;
+				return BasicMetaType::I64;
 			}
-			else if (IsTypeEqual<uint8_t>(DataType))
+			else if (IsTypeEqual<uint8_t>(type))
 			{
-				return BasicDataType::UI8;
+				return BasicMetaType::UI8;
 			}
-			else if (IsTypeEqual<uint32_t>(DataType))
+			else if (IsTypeEqual<uint32_t>(type))
 			{
-				return BasicDataType::UI32;
+				return BasicMetaType::UI32;
 			}
-			else if (IsTypeEqual<uint64_t>(DataType))
+			else if (IsTypeEqual<uint64_t>(type))
 			{
-				return BasicDataType::UI64;
-			}
-		}
-		else if (DataType.is_floating_point())
-		{
-			if (IsTypeEqual<float>(DataType))
-			{
-				return BasicDataType::FLOAT;
-			}
-			else if (IsTypeEqual<double>(DataType))
-			{
-				return BasicDataType::DOUBLE;
+				return BasicMetaType::UI64;
 			}
 		}
-		else if (DataType.is_enum())
+		else if (type.is_floating_point())
 		{
-			return BasicDataType::ENUM;
+			if (IsTypeEqual<float>(type))
+			{
+				return BasicMetaType::FLOAT;
+			}
+			else if (IsTypeEqual<double>(type))
+			{
+				return BasicMetaType::DOUBLE;
+			}
 		}
-		else if (IsTypeEqual<std::string>(DataType))
+		else if (type.is_enum())
 		{
-			return BasicDataType::STRING;
+			return BasicMetaType::ENUM;
 		}
-		else if (IsTypeEqual<glm::vec2>(DataType))
+		else if (IsTypeEqual<std::string>(type))
 		{
-			return BasicDataType::VEC2;
+			return BasicMetaType::STRING;
 		}
-		else if (IsTypeEqual<glm::vec3>(DataType))
+		else if (IsTypeEqual<glm::vec2>(type))
 		{
-			return BasicDataType::VEC3;
+			return BasicMetaType::VEC2;
 		}
-		else if (IsTypeEqual<glm::vec4>(DataType))
+		else if (IsTypeEqual<glm::vec3>(type))
 		{
-			return BasicDataType::VEC4;
+			return BasicMetaType::VEC3;
 		}
-		else if (IsTypeEqual<Ref<Texture2D>>(DataType))
+		else if (IsTypeEqual<glm::vec4>(type))
 		{
-			return BasicDataType::TEXTURE;
+			return BasicMetaType::VEC4;
 		}
-		else if (IsTypeEqual<Ref<ParticleTemplate>>(DataType))
+		else if (IsTypeEqual<Ref<Texture2D>>(type))
 		{
-			return BasicDataType::PARTICLE;
+			return BasicMetaType::TEXTURE;
+		}
+		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
+		{
+			return BasicMetaType::PARTICLE;
 		}
 
-		return BasicDataType::NONE;
+		return BasicMetaType::NONE;
 	}
 
 	ZE_REFL_REGISTRATION
@@ -172,10 +171,9 @@ namespace ZeoEngine {
 
 	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
 	{
-		instance.type().func("set_enum_value"_hs).invoke({}, std::ref(instance), std::ref(newValue));
+		instance.type().func("set_enum_value_for_seq"_hs).invoke({}, std::ref(instance), std::ref(newValue));
 	}
 
-	// TODO:
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type)
 	{
 		return type.func("create_default_value"_hs).invoke({});

@@ -48,6 +48,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(TestComponent, Vec2VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, Vec3VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, ColorVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
+		ZE_REFL_DATA_REF(TestComponent, Texture2DVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")))
 		ZE_REFL_DATA_REF(TestComponent, ParticleTemplateVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")));
 #endif
 
