@@ -203,7 +203,7 @@ namespace ZeoEngine {
 		virtual void OnDestroy() override
 		{
 			// Clear particle system reference before this component has been removed
-			RemoveParticleSystemInstance();
+			RemoveCurrentParticleSystemInstance();
 		}
 
 		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) override
@@ -252,7 +252,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		void RemoveParticleSystemInstance()
+		void RemoveCurrentParticleSystemInstance()
 		{
 			if (Template)
 			{

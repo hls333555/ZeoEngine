@@ -21,7 +21,7 @@ namespace ZeoEngine {
 
 	public:
 		Scene() = default;
-		virtual ~Scene();
+		virtual ~Scene() = default;
 
 		const std::string& GetName() const { return m_Name; }
 		const std::string& GetPath() const { return m_Path; }
@@ -49,6 +49,7 @@ namespace ZeoEngine {
 		virtual void OnDeserialized() {}
 
 	protected:
+		// Should be called in destructor
 		virtual void OnClenup() {}
 
 	protected:

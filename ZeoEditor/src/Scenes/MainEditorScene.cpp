@@ -5,6 +5,11 @@
 
 namespace ZeoEngine {
 
+	MainEditorScene::~MainEditorScene()
+	{
+		OnClenup();
+	}
+
 	void MainEditorScene::OnUpdate(DeltaTime dt)
 	{
 		// TODO:
@@ -149,7 +154,7 @@ namespace ZeoEngine {
 		// Clear particle system reference for runtime on scene destruction
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& psc)
 		{
-			psc.RemoveParticleSystemInstance();
+			psc.RemoveCurrentParticleSystemInstance();
 		});
 	}
 

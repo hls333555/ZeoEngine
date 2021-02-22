@@ -5,6 +5,11 @@
 
 namespace ZeoEngine {
 
+	ParticleEditorScene::~ParticleEditorScene()
+	{
+		OnClenup();
+	}
+
 	void ParticleEditorScene::OnUpdate(DeltaTime dt)
 	{
 		// Update particle system for particle editor
@@ -34,7 +39,7 @@ namespace ZeoEngine {
 		// Clear particle system reference for particle editor on scene destruction
 		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& pspc)
 		{
-			pspc.RemoveParticleSystemInstance();
+			pspc.RemoveCurrentParticleSystemInstance();
 		});
 	}
 

@@ -6,11 +6,6 @@
 
 namespace ZeoEngine {
 
-	Scene::~Scene()
-	{
-		OnClenup();
-	}
-
 	void Scene::SetPath(const std::string& path)
 	{
 		m_Path = path;

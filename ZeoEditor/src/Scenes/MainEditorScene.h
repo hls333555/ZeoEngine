@@ -7,6 +7,8 @@ namespace ZeoEngine {
 	class MainEditorScene : public Scene
 	{
 	public:
+		virtual ~MainEditorScene();
+
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnRender(const EditorCamera& camera) override;
 		virtual void OnEvent(Event& e) override;
