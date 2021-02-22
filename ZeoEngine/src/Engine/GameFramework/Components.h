@@ -27,9 +27,9 @@ namespace ZeoEngine {
 		// Callbacks
 		/** Called before this component has been removed from the owner entity. */
 		virtual void OnDestroy() {}
-		/** Called every time this data is changed in the editor. (e.g. during dragging a slider to tweak the value) */
+		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
 		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) {}
-		/** Called only when this data is changed and deactivated in the editor. (e.g. after dragging a slider to tweak the value) */
+		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 	};
 
@@ -204,6 +204,11 @@ namespace ZeoEngine {
 		{
 			// Clear particle system reference before this component has been removed
 			RemoveParticleSystemInstance();
+		}
+
+		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) override
+		{
+			CreateParticleSystem(Template);
 		}
 
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override

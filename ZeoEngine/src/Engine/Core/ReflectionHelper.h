@@ -127,19 +127,22 @@ namespace ZeoEngine {
 		}
 	};
 
-	void InternalRemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
-	entt::meta_any InternalGetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
-	entt::meta_any InternalHasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
-	void BindOnDestroyFunc(entt::meta_type compType, entt::registry& registry);
+	namespace Reflection {
 
+		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
+		entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
+		entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
+
+		void BindOnDestroy(entt::meta_type compType, entt::registry& registry);
+
+		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
+
+	}
+	
 	const char* GetEnumDisplayName(entt::meta_any enumValue);
-	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
 
 	// TODO: Remove
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type);
-
-	void InternalInvokeOnDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
-	void InternalInvokePostDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

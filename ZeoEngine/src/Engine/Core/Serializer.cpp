@@ -647,7 +647,7 @@ namespace ZeoEngine {
 				auto newValue = enumData.get({});
 				if (bIsSeqContainer)
 				{
-					SetEnumValueForSeq(instance, newValue);
+					Reflection::SetEnumValueForSeq(instance, newValue);
 				}
 				else
 				{

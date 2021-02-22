@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
 		AddComponentId(compId);
-		BindOnDestroyFunc(compType, m_Scene->m_Registry);
+		Reflection::BindOnDestroy(compType, m_Scene->m_Registry);
 		return compInstance;
 	}
 
@@ -74,7 +74,7 @@ namespace ZeoEngine {
 		}
 
 		RemoveComponentId(compId);
-		InternalRemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		Reflection::RemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 	}
 
 	entt::meta_any Entity::GetComponentById(entt::id_type compId) const
@@ -86,7 +86,7 @@ namespace ZeoEngine {
 			return {};
 		}
 
-		return InternalGetComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		return Reflection::GetComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 	}
 
 	bool Entity::HasComponentById(entt::id_type compId) const
@@ -94,7 +94,7 @@ namespace ZeoEngine {
 		auto compType = entt::resolve(compId);
 		if (!compType) return false;
 
-		auto bHas = InternalHasComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		auto bHas = Reflection::HasComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 		return bHas.cast<bool>();
 	}
 

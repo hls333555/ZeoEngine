@@ -3,10 +3,12 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 #include "Engine/Utils/PlatformUtils.h"
+#include "Panels/DataInspectorPanel.h"
+#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
 
-	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec)
+	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
 		const auto type = bIsSeqElement ? dataSpec.SeqView.value_type() : dataSpec.Data.type();
@@ -18,55 +20,80 @@ namespace ZeoEngine {
 				ZE_CORE_ERROR("Container nesting is not supported!");
 				return {};
 			}
-			return CreateRef<SequenceContainerWidget>(dataSpec);
+			return CreateRef<SequenceContainerWidget>(dataSpec, contextPanel);
 		case BasicMetaType::ASSCON:
 			if (bIsSeqElement)
 			{
 				ZE_CORE_ERROR("Container nesting is not supported!");
 				return {};
 			}
-			return CreateRef<AssociativeContainerWidget>(dataSpec);
+			return CreateRef<AssociativeContainerWidget>(dataSpec, contextPanel);
 		case BasicMetaType::BOOL:
-			return CreateRef<BoolDataWidget>(dataSpec);
+			return CreateRef<BoolDataWidget>(dataSpec, contextPanel);
 		case BasicMetaType::I8:
-			return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+			return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, contextPanel, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
 		case BasicMetaType::I32:
-			return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+			return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, contextPanel, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 		case BasicMetaType::I64:
-			return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+			return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, contextPanel, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 		case BasicMetaType::UI8:
-			return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+			return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, contextPanel, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 		case BasicMetaType::UI32:
-			return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+			return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, contextPanel, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 		case BasicMetaType::UI64:
-			return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+			return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, contextPanel, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 		case BasicMetaType::FLOAT:
-			return CreateRef<ScalarNDataWidget<float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			return CreateRef<ScalarNDataWidget<float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		case BasicMetaType::DOUBLE:
-			return CreateRef<ScalarNDataWidget<double>>(dataSpec, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+			return CreateRef<ScalarNDataWidget<double>>(dataSpec, contextPanel, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
 		case BasicMetaType::ENUM:
-			return CreateRef<EnumDataWidget>(dataSpec);
+			return CreateRef<EnumDataWidget>(dataSpec, contextPanel);
 		case BasicMetaType::STRING:
-			return CreateRef<StringDataWidget>(dataSpec);
+			return CreateRef<StringDataWidget>(dataSpec, contextPanel);
 		case BasicMetaType::VEC2:
-			return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		case BasicMetaType::VEC3:
-			return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 		case BasicMetaType::VEC4:
-			return CreateRef<ColorDataWidget>(dataSpec);
+			return CreateRef<ColorDataWidget>(dataSpec, contextPanel);
 		case BasicMetaType::TEXTURE:
-			return CreateRef<Texture2DDataWidget>(dataSpec);
+			return CreateRef<Texture2DDataWidget>(dataSpec, contextPanel);
 		case BasicMetaType::PARTICLE:
-			// TODO:
-			return {};
+			return CreateRef<ParticleTemplateDataWidget>(dataSpec, contextPanel);
 		}
 
 		return {};
 	}
 
-	BoolDataWidget::BoolDataWidget(const DataSpec& dataSpec)
+	void DataWidget::Init(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		m_DataSpec = dataSpec;
+		m_ContextPanel = contextPanel;
+		if (!m_DataSpec.bIsSeqElement)
+		{
+			Draw(m_DataSpec.ComponentInstance);
+		}
+	}
+
+	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
+	{
+		ZE_TRACE("Value changed during edit!");
+		Component* comp = m_DataSpec.ComponentInstance.try_cast<Component>();
+		ZE_CORE_ASSERT(comp);
+		comp->OnDataValueEditChange(data.id(), oldValue);
+	}
+
+	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
+	{
+		ZE_TRACE("Value changed after edit!");
+		Component* comp = m_DataSpec.ComponentInstance.try_cast<Component>();
+		ZE_CORE_ASSERT(comp);
+		comp->PostDataValueEditChange(data.id(), oldValue);
+	}
+
+	BoolDataWidget::BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	{
+		Init(dataSpec, contextPanel);
 	}
 
 	void BoolDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
@@ -76,15 +103,14 @@ namespace ZeoEngine {
 		if (ImGui::Checkbox("##Bool", &m_Buffer))
 		{
 			SetValueToData();
-			//InvokePostDataValueChangeCallback();
 		}
 
 		PostDraw();
 	}
 
-	EnumDataWidget::EnumDataWidget(const DataSpec& dataSpec)
+	EnumDataWidget::EnumDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 		InitEnumDatas();
 	}
 
@@ -108,13 +134,14 @@ namespace ZeoEngine {
 						if (m_DataSpec.bIsSeqElement)
 						{
 							// TODO: Think a better way for enum sequence container
-							SetEnumValueForSeq(m_DataSpec.SeqView[m_DataSpec.ElementIndex], m_Buffer);
+							Reflection::SetEnumValueForSeq(m_DataSpec.SeqView[m_DataSpec.ElementIndex], m_Buffer);
+							InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer);
 						}
 						else
 						{
 							SetValueToData();
 						}
-						//InvokePostDataValueChangeCallback();
+						
 					}
 				}
 			}
@@ -142,9 +169,9 @@ namespace ZeoEngine {
 		m_CurrentEnumDataName = GetEnumDisplayName(m_Buffer);
 	}
 
-	StringDataWidget::StringDataWidget(const DataSpec& dataSpec)
+	StringDataWidget::StringDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 	}
 
 	void StringDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
@@ -156,7 +183,6 @@ namespace ZeoEngine {
 		if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
 		{
 			SetValueToData();
-			//InvokePostDataValueChangeCallback();
 		}
 		if (ImGui::IsItemActivated())
 		{
@@ -167,16 +193,15 @@ namespace ZeoEngine {
 			if (IsBufferChanged())
 			{
 				SetValueToData();
-				//InvokePostDataValueChangeCallback();
 			}
 		}
 
 		PostDraw();
 	}
 
-	ColorDataWidget::ColorDataWidget(const DataSpec& dataSpec)
+	ColorDataWidget::ColorDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 	}
 
 	void ColorDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
@@ -184,15 +209,18 @@ namespace ZeoEngine {
 		if (!PreDraw(compInstance, elementIndex)) return;
 
 		bool bChanged = ImGui::ColorEdit4("", glm::value_ptr(m_Buffer));
-		
-		if (
-			// For dragging
-			bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left) ||
-			// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-			ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+		// For dragging
+		if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 		{
-			SetValueToData();
-			//InvokeOnDataValueChangeCallback();
+			SetValueToData(false);
+		}
+		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
+		if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+		{
+			if (IsBufferChanged())
+			{
+				SetValueToData();
+			}
 		}
 		// For multi-component widget, tabbing will switch to the next component, so we must handle deactivation to apply cache first
 		if (ImGui::IsItemDeactivatedAfterEdit())
@@ -200,7 +228,6 @@ namespace ZeoEngine {
 			if (IsBufferChanged())
 			{
 				SetValueToData();
-				//InvokePostDataValueChangeCallback();
 			}
 		}
 		if (ImGui::IsItemActivated())
@@ -211,9 +238,9 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	Texture2DDataWidget::Texture2DDataWidget(const DataSpec& dataSpec)
+	Texture2DDataWidget::Texture2DDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 	}
 
 	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
@@ -273,7 +300,6 @@ namespace ZeoEngine {
 					{
 						m_Buffer = loadedTexture;
 						SetValueToData();
-						//InvokePostDataValueChangeCallback();
 					}
 				}
 			}
@@ -312,7 +338,6 @@ namespace ZeoEngine {
 						{
 							m_Buffer = texture;
 							SetValueToData();
-							//InvokePostDataValueChangeCallback();
 						}
 					}
 				}
@@ -323,6 +348,136 @@ namespace ZeoEngine {
 		}
 
 		// Display texture path tooltip for current selection
+		if (m_Buffer && ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("%s", m_Buffer->GetPath().c_str());
+		}
+
+		PostDraw();
+	}
+
+	ParticleTemplateDataWidget::ParticleTemplateDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	{
+		Init(dataSpec, contextPanel);
+	}
+
+	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	{
+		if (!PreDraw(compInstance, elementIndex)) return;
+
+		ParticleLibrary& library = ParticleLibrary::Get();
+		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
+		auto backgroundTexture = texture2DLib.Get("assets/textures/Checkerboard_Alpha.png");
+		// Particle template preview
+		{
+			constexpr float pTemplatePreviewWidth = 75.0f;
+			// Draw checkerboard texture as background first
+			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+				ImGui::GetCursorScreenPos(),
+				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+			// Draw preview thumbnail on top of that
+			auto thumbnailTexture = m_Buffer && m_Buffer->PreviewThumbnail ? m_Buffer->PreviewThumbnail : backgroundTexture;
+			ImGui::Image(thumbnailTexture->GetTexture(),
+				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
+			// Double-click to open the particle editor only when particle template is valid
+			if (m_Buffer && ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Double-click to open the particle editor");
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				{
+					EditorDockspace* editor = m_ContextPanel->GetContext()->OpenEditor(EditorDockspaceType::Particle_Editor);
+					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
+					{
+						pspc.SetTemplate(m_Buffer);
+					});
+				}
+			}
+		}
+
+		ImGui::SameLine();
+
+		if (m_DataSpec.bIsSeqElement)
+		{
+			// Make sure browser widget + dropdown button can reach desired size
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
+			ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+		}
+		else
+		{
+			// Align width to the right side
+			ImGui::SetNextItemWidth(-1.0f);
+		}
+
+		// Particle template browser
+		if (ImGui::BeginCombo("##ParticleTemplate", m_Buffer ? m_Buffer->GetName().c_str() : nullptr))
+		{
+			bool bIsBufferChanged = false;
+			// Pop up file browser to select a particle template from disk
+			if (ImGui::Selectable("Browse particle template..."))
+			{
+				auto filePath = FileDialogs::OpenFile(AssetType::ParticleTemplate);
+				if (filePath)
+				{
+					// Add selected particle template to the library
+					Ref<ParticleTemplate> loadedTemplate = library.GetOrLoad(*filePath);
+					bIsBufferChanged = loadedTemplate != m_Buffer;
+					if (bIsBufferChanged)
+					{
+						m_Buffer = loadedTemplate;
+						SetValueToData();
+					}
+				}
+			}
+
+			ImGui::Separator();
+
+			// List all loaded templates from ParticleLibrary
+			for (const auto& [path, pTemplate] : library.GetParticleTemplatesMap())
+			{
+				// Push particle template path as id
+				ImGui::PushID(pTemplate->GetPath().c_str());
+				{
+					const float pTemplateThumbnailWidth = 30.0f;
+					bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
+					// Display particle template path tooltip for drop-down item
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltip("%s", pTemplate->GetPath().c_str());
+					}
+
+					ImGui::SameLine();
+
+					// Draw particle template thumbnail
+					auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
+					ImGui::Image(thumbnailTexture->GetTexture(),
+						ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
+						ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+					ImGui::SameLine();
+
+					// Display particle template name
+					ImGui::Text(pTemplate->GetName().c_str());
+					if (bIsSelected)
+					{
+						bIsBufferChanged = pTemplate != m_Buffer;
+						if (bIsBufferChanged)
+						{
+							m_Buffer = pTemplate;
+							SetValueToData();
+						}
+					}
+				}
+				ImGui::PopID();
+			}
+
+			ImGui::EndCombo();
+		}
+
+		// Display particle template path tooltip for current selection
 		if (m_Buffer && ImGui::IsItemHovered())
 		{
 			ImGui::SetTooltip("%s", m_Buffer->GetPath().c_str());
@@ -358,11 +513,11 @@ namespace ZeoEngine {
 		ImGui::TreePop();
 	}
 
-	SequenceContainerWidget::SequenceContainerWidget(const DataSpec& dataSpec)
+	SequenceContainerWidget::SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, true };
-		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec);
+		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, m_ContextPanel);
 	}
 
 	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
@@ -423,7 +578,7 @@ namespace ZeoEngine {
 			{
 				if (seqSize > 0 && m_DataSpec.SeqView.clear())
 				{
-					//InvokePostDataValueEditChangeCallback(data, {});
+					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
 				}
 			}
 
@@ -454,7 +609,7 @@ namespace ZeoEngine {
 		auto [retIt, res] = m_DataSpec.SeqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
 		if (res)
 		{
-			//InvokePostDataValueEditChangeCallback(data, {});
+			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
 			return retIt;
 		}
 		else
@@ -471,7 +626,7 @@ namespace ZeoEngine {
 		auto [retIt, res] = m_DataSpec.SeqView.erase(it);
 		if (res)
 		{
-			//InvokePostDataValueEditChangeCallback(data, {});
+			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
 			return retIt;
 		}
 		else
@@ -483,9 +638,9 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	AssociativeContainerWidget::AssociativeContainerWidget(const DataSpec& dataSpec)
+	AssociativeContainerWidget::AssociativeContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
-		Init(dataSpec);
+		Init(dataSpec, contextPanel);
 	}
 
 	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)

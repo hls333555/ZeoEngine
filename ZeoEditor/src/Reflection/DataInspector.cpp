@@ -529,7 +529,7 @@ namespace ZeoEngine {
 		else
 		{
 			DataSpec dataSpec{ data, compInstance, false };
-			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec);
+			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, m_Context);
 		}
 	}
 
@@ -611,13 +611,13 @@ namespace ZeoEngine {
 	void DataInspector::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed!");
-		InternalInvokeOnDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
+		//InternalInvokeOnDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
 	void DataInspector::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed after edit!");
-		InternalInvokePostDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
+		//InternalInvokePostDataValueEditChangeCallback(m_DataCallbackInfo.ComponentInstance.type(), m_DataCallbackInfo.ComponentInstance, data.id(), oldValue);
 	}
 
 	void DataInspector::ProcessBoolData(entt::meta_data data, entt::meta_any& instance, bool bIsSeqContainer, bool bIsSubData)
@@ -673,7 +673,7 @@ namespace ZeoEngine {
 						auto oldValue = enumValue;
 						if (bIsSeqContainer)
 						{
-							SetEnumValueForSeq(instance, newValue);
+							//SetEnumValueForSeq(instance, newValue);
 						}
 						else
 						{

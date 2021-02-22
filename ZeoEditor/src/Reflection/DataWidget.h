@@ -10,7 +10,9 @@
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -27,11 +29,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<class DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec);
+	Ref<class DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 	static const ImGuiTreeNodeFlags DefaultDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags EmptyContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags DefaultContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen;
+
+	class DataInspectorPanel;
 
 	class DataWidget
 	{
@@ -46,17 +50,14 @@ namespace ZeoEngine {
 		virtual void PostDraw() = 0;
 
 	protected:
-		void Init(const DataSpec& dataSpec)
-		{
-			m_DataSpec = dataSpec;
-			if (!m_DataSpec.bIsSeqElement)
-			{
-				Draw(m_DataSpec.ComponentInstance);
-			}
-		}
+		void Init(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+
+		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
+		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
 
 	protected:
 		DataSpec m_DataSpec;
+		DataInspectorPanel* m_ContextPanel;
 	};
 
 	template<typename T>
@@ -67,6 +68,7 @@ namespace ZeoEngine {
 		{
 			m_DataSpec.Update(compInstance, elementIndex);
 			UpdateBuffer();
+			m_OldBuffer = m_Buffer;
 
 			if (elementIndex != -1) return true;
 
@@ -97,15 +99,22 @@ namespace ZeoEngine {
 			m_Buffer = GetValueFromData();
 		}
 
-		// TODO: Will copy?
 		virtual T GetValueFromData()
 		{
 			return m_DataSpec.GetValue<T>();
 		}
 
-		void SetValueToData()
+		void SetValueToData(bool bShouldCallPostCallback = true)
 		{
 			m_DataSpec.SetValue(m_Buffer);
+			if (bShouldCallPostCallback)
+			{
+				InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer);
+			}
+			else
+			{
+				InvokeOnDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer);
+			}
 		}
 
 		bool IsBufferChanged()
@@ -114,13 +123,13 @@ namespace ZeoEngine {
 		}
 
 	protected:
-		T m_Buffer;
+		T m_Buffer, m_OldBuffer;
 	};
 
 	class BoolDataWidget : public BasicDataWidgetT<bool>
 	{
 	public:
-		BoolDataWidget(const DataSpec& dataSpec);
+		BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
@@ -129,14 +138,14 @@ namespace ZeoEngine {
 	class ScalarNDataWidget : public BasicDataWidgetT<T>
 	{
 	public:
-		ScalarNDataWidget(const DataSpec& dataSpec, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
+		ScalarNDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 			: m_ScalarType(scalarType)
 			, m_DefaultMin(defaultMin), m_DefaultMax(defaultMax)
 			, m_Format(format)
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 
-			Init(dataSpec);
+			Init(dataSpec, contextPanel);
 		}
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override
@@ -162,14 +171,18 @@ namespace ZeoEngine {
 			}
 
 			bool bChanged = ImGui::DragScalarNEx("", m_ScalarType, valuePtr, N, dragSpeedValue, &minValue, &maxValue, m_Format, clampMode);
-			if (
-				// For dragging
-				bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left) ||
-				// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-				ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+			// For dragging
+			if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
-				SetValueToData();
-				//InvokeOnDataValueChangeCallback();
+				SetValueToData(false);
+			}
+			// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
+			if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+			{
+				if (IsBufferChanged())
+				{
+					SetValueToData();
+				}
 			}
 			// For multi-component widget, tabbing will switch to the next component, so we must handle deactivation to apply cache first
 			if (ImGui::IsItemDeactivatedAfterEdit())
@@ -177,7 +190,6 @@ namespace ZeoEngine {
 				if (IsBufferChanged())
 				{
 					SetValueToData();
-					//InvokePostDataValueChangeCallback();
 				}
 			}
 			if (ImGui::IsItemActivated())
@@ -197,7 +209,7 @@ namespace ZeoEngine {
 	class EnumDataWidget : public BasicDataWidgetT<entt::meta_any>
 	{
 	public:
-		EnumDataWidget(const DataSpec& dataSpec);
+		EnumDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 
@@ -219,7 +231,7 @@ namespace ZeoEngine {
 	class StringDataWidget : public BasicDataWidgetT<std::string>
 	{
 	public:
-		StringDataWidget(const DataSpec& dataSpec);
+		StringDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
@@ -227,7 +239,7 @@ namespace ZeoEngine {
 	class ColorDataWidget : public BasicDataWidgetT<glm::vec4>
 	{
 	public:
-		ColorDataWidget(const DataSpec& dataSpec);
+		ColorDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
@@ -235,7 +247,15 @@ namespace ZeoEngine {
 	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
 	{
 	public:
-		Texture2DDataWidget(const DataSpec& dataSpec);
+		Texture2DDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+
+		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
+	};
+
+	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
+	{
+	public:
+		ParticleTemplateDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 	};
@@ -253,7 +273,7 @@ namespace ZeoEngine {
 	class SequenceContainerWidget : public ContainerWidget
 	{
 	public:
-		SequenceContainerWidget(const DataSpec& dataSpec);
+		SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 
@@ -270,7 +290,7 @@ namespace ZeoEngine {
 	class AssociativeContainerWidget : public ContainerWidget
 	{
 	public:
-		AssociativeContainerWidget(const DataSpec& dataSpec);
+		AssociativeContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		virtual void Draw(const entt::meta_any& compInstance, int32_t elementIndex = -1) override;
 

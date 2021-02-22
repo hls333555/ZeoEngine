@@ -132,8 +132,6 @@ entt::meta<_type>()																						\
 		.func<&ZeoEngine::Reflection::get<_type>, entt::as_ref_t>("get"_hs)								\
 		.func<&ZeoEngine::Reflection::has<_type>>("has"_hs)												\
 		.func<&ZeoEngine::Reflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)						\
-		.func<&Component::OnDataValueEditChange>("OnDataValueEditChange"_hs)							\
-		.func<&Component::PostDataValueEditChange>("PostDataValueEditChange"_hs)						\
 		.base<Component>()
 
 //////////////////////////////////////////////////////////////////////////

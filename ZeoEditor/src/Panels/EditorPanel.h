@@ -51,9 +51,10 @@ namespace ZeoEngine {
 		ScenePanel(EditorPanelType panelType, EditorDockspace* context, bool bDefaultShow = false, ImGuiWindowFlags panelWindowFlags = 0,
 			const ImVec2Data& initialSize = ImVec2Data::DefaultSize, const ImVec2Data& initialPos = ImVec2Data::DefaultPos);
 
-	protected:
 		template<typename T=EditorDockspace>
 		T* GetContext() { return dynamic_cast<T*>(m_Context); }
+
+	protected:
 		virtual bool IsShow() const override;
 		const Ref<Scene>& GetScene() const;
 		const Ref<FrameBuffer>& GetFrameBuffer() const;

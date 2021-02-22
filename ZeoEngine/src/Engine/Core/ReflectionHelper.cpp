@@ -92,6 +92,35 @@ namespace ZeoEngine {
 		return BasicMetaType::NONE;
 	}
 
+	namespace Reflection {
+
+		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+		{
+			compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
+		}
+
+		entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+		{
+			return compType.func("get"_hs).invoke({}, std::ref(registry), entity);
+		}
+
+		entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+		{
+			return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
+		}
+
+		void BindOnDestroy(entt::meta_type compType, entt::registry& registry)
+		{
+			compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
+		}
+
+		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
+		{
+			instance.type().func("set_enum_value_for_seq"_hs).invoke({}, std::ref(instance), std::ref(newValue));
+		}
+
+	}
+
 	ZE_REFL_REGISTRATION
 	{
 		entt::meta<bool>().ctor<>();
@@ -134,26 +163,6 @@ namespace ZeoEngine {
 			.conv<float>();
 	}
 
-	void InternalRemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
-	{
-		compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
-	}
-
-	entt::meta_any InternalGetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
-	{
-		return compType.func("get"_hs).invoke({}, std::ref(registry), entity);
-	}
-
-	entt::meta_any InternalHasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
-	{
-		return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
-	}
-
-	void BindOnDestroyFunc(entt::meta_type compType, entt::registry& registry)
-	{
-		compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
-	}
-
 	const char* GetEnumDisplayName(entt::meta_any enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing
@@ -169,24 +178,9 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
-	{
-		instance.type().func("set_enum_value_for_seq"_hs).invoke({}, std::ref(instance), std::ref(newValue));
-	}
-
 	entt::meta_any CreateTypeDefaultValue(entt::meta_type type)
 	{
 		return type.func("create_default_value"_hs).invoke({});
-	}
-
-	void InternalInvokeOnDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue)
-	{
-		type.func("OnDataValueEditChange"_hs).invoke(std::move(instance), dataId, oldValue);
-	}
-
-	void InternalInvokePostDataValueEditChangeCallback(entt::meta_type type, entt::meta_handle instance, uint32_t dataId, std::any oldValue)
-	{
-		type.func("PostDataValueEditChange"_hs).invoke(std::move(instance), dataId, oldValue);
 	}
 
 }
