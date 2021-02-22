@@ -52,7 +52,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(TestComponent, ParticleTemplateVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")));
 #endif
 
-	ZE_REFL_COMPONENT(CoreComponent, ZE_REFL_PROP(Inherent))
+	ZE_REFL_COMPONENT(CoreComponent, ZE_REFL_PROP(Inherent), ZE_REFL_PROP(HideComponentHeader))
 		ZE_REFL_DATA_REF(CoreComponent, Name)
 		ZE_REFL_DATA_REF(CoreComponent, bIsInternal, ZE_REFL_PROP(HiddenInEditor));
 
@@ -108,7 +108,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA_REF(BurstData, Time, ZE_REFL_PROP_PAIR(ClampMin, 0.0f), ZE_REFL_PROP_PAIR(ClampMax, 1.0f), ZE_REFL_PROP_PAIR(DragSensitivity, 0.01f), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("标准化的时间点：[0,1]")))
 		ZE_REFL_DATA_REF(BurstData, Amount, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("在该时间点一次性生成的粒子数")));
 
-	ZE_REFL_COMPONENT(ParticleSystemPreviewComponent, ZE_REFL_PROP(Inherent))
+	ZE_REFL_COMPONENT(ParticleSystemPreviewComponent, ZE_REFL_PROP(Inherent), ZE_REFL_PROP(HideComponentHeader))
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, IsLocalSpace, SetLocalSpace, IsLocalSpace, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Emitter")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("是否在局部空间模拟粒子")))
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, LoopCount, SetLoopCount, GetLoopCount, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Emitter")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("循环次数。若小于等于0, 则为无限循环")))
 		ZE_REFL_DATA_SETTER_GETTER(ParticleSystemPreviewComponent, LoopDuration, SetLoopDuration, GetLoopDuration, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Emitter")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("每次循环的时长")))

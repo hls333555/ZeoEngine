@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		const auto compId = compType.info().hash();
 		const auto compName = GetMetaObjectDisplayName(compType);
 
-		bool bShouldDisplayCompHeader = compId != entt::type_hash<CoreComponent>::value();
+		bool bShouldDisplayCompHeader = !DoesPropExist(PropertyType::HideComponentHeader, compType);
 		bool bIsCompHeaderExpanded = true;
 		bool bWillRemoveType = false;
 		// Display component header

@@ -87,6 +87,7 @@ enum class PropertyType
 
 	DisplayName,				// [value_type: const char*] Display name of component or data.
 	Inherent,					// [key_only] This component cannot be added or removed within editor.
+	HideComponentHeader,		// [key_only] This component will not display a collapsing header.
 	Category,					// [value_type: const char*] Category of component or data.
 	HiddenInEditor,				// [key_only] Should hide this data in editor?
 	HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
