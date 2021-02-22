@@ -1,8 +1,6 @@
 #pragma once
 
-#pragma warning(push, 0)
 #include <entt.hpp>
-#pragma warning(pop)
 
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
