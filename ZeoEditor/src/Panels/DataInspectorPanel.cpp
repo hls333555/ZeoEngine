@@ -2,6 +2,7 @@
 
 #include "Dockspaces/MainDockspace.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Core/ReflectionHelper.h"
 
 namespace ZeoEngine {
 

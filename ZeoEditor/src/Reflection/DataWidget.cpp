@@ -8,12 +8,19 @@
 
 namespace ZeoEngine {
 
+	uint32_t GetAggregatedDataID(entt::meta_data data)
+	{
+		return ImGui::GetCurrentWindow()->GetID(data.id());
+	}
+
 	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
-		const auto type = bIsSeqElement ? dataSpec.SeqView.value_type() : dataSpec.Data.type();
+		const auto type = dataSpec.GetType();
 		switch (EvaluateMetaType(type))
 		{
+		case BasicMetaType::STRUCT:
+			return CreateRef<StructWidget>(dataSpec, contextPanel);
 		case BasicMetaType::SEQCON:
 			if (bIsSeqElement)
 			{
@@ -71,10 +78,10 @@ namespace ZeoEngine {
 		m_ContextPanel = contextPanel;
 		if (!m_DataSpec.bIsSeqElement)
 		{
-			Draw(m_DataSpec.ComponentInstance);
+			Draw(m_DataSpec.ComponentInstance, m_DataSpec.ParentInstance);
 		}
 	}
-
+	// TODO:
 	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
 		ZE_TRACE("Value changed during edit!");
@@ -96,9 +103,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void BoolDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void BoolDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		if (ImGui::Checkbox("##Bool", &m_Buffer))
 		{
@@ -114,9 +121,9 @@ namespace ZeoEngine {
 		InitEnumDatas();
 	}
 
-	void EnumDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void EnumDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		if (ImGui::BeginCombo("##Enum", m_CurrentEnumDataName))
 		{
@@ -174,9 +181,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void StringDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void StringDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		ImGui::InputText("##String", &m_Buffer, ImGuiInputTextFlags_AutoSelectAll);
 		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
@@ -204,9 +211,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void ColorDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void ColorDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		bool bChanged = ImGui::ColorEdit4("", glm::value_ptr(m_Buffer));
 		// For dragging
@@ -243,9 +250,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
@@ -361,9 +368,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		ParticleLibrary& library = ParticleLibrary::Get();
 		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
@@ -486,9 +493,9 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	bool ContainerWidget::PreDraw(const entt::meta_any& compInstance, int32_t elementIndex)
+	bool ContainerWidget::PreDraw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		m_DataSpec.Update(compInstance, elementIndex);
+		m_DataSpec.Update(compInstance, parentInstance, elementIndex);
 
 		const auto size = m_DataSpec.GetContainerSize();
 		const ImGuiTreeNodeFlags flags = size > 0 ? DefaultContainerDataTreeNodeFlags : EmptyContainerDataTreeNodeFlags;
@@ -516,41 +523,62 @@ namespace ZeoEngine {
 	SequenceContainerWidget::SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
-		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, true };
+		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.ParentInstance, false, true };
 		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, m_ContextPanel);
 	}
 
-	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
 		if (!m_ElementWidgetTemplate) return;
 
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 		uint32_t i = 0;
 		for (auto it = m_DataSpec.SeqView.begin(); it != m_DataSpec.SeqView.end();)
 		{
-			auto element = *it;
-
-			// Data index
 			char nameBuffer[16];
 			_itoa_s(i, nameBuffer, 10);
-			bool bIsTreeExpanded = ImGui::TreeNodeEx(nameBuffer, DefaultDataTreeNodeFlags);
+			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, m_DataSpec.SeqView.value_type());
+			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
+			// Data index
+			bool bIsTreeExpanded = ImGui::TreeNodeEx(nameBuffer, flags);
 			// Switch to the right column
 			ImGui::TableNextColumn();
 			// Push data index as id
 			ImGui::PushID(i);
 			{
-				// Make sure element widget + dropdown button can reach desired size
-				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-				float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
-				ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
-				// Draw element widget
-				m_ElementWidgetTemplate->Draw(compInstance, i);
-				ImGui::SameLine();
-				// Insert and erase buttons
-				DrawContainerElementOperationWidget(it);
-				// Switch to the next row
-				ImGui::TableNextColumn();
+				if (bIsElementStruct)
+				{
+					// Insert and erase buttons
+					DrawContainerElementOperationWidget(it);
+					// Switch to the next row
+					ImGui::TableNextColumn();
+					if (bIsTreeExpanded)
+					{
+						// If we erased the last element just now, the widget should not be drawn
+						if (it != m_DataSpec.SeqView.end())
+						{
+							// Draw element widget
+							m_ElementWidgetTemplate->Draw(compInstance, compInstance, i);
+						}
+
+						ImGui::TreePop();
+					}
+				}
+				else
+				{
+					// Make sure element widget + dropdown button can reach desired size
+					ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+					float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
+					ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+					// Draw element widget
+					m_ElementWidgetTemplate->Draw(compInstance, compInstance, i);
+					ImGui::SameLine();
+					// Insert and erase buttons
+					DrawContainerElementOperationWidget(it);
+					// Switch to the next row
+					ImGui::TableNextColumn();
+				}
 			}
 			ImGui::PopID();
 
@@ -643,9 +671,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, int32_t elementIndex)
+	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
 
 
 
@@ -670,6 +698,105 @@ namespace ZeoEngine {
 	entt::meta_associative_container::iterator AssociativeContainerWidget::EraseValue(entt::meta_associative_container::iterator it)
 	{
 		return {};
+	}
+
+	StructWidget::StructWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	{
+		Init(dataSpec, contextPanel);
+	}
+
+	bool StructWidget::PreDraw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	{
+		m_DataSpec.Update(compInstance, parentInstance, elementIndex);
+
+		// Data name
+		bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultStructDataTreeNodeFlags);
+		// Data tooltip
+		ShowPropertyTooltip(m_DataSpec.Data);
+		// Switch to the right column
+		ImGui::TableNextColumn();
+		// Switch to the next row
+		ImGui::TableNextColumn();
+
+		return bIsDataTreeExpanded;
+	}
+
+	void StructWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	{
+		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+
+		const auto structType = m_DataSpec.GetType();
+		auto structInstance = m_DataSpec.GetValue();
+
+		// Preprocess subdatas if needed
+		if (m_bIsPreprocessedSubdatasDirty)
+		{
+			const auto compName = GetMetaObjectDisplayName(compInstance.type());
+			ZE_CORE_TRACE("Sorting subdatas on {0} of '{1}'", m_DataSpec.DataName, *compName);
+			PreprocessStruct(structType);
+			// TODO:
+			m_bIsPreprocessedSubdatasDirty = false;
+		}
+
+		std::vector<entt::meta_data> visibleSubdatas;
+		for (const auto subDataId : m_PreprocessedSubdatas)
+		{
+			entt::meta_data subdata = structType.data(subDataId);
+			
+			// TODO:
+			if (/*!ShouldHideData(subdata, structInstance)*/true)
+			{
+				visibleSubdatas.push_back(subdata);
+			}
+		}
+		for (const auto subdata : visibleSubdatas)
+		{
+			// Push subdata id
+			ImGui::PushID(subdata.id());
+			{
+				// Draw widget based on data type
+				DrawSubdataWidget(subdata, structInstance);
+			}
+			ImGui::PopID();
+		}
+
+		PostDraw();
+	}
+
+	void StructWidget::PostDraw()
+	{
+		ImGui::TreePop();
+	}
+
+	void StructWidget::PreprocessStruct(entt::meta_type structType)
+	{
+		for (const auto subdata : structType.data())
+		{
+			PreprocessSubdata(subdata);
+		}
+	}
+
+	void StructWidget::PreprocessSubdata(entt::meta_data subdata)
+	{
+		// Reverse subdata display order
+		m_PreprocessedSubdatas.push_front(subdata.id());
+	}
+
+	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, const entt::meta_any& structInstance)
+	{
+		uint32_t aggregatedDataId = GetAggregatedDataID(subdata);
+		if (m_SubdataWidgets.find(aggregatedDataId) != m_SubdataWidgets.cend())
+		{
+			if (m_SubdataWidgets[aggregatedDataId])
+			{
+				m_SubdataWidgets[aggregatedDataId]->Draw(m_DataSpec.ComponentInstance, structInstance);
+			}
+		}
+		else
+		{
+			DataSpec dataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
+			m_SubdataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, m_ContextPanel);
+		}
 	}
 
 }

@@ -199,7 +199,7 @@ namespace ZeoEngine {
 			{
 				EvaluateSerializeAssociativeContainerData(out, data, instance);
 			}
-			else if (DoesPropExist(PropertyType::NestedClass, dataType))
+			else if (DoesPropExist(PropertyType::Struct, dataType))
 			{
 				EvaluateSerializeNestedData(out, data, instance, false);
 			}
@@ -223,7 +223,7 @@ namespace ZeoEngine {
 				for (auto it = seqView.begin(); it != seqView.end(); ++it)
 				{
 					auto element = *it;
-					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, type);
+					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, type);
 					if (bIsNestedClass)
 					{
 						EvaluateSerializeNestedData(out, data, element, true);
@@ -254,7 +254,7 @@ namespace ZeoEngine {
 			{
 				out << YAML::BeginMap;
 				{
-					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
+					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, subData.type());
 					if (bIsNestedClass)
 					{
 						EvaluateSerializeNestedData(out, subData, subInstance, false);
@@ -434,7 +434,7 @@ namespace ZeoEngine {
 				{
 					EvaluateDeserializeAssociativeContainerData(data, instance, dataValue);
 				}
-				else if (DoesPropExist(PropertyType::NestedClass, dataType))
+				else if (DoesPropExist(PropertyType::Struct, dataType))
 				{
 					EvaluateDeserializeNestedData(data, instance, dataValue, false);
 				}
@@ -479,7 +479,7 @@ namespace ZeoEngine {
 		{
 			auto seqView = data.get(instance).as_sequence_container();
 			auto it = InsertDefaultValueForSeq(data, seqView);
-			bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, type);
+			bool bIsNestedClass = DoesPropExist(PropertyType::Struct, type);
 			if (bIsNestedClass)
 			{
 				// TODO: Fix: cannot convert argument 2 from 'entt::meta_sequence_container::meta_iterator::reference' to 'entt::meta_any &'
@@ -513,7 +513,7 @@ namespace ZeoEngine {
 				// Evaluate serialized subdata only
 				if (subValue)
 				{
-					bool bIsNestedClass = DoesPropExist(PropertyType::NestedClass, subData.type());
+					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, subData.type());
 					if (bIsNestedClass)
 					{
 						EvaluateDeserializeNestedData(subData, subInstance, subValue, false);

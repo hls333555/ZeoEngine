@@ -10,7 +10,11 @@ namespace ZeoEngine {
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type)
 	{
-		if (type.is_sequence_container())
+		if (DoesPropExist(PropertyType::Struct, type))
+		{
+			return BasicMetaType::STRUCT;
+		}
+		else if (type.is_sequence_container())
 		{
 			return BasicMetaType::SEQCON;
 		}

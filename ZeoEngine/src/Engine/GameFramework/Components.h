@@ -33,6 +33,7 @@ namespace ZeoEngine {
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 	};
 
+	// TODO: Move to Test.h
 #if ENABLE_TEST
 	struct TestComponent : public Component
 	{
@@ -45,6 +46,32 @@ namespace ZeoEngine {
 		{
 			TestEnumClass1, TestEnumClass2, TestEnumClass3
 		};
+
+		struct TestStruct1
+		{
+			bool operator==(const TestStruct1& other) const
+			{
+				return EnumVar == other.EnumVar && I32Var == other.I32Var;
+			}
+
+			TestEnum EnumVar;
+			int32_t I32Var;
+		};
+
+		struct TestStruct2
+		{
+			bool operator==(const TestStruct2& other) const
+			{
+				return TestStruct1Var == other.TestStruct1Var && FloatVar == other.FloatVar;
+			}
+
+			TestStruct1 TestStruct1Var;
+			float FloatVar;
+		};
+
+		TestStruct2& GetTestStruct2GetterVar() { return TestStruct2GetterVar; }
+		float GetFloatSetterGetterVar() const { return FloatSetterGetterVar; } void SetFloatSetterGetterVar(float value) { FloatSetterGetterVar = value; }
+		auto& GetTestStruct2VecGetterVar() { return TestStruct2VecGetterVar; }
 
 		bool BoolVar;
 		uint8_t Ui8Var;
@@ -63,6 +90,9 @@ namespace ZeoEngine {
 		glm::vec4 ColorVar;
 		Ref<Texture2D> Texture2DVar;
 		Ref<ParticleTemplate> ParticleTemplateVar;
+		TestStruct1 TestStruct1Var;
+		TestStruct2 TestStruct2GetterVar;
+		float FloatSetterGetterVar;
 
 		std::deque<bool> BoolDeqVar;
 		std::vector<uint8_t> Ui8VecVar;
@@ -80,6 +110,8 @@ namespace ZeoEngine {
 		std::vector<glm::vec4> ColorVecVar;
 		std::vector<Ref<Texture2D>> Texture2DVecVar;
 		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
+		std::vector<TestStruct1> TestStruct1VecVar;
+		std::vector<TestStruct2> TestStruct2VecGetterVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;
@@ -290,43 +322,25 @@ namespace ZeoEngine {
 			CreateParticleSystem(oldTemplate);
 		}
 
-		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
-		void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
-		int32_t GetLoopCount() const { return Template->LoopCount; }
-		void SetLoopCount(int32_t count) { Template->LoopCount = count; }
-		float GetLoopDuration() const { return Template->LoopDuration; }
-		void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
-		const ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
-		void SetSpawnRate(const ParticleFloat& value) { Template->SpawnRate = value; }
+		bool IsLocalSpace() const { return Template->bIsLocalSpace; } void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
+		int32_t GetLoopCount() const { return Template->LoopCount; } void SetLoopCount(int32_t count) { Template->LoopCount = count; }
+		float GetLoopDuration() const { return Template->LoopDuration; } void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
+		ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
 		auto& GetBurstList() const { return Template->BurstList; }
-		const ParticleVec3& GetInitialPosition() const { return Template->InitialPosition; }
-		void SetInitialPosition(const ParticleVec3& position) { Template->InitialPosition = position; }
-		const ParticleVec3& GetInitialRotation() const { return Template->InitialRotation; }
-		void SetInitialRotation(const ParticleVec3& rotation) { Template->InitialRotation = rotation; }
-		const ParticleVec3& GetRotationRate() const { return Template->RotationRate; }
-		void SetRotationRate(const ParticleVec3& rotationRate) { Template->RotationRate = rotationRate; }
-		const ParticleVec3& GetSizeBegin() const { return Template->SizeBegin; }
-		void SetSizeBegin(const ParticleVec3& size) { Template->SizeBegin = size; }
-		const ParticleVec3& GetSizeEnd() const { return Template->SizeEnd; }
-		void SetSizeEnd(const ParticleVec3& size) { Template->SizeEnd = size; }
-		const ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
-		void SetInitialVelocity(const ParticleVec3& velocity) { Template->InitialVelocity = velocity; }
-		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; }
-		void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
-		const ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
-		void SetColorBegin(const ParticleColor& color) { Template->ColorBegin = color; }
-		const ParticleColor& GetColorEnd() const { return Template->ColorEnd; }
-		void SetColorEnd(const ParticleColor& color) { Template->ColorEnd = color; }
-		const ParticleFloat& GetLifetime() const { return Template->Lifetime; }
-		void SetLifetime(const ParticleFloat& lifetime) { Template->Lifetime = lifetime; }
-		const Ref<Texture2D>& GetTexture() const { return Template->Texture; }
-		void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
-		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
-		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
-		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
-		void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
-		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; }
-		void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
+		ParticleVec3& GetInitialPosition() const { return Template->InitialPosition; }
+		ParticleVec3& GetInitialRotation() const { return Template->InitialRotation; }
+		ParticleVec3& GetRotationRate() const { return Template->RotationRate; }
+		ParticleVec3& GetSizeBegin() const { return Template->SizeBegin; }
+		ParticleVec3& GetSizeEnd() const { return Template->SizeEnd; }
+		ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
+		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; } void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
+		ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
+		ParticleColor& GetColorEnd() const { return Template->ColorEnd; }
+		ParticleFloat& GetLifetime() const { return Template->Lifetime; }
+		const Ref<Texture2D>& GetTexture() const { return Template->Texture; } void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
+		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; } void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
+		uint32_t GetMaxParticles() const { return Template->MaxParticles; } void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
+		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; } void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
 
 	};
 

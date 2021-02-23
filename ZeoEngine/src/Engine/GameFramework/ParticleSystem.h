@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		T EvaluateUniform() const;
 
 	public:
-		T Val1, Val2;
+		T Val1 = T(), Val2 = T(); // Initialization is very important! Or unexpected behavior will happen when a new element of this type is added to the container via the "Insert" button
 		ParticleVariationType VariationType = ParticleVariationType::Constant;
 	};
 
