@@ -13,6 +13,7 @@
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/GameFramework/Components.h"
+#include "Reflection/DataParser.h"
 
 namespace ZeoEngine {
 
@@ -319,7 +320,9 @@ namespace ZeoEngine {
 		void DrawSubdataWidget(entt::meta_data subdata, const entt::meta_any& structInstance);
 
 	private:
-		/** Map from aggregated data id to DataWidget instance */
+		DataParser m_SubdataParser;
+
+		/** Map from aggregated subdata id to DataWidget instance */
 		std::unordered_map<uint32_t, Ref<DataWidget>> m_SubdataWidgets;
 
 		/** List of all its subdata, used to draw ordered registered subdatas in DataInspectorPanel */

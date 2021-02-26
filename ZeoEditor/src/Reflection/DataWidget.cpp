@@ -732,9 +732,8 @@ namespace ZeoEngine {
 		if (m_bIsPreprocessedSubdatasDirty)
 		{
 			const auto compName = GetMetaObjectDisplayName(compInstance.type());
-			ZE_CORE_TRACE("Sorting subdatas on {0} of '{1}'", m_DataSpec.DataName, *compName);
+			ZE_CORE_TRACE("Sorting subdatas on '{0}' of '{1}'", m_DataSpec.DataName, *compName);
 			PreprocessStruct(structType);
-			// TODO:
 			m_bIsPreprocessedSubdatasDirty = false;
 		}
 
@@ -743,8 +742,7 @@ namespace ZeoEngine {
 		{
 			entt::meta_data subdata = structType.data(subDataId);
 			
-			// TODO:
-			if (/*!ShouldHideData(subdata, structInstance)*/true)
+			if (!m_SubdataParser.ShouldHideData(subdata, structInstance))
 			{
 				visibleSubdatas.push_back(subdata);
 			}
@@ -784,18 +782,18 @@ namespace ZeoEngine {
 
 	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, const entt::meta_any& structInstance)
 	{
-		uint32_t aggregatedDataId = GetAggregatedDataID(subdata);
-		if (m_SubdataWidgets.find(aggregatedDataId) != m_SubdataWidgets.cend())
+		uint32_t aggregatedSubdataId = GetAggregatedDataID(subdata);
+		if (m_SubdataWidgets.find(aggregatedSubdataId) != m_SubdataWidgets.cend())
 		{
-			if (m_SubdataWidgets[aggregatedDataId])
+			if (m_SubdataWidgets[aggregatedSubdataId])
 			{
-				m_SubdataWidgets[aggregatedDataId]->Draw(m_DataSpec.ComponentInstance, structInstance);
+				m_SubdataWidgets[aggregatedSubdataId]->Draw(m_DataSpec.ComponentInstance, structInstance);
 			}
 		}
 		else
 		{
 			DataSpec dataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
-			m_SubdataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, m_ContextPanel);
+			m_SubdataWidgets[aggregatedSubdataId] = ConstructBasicDataWidget(dataSpec, m_ContextPanel);
 		}
 	}
 

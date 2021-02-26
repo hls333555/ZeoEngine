@@ -4,6 +4,8 @@
 #include <optional>
 
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/ReflectionHelper.h"
+#include "Reflection/DataParser.h"
 
 namespace ZeoEngine {
 
@@ -25,16 +27,14 @@ namespace ZeoEngine {
 	private:
 		void PreprocessData(entt::meta_type compType, entt::meta_data data);
 
-		// NOTE: Do not pass entt::meta_handle around as it does not support copy
-		bool ShouldHideData(entt::meta_data data, const entt::meta_any& instance);
-		void ParseHideCondition(entt::meta_data data, const entt::meta_any& instance, const std::string& hideConditionStr, const char* token, std::optional<bool>& result);
-
 		void MarkCachesDirty();
 
 		void DrawDataWidget(entt::meta_data data, const entt::meta_any& compInstance);
 
 	private:
 		DataInspectorPanel* m_Context;
+
+		DataParser m_DataParser;
 
 		/** Map from aggregated data id to DataWidget instance */
 		std::unordered_map<uint32_t, Ref<DataWidget>> m_DataWidgets;

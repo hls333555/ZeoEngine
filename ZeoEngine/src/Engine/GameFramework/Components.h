@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		};
 
 		TestStruct2& GetTestStruct2GetterVar() { return TestStruct2GetterVar; }
-		float GetFloatSetterGetterVar() const { return FloatSetterGetterVar; } void SetFloatSetterGetterVar(float value) { FloatSetterGetterVar = value; }
+		bool GetShowSequenceContainers() const { return ShowSequenceContainers; } void SetShowSequenceContainers(bool value) { ShowSequenceContainers = value; }
 		auto& GetTestStruct2VecGetterVar() { return TestStruct2VecGetterVar; }
 
 		bool BoolVar;
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 		Ref<ParticleTemplate> ParticleTemplateVar;
 		TestStruct1 TestStruct1Var;
 		TestStruct2 TestStruct2GetterVar;
-		float FloatSetterGetterVar;
+		bool ShowSequenceContainers;
 
 		std::deque<bool> BoolDeqVar;
 		std::vector<uint8_t> Ui8VecVar;

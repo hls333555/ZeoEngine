@@ -54,7 +54,7 @@ namespace ZeoEngine {
 		// Preprocess datas if needed
 		if (m_bIsPreprocessedDatasDirty)
 		{
-			ZE_CORE_TRACE("Sorting datas on {0} of '{1}'", *compName, entity.GetEntityName());
+			ZE_CORE_TRACE("Sorting datas on '{0}' of '{1}'", *compName, entity.GetEntityName());
 			PreprocessComponent(compType);
 		}
 		if (bIsCompHeaderExpanded)
@@ -68,8 +68,7 @@ namespace ZeoEngine {
 				for (const auto dataId : dataIds)
 				{
 					entt::meta_data data = compType.data(dataId);
-					// TODO:
-					if (!ShouldHideData(data, compInstance))
+					if (!m_DataParser.ShouldHideData(data, compInstance))
 					{
 						bShouldDisplayCategoryTree = category != "";
 						visibleDatas.push_back(data);
@@ -79,7 +78,8 @@ namespace ZeoEngine {
 				if (bShouldDisplayCategoryTree)
 				{
 					// Data category tree
-					bIsCategoryTreeExpanded = ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
+					bIsCategoryTreeExpanded = ImGui::TreeNodeEx(category.c_str(),
+						ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
 				}
 				if (bIsCategoryTreeExpanded)
 				{
@@ -155,114 +155,9 @@ namespace ZeoEngine {
 		m_PreprocessedDatas[compType.info().hash()][category].push_front(data.id());
 	}
 
-	bool DataInspector::ShouldHideData(entt::meta_data data, const entt::meta_any& instance)
-	{
-		auto bIsHiddenInEditor = DoesPropExist(PropertyType::HiddenInEditor, data);
-		if (bIsHiddenInEditor) return true;
-
-		auto hideCondition = GetPropValue<const char*>(PropertyType::HideCondition, data);
-		// HideCondition property is not set, show this data normally
-		if (!hideCondition) return false;
-
-		std::string hideConditionStr{ *hideCondition };
-		std::optional<bool> result;
-		// TODO: Add more operators
-		ParseHideCondition(data, instance, hideConditionStr, "==", result);
-		ParseHideCondition(data, instance, hideConditionStr, "!=", result);
-
-		return *result;
-	}
-
-	void DataInspector::ParseHideCondition(entt::meta_data data, const entt::meta_any& instance, const std::string& hideConditionStr, const char* token, std::optional<bool>& result)
-	{
-		// Map from id to HideCondition key-value pair
-		static std::unordered_map<uint32_t, std::pair<std::string, std::string>> hideConditionBuffers;
-
-		// The string has been successfully parsed already, just return
-		if (result) return;
-
-		auto tokenPos = hideConditionStr.find(token);
-		if (tokenPos == std::string::npos) return;
-
-		std::string keyStr, valueStr;
-		auto id = GetAggregatedDataID(data);
-		if (hideConditionBuffers.find(id) != hideConditionBuffers.end())
-		{
-			keyStr = hideConditionBuffers[id].first;
-			valueStr = hideConditionBuffers[id].second;
-		}
-		else
-		{
-			keyStr = hideConditionStr.substr(0, tokenPos);
-			// Erase tail blanks
-			keyStr.erase(keyStr.find_last_not_of(" ") + 1);
-
-			valueStr = hideConditionStr.substr(tokenPos + 2, hideConditionStr.size() - 1);
-			// Erase head blanks
-			valueStr.erase(0, valueStr.find_first_not_of(" "));
-			// Extract enum value if necessary (e.g. SceneCamera::ProjectionType::Perspective -> Perspective)
-			auto valuePos = valueStr.rfind("::");
-			if (valuePos != std::string::npos)
-			{
-				valueStr.erase(0, valuePos + 2);
-			}
-
-			hideConditionBuffers[id].first = keyStr;
-			hideConditionBuffers[id].second = valueStr;
-		}
-
-		auto keyData = entt::resolve(instance.type().info().hash()).data(entt::hashed_string::value(keyStr.c_str()));
-		auto keyDataValue = keyData.get(instance);
-
-		// Bool
-		{
-			if (valueStr.find("true") != std::string::npos || valueStr.find("True") != std::string::npos)
-			{
-				if (token == "==")
-				{
-					result = keyDataValue.cast<bool>();
-					return;
-				}
-				if (token == "!=")
-				{
-					result = !keyDataValue.cast<bool>();
-					return;
-				}
-			}
-			if (valueStr.find("false") != std::string::npos || valueStr.find("False") != std::string::npos)
-			{
-				if (token == "==")
-				{
-					result = !keyDataValue.cast<bool>();
-					return;
-				}
-				if (token == "!=")
-				{
-					result = keyDataValue.cast<bool>();
-					return;
-				}
-			}
-		}
-
-		// Enum
-		{
-			auto keyDataType = keyData.type();
-			auto valueToCompare = keyDataType.data(entt::hashed_string::value(valueStr.c_str())).get({});
-			if (token == "==")
-			{
-				result = keyDataValue == valueToCompare;
-				return;
-			}
-			if (token == "!=")
-			{
-				result = keyDataValue != valueToCompare;
-				return;
-			}
-		}
-	}
-
 	void DataInspector::MarkCachesDirty()
 	{
+		m_DataParser.ClearCache();
 		m_DataWidgets.clear();
 		m_PreprocessedDatas.clear();
 		m_bIsPreprocessedDatasDirty = true;
