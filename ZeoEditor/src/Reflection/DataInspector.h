@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <optional>
 
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/ReflectionHelper.h"

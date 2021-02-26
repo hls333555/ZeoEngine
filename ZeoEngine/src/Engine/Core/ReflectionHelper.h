@@ -151,27 +151,10 @@ namespace ZeoEngine {
 	
 	const char* GetEnumDisplayName(entt::meta_any enumValue);
 
-	// TODO: Remove
-	entt::meta_any CreateTypeDefaultValue(entt::meta_type type);
-
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)
 	{
 		return type.info().hash() == entt::type_hash<T>::value();
-	}
-
-	// TODO: Remove
-	template<typename T>
-	T GetDataValue(entt::meta_data data, entt::meta_handle instance)
-	{
-		return data.get(std::move(instance)).cast<T>();
-	}
-
-	// TODO: Remove
-	template<typename T>
-	void SetDataValue(entt::meta_data data, entt::meta_handle instance, T&& value)
-	{
-		data.set(std::move(instance), std::forward<T>(value));
 	}
 
 	template<typename T>

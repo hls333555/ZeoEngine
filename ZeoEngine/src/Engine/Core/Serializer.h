@@ -38,22 +38,19 @@ namespace ZeoEngine {
 			std::ofstream fout(m_Path);
 			fout << out.c_str();
 		}
-		void SerializeType(YAML::Emitter& out, entt::meta_any instance);
+
+		void SerializeType(YAML::Emitter& out, entt::meta_any& instance);
 
 	private:
-		void EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance);
-		void EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance);
-		void EvaluateSerializeNestedData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
-		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
-
-		void EvaluateSerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
-		void EvaluateSerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
-		void EvaluateSerializeOtherData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
+		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
+		void EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
+		void EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
+		void EvaluateSerializeStructData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 
 		template<typename T>
-		void SerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+		void SerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 		{
-			if (bIsSeqContainer)
+			if (bIsSeqElement)
 			{
 				const auto elementValue = instance.cast<T>();
 				if constexpr (std::is_same<T, uint8_t>::value)
@@ -69,7 +66,7 @@ namespace ZeoEngine {
 			else
 			{
 				const auto dataName = GetMetaObjectDisplayName(data);
-				const auto dataValue = GetDataValue<T>(data, instance);
+				const auto dataValue = data.get(instance).cast<T>();
 				if constexpr (std::is_same<T, uint8_t>::value)
 				{
 					out << YAML::Key << *dataName << YAML::Value << +dataValue;
@@ -80,7 +77,7 @@ namespace ZeoEngine {
 				}
 			}
 		}
-		void SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer);
+		void SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 
 	public:
 		bool Deserialize(entt::meta_any instance, AssetType assetType);
@@ -90,29 +87,25 @@ namespace ZeoEngine {
 		void DeserializeType(entt::meta_any& instance, const YAML::Node& value);
 
 	private:
-		void EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
-		void EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
-		void EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
-
-		void EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
-		void EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
+		void EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
+		void EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeAssociativeContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeStructData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
 
 		template<typename T>
-		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
 		{
 			const auto& dataValue = value.as<T>();
-			if (bIsSeqContainer)
+			if (bIsSeqElement)
 			{
-				instance.set(data.id(), dataValue);
+				instance.cast<T&>() = dataValue;
 			}
 			else
 			{
-				SetDataValue(data, instance, dataValue);
+				data.set(instance, dataValue);
 			}
 		}
-		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer);
+		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
 
 	private:
 		std::string m_Path;

@@ -182,9 +182,4 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	entt::meta_any CreateTypeDefaultValue(entt::meta_type type)
-	{
-		return type.func("create_default_value"_hs).invoke({});
-	}
-
 }

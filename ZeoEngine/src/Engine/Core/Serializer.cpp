@@ -182,38 +182,100 @@ namespace ZeoEngine {
 		});
 	}
 
-	void TypeSerializer::SerializeType(YAML::Emitter& out, entt::meta_any instance)
+	void TypeSerializer::SerializeType(YAML::Emitter& out, entt::meta_any& instance)
 	{
-		for (auto data : instance.type().data())
+		for (const auto data : instance.type().data())
 		{
 			// Do not serialize transient data
 			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
 			if (bDiscardSerialize) continue;
 
-			const auto dataType = data.type();
-			if (dataType.is_sequence_container())
-			{
-				EvaluateSerializeSequenceContainerData(out, data, instance);
-			}
-			else if (dataType.is_associative_container())
-			{
-				EvaluateSerializeAssociativeContainerData(out, data, instance);
-			}
-			else if (DoesPropExist(PropertyType::Struct, dataType))
-			{
-				EvaluateSerializeNestedData(out, data, instance, false);
-			}
-			else
-			{
-				EvaluateSerializeData(out, data, instance, false);
-			}
+			EvaluateSerializeData(out, data, instance, false);
 		}
 	}
 
-	void TypeSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	void TypeSerializer::EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+	{
+		const auto type = bIsSeqElement ? instance.type() : data.type();
+		switch (EvaluateMetaType(type))
+		{
+		case BasicMetaType::STRUCT:
+			EvaluateSerializeStructData(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::SEQCON:
+			if (bIsSeqElement)
+			{
+				ZE_CORE_ERROR("Container nesting is not supported!");
+				return;
+			}
+			EvaluateSerializeSequenceContainerData(out, data, instance);
+			break;
+		case BasicMetaType::ASSCON:
+			if (bIsSeqElement)
+			{
+				ZE_CORE_ERROR("Container nesting is not supported!");
+				return;
+			}
+			EvaluateSerializeAssociativeContainerData(out, data, instance);
+			break;
+		case BasicMetaType::BOOL:
+			SerializeData<bool>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::I8:
+			SerializeData<int8_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::I32:
+			SerializeData<int32_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::I64:
+			SerializeData<int64_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::UI8:
+			SerializeData<uint8_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::UI32:
+			SerializeData<uint32_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::UI64:
+			SerializeData<uint64_t>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::FLOAT:
+			SerializeData<float>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::DOUBLE:
+			SerializeData<double>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::ENUM:
+			SerializeEnumData(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::STRING:
+			SerializeData<std::string>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC2:
+			SerializeData<glm::vec2>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC3:
+			SerializeData<glm::vec3>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC4:
+			SerializeData<glm::vec4>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::TEXTURE:
+			SerializeData<Ref<Texture2D>>(out, data, instance, bIsSeqElement);
+			break;
+		case BasicMetaType::PARTICLE:
+			SerializeData<Ref<ParticleTemplate>>(out, data, instance, bIsSeqElement);
+			break;
+		default:
+			auto dataName = GetMetaObjectDisplayName(data);
+			ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", *dataName);
+			break;
+		}
+	}
+
+	void TypeSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance)
 	{
 		auto seqView = data.get(instance).as_sequence_container();
-		const auto type = seqView.value_type();
 		const auto dataName = GetMetaObjectDisplayName(data);
 		out << YAML::Key << *dataName << YAML::Value;
 		{
@@ -223,46 +285,30 @@ namespace ZeoEngine {
 				for (auto it = seqView.begin(); it != seqView.end(); ++it)
 				{
 					auto element = *it;
-					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, type);
-					if (bIsNestedClass)
-					{
-						EvaluateSerializeNestedData(out, data, element, true);
-					}
-					else
-					{
-						EvaluateSerializeData(out, data, element, true);
-					}
+					EvaluateSerializeData(out, data, element, true);
 				}
 			}
 			out << YAML::EndSeq;
 		}
 	}
 
-	void TypeSerializer::EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance)
+	void TypeSerializer::EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance)
 	{
 
 	}
 
-	void TypeSerializer::EvaluateSerializeNestedData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	void TypeSerializer::EvaluateSerializeStructData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 	{
 		const auto dataName = GetMetaObjectDisplayName(data);
-		bIsSeqContainer ? out << YAML::BeginSeq : out << YAML::Key << *dataName << YAML::Value << YAML::BeginSeq;
+		bIsSeqElement ? out << YAML::BeginSeq : out << YAML::Key << *dataName << YAML::Value << YAML::BeginSeq;
 		{
-			const auto type = bIsSeqContainer ? instance.type() : data.type();
-			auto subInstance = bIsSeqContainer ? instance : data.get(instance);
-			for (auto subData : type.data())
+			const auto structType = bIsSeqElement ? instance.type() : data.type();
+			auto structInstance = bIsSeqElement ? instance : data.get(instance);
+			for (const auto subData : structType.data())
 			{
 				out << YAML::BeginMap;
 				{
-					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, subData.type());
-					if (bIsNestedClass)
-					{
-						EvaluateSerializeNestedData(out, subData, subInstance, false);
-					}
-					else
-					{
-						EvaluateSerializeData(out, subData, subInstance, false);
-					}
+					EvaluateSerializeData(out, subData, structInstance, false);
 				}
 				out << YAML::EndMap;
 			}
@@ -270,114 +316,9 @@ namespace ZeoEngine {
 		out << YAML::EndSeq;
 	}
 
-	void TypeSerializer::EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
+	void TypeSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (type.is_integral())
-		{
-			EvaluateSerializeIntegralData(out, data, instance, bIsSeqContainer);
-		}
-		else if (type.is_floating_point())
-		{
-			EvaluateSerializeFloatingPointData(out, data, instance, bIsSeqContainer);
-		}
-		else if (type.is_enum())
-		{
-			SerializeEnumData(out, data, instance, bIsSeqContainer);
-		}
-		else
-		{
-			EvaluateSerializeOtherData(out, data, instance, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateSerializeIntegralData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<bool>(type))
-		{
-			SerializeData<bool>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int8_t>(type))
-		{
-			SerializeData<int8_t>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int32_t>(type))
-		{
-			SerializeData<int32_t>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int64_t>(type))
-		{
-			SerializeData<int64_t>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint8_t>(type))
-		{
-			SerializeData<uint8_t>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint32_t>(type))
-		{
-			SerializeData<uint32_t>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint64_t>(type))
-		{
-			SerializeData<uint64_t>(out, data, instance, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateSerializeFloatingPointData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<float>(type))
-		{
-			SerializeData<float>(out, data, instance, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<double>(type))
-		{
-			SerializeData<double>(out, data, instance, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateSerializeOtherData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<std::string>(type))
-		{
-			SerializeData<std::string>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec2>(type))
-		{
-			SerializeData<glm::vec2>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec3>(type))
-		{
-			SerializeData<glm::vec3>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec4>(type))
-		{
-			SerializeData<glm::vec4>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<Ref<Texture2D>>(type))
-		{
-			SerializeData<Ref<Texture2D>>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
-		{
-			SerializeData<Ref<ParticleTemplate>>(out, data, instance, bIsSeqContainer);
-			return;
-		}
-
-		auto dataName = GetMetaObjectDisplayName(data);
-		ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", *dataName);
-	}
-
-	void TypeSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, const entt::meta_any instance, bool bIsSeqContainer)
-	{
-		if (bIsSeqContainer)
+		if (bIsSeqElement)
 		{
 			const char* enumValueName = GetEnumDisplayName(instance);
 			out << enumValueName;
@@ -402,7 +343,7 @@ namespace ZeoEngine {
 
 	std::optional<YAML::Node> TypeSerializer::PreDeserialize(AssetType assetType)
 	{
-		YAML::Node data = YAML::LoadFile(m_Path);
+		auto data = YAML::LoadFile(m_Path);
 		auto assetTypeName = magic_enum::enum_name(assetType).data();
 		if (!data[assetTypeName])
 		{
@@ -418,78 +359,120 @@ namespace ZeoEngine {
 
 	void TypeSerializer::DeserializeType(entt::meta_any& instance, const YAML::Node& value)
 	{
-		for (auto data : instance.type().data())
+		for (const auto data : instance.type().data())
 		{
 			auto dataName = GetMetaObjectDisplayName(data);
 			const auto& dataValue = value[*dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
-				const auto dataType = data.type();
-				if (dataType.is_sequence_container())
-				{
-					EvaluateDeserializeSequenceContainerData(data, instance, dataValue);
-				}
-				else if (dataType.is_associative_container())
-				{
-					EvaluateDeserializeAssociativeContainerData(data, instance, dataValue);
-				}
-				else if (DoesPropExist(PropertyType::Struct, dataType))
-				{
-					EvaluateDeserializeNestedData(data, instance, dataValue, false);
-				}
-				else
-				{
-					EvaluateDeserializeData(data, instance, dataValue, false);
-				}
+				EvaluateDeserializeData(data, instance, dataValue, false);
 			}
 		}
 	}
 
-	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(entt::meta_data data, entt::meta_sequence_container& seqView)
+	void TypeSerializer::EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
 	{
-		// "0" value works for "all" types because we have registered their conversion functions
-		auto [retIt, res] = seqView.insert(seqView.end(), 0);
+		const auto type = bIsSeqElement ? instance.type() : data.type();
+		switch (EvaluateMetaType(type))
+		{
+		case BasicMetaType::STRUCT:
+			EvaluateDeserializeStructData(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::SEQCON:
+			if (bIsSeqElement)
+			{
+				ZE_CORE_ERROR("Container nesting is not supported!");
+				return;
+			}
+			EvaluateDeserializeSequenceContainerData(data, instance, value);
+			break;
+		case BasicMetaType::ASSCON:
+			if (bIsSeqElement)
+			{
+				ZE_CORE_ERROR("Container nesting is not supported!");
+				return;
+			}
+			EvaluateDeserializeAssociativeContainerData(data, instance, value);
+			break;
+		case BasicMetaType::BOOL:
+			DeserializeData<bool>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::I8:
+			DeserializeData<int8_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::I32:
+			DeserializeData<int32_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::I64:
+			DeserializeData<int64_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::UI8:
+			DeserializeData<uint8_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::UI32:
+			DeserializeData<uint32_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::UI64:
+			DeserializeData<uint64_t>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::FLOAT:
+			DeserializeData<float>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::DOUBLE:
+			DeserializeData<double>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::ENUM:
+			DeserializeEnumData(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::STRING:
+			DeserializeData<std::string>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC2:
+			DeserializeData<glm::vec2>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC3:
+			DeserializeData<glm::vec3>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::VEC4:
+			DeserializeData<glm::vec4>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::TEXTURE:
+			DeserializeData<Ref<Texture2D>>(data, instance, value, bIsSeqElement);
+			break;
+		case BasicMetaType::PARTICLE:
+			DeserializeData<Ref<ParticleTemplate>>(data, instance, value, bIsSeqElement);
+			break;
+		default:
+			auto dataName = GetMetaObjectDisplayName(data);
+			ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", *dataName);
+			break;
+		}
+	}
+
+	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(const entt::meta_data data, entt::meta_sequence_container& seqView)
+	{
+		auto [retIt, res] = seqView.insert(seqView.end(), seqView.value_type().construct());
 		if (res)
 		{
 			return retIt;
 		}
 		else
 		{
-			// For special types like user-defined enums, we have to invoke a function instead
-			auto defaultValue = CreateTypeDefaultValue(seqView.value_type());
-			auto [retIt, res] = seqView.insert(seqView.end(), defaultValue);
-			if (res)
-			{
-				return retIt;
-			}
-			else
-			{
-				auto dataName = GetMetaObjectDisplayName(data);
-				ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'!", *dataName);
-			}
+			auto dataName = GetMetaObjectDisplayName(data);
+			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
 		}
+
 		return {};
 	}
 
-	void TypeSerializer::EvaluateDeserializeSequenceContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
+	void TypeSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
 	{
-		const auto type = data.get(instance).as_sequence_container().value_type();
-		for (const auto& element : value)
+		for (const auto& elementValue : value)
 		{
 			auto seqView = data.get(instance).as_sequence_container();
 			auto it = InsertDefaultValueForSeq(data, seqView);
-			bool bIsNestedClass = DoesPropExist(PropertyType::Struct, type);
-			if (bIsNestedClass)
-			{
-				// TODO: Fix: cannot convert argument 2 from 'entt::meta_sequence_container::meta_iterator::reference' to 'entt::meta_any &'
-				EvaluateDeserializeNestedData(data, *it, element, true);
-			}
-			else
-			{
-				// TODO: Fix: cannot convert argument 2 from 'entt::meta_sequence_container::meta_iterator::reference' to 'entt::meta_any &'
-				EvaluateDeserializeData(data, *it, element, true);
-			}
+			EvaluateDeserializeData(data, *it, elementValue, true);
 		}
 	}
 
@@ -498,12 +481,12 @@ namespace ZeoEngine {
 
 	}
 
-	void TypeSerializer::EvaluateDeserializeNestedData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	void TypeSerializer::EvaluateDeserializeStructData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
 	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		auto subInstance = bIsSeqContainer ? instance : data.get(instance);
+		const auto type = bIsSeqElement ? instance.type() : data.type();
+		auto structInstance = bIsSeqElement ? instance : data.get(instance);
 		uint32_t i = 0;
-		for (auto subData : type.data())
+		for (const auto subData : type.data())
 		{
 			auto subDataName = GetMetaObjectDisplayName(subData);
 			// Evaluate serialized subdata only
@@ -513,145 +496,30 @@ namespace ZeoEngine {
 				// Evaluate serialized subdata only
 				if (subValue)
 				{
-					bool bIsNestedClass = DoesPropExist(PropertyType::Struct, subData.type());
-					if (bIsNestedClass)
-					{
-						EvaluateDeserializeNestedData(subData, subInstance, subValue, false);
-					}
-					else
-					{
-						EvaluateDeserializeData(subData, subInstance, subValue, false);
-					}
+					EvaluateDeserializeData(subData, structInstance, subValue, false);
 				}
 			}
 			++i;
 		}
-		// We must set subInstance value back to instance
-		SetDataValue(data, instance, subInstance);
 	}
 
-	void TypeSerializer::EvaluateDeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (type.is_integral())
-		{
-			EvaluateDeserializeIntegralData(data, instance, value, bIsSeqContainer);
-		}
-		else if (type.is_floating_point())
-		{
-			EvaluateDeserializeFloatingPointData(data, instance, value, bIsSeqContainer);
-		}
-		else if (type.is_enum())
-		{
-			DeserializeEnumData(data, instance, value, bIsSeqContainer);
-		}
-		else
-		{
-			EvaluateDeserializeOtherData(data, instance, value, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateDeserializeIntegralData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<bool>(type))
-		{
-			DeserializeData<bool>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int8_t>(type))
-		{
-			DeserializeData<int8_t>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int32_t>(type))
-		{
-			DeserializeData<int32_t>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<int64_t>(type))
-		{
-			DeserializeData<int64_t>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint8_t>(type))
-		{
-			DeserializeData<uint8_t>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint32_t>(type))
-		{
-			DeserializeData<uint32_t>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<uint64_t>(type))
-		{
-			DeserializeData<uint64_t>(data, instance, value, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateDeserializeFloatingPointData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<float>(type))
-		{
-			DeserializeData<float>(data, instance, value, bIsSeqContainer);
-		}
-		else if (IsTypeEqual<double>(type))
-		{
-			DeserializeData<double>(data, instance, value, bIsSeqContainer);
-		}
-	}
-
-	void TypeSerializer::EvaluateDeserializeOtherData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
-	{
-		const auto type = bIsSeqContainer ? instance.type() : data.type();
-		if (IsTypeEqual<std::string>(type))
-		{
-			DeserializeData<std::string>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec2>(type))
-		{
-			DeserializeData<glm::vec2>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec3>(type))
-		{
-			DeserializeData<glm::vec3>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<glm::vec4>(type))
-		{
-			DeserializeData<glm::vec4>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<Ref<Texture2D>>(type))
-		{
-			DeserializeData<Ref<Texture2D>>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
-		{
-			DeserializeData<Ref<ParticleTemplate>>(data, instance, value, bIsSeqContainer);
-			return;
-		}
-
-		auto dataName = GetMetaObjectDisplayName(data);
-		ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", *dataName);
-	}
-
-	void TypeSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqContainer)
+	void TypeSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
 	{
 		const auto currentValueName = value.as<std::string>();
-		const auto& datas = bIsSeqContainer ? instance.type().data() : data.type().data();
-		for (auto enumData : datas)
+		const auto& datas = bIsSeqElement ? instance.type().data() : data.type().data();
+		for (const auto enumData : datas)
 		{
 			auto valueName = GetMetaObjectDisplayName(enumData);
 			if (currentValueName == valueName)
 			{
 				auto newValue = enumData.get({});
-				if (bIsSeqContainer)
+				if (bIsSeqElement)
 				{
 					Reflection::SetEnumValueForSeq(instance, newValue);
 				}
 				else
 				{
-					SetDataValue(data, instance, newValue);
+					data.set(instance, newValue);
 				}
 			}
 		}
@@ -699,14 +567,13 @@ namespace ZeoEngine {
 			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
 			{
 				// Do not call entt::registry::visit() as the order is reversed
-				for (const auto typeId : entity.GetOrderedComponentIds())
+				for (const auto compId : entity.GetOrderedComponentIds())
 				{
 					out << YAML::BeginMap;
 					{
-						const auto type = entt::resolve(typeId);
-						out << YAML::Key << "Component" << YAML::Value << typeId; // TODO: Type ID goes here
-						const auto instance = entity.GetComponentById(typeId);
-						SerializeType(out, instance);
+						out << YAML::Key << "Component" << YAML::Value << compId; // TODO: Component ID goes here
+						auto compInstance = entity.GetComponentById(compId);
+						SerializeType(out, compInstance);
 					}
 					out << YAML::EndMap;
 				}
@@ -755,15 +622,15 @@ namespace ZeoEngine {
 		{
 			for (auto component : components)
 			{
-				auto typeId = component["Component"].as<uint32_t>();
+				auto compId = component["Component"].as<uint32_t>();
 				// TODO: NativeScriptComponent deserialization
-				if (typeId == entt::type_hash<NativeScriptComponent>::value()) continue;
+				if (compId == entt::type_hash<NativeScriptComponent>::value()) continue;
 
-				entt::meta_any instance = deserializedEntity.GetOrAddComponentById(typeId);
-				// Instance may be null as typeId is invalid
-				if (instance)
+				entt::meta_any compInstance = deserializedEntity.GetOrAddComponentById(compId);
+				// Instance may be null as compId is invalid
+				if (compInstance)
 				{
-					DeserializeType(instance, component);
+					DeserializeType(compInstance, component);
 				}
 			}
 		}
