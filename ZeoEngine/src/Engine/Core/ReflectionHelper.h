@@ -45,59 +45,46 @@ namespace ZeoEngine {
 	public:
 		const char* DataName;
 		entt::meta_data Data;
-		entt::meta_any ParentInstance, ComponentInstance;
+		entt::meta_any Instance; // Can be component instance, element instance or struct instance
+		entt::meta_any ComponentInstance;
 
 		bool bIsStructSubdata;
-
-		int32_t ElementIndex;
-
-		bool bIsSeqElement;
-		entt::meta_sequence_container SeqView;
+		bool bIsSeqElement; // NOTE: Even if this is true, Instance may not be valid!
 
 		DataSpec() = default;
-		DataSpec(entt::meta_data data, const entt::meta_any& compInstance, const entt::meta_any& parentInstance, bool isStructSubdata, bool isSeqElement)
+		DataSpec(entt::meta_data data, const entt::meta_any& compInstance, const entt::meta_any& instance, bool isStructSubdata, bool isSeqElement)
 			: Data(data)
 			, ComponentInstance(compInstance)
-			, ParentInstance(parentInstance)
+			, Instance(instance)
 			, bIsStructSubdata(isStructSubdata)
 			, bIsSeqElement(isSeqElement)
 		{
 			const auto dataName = GetMetaObjectDisplayName(Data);
 			DataName = *dataName;
-			TryUpdateSeqView();
 		}
 
-		void Update(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+		void Update(const entt::meta_any& compInstance, const entt::meta_any& instance)
 		{
 			// NOTE: After this (meta_any) assignment, "compInstance" may be invalid! Use "ComponentInstance" instead!
 			ComponentInstance = compInstance;
-			ParentInstance = parentInstance;
-			TryUpdateSeqView();
-			ElementIndex = elementIndex;
+			Instance = instance;
 		}
 
 		entt::meta_type GetType() const
 		{
-			if (bIsSeqElement) return SeqView.value_type();
+			if (bIsSeqElement) return Instance.type();
 			return Data.type();
-		}
-
-		size_t GetContainerSize() const
-		{
-			if (SeqView) return SeqView.size();
-
-			return 0;
 		}
 
 		entt::meta_any GetValue()
 		{
 			if (bIsSeqElement)
 			{
-				return SeqView[ElementIndex];
+				return Instance;
 			}
 			else
 			{
-				return Data.get(ParentInstance);
+				return Data.get(Instance);
 			}
 		}
 
@@ -106,11 +93,11 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				return SeqView[ElementIndex].cast<T>();
+				return Instance.cast<T>();
 			}
 			else
 			{
-				return Data.get(ParentInstance).cast<T>();
+				return Data.get(Instance).cast<T>();
 			}
 		}
 
@@ -119,20 +106,11 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				SeqView[ElementIndex].cast<T>() = value;
+				Instance.cast<T>() = value;
 			}
 			else
 			{
-				Data.set(ParentInstance, std::forward<T>(value));
-			}
-		}
-
-	private:
-		void TryUpdateSeqView()
-		{
-			if (Data.type().is_sequence_container())
-			{
-				SeqView = Data.get(ParentInstance).as_sequence_container();
+				Data.set(Instance, std::forward<T>(value));
 			}
 		}
 	};

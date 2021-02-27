@@ -28,7 +28,7 @@ namespace ZeoEngine {
 
 		void MarkCachesDirty();
 
-		void DrawDataWidget(entt::meta_data data, const entt::meta_any& compInstance);
+		void DrawDataWidget(entt::meta_data data, entt::meta_any& compInstance);
 
 	private:
 		DataInspectorPanel* m_Context;

@@ -284,8 +284,8 @@ namespace ZeoEngine {
 			{
 				for (auto it = seqView.begin(); it != seqView.end(); ++it)
 				{
-					auto element = *it;
-					EvaluateSerializeData(out, data, element, true);
+					auto elementInstance = *it;
+					EvaluateSerializeData(out, data, elementInstance, true);
 				}
 			}
 			out << YAML::EndSeq;
@@ -472,7 +472,8 @@ namespace ZeoEngine {
 		{
 			auto seqView = data.get(instance).as_sequence_container();
 			auto it = InsertDefaultValueForSeq(data, seqView);
-			EvaluateDeserializeData(data, *it, elementValue, true);
+			auto elementInstance = *it;
+			EvaluateDeserializeData(data, elementInstance, elementValue, true);
 		}
 	}
 

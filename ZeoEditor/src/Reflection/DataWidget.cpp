@@ -13,10 +13,9 @@ namespace ZeoEngine {
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
-	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
-		const auto type = dataSpec.GetType();
 		switch (EvaluateMetaType(type))
 		{
 		case BasicMetaType::STRUCT:
@@ -78,7 +77,7 @@ namespace ZeoEngine {
 		m_ContextPanel = contextPanel;
 		if (!m_DataSpec.bIsSeqElement)
 		{
-			Draw(m_DataSpec.ComponentInstance, m_DataSpec.ParentInstance);
+			Draw(m_DataSpec.ComponentInstance, m_DataSpec.Instance);
 		}
 	}
 
@@ -103,9 +102,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void BoolDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void BoolDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		if (ImGui::Checkbox("##Bool", &m_Buffer))
 		{
@@ -118,12 +117,16 @@ namespace ZeoEngine {
 	EnumDataWidget::EnumDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
-		InitEnumDatas();
 	}
 
-	void EnumDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void EnumDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
+
+		if (m_EnumDatas.empty())
+		{
+			InitEnumDatas();
+		}
 
 		if (ImGui::BeginCombo("##Enum", m_CurrentEnumDataName))
 		{
@@ -141,7 +144,7 @@ namespace ZeoEngine {
 						if (m_DataSpec.bIsSeqElement)
 						{
 							// TODO: Think a better way for enum sequence container
-							Reflection::SetEnumValueForSeq(m_DataSpec.SeqView[m_DataSpec.ElementIndex], m_Buffer);
+							Reflection::SetEnumValueForSeq(instance, m_Buffer);
 							InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer);
 						}
 						else
@@ -162,7 +165,7 @@ namespace ZeoEngine {
 	void EnumDataWidget::InitEnumDatas()
 	{
 		m_EnumDatas.clear();
-		auto type = m_DataSpec.bIsSeqElement ? m_DataSpec.SeqView.value_type() : m_Buffer.type();
+		const auto type = m_DataSpec.GetType();
 		for (const auto enumData : type.data())
 		{
 			// Reverse enum data order
@@ -181,9 +184,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void StringDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void StringDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		ImGui::InputText("##String", &m_Buffer, ImGuiInputTextFlags_AutoSelectAll);
 		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
@@ -211,9 +214,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void ColorDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void ColorDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		bool bChanged = ImGui::ColorEdit4("", glm::value_ptr(m_Buffer));
 		// For dragging
@@ -250,9 +253,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
@@ -368,9 +371,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		ParticleLibrary& library = ParticleLibrary::Get();
 		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
@@ -493,11 +496,12 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	bool ContainerWidget::PreDraw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	bool ContainerWidget::PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		m_DataSpec.Update(compInstance, parentInstance, elementIndex);
+		m_DataSpec.Update(compInstance, instance);
 
-		const auto size = m_DataSpec.GetContainerSize();
+		auto seqView = m_DataSpec.GetValue().as_sequence_container();
+		const auto size = seqView.size();
 		const ImGuiTreeNodeFlags flags = size > 0 ? DefaultContainerDataTreeNodeFlags : EmptyContainerDataTreeNodeFlags;
 
 		// Data name
@@ -523,22 +527,26 @@ namespace ZeoEngine {
 	SequenceContainerWidget::SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
-		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.ParentInstance, false, true };
-		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, m_ContextPanel);
+		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
+		auto seqView = m_DataSpec.GetValue().as_sequence_container();
+		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type(), m_ContextPanel);
 	}
 
-	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!m_ElementWidgetTemplate) return;
 
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
+		auto seqView = m_DataSpec.GetValue().as_sequence_container();
 		uint32_t i = 0;
-		for (auto it = m_DataSpec.SeqView.begin(); it != m_DataSpec.SeqView.end();)
+		for (auto it = seqView.begin(); it != seqView.end();)
 		{
+			auto elementInstance = *it;
+
 			char nameBuffer[16];
 			_itoa_s(i, nameBuffer, 10);
-			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, m_DataSpec.SeqView.value_type());
+			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, seqView.value_type());
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
 			// Data index
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(nameBuffer, flags);
@@ -550,16 +558,16 @@ namespace ZeoEngine {
 				if (bIsElementStruct)
 				{
 					// Insert and erase buttons
-					DrawContainerElementOperationWidget(it);
+					DrawContainerElementOperationWidget(seqView, it);
 					// Switch to the next row
 					ImGui::TableNextColumn();
 					if (bIsTreeExpanded)
 					{
 						// If we erased the last element just now, the widget should not be drawn
-						if (it != m_DataSpec.SeqView.end())
+						if (it != seqView.end())
 						{
 							// Draw element widget
-							m_ElementWidgetTemplate->Draw(compInstance, compInstance, i);
+							m_ElementWidgetTemplate->Draw(compInstance, elementInstance);
 						}
 
 						ImGui::TreePop();
@@ -572,17 +580,17 @@ namespace ZeoEngine {
 					float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
 					ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
 					// Draw element widget
-					m_ElementWidgetTemplate->Draw(compInstance, compInstance, i);
+					m_ElementWidgetTemplate->Draw(compInstance, elementInstance);
 					ImGui::SameLine();
 					// Insert and erase buttons
-					DrawContainerElementOperationWidget(it);
+					DrawContainerElementOperationWidget(seqView, it);
 					// Switch to the next row
 					ImGui::TableNextColumn();
 				}
 			}
 			ImGui::PopID();
 
-			if (it != m_DataSpec.SeqView.end())
+			if (it != seqView.end())
 			{
 				++it, ++i;
 			}
@@ -593,18 +601,19 @@ namespace ZeoEngine {
 
 	void SequenceContainerWidget::DrawContainerOperationWidget()
 	{
-		const auto seqSize = m_DataSpec.SeqView.size();
+		auto seqView = m_DataSpec.GetValue().as_sequence_container();
+		const auto seqSize = seqView.size();
 		ImGui::Text("%d elements", seqSize);
 		ImGui::SameLine();
 		if (ImGui::BeginCombo("##SequenceContainerOperation", nullptr, ImGuiComboFlags_NoPreview))
 		{
 			if (ImGui::Selectable("Add"))
 			{
-				InsertValue(m_DataSpec.SeqView.end());
+				InsertValue(seqView, seqView.end());
 			}
 			if (ImGui::Selectable("Clear"))
 			{
-				if (seqSize > 0 && m_DataSpec.SeqView.clear())
+				if (seqSize > 0 && seqView.clear())
 				{
 					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
 				}
@@ -614,27 +623,27 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SequenceContainerWidget::DrawContainerElementOperationWidget(entt::meta_sequence_container::iterator& it)
+	void SequenceContainerWidget::DrawContainerElementOperationWidget(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
 	{
 		if (ImGui::BeginCombo("##SequenceContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
 		{
 			if (ImGui::Selectable("Insert"))
 			{
-				it = InsertValue(it);
+				it = InsertValue(seqView, it);
 			}
 			if (ImGui::Selectable("Erase"))
 			{
-				it = EraseValue(it);
+				it = EraseValue(seqView, it);
 			}
 
 			ImGui::EndCombo();
 		}
 	}
 
-	entt::meta_sequence_container::iterator SequenceContainerWidget::InsertValue(entt::meta_sequence_container::iterator it)
+	entt::meta_sequence_container::iterator SequenceContainerWidget::InsertValue(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		const auto elementType = m_DataSpec.SeqView.value_type();
-		auto [retIt, res] = m_DataSpec.SeqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
+		const auto elementType = seqView.value_type();
+		auto [retIt, res] = seqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
 		if (res)
 		{
 			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
@@ -649,9 +658,9 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	entt::meta_sequence_container::iterator SequenceContainerWidget::EraseValue(entt::meta_sequence_container::iterator it)
+	entt::meta_sequence_container::iterator SequenceContainerWidget::EraseValue(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		auto [retIt, res] = m_DataSpec.SeqView.erase(it);
+		auto [retIt, res] = seqView.erase(it);
 		if (res)
 		{
 			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
@@ -671,9 +680,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 
 
@@ -685,17 +694,17 @@ namespace ZeoEngine {
 		
 	}
 
-	void AssociativeContainerWidget::DrawContainerElementOperationWidget(entt::meta_associative_container::iterator& it)
+	void AssociativeContainerWidget::DrawContainerElementOperationWidget(entt::meta_associative_container& assView, entt::meta_associative_container::iterator& it)
 	{
 
 	}
 
-	entt::meta_associative_container::iterator AssociativeContainerWidget::InsertValue(entt::meta_associative_container::iterator it)
+	entt::meta_associative_container::iterator AssociativeContainerWidget::InsertValue(entt::meta_associative_container& assView, entt::meta_associative_container::iterator it)
 	{
 		return {};
 	}
 
-	entt::meta_associative_container::iterator AssociativeContainerWidget::EraseValue(entt::meta_associative_container::iterator it)
+	entt::meta_associative_container::iterator AssociativeContainerWidget::EraseValue(entt::meta_associative_container& assView, entt::meta_associative_container::iterator it)
 	{
 		return {};
 	}
@@ -705,9 +714,9 @@ namespace ZeoEngine {
 		Init(dataSpec, contextPanel);
 	}
 
-	bool StructWidget::PreDraw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	bool StructWidget::PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		m_DataSpec.Update(compInstance, parentInstance, elementIndex);
+		m_DataSpec.Update(compInstance, instance);
 
 		// Data name
 		bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultStructDataTreeNodeFlags);
@@ -721,9 +730,9 @@ namespace ZeoEngine {
 		return bIsDataTreeExpanded;
 	}
 
-	void StructWidget::Draw(const entt::meta_any& compInstance, const entt::meta_any& parentInstance, int32_t elementIndex)
+	void StructWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
 	{
-		if (!PreDraw(compInstance, parentInstance, elementIndex)) return;
+		if (!PreDraw(compInstance, instance)) return;
 
 		const auto structType = m_DataSpec.GetType();
 		auto structInstance = m_DataSpec.GetValue();
@@ -780,7 +789,7 @@ namespace ZeoEngine {
 		m_PreprocessedSubdatas.push_front(subdata.id());
 	}
 
-	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, const entt::meta_any& structInstance)
+	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, entt::meta_any& structInstance)
 	{
 		uint32_t aggregatedSubdataId = GetAggregatedDataID(subdata);
 		if (m_SubdataWidgets.find(aggregatedSubdataId) != m_SubdataWidgets.cend())
@@ -793,7 +802,7 @@ namespace ZeoEngine {
 		else
 		{
 			DataSpec dataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
-			m_SubdataWidgets[aggregatedSubdataId] = ConstructBasicDataWidget(dataSpec, m_ContextPanel);
+			m_SubdataWidgets[aggregatedSubdataId] = ConstructBasicDataWidget(dataSpec, subdata.type(), m_ContextPanel);
 		}
 	}
 

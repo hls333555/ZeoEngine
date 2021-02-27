@@ -163,7 +163,7 @@ namespace ZeoEngine {
 		m_bIsPreprocessedDatasDirty = true;
 	}
 
-	void DataInspector::DrawDataWidget(entt::meta_data data, const entt::meta_any& compInstance)
+	void DataInspector::DrawDataWidget(entt::meta_data data, entt::meta_any& compInstance)
 	{
 		uint32_t aggregatedDataId = GetAggregatedDataID(data);
 		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
@@ -176,7 +176,7 @@ namespace ZeoEngine {
 		else
 		{
 			DataSpec dataSpec{ data, compInstance, compInstance, false, false };
-			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, m_Context);
+			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, data.type(), m_Context);
 		}
 	}
 
