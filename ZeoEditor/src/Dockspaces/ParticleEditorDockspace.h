@@ -13,6 +13,8 @@ namespace ZeoEngine {
 
 		virtual EditorPanelType GetViewportPanelType() const override { return EditorPanelType::Particle_View; }
 
+		virtual void CreateNewScene(bool bIsFromOpenScene = false) override;
+
 	private:
 		virtual AssetType GetAssetType() const override { return AssetType::ParticleTemplate; }
 		virtual void Serialize(const std::string& filePath) override;

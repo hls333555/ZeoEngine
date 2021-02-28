@@ -123,12 +123,20 @@ namespace ZeoEngine {
 	}
 
 	// Template explicit specialization
+	// NOTE: Trying to instantiate other types will cause linking error!
 	template struct ParticleVariation<int32_t>;
 	template struct ParticleVariation<float>;
 	template struct ParticleVariation<glm::vec2>;
 	template struct ParticleVariation<glm::vec3>;
 	template struct ParticleVariation<glm::vec4>;
-	// Trying to instantiate other types will cause linking error!
+
+	void ParticleTemplate::UpdateAllParticleSystemInstances()
+	{
+		for (const auto& ps : ParticleSystemInstances)
+		{
+			ps->Reevaluate();
+		}
+	}
 
 	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
 		: m_ParticleTemplate(particleTemplate)
@@ -137,6 +145,21 @@ namespace ZeoEngine {
 	{
 		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
 		Reevaluate();
+	}
+
+	Ref<ParticleSystem> ParticleSystem::Create(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
+	{
+		// A way to allow std::make_shared() to access ParticleSystem's private constructor
+		class ParticleSystemEnableShared : public ParticleSystem
+		{
+		public:
+			ParticleSystemEnableShared(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
+				: ParticleSystem(particleTemplate, positionOffset, ownerEntity) {}
+		};
+
+		auto ps = CreateRef<ParticleSystemEnableShared>(particleTemplate, positionOffset, ownerEntity);
+		particleTemplate->AddParticleSystemInstance(ps);
+		return ps;
 	}
 
 	void ParticleSystem::Reevaluate()
@@ -481,26 +504,21 @@ namespace ZeoEngine {
 		m_bActive = false;
 	}
 
-	void ParticleLibrary::Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
-	{
-		if (!Exists(path))
-		{
-			m_ParticleTemplates[GetRelativePath(path)] = pTemplate;
-		}
-	}
-
-	void ParticleLibrary::Add(const Ref<ParticleTemplate>& pTemplate)
-	{
-		const std::string& path = pTemplate->GetPath();
-		Add(path, pTemplate);
-	}
-
 	Ref<ParticleTemplate> ParticleLibrary::Load(const std::string& path)
 	{
 		auto pTemplate = CreateRef<ParticleTemplate>(path);
-		TypeSerializer serializer(path);
-		serializer.Deserialize(ParticleSystemPreviewComponent{ pTemplate }, AssetType::ParticleTemplate);
+		DeserializeParticleTemplate(path, pTemplate);
 		Add(pTemplate);
+		return pTemplate;
+	}
+
+	Ref<ParticleTemplate> ParticleLibrary::Reload(const Ref<ParticleTemplate>& pTemplate)
+	{
+		// As default particle template does not have file path
+		if (pTemplate->GetPath().empty()) return {};
+
+		DeserializeParticleTemplate(pTemplate->GetPath(), pTemplate);
+		pTemplate->UpdateAllParticleSystemInstances();
 		return pTemplate;
 	}
 
@@ -525,6 +543,23 @@ namespace ZeoEngine {
 	bool ParticleLibrary::Exists(const std::string& path) const
 	{
 		return m_ParticleTemplates.find(GetRelativePath(path)) != m_ParticleTemplates.end();
+	}
+
+	void ParticleLibrary::Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
+	{
+		m_ParticleTemplates[GetRelativePath(path)] = pTemplate;
+	}
+
+	void ParticleLibrary::Add(const Ref<ParticleTemplate>& pTemplate)
+	{
+		const std::string& path = pTemplate->GetPath();
+		Add(path, pTemplate);
+	}
+
+	void ParticleLibrary::DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
+	{
+		TypeSerializer serializer(path);
+		serializer.Deserialize(ParticleSystemPreviewComponent{ pTemplate }, AssetType::ParticleTemplate);
 	}
 
 }

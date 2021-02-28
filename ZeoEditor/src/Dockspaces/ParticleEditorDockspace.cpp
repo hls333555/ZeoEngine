@@ -45,6 +45,17 @@ namespace ZeoEngine {
 		PushPanel(particleInspectorPanel);
 	}
 
+	void ParticleEditorDockspace::CreateNewScene(bool bIsFromOpenScene)
+	{
+		// Reload particle template data
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& pspc)
+		{
+			ParticleLibrary::Get().Reload(pspc.Template);
+		});
+
+		EditorDockspace::CreateNewScene(bIsFromOpenScene);
+	}
+
 	void ParticleEditorDockspace::Serialize(const std::string& filePath)
 	{
 		TypeSerializer serializer(filePath);

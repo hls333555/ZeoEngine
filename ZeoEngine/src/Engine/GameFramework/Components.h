@@ -262,9 +262,7 @@ namespace ZeoEngine {
 			}
 			if (Template)
 			{
-				ParticleSystemRuntime = CreateRef<ParticleSystem>(Template, PositionOffset, OwnerEntity);
-				// Add newly created instance to cache
-				Template->AddParticleSystemInstance(ParticleSystemRuntime);
+				ParticleSystemRuntime = ParticleSystem::Create(Template, PositionOffset, OwnerEntity);
 			}
 		}
 
@@ -296,7 +294,6 @@ namespace ZeoEngine {
 
 	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
 	{
-	public:
 		ParticleSystemPreviewComponent()
 		{
 			Template = CreateRef<ParticleTemplate>();
@@ -309,12 +306,12 @@ namespace ZeoEngine {
 
 		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) override
 		{
-			NotifyAllInstances();
+			Template->UpdateAllParticleSystemInstances();
 		}
 
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
 		{
-			NotifyAllInstances();
+			Template->UpdateAllParticleSystemInstances();
 		}
 
 		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
@@ -344,14 +341,6 @@ namespace ZeoEngine {
 		uint32_t GetMaxParticles() const { return Template->MaxParticles; } void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
 		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; } void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
 
-	private:
-		void NotifyAllInstances()
-		{
-			for (const auto& ps : Template->ParticleSystemInstances)
-			{
-				ps->Reevaluate();
-			}
-		}
 	};
 
 }

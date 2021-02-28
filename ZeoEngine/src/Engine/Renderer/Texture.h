@@ -52,17 +52,18 @@ namespace ZeoEngine {
 		Texture2DLibrary(const Texture2DLibrary&) = delete;
 		Texture2DLibrary& operator=(const Texture2DLibrary&) = delete;
 
-		void Add(const std::string& path, const Ref<Texture2D>& texture);
-		void Add(const Ref<Texture2D>& texture);
-		Ref<Texture2D> Load(const std::string& path);
+		const auto& GetTexturesMap() const { return m_Textures; }
 
+		Ref<Texture2D> Load(const std::string& path);
 		Ref<Texture2D> GetOrLoad(const std::string& path);
 
 		Ref<Texture2D> Get(const std::string& path);
 
 		bool Exists(const std::string& path) const;
 
-		const std::unordered_map<std::string, Ref<Texture2D>>& GetTexturesMap() const { return m_Textures; }
+	private:
+		void Add(const std::string& path, const Ref<Texture2D>& texture);
+		void Add(const Ref<Texture2D>& texture);
 
 	private:
 		std::unordered_map<std::string, Ref<Texture2D>> m_Textures;

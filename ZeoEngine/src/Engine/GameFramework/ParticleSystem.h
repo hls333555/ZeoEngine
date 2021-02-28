@@ -71,6 +71,7 @@ namespace ZeoEngine {
 		const std::string& GetPath() const { return Path; }
 		const std::string& GetName() const { return Name; }
 
+	public:
 		void AddParticleSystemInstance(const Ref<ParticleSystem>& psInstance)
 		{
 			ParticleSystemInstances.push_back(psInstance);
@@ -83,6 +84,8 @@ namespace ZeoEngine {
 				ParticleSystemInstances.erase(it);
 			}
 		}
+
+		void UpdateAllParticleSystemInstances();
 
 		void UpdatePreviewThumbnail(const std::string& imageName)
 		{
@@ -131,23 +134,26 @@ namespace ZeoEngine {
 
 		Ref<Texture2D> PreviewThumbnail;
 
-		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
-		std::vector<Ref<ParticleSystem>> ParticleSystemInstances;
-
 	private:
 		std::string Path;
 		std::string Name;
+
+		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
+		std::vector<Ref<ParticleSystem>> ParticleSystemInstances;
+
 	};
 
 	class ParticleSystem
 	{
 		friend class ParticleViewportPanel;
-		friend struct ParticleSystemPreviewComponent;
+		friend struct ParticleTemplate;
 
-	public:
+	private:
 		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
 
 	public:
+		static Ref<ParticleSystem> Create(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
+
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
@@ -272,18 +278,21 @@ namespace ZeoEngine {
 	public:
 		ParticleLibrary(const ParticleLibrary&) = delete;
 		ParticleLibrary& operator=(const ParticleLibrary&) = delete;
+		
+		const auto& GetParticleTemplatesMap() const { return m_ParticleTemplates; }
 
-		void Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
-		void Add(const Ref<ParticleTemplate>& pTemplate);
 		Ref<ParticleTemplate> Load(const std::string& path);
-
+		Ref<ParticleTemplate> Reload(const Ref<ParticleTemplate>& pTemplate);
 		Ref<ParticleTemplate> GetOrLoad(const std::string& path);
 
 		Ref<ParticleTemplate> Get(const std::string& path);
 
 		bool Exists(const std::string& path) const;
 
-		const std::unordered_map<std::string, Ref<ParticleTemplate>>& GetParticleTemplatesMap() const { return m_ParticleTemplates; }
+	private:
+		void Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
+		void Add(const Ref<ParticleTemplate>& pTemplate);
+		void DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
 
 	private:
 		std::unordered_map<std::string, Ref<ParticleTemplate>> m_ParticleTemplates;
