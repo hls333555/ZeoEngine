@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(m_EngineLayer);
 
 		// Default level background
-		Texture2DLibrary::Get().Load("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
+		Texture2DLibrary::Get().LoadAsset("../ZeoEditor/assets/textures/Checkerboard_Alpha.png");
 
 	}
 

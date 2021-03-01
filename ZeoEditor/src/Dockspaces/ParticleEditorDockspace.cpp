@@ -50,7 +50,7 @@ namespace ZeoEngine {
 		// Reload particle template data
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& pspc)
 		{
-			ParticleLibrary::Get().Reload(pspc.Template);
+			ParticleLibrary::Get().ReloadAsset(pspc.Template);
 		});
 
 		EditorDockspace::CreateNewScene(bIsFromOpenScene);
@@ -75,7 +75,7 @@ namespace ZeoEngine {
 		// Deserialize particle template data and create particle system instance
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& pspc)
 		{
-			const auto& pTemplate = ParticleLibrary::Get().GetOrLoad(filePath);
+			const auto& pTemplate = ParticleLibrary::Get().GetOrLoadAsset(filePath);
 			pspc.SetTemplate(pTemplate);
 		});
 	}

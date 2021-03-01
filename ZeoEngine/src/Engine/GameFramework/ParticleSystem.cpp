@@ -504,15 +504,15 @@ namespace ZeoEngine {
 		m_bActive = false;
 	}
 
-	Ref<ParticleTemplate> ParticleLibrary::Load(const std::string& path)
+	Ref<ParticleTemplate> ParticleLibrary::LoadAsset(const std::string& path)
 	{
 		auto pTemplate = CreateRef<ParticleTemplate>(path);
 		DeserializeParticleTemplate(path, pTemplate);
-		Add(pTemplate);
+		AddAsset(pTemplate);
 		return pTemplate;
 	}
 
-	Ref<ParticleTemplate> ParticleLibrary::Reload(const Ref<ParticleTemplate>& pTemplate)
+	Ref<ParticleTemplate> ParticleLibrary::ReloadAsset(const Ref<ParticleTemplate>& pTemplate)
 	{
 		// As default particle template does not have file path
 		if (pTemplate->GetPath().empty()) return {};
@@ -520,40 +520,6 @@ namespace ZeoEngine {
 		DeserializeParticleTemplate(pTemplate->GetPath(), pTemplate);
 		pTemplate->UpdateAllParticleSystemInstances();
 		return pTemplate;
-	}
-
-	Ref<ParticleTemplate> ParticleLibrary::GetOrLoad(const std::string& path)
-	{
-		if (Exists(path))
-		{
-			return m_ParticleTemplates[GetRelativePath(path)];
-		}
-		else
-		{
-			return Load(path);
-		}
-	}
-
-	Ref<ParticleTemplate> ParticleLibrary::Get(const std::string& path)
-	{
-		ZE_CORE_ASSERT(Exists(path), "Particle template not found!");
-		return m_ParticleTemplates[GetRelativePath(path)];
-	}
-
-	bool ParticleLibrary::Exists(const std::string& path) const
-	{
-		return m_ParticleTemplates.find(GetRelativePath(path)) != m_ParticleTemplates.end();
-	}
-
-	void ParticleLibrary::Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
-	{
-		m_ParticleTemplates[GetRelativePath(path)] = pTemplate;
-	}
-
-	void ParticleLibrary::Add(const Ref<ParticleTemplate>& pTemplate)
-	{
-		const std::string& path = pTemplate->GetPath();
-		Add(path, pTemplate);
 	}
 
 	void ParticleLibrary::DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate)

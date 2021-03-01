@@ -7,6 +7,7 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -265,7 +266,7 @@ namespace ZeoEngine {
 
 	};
 
-	class ParticleLibrary
+	class ParticleLibrary : public AssetLibrary<Ref<ParticleTemplate>>
 	{
 	public:
 		static ParticleLibrary& Get()
@@ -273,29 +274,14 @@ namespace ZeoEngine {
 			static ParticleLibrary instance;
 			return instance;
 		}
-	private:
-		ParticleLibrary() = default;
-	public:
-		ParticleLibrary(const ParticleLibrary&) = delete;
-		ParticleLibrary& operator=(const ParticleLibrary&) = delete;
-		
-		const auto& GetParticleTemplatesMap() const { return m_ParticleTemplates; }
 
-		Ref<ParticleTemplate> Load(const std::string& path);
-		Ref<ParticleTemplate> Reload(const Ref<ParticleTemplate>& pTemplate);
-		Ref<ParticleTemplate> GetOrLoad(const std::string& path);
-
-		Ref<ParticleTemplate> Get(const std::string& path);
-
-		bool Exists(const std::string& path) const;
+		virtual Ref<ParticleTemplate> LoadAsset(const std::string& path) override;
+		Ref<ParticleTemplate> ReloadAsset(const Ref<ParticleTemplate>& pTemplate);
 
 	private:
-		void Add(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
-		void Add(const Ref<ParticleTemplate>& pTemplate);
+		virtual const char* GetDisplayAssetName() const override { return "Particle template"; }
+
 		void DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
-
-	private:
-		std::unordered_map<std::string, Ref<ParticleTemplate>> m_ParticleTemplates;
 
 	};
 

@@ -260,7 +260,7 @@ namespace ZeoEngine {
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
 		{
-			auto backgroundTexture = library.Get("assets/textures/Checkerboard_Alpha.png");
+			auto backgroundTexture = library.GetAsset("assets/textures/Checkerboard_Alpha.png");
 			constexpr float texturePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
 			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
@@ -304,7 +304,7 @@ namespace ZeoEngine {
 				if (filePath)
 				{
 					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library.GetOrLoad(*filePath);
+					Ref<Texture2D> loadedTexture = library.GetOrLoadAsset(*filePath);
 					bIsBufferChanged = loadedTexture != m_Buffer;
 					if (bIsBufferChanged)
 					{
@@ -317,7 +317,7 @@ namespace ZeoEngine {
 			ImGui::Separator();
 
 			// List all loaded textures from Texture2DLibrary
-			for (const auto& [path, texture] : library.GetTexturesMap())
+			for (const auto& [path, texture] : library.GetAssetsMap())
 			{
 				// Push texture path as id
 				ImGui::PushID(texture->GetPath().c_str());
@@ -377,7 +377,7 @@ namespace ZeoEngine {
 
 		ParticleLibrary& library = ParticleLibrary::Get();
 		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
-		auto backgroundTexture = texture2DLib.Get("assets/textures/Checkerboard_Alpha.png");
+		auto backgroundTexture = texture2DLib.GetAsset("assets/textures/Checkerboard_Alpha.png");
 		// Particle template preview
 		{
 			constexpr float pTemplatePreviewWidth = 75.0f;
@@ -433,7 +433,7 @@ namespace ZeoEngine {
 				if (filePath)
 				{
 					// Add selected particle template to the library
-					Ref<ParticleTemplate> loadedTemplate = library.GetOrLoad(*filePath);
+					Ref<ParticleTemplate> loadedTemplate = library.GetOrLoadAsset(*filePath);
 					bIsBufferChanged = loadedTemplate != m_Buffer;
 					if (bIsBufferChanged)
 					{
@@ -446,7 +446,7 @@ namespace ZeoEngine {
 			ImGui::Separator();
 
 			// List all loaded templates from ParticleLibrary
-			for (const auto& [path, pTemplate] : library.GetParticleTemplatesMap())
+			for (const auto& [path, pTemplate] : library.GetAssetsMap())
 			{
 				// Push particle template path as id
 				ImGui::PushID(pTemplate->GetPath().c_str());

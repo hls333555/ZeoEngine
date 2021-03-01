@@ -21,7 +21,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		Texture2DLibrary::Get().Load("assets/textures/Checkerboard_Alpha.png");
+		Texture2DLibrary::Get().LoadAsset("assets/textures/Checkerboard_Alpha.png");
 
 		Level& level = Level::Get();
 

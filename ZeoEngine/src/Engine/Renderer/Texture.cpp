@@ -38,45 +38,11 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Texture2D> Texture2DLibrary::Load(const std::string& path)
+	Ref<Texture2D> Texture2DLibrary::LoadAsset(const std::string& path)
 	{
 		auto texture = Texture2D::Create(path);
-		Add(texture);
+		AddAsset(texture);
 		return texture;
-	}
-
-	Ref<Texture2D> Texture2DLibrary::GetOrLoad(const std::string& path)
-	{
-		if (Exists(path))
-		{
-			return m_Textures[GetRelativePath(path)];
-		}
-		else
-		{
-			return Load(path);
-		}
-	}
-
-	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)
-	{
-		ZE_CORE_ASSERT(Exists(path), "Texture not found!");
-		return m_Textures[GetRelativePath(path)];
-	}
-
-	bool Texture2DLibrary::Exists(const std::string& path) const
-	{
-		return m_Textures.find(GetRelativePath(path)) != m_Textures.end();
-	}
-
-	void Texture2DLibrary::Add(const std::string& path, const Ref<Texture2D>& texture)
-	{
-		m_Textures[GetRelativePath(path)] = texture;
-	}
-
-	void Texture2DLibrary::Add(const Ref<Texture2D>& texture)
-	{
-		const std::string& path = texture->GetPath();
-		Add(path, texture);
 	}
 
 }

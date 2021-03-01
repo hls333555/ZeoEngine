@@ -97,7 +97,7 @@ namespace YAML {
 			const auto& path = node.as<std::string>();
 			if (path.empty()) return true;
 
-			rhs = Texture2DLibrary::Get().GetOrLoad(path);
+			rhs = Texture2DLibrary::Get().GetOrLoadAsset(path);
 			return true;
 		}
 	};
@@ -117,7 +117,7 @@ namespace YAML {
 			const auto& path = node.as<std::string>();
 			if (path.empty()) return true;
 
-			rhs = ParticleLibrary::Get().GetOrLoad(path);
+			rhs = ParticleLibrary::Get().GetOrLoadAsset(path);
 			return true;
 		}
 	};

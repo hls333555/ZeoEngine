@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -38,7 +39,7 @@ namespace ZeoEngine {
 
 	};
 
-	class Texture2DLibrary
+	class Texture2DLibrary : public AssetLibrary<Ref<Texture2D>>
 	{
 	public:
 		static Texture2DLibrary& Get()
@@ -46,28 +47,11 @@ namespace ZeoEngine {
 			static Texture2DLibrary instance;
 			return instance;
 		}
-	private:
-		Texture2DLibrary() = default;
-	public:
-		Texture2DLibrary(const Texture2DLibrary&) = delete;
-		Texture2DLibrary& operator=(const Texture2DLibrary&) = delete;
 
-		const auto& GetTexturesMap() const { return m_Textures; }
-
-		Ref<Texture2D> Load(const std::string& path);
-		Ref<Texture2D> GetOrLoad(const std::string& path);
-
-		Ref<Texture2D> Get(const std::string& path);
-
-		bool Exists(const std::string& path) const;
+		virtual Ref<Texture2D> LoadAsset(const std::string& path) override;
 
 	private:
-		void Add(const std::string& path, const Ref<Texture2D>& texture);
-		void Add(const Ref<Texture2D>& texture);
-
-	private:
-		std::unordered_map<std::string, Ref<Texture2D>> m_Textures;
-
+		virtual const char* GetDisplayAssetName() const override { return "Texture"; }
 	};
 
 }
