@@ -4,8 +4,9 @@
 #include <fstream>
 
 #include <glad/glad.h>
-
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -16,25 +17,18 @@ namespace ZeoEngine {
 		if (type == "fragment" || type == "pixel")
 			return GL_FRAGMENT_SHADER;
 
-		ZE_CORE_ASSERT_INFO(false, "Unknown shader type '{0}'!", type);
+		ZE_CORE_ASSERT(false, "Unknown shader type '{0}'!", type);
 		return 0;
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
+		: m_Name(GetNameFromPath(filePath))
 	{
 		ZE_PROFILE_FUNCTION();
 
 		std::string src = ReadFile(filePath);
 		auto shaderSrcs = PreProcess(src);
 		Compile(shaderSrcs);
-
-		// Extract name from file path
-		// "assets/shaders/Texture.glsl" -> "Texture"
-		auto lastSlash = filePath.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
-		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto lastDot = filePath.rfind("."); // rfind() will find EXACTLY the provided characters
-		auto count = lastDot == std::string::npos ? filePath.size() - lastSlash /** File without extension */ : lastDot - lastSlash;
-		m_Name = filePath.substr(lastSlash, count);
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -74,7 +68,6 @@ namespace ZeoEngine {
 				result.resize(size);
 				in.seekg(0, std::ios::beg);
 				in.read(&result[0], size);
-				in.close();
 			}
 		}
 		else
@@ -99,12 +92,12 @@ namespace ZeoEngine {
 		{
 			// End of line
 			size_t eol = src.find_first_of("\r\n", typeTokenPos);
-			ZE_CORE_ASSERT_INFO(eol != std::string::npos, "Syntax error!");
+			ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
 
 			size_t typePos = typeTokenPos + typeTokenLength + 1;
 			// Get shader type
 			std::string type = src.substr(typePos, eol - typePos);
-			ZE_CORE_ASSERT_INFO(ShaderTypeFromString(type), "Invalid shader type token!");
+			ZE_CORE_ASSERT(ShaderTypeFromString(type), "Invalid shader type token!");
 
 			// Beginning of shader source: "#version..."
 			size_t shaderSrcPos = src.find_first_not_of("\r\n", eol);
@@ -125,7 +118,7 @@ namespace ZeoEngine {
 		GLuint program = glCreateProgram();
 		// Since std::vector is a heap-allocated array, it is not efficient enough for a game engine
 		// We prefer to use stack-allocated array like std::array
-		ZE_CORE_ASSERT_INFO(shaderSrcs.size() <= 2, "Only up to two shaders are supported for now!");
+		ZE_CORE_ASSERT(shaderSrcs.size() <= 2, "Only up to two shaders are supported for now!");
 		std::array<GLuint, 2> glShaderIds;
 		int glShaderId = 0;
 		for (auto& pair : shaderSrcs)
@@ -156,7 +149,7 @@ namespace ZeoEngine {
 				glDeleteShader(shader);
 
 				ZE_CORE_ERROR("{0}", infoLog.data());
-				ZE_CORE_ASSERT_INFO(false, "Failed to compile shader!");
+				ZE_CORE_ASSERT(false, "Failed to compile shader!");
 				break;
 			}
 
@@ -188,7 +181,7 @@ namespace ZeoEngine {
 			}
 
 			ZE_CORE_ERROR("{0}", infoLog.data());
-			ZE_CORE_ASSERT_INFO(false, "Failed to link shader program!");
+			ZE_CORE_ASSERT(false, "Failed to link shader program!");
 			return;
 		}
 

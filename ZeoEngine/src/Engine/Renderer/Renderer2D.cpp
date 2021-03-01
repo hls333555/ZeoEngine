@@ -25,6 +25,7 @@ namespace ZeoEngine {
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float2, "a_TilingFactor" },
 			{ ShaderDataType::Float2, "a_UVOffset" },
+			{ ShaderDataType::Int, "a_ObjectID" },
 		};
 		s_Data.QuadVBO->SetLayout(squareLayout);
 		s_Data.QuadVAO->AddVertexBuffer(s_Data.QuadVBO);
@@ -63,7 +64,7 @@ namespace ZeoEngine {
 		{
 			samplers[i] = i;
 		}
-		s_Data.TextureShader = Shader::Create("../ZeoEditor/assets/shaders/Texture.glsl");
+		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
 		// TextureShader is bound here!
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
@@ -77,6 +78,28 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		delete[] s_Data.QuadVertexBufferBase;
+	}
+
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		Reset();
+	}
+
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetViewProjection();
+
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+
+		Reset();
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
@@ -136,6 +159,16 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawQuad(transform, color);
+	}
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -147,9 +180,6 @@ namespace ZeoEngine {
 		constexpr float textureIndex = 0.0f;
 		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
 		constexpr glm::vec2 uvOffset = { 0.0f, 0.0f };
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; ++i)
 		{
@@ -176,6 +206,16 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -184,7 +224,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -192,15 +232,17 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
 
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -227,6 +269,16 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -238,7 +290,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -246,12 +298,14 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -278,6 +332,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, color);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -290,10 +355,6 @@ namespace ZeoEngine {
 		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
 		constexpr glm::vec2 uvOffset = { 0.0f, 0.0f };
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
 		for (size_t i = 0; i < quadVertexCount; ++i)
 		{
 			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
@@ -302,6 +363,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -319,6 +381,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, texture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, uint32_t entityID)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -327,7 +400,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -335,16 +408,17 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
 
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -354,6 +428,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -371,6 +446,17 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawRotatedQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	{
+		ZE_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			FlushAndReset();
@@ -382,7 +468,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (*s_Data.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -390,13 +476,14 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			{
+				FlushAndReset();
+			}
+
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
 			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -414,14 +501,14 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	Statistics Renderer2D::GetStats()
+	Statistics& Renderer2D::GetStats()
 	{
 		return s_Data.Stats;
 	}
 
 	void Renderer2D::ResetStats()
 	{
-		memset(&s_Data.Stats, 0, sizeof(Statistics));
+		s_Data.Stats.Reset();
 	}
 
 }

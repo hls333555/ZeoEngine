@@ -27,6 +27,8 @@ namespace ZeoEngine {
 
 		virtual void EnableDepthWriting(bool bEnable) = 0;
 
+		virtual int32_t ReadPixel(int32_t x, int32_t y) = 0;
+
 		static API GetAPI() { return s_API; }
 
 		static Scope<RendererAPI> Create();

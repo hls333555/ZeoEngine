@@ -9,20 +9,22 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/GameFramework/EngineLayer.h"
 
+int main(int argc, char** argv);
+
 namespace ZeoEngine {
 
 	class ImGuiLayer;
 
 	class Application
 	{
+		friend int ::main(int argc, char** argv);
+
 	public:
 		Application(const std::string& name = "Zeo App");
 		virtual ~Application();
 
 		static Application& Get() { return *s_Instance; }
 		Window& GetWindow() { return *m_Window; }
-
-		void Run();
 
 		void Close();
 
@@ -31,8 +33,24 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		EngineLayer* GetEngineLayer();
+		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
+		// TODO:
+		template<typename T>
+		T* FindLayer()
+		{
+			for (auto* layer : m_LayerStack)
+			{
+				T* layer_cast = dynamic_cast<T*>(layer);
+				if (layer_cast)
+				{
+					return layer_cast;
+				}
+			}
+			return nullptr;
+		}
+
+		// TODO:
 		template<typename T>
 		T* FindLayerByName(const std::string& layerName)
 		{
@@ -43,11 +61,12 @@ namespace ZeoEngine {
 					return dynamic_cast<T*>(layer);
 				}
 			}
-
 			return nullptr;
 		}
 
 	private:
+		void Run();
+
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 

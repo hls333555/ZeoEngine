@@ -40,6 +40,11 @@ namespace ZeoEngine {
 			s_RendererAPI->EnableDepthWriting(bEnable);
 		}
 
+		static int32_t ReadPixel(int32_t x, int32_t y)
+		{
+			return s_RendererAPI->ReadPixel(x, y);
+		}
+
 	private:
 		static Scope<RendererAPI> s_RendererAPI;
 	};

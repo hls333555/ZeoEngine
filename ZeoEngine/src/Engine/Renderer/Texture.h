@@ -1,6 +1,10 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #include "Engine/Core/Core.h"
+#include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -11,7 +15,7 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
-		virtual const std::string& GetPath() const = 0;
+		virtual const std::string& GetPath() const = 0; // This path is canonical.
 		virtual const std::string& GetFileName() const = 0;
 		virtual bool HasAlpha() const = 0;
 		virtual void* GetTexture() const = 0;
@@ -35,32 +39,19 @@ namespace ZeoEngine {
 
 	};
 
-	class Texture2DLibrary
+	class Texture2DLibrary : public AssetLibrary<Ref<Texture2D>>
 	{
-		friend class EngineLayer;
-
-	private:
-		Texture2DLibrary() = default;
 	public:
-		Texture2DLibrary(const Texture2DLibrary&) = delete;
-		Texture2DLibrary& operator=(const Texture2DLibrary&) = delete;
+		static Texture2DLibrary& Get()
+		{
+			static Texture2DLibrary instance;
+			return instance;
+		}
 
-		void Add(const std::string& path, const Ref<Texture2D>& texture);
-		void Add(const Ref<Texture2D>& texture);
-		Ref<Texture2D> Load(const std::string& filePath);
-		Ref<Texture2D> Load(const std::string& path, const std::string& filePath);
-
-		Ref<Texture2D> GetOrLoad(const std::string& path);
-
-		Ref<Texture2D> Get(const std::string& path);
-
-		bool Exists(const std::string& path) const;
-
-		const std::unordered_map<std::string, Ref<Texture2D>>& GetTexturesMap() const { return m_Textures; }
+		virtual Ref<Texture2D> LoadAsset(const std::string& path) override;
 
 	private:
-		std::unordered_map<std::string, Ref<Texture2D>> m_Textures;
-
+		virtual const char* GetDisplayAssetName() const override { return "Texture"; }
 	};
 
 }

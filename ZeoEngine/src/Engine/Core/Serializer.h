@@ -1,81 +1,136 @@
 #pragma once
 
-#include <rttr/type>
-#define RAPIDJSON_HAS_STDSTRING 1
-#include <prettywriter.h> // for stringify JSON
-#include <document.h>     // rapidjson's DOM-style API
+#include "Engine/GameFramework/Entity.h"
+
+#include <yaml-cpp/yaml.h>
+#include <magic_enum.hpp>
+
+#include "Engine/Core/ReflectionHelper.h"
+#include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
-	class Serializer
+	class TypeSerializer
 	{
-		using ObjectInstantiationFn = std::function<rttr::variant()>;
-
 	public:
-		Serializer(const Serializer&) = delete;
-		Serializer& operator=(const Serializer&) = delete;
+		TypeSerializer(const std::string& filePath);
 
-		static Serializer& Get()
+		void Serialize(entt::meta_any instance, AssetType assetType);
+
+	protected:
+		template<typename Func>
+		void Serialize_t(AssetType assetType, Func fn)
 		{
-			static Serializer serializer;
-			return serializer;
-		}
+			YAML::Emitter out;
 
-	private:
-		Serializer() = default;
+			auto assetTypeName = magic_enum::enum_name(assetType).data();
+			const std::string assetName = GetNameFromPath(m_Path);
+			ZE_CORE_TRACE("Serializing {0} '{1}'", assetTypeName, assetName);
 
-	public:
-		/**
-		 * Serialize an object into a string, then you can output that string into a file.
-		 * In most cases, you should stream out file type first, which will be checked against duing file validation stage when deserializing.
-		 */
-		std::string Serialize(const rttr::instance& object);
-
-		/**
-		 * Returns true if file validation succeeds.
-		 * @param validationStr - string to validate, currently should be type of this file (e.g."Level", "ParticleSystem")
-		 * @param OutProcessedStr - [OUT] string ready to deserialize, if validation failed, this will be an empty string
-		 */
-		bool ValidateFile(const std::string& filePath, const std::string& validationStr, std::string& outProcessedStr);
-		
-		/**
-		 * Deserialize a string.
-		 * NOTE: Only call this if ValidateFile() returns true!
-		 * @templ T - Type of instantiated object, should be a pointer
-		 * @param instantiator - Function that performs instantiation of an object to be deserialized to
-		 */
-		template<typename T>
-		bool Deserialize(const std::string& extractedString, ObjectInstantiationFn instantiator)
-		{
-			// Default template parameter uses UTF8 and MemoryPoolAllocator
-			rapidjson::Document document;
-			// "normal" parsing, decode strings to new buffers. Can use other input stream via ParseStream()
-			if (document.Parse(extractedString).HasParseError())
+			out << YAML::BeginMap;
 			{
-				ZE_CORE_ERROR("Error parsing serialization file!");
-				return false;
+				out << YAML::Key << assetTypeName << YAML::Value << assetName;
+				fn(out);
 			}
+			out << YAML::EndMap;
 
-			rttr::variant& object = instantiator();
-			DeserializeRecursively(object, document);
-			// Call the callback
-			object.get_value<T>()->OnDeserialized();
-			return true;
+			std::ofstream fout(m_Path);
+			fout << out.c_str();
 		}
 
+		void SerializeType(YAML::Emitter& out, entt::meta_any& instance);
+
 	private:
-		void SerializeRecursively(const rttr::instance& object, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-		bool SerializeValue(const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-		bool SerializeAtomicTypes(const rttr::type& type, const rttr::variant& var, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-		void SerializeSequentialContainerTypes(const rttr::variant_sequential_view& sequentialView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
-		void SerializeAssociativeContainerTypes(const rttr::variant_associative_view& associativeView, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer);
+		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
+		void EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
+		void EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
+		void EvaluateSerializeStructData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 
-		void DeserializeRecursively(const rttr::instance& object, rapidjson::Value& jsonObject);
-		rttr::variant DeserializeBasicTypes(rapidjson::Value& jsonValue);
-		void DeserializeSequentialContainerTypes(rttr::variant_sequential_view& sequentialView, rapidjson::Value& jsonArrayValue);
-		void DeserializeAssociativeContainerTypes(rttr::variant_associative_view& associativeView, rapidjson::Value& jsonArrayValue);
-		rttr::variant ExtractValue(rapidjson::Value::MemberIterator& it, const rttr::type& type);
+		template<typename T>
+		void SerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+		{
+			if (bIsSeqElement)
+			{
+				const auto elementValue = instance.cast<T>();
+				if constexpr (std::is_same<T, uint8_t>::value)
+				{
+					// This '+' can force output uint8_t as number
+					out << +elementValue;
+				}
+				else
+				{
+					out << elementValue;
+				}
+			}
+			else
+			{
+				const auto dataName = GetMetaObjectDisplayName(data);
+				const auto dataValue = data.get(instance).cast<T>();
+				if constexpr (std::is_same<T, uint8_t>::value)
+				{
+					out << YAML::Key << *dataName << YAML::Value << +dataValue;
+				}
+				else
+				{
+					out << YAML::Key << *dataName << YAML::Value << dataValue;
+				}
+			}
+		}
+		void SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 
+	public:
+		bool Deserialize(entt::meta_any instance, AssetType assetType);
+
+	protected:
+		std::optional<YAML::Node> PreDeserialize(AssetType assetType);
+		void DeserializeType(entt::meta_any& instance, const YAML::Node& value);
+
+	private:
+		void EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
+		void EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeAssociativeContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
+		void EvaluateDeserializeStructData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
+
+		template<typename T>
+		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
+		{
+			const auto& dataValue = value.as<T>();
+			if (bIsSeqElement)
+			{
+				instance.cast<T&>() = dataValue;
+			}
+			else
+			{
+				data.set(instance, dataValue);
+			}
+		}
+		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
+
+	private:
+		std::string m_Path;
+	};
+
+	class SceneSerializer : public TypeSerializer
+	{
+	public:
+		SceneSerializer(const std::string& filePath, const Ref<Scene>& scene);
+
+		void Serialize();
+		void SerializeRuntime();
+
+	private:
+		void SerializeEntity(YAML::Emitter& out, const Entity entity);
+
+	public:
+		bool Deserialize();
+		bool DeserializeRuntime();
+
+	private:
+		void DeserializeEntity(const YAML::Node& entity);
+
+	private:
+		Ref<Scene> m_Scene;
 	};
 
 }

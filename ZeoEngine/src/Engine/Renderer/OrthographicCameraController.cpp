@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/Core/MouseCodes.h"
 
 namespace ZeoEngine {
 
@@ -27,39 +28,39 @@ namespace ZeoEngine {
 		
 		// Pan camera view by holding middle mouse button
 		// TODO: This does not go well with camera rotation
-		if (Input::IsMouseButtonPressed(2))
+		if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 		{
-			auto [x, y] = Input::GetMousePosition();
+			const auto position = Input::GetMousePosition();
 			if (!m_bMiddleMouseButtonFirstPressed)
 			{
-				m_CameraPosition.x -= (x - m_LastPressedMousePosition.x) * m_CameraTranslationSpeed * dt;
-				m_CameraPosition.y += (y - m_LastPressedMousePosition.y) * m_CameraTranslationSpeed * dt;
+				m_CameraPosition.x -= (position.x - m_LastPressedMousePosition.x) * m_CameraTranslationSpeed * dt;
+				m_CameraPosition.y += (position.y - m_LastPressedMousePosition.y) * m_CameraTranslationSpeed * dt;
 				m_Camera.SetPosition(m_CameraPosition);
 			}
 			m_bMiddleMouseButtonFirstPressed = false;
-			m_LastPressedMousePosition = { x, y };
+			m_LastPressedMousePosition = position;
 		}
-		if (Input::IsMouseButtonReleased(2))
+		if (Input::IsMouseButtonReleased(Mouse::ButtonMiddle))
 		{
 			m_bMiddleMouseButtonFirstPressed = true;
 		}
 
-		//if (Input::IsKeyPressed(ZE_KEY_A))
+		//if (Input::IsKeyPressed(Key::A))
 		//{
 		//	m_CameraPosition.x -= m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
 		//	m_CameraPosition.y -= m_CameraTranslationSpeed * sin(glm::radians(m_CameraRotation)) * dt;
 		//}
-		//if (Input::IsKeyPressed(ZE_KEY_D))
+		//if (Input::IsKeyPressed(Key::D))
 		//{
 		//	m_CameraPosition.x += m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
 		//	m_CameraPosition.y += m_CameraTranslationSpeed * sin(glm::radians(m_CameraRotation)) * dt;
 		//}
-		//if (Input::IsKeyPressed(ZE_KEY_W))
+		//if (Input::IsKeyPressed(Key::W))
 		//{
 		//	m_CameraPosition.x += m_CameraTranslationSpeed * -sin(glm::radians(m_CameraRotation)) * dt;
 		//	m_CameraPosition.y += m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
 		//}
-		//if (Input::IsKeyPressed(ZE_KEY_S))
+		//if (Input::IsKeyPressed(Key::S))
 		//{
 		//	m_CameraPosition.x -= m_CameraTranslationSpeed * -sin(glm::radians(m_CameraRotation)) * dt;
 		//	m_CameraPosition.y -= m_CameraTranslationSpeed * cos(glm::radians(m_CameraRotation)) * dt;
@@ -68,11 +69,11 @@ namespace ZeoEngine {
 
 		//if (m_bRotation)
 		//{
-		//	if (Input::IsKeyPressed(ZE_KEY_Q))
+		//	if (Input::IsKeyPressed(Key::Q))
 		//	{
 		//		m_CameraRotation -= m_CameraRotationSpeed * dt;
 		//	}
-		//	if (Input::IsKeyPressed(ZE_KEY_E))
+		//	if (Input::IsKeyPressed(Key::E))
 		//	{
 		//		m_CameraRotation += m_CameraRotationSpeed * dt;
 		//	}
@@ -121,7 +122,7 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		// Reset camera view by pressing C
-		if (e.GetKeyCode() == ZE_KEY_C)
+		if (e.GetKeyCode() == Key::C)
 		{
 			m_CameraPosition = { 0.0f, 0.0f, 0.0f };
 			m_Camera.SetPosition(m_CameraPosition);

@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	OpenGLContext::OpenGLContext(GLFWwindow* WindowHandle)
 		: m_WindowHandle(WindowHandle)
 	{
-		ZE_CORE_ASSERT_INFO(WindowHandle, "Window handle is null!");
+		ZE_CORE_ASSERT(WindowHandle, "Window handle is null!");
 	}
 
 	void OpenGLContext::Init()
@@ -18,11 +18,14 @@ namespace ZeoEngine {
 
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGL();
-		ZE_CORE_ASSERT_INFO(status, "Failed to initialize Glad!");
+		ZE_CORE_ASSERT(status, "Failed to initialize Glad!");
 
-		ZE_CORE_INFO("Vendor: {0}", glGetString(GL_VENDOR));
-		ZE_CORE_INFO("Renderer: {0}", glGetString(GL_RENDERER));
-		ZE_CORE_INFO("Version: {0}", glGetString(GL_VERSION));
+		ZE_CORE_INFO("OpenGL Info:");
+		ZE_CORE_INFO("-Vendor: {0}", glGetString(GL_VENDOR));
+		ZE_CORE_INFO("-Renderer: {0}", glGetString(GL_RENDERER));
+		ZE_CORE_INFO("-Version: {0}", glGetString(GL_VERSION));
+
+		ZE_CORE_ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "ZeoEngine requires at least OpenGL version 4.5!");
 	}
 
 	void OpenGLContext::SwapBuffers()

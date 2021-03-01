@@ -1,47 +1,14 @@
 #include "ZEpch.h"
 #include "Engine/ImGui/MyImGui.h"
 
+#include <imgui_internal.h>
+
 namespace ImGui {
 
-	IMGUI_API bool DragInt_8(const char* label, int8_t* v, float v_speed, int8_t v_min, int8_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_S8, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragInt_32(const char* label, int32_t* v, float v_speed, int32_t v_min, int32_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragInt_64(const char* label, int64_t* v, float v_speed, int64_t v_min, int64_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_S64, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragUInt_8(const char* label, uint8_t* v, float v_speed, uint8_t v_min, uint8_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_U8, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragUInt_32(const char* label, uint32_t* v, float v_speed, uint32_t v_min, uint32_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_U32, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragUInt_64(const char* label, uint64_t* v, float v_speed, uint64_t v_min, uint64_t v_max, const char* format)
-	{
-		return DragScalar(label, ImGuiDataType_U64, v, v_speed, &v_min, &v_max, format);
-	}
-
-	IMGUI_API bool DragDouble(const char* label, double* v, float v_speed, double v_min, double v_max, const char* format, float power)
-	{
-		return DragScalar(label, ImGuiDataType_Double, v, v_speed, &v_min, &v_max, format, power);
-	}
-
-	IMGUI_API void TextCentered(const char* fmt, ...)
+	void TextCentered(const char* fmt, ...)
 	{
 		ImVec2 textSize = CalcTextSize(fmt);
-		float indent = (GetWindowSize().x - textSize.x) / 2.0f;
+		float indent = (GetContentRegionAvail().x - textSize.x) * 0.5f;
 		Indent(indent);
 		va_list args;
 		va_start(args, fmt);
@@ -50,7 +17,7 @@ namespace ImGui {
 		Unindent(indent);
 	}
 
-	IMGUI_API void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol)
+	void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol)
 	{
 		if (!drawList)
 			return;
@@ -58,5 +25,86 @@ namespace ImGui {
 		drawList->AddRectFilled(a, b, backgroundCol);
 		drawList->AddRectFilled(a, { a.x + fraction * (b.x - a.x), b.y }, foregroundCol);
 	}
+
+	static const ImGuiDataTypeInfo GDataTypeInfo[] =
+	{
+		{ sizeof(char),             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
+		{ sizeof(unsigned char),    "U8",   "%u",   "%u"    },
+		{ sizeof(short),            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
+		{ sizeof(unsigned short),   "U16",  "%u",   "%u"    },
+		{ sizeof(int),              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
+		{ sizeof(unsigned int),     "U32",  "%u",   "%u"    },
+	#ifdef _MSC_VER
+		{ sizeof(ImS64),            "S64",  "%I64d","%I64d" },  // ImGuiDataType_S64
+		{ sizeof(ImU64),            "U64",  "%I64u","%I64u" },
+	#else
+		{ sizeof(ImS64),            "S64",  "%lld", "%lld"  },  // ImGuiDataType_S64
+		{ sizeof(ImU64),            "U64",  "%llu", "%llu"  },
+	#endif
+		{ sizeof(float),            "float", "%f",  "%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
+		{ sizeof(double),           "double","%f",  "%lf"   },  // ImGuiDataType_Double
+	};
+	IM_STATIC_ASSERT(IM_ARRAYSIZE(GDataTypeInfo) == ImGuiDataType_COUNT);
+
+	bool DragScalarNEx(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+	{
+		ImGuiWindow* window = GetCurrentWindow();
+		if (window->SkipItems)
+			return false;
+
+		ImGuiContext& g = *GImGui;
+		bool value_changed = false;
+		BeginGroup();
+		PushID(label);
+		PushMultiItemsWidths(components, CalcItemWidth());
+		size_t type_size = GDataTypeInfo[data_type].Size;
+		for (int i = 0; i < components; ++i)
+		{
+			PushID(i);
+			if (i > 0)
+			{
+				SameLine(0, g.Style.ItemInnerSpacing.x);
+			}
+			value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
+
+			if (components > 1)
+			{
+				const ImVec2 min = GetItemRectMin();
+				const ImVec2 max = GetItemRectMax();
+				const float spacing = g.Style.FrameRounding;
+				const float halfSpacing = spacing * 0.5f;
+				static const ImU32 colors[] =
+				{
+					0xBB0000FF, // Red
+					0xBB00FF00, // Green
+					0xBBFF0000, // Blue
+					0xBBFFFFFF, // White for alpha?
+				};
+				window->DrawList->AddLine({ min.x + spacing, max.y - halfSpacing }, { max.x - spacing, max.y - halfSpacing }, colors[i], 3);
+			}
+
+			PopID();
+			PopItemWidth();
+			p_data = (void*)((char*)p_data + type_size);
+		}
+		PopID();
+
+		const char* label_end = FindRenderedTextEnd(label);
+		if (label != label_end)
+		{
+			SameLine(0, g.Style.ItemInnerSpacing.x);
+			TextEx(label, label_end);
+		}
+
+		EndGroup();
+		return value_changed;
+	}
+
+}
+
+namespace ZeoEngine {
+
+	ImVec2Data ImVec2Data::DefaultPos{ { -1.0f, -1.0f } };
+	ImVec2Data ImVec2Data::DefaultSize{ { 800.0f, 600.0f } };
 
 }

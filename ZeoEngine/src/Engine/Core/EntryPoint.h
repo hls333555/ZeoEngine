@@ -1,12 +1,14 @@
 #pragma once
 
+#include "Engine/Debug/Instrumentor.h"
+
 #ifdef ZE_PLATFORM_WINDOWS
 //extern ZeoEngine::Application* ZeoEngine::CreateApplication();
 int main(int argc, char** argv)
 {
 	ZeoEngine::Log::Init();
 	ZE_CORE_TRACE("Initializing engine...");
-	ZE_CORE_TRACE("Log initialized!");
+	ZE_CORE_TRACE("Initializing log");
 
 	ZE_PROFILE_BEGIN_SESSION("Startup", "ZeoEngineProfile_Startup.json");
 	auto app = ZeoEngine::CreateApplication();

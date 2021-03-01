@@ -9,17 +9,17 @@ namespace ZeoEngine {
 	{
 		static EditorLog s_EditorLog;
 
-		ImGuiTextBuffer     Buf;
+		ImGuiTextBuffer     Buffer;
 		ImGuiTextFilter     Filter;
-		ImVector<int>       LineOffsets;        // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
+		ImVector<int>       LineOffsets;	// Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
 		ImVector<int>		LogLevels;
 		ImVector<ImVec4>	LogColors;
-		bool                AutoScroll;     // Keep scrolling if already at the bottom
+		bool                bAutoScroll;	// Keep scrolling if already at the bottom
 		bool				bEnableLogLevelFilters[6];
 
 		EditorLog()
 		{
-			AutoScroll = true;
+			bAutoScroll = true;
 			for (int i = 0; i < 6; ++i)
 			{
 				bEnableLogLevelFilters[i] = true;
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 
 		void Clear()
 		{
-			Buf.clear();
+			Buffer.clear();
 			LineOffsets.clear();
 			LineOffsets.push_back(0);
 			LogColors.clear();
@@ -37,14 +37,14 @@ namespace ZeoEngine {
 
 		void AddLog(int logLevel, const char* fmt, ...) IM_FMTARGS(2)
 		{
-			int old_size = Buf.size();
+			int old_size = Buffer.size();
 			va_list args;
 			va_start(args, fmt);
-			Buf.appendfv(fmt, args);
+			Buffer.appendfv(fmt, args);
 			va_end(args);
-			for (int new_size = Buf.size(); old_size < new_size; old_size++)
+			for (int new_size = Buffer.size(); old_size < new_size; old_size++)
 			{
-				if (Buf[old_size] == '\n')
+				if (Buffer[old_size] == '\n')
 				{
 					LineOffsets.push_back(old_size + 1);
 					LogLevels.push_back(logLevel);
@@ -81,18 +81,12 @@ namespace ZeoEngine {
 			}
 		}
 
-		void Draw(const char* title, bool* p_open = NULL)
+		void Draw()
 		{
-			if (!ImGui::Begin(title, p_open))
-			{
-				ImGui::End();
-				return;
-			}
-
 			// Options menu
 			if (ImGui::BeginPopup("Options"))
 			{
-				ImGui::Checkbox("Auto-scroll", &AutoScroll);
+				ImGui::Checkbox("Auto-scroll", &bAutoScroll);
 				ImGui::EndPopup();
 			}
 			if (ImGui::Button("Options"))
@@ -134,8 +128,8 @@ namespace ZeoEngine {
 				ImGui::LogToClipboard();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-			const char* buf = Buf.begin();
-			const char* buf_end = Buf.end();
+			const char* buf = Buffer.begin();
+			const char* buf_end = Buffer.end();
 			if (Filter.IsActive())
 			{
 				// In this example we don't use the clipper when Filter is enabled.
@@ -185,11 +179,10 @@ namespace ZeoEngine {
 			}
 			ImGui::PopStyleVar();
 
-			if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+			if (bAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
 				ImGui::SetScrollHereY(1.0f);
 
 			ImGui::EndChild();
-			ImGui::End();
 		}
 	};
 
@@ -198,17 +191,17 @@ namespace ZeoEngine {
 namespace spdlog {
 
 	template<typename Mutex>
-	class editorlog_sink : public spdlog::sinks::base_sink <Mutex>
+	class editorlog_sink : public sinks::base_sink <Mutex>
 	{
 	protected:
-		void sink_it_(const spdlog::details::log_msg& msg) override
+		void sink_it_(const details::log_msg& msg) override
 		{
 			// log_msg is a struct containing the log entry info like level, timestamp, thread id etc.
 			// msg.raw contains pre formatted log
 
 			// If needed (very likely but not mandatory), the sink formats the message before sending it to its final destination:
 			spdlog::memory_buf_t formatted;
-			base_sink<Mutex>::formatter_->format(msg, formatted);
+			sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
 			ZeoEngine::EditorLog::s_EditorLog.AddLog(msg.level, fmt::to_string(formatted).c_str());
 		}
 
@@ -222,7 +215,7 @@ namespace spdlog {
 #include <mutex>
 	namespace sinks {
 		using editorlog_sink_mt = editorlog_sink<std::mutex>;
-		using editorlog_sink_st = editorlog_sink<spdlog::details::null_mutex>;
+		using editorlog_sink_st = editorlog_sink<details::null_mutex>;
 	}
 
 }

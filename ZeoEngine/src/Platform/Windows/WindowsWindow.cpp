@@ -50,7 +50,7 @@ namespace ZeoEngine {
 			ZE_PROFILE_SCOPE("glfwInit");
 
 			int success = glfwInit();
-			ZE_CORE_ASSERT_INFO(success, "Failed to intialize GLFW!");
+			ZE_CORE_ASSERT(success, "Failed to initialize GLFW!");
 			// Set the GLFW error callback
 			glfwSetErrorCallback(GLFWErrorCallback);
 

@@ -1,11 +1,15 @@
 #include "ZEpch.h"
 #include "Engine/Core/Application.h"
 
-#include "Engine/Core/Log.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 
 #include <GLFW/glfw3.h>
+
+extern "C"
+{
+	_declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
 
 namespace ZeoEngine {
 
@@ -15,7 +19,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		ZE_CORE_ASSERT_INFO(!s_Instance, "Application already exists!");
+		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 		m_Window = Window::Create(WindowProps(name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
@@ -45,11 +49,13 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
 
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
-		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
-			(*--it)->OnEvent(e);
-			if (e.m_bHandled)
-				break;
+			// As of now, Application::OnWindowClose(WindowCloseEvent& e) will always return true,
+			// so in this case, we want to first check if it is handled, and breaking before passing it through that layer
+			if (e.m_bHandled) break;
+
+			(*it)->OnEvent(e);
 		}
 	}
 
@@ -67,15 +73,6 @@ namespace ZeoEngine {
 
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
-	}
-
-	EngineLayer* Application::GetEngineLayer()
-	{
-		for (auto* layer : m_LayerStack)
-		{
-			return dynamic_cast<EngineLayer*>(layer);
-		}
-		return nullptr;
 	}
 
 	void Application::Run()

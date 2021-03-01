@@ -3,87 +3,46 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
+
 	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
 	{
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLTexture2D>(width, height);
 		default:
-			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
 
 	Ref<Texture2D> Texture2D::Create(const std::string& path)
 	{
+		const auto canonicalPath = GetRelativePath(path);
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:
-			ZE_CORE_ASSERT_INFO(false, "RendererAPI is currently not supported!");
+			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLTexture2D>(path);
+			return CreateRef<OpenGLTexture2D>(canonicalPath);
 		default:
-			ZE_CORE_ASSERT_INFO(false, "Unknown RendererAPI!");
+			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 			return nullptr;
 		}
 	}
 
-	void Texture2DLibrary::Add(const std::string& path, const Ref<Texture2D>& texture)
+	Ref<Texture2D> Texture2DLibrary::LoadAsset(const std::string& path)
 	{
-		if (!Exists(path))
-		{
-			m_Textures[path] = texture;
-		}
-	}
-
-	void Texture2DLibrary::Add(const Ref<Texture2D>& texture)
-	{
-		const std::string& path = texture->GetPath();
-		Add(path, texture);
-	}
-
-	Ref<Texture2D> Texture2DLibrary::Load(const std::string& filePath)
-	{
-		auto texture = Texture2D::Create(filePath);
-		Add(texture);
+		auto texture = Texture2D::Create(path);
+		AddAsset(texture);
 		return texture;
-	}
-
-	Ref<Texture2D> Texture2DLibrary::Load(const std::string& path, const std::string& filePath)
-	{
-		auto texture = Texture2D::Create(filePath);
-		Add(path, texture);
-		return texture;
-	}
-
-	Ref<Texture2D> Texture2DLibrary::GetOrLoad(const std::string& path)
-	{
-		if (Exists(path))
-		{
-			return m_Textures[path];
-		}
-		else
-		{
-			return Load(path);
-		}
-	}
-
-	Ref<Texture2D> Texture2DLibrary::Get(const std::string& path)
-	{
-		ZE_CORE_ASSERT_INFO(Exists(path), "Texture not found!");
-		return m_Textures[path];
-	}
-
-	bool Texture2DLibrary::Exists(const std::string& path) const
-	{
-		return m_Textures.find(path) != m_Textures.end();
 	}
 
 }

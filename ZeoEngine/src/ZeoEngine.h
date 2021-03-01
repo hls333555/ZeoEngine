@@ -7,20 +7,21 @@
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Layer.h"
 #include "Engine/Core/Log.h"
+#include "Engine/Core/Assert.h"
 
 #include "Engine/Core/DeltaTime.h"
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Engine/Core/MouseButtonCodes.h"
+#include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/Core/EngineGlobals.h"
-#include "Engine/Core/Delegate.h"
 
-#include "Engine/GameFramework/GameObject.h"
-#include "Engine/GameFramework/SpriteObject.h"
-#include "Engine/GameFramework/Level.h"
+#include "Engine/GameFramework/Scene.h"
+#include "Engine/GameFramework/Entity.h"
+#include "Engine/GameFramework/ScriptableEntity.h"
+#include "Engine/GameFramework/Components.h"
+#include "Engine/Core/ReflectionCore.h"
 
 #include "Engine/ImGui/ImGuiLayer.h"
 

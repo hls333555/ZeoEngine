@@ -3,6 +3,8 @@
 
 #include <stb_image.h>
 
+#include "Engine/Utils/EngineUtils.h"
+
 namespace ZeoEngine {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
 		: m_Width(width), m_Height(height)
@@ -24,6 +26,7 @@ namespace ZeoEngine {
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path(path)
+		, m_FileName(GetFileNameFromPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -35,7 +38,7 @@ namespace ZeoEngine {
 
 			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		}
-		ZE_CORE_ASSERT_INFO(data, "Failed to load image!");
+		ZE_CORE_ASSERT(data, "Failed to load image!");
 		m_Width = width;
 		m_Height = height;
 
@@ -52,7 +55,7 @@ namespace ZeoEngine {
 			m_bHasAlpha = true;
 			break;
 		default:
-			ZE_CORE_ASSERT_INFO(internalFormat & dataFormat, "Texture format not supported!");
+			ZE_CORE_ASSERT(internalFormat & dataFormat, "Texture format not supported!");
 		}
 
 		m_InternalFormat = internalFormat;
@@ -70,13 +73,6 @@ namespace ZeoEngine {
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 
 		stbi_image_free(data);
-
-		// Extract name from file path
-		// "assets/textures/Texture.png" -> "Texture.png"
-		auto lastSlash = m_Path.find_last_of("/\\"); // find_last_of() will find ANY of the provided characters
-		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto count = m_Path.size() - lastSlash;
-		m_FileName = m_Path.substr(lastSlash, count);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()
@@ -92,7 +88,7 @@ namespace ZeoEngine {
 
 		// Bytes per pixel
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-		ZE_CORE_ASSERT_INFO(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 

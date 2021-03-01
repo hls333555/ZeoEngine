@@ -57,11 +57,13 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
+		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
+
 		virtual void* GetColorAttachment() const override { return (void*)(intptr_t)m_ColorAttachment; }
 
 	private:
 		FrameBufferSpec m_Spec;
-		uint32_t m_RendererID = 0, m_ColorAttachment = 0, m_DepthAttachment = 0;
+		uint32_t m_RendererID = 0, m_ColorAttachment = 0, m_IDAttachment = 0, m_DepthAttachment = 0;
 
 	};
 

@@ -2,6 +2,7 @@
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 #include <glad/glad.h>
+#include <stb_image_write.h>
 
 namespace ZeoEngine {
 
@@ -128,21 +129,6 @@ namespace ZeoEngine {
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
-		//// Texture attachment
-		//glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
-		//glTextureStorage2D(m_ColorAttachment, 1, GL_RGB8, m_Spec.Width, m_Spec.Height);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Spec.Width, m_Spec.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-		//glTextureParameteri(m_ColorAttachment, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTextureParameteri(m_ColorAttachment, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
-
-		//// Renderbuffer object attachment
-		//glCreateRenderbuffers(1, &m_DepthAttachment);
-		//glBindRenderbuffer(GL_RENDERBUFFER, m_DepthAttachment);
-		//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Spec.Width, m_Spec.Height);
-		//glBindRenderbuffer(GL_RENDERBUFFER, 0);
-		//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_DepthAttachment);
-
 		// Texture attachment
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
@@ -151,13 +137,24 @@ namespace ZeoEngine {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
 
+		// ID buffer attachment
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_IDAttachment);
+		glBindTexture(GL_TEXTURE_2D, m_IDAttachment);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Spec.Width, m_Spec.Height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_IDAttachment, 0);
+
+		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+		glDrawBuffers(2, drawBuffers);
+
 		// Depth attachment
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Spec.Width, m_Spec.Height);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
-		ZE_CORE_ASSERT_INFO(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		ZE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -169,6 +166,9 @@ namespace ZeoEngine {
 		// Update viewport to framebuffer texture's resolution
 		glViewport(0, 0, m_Spec.Width, m_Spec.Height);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+
+		int32_t clearValue = -1;
+		glClearTexImage(m_IDAttachment, 0, GL_RED_INTEGER, GL_INT, &clearValue);
 	}
 
 	void OpenGLFrameBuffer::Unbind() const
@@ -189,6 +189,31 @@ namespace ZeoEngine {
 		m_Spec.Width = width;
 		m_Spec.Height = height;
 		Invalidate();
+	}
+
+	void OpenGLFrameBuffer::Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth)
+	{
+		constexpr int numOfComponents = 4; // RGBA
+		uint32_t snapshotWidth = width, snapshotHeight = height;
+		if (imageWidth != 0)
+		{
+			snapshotWidth = snapshotHeight = imageWidth;
+		}
+
+		// Read from the framebuffer into the data array
+		const uint32_t dataSize = numOfComponents * snapshotWidth * snapshotHeight;
+		GLubyte* data = new GLubyte[dataSize];
+		memset(data, 0, dataSize);
+		// Resize viewport to center-squared if imageWidth is non-zero
+		glViewport((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+		glReadPixels((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+		// Write the PNG image
+		int strideInBytes = snapshotWidth * numOfComponents;
+		stbi_flip_vertically_on_write(1);
+		stbi_write_png(imageName.c_str(), snapshotWidth, snapshotHeight, numOfComponents, data, strideInBytes);
+		delete[] data;
 	}
 
 }
