@@ -98,10 +98,93 @@ namespace ZeoEngine {
 
 	static const uint32_t s_MaxFrameBufferSize = 8192;
 
+	namespace Utils {
+
+		static bool IsDepthFormat(FrameBufferTextureFormat format)
+		{
+			switch (format)
+			{
+			case FrameBufferTextureFormat::DEPTH24STENCIL8: return true;
+			}
+
+			return false;
+		}
+
+		static GLenum TextureTarget(bool bIsMultiSampled)
+		{
+			return bIsMultiSampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+		}
+
+		static void CreateTextures(bool bIsMultiSampled, uint32_t* outID, uint32_t count)
+		{
+			glCreateTextures(TextureTarget(bIsMultiSampled), count, outID);
+		}
+
+		static void BindTexture(bool bIsMultiSampled, uint32_t ID)
+		{
+			glBindTexture(TextureTarget(bIsMultiSampled), ID);
+		}
+
+		static void AttachColorTexture(uint32_t ID, uint32_t samples, GLenum format, uint32_t width, uint32_t height, uint32_t index)
+		{
+			bool bIsMultiSampled = samples > 1;
+			if (bIsMultiSampled)
+			{
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+			}
+			else
+			{
+				glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(bIsMultiSampled), ID, 0);
+		}
+
+		static void AttachDepthTexture(uint32_t ID, uint32_t samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
+		{
+			bool bIsMultiSampled = samples > 1;
+			if (bIsMultiSampled)
+			{
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+			}
+			else
+			{
+				glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(bIsMultiSampled), ID, 0);
+		}
+
+	}
+
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpec& spec)
 		: m_Spec(spec)
 	{
 		ZE_PROFILE_FUNCTION();
+
+		for (auto spec : m_Spec.Attachments.TextureSpecs)
+		{
+			if (!Utils::IsDepthFormat(spec.TextureFormat))
+			{
+				m_ColorAttachmentSpecs.emplace_back(spec);
+			}
+			else
+			{
+				m_DepthAttachmentSpec = spec;
+			}
+		}
 
 		Invalidate();
 	}
@@ -111,7 +194,7 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		glDeleteFramebuffers(1, &m_RendererID);
-		glDeleteTextures(1, &m_ColorAttachment);
+		glDeleteTextures(static_cast<uint32_t>(m_ColorAttachments.size()), m_ColorAttachments.data());
 		glDeleteTextures(1, &m_DepthAttachment);
 	}
 
@@ -122,37 +205,59 @@ namespace ZeoEngine {
 		if (m_RendererID)
 		{
 			glDeleteFramebuffers(1, &m_RendererID);
-			glDeleteTextures(1, &m_ColorAttachment);
+			glDeleteTextures(static_cast<uint32_t>(m_ColorAttachments.size()), m_ColorAttachments.data());
 			glDeleteTextures(1, &m_DepthAttachment);
+
+			m_ColorAttachments.clear();
+			m_DepthAttachment = 0;
 		}
 
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
-		// Texture attachment
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
-		glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_Spec.Width, m_Spec.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
+		bool bIsMultiSampled = m_Spec.Samples > 1;
 
-		// ID buffer attachment
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_IDAttachment);
-		glBindTexture(GL_TEXTURE_2D, m_IDAttachment);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Spec.Width, m_Spec.Height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_IDAttachment, 0);
+		// Attachments
+		if (m_ColorAttachmentSpecs.size())
+		{
+			m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
+			Utils::CreateTextures(bIsMultiSampled, m_ColorAttachments.data(), static_cast<uint32_t>(m_ColorAttachments.size()));
 
-		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-		glDrawBuffers(2, drawBuffers);
+			for (size_t i = 0; i < m_ColorAttachments.size(); ++i)
+			{
+				Utils::BindTexture(bIsMultiSampled, m_ColorAttachments[i]);
+				switch (m_ColorAttachmentSpecs[i].TextureFormat)
+				{
+				case FrameBufferTextureFormat::RGBA8:
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Spec.Samples, GL_RGBA8, m_Spec.Width, m_Spec.Height, static_cast<uint32_t>(i));
+					break;
+				}
+			}
+		}
 
-		// Depth attachment
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
-		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Spec.Width, m_Spec.Height);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+		if (m_DepthAttachmentSpec.TextureFormat != FrameBufferTextureFormat::None)
+		{
+			Utils::CreateTextures(bIsMultiSampled, &m_DepthAttachment, 1);
+			Utils::BindTexture(bIsMultiSampled, m_DepthAttachment);
+			switch (m_DepthAttachmentSpec.TextureFormat)
+			{
+			case FrameBufferTextureFormat::DEPTH24STENCIL8:
+				Utils::AttachDepthTexture(m_DepthAttachment, m_Spec.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Spec.Width, m_Spec.Height);
+				break;
+			}
+		}
+
+		if (m_ColorAttachments.size() > 1)
+		{
+			ZE_CORE_ASSERT(m_ColorAttachments.size() <= 4, "Currently we only support 4 color attachments!");
+			GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+			glDrawBuffers(static_cast<uint32_t>(m_ColorAttachments.size()), buffers);
+		}
+		else if (m_ColorAttachments.empty())
+		{
+			// Only depth-pass
+			glDrawBuffer(GL_NONE);
+		}
 
 		ZE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
@@ -168,7 +273,8 @@ namespace ZeoEngine {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
 		int32_t clearValue = -1;
-		glClearTexImage(m_IDAttachment, 0, GL_RED_INTEGER, GL_INT, &clearValue);
+		// TODO: Fixme!
+		//glClearTexImage(m_IDAttachment, 0, GL_RED_INTEGER, GL_INT, &clearValue);
 	}
 
 	void OpenGLFrameBuffer::Unbind() const

@@ -59,11 +59,21 @@ namespace ZeoEngine {
 
 		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
 
-		virtual void* GetColorAttachment() const override { return (void*)(intptr_t)m_ColorAttachment; }
+		virtual void* GetColorAttachment(uint32_t index = 0) const override
+		{
+			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
+			return (void*)(intptr_t)m_ColorAttachments[index];
+		}
 
 	private:
 		FrameBufferSpec m_Spec;
-		uint32_t m_RendererID = 0, m_ColorAttachment = 0, m_IDAttachment = 0, m_DepthAttachment = 0;
+		uint32_t m_RendererID = 0;
+
+		std::vector<FrameBufferTextureSpec> m_ColorAttachmentSpecs;
+		FrameBufferTextureSpec m_DepthAttachmentSpec;
+
+		std::vector<uint32_t> m_ColorAttachments;
+		uint32_t m_DepthAttachment = 0;
 
 	};
 

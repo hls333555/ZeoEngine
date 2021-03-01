@@ -214,6 +214,7 @@ namespace ZeoEngine {
 	void EditorDockspace::CreateFrameBuffers()
 	{
 		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
 		fbSpec.Width = FRAMEBUFFER_WIDTH;
 		fbSpec.Height = FRAMEBUFFER_HEIGHT;
 		m_FBO = FrameBuffer::Create(fbSpec);
