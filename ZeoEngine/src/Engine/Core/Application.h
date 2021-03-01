@@ -35,9 +35,6 @@ namespace ZeoEngine {
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
-		// TODO: Remove
-		EngineLayer* GetEngineLayer();
-
 		// TODO:
 		template<typename T>
 		T* FindLayer()

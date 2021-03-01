@@ -26,7 +26,6 @@ project "ZeoEditor"
 		"%{wks.location}/ZeoEngine/vendor",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",

@@ -13,7 +13,7 @@
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/ReflectionCore.h"
 
-#define ENABLE_TEST 0
+#define ENABLE_TEST 1
 
 namespace ZeoEngine {
 

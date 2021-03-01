@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Debug/Instrumentor.h"
+
 #ifdef ZE_PLATFORM_WINDOWS
 //extern ZeoEngine::Application* ZeoEngine::CreateApplication();
 int main(int argc, char** argv)

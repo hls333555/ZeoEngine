@@ -25,7 +25,6 @@ project "Sandbox"
 		"%{wks.location}/ZeoEngine/vendor",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.rttr}",
 		"%{IncludeDir.entt}"
 	}
 

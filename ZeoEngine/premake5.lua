@@ -38,7 +38,6 @@ project "ZeoEngine"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.rttr}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
@@ -53,7 +52,6 @@ project "ZeoEngine"
 		"ImGui",
 		"yaml-cpp",
 		"opengl32.lib",
-		"rttr",
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

@@ -10,9 +10,6 @@
 [submodule "ZeoEngine/vendor/glm"]
 	path = ZeoEngine/vendor/glm
 	url = https://github.com/g-truc/glm
-[submodule "ZeoEngine/vendor/rttr"]
-	path = ZeoEngine/vendor/rttr
-	url = git@github.com:hls333555/rttr.git
 [submodule "ZeoEngine/vendor/yaml-cpp"]
 	path = ZeoEngine/vendor/yaml-cpp
 	url = https://github.com/hls333555/yaml-cpp.git

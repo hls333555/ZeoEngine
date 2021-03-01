@@ -75,15 +75,6 @@ namespace ZeoEngine {
 		layer->OnAttach();
 	}
 
-	EngineLayer* Application::GetEngineLayer()
-	{
-		for (auto* layer : m_LayerStack)
-		{
-			return dynamic_cast<EngineLayer*>(layer);
-		}
-		return nullptr;
-	}
-
 	void Application::Run()
 	{
 		ZE_PROFILE_FUNCTION();
