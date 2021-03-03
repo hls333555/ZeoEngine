@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 		virtual void OnEvent(Event& e) override;
 
-		void ReadPixelDataFromIDBuffer();
+		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);
 
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);

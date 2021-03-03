@@ -9,14 +9,14 @@ layout(location = 2) in vec2 a_TexCoord;
 layout(location = 3) in float a_TexIndex;
 layout(location = 4) in vec2 a_TilingFactor;
 layout(location = 5) in vec2 a_UVOffset;
-layout(location = 6) in int a_ObjectID;
+layout(location = 6) in int a_EntityID;
 
 out vec4 v_Color;
 out vec2 v_TexCoord;
 out flat float v_TexIndex;
 out vec2 v_TilingFactor;
 out vec2 v_UVOffset;
-out flat int v_ObjectID;
+out flat int v_EntityID;
 
 uniform mat4 u_ViewProjection;
 
@@ -28,7 +28,7 @@ void main()
 	v_TexIndex = a_TexIndex;
 	v_TilingFactor = a_TilingFactor;
 	v_UVOffset = a_UVOffset;
-	v_ObjectID = a_ObjectID;
+	v_EntityID = a_EntityID;
 }
 
 #type fragment
@@ -39,15 +39,15 @@ in vec2 v_TexCoord;
 in flat float v_TexIndex;
 in vec2 v_TilingFactor;
 in vec2 v_UVOffset;
-in flat int v_ObjectID;
+in flat int v_EntityID;
 
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 o_color;
 layout(location = 1) out int o_IDBuffer;
 
 uniform sampler2D u_Textures[32];
 
 void main()
 {
-	color = texture(u_Textures[int(v_TexIndex)], vec2(v_TexCoord.x + v_UVOffset.x, v_TexCoord.y + v_UVOffset.y) * v_TilingFactor) * v_Color;
-	o_IDBuffer = v_ObjectID;
+	o_color = texture(u_Textures[int(v_TexIndex)], vec2(v_TexCoord.x + v_UVOffset.x, v_TexCoord.y + v_UVOffset.y) * v_TilingFactor) * v_Color;
+	o_IDBuffer = v_EntityID;
 }

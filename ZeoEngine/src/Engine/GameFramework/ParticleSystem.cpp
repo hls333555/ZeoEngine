@@ -453,11 +453,11 @@ namespace ZeoEngine {
 				glm::scale(glm::mat4(1.0f), particle.Size);
 			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawRotatedQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
+				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
 			}
 			else
 			{
-				Renderer2D::DrawRotatedQuad(transform, particle.Color);
+				Renderer2D::DrawQuad(transform, particle.Color);
 			}
 		}
 	}

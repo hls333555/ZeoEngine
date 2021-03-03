@@ -13,7 +13,6 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
-#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
@@ -71,7 +70,7 @@ namespace ZeoEngine {
 
 	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsUsing() && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
 		{
 			GetContext()->SetContextEntity(m_HoveredEntity);
 		}
@@ -79,16 +78,15 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void GameViewportPanel::ReadPixelDataFromIDBuffer()
+	void GameViewportPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
 	{
 		auto [mx, my] = GetMouseViewportPosition();
-		auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
-		auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		// Y coordinate for framebuffer texture is from bottom to up
-		my = viewportHeight - my;
-		if (mx >= 0.0f && my >= 0.0f && mx < viewportWidth && my < viewportHeight)
+		my = viewportSize.y - my;
+		if (mx >= 0.0f && my >= 0.0f && mx < viewportSize.x && my < viewportSize.y)
 		{
-			int32_t pixel = RenderCommand::ReadPixel(static_cast<int32_t>(mx), static_cast<int32_t>(my));
+			int32_t pixel = frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my));
 			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetScene().get());
 
 			auto& Stats = Renderer2D::GetStats();
@@ -101,38 +99,6 @@ namespace ZeoEngine {
 		SceneViewportPanel::RenderPanel();
 
 		RenderGizmo();
-
-		//ImGuiWindow* window = ImGui::GetCurrentWindow();
-
-		// Begin drop operation from Class Browser
-		// Note: BeginDragDropTarget() does not support window as target
-		//if (ImGui::BeginDragDropTargetCustom(ImGui::GetCurrentWindow()->Rect(), ImGui::GetCurrentWindow()->ID))
-		//{
-		//	if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragGameObjectClass"))
-		//	{
-		//		// We use active camera instead of editor camera here because placing objects during PIE is allowed for now
-		//			// It should be changed back to editor camera if that behavior is disabled
-		//		const glm::vec2 result = ProjectScreenToWorld2D(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), ImGui::GetCurrentWindow(), m_ActiveCamera);
-
-		//		// Spawn dragged Game Object to the level at mouse position
-		//		// Note: It sesems that rttr::argument does not support initializer_list conversion, so we should explicitly call constructor for glm::vec3 here
-		//		rttr::variant createdVar = (*(rttr::type*)payload->Data).create({ glm::vec3{ result.x, result.y, 0.1f } });
-		//		GameObject* spawnedGameObject = createdVar.get_value<GameObject*>();
-		//		if (spawnedGameObject != m_SelectedGameObject)
-		//		{
-		//			OnGameObjectSelectionChanged(m_SelectedGameObject);
-		//		}
-		//		// Set it selected
-		//		m_SelectedGameObject = spawnedGameObject;
-		//		m_SelectedGameObject->m_bIsSelectedInEditor = true;
-		//	}
-		//	ImGui::EndDragDropTarget();
-		//}
-
-		//float padding = 5.0f;
-		//ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPos().x + padding, ImGui::GetCursorPos().y + padding));
-
-		//OnGameViewImGuiRender();
 	}
 
 	void GameViewportPanel::RenderToolbar()

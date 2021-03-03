@@ -102,10 +102,10 @@ namespace ZeoEngine {
 		serializer.Deserialize();
 	}
 
-	void MainDockspace::PostSceneRender()
+	void MainDockspace::PostSceneRender(const Ref<FrameBuffer>& frameBuffer)
 	{
 		auto* gameViewportPanel = GetPanelByType<GameViewportPanel>(EditorPanelType::Game_View);
-		gameViewportPanel->ReadPixelDataFromIDBuffer();
+		gameViewportPanel->ReadPixelDataFromIDBuffer(frameBuffer);
 	}
 
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)

@@ -26,7 +26,7 @@ namespace ZeoEngine {
 	void EditorDockspace::OnAttach()
 	{
 		CreateScene();
-		CreateFrameBuffers();
+		CreateFrameBuffer();
 	}
 
 	void EditorDockspace::OnUpdate(DeltaTime dt)
@@ -35,6 +35,7 @@ namespace ZeoEngine {
 
 		m_Scene->OnUpdate(dt);
 
+		// TODO: Move these to other place
 		BeginFrameBuffer();
 		{
 			{
@@ -42,14 +43,14 @@ namespace ZeoEngine {
 
 				RenderCommand::SetClearColor({ 0.25f, 0.25f, 0.25f, 1.0f });
 				RenderCommand::Clear();
-				// TODO: This fixes ReadPixels() != -1 when nothing selected
-				BeginFrameBuffer();
+				// Clear entity ID attachment to -1
+				m_FBO->ClearAttachment(1, -1);
 			}
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
 				m_Scene->OnRender(*m_EditorCamera);
-				PostSceneRender();
+				PostSceneRender(m_FBO);
 			}
 		}
 		EndFrameBuffer();
@@ -211,10 +212,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorDockspace::CreateFrameBuffers()
+	void EditorDockspace::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
 		fbSpec.Width = FRAMEBUFFER_WIDTH;
 		fbSpec.Height = FRAMEBUFFER_HEIGHT;
 		m_FBO = FrameBuffer::Create(fbSpec);

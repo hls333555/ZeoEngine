@@ -79,11 +79,11 @@ namespace ZeoEngine {
 
 		void CreateScene();
 
-		void CreateFrameBuffers();
+		void CreateFrameBuffer();
 		void BeginFrameBuffer();
 		void EndFrameBuffer();
 
-		virtual void PostSceneRender() {}
+		virtual void PostSceneRender(const Ref<FrameBuffer>& frameBuffer) {}
 
 		void RenderDockspace();
 		virtual void BuildDockWindows(ImGuiID dockspaceID) = 0;

@@ -142,10 +142,16 @@ namespace ZeoEngine {
 	enum class FrameBufferTextureFormat
 	{
 		None = 0,
-		RGBA8,					// Color
-		DEPTH24STENCIL8,		// Depth/stencil
+
+		// Color
+		RGBA8,
+		RED_INTEGER,
+
+		// Depth/stencil
+		DEPTH24STENCIL8,
 		
-		Depth = DEPTH24STENCIL8	// Defaults
+		// Defaults
+		Depth = DEPTH24STENCIL8
 	};
 
 	struct FrameBufferTextureSpec
@@ -182,14 +188,18 @@ namespace ZeoEngine {
 
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
+		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
+
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
-		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) = 0;
+		virtual int32_t ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y) = 0;
 
-		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
+		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
+
+		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) = 0;
 
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
 	};

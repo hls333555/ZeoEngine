@@ -18,8 +18,6 @@ namespace ZeoEngine {
 
 		virtual void EnableDepthWriting(bool bEnable) override;
 
-		virtual int32_t ReadPixel(int32_t x, int32_t y) override;
-
 	};
 
 }

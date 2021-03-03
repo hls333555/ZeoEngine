@@ -50,6 +50,12 @@ namespace ZeoEngine {
 
 		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
 
+		virtual void* GetColorAttachment(uint32_t index = 0) const override
+		{
+			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
+			return (void*)(intptr_t)m_ColorAttachments[index];
+		}
+
 		void Invalidate();
 
 		virtual void Bind() const override;
@@ -57,13 +63,11 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
+		virtual int32_t ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y) override;
 
-		virtual void* GetColorAttachment(uint32_t index = 0) const override
-		{
-			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
-			return (void*)(intptr_t)m_ColorAttachments[index];
-		}
+		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
+
+		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
 
 	private:
 		FrameBufferSpec m_Spec;

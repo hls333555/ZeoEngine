@@ -122,14 +122,7 @@ namespace ZeoEngine {
 		for (auto entity : spriteGroup)
 		{
 			auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-			if (spriteComp.Texture)
-			{
-				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor, static_cast<uint32_t>(entity));
-			}
-			else
-			{
-				Renderer2D::DrawRotatedQuad(transformComp.GetTransform(), spriteComp.TintColor, static_cast<uint32_t>(entity));
-			}
+			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
 		}
 
 		// Render particle system

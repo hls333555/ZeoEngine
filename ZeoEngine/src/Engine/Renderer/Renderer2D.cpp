@@ -19,13 +19,13 @@ namespace ZeoEngine {
 		s_Data.QuadVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 
 		BufferLayout squareLayout = {
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
+			{ ShaderDataType::Float3, "a_Position"     },
+			{ ShaderDataType::Float4, "a_Color"        },
+			{ ShaderDataType::Float2, "a_TexCoord"     },
+			{ ShaderDataType::Float,  "a_TexIndex"     },
 			{ ShaderDataType::Float2, "a_TilingFactor" },
-			{ ShaderDataType::Float2, "a_UVOffset" },
-			{ ShaderDataType::Int, "a_ObjectID" },
+			{ ShaderDataType::Float2, "a_UVOffset"     },
+			{ ShaderDataType::Int,    "a_EntityID"     },
 		};
 		s_Data.QuadVBO->SetLayout(squareLayout);
 		s_Data.QuadVAO->AddVertexBuffer(s_Data.QuadVBO);
@@ -165,7 +165,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -189,6 +189,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -212,7 +213,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -252,6 +253,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -260,12 +262,12 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -275,7 +277,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -315,6 +317,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
 
@@ -336,40 +339,7 @@ namespace ZeoEngine {
 			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawRotatedQuad(transform, color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
-	{
-		ZE_PROFILE_FUNCTION();
-
-		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-		{
-			FlushAndReset();
-		}
-
-		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		// White texture
-		constexpr float textureIndex = 0.0f;
-		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
-		constexpr glm::vec2 uvOffset = { 0.0f, 0.0f };
-
-		for (size_t i = 0; i < quadVertexCount; ++i)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
-			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
-			++s_Data.QuadVertexBufferPtr;
-		}
-
-		s_Data.QuadIndexCount += 6;
-
-		++s_Data.Stats.QuadCount;
+		DrawQuad(transform, color);
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
@@ -385,64 +355,15 @@ namespace ZeoEngine {
 			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawRotatedQuad(transform, texture, tilingFactor, uvOffset, tintColor);
+		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, uint32_t entityID)
-	{
-		ZE_PROFILE_FUNCTION();
-
-		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
-		{
-			FlushAndReset();
-		}
-
-		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
-		{
-			if (*s_Data.TextureSlots[i] == *texture)
-			{
-				textureIndex = static_cast<float>(i);
-				break;
-			}
-		}
-		if (textureIndex == 0.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
-			{
-				FlushAndReset();
-			}
-
-			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
-
-		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		for (size_t i = 0; i < quadVertexCount; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
-			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
-			++s_Data.QuadVertexBufferPtr;
-		}
-
-		s_Data.QuadIndexCount += 6;
-
-		++s_Data.Stats.QuadCount;
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor /*= { 1.0f, 1.0f }*/, const glm::vec2& uvOffset /*= { 0.0f, 0.0f }*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -450,55 +371,20 @@ namespace ZeoEngine {
 			glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawRotatedQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
+		DrawQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int32_t entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
-		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+		if (src.Texture)
 		{
-			FlushAndReset();
+			DrawQuad(transform, src.Texture, src.TextureTiling, { 0.0f, 0.0f }, src.TintColor, entityID);
 		}
-
-		constexpr size_t quadVertexCount = 4;
-		const glm::vec2* textureCoords = subTexture->GetTexCoords();
-		const Ref<Texture2D> texture = subTexture->GetTexture();
-		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
+		else
 		{
-			if (*s_Data.TextureSlots[i] == *texture)
-			{
-				textureIndex = static_cast<float>(i);
-				break;
-			}
+			DrawQuad(transform, src.TintColor, entityID);
 		}
-		if (textureIndex == 0.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
-			{
-				FlushAndReset();
-			}
-
-			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
-
-		for (size_t i = 0; i < quadVertexCount; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
-			++s_Data.QuadVertexBufferPtr;
-		}
-
-		s_Data.QuadIndexCount += 6;
-
-		++s_Data.Stats.QuadCount;
+		
 	}
 
 	Statistics& Renderer2D::GetStats()
