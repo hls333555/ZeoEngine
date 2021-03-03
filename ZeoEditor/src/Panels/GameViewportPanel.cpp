@@ -39,26 +39,27 @@ namespace ZeoEngine {
 	{
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
 
+		bool bCanSwitchGizmo = !ImGuizmo::IsUsing();
 		switch (e.GetKeyCode())
 		{
 			case Key::W:
 			{
-				m_GizmoType = ImGuizmo::TRANSLATE;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE;
 				break;
 			}
 			case Key::E:
 			{
-				m_GizmoType = ImGuizmo::ROTATE;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE;
 				break;
 			}
 			case Key::R:
 			{
-				m_GizmoType = ImGuizmo::SCALE;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE;
 				break;
 			}
 			case Key::Space:
 			{
-				m_GizmoType = m_GizmoType + 1 > ImGuizmo::SCALE ? ImGuizmo::TRANSLATE : m_GizmoType + 1;
+				if (bCanSwitchGizmo) m_GizmoType = m_GizmoType + 1 > ImGuizmo::SCALE ? ImGuizmo::TRANSLATE : m_GizmoType + 1;
 				break;
 			}
 			default:
