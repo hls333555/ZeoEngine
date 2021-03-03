@@ -15,7 +15,45 @@ namespace ZeoEngine {
 		using ScenePanel::ScenePanel;
 
 	protected:
-		void DrawComponents(Entity entity, const std::set<uint32_t>& ignoredComponentIds = {});
+		template<typename Component>
+		bool ShouldIgnoreComponent(uint32_t compId)
+		{
+			return entt::type_hash<Component>::value() == compId;
+		}
+
+		template<typename... IgnoredComponents>
+		void DrawComponents(Entity entity)
+		{
+			// Push entity id
+			ImGui::PushID(static_cast<uint32_t>(entity));
+			{
+				// Process components on this entity
+				for (const auto compId : entity.GetOrderedComponentIds())
+				{
+					// NOTE: This pair of brackets inside if statement are required for template argument expansion!
+					if ((ShouldIgnoreComponent<IgnoredComponents>(compId) || ...)) continue;
+
+					// Push component id
+					ImGui::PushID(compId);
+					{
+						const auto compType = entt::resolve(compId);
+						m_DataInspector.ProcessComponent(compType, entity);
+					}
+					ImGui::PopID();
+				}
+				m_DataInspector.OnDrawComponentsComplete();
+			}
+			ImGui::PopID();
+
+			// The following part will not have entity id pushed into ImGui!
+			if (m_bAllowAddingComponents)
+			{
+				ImGui::Separator();
+
+				// Add component button
+				DrawAddComponentButton(entity);
+			}
+		}
 
 	private:
 		void DrawAddComponentButton(Entity entity);

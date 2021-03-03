@@ -6,38 +6,6 @@
 
 namespace ZeoEngine {
 
-	void DataInspectorPanel::DrawComponents(Entity entity, const std::set<uint32_t>& ignoredCompIds)
-	{
-		// Push entity id
-		ImGui::PushID(static_cast<uint32_t>(entity));
-		{
-			// Process components on this entity
-			for (const auto compId : entity.GetOrderedComponentIds())
-			{
-				if (ignoredCompIds.find(compId) != ignoredCompIds.cend()) continue;
-
-				// Push component id
-				ImGui::PushID(compId);
-				{
-					const auto compType = entt::resolve(compId);
-					m_DataInspector.ProcessComponent(compType, entity);
-				}
-				ImGui::PopID();
-			}
-			m_DataInspector.OnDrawComponentsComplete();
-		}
-		ImGui::PopID();
-
-		// The following part will not have entity id pushed into ImGui!
-		if (m_bAllowAddingComponents)
-		{
-			ImGui::Separator();
-
-			// Add component button
-			DrawAddComponentButton(entity);
-		}
-	}
-
 	void DataInspectorPanel::DrawAddComponentButton(Entity entity)
 	{
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
@@ -127,14 +95,12 @@ namespace ZeoEngine {
 		m_LastSelectedEntity = selectedEntity;
 	}
 
-	#define DEFAULT_IGNORED_COMPIDS { entt::type_hash<CoreComponent>::value(), entt::type_hash<TransformComponent>::value() }
-
 	void ParticleInspectorPanel::RenderPanel()
 	{
 		Entity contextEntity = GetContext()->GetContextEntity();
 		if (contextEntity)
 		{
-			DrawComponents(contextEntity, DEFAULT_IGNORED_COMPIDS);
+			DrawComponents<CoreComponent, TransformComponent>(contextEntity);
 		}
 	}
 
