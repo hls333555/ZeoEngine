@@ -34,12 +34,6 @@ Start by cloning the repository with `git clone --recursive https://github.com/h
 
 If the repository was cloned non-recursively previously, use `git submodule update --init` to clone the necessary submodules.
 
-**NOTE**
-
-The engine uses FreeType as default font rasterizer. 
-
-In order to work properly, you should get latest FreeType binaries or build yourself using *vcpkg* with `vcpkg install freetype:x64-windows`, `vcpkg integrate install`. More instructions on [Install vcpkg on Windows, Linux, and macOS | Microsoft Docs](https://docs.microsoft.com/en-us/cpp/build/install-vcpkg?view=msvc-160&tabs=windows).
-
 
 
 You can refer to the [wiki page](https://github.com/hls333555/ZeoEngine/wiki) to see how this engine operates internally and how you can use it to create games.
