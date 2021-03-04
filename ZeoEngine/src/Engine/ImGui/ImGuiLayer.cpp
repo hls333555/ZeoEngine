@@ -120,10 +120,8 @@ namespace ZeoEngine {
 		builder.AddText(missingChars);
 		ImVector<ImWchar> OutRanges;
 		builder.BuildRanges(&OutRanges);
-		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 16.0f, nullptr, OutRanges.Data);
-		unsigned char* outPixels = nullptr;
-		int outWidth, outHeight, outBytesPerPixel;
-		io.Fonts->GetTexDataAsAlpha8(&outPixels, &outWidth, &outHeight, &outBytesPerPixel);
+		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 15.0f, nullptr, OutRanges.Data);
+		io.Fonts->Build();
 	}
 
 	void ImGuiLayer::SetDarkThemeColors()
