@@ -392,19 +392,36 @@ namespace ZeoEngine {
 				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
-			// Double-click to open the particle editor only when particle template is valid
-			if (m_Buffer && ImGui::IsItemHovered())
+			
+			// If particle template is set...
+			if (m_Buffer)
 			{
-				ImGui::SetTooltip("Double-click to open the particle editor");
-				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				if (ImGui::IsItemHovered())
 				{
-					EditorDockspace* editor = m_ContextPanel->GetContext()->OpenEditor(EditorDockspaceType::Particle_Editor);
-					editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
+					ImGui::SetTooltip("Double-click to open the particle editor\nRight-click to open the context menu");
+					// Double-click on the preview thumbnail to open the particle editor
+					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						pspc.SetTemplate(m_Buffer);
-					});
+						EditorDockspace* editor = m_ContextPanel->GetContext()->OpenEditor(EditorDockspaceType::Particle_Editor);
+						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
+						{
+							pspc.SetTemplate(m_Buffer);
+						});
+					}
+				}
+
+				// Right-click on the preview thumbnail to open the popup menu
+				if (ImGui::BeginPopupContextItem("ParticleTemplateOptiones"))
+				{
+					if (ImGui::MenuItem("Resimulate"))
+					{
+						m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().ParticleSystemRuntime->Resimulate();
+					}
+
+					ImGui::EndPopup();
 				}
 			}
+			
 		}
 
 		ImGui::SameLine();

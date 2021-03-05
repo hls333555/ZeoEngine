@@ -148,6 +148,7 @@ namespace ZeoEngine {
 	{
 		friend class ParticleViewportPanel;
 		friend struct ParticleTemplate;
+		friend class ParticleTemplateDataWidget;
 
 	private:
 		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
