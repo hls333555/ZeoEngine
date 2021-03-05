@@ -71,7 +71,7 @@ namespace ZeoEngine {
 
 	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftControl)) // This key press should match camera control
 		{
 			GetContext()->SetContextEntity(m_HoveredEntity);
 		}

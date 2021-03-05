@@ -4,6 +4,7 @@
 #include <glfw/glfw3.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <imgui.h>
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
@@ -19,21 +20,22 @@ namespace ZeoEngine {
 
 	void EditorCamera::OnUpdate(DeltaTime dt)
 	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
+		// This key press should match gizmo control
+		if (Input::IsKeyPressed(Key::LeftControl))
 		{
 			const glm::vec2 mousePos = Input::GetMousePosition();
 			glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 			m_InitialMousePosition = mousePos;
 
-			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
+			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
 			{
 				MousePan(delta);
 			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
+			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft) && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
 				MouseRotate(delta);
 			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && ImGui::IsMouseDragging(ImGuiMouseButton_Right))
 			{
 				MouseZoom(delta.y);
 			}
