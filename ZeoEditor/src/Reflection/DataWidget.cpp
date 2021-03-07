@@ -4,6 +4,7 @@
 
 #include "Engine/Utils/PlatformUtils.h"
 #include "Panels/DataInspectorPanel.h"
+#include "Core/WindowManager.h"
 #include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
@@ -402,7 +403,7 @@ namespace ZeoEngine {
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						EditorDockspace* editor = m_ContextPanel->GetContext()->OpenEditor(EditorDockspaceType::Particle_Editor);
+						EditorDockspace* editor = DockspaceManager::Get().OpenDockspace(EditorDockspaceType::Particle_Editor);
 						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
 						{
 							pspc.SetTemplate(m_Buffer);

@@ -7,12 +7,12 @@
 
 namespace ZeoEngine {
 
-	class DataInspectorPanel : public ScenePanel
+	class DataInspectorPanel : public EditorPanel
 	{
 		friend class DataInspector;
 
 	public:
-		using ScenePanel::ScenePanel;
+		using EditorPanel::EditorPanel;
 
 	protected:
 		template<typename Component>

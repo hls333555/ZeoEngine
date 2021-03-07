@@ -5,8 +5,6 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Debug/Instrumentor.h"
-#include "EditorLayer.h"
-#include "Panels/SceneViewportPanel.h"
 #include "Scenes/MainEditorScene.h"
 #include "Scenes/ParticleEditorScene.h"
 
@@ -15,11 +13,8 @@
 
 namespace ZeoEngine {
 
-	EditorDockspace::EditorDockspace(EditorDockspaceType dockspaceType, EditorLayer* context, bool bDefaultShow, const glm::vec2& dockspacePadding, ImGuiWindowFlags dockspaceWindowFlags, ImVec2Data initialSize, ImVec2Data initialPos)
-		: m_DockspaceType(dockspaceType), m_EditorContext(context), m_bShow(bDefaultShow)
-		, m_DockspacePadding(dockspacePadding)
-		, m_DockspaceWindowFlags(dockspaceWindowFlags)
-		, m_InitialSize(initialSize), m_InitialPos(initialPos)
+	EditorDockspace::EditorDockspace(const EditorDockspaceSpec& spec)
+		: m_DockspaceSpec(spec)
 	{
 	}
 
@@ -50,7 +45,7 @@ namespace ZeoEngine {
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
 				m_Scene->OnRender(*m_EditorCamera);
-				PostSceneRender(m_FBO);
+				PostRenderScene(m_FBO);
 			}
 		}
 		EndFrameBuffer();
@@ -58,6 +53,8 @@ namespace ZeoEngine {
 
 	void EditorDockspace::OnImGuiRender()
 	{
+		if (!m_bShow) return;
+
 		// Render dockspace
 		RenderDockspace();
 		// Render panels
@@ -75,42 +72,34 @@ namespace ZeoEngine {
 		}
 	}
 
+	int32_t EditorDockspace::PreRenderDockspace()
+	{
+		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+		ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
+		ImGui::SetNextWindowPos(CenterPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowSize(m_DockspaceSpec.InitialSize.Data, m_DockspaceSpec.InitialSize.Condition);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, ImGui::GetStyle().WindowRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, ImGui::GetStyle().WindowBorderSize);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspaceSpec.Padding);
+		return 3;
+	}
+
 	void EditorDockspace::RenderDockspace()
 	{
-		if (!m_bShow) return;
+		int32_t styleCount = PreRenderDockspace();
 
-		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		bool bIsMainDockspace = m_DockspaceType == EditorDockspaceType::Main_Editor;
-		if (bIsMainDockspace)
-		{
-			ImGui::SetNextWindowViewport(mainViewport->ID);
-			ImGui::SetNextWindowPos(mainViewport->Pos);
-		}
-		else if (m_InitialPos == ImVec2Data::DefaultPos)
-		{
-			ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
-			ImGui::SetNextWindowPos(CenterPos, m_InitialPos.Condition, ImVec2(0.5f, 0.5f));
-		}
-		else
-		{
-			ImGui::SetNextWindowPos(m_InitialPos.Data, m_InitialPos.Condition);
-		}
-		ImGui::SetNextWindowSize(bIsMainDockspace ? mainViewport->Size : static_cast<ImVec2>(m_InitialSize.Data), bIsMainDockspace ? 0 : m_InitialSize.Condition);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowRounding);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, bIsMainDockspace ? 0.0f : ImGui::GetStyle().WindowBorderSize);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspacePadding);
-
-		ImGui::Begin(GetDockspaceName().c_str(), &m_bShow, m_DockspaceWindowFlags);
-		ImGui::PopStyleVar(3);
+		std::string dockspaceName = ResolveEditorNameFromEnum(m_DockspaceSpec.Type);
+		ImGui::Begin(dockspaceName.c_str(), &m_bShow, m_DockspaceSpec.WindowFlags);
+		ImGui::PopStyleVar(styleCount);
 
 		m_bIsDockspaceFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 		m_bIsDockspaceHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 		// Render menus - non-main-menus must be rendered winthin window context
-		m_MenuManager.OnImGuiRender(bIsMainDockspace);
+		m_MenuManager.OnImGuiRender(m_DockspaceSpec.Type == EditorDockspaceType::Main_Editor);
 
 		// TODO: Needs separate from window name?
-		ImGuiID dockspaceID = ImGui::GetID(GetDockspaceName().c_str());
+		ImGuiID dockspaceID = ImGui::GetID(dockspaceName.c_str());
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)
 		{
 			m_bShouldRebuildDockLayout = false;
@@ -132,27 +121,19 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	void EditorDockspace::PushDockspace(EditorDockspace* dockspace)
+	EditorMenu& EditorDockspace::CreateMenu(const std::string& menuName)
 	{
-		m_EditorContext->PushDockspace(dockspace);
+		return m_MenuManager.CreateMenu(menuName, this);
 	}
 
-	void EditorDockspace::PushMenu(EditorMenu* menu)
+	void EditorDockspace::OpenPanel(EditorPanelType panelType)
 	{
-		menu->SetContext(this);
-		m_MenuManager.PushMenu(menu);
+		m_PanelManager.OpenPanel(panelType, this);
 	}
 
-	void EditorDockspace::PushPanel(EditorPanel* panel)
+	void EditorDockspace::CreatePanel(EditorPanelType panelType)
 	{
-		m_PanelManager.PushPanel(panel);
-	}
-
-	EditorDockspace* EditorDockspace::OpenEditor(EditorDockspaceType dockspaceType)
-	{
-		auto* editor = m_EditorContext->GetDockspaceByType(dockspaceType);
-		*editor->GetShowPtr() = true;
-		return editor;
+		m_PanelManager.CreatePanel(panelType, this);
 	}
 
 	void EditorDockspace::CreateNewScene(bool bIsFromOpenScene)
@@ -198,7 +179,7 @@ namespace ZeoEngine {
 
 	void EditorDockspace::CreateScene()
 	{
-		switch (m_DockspaceType)
+		switch (m_DockspaceSpec.Type)
 		{
 		case EditorDockspaceType::Main_Editor:
 			m_Scene = CreateRef<MainEditorScene>();
@@ -229,70 +210,6 @@ namespace ZeoEngine {
 	void EditorDockspace::EndFrameBuffer()
 	{
 		m_FBO->Unbind();
-	}
-
-	DockspaceManager::~DockspaceManager()
-	{
-		for (auto& [name, dockspace] : m_Dockspaces)
-		{
-			dockspace->OnDetach();
-			delete dockspace;
-		}
-	}
-
-	void DockspaceManager::OnUpdate(DeltaTime dt)
-	{
-		Renderer2D::ResetStats();
-
-		for (auto& [name, dockspace] : m_Dockspaces)
-		{
-			// Do not update scene if this dockspace is invisible
-			if (dockspace->m_bShow)
-			{
-				dockspace->OnUpdate(dt);
-			}
-		}
-	}
-
-	void DockspaceManager::OnImGuiRender()
-	{
-		for (auto& [name, dockspace] : m_Dockspaces)
-		{
-			dockspace->OnImGuiRender();
-		}
-	}
-
-	void DockspaceManager::OnEvent(Event& e)
-	{
-		for (auto& [name, dockspace] : m_Dockspaces)
-		{
-			dockspace->OnEvent(e);
-		}
-	}
-
-	void DockspaceManager::PushDockspace(EditorDockspace* dockspace)
-	{
-		m_Dockspaces.emplace(dockspace->GetDockspaceName(), dockspace);
-		dockspace->OnAttach();
-	}
-
-	EditorDockspace* DockspaceManager::GetDockspaceByName(const std::string& dockspaceName)
-	{
-		auto result = m_Dockspaces.find(dockspaceName);
-		return result == m_Dockspaces.end() ? nullptr : result->second;
-	}
-
-	void DockspaceManager::RebuildDockLayout(const std::string& dockspaceName)
-	{
-		bool bShouldRebuildAll = dockspaceName.empty();
-		for (auto& [name, dockspace] : m_Dockspaces)
-		{
-			if (bShouldRebuildAll || dockspace->GetDockspaceName() == dockspaceName)
-			{
-				dockspace->m_bShouldRebuildDockLayout = true;
-				if (!bShouldRebuildAll) break;
-			}
-		}
 	}
 
 }

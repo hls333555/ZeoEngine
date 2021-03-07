@@ -10,10 +10,10 @@
 
 namespace ZeoEngine {
 
-	class SceneViewportPanel : public ScenePanel
+	class SceneViewportPanel : public EditorPanel
 	{
 	public:
-		using ScenePanel::ScenePanel;
+		using EditorPanel::EditorPanel;
 		virtual void OnAttach() override;
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnEvent(Event& e) override;

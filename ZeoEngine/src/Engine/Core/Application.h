@@ -35,30 +35,14 @@ namespace ZeoEngine {
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
-		// TODO:
 		template<typename T>
 		T* FindLayer()
 		{
 			for (auto* layer : m_LayerStack)
 			{
-				T* layer_cast = dynamic_cast<T*>(layer);
-				if (layer_cast)
+				if (T* layerCast = dynamic_cast<T*>(layer))
 				{
-					return layer_cast;
-				}
-			}
-			return nullptr;
-		}
-
-		// TODO:
-		template<typename T>
-		T* FindLayerByName(const std::string& layerName)
-		{
-			for (auto* layer : m_LayerStack)
-			{
-				if (layer->GetName() == layerName)
-				{
-					return dynamic_cast<T*>(layer);
+					return layerCast;
 				}
 			}
 			return nullptr;

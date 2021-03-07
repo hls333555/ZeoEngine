@@ -4,10 +4,10 @@
 
 namespace ZeoEngine {
 
-	class SceneOutlinePanel : public ScenePanel
+	class SceneOutlinePanel : public EditorPanel
 	{
 	public:
-		using ScenePanel::ScenePanel;
+		using EditorPanel::EditorPanel;
 
 	private:
 		virtual void RenderPanel() override;

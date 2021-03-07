@@ -1,9 +1,8 @@
 #include "EditorLayer.h"
 
-#include "Dockspaces/MainDockspace.h"
+#include "Core/WindowManager.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Engine/Debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
@@ -20,10 +19,7 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		MainDockspace* mainDockspace = new MainDockspace(EditorDockspaceType::Main_Editor, this, true, { 5.0f, 5.0f }, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
-		PushDockspace(mainDockspace);
+		DockspaceManager::Get().CreateDockspace(EditorDockspaceType::Main_Editor);
 
 		// TODO:
 		std::string cachePath = std::filesystem::current_path().string().append("/temp");
@@ -35,7 +31,7 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnUpdate(dt);
 
-		m_DockspaceManager.OnUpdate(dt);
+		DockspaceManager::Get().OnUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -45,30 +41,15 @@ namespace ZeoEngine {
 		ImGui::ShowDemoWindow(&bShow);
 #endif
 
-		m_DockspaceManager.OnImGuiRender();
+		DockspaceManager::Get().OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		m_DockspaceManager.OnEvent(event);
+		DockspaceManager::Get().OnEvent(event);
 	}
 
-	void EditorLayer::PushDockspace(EditorDockspace* dockspace)
-	{
-		m_DockspaceManager.PushDockspace(dockspace);
-	}
-
-	EditorDockspace* EditorLayer::GetDockspaceByType(EditorDockspaceType dockspaceType)
-	{
-		return m_DockspaceManager.GetDockspaceByName(ResolveEditorNameFromEnum(dockspaceType));
-	}
-
-	void EditorLayer::RebuildDockLayout(EditorDockspaceType dockspaceType)
-	{
-		std::string name = dockspaceType == EditorDockspaceType::NONE ? "" : ResolveEditorNameFromEnum(dockspaceType);
-		m_DockspaceManager.RebuildDockLayout(name);
-	}
-
+	// TODO:
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
 		// Start PIE by pressing Alt+P

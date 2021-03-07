@@ -12,10 +12,12 @@ namespace ZeoEngine {
 
 	class EditorMenu
 	{
-	protected:
-		EditorMenu() = default;
+		friend class MenuManager;
+
+	private:
+		EditorMenu() = delete;
+		EditorMenu(const std::string& menuName, EditorDockspace* context);
 	public:
-		explicit EditorMenu(const std::string& menuName);
 		~EditorMenu();
 
 		void OnImGuiRender();
@@ -23,10 +25,15 @@ namespace ZeoEngine {
 
 		template<typename T = EditorDockspace>
 		T* GetContext() { return dynamic_cast<T*>(m_Context); }
-		void SetContext(EditorDockspace* contextDockspace) { m_Context = contextDockspace; }
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
-		void PushMenuItem(EditorMenuItem* menuItem);
+		template<typename T, typename ... Args>
+		EditorMenu& MenuItem(Args&& ... args)
+		{
+			T* menuItem = new T(this, std::forward<Args>(args)...);
+			m_MenuItems.emplace_back(menuItem);
+			return *this;
+		}
 
 	private:
 		void RenderMenuItems();
@@ -34,28 +41,8 @@ namespace ZeoEngine {
 	private:
 		std::string m_MenuName;
 		EditorDockspace* m_Context;
-		bool m_bEnabled{ true };
+		bool m_bEnabled = true;
 		std::vector<EditorMenuItem*> m_MenuItems;
-	};
-
-	class MenuManager
-	{
-	public:
-		MenuManager() = default;
-		~MenuManager();
-
-		void PushMenu(EditorMenu* menu);
-
-		void OnImGuiRender(bool bIsMainMenu);
-		void OnEvent(Event& e);
-
-	private:
-		void RenderMainMenuBar();
-		void RenderMenuBar();
-		void RenderMenus();
-
-	private:
-		std::vector<EditorMenu*> m_Menus;
 	};
 
 }

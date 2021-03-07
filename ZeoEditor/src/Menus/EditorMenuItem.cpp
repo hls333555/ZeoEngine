@@ -2,16 +2,17 @@
 
 #include <imgui.h>
 
-#include "Engine/Core/Application.h"
-#include "EditorLayer.h"
-#include "Dockspaces/MainDockspace.h"
+#include "Menus/EditorMenu.h"
+#include "Core/WindowManager.h"
 #include "Engine/Core/Input.h"
 #include "Panels/SceneViewportPanel.h"
+#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
 
-	EditorMenuItem::EditorMenuItem(const std::string& menuItemName, const std::string& shortcutName)
-		: m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
+	EditorMenuItem::EditorMenuItem(EditorMenu* context, const std::string& menuItemName, const std::string& shortcutName)
+		: m_Context(context)
+		, m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
 	{
 	}
 
@@ -46,8 +47,8 @@ namespace ZeoEngine {
 		return GetEditorContext()->GetScene();
 	}
 
-	MenuItem_Seperator::MenuItem_Seperator(const std::string& menuItemName)
-		: EditorMenuItem(menuItemName, std::string())
+	MenuItem_Seperator::MenuItem_Seperator(EditorMenu* context, const std::string& menuItemName)
+		: EditorMenuItem(context, menuItemName)
 	{
 	}
 
@@ -56,15 +57,46 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	MenuItem_ToggleWindow::MenuItem_ToggleWindow(const std::string windowName, const std::string& shortcutName, bool* bShowWindowPtr)
-		: EditorMenuItem(windowName, shortcutName)
-		, m_bShowWindowPtr(bShowWindowPtr)
+	MenuItem_ToggleEditor::MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName)
+		: EditorMenuItem(context, ResolveEditorNameFromEnum(dockspaceType), shortcutName)
+		, m_DockspaceType(dockspaceType)
 	{
 	}
 
-	void MenuItem_ToggleWindow::OnImGuiRender()
+	void MenuItem_ToggleEditor::OnImGuiRender()
 	{
-		ImGui::MenuItem(m_MenuItemName.c_str(), m_ShortcutName.c_str(), m_bShowWindowPtr, m_bEnabled);
+		if (auto* dockspace = DockspaceManager::Get().GetDockspace(m_DockspaceType))
+		{
+			m_bShowPtr = dockspace->GetShowPtr();
+		}
+		if (ImGui::MenuItem(m_MenuItemName.c_str(), m_ShortcutName.c_str(), m_bShowPtr, m_bEnabled))
+		{
+			if (!m_bShowPtr)
+			{
+				DockspaceManager::Get().OpenDockspace(m_DockspaceType);
+			}
+		}
+	}
+
+	MenuItem_TogglePanel::MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName)
+		: EditorMenuItem(context, ResolveEditorNameFromEnum(panelType), shortcutName)
+		, m_PanelType(panelType)
+	{
+	}
+
+	void MenuItem_TogglePanel::OnImGuiRender()
+	{
+		if (auto* panel = GetEditorContext()->GetPanel(m_PanelType))
+		{
+			m_bShowPtr = panel->GetShowPtr();
+		}
+		if (ImGui::MenuItem(m_MenuItemName.c_str(), m_ShortcutName.c_str(), m_bShowPtr, m_bEnabled))
+		{
+			if (!m_bShowPtr)
+			{
+				GetEditorContext()->OpenPanel(m_PanelType);
+			}
+		}
 	}
 
 	bool MenuItem_NewScene::OnKeyPressedOverride(KeyPressedEvent& e)
@@ -206,8 +238,7 @@ namespace ZeoEngine {
 
 	void MenuItem_ResetLayout::OnMenuItemActivated()
 	{
-		EditorLayer* editorLayer = Application::Get().FindLayer<EditorLayer>();
-		editorLayer->RebuildDockLayout();
+		DockspaceManager::Get().RebuildDockLayout();
 	}
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
@@ -216,7 +247,7 @@ namespace ZeoEngine {
 		// This may be null e.g. default particle system
 		if (filePath == "") return;
 
-		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanelByType<SceneViewportPanel>(GetEditorContext()->GetViewportPanelType());
+		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanel<SceneViewportPanel>(GetEditorContext()->GetViewportPanelType());
 		std::string snapshotName = filePath + ".png";
 		viewportPanel->Snapshot(snapshotName, 256);
 	}

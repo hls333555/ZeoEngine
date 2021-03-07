@@ -3,7 +3,6 @@
 #include "Engine/GameFramework/EngineLayer.h"
 
 #include "Engine/Events/KeyEvent.h"
-#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
 
@@ -29,11 +28,6 @@ namespace ZeoEngine {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 
-		void PushDockspace(EditorDockspace* dockspace);
-		EditorDockspace* GetDockspaceByType(EditorDockspaceType dockspaceType);
-		/** If dockspaceType is NONE, all dockspaces will be reset layout. */
-		void RebuildDockLayout(EditorDockspaceType dockspaceType = EditorDockspaceType::NONE);
-
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 
@@ -41,9 +35,6 @@ namespace ZeoEngine {
 		void StopPIE();
 		void PausePIE();
 		void ResumePIE();
-
-	private:
-		DockspaceManager m_DockspaceManager;
 
 	};
 

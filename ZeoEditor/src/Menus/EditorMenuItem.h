@@ -15,13 +15,12 @@ namespace ZeoEngine {
 	{
 	public:
 		EditorMenuItem() = delete;
-		EditorMenuItem(const std::string& menuItemName, const std::string& shortcutName);
+		EditorMenuItem(EditorMenu* context, const std::string& menuItemName, const std::string& shortcutName = "");
 		virtual ~EditorMenuItem() = default;
 
 		virtual void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		void SetContext(EditorMenu* contextMenu) { m_Context = contextMenu; }
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
 	protected:
@@ -38,13 +37,13 @@ namespace ZeoEngine {
 		std::string m_MenuItemName;
 		std::string m_ShortcutName;
 		EditorMenu* m_Context;
-		bool m_bEnabled{ true };
+		bool m_bEnabled = true;
 	};
 
 	class MenuItem_Seperator : public EditorMenuItem
 	{
 	public:
-		explicit MenuItem_Seperator(const std::string& menuItemName = "Seperator");
+		explicit MenuItem_Seperator(EditorMenu* context, const std::string& menuItemName = "Seperator");
 
 		virtual void OnImGuiRender() override;
 
@@ -52,10 +51,10 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override {}
 	};
 
-	class MenuItem_ToggleWindow : public EditorMenuItem
+	class MenuItem_ToggleEditor : public EditorMenuItem
 	{
 	public:
-		MenuItem_ToggleWindow(const std::string windowName, const std::string& shortcutName, bool* bShowWindowPtr);
+		MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName = "");
 
 		virtual void OnImGuiRender() override;
 
@@ -63,7 +62,23 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override {}
 
 	private:
-		bool* m_bShowWindowPtr;
+		EditorDockspaceType m_DockspaceType;
+		bool* m_bShowPtr = nullptr;
+	};
+
+	class MenuItem_TogglePanel : public EditorMenuItem
+	{
+	public:
+		MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName = "");
+
+		virtual void OnImGuiRender() override;
+
+	private:
+		virtual void OnMenuItemActivated() override {}
+
+	private:
+		EditorPanelType m_PanelType;
+		bool* m_bShowPtr = nullptr;
 	};
 
 	class MenuItem_NewScene : public EditorMenuItem

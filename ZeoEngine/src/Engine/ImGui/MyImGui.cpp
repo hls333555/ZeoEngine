@@ -17,15 +17,6 @@ namespace ImGui {
 		Unindent(indent);
 	}
 
-	void AddProgressBar(ImDrawList* drawList, float fraction, const ImVec2& a, const ImVec2& b, ImU32 foregroundCol, ImU32 backgroundCol)
-	{
-		if (!drawList)
-			return;
-
-		drawList->AddRectFilled(a, b, backgroundCol);
-		drawList->AddRectFilled(a, { a.x + fraction * (b.x - a.x), b.y }, foregroundCol);
-	}
-
 	static const ImGuiDataTypeInfo GDataTypeInfo[] =
 	{
 		{ sizeof(char),             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
@@ -99,12 +90,5 @@ namespace ImGui {
 		EndGroup();
 		return value_changed;
 	}
-
-}
-
-namespace ZeoEngine {
-
-	ImVec2Data ImVec2Data::DefaultPos{ { -1.0f, -1.0f } };
-	ImVec2Data ImVec2Data::DefaultSize{ { 800.0f, 600.0f } };
 
 }

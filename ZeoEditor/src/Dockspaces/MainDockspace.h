@@ -20,7 +20,8 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& filePath) override;
 		virtual void Deserialize(const std::string& filePath) override;
 
-		virtual void PostSceneRender(const Ref<FrameBuffer>& frameBuffer) override;
+		virtual void PostRenderScene(const Ref<FrameBuffer>& frameBuffer) override;
+		virtual int32_t PreRenderDockspace() override;
 
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;
 

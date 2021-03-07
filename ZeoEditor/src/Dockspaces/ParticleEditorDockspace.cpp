@@ -2,11 +2,11 @@
 
 #include <imgui_internal.h>
 
-#include "Panels/ParticleViewportPanel.h"
-#include "Panels/DataInspectorPanel.h"
+#include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItem.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
+#include "Panels/ParticleViewportPanel.h"
 
 namespace ZeoEngine {
 
@@ -14,35 +14,24 @@ namespace ZeoEngine {
 	{
 		EditorDockspace::OnAttach();
 
-		ParticleViewportPanel* particleViewportPanel = new ParticleViewportPanel(EditorPanelType::Particle_View, this, true);
-		ParticleInspectorPanel* particleInspectorPanel = new ParticleInspectorPanel(EditorPanelType::Particle_Inspector, this, true);
+		CreatePanel(EditorPanelType::Particle_View);
+		CreatePanel(EditorPanelType::Particle_Inspector);
 
-		{
-			EditorMenu* fileMenu = new EditorMenu("File");
-			fileMenu->PushMenuItem(new MenuItem_NewScene("New particle template", "CTRL+N"));
-			fileMenu->PushMenuItem(new MenuItem_OpenScene("Open particle template", "CTRL+O"));
-			fileMenu->PushMenuItem(new MenuItem_SaveScene("Save particle template", "CTRL+S"));
-			fileMenu->PushMenuItem(new MenuItem_SaveSceneAs("Save particle template As", "CTRL+ALT+S"));
-			PushMenu(fileMenu);
-		}
+		CreateMenu("File")
+			.MenuItem<MenuItem_NewScene>("New particle template", "CTRL+N")
+			.MenuItem<MenuItem_OpenScene>("Open particle template", "CTRL+O")
+			.MenuItem<MenuItem_SaveScene>("Save particle template", "CTRL+S")
+			.MenuItem<MenuItem_SaveSceneAs>("Save particle template As", "CTRL+ALT+S");
 
-		{
-			EditorMenu* editMenu = new EditorMenu("Edit");
-			editMenu->PushMenuItem(new MenuItem_Undo("Undo", "CTRL+Z"));
-			editMenu->PushMenuItem(new MenuItem_Redo("Redo", "CTRL+Y"));
-			editMenu->PushMenuItem(new MenuItem_Snapshot("Snapshot", ""));
-			PushMenu(editMenu);
-		}
+		CreateMenu("Edit")
+			.MenuItem<MenuItem_Undo>("Undo", "CTRL+Z")
+			.MenuItem<MenuItem_Redo>("Redo", "CTRL+Y")
+			.MenuItem<MenuItem_Snapshot>("Snapshot");
 
-		{
-			EditorMenu* windowMenu = new EditorMenu("Window");
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_View), "", particleViewportPanel->GetShowPtr()));
-			windowMenu->PushMenuItem(new MenuItem_ToggleWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_Inspector), "", particleInspectorPanel->GetShowPtr()));
-			PushMenu(windowMenu);
-		}
+		CreateMenu("Window")
+			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Particle_View)
+			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Particle_Inspector);
 
-		PushPanel(particleViewportPanel);
-		PushPanel(particleInspectorPanel);
 	}
 
 	void ParticleEditorDockspace::CreateNewScene(bool bIsFromOpenScene)
@@ -63,9 +52,9 @@ namespace ZeoEngine {
 		// Only snapshot on save when thumbnail texture is null
 		if (!pspc.Template->PreviewThumbnail)
 		{
-			ParticleViewportPanel* viewportPanel = GetPanelByType<ParticleViewportPanel>(EditorPanelType::Particle_View);
+			ParticleViewportPanel* particleViewportPanel = GetPanel<ParticleViewportPanel>(EditorPanelType::Particle_View);
 			std::string snapshotName = filePath + ".png";
-			viewportPanel->Snapshot(snapshotName, 256);
+			particleViewportPanel->Snapshot(snapshotName, 256);
 		}
 		serializer.Serialize(pspc, GetAssetType());
 	}
