@@ -6,6 +6,7 @@
 #include "Menus/EditorMenuItem.h"
 #include "Engine/Core/Serializer.h"
 #include "Panels/GameViewportPanel.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 

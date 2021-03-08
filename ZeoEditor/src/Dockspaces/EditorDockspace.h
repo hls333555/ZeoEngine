@@ -4,7 +4,7 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Buffer.h"
-#include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 

@@ -13,6 +13,7 @@
 #include "Panels/ParticleViewportPanel.h"
 #include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenu.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 

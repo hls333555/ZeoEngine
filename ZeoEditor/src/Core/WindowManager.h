@@ -4,27 +4,11 @@
 
 #include <imgui.h>
 
-#include "Engine/ImGui/MyImGui.h"
-#include "Utils/EditorUtils.h"
+#include "Core/EditorTypes.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
-
-	struct EditorDockspaceSpec
-	{
-		EditorDockspaceType Type;
-		glm::vec2 Padding{ 0.0f };
-		ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_MenuBar;
-		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
-	};
-
-	struct EditorPanelSpec
-	{
-		EditorPanelType Type;
-		ImGuiWindowFlags WindowFlags = 0;
-		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
-	};
 
 	class EditorDockspace;
 	class EditorPanel;

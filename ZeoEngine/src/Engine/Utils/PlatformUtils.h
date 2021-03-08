@@ -3,15 +3,9 @@
 #include <optional>
 #include <string>
 
-namespace ZeoEngine {
+#include "Engine/Core/EngineTypes.h"
 
-	enum class AssetType
-	{
-		NONE,
-		Scene,
-		ParticleTemplate,
-		Texture,
-	};
+namespace ZeoEngine {
 
 	class FileDialogs
 	{

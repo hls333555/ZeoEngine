@@ -7,6 +7,7 @@
 #include "Engine/Core/Input.h"
 #include "Panels/SceneViewportPanel.h"
 #include "Dockspaces/EditorDockspace.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 

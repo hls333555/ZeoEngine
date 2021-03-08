@@ -1,6 +1,7 @@
 #include "Panels/EditorPanel.h"
 
 #include "Dockspaces/EditorDockspace.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 

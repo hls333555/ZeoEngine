@@ -7,6 +7,7 @@
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Panels/ParticleViewportPanel.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 

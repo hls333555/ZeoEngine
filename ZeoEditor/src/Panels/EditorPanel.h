@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Core/WindowManager.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Buffer.h"
-#include "Engine/ImGui/MyImGui.h"
-#include "Utils/EditorUtils.h"
+#include "Core/EditorTypes.h"
 
 namespace ZeoEngine {
 

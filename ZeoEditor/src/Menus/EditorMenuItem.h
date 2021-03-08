@@ -4,7 +4,7 @@
 
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Events/KeyEvent.h"
-#include "Utils/EditorUtils.h"
+#include "Core/EditorTypes.h"
 
 namespace ZeoEngine {
 

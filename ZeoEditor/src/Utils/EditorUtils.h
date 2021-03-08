@@ -6,34 +6,6 @@
 
 namespace ZeoEngine {
 
-	// NOTE: All enums should use '_' to concatenate words
-	enum class EditorDockspaceType
-	{
-		NONE,
-
-		Main_Editor,
-		Particle_Editor,
-	};
-
-	// NOTE: All enums should use '_' to concatenate words
-	enum class EditorPanelType
-	{
-		NONE,
-
-		// Main editor windows
-		Game_View,
-		Scene_Outline,
-		Entity_Inspector,
-		Console,
-		Stats,
-		Preferences,
-		About,
-
-		// Particle editor windows
-		Particle_View,
-		Particle_Inspector,
-	};
-
 	template<typename T>
 	std::string ResolveEditorNameFromEnum(T type)
 	{

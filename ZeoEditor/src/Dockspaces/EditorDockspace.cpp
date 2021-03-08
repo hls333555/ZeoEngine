@@ -7,6 +7,8 @@
 #include "Engine/Debug/Instrumentor.h"
 #include "Scenes/MainEditorScene.h"
 #include "Scenes/ParticleEditorScene.h"
+#include "Utils/EditorUtils.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
