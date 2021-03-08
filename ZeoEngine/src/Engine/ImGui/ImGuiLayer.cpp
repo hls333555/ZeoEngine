@@ -113,11 +113,8 @@ namespace ZeoEngine {
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		ImFontGlyphRangesBuilder builder;
-		// Load 2500 common Chinese characters
-		builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-		// Add needed missing characters
-		static const char* missingChars = u8"¼­äÖÄâÖ¡";
-		builder.AddText(missingChars);
+		// Load full Chinese characters
+		builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
 		ImVector<ImWchar> OutRanges;
 		builder.BuildRanges(&OutRanges);
 		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 15.0f, nullptr, OutRanges.Data);
