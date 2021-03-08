@@ -45,7 +45,7 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		EditorDockspace* OpenDockspace(EditorDockspaceType dockspaceType);
+		EditorDockspace* ToggleDockspace(EditorDockspaceType dockspaceType, bool bOpen);
 
 		EditorDockspace* CreateDockspace(EditorDockspaceType dockspaceType);
 		template<typename T>
@@ -75,7 +75,7 @@ namespace ZeoEngine {
 		PanelManager() = default;
 		~PanelManager();
 
-		EditorPanel* OpenPanel(EditorPanelType panelType, EditorDockspace* context);
+		EditorPanel* TogglePanel(EditorPanelType panelType, EditorDockspace* context, bool bOpen);
 
 		EditorPanel* CreatePanel(EditorPanelType panelType, EditorDockspace* context);
 		template<typename T>

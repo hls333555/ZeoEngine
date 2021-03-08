@@ -403,7 +403,7 @@ namespace ZeoEngine {
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						EditorDockspace* editor = DockspaceManager::Get().OpenDockspace(EditorDockspaceType::Particle_Editor);
+						EditorDockspace* editor = DockspaceManager::Get().ToggleDockspace(EditorDockspaceType::Particle_Editor, true);
 						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
 						{
 							pspc.SetTemplate(m_Buffer);

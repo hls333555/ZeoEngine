@@ -126,9 +126,9 @@ namespace ZeoEngine {
 		return m_MenuManager.CreateMenu(menuName, this);
 	}
 
-	void EditorDockspace::OpenPanel(EditorPanelType panelType)
+	EditorPanel* EditorDockspace::TogglePanel(EditorPanelType panelType, bool bOpen)
 	{
-		m_PanelManager.OpenPanel(panelType, this);
+		return m_PanelManager.TogglePanel(panelType, this, bOpen);
 	}
 
 	void EditorDockspace::CreatePanel(EditorPanelType panelType)

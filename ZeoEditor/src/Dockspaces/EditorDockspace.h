@@ -39,7 +39,7 @@ namespace ZeoEngine {
 
 		EditorMenu& CreateMenu(const std::string& menuName);
 
-		void OpenPanel(EditorPanelType panelType);
+		EditorPanel* TogglePanel(EditorPanelType panelType, bool bOpen);
 		void CreatePanel(EditorPanelType panelType);
 		template<typename T = EditorPanel>
 		T* GetPanel(EditorPanelType panelType)

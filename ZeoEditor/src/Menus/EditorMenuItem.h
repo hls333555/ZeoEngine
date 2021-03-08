@@ -36,8 +36,9 @@ namespace ZeoEngine {
 	protected:
 		std::string m_MenuItemName;
 		std::string m_ShortcutName;
-		EditorMenu* m_Context;
+		bool* m_bSelected = nullptr;
 		bool m_bEnabled = true;
+		EditorMenu* m_Context = nullptr;
 	};
 
 	class MenuItem_Seperator : public EditorMenuItem
@@ -56,14 +57,11 @@ namespace ZeoEngine {
 	public:
 		MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName = "");
 
-		virtual void OnImGuiRender() override;
-
 	private:
-		virtual void OnMenuItemActivated() override {}
+		virtual void OnMenuItemActivated() override;
 
 	private:
 		EditorDockspaceType m_DockspaceType;
-		bool* m_bShowPtr = nullptr;
 	};
 
 	class MenuItem_TogglePanel : public EditorMenuItem
@@ -71,14 +69,11 @@ namespace ZeoEngine {
 	public:
 		MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName = "");
 
-		virtual void OnImGuiRender() override;
-
 	private:
-		virtual void OnMenuItemActivated() override {}
+		virtual void OnMenuItemActivated() override;
 
 	private:
 		EditorPanelType m_PanelType;
-		bool* m_bShowPtr = nullptr;
 	};
 
 	class MenuItem_NewScene : public EditorMenuItem

@@ -25,14 +25,22 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorDockspace* DockspaceManager::OpenDockspace(EditorDockspaceType dockspaceType)
+	EditorDockspace* DockspaceManager::ToggleDockspace(EditorDockspaceType dockspaceType, bool bOpen)
 	{
-		if (auto* dockspace = GetDockspace(dockspaceType))
+		auto* dockspace = GetDockspace(dockspaceType);
+		if (dockspace)
 		{
-			dockspace->m_bShow = true;
+			dockspace->m_bShow = bOpen;
 			return dockspace;
 		}
-		return CreateDockspace(dockspaceType);
+		else
+		{
+			if (bOpen)
+			{
+				return CreateDockspace(dockspaceType);
+			}
+		}
+		return nullptr;
 	}
 
 	EditorDockspace* DockspaceManager::CreateDockspace(EditorDockspaceType dockspaceType)
@@ -118,14 +126,22 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorPanel* PanelManager::OpenPanel(EditorPanelType panelType, EditorDockspace * context)
+	EditorPanel* PanelManager::TogglePanel(EditorPanelType panelType, EditorDockspace* context, bool bOpen)
 	{
-		if (auto* panel = GetPanel(panelType))
+		auto* panel = GetPanel(panelType);
+		if (panel)
 		{
-			panel->m_bShow = true;
+			panel->m_bShow = bOpen;
 			return panel;
 		}
-		return CreatePanel(panelType, context);
+		else
+		{
+			if (bOpen)
+			{
+				return CreatePanel(panelType, context);
+			}
+		}
+		return nullptr;
 	}
 
 	EditorPanel* PanelManager::CreatePanel(EditorPanelType panelType, EditorDockspace* context)
