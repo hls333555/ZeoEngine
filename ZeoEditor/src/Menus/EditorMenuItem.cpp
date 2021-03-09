@@ -62,19 +62,27 @@ namespace ZeoEngine {
 		: EditorMenuItem(context, ResolveEditorNameFromEnum(dockspaceType), shortcutName)
 		, m_DockspaceType(dockspaceType)
 	{
-		auto* dockspace = DockspaceManager::Get().GetDockspace(dockspaceType);
-		if (dockspace)
+	}
+
+	void MenuItem_ToggleEditor::OnImGuiRender()
+	{
+		if (!m_bSelected)
 		{
-			m_bSelected = dockspace->GetShowPtr();
+			auto* dockspace = DockspaceManager::Get().GetDockspace(m_DockspaceType);
+			if (dockspace)
+			{
+				m_bSelected = dockspace->GetShowPtr();
+			}
 		}
+
+		EditorMenuItem::OnImGuiRender();
 	}
 
 	void MenuItem_ToggleEditor::OnMenuItemActivated()
 	{
 		if (!m_bSelected)
 		{
-			auto* dockspace = DockspaceManager::Get().ToggleDockspace(m_DockspaceType, true);
-			m_bSelected = dockspace->GetShowPtr();
+			DockspaceManager::Get().ToggleDockspace(m_DockspaceType, true);
 		}
 	}
 
@@ -82,19 +90,27 @@ namespace ZeoEngine {
 		: EditorMenuItem(context, ResolveEditorNameFromEnum(panelType), shortcutName)
 		, m_PanelType(panelType)
 	{
-		auto* panel = GetEditorContext()->GetPanel(panelType);
-		if (panel)
+	}
+
+	void MenuItem_TogglePanel::OnImGuiRender()
+	{
+		if (!m_bSelected)
 		{
-			m_bSelected = panel->GetShowPtr();
+			auto* panel = GetEditorContext()->GetPanel(m_PanelType);
+			if (panel)
+			{
+				m_bSelected = panel->GetShowPtr();
+			}
 		}
+
+		EditorMenuItem::OnImGuiRender();
 	}
 
 	void MenuItem_TogglePanel::OnMenuItemActivated()
 	{
 		if (!m_bSelected)
 		{
-			auto* panel = GetEditorContext()->TogglePanel(m_PanelType, true);
-			m_bSelected = panel->GetShowPtr();
+			GetEditorContext()->TogglePanel(m_PanelType, true);
 		}
 	}
 

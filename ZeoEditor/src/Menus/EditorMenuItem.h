@@ -57,6 +57,8 @@ namespace ZeoEngine {
 	public:
 		MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName = "");
 
+		virtual void OnImGuiRender() override;
+
 	private:
 		virtual void OnMenuItemActivated() override;
 
@@ -68,6 +70,8 @@ namespace ZeoEngine {
 	{
 	public:
 		MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName = "");
+
+		virtual void OnImGuiRender() override;
 
 	private:
 		virtual void OnMenuItemActivated() override;
