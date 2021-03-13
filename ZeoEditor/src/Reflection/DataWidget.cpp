@@ -562,12 +562,68 @@ namespace ZeoEngine {
 		{
 			auto elementInstance = *it;
 
-			char nameBuffer[16];
-			_itoa_s(i, nameBuffer, 10);
+			char indexNameBuffer[16];
+			_itoa_s(i, indexNameBuffer, 10);
 			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, seqView.value_type());
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
 			// Data index
-			bool bIsTreeExpanded = ImGui::TreeNodeEx(nameBuffer, flags);
+			bool bIsTreeExpanded = ImGui::TreeNodeEx(indexNameBuffer, flags);
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Drag to re-arrange elements");
+			}
+
+			// Drag-drop operation
+			{
+				if (ImGui::BeginDragDropSource())
+				{
+					ImGui::SetDragDropPayload("DragSeqContainerIndex", &i, sizeof(uint32_t));
+					ImGui::Text("Place it here");
+
+					ImGui::EndDragDropSource();
+				}
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragSeqContainerIndex"))
+					{
+						ZE_CORE_ASSERT(payload->DataSize == sizeof(uint32_t));
+
+						auto sourceIndex = *(const uint32_t*)payload->Data;
+						auto targetIndex = i;
+						bool bMoveDownward = targetIndex >= sourceIndex;
+
+						// Insert to target location
+						{
+							auto element = seqView[sourceIndex];
+							auto targetIt = it;
+							seqView.insert(bMoveDownward ? ++targetIt : targetIt, element);
+						}
+
+						// Erase from source location
+						{
+							auto sourceIt = seqView.begin();
+							for (uint32_t j = 0; j < sourceIndex; ++j)
+							{
+								++sourceIt;
+							}
+							seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
+						}
+
+						// Update iterator to last draw location
+						{
+							it = seqView.begin();
+							for (uint32_t j = 0; j < i; ++j)
+							{
+								++it;
+							}
+						}
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+			}
+
 			// Switch to the right column
 			ImGui::TableNextColumn();
 			// Push data index as id
