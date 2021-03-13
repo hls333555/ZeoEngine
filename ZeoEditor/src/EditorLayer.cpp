@@ -3,10 +3,9 @@
 #include "Core/WindowManager.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/Core/CoreMacros.h"
 
 namespace ZeoEngine {
-
-#define SHOW_IMGUI_DEMO 0
 
 	PIEState pieState;
 
@@ -20,11 +19,6 @@ namespace ZeoEngine {
 		EngineLayer::OnAttach();
 
 		DockspaceManager::Get().CreateDockspace(EditorDockspaceType::Main_Editor);
-
-		// TODO:
-		std::string cachePath = std::filesystem::current_path().string().append("/temp");
-		// Create temp folder on demand
-		std::filesystem::create_directory(cachePath);
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)

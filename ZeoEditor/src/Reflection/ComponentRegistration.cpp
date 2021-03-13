@@ -5,7 +5,7 @@ ZE_REFL_REGISTRATION
 {
 using namespace ZeoEngine;
 
-#if ENABLE_TEST
+#if ENABLE_TEST_COMPONENT
 	ZE_REFL_ENUM(TestComponent::TestEnum)
 		ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum1)
 		ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum2)

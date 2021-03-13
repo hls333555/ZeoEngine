@@ -12,8 +12,7 @@
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/ReflectionCore.h"
-
-#define ENABLE_TEST 0
+#include "Engine/Core/CoreMacros.h"
 
 namespace ZeoEngine {
 
@@ -33,8 +32,7 @@ namespace ZeoEngine {
 		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 	};
 
-	// TODO: Move to Test.h
-#if ENABLE_TEST
+#if ENABLE_TEST_COMPONENT
 	struct TestComponent : public Component
 	{
 		enum TestEnum

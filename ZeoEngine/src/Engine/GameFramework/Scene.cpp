@@ -23,7 +23,7 @@ namespace ZeoEngine {
 			coreComp.bIsInternal = bIsInternal;
 		}
 		entity.AddComponent<TransformComponent>();
-#if ENABLE_TEST
+#if ENABLE_TEST_COMPONENT
 		entity.AddComponent<TestComponent>();
 #endif
 		// No need to sort on first entity
