@@ -1,6 +1,7 @@
 #include "Reflection/DataWidget.h"
 
 #include <misc/cpp/imgui_stdlib.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/Utils/PlatformUtils.h"
 #include "Panels/DataInspectorPanel.h"

@@ -5,6 +5,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <ImGuizmo.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/Core/Application.h"
 
@@ -112,12 +113,17 @@ namespace ZeoEngine {
 	void ImGuiLayer::LoadDefaultFont()
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		ImFontGlyphRangesBuilder builder;
+
 		// Load full Chinese characters
-		builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
-		ImVector<ImWchar> OutRanges;
-		builder.BuildRanges(&OutRanges);
-		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 15.0f, nullptr, OutRanges.Data);
+		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+
+		ImFontConfig config;
+		config.MergeMode = true; // Merge into first font
+		config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+		static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+		// Load font awesome 5 icons
+		io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_FAR, 15.0f, &config, iconRanges);
+
 		io.Fonts->Build();
 	}
 

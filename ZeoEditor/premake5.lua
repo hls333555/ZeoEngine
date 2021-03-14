@@ -30,7 +30,9 @@ project "ZeoEditor"
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.magic_enum}"
+		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.IconFontCppHeaders}"
+
 	}
 
 	links

@@ -19,7 +19,8 @@ project "ZeoEngine"
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.ini",
 		"vendor/ImGuizmo/ImGuizmo.h",
-		"vendor/ImGuizmo/ImGuizmo.cpp"
+		"vendor/ImGuizmo/ImGuizmo.cpp",
+		"vendor/IconFontCppHeaders/**.h"
 	}
 
 	defines
@@ -42,7 +43,8 @@ project "ZeoEngine"
 		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.magic_enum}"
+		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.IconFontCppHeaders}"
 	}
 
 	links 

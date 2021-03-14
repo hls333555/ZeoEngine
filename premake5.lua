@@ -29,6 +29,7 @@ IncludeDir["rapidjson"] = "%{wks.location}/ZeoEngine/vendor/rapidjson"
 IncludeDir["entt"] = "%{wks.location}/ZeoEngine/vendor/entt/include"
 IncludeDir["yaml_cpp"] = "%{wks.location}/ZeoEngine/vendor/yaml-cpp/include"
 IncludeDir["magic_enum"] = "%{wks.location}/ZeoEngine/vendor/magic_enum/include"
+IncludeDir["IconFontCppHeaders"] = "%{wks.location}/ZeoEngine/vendor/IconFontCppHeaders"
 
 -- Include premake files
 group "Dependencies"
