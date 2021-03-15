@@ -122,7 +122,7 @@ namespace ZeoEngine {
 		config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
 		static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 		// Load font awesome 5 icons
-		io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_FAR, 15.0f, &config, iconRanges);
+		io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_FAS, 13.0f, &config, iconRanges);
 
 		io.Fonts->Build();
 	}

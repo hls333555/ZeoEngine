@@ -1,6 +1,7 @@
 #include "Panels/ParticleViewportPanel.h"
 
 #include <imgui_internal.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/EditorDockspace.h"
@@ -10,10 +11,6 @@ namespace ZeoEngine {
 	void ParticleViewportPanel::OnAttach()
 	{
 		SceneViewportPanel::OnAttach();
-
-		m_ResimulateTexture = Texture2D::Create("assets/textures/Restart.png");
-		m_ToolbarTextures[0] = m_PauseTexture->GetTexture();
-		m_ToolbarTextures[1] = m_ResimulateTexture->GetTexture();
 
 		CreatePreviewParticle();
 		GetContext()->m_OnSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
@@ -81,29 +78,24 @@ namespace ZeoEngine {
 
 	void ParticleViewportPanel::RenderToolbar()
 	{
-		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
 
-		const float buttonSize = 32.0f;
 		// Place buttons at window center
-		ImGui::Indent(contentRegionAvailable.x * 0.5f - buttonSize - GImGui->Style.FramePadding.x * 3.0f/* Both two sides of button and SameLine() have spacing. */);
+		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f);
+
 		// Toggle pause / resume
-		if (ImGui::ImageButton(m_ToolbarTextures[0], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::TransparentButton(ps->IsPause() ? ICON_FA_PLAY : ICON_FA_PAUSE))
 		{
-			ToggleResumeTexture();
 			ps->TogglePause();
 		}
+
 		ImGui::SameLine();
+
 		// Resimulate
-		if (ImGui::ImageButton(m_ToolbarTextures[1], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::TransparentButton(ICON_FA_REDO_ALT))
 		{
 			ps->Resimulate();
 		}
-	}
-
-	void ParticleViewportPanel::ToggleResumeTexture()
-	{
-		m_ToolbarTextures[0] = m_ToolbarTextures[0] == m_PauseTexture->GetTexture() ? m_PlayTexture->GetTexture() : m_PauseTexture->GetTexture();
 	}
 
 }

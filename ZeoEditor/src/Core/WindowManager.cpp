@@ -1,5 +1,8 @@
 #include "Core/WindowManager.h"
 
+#include <IconsFontAwesome5.h>
+#include <magic_enum.hpp>
+
 #include "Dockspaces/MainDockspace.h"
 #include "Dockspaces/ParticleEditorDockspace.h"
 #include "Engine/Renderer/Renderer2D.h"
@@ -13,9 +16,41 @@
 #include "Panels/ParticleViewportPanel.h"
 #include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenu.h"
-#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
+
+	const char* GetDockspaceName(EditorDockspaceType dockspaceType)
+	{
+		switch (dockspaceType)
+		{
+			case EditorDockspaceType::Main_Editor:		return "Main Editor";
+			case EditorDockspaceType::Particle_Editor:	return ICON_FA_FIRE "  Particle Editor";
+		}
+
+		const char* typeStr = magic_enum::enum_name(dockspaceType).data();
+		ZE_CORE_ASSERT("Failed to get name from dockspace type: {0}!", typeStr);
+		return nullptr;
+	}
+
+	const char* GetPanelName(EditorPanelType panelType)
+	{
+		switch (panelType)
+		{
+			case EditorPanelType::Game_View:			return ICON_FA_PLAY_CIRCLE "  Game View";
+			case EditorPanelType::Scene_Outline:		return ICON_FA_SITEMAP "  Scene Outline";
+			case EditorPanelType::Entity_Inspector:		return ICON_FA_INFO_CIRCLE "  Entity Inspector";
+			case EditorPanelType::Console:				return ICON_FA_TERMINAL "  Console";
+			case EditorPanelType::Stats:				return ICON_FA_CHART_PIE "  Stats";
+			case EditorPanelType::Preferences:			return ICON_FA_COGS "  Preferences";
+			case EditorPanelType::About:				return ICON_FA_QUESTION_CIRCLE "  About";
+			case EditorPanelType::Particle_View:		return ICON_FA_PLAY_CIRCLE "  Particle View";
+			case EditorPanelType::Particle_Inspector:	return ICON_FA_INFO_CIRCLE "  Particle Inspector";
+		}
+
+		const char* typeStr = magic_enum::enum_name(panelType).data();
+		ZE_CORE_ASSERT("Failed to get name from panel type: {0}!", typeStr);
+		return nullptr;
+	}
 
 	DockspaceManager::~DockspaceManager()
 	{
@@ -46,7 +81,8 @@ namespace ZeoEngine {
 
 	EditorDockspace* DockspaceManager::CreateDockspace(EditorDockspaceType dockspaceType)
 	{
-		ZE_CORE_INFO("Creating dockspace: {0}", ResolveEditorNameFromEnum(dockspaceType));
+		const char* dockspaceName = GetDockspaceName(dockspaceType);
+		ZE_CORE_INFO("Creating dockspace: {0}", dockspaceName);
 		EditorDockspaceSpec spec;
 		spec.Type = dockspaceType;
 		switch (dockspaceType)
@@ -65,7 +101,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		ZE_CORE_ASSERT("Failed to create dockspace with unknown dockspace type: {0}!", ResolveEditorNameFromEnum(dockspaceType));
+		ZE_CORE_ASSERT("Failed to create dockspace with unknown dockspace type: {0}!", dockspaceName);
 		return nullptr;
 	}
 
@@ -147,7 +183,8 @@ namespace ZeoEngine {
 
 	EditorPanel* PanelManager::CreatePanel(EditorPanelType panelType, EditorDockspace* context)
 	{
-		ZE_CORE_INFO("Creating panel: {0}", ResolveEditorNameFromEnum(panelType));
+		const char* panelName = GetPanelName(panelType);
+		ZE_CORE_INFO("Creating panel: {0}", panelName);
 		EditorPanelSpec spec;
 		spec.Type = panelType;
 		switch (panelType)
@@ -195,7 +232,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		ZE_CORE_ASSERT("Failed to create panel with unknown panel type: {0}!", ResolveEditorNameFromEnum(panelType));
+		ZE_CORE_ASSERT("Failed to create panel with unknown panel type: {0}!", panelName);
 		return nullptr;
 	}
 

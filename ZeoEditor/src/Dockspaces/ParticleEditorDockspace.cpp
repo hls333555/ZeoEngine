@@ -1,13 +1,13 @@
 #include "Dockspaces/ParticleEditorDockspace.h"
 
 #include <imgui_internal.h>
+#include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItem.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Panels/ParticleViewportPanel.h"
-#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -19,15 +19,15 @@ namespace ZeoEngine {
 		CreatePanel(EditorPanelType::Particle_Inspector);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewScene>("New particle template", "CTRL+N")
-			.MenuItem<MenuItem_OpenScene>("Open particle template", "CTRL+O")
-			.MenuItem<MenuItem_SaveScene>("Save particle template", "CTRL+S")
-			.MenuItem<MenuItem_SaveSceneAs>("Save particle template As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New particle template", "CTRL+N")
+			.MenuItem<MenuItem_OpenScene>(ICON_FA_FILE_IMPORT "  Open particle template", "CTRL+O")
+			.MenuItem<MenuItem_SaveScene>(ICON_FA_SAVE "  Save particle template", "CTRL+S")
+			.MenuItem<MenuItem_SaveSceneAs>(ICON_FA_SAVE "  Save particle template As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
-			.MenuItem<MenuItem_Undo>("Undo", "CTRL+Z")
-			.MenuItem<MenuItem_Redo>("Redo", "CTRL+Y")
-			.MenuItem<MenuItem_Snapshot>("Snapshot");
+			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
+			.MenuItem<MenuItem_Redo>(ICON_FA_REDO "  Redo", "CTRL+Y")
+			.MenuItem<MenuItem_Snapshot>(ICON_FA_CAMERA "  Snapshot");
 
 		CreateMenu("Window")
 			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Particle_View)
@@ -75,8 +75,8 @@ namespace ZeoEngine {
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_View).c_str(), dockLeft);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Particle_Inspector).c_str(), dockRight);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Particle_View), dockLeft);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Particle_Inspector), dockRight);
 	}
 
 }

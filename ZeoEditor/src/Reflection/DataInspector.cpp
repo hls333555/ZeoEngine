@@ -1,5 +1,7 @@
 #include "Reflection/DataInspector.h"
 
+#include <IconsFontAwesome5.h>
+
 #include "Reflection/DataWidget.h"
 
 namespace ZeoEngine {
@@ -13,7 +15,7 @@ namespace ZeoEngine {
 	{
 		auto compInstance = entity.GetComponentById(compType.info().hash());
 		const auto compId = compType.info().hash();
-		const auto compName = GetMetaObjectDisplayName(compType);
+		const char* compDisplayName = GetComponentDisplayNameFull(compId);
 
 		bool bShouldDisplayCompHeader = !DoesPropExist(PropertyType::HideComponentHeader, compType);
 		bool bIsCompHeaderExpanded = true;
@@ -25,7 +27,7 @@ namespace ZeoEngine {
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			// Component collapsing header
-			bIsCompHeaderExpanded = ImGui::CollapsingHeader(*compName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+			bIsCompHeaderExpanded = ImGui::CollapsingHeader(compDisplayName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 			// Header tooltip
 			ShowPropertyTooltip(compType);
 
@@ -42,7 +44,7 @@ namespace ZeoEngine {
 				{
 					// Inherent components can never be removed
 					bool bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);
-					if (ImGui::MenuItem("Remove Component", nullptr, false, !bIsInherentComp))
+					if (ImGui::MenuItem(ICON_FA_MINUS_CIRCLE "  Remove Component", nullptr, false, !bIsInherentComp))
 					{
 						bWillRemoveType = true;
 					}
@@ -54,7 +56,7 @@ namespace ZeoEngine {
 		// Preprocess datas if needed
 		if (m_bIsPreprocessedDatasDirty)
 		{
-			ZE_CORE_TRACE("Sorting datas on '{0}' of '{1}'", *compName, entity.GetEntityName());
+			ZE_CORE_TRACE("Sorting datas on '{0}' of '{1}'", compDisplayName, entity.GetEntityName());
 			PreprocessComponent(compType);
 		}
 		if (bIsCompHeaderExpanded)

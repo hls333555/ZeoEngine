@@ -7,7 +7,6 @@
 #include "Engine/Core/Input.h"
 #include "Panels/SceneViewportPanel.h"
 #include "Dockspaces/EditorDockspace.h"
-#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -59,7 +58,7 @@ namespace ZeoEngine {
 	}
 
 	MenuItem_ToggleEditor::MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName)
-		: EditorMenuItem(context, ResolveEditorNameFromEnum(dockspaceType), shortcutName)
+		: EditorMenuItem(context, GetDockspaceName(dockspaceType), shortcutName)
 		, m_DockspaceType(dockspaceType)
 	{
 	}
@@ -87,7 +86,7 @@ namespace ZeoEngine {
 	}
 
 	MenuItem_TogglePanel::MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName)
-		: EditorMenuItem(context, ResolveEditorNameFromEnum(panelType), shortcutName)
+		: EditorMenuItem(context, GetPanelName(panelType), shortcutName)
 		, m_PanelType(panelType)
 	{
 	}

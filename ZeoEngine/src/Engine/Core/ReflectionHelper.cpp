@@ -2,11 +2,38 @@
 #include "Engine/Core/ReflectionHelper.h"
 
 #include <glm/glm.hpp>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
+
+	const char* GetComponentIcon(uint32_t compId)
+	{
+		switch (compId)
+		{
+			case entt::type_hash<TransformComponent>::value():		return ICON_FA_MAP_MARKER_ALT;
+			case entt::type_hash<SpriteRendererComponent>::value():	return ICON_FA_GHOST;
+			case entt::type_hash<CameraComponent>::value():			return ICON_FA_CAMERA;
+			case entt::type_hash<ParticleSystemComponent>::value():	return ICON_FA_FIRE_ALT;
+		}
+
+		return ICON_FA_CIRCLE_NOTCH;
+	}
+
+	const char* GetComponentDisplayNameFull(uint32_t compId)
+	{
+		const char* compIcon = GetComponentIcon(compId);
+		const auto compType = entt::resolve(compId);
+		const auto compName = GetMetaObjectDisplayName(compType);
+		static char fullCompName[128];
+		strcpy_s(fullCompName, compIcon);
+		strcat_s(fullCompName, "  ");
+		strcat_s(fullCompName, *compName);
+		return fullCompName;
+	}
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type)
 	{

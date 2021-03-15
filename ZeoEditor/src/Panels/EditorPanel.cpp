@@ -1,7 +1,6 @@
 #include "Panels/EditorPanel.h"
 
 #include "Dockspaces/EditorDockspace.h"
-#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -20,8 +19,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowPos(CenterPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
-		std::string panelName = ResolveEditorNameFromEnum(m_PanelSpec.Type);
-		if (ImGui::Begin(panelName.c_str(), &m_bShow, m_PanelSpec.WindowFlags))
+		if (ImGui::Begin(GetPanelName(m_PanelSpec.Type), &m_bShow, m_PanelSpec.WindowFlags))
 		{
 			m_bIsPanelFocused = ImGui::IsWindowFocused();
 			m_bIsPanelHovered = ImGui::IsWindowHovered();

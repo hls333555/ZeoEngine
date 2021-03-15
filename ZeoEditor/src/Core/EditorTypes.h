@@ -4,7 +4,6 @@
 
 namespace ZeoEngine {
 
-	// NOTE: All enums should use '_' to concatenate words
 	enum class EditorDockspaceType
 	{
 		NONE,
@@ -13,7 +12,6 @@ namespace ZeoEngine {
 		Particle_Editor,
 	};
 
-	// NOTE: All enums should use '_' to concatenate words
 	enum class EditorPanelType
 	{
 		NONE,

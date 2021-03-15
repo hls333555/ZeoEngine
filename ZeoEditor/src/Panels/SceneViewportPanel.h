@@ -4,7 +4,6 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Renderer/EditorCamera.h"
 
@@ -40,9 +39,6 @@ namespace ZeoEngine {
 		void OnViewportResize(const glm::vec2& size);
 
 	protected:
-		Ref<Texture2D> m_PlayTexture, m_PauseTexture;
-		void* m_ToolbarTextures[2];
-
 		EditorCamera m_EditorCamera;
 		glm::vec2 m_ViewportBounds[2];
 

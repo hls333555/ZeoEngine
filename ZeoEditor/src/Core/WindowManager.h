@@ -14,6 +14,9 @@ namespace ZeoEngine {
 	class EditorPanel;
 	class EditorMenu;
 
+	const char* GetDockspaceName(EditorDockspaceType dockspaceType);
+	const char* GetPanelName(EditorPanelType panelType);
+
 	class DockspaceManager
 	{
 	private:

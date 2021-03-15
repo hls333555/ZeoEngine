@@ -23,11 +23,7 @@ namespace ZeoEngine {
 
 		void CreateDefaultParticleSystem();
 
-		void ToggleResumeTexture();
-
 	private:
-		Ref<Texture2D> m_ResimulateTexture;
-
 		ParticleSystemPreviewComponent* m_ParticlePreviewComp;
 
 	};

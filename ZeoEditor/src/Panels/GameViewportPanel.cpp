@@ -5,6 +5,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <ImGuizmo.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/EditorDockspace.h"
@@ -21,9 +22,7 @@ namespace ZeoEngine {
 	{
 		SceneViewportPanel::OnAttach();
 
-		m_StopTexture = Texture2D::Create("assets/textures/Stop.png");
-		m_ToolbarTextures[0] = m_PlayTexture->GetTexture();
-		m_ToolbarTextures[1] = m_PauseTexture->GetTexture();
+		
 	}
 
 	void GameViewportPanel::OnEvent(Event& e)
@@ -104,50 +103,23 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::RenderToolbar()
 	{
-		const float buttonSize = 32.0f;
 		// Place buttons at window center
-		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - buttonSize - GImGui->Style.FramePadding.x * 3.0f/* Both two sides of button and SameLine() have spacing. */);
+		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f);
+
 		// Toggle play / stop
-		if (ImGui::ImageButton(m_ToolbarTextures[0], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::TransparentButton(ICON_FA_PLAY))
 		{
-			ToggleStopTexture();
-			//if (pieState == PIEState::None)
-			//{
-			//	StartPIE();
-			//}
-			//else
-			//{
-			//	StopPIE();
-			//}
+			
 		}
+
 		ImGui::SameLine();
+
 		// Toggle pause / resume
-		if (ImGui::ImageButton(m_ToolbarTextures[1], { buttonSize, buttonSize }, { 0.0f, 1.0f }, { 1.0f, 0.0f }))
+		if (ImGui::TransparentButton(ICON_FA_PAUSE))
 		{
-			ToggleResumeTexture();
-			//if (pieState == PIEState::Running)
-			//{
-			//	PausePIE();
-			//}
-			//else if (pieState == PIEState::Paused)
-			//{
-			//	ResumePIE();
-			//}
+			
 		}
 
-	}
-
-	void GameViewportPanel::ToggleStopTexture()
-	{
-		m_ToolbarTextures[0] = m_ToolbarTextures[0] == m_PlayTexture->GetTexture() ? m_StopTexture->GetTexture() : m_PlayTexture->GetTexture();
-	}
-
-	void GameViewportPanel::ToggleResumeTexture()
-	{
-		if (m_ToolbarTextures[0] == m_StopTexture->GetTexture())
-		{
-			m_ToolbarTextures[1] = m_ToolbarTextures[1] == m_PauseTexture->GetTexture() ? m_PlayTexture->GetTexture() : m_PauseTexture->GetTexture();
-		}
 	}
 
 	void GameViewportPanel::RenderGizmo()

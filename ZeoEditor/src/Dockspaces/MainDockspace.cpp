@@ -1,12 +1,12 @@
 #include "Dockspaces/MainDockspace.h"
 
 #include <imgui_internal.h>
+#include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItem.h"
 #include "Engine/Core/Serializer.h"
 #include "Panels/GameViewportPanel.h"
-#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -20,17 +20,17 @@ namespace ZeoEngine {
 		CreatePanel(EditorPanelType::Console);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewScene>("New Scene", "CTRL+N")
-			.MenuItem<MenuItem_OpenScene>("Open Scene", "CTRL+O")
-			.MenuItem<MenuItem_SaveScene>("Save Scene", "CTRL+S")
-			.MenuItem<MenuItem_SaveSceneAs>("Save Scene As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New Scene", "CTRL+N")
+			.MenuItem<MenuItem_OpenScene>(ICON_FA_FILE_IMPORT "  Open Scene", "CTRL+O")
+			.MenuItem<MenuItem_SaveScene>(ICON_FA_SAVE "  Save Scene", "CTRL+S")
+			.MenuItem<MenuItem_SaveSceneAs>(ICON_FA_SAVE "  Save Scene As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
-			.MenuItem<MenuItem_Undo>("Undo", "CTRL+Z")
-			.MenuItem<MenuItem_Redo>("Redo", "CTRL+Y")
-			.MenuItem<MenuItem_Copy>("Copy", "CTRL+C")
-			.MenuItem<MenuItem_Paste>("Paste", "CTRL+V")
-			.MenuItem<MenuItem_Cut>("Cut", "CTRL+X");
+			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
+			.MenuItem<MenuItem_Redo>(ICON_FA_REDO "  Redo", "CTRL+Y")
+			.MenuItem<MenuItem_Copy>(ICON_FA_COPY"  Copy", "CTRL+C")
+			.MenuItem<MenuItem_Paste>(ICON_FA_PASTE "  Paste", "CTRL+V")
+			.MenuItem<MenuItem_Cut>(ICON_FA_CUT "  Cut", "CTRL+X");
 
 		CreateMenu("Window")
 			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Game_View)
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Stats)
 			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Preferences)
 			.MenuItem<MenuItem_Seperator>()
-			.MenuItem<MenuItem_ResetLayout>("Reset layout");
+			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");
 
 		CreateMenu("Help")
 			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::About);
@@ -97,11 +97,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
 
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Game_View).c_str(), dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Scene_Outline).c_str(), dockRightUp);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Entity_Inspector).c_str(), dockRightDown);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Game_View), dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Scene_Outline), dockRightUp);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Entity_Inspector), dockRightDown);
 		//ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
-		ImGui::DockBuilderDockWindow(ResolveEditorNameFromEnum(EditorPanelType::Console).c_str(), dockLeftDown);
+		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Console), dockLeftDown);
 	}
 
 }

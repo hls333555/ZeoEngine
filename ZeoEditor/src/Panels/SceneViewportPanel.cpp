@@ -14,9 +14,6 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::OnAttach()
 	{
-		m_PlayTexture = Texture2D::Create("assets/textures/Play.png");
-		m_PauseTexture = Texture2D::Create("assets/textures/Pause.png");
-
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		GetContext()->SetEditorCamera(&m_EditorCamera);
 	}

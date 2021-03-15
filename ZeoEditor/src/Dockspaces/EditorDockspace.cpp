@@ -7,7 +7,6 @@
 #include "Engine/Debug/Instrumentor.h"
 #include "Scenes/MainEditorScene.h"
 #include "Scenes/ParticleEditorScene.h"
-#include "Utils/EditorUtils.h"
 #include "Engine/Utils/PlatformUtils.h"
 
 #define FRAMEBUFFER_WIDTH 1280
@@ -90,8 +89,8 @@ namespace ZeoEngine {
 	{
 		int32_t styleCount = PreRenderDockspace();
 
-		std::string dockspaceName = ResolveEditorNameFromEnum(m_DockspaceSpec.Type);
-		ImGui::Begin(dockspaceName.c_str(), &m_bShow, m_DockspaceSpec.WindowFlags);
+		const char* dockspaceName = GetDockspaceName(m_DockspaceSpec.Type);
+		ImGui::Begin(dockspaceName, &m_bShow, m_DockspaceSpec.WindowFlags);
 		ImGui::PopStyleVar(styleCount);
 
 		m_bIsDockspaceFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
@@ -101,7 +100,7 @@ namespace ZeoEngine {
 		m_MenuManager.OnImGuiRender(m_DockspaceSpec.Type == EditorDockspaceType::Main_Editor);
 
 		// TODO: Needs separate from window name?
-		ImGuiID dockspaceID = ImGui::GetID(dockspaceName.c_str());
+		ImGuiID dockspaceID = ImGui::GetID(dockspaceName);
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)
 		{
 			m_bShouldRebuildDockLayout = false;

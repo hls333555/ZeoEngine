@@ -1,5 +1,7 @@
 #include "Panels/DataInspectorPanel.h"
 
+#include <IconsFontAwesome5.h>
+
 #include "Dockspaces/MainDockspace.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionHelper.h"
@@ -12,7 +14,7 @@ namespace ZeoEngine {
 		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
 		ImGui::Indent((contentRegionAvailable.x - textSize.x) * 0.5f);
 
-		if (ImGui::Button("Add Component"))
+		if (ImGui::Button(ICON_FA_PLUS_CIRCLE "  Add Component"))
 		{
 			ImGui::OpenPopup("AddComponent");
 		}
@@ -42,15 +44,13 @@ namespace ZeoEngine {
 				{
 					for (const auto compId : compIds)
 					{
-						const auto compType = entt::resolve(compId);
-						// We want to display "full name" here instead of "display name"
-						auto compName = GetPropValue<const char*>(PropertyType::Name, compType);
-						if (ImGui::Selectable(*compName))
+						if (ImGui::Selectable(GetComponentDisplayNameFull(compId)))
 						{
 							auto compInstance = entity.AddComponentById(compId);
 							// Instance may be null as AddComponentById() failed
 							if (compInstance)
 							{
+								const auto compType = entt::resolve(compId);
 								// Categorize datas on this newly added component
 								m_DataInspector.PreprocessComponent(compType);
 							}

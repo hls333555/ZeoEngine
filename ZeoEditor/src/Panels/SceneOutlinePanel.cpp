@@ -1,6 +1,7 @@
 #include "Panels/SceneOutlinePanel.h"
 
 #include <imgui.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Dockspaces/MainDockspace.h"
@@ -26,7 +27,7 @@ namespace ZeoEngine {
 		// Right-click on blank space
 		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
-			if (ImGui::MenuItem("Create Empty Entity"))
+			if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
 			{
 				auto selectedEntity = GetScene()->CreateEntity("New Entity");
 				GetContext()->SetContextEntity(selectedEntity);

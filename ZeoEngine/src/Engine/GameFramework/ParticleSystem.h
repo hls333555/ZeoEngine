@@ -214,6 +214,7 @@ namespace ZeoEngine {
 		};
 
 		void TogglePause();
+		bool IsPause() const { return m_bPauseUpdate; }
 		void Resimulate();
 		void ResetParticlePool();
 		void Reset();

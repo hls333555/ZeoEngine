@@ -415,7 +415,7 @@ namespace ZeoEngine {
 				// Right-click on the preview thumbnail to open the popup menu
 				if (ImGui::BeginPopupContextItem("ParticleTemplateOptiones"))
 				{
-					if (ImGui::MenuItem("Resimulate"))
+					if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 					{
 						m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().ParticleSystemRuntime->Resimulate();
 					}
@@ -679,22 +679,30 @@ namespace ZeoEngine {
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
 		const auto seqSize = seqView.size();
 		ImGui::Text("%d elements", seqSize);
-		ImGui::SameLine();
-		if (ImGui::BeginCombo("##SequenceContainerOperation", nullptr, ImGuiComboFlags_NoPreview))
-		{
-			if (ImGui::Selectable("Add"))
-			{
-				InsertValue(seqView, seqView.end());
-			}
-			if (ImGui::Selectable("Clear"))
-			{
-				if (seqSize > 0 && seqView.clear())
-				{
-					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
-				}
-			}
 
-			ImGui::EndCombo();
+		ImGui::SameLine();
+
+		if (ImGui::TransparentSmallButton(ICON_FA_PLUS))
+		{
+			InsertValue(seqView, seqView.end());
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Add a element to the last");
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::TransparentSmallButton(ICON_FA_TRASH))
+		{
+			if (seqSize > 0 && seqView.clear())
+			{
+				InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+			}
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Remove all elements");
 		}
 	}
 
