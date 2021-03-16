@@ -49,75 +49,33 @@ namespace ZeoEngine {
 		{
 			return BasicMetaType::ASSCON;
 		}
-		else if (type.is_integral())
-		{
-			if (IsTypeEqual<bool>(type))
-			{
-				return BasicMetaType::BOOL;
-			}
-			else if (IsTypeEqual<int8_t>(type))
-			{
-				return BasicMetaType::I8;
-			}
-			else if (IsTypeEqual<int32_t>(type))
-			{
-				return BasicMetaType::I32;
-			}
-			else if (IsTypeEqual<int64_t>(type))
-			{
-				return BasicMetaType::I64;
-			}
-			else if (IsTypeEqual<uint8_t>(type))
-			{
-				return BasicMetaType::UI8;
-			}
-			else if (IsTypeEqual<uint32_t>(type))
-			{
-				return BasicMetaType::UI32;
-			}
-			else if (IsTypeEqual<uint64_t>(type))
-			{
-				return BasicMetaType::UI64;
-			}
-		}
-		else if (type.is_floating_point())
-		{
-			if (IsTypeEqual<float>(type))
-			{
-				return BasicMetaType::FLOAT;
-			}
-			else if (IsTypeEqual<double>(type))
-			{
-				return BasicMetaType::DOUBLE;
-			}
-		}
 		else if (type.is_enum())
 		{
 			return BasicMetaType::ENUM;
 		}
-		else if (IsTypeEqual<std::string>(type))
+		else
 		{
-			return BasicMetaType::STRING;
-		}
-		else if (IsTypeEqual<glm::vec2>(type))
-		{
-			return BasicMetaType::VEC2;
-		}
-		else if (IsTypeEqual<glm::vec3>(type))
-		{
-			return BasicMetaType::VEC3;
-		}
-		else if (IsTypeEqual<glm::vec4>(type))
-		{
-			return BasicMetaType::VEC4;
-		}
-		else if (IsTypeEqual<Ref<Texture2D>>(type))
-		{
-			return BasicMetaType::TEXTURE;
-		}
-		else if (IsTypeEqual<Ref<ParticleTemplate>>(type))
-		{
-			return BasicMetaType::PARTICLE;
+			switch (type.info().hash())
+			{
+				// Integral
+				case entt::type_hash<bool>::value():					return BasicMetaType::BOOL;
+				case entt::type_hash<int8_t>::value():					return BasicMetaType::I8;
+				case entt::type_hash<int32_t>::value():					return BasicMetaType::I32;
+				case entt::type_hash<int64_t>::value():					return BasicMetaType::I64;
+				case entt::type_hash<uint8_t>::value():					return BasicMetaType::UI8;
+				case entt::type_hash<uint32_t>::value():				return BasicMetaType::UI32;
+				case entt::type_hash<uint64_t>::value():				return BasicMetaType::UI64;
+				// Floating point
+				case entt::type_hash<float>::value():					return BasicMetaType::FLOAT;
+				case entt::type_hash<double>::value():					return BasicMetaType::DOUBLE;
+				// Class
+				case entt::type_hash<std::string>::value():				return BasicMetaType::STRING;
+				case entt::type_hash<glm::vec2>::value():				return BasicMetaType::VEC2;
+				case entt::type_hash<glm::vec3>::value():				return BasicMetaType::VEC3;
+				case entt::type_hash<glm::vec4>::value():				return BasicMetaType::VEC4;
+				case entt::type_hash<Ref<Texture2D>>::value():			return BasicMetaType::TEXTURE;
+				case entt::type_hash<Ref<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
+			}
 		}
 
 		return BasicMetaType::NONE;
