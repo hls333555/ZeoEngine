@@ -103,8 +103,11 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::RenderToolbar()
 	{
+		bool bIsInPIE = false;
+		float indent = bIsInPIE ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f :
+			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - GImGui->Style.FramePadding.x;
 		// Place buttons at window center
-		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f);
+		ImGui::Indent(indent);
 
 		// Toggle play / stop
 		if (ImGui::TransparentButton(ICON_FA_PLAY))
@@ -112,12 +115,15 @@ namespace ZeoEngine {
 			
 		}
 
-		ImGui::SameLine();
-
-		// Toggle pause / resume
-		if (ImGui::TransparentButton(ICON_FA_PAUSE))
+		if (bIsInPIE)
 		{
-			
+			ImGui::SameLine();
+
+			// Toggle pause / resume
+			if (ImGui::TransparentButton(ICON_FA_PAUSE))
+			{
+
+			}
 		}
 
 	}

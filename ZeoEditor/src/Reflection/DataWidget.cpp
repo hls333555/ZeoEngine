@@ -20,54 +20,54 @@ namespace ZeoEngine {
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
 		switch (EvaluateMetaType(type))
 		{
-		case BasicMetaType::STRUCT:
-			return CreateRef<StructWidget>(dataSpec, contextPanel);
-		case BasicMetaType::SEQCON:
-			if (bIsSeqElement)
-			{
-				ZE_CORE_ERROR("Container nesting is not supported!");
-				return {};
-			}
-			return CreateRef<SequenceContainerWidget>(dataSpec, contextPanel);
-		case BasicMetaType::ASSCON:
-			if (bIsSeqElement)
-			{
-				ZE_CORE_ERROR("Container nesting is not supported!");
-				return {};
-			}
-			return CreateRef<AssociativeContainerWidget>(dataSpec, contextPanel);
-		case BasicMetaType::BOOL:
-			return CreateRef<BoolDataWidget>(dataSpec, contextPanel);
-		case BasicMetaType::I8:
-			return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, contextPanel, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
-		case BasicMetaType::I32:
-			return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, contextPanel, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
-		case BasicMetaType::I64:
-			return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, contextPanel, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
-		case BasicMetaType::UI8:
-			return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, contextPanel, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
-		case BasicMetaType::UI32:
-			return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, contextPanel, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
-		case BasicMetaType::UI64:
-			return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, contextPanel, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
-		case BasicMetaType::FLOAT:
-			return CreateRef<ScalarNDataWidget<float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		case BasicMetaType::DOUBLE:
-			return CreateRef<ScalarNDataWidget<double>>(dataSpec, contextPanel, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
-		case BasicMetaType::ENUM:
-			return CreateRef<EnumDataWidget>(dataSpec, contextPanel);
-		case BasicMetaType::STRING:
-			return CreateRef<StringDataWidget>(dataSpec, contextPanel);
-		case BasicMetaType::VEC2:
-			return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		case BasicMetaType::VEC3:
-			return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
-		case BasicMetaType::VEC4:
-			return CreateRef<ColorDataWidget>(dataSpec, contextPanel);
-		case BasicMetaType::TEXTURE:
-			return CreateRef<Texture2DDataWidget>(dataSpec, contextPanel);
-		case BasicMetaType::PARTICLE:
-			return CreateRef<ParticleTemplateDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::STRUCT:
+				return CreateRef<StructWidget>(dataSpec, contextPanel);
+			case BasicMetaType::SEQCON:
+				if (bIsSeqElement)
+				{
+					ZE_CORE_ERROR("Container nesting is not supported!");
+					return {};
+				}
+				return CreateRef<SequenceContainerWidget>(dataSpec, contextPanel);
+			case BasicMetaType::ASSCON:
+				if (bIsSeqElement)
+				{
+					ZE_CORE_ERROR("Container nesting is not supported!");
+					return {};
+				}
+				return CreateRef<AssociativeContainerWidget>(dataSpec, contextPanel);
+			case BasicMetaType::BOOL:
+				return CreateRef<BoolDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::I8:
+				return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, contextPanel, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+			case BasicMetaType::I32:
+				return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, contextPanel, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+			case BasicMetaType::I64:
+				return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, contextPanel, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+			case BasicMetaType::UI8:
+				return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, contextPanel, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+			case BasicMetaType::UI32:
+				return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, contextPanel, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+			case BasicMetaType::UI64:
+				return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, contextPanel, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+			case BasicMetaType::FLOAT:
+				return CreateRef<ScalarNDataWidget<float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			case BasicMetaType::DOUBLE:
+				return CreateRef<ScalarNDataWidget<double>>(dataSpec, contextPanel, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+			case BasicMetaType::ENUM:
+				return CreateRef<EnumDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::STRING:
+				return CreateRef<StringDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::VEC2:
+				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			case BasicMetaType::VEC3:
+				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+			case BasicMetaType::VEC4:
+				return CreateRef<ColorDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::TEXTURE:
+				return CreateRef<Texture2DDataWidget>(dataSpec, contextPanel);
+			case BasicMetaType::PARTICLE:
+				return CreateRef<ParticleTemplateDataWidget>(dataSpec, contextPanel);
 		}
 
 		return {};

@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <spdlog/sinks/base_sink.h>
+#include <IconsFontAwesome5.h>
 
 namespace ZeoEngine {
 
@@ -86,19 +87,19 @@ namespace ZeoEngine {
 			// Options menu
 			if (ImGui::BeginPopup("Options"))
 			{
-				ImGui::Checkbox("Auto-scroll", &bAutoScroll);
+				ImGui::Checkbox(ICON_FA_SCROLL "  Auto-scroll", &bAutoScroll);
 				ImGui::EndPopup();
 			}
-			if (ImGui::Button("Options"))
+			if (ImGui::Button(ICON_FA_COG "  Options"))
 				ImGui::OpenPopup("Options");
 
 			ImGui::SameLine();
 
-			bool clear = ImGui::Button("Clear");
+			bool clear = ImGui::Button(ICON_FA_TRASH_ALT "  Clear");
 
 			ImGui::SameLine();
 
-			bool copy = ImGui::Button("Copy");
+			bool copy = ImGui::Button(ICON_FA_COPY "  Copy");
 
 			ImGui::SameLine();
 
@@ -112,7 +113,7 @@ namespace ZeoEngine {
 				ImGui::Checkbox("Critical", &bEnableLogLevelFilters[5]);
 				ImGui::EndPopup();
 			}
-			if (ImGui::Button("Filters"))
+			if (ImGui::Button(ICON_FA_FILTER  "Filters"))
 				ImGui::OpenPopup("Filters");
 
 			ImGui::SameLine();
