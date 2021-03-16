@@ -49,5 +49,5 @@ uniform sampler2D u_Textures[32];
 void main()
 {
 	o_color = texture(u_Textures[int(v_TexIndex)], vec2(v_TexCoord.x + v_UVOffset.x, v_TexCoord.y + v_UVOffset.y) * v_TilingFactor) * v_Color;
-	o_IDBuffer = v_EntityID;
+	o_IDBuffer = o_color.a != 0 ? v_EntityID : -1;
 }
