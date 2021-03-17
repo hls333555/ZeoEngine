@@ -73,33 +73,29 @@ namespace ZeoEngine {
 		}
 	}
 
-	int32_t EditorDockspace::PreRenderDockspace()
+	void EditorDockspace::PreRenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
-		ImGui::SetNextWindowPos(CenterPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+		ImVec2 centerPos{ mainViewport->Pos.x + mainViewport->Size.x / 2.0f, mainViewport->Pos.y + mainViewport->Size.y / 2.0f };
+		ImGui::SetNextWindowPos(centerPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(m_DockspaceSpec.InitialSize.Data, m_DockspaceSpec.InitialSize.Condition);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, ImGui::GetStyle().WindowRounding);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, ImGui::GetStyle().WindowBorderSize);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspaceSpec.Padding);
-		return 3;
 	}
 
 	void EditorDockspace::RenderDockspace()
 	{
-		int32_t styleCount = PreRenderDockspace();
+		PreRenderDockspace();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		const char* dockspaceName = GetDockspaceName(m_DockspaceSpec.Type);
 		ImGui::Begin(dockspaceName, &m_bShow, m_DockspaceSpec.WindowFlags);
-		ImGui::PopStyleVar(styleCount);
+		ImGui::PopStyleVar();
 
 		m_bIsDockspaceFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 		m_bIsDockspaceHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
-		// Render menus - non-main-menus must be rendered winthin window context
+		// Render menus (non-main-menus must be rendered winthin window context)
 		m_MenuManager.OnImGuiRender(m_DockspaceSpec.Type == EditorDockspaceType::Main_Editor);
 
-		// TODO: Needs separate from window name?
 		ImGuiID dockspaceID = ImGui::GetID(dockspaceName);
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)
 		{

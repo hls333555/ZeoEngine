@@ -277,7 +277,7 @@ namespace ZeoEngine {
 			// Display texture info tooltip
 			if (m_Buffer && ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("Resolution: %dx%d\nHas alpha: %s", m_Buffer->GetWidth(), m_Buffer->GetHeight(), m_Buffer->HasAlpha() ? "true" : "false");
+				ImGui::SetTooltipRounded("Resolution: %dx%d\nHas alpha: %s", m_Buffer->GetWidth(), m_Buffer->GetHeight(), m_Buffer->HasAlpha() ? "true" : "false");
 			}
 		}
 
@@ -329,7 +329,7 @@ namespace ZeoEngine {
 					// Display texture path tooltip for drop-down item
 					if (ImGui::IsItemHovered())
 					{
-						ImGui::SetTooltip("%s", texture->GetPath().c_str());
+						ImGui::SetTooltipRounded("%s", texture->GetPath().c_str());
 					}
 
 					ImGui::SameLine();
@@ -362,7 +362,7 @@ namespace ZeoEngine {
 		// Display texture path tooltip for current selection
 		if (m_Buffer && ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltip("%s", m_Buffer->GetPath().c_str());
+			ImGui::SetTooltipRounded("%s", m_Buffer->GetPath().c_str());
 		}
 
 		PostDraw();
@@ -400,7 +400,7 @@ namespace ZeoEngine {
 			{
 				if (ImGui::IsItemHovered())
 				{
-					ImGui::SetTooltip("Double-click to open the particle editor\nRight-click to open the context menu");
+					ImGui::SetTooltipRounded("Double-click to open the particle editor\nRight-click to open the context menu");
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
@@ -475,7 +475,7 @@ namespace ZeoEngine {
 					// Display particle template path tooltip for drop-down item
 					if (ImGui::IsItemHovered())
 					{
-						ImGui::SetTooltip("%s", pTemplate->GetPath().c_str());
+						ImGui::SetTooltipRounded("%s", pTemplate->GetPath().c_str());
 					}
 
 					ImGui::SameLine();
@@ -509,7 +509,7 @@ namespace ZeoEngine {
 		// Display particle template path tooltip for current selection
 		if (m_Buffer && ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltip("%s", m_Buffer->GetPath().c_str());
+			ImGui::SetTooltipRounded("%s", m_Buffer->GetPath().c_str());
 		}
 
 		PostDraw();
@@ -563,6 +563,7 @@ namespace ZeoEngine {
 		{
 			auto elementInstance = *it;
 
+			ImGui::AlignTextToFramePadding();
 			char indexNameBuffer[16];
 			_itoa_s(i, indexNameBuffer, 10);
 			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, seqView.value_type());
@@ -571,7 +572,7 @@ namespace ZeoEngine {
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(indexNameBuffer, flags);
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("Drag to re-arrange elements");
+				ImGui::SetTooltipRounded("Drag to re-arrange elements");
 			}
 
 			// Drag-drop operation
@@ -688,7 +689,7 @@ namespace ZeoEngine {
 		}
 		if (ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltip("Add a element to the last");
+			ImGui::SetTooltipRounded("Add a element to the last");
 		}
 
 		ImGui::SameLine();
@@ -702,7 +703,7 @@ namespace ZeoEngine {
 		}
 		if (ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltip("Remove all elements");
+			ImGui::SetTooltipRounded("Remove all elements");
 		}
 	}
 

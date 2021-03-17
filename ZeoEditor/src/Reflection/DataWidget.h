@@ -25,7 +25,7 @@ namespace ZeoEngine {
 			auto tooltip = GetPropValue<const char*>(PropertyType::Tooltip, metaObj);
 			if (tooltip)
 			{
-				ImGui::SetTooltip(*tooltip);
+				ImGui::SetTooltipRounded(*tooltip);
 			}
 		}
 	}
@@ -75,6 +75,7 @@ namespace ZeoEngine {
 
 			if (m_DataSpec.bIsSeqElement) return true;
 
+			ImGui::AlignTextToFramePadding();
 			// Data name
 			bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultDataTreeNodeFlags);
 			// Data tooltip

@@ -74,16 +74,12 @@ namespace ZeoEngine {
 		gameViewportPanel->ReadPixelDataFromIDBuffer(frameBuffer);
 	}
 
-	int32_t MainDockspace::PreRenderDockspace()
+	void MainDockspace::PreRenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(mainViewport->WorkPos);
+		ImGui::SetNextWindowSize(mainViewport->WorkSize);
 		ImGui::SetNextWindowViewport(mainViewport->ID);
-		ImGui::SetNextWindowPos(mainViewport->Pos);
-		ImGui::SetNextWindowSize(mainViewport->Size);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_DockspaceSpec.Padding);
-		return 3;
 	}
 
 	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)

@@ -67,7 +67,7 @@ namespace ZeoEngine {
 		void EndFrameBuffer();
 
 		virtual void PostRenderScene(const Ref<FrameBuffer>& frameBuffer) {}
-		virtual int32_t PreRenderDockspace();
+		virtual void PreRenderDockspace();
 
 		void RenderDockspace();
 		virtual void BuildDockWindows(ImGuiID dockspaceID) = 0;

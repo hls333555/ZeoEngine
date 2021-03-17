@@ -44,9 +44,10 @@ namespace ZeoEngine {
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			style.GrabRounding = style.WindowRounding = 8.0f;
+			style.WindowRounding = 8.0f;
 			style.WindowBorderSize = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+			style.PopupRounding = 5.0f;
+			style.FrameRounding = 5.0f;
 		}
 
 		SetDarkThemeColors();

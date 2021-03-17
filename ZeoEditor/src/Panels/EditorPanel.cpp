@@ -15,10 +15,11 @@ namespace ZeoEngine {
 		if (!m_bShow) return;
 
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImVec2 CenterPos{ mainViewport->Size.x / 2.0f, mainViewport->Size.y / 2.0f };
-		ImGui::SetNextWindowPos(CenterPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+		ImVec2 centerPos{ mainViewport->Pos.x + mainViewport->Size.x / 2.0f, mainViewport->Pos.y + mainViewport->Size.y / 2.0f };
+		ImGui::SetNextWindowPos(centerPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
 		if (ImGui::Begin(GetPanelName(m_PanelSpec.Type), &m_bShow, m_PanelSpec.WindowFlags))
 		{
 			m_bIsPanelFocused = ImGui::IsWindowFocused();
@@ -26,6 +27,7 @@ namespace ZeoEngine {
 
 			RenderPanel();
 		}
+		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}

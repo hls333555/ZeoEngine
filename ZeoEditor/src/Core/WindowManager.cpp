@@ -89,10 +89,10 @@ namespace ZeoEngine {
 		{
 			case EditorDockspaceType::Main_Editor:
 			{
-				spec.Padding = { 5.0f, 5.0f };
-				spec.WindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-					ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+				ImGuiWindowFlags flags = 0;
+				flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
+				flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+				spec.WindowFlags = flags;
 				return CreateDockspace<MainDockspace>(spec);
 			}
 			case EditorDockspaceType::Particle_Editor:
@@ -208,6 +208,7 @@ namespace ZeoEngine {
 			case EditorPanelType::Stats:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+				spec.Padding = ImGui::GetStyle().WindowPadding;
 				spec.InitialSize = { { 300.0f, 300.0f } };
 				return CreatePanel<StatsPanel>(spec, context);
 			}

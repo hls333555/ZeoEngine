@@ -20,6 +20,16 @@ namespace ImGui {
 		Unindent(indent);
 	}
 
+	void SetTooltipRounded(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+		SetTooltipV(fmt, args);
+		PopStyleVar();
+		va_end(args);
+	}
+
 	static const ImGuiDataTypeInfo GDataTypeInfo[] =
 	{
 		{ sizeof(char),             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
@@ -40,6 +50,21 @@ namespace ImGui {
 	};
 	IM_STATIC_ASSERT(IM_ARRAYSIZE(GDataTypeInfo) == ImGuiDataType_COUNT);
 
+	void PushMultiItemsWidthsWithLabels(int components, float label_width, float w_full)
+	{
+		ImGuiContext& g = *GImGui;
+		ImGuiWindow* window = g.CurrentWindow;
+		const ImGuiStyle& style = g.Style;
+		const float w_item_one = ImMax(1.0f, IM_FLOOR((w_full - (style.ItemInnerSpacing.x) * (components - 1 + components)) / (float)components) - label_width);
+		const float w_item_last = ImMax(1.0f, IM_FLOOR(w_full - (w_item_one + label_width) * (components - 1) - style.ItemInnerSpacing.x * (components - 1 + components) - label_width));
+		window->DC.ItemWidthStack.push_back(window->DC.ItemWidth); // Backup current width
+		window->DC.ItemWidthStack.push_back(w_item_last);
+		for (int i = 0; i < components - 2; i++)
+			window->DC.ItemWidthStack.push_back(w_item_one);
+		window->DC.ItemWidth = (components == 1) ? w_item_last : w_item_one;
+		g.NextItemData.Flags &= ~ImGuiNextItemDataFlags_HasWidth;
+	}
+
 	bool DragScalarNEx(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
 	{
 		ImGuiWindow* window = GetCurrentWindow();
@@ -50,7 +75,7 @@ namespace ImGui {
 		bool value_changed = false;
 		BeginGroup();
 		PushID(label);
-		PushMultiItemsWidths(components, CalcItemWidth());
+		PushMultiItemsWidthsWithLabels(components, CalcTextSize("X").x, CalcItemWidth());
 		size_t type_size = GDataTypeInfo[data_type].Size;
 		for (int i = 0; i < components; ++i)
 		{
@@ -59,24 +84,22 @@ namespace ImGui {
 			{
 				SameLine(0, g.Style.ItemInnerSpacing.x);
 			}
-			value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
-
 			if (components > 1)
 			{
-				const ImVec2 min = GetItemRectMin();
-				const ImVec2 max = GetItemRectMax();
-				const float spacing = g.Style.FrameRounding;
-				const float halfSpacing = spacing * 0.5f;
-				static const ImU32 colors[] =
+				static const char* labels[] =
 				{
-					0xBB0000FF, // Red
-					0xBB00FF00, // Green
-					0xBBFF0000, // Blue
-					0xBBFFFFFF, // White for alpha?
+					"X", "Y", "Z"
 				};
-				window->DrawList->AddLine({ min.x + spacing, max.y - halfSpacing }, { max.x - spacing, max.y - halfSpacing }, colors[i], 3);
+				static const ImVec4 colors[] =
+				{
+					{ 1.0f, 0.0f, 0.0f, 1.0f},
+					{ 0.0f, 1.0f, 0.0f, 1.0f},
+					{ 0.0f, 0.0f, 1.0f, 1.0f}
+				};
+				ImGui::TextColored(colors[i], labels[i]);
+				ImGui::SameLine(0, g.Style.ItemInnerSpacing.x);
 			}
-
+			value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
 			PopID();
 			PopItemWidth();
 			p_data = (void*)((char*)p_data + type_size);

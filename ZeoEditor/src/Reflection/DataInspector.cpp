@@ -31,7 +31,7 @@ namespace ZeoEngine {
 			// Header tooltip
 			ShowPropertyTooltip(compType);
 
-			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight + GImGui->Style.FramePadding.x);
 
 			// Component settings button
 			{
@@ -90,7 +90,7 @@ namespace ZeoEngine {
 					ImGui::PopID();
 					// and pop entity id
 					ImGui::PopID();
-					if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+					if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 					{
 						ImGui::TableNextColumn();
 						// Re-push entity id
@@ -98,7 +98,6 @@ namespace ZeoEngine {
 						// Re-push component id
 						ImGui::PushID(compId);
 
-						ImGui::AlignTextToFramePadding();
 						// Iterate all visible datas
 						for (const auto data : visibleDatas)
 						{

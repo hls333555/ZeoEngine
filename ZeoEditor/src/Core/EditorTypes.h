@@ -33,7 +33,6 @@ namespace ZeoEngine {
 	struct EditorDockspaceSpec
 	{
 		EditorDockspaceType Type;
-		glm::vec2 Padding{ 0.0f };
 		ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_MenuBar;
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};
@@ -42,6 +41,7 @@ namespace ZeoEngine {
 	{
 		EditorPanelType Type;
 		ImGuiWindowFlags WindowFlags = 0;
+		ImVec2 Padding = ImVec2(3.5f, 3.5f);
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};
 
