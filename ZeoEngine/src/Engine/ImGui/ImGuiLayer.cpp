@@ -40,17 +40,14 @@ namespace ZeoEngine {
 
 		// Setup dark Dear ImGui style
 		ImGui::StyleColorsDark();
+		SetDarkThemeColors();
+
 		// Set default style
 		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 8.0f;
-			style.WindowBorderSize = 0.0f;
-			style.PopupRounding = 5.0f;
-			style.FrameRounding = 5.0f;
-		}
-
-		SetDarkThemeColors();
+		style.WindowRounding = 8.0f;
+		style.PopupRounding = 5.0f;
+		style.PopupBorderSize = 0.0f;
+		style.FrameRounding = 5.0f;
 
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());

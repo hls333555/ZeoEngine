@@ -52,14 +52,16 @@ namespace ZeoEngine {
 		GetContext()->BlockEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
-		ImGui::GetWindowDrawList()->AddImage(
+		ImGui::GetWindowDrawList()->AddImageRounded(
 			GetFrameBuffer()->GetColorAttachment(),
 			// Upper left corner for the UVs to be applied at
 			window->InnerRect.Min,
 			// Lower right corner for the UVs to be applied at
 			window->InnerRect.Max,
 			// The UVs have to be flipped
-			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+			IM_COL32_WHITE,
+			ImGui::IsWindowDocked() ? 0.0f : 8.0f, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 
 		RenderToolbar();
 	}

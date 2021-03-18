@@ -4,6 +4,8 @@
 #include <spdlog/sinks/base_sink.h>
 #include <IconsFontAwesome5.h>
 
+#include "Engine/ImGui/MyImGui.h"
+
 namespace ZeoEngine {
 
 	struct EditorLog
@@ -85,7 +87,7 @@ namespace ZeoEngine {
 		void Draw()
 		{
 			// Options menu
-			if (ImGui::BeginPopup("Options"))
+			if (ImGui::BeginPopupWithPadding("Options"))
 			{
 				ImGui::Checkbox(ICON_FA_SCROLL "  Auto-scroll", &bAutoScroll);
 				ImGui::EndPopup();
@@ -104,7 +106,7 @@ namespace ZeoEngine {
 			ImGui::SameLine();
 
 			// Filters menu
-			if (ImGui::BeginPopup("Filters"))
+			if (ImGui::BeginPopupWithPadding("Filters"))
 			{
 				ImGui::Checkbox("Trace", &bEnableLogLevelFilters[0]);
 				ImGui::Checkbox("Info", &bEnableLogLevelFilters[2]);

@@ -20,7 +20,7 @@ namespace ImGui {
 		Unindent(indent);
 	}
 
-	void SetTooltipRounded(const char* fmt, ...)
+	void SetTooltipWithPadding(const char* fmt, ...)
 	{
 		va_list args;
 		va_start(args, fmt);
@@ -28,6 +28,30 @@ namespace ImGui {
 		SetTooltipV(fmt, args);
 		PopStyleVar();
 		va_end(args);
+	}
+
+	bool BeginPopupWithPadding(const char* str_id, ImGuiWindowFlags flags)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		bool is_open = BeginPopup(str_id, flags);
+		ImGui::PopStyleVar();
+		return is_open;
+	}
+
+	bool BeginPopupContextWindowWithPadding(const char* str_id, ImGuiPopupFlags popup_flags)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		bool is_open = BeginPopupContextWindow(str_id, popup_flags);
+		ImGui::PopStyleVar();
+		return is_open;
+	}
+
+	bool BeginPopupContextItemWithPadding(const char* str_id, ImGuiPopupFlags popup_flags)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		bool is_open = BeginPopupContextItem(str_id, popup_flags);
+		ImGui::PopStyleVar();
+		return is_open;
 	}
 
 	static const ImGuiDataTypeInfo GDataTypeInfo[] =

@@ -40,7 +40,7 @@ namespace ZeoEngine {
 					ImGui::OpenPopup("ComponentSettings");
 				}
 
-				if (ImGui::BeginPopup("ComponentSettings"))
+				if (ImGui::BeginPopupWithPadding("ComponentSettings"))
 				{
 					// Inherent components can never be removed
 					bool bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);

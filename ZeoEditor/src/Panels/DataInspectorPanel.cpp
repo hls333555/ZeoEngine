@@ -19,7 +19,7 @@ namespace ZeoEngine {
 			ImGui::OpenPopup("AddComponent");
 		}
 
-		if (ImGui::BeginPopup("AddComponent"))
+		if (ImGui::BeginPopupWithPadding("AddComponent"))
 		{
 			if (m_bIsCategorizedComponentsDirty)
 			{

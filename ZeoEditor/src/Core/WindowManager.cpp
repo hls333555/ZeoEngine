@@ -215,6 +215,7 @@ namespace ZeoEngine {
 			case EditorPanelType::Preferences:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoCollapse;
+				spec.Padding = ImGui::GetStyle().WindowPadding;
 				return CreatePanel<PreferencesPanel>(spec, context);
 			}
 			case EditorPanelType::About:

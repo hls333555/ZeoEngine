@@ -6,8 +6,10 @@ namespace ImGui {
 
 	IMGUI_API void TextCentered(const char* fmt, ...);
 
-	/** Version that displays tooltip well with rounding corner. */
-	IMGUI_API void SetTooltipRounded(const char* fmt, ...) IM_FMTARGS(1);
+	IMGUI_API void SetTooltipWithPadding(const char* fmt, ...) IM_FMTARGS(1);
+	IMGUI_API bool BeginPopupWithPadding(const char* str_id, ImGuiWindowFlags flags = 0);
+	IMGUI_API bool BeginPopupContextWindowWithPadding(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
+	IMGUI_API bool BeginPopupContextItemWithPadding(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
 
 	IMGUI_API void PushMultiItemsWidthsWithLabels(int components, float label_width, float w_full);
 	/** Version that displays (x,y,z) labels before each component (components > 1). */

@@ -25,7 +25,7 @@ namespace ZeoEngine {
 			auto tooltip = GetPropValue<const char*>(PropertyType::Tooltip, metaObj);
 			if (tooltip)
 			{
-				ImGui::SetTooltipRounded(*tooltip);
+				ImGui::SetTooltipWithPadding(*tooltip);
 			}
 		}
 	}

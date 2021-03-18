@@ -9,7 +9,6 @@ namespace ZeoEngine {
 	void PreferencesPanel::RenderPanel()
 	{
 		// TODO: Write preferences to a config file
-		ImGui::ShowStyleSelector("Editor style");
 
 		// VSync
 		{
