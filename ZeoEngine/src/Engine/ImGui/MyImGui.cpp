@@ -2,6 +2,7 @@
 #include "Engine/ImGui/MyImGui.h"
 
 #include <imgui_internal.h>
+#include <IconsFontAwesome5.h>
 
 namespace ImGui {
 
@@ -197,6 +198,21 @@ namespace ImGui {
 
 		IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
 		return pressed;
+	}
+
+	void HelpMarker(const char* desc)
+	{
+		ImGui::TextDisabled(ICON_FA_QUESTION_CIRCLE);
+		if (ImGui::IsItemHovered())
+		{
+			PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted(desc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+			PopStyleVar();
+		}
 	}
 
 }

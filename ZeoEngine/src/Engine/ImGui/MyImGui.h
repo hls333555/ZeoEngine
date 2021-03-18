@@ -20,6 +20,8 @@ namespace ImGui {
 	IMGUI_API bool TransparentButton(const char* label, const ImVec2& size = ImVec2(0, 0));
 	IMGUI_API bool TransparentButtonEx(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
+	IMGUI_API void HelpMarker(const char* desc);
+
 }
 
 namespace ZeoEngine {
