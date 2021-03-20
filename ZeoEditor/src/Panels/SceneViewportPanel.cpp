@@ -30,10 +30,7 @@ namespace ZeoEngine {
 			OnViewportResize(m_LastViewportSize);
 		}
 
-		if (IsPanelFocused())
-		{
-			m_EditorCamera.OnUpdate(dt);
-		}
+		m_EditorCamera.OnUpdate(dt, IsPanelFocused());
 	}
 
 	void SceneViewportPanel::OnEvent(Event& e)

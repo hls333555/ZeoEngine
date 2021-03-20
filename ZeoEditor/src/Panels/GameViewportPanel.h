@@ -30,6 +30,7 @@ namespace ZeoEngine {
 
 	private:
 		int32_t m_GizmoType = 0;
+		bool m_bGizmoVisible = false;
 
 		Entity m_HoveredEntity;
 	};

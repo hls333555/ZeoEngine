@@ -5,6 +5,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <imgui.h>
+#include <ImGuizmo.h>
 
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
@@ -18,24 +19,33 @@ namespace ZeoEngine {
 		UpdateView();
 	}
 
-	void EditorCamera::OnUpdate(DeltaTime dt)
+	void EditorCamera::OnUpdate(DeltaTime dt, bool bIsViewportFocused)
 	{
-		// This key press should match gizmo control
-		if (Input::IsKeyPressed(Key::LeftControl))
-		{
-			const glm::vec2 mousePos = Input::GetMousePosition();
-			glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
-			m_InitialMousePosition = mousePos;
+		m_bIsUsing = false;
 
-			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
-			{
-				MousePan(delta);
-			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft) && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+		const glm::vec2 mousePos = Input::GetMousePosition();
+		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
+		m_InitialMousePosition = mousePos;
+
+		if (!bIsViewportFocused) return;
+
+		if (ImGuizmo::IsUsing()) return;
+
+		if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+		{
+			m_bIsUsing = true;
+			MousePan(delta);
+		}
+		
+		if (Input::IsKeyPressed(Key::CameraControl))
+		{
+			m_bIsUsing = true;
+
+			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
 				MouseRotate(delta);
 			}
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && ImGui::IsMouseDragging(ImGuiMouseButton_Right))
+			else if (ImGui::IsMouseDragging(ImGuiMouseButton_Right))
 			{
 				MouseZoom(delta.y);
 			}

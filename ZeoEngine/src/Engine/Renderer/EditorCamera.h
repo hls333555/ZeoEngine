@@ -14,8 +14,11 @@ namespace ZeoEngine {
 		EditorCamera() = default;
 		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);
 
-		void OnUpdate(DeltaTime dt);
+		void OnUpdate(DeltaTime dt, bool bIsViewportFocused);
 		void OnEvent(Event& e);
+
+		/** Returns true when being manipulated. */
+		bool IsUsing() const { return m_bIsUsing; }
 
 		float GetDistance() const { return m_Distance; }
 		void SetDistance(float distance) { m_Distance = distance; }
@@ -51,6 +54,8 @@ namespace ZeoEngine {
 		float CalculateZoomSpeed() const;
 
 	private:
+		bool m_bIsUsing = false;
+
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
 		glm::mat4 m_ViewMatrix;

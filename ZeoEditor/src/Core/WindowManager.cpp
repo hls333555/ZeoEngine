@@ -89,10 +89,8 @@ namespace ZeoEngine {
 		{
 			case EditorDockspaceType::Main_Editor:
 			{
-				ImGuiWindowFlags flags = 0;
-				flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
-				flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-				spec.WindowFlags = flags;
+				spec.WindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
+				spec.WindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 				return CreateDockspace<MainDockspace>(spec);
 			}
 			case EditorDockspaceType::Particle_Editor:

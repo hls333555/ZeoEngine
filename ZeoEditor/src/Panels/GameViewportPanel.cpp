@@ -70,7 +70,9 @@ namespace ZeoEngine {
 
 	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		if (IsPanelHovered() && e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftControl)) // This key press should match camera control
+		if (IsPanelHovered() &&
+			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
+			(!m_bGizmoVisible || (m_bGizmoVisible && !ImGuizmo::IsOver())))
 		{
 			GetContext()->SetContextEntity(m_HoveredEntity);
 		}
@@ -130,8 +132,11 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::RenderGizmo()
 	{
+		ImGuizmo::Enable(!m_EditorCamera.IsUsing());
+
 		Entity selectedEntity = GetContext()->GetContextEntity();
-		if (selectedEntity && m_GizmoType != -1)
+		m_bGizmoVisible = selectedEntity && m_GizmoType != -1;
+		if (m_bGizmoVisible)
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
