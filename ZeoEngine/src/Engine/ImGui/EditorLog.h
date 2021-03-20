@@ -3,34 +3,9 @@
 #include <imgui.h>
 #include <spdlog/sinks/base_sink.h>
 
+#include "Engine/ImGui/TextFilter.h"
+
 namespace ZeoEngine {
-
-	// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
-	struct TextFilter
-	{
-		// [Internal]
-		struct TextRange
-		{
-			const char* b;
-			const char* e;
-
-			TextRange() { b = e = NULL; }
-			TextRange(const char* _b, const char* _e) { b = _b; e = _e; }
-			bool            empty() const { return b == e; }
-			IMGUI_API void  split(char separator, ImVector<TextRange>* out) const;
-		};
-
-		char                    InputBuf[256];
-		ImVector<TextRange>		Filters;
-		int                     CountGrep;
-
-		IMGUI_API           TextFilter(const char* default_filter = "");
-		IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0f);  // Helper calling InputTextWithHint+Build
-		IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
-		IMGUI_API void      Build();
-		void                Clear() { InputBuf[0] = 0; Build(); }
-		bool                IsActive() const { return !Filters.empty(); }
-	};
 
 	struct EditorLog
 	{

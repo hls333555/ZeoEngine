@@ -203,6 +203,7 @@ namespace ZeoEngine {
 			}
 			case EditorPanelType::Console:
 			{
+				spec.Padding = ImGui::GetStyle().WindowPadding;
 				return CreatePanel<ConsolePanel>(spec, context);
 			}
 			case EditorPanelType::Stats:

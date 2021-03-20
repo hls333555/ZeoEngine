@@ -1,7 +1,6 @@
 #include "ZEpch.h"
-#include "Engine/Core/EditorLog.h"
+#include "Engine/ImGui/EditorLog.h"
 
-#include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/ImGui/MyImGui.h"
@@ -9,131 +8,6 @@
 namespace ZeoEngine {
 
 	EditorLog EditorLog::s_EditorLog;
-
-	void ImStrncpy(char* dst, const char* src, size_t count)
-	{
-		if (count < 1) return;
-
-		if (count > 1)
-		{
-			strncpy(dst, src, count - 1);
-		}
-		dst[count - 1] = 0;
-	}
-
-	TextFilter::TextFilter(const char* default_filter)
-	{
-		if (default_filter)
-		{
-			ImStrncpy(InputBuf, default_filter, IM_ARRAYSIZE(InputBuf));
-			Build();
-		}
-		else
-		{
-			InputBuf[0] = 0;
-			CountGrep = 0;
-		}
-	}
-
-	bool TextFilter::Draw(const char* label, float width)
-	{
-		if (width != 0.0f)
-		{
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f);
-		}
-		bool value_changed = ImGui::InputTextWithHint(label, "Search log", InputBuf, IM_ARRAYSIZE(InputBuf));
-		ImGui::SameLine();
-		ImGui::HelpMarker(
-R"(Filter usage:
-	""			display all lines
-	"xxx"		display lines containing "xxx"
-	"xxx,yyy"	display lines containing "xxx" or "yyy"
-	"-xxx"		hide lines containing "xxx")");
-		if (value_changed)
-		{
-			Build();
-		}
-		return value_changed;
-	}
-
-	void TextFilter::TextRange::split(char separator, ImVector<TextRange>* out) const
-	{
-		out->resize(0);
-		const char* wb = b;
-		const char* we = wb;
-		while (we < e)
-		{
-			if (*we == separator)
-			{
-				out->push_back(TextRange(wb, we));
-				wb = we + 1;
-			}
-			we++;
-		}
-		if (wb != we)
-		{
-			out->push_back(TextRange(wb, we));
-		}
-	}
-
-	void TextFilter::Build()
-	{
-		Filters.resize(0);
-		TextRange input_range(InputBuf, InputBuf + strlen(InputBuf));
-		input_range.split(',', &Filters);
-
-		CountGrep = 0;
-		for (int i = 0; i != Filters.Size; i++)
-		{
-			TextRange& f = Filters[i];
-			while (f.b < f.e && ImCharIsBlankA(f.b[0]))
-			{
-				f.b++;
-			}
-			while (f.e > f.b && ImCharIsBlankA(f.e[-1]))
-			{
-				f.e--;
-			}
-			if (f.empty()) continue;
-
-			if (Filters[i].b[0] != '-')
-			{
-				CountGrep += 1;
-			}
-		}
-	}
-
-	bool TextFilter::PassFilter(const char* text, const char* text_end) const
-	{
-		if (Filters.empty()) return true;
-
-		if (text == NULL)
-		{
-			text = "";
-		}
-
-		for (int i = 0; i != Filters.Size; i++)
-		{
-			const TextRange& f = Filters[i];
-			if (f.empty()) continue;
-
-			if (f.b[0] == '-')
-			{
-				// Subtract
-				if (ImStristr(text, text_end, f.b + 1, f.e) != NULL) return false;
-			}
-			else
-			{
-				// Grep
-				if (ImStristr(text, text_end, f.b, f.e) != NULL) return true;
-			}
-		}
-
-		// Implicit * grep
-		if (CountGrep == 0) return true;
-
-		return false;
-	}
 
 	EditorLog::EditorLog()
 	{
@@ -269,7 +143,7 @@ R"(Filter usage:
 		const char* buf_end = Buffer.end();
 		if (Filter.IsActive() || bAnyLogLevelFiltered)
 		{
-			// In this example we don't use the clipper when Filter is enabled.
+			// We don't use the clipper when Filter is enabled.
 			// This is because we don't have a random access on the result on our filter.
 			// A real application processing logs with ten of thousands of entries may want to store the result of search/filter.
 			// especially if the filtering function is not trivial (e.g. reg-exp).
