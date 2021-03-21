@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Events/Event.h"
+#include "Engine/Events/KeyEvent.h"
 #include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
@@ -37,6 +37,9 @@ namespace ZeoEngine {
 		void SetViewportBounds(float x, float y, float width, float height);
 
 		void OnViewportResize(const glm::vec2& size);
+
+		bool OnMouseScroll(MouseScrolledEvent& e);
+		bool OnFocusEntity(KeyPressedEvent& e);
 
 	protected:
 		EditorCamera m_EditorCamera;

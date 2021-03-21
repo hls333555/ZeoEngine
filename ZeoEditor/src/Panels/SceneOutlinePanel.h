@@ -2,6 +2,8 @@
 
 #include "Panels/EditorPanel.h"
 
+#include "Engine/GameFramework/Entity.h"
+
 namespace ZeoEngine {
 
 	class SceneOutlinePanel : public EditorPanel

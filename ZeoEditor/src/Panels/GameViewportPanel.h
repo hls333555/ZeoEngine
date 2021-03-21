@@ -13,7 +13,6 @@ namespace ZeoEngine {
 	public:
 		using SceneViewportPanel::SceneViewportPanel;
 
-		virtual void OnAttach() override;
 		virtual void OnEvent(Event& e) override;
 
 		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);

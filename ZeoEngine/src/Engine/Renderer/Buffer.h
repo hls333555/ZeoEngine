@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/Assert.h"
+
 namespace ZeoEngine {
 
 	enum class ShaderDataType

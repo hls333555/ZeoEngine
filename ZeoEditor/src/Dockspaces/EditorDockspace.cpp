@@ -118,6 +118,11 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
+	void EditorDockspace::FocusContextEntity()
+	{
+		m_EditorCamera->StartFocusEntity(m_ContextEntity);
+	}
+
 	EditorMenu& EditorDockspace::CreateMenu(const std::string& menuName)
 	{
 		return m_MenuManager.CreateMenu(menuName, this);

@@ -49,7 +49,7 @@ namespace ZeoEngine {
 	void ParticleEditorDockspace::Serialize(const std::string& filePath)
 	{
 		TypeSerializer serializer(filePath);
-		auto& pspc = m_ContextEntity.GetComponent<ParticleSystemPreviewComponent>();
+		auto& pspc = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
 		// Only snapshot on save when thumbnail texture is null
 		if (!pspc.Template->PreviewThumbnail)
 		{

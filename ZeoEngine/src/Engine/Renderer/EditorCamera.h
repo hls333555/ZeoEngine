@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Engine/Renderer/Camera.h"
-#include "Engine/Core/DeltaTime.h"
-#include "Engine/Events/MouseEvent.h"
 
 #include <glm/glm.hpp>
+
+#include "Engine/Core/DeltaTime.h"
+#include "Engine/GameFramework/Entity.h"
+#include "Engine/Events/MouseEvent.h"
 
 namespace ZeoEngine {
 
@@ -15,10 +17,13 @@ namespace ZeoEngine {
 		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);
 
 		void OnUpdate(DeltaTime dt, bool bIsViewportFocused);
-		void OnEvent(Event& e);
 
 		/** Returns true when being manipulated. */
 		bool IsUsing() const { return m_bIsUsing; }
+
+		void StartFocusEntity(Entity entity);
+
+		bool OnMouseScroll(MouseScrolledEvent& e);
 
 		float GetDistance() const { return m_Distance; }
 		void SetDistance(float distance) { m_Distance = distance; }
@@ -41,8 +46,6 @@ namespace ZeoEngine {
 		void UpdateProjection();
 		void UpdateView();
 
-		bool OnMouseScroll(MouseScrolledEvent& e);
-
 		void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
@@ -55,6 +58,9 @@ namespace ZeoEngine {
 
 	private:
 		bool m_bIsUsing = false;
+
+		bool m_bStartLerpToFocus = false;
+		Entity m_FocusedEntity;
 
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 

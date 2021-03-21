@@ -50,6 +50,10 @@ namespace ZeoEngine {
 		{
 			GetContext()->SetContextEntity(entity);
 		}
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+		{
+			GetContext()->FocusContextEntity();
+		}
 
 		bool bIsCurrentEntitySelected = selectedEntity == entity;
 		bool bWillDestroyEntity = false;

@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		EditorDockspace::CreateNewScene(bIsFromOpenScene);
 
 		// Clear selected entity
-		m_ContextEntity = {};
+		SetContextEntity({});
 	}
 
 	void MainDockspace::Serialize(const std::string& filePath)

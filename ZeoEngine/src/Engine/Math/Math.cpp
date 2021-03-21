@@ -82,4 +82,27 @@ namespace ZeoEngine::Math {
 		return true;
 	}
 
+	glm::vec3 InterpTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed)
+	{
+		// If no interp speed, jump to target value
+		if (interpSpeed <= 0.0f)
+		{
+			return target;
+		}
+
+		// Distance to reach
+		const glm::vec3 dist = target - current;
+
+		// If distance is too small, just set the desired location
+		if (glm::length(dist) < KINDA_SMALL_NUMBER)
+		{
+			return target;
+		}
+
+		// Delta Move, clamp so we do not over shoot
+		const glm::vec3 deltaMove = dist * glm::clamp<float>(dt * interpSpeed, 0.0f, 1.0f);
+
+		return current + deltaMove;
+	}
+
 }

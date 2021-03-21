@@ -1,15 +1,14 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/EditorCamera.h"
 
-#include <glfw/glfw3.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <imgui.h>
 #include <ImGuizmo.h>
 
 #include "Engine/Core/Input.h"
-#include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
+#include "Engine/Math/Math.h"
 
 namespace ZeoEngine {
 
@@ -27,11 +26,24 @@ namespace ZeoEngine {
 		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;
 
+		if (m_bStartLerpToFocus && m_FocusedEntity)
+		{
+			m_bIsUsing = true;
+			const auto targetPos = m_FocusedEntity.GetEntityTranslation();
+			m_FocalPoint = Math::InterpTo(m_FocalPoint, targetPos, dt, 13.0f);
+			if (m_FocalPoint == targetPos)
+			{
+				m_bStartLerpToFocus = false;
+			}
+			UpdateView();
+		}
+
 		if (!bIsViewportFocused) return;
 
 		if (ImGuizmo::IsUsing()) return;
 
-		if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+		// We should forbid operations that modify focal point during focusing
+		if (!m_bStartLerpToFocus && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
 		{
 			m_bIsUsing = true;
 			MousePan(delta);
@@ -54,10 +66,19 @@ namespace ZeoEngine {
 		UpdateView();
 	}
 
-	void EditorCamera::OnEvent(Event& e)
+	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
 	{
-		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(EditorCamera::OnMouseScroll));
+		float delta = e.GetYOffset() * 0.1f;
+		MouseZoom(delta);
+		UpdateView();
+		return false;
+	}
+
+	void EditorCamera::StartFocusEntity(Entity entity)
+	{
+		// TODO: Consider entity's bounding box
+		m_FocusedEntity = entity;
+		m_bStartLerpToFocus = true;
 	}
 
 	glm::vec3 EditorCamera::GetForwardVector() const
@@ -94,14 +115,6 @@ namespace ZeoEngine {
 		glm::quat orientation = GetOrientation();
 		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
-	}
-
-	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
-	{
-		float delta = e.GetYOffset() * 0.1f;
-		MouseZoom(delta);
-		UpdateView();
-		return false;
 	}
 
 	void EditorCamera::MousePan(const glm::vec2& delta)

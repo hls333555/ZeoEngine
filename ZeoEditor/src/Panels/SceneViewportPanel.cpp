@@ -4,10 +4,7 @@
 #include <imgui_internal.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/Input.h"
-#include "Engine/Events/MouseEvent.h"
-#include "Engine/Events/KeyEvent.h"
-#include "Engine/Core/MouseCodes.h"
+#include "Engine/Core/KeyCodes.h"
 #include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
@@ -37,7 +34,23 @@ namespace ZeoEngine {
 	{
 		if (!IsPanelHovered()) return;
 
-		m_EditorCamera.OnEvent(e);
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(SceneViewportPanel::OnMouseScroll));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewportPanel::OnFocusEntity));
+	}
+
+	bool SceneViewportPanel::OnMouseScroll(MouseScrolledEvent& e)
+	{
+		return m_EditorCamera.OnMouseScroll(e);
+	}
+
+	bool SceneViewportPanel::OnFocusEntity(KeyPressedEvent& e)
+	{
+		if (e.GetKeyCode() == Key::F)
+		{
+			GetContext()->FocusContextEntity();
+		}
+		return false;
 	}
 
 	void SceneViewportPanel::RenderPanel()

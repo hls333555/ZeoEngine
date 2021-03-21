@@ -4,9 +4,10 @@
 
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
-#include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
+
+	 class EditorCamera;
 
 	class Scene
 	{

@@ -29,13 +29,15 @@ namespace ZeoEngine {
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsDockspaceFocused() const { return m_bIsDockspaceFocused; }
 		bool IsDockspaceHovered() const { return m_bIsDockspaceHovered; }
-		Entity GetContextEntity() const { return m_ContextEntity; }
-		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 		virtual EditorPanelType GetViewportPanelType() const = 0;
 		EditorCamera* GetEditorCamera() const { return m_EditorCamera; }
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
+
+		Entity GetContextEntity() const { return m_ContextEntity; }
+		void SetContextEntity(Entity newEntity) { m_ContextEntity = newEntity; }
+		void FocusContextEntity();
 
 		EditorMenu& CreateMenu(const std::string& menuName);
 
@@ -74,7 +76,6 @@ namespace ZeoEngine {
 
 	protected:
 		EditorDockspaceSpec m_DockspaceSpec;
-		Entity m_ContextEntity;
 	private:
 		entt::sigh<void(bool)> m_OnSceneCreateDel;
 	public:
@@ -89,6 +90,7 @@ namespace ZeoEngine {
 		bool m_bIsDockspaceFocused = false, m_bIsDockspaceHovered = false;
 		bool m_bBlockEvents = true;
 
+		Entity m_ContextEntity;
 		EditorCamera* m_EditorCamera;
 
 		Ref<Scene> m_Scene;

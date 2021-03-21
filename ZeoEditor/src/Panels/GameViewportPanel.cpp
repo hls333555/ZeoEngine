@@ -8,7 +8,6 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/EditorDockspace.h"
 #include "Dockspaces/MainDockspace.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
@@ -17,13 +16,6 @@
 #include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
-
-	void GameViewportPanel::OnAttach()
-	{
-		SceneViewportPanel::OnAttach();
-
-		
-	}
 
 	void GameViewportPanel::OnEvent(Event& e)
 	{
