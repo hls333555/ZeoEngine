@@ -2,6 +2,8 @@
 
 #include "Panels/SceneViewportPanel.h"
 
+#include <ImGuizmo.h>
+
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
 #include "Engine/GameFramework/Entity.h"
@@ -34,7 +36,7 @@ namespace ZeoEngine {
 		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);
 
 	private:
-		int32_t m_GizmoType = 0;
+		ImGuizmo::OPERATION m_GizmoType = ImGuizmo::TRANSLATE;
 		bool m_bGizmoVisible = false;
 
 		Entity m_HoveredEntity;

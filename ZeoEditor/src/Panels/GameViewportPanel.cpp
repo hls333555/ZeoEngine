@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <ImGuizmo.h>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
@@ -103,7 +102,7 @@ namespace ZeoEngine {
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				static_cast<ImGuizmo::OPERATION>(m_GizmoType), ImGuizmo::LOCAL,
+				m_GizmoType, ImGuizmo::LOCAL,
 				glm::value_ptr(entityTransform),
 				nullptr, bSnap ? snapValues : nullptr);
 
@@ -141,29 +140,32 @@ namespace ZeoEngine {
 		{
 			case Key::W:
 			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE;
-				break;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE; return true;
 			}
 			case Key::E:
 			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE;
-				break;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE; return true;
 			}
 			case Key::R:
 			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE;
-				break;
+				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE; return true;
 			}
 			case Key::Space:
 			{
-				if (bCanSwitchGizmo) m_GizmoType = m_GizmoType + 1 > ImGuizmo::SCALE ? ImGuizmo::TRANSLATE : m_GizmoType + 1;
-				break;
+				if (bCanSwitchGizmo)
+				{
+					switch (m_GizmoType)
+					{
+						case ImGuizmo::TRANSLATE:	m_GizmoType = ImGuizmo::ROTATE; break;
+						case ImGuizmo::ROTATE:		m_GizmoType = ImGuizmo::SCALE; break;
+						case ImGuizmo::SCALE:		m_GizmoType = ImGuizmo::TRANSLATE; break;
+					}
+				}
+				return true;
 			}
-			default:
-				return false;
 		}
 
-		return true;
+		return false;
 	}
 
 	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)

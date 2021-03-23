@@ -34,6 +34,7 @@ namespace ZeoEngine {
 			if (m_FocalPoint == targetPos)
 			{
 				m_bStartLerpToFocus = false;
+				m_bIsUsing = false;
 			}
 			UpdateView();
 		}
