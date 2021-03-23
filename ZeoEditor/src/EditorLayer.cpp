@@ -18,7 +18,7 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		DockspaceManager::Get().CreateDockspace(EditorDockspaceType::Main_Editor);
+		DockspaceManager::Get().CreateDockspace(DockspaceType::MainEditor);
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)

@@ -3,7 +3,6 @@
 #include <map>
 
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/Core/ReflectionHelper.h"
 #include "Reflection/DataParser.h"
 
 namespace ZeoEngine {
@@ -14,7 +13,7 @@ namespace ZeoEngine {
 	class DataInspector
 	{
 	public:
-		DataInspector(DataInspectorPanel* context);
+		explicit DataInspector(DataInspectorPanel* context);
 
 		void ProcessComponent(entt::meta_type compType, Entity entity);
 		/** Iterate all datas on this component, reverse their order and categorize them. */

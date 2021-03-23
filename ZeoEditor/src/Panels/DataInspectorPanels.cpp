@@ -1,4 +1,4 @@
-#include "Panels/DataInspectorPanel.h"
+#include "Panels/DataInspectorPanels.h"
 
 #include <IconsFontAwesome5.h>
 
@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		m_bAllowAddingComponents = true;
 	}
 
-	void EntityInspectorPanel::RenderPanel()
+	void EntityInspectorPanel::ProcessRender()
 	{
 		Entity selectedEntity = GetContext()->GetContextEntity();
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
@@ -95,7 +95,7 @@ namespace ZeoEngine {
 		m_LastSelectedEntity = selectedEntity;
 	}
 
-	void ParticleInspectorPanel::RenderPanel()
+	void ParticleInspectorPanel::ProcessRender()
 	{
 		Entity contextEntity = GetContext()->GetContextEntity();
 		if (contextEntity)

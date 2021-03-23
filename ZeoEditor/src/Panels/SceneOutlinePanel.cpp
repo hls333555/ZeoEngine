@@ -4,22 +4,23 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/MainDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 #include "Engine/Core/KeyCodes.h"
 
 namespace ZeoEngine {
 
-	void SceneOutlinePanel::RenderPanel()
+	void SceneOutlinePanel::ProcessRender()
 	{
 		// Display entities in creation order, the order is updated when a new entity is created
-		GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
+		GetContext()->GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
 		{
-			Entity entity{ entityId, GetScene().get() };
+			Entity entity{ entityId, GetContext()->GetScene().get() };
 			DrawEntityNode(entity);
 		});
 
 		// Deselect entity when blank space is clicked
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+		// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
+		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 		{
 			GetContext()->SetContextEntity({});
 		}
@@ -29,7 +30,7 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
 			{
-				auto selectedEntity = GetScene()->CreateEntity("New Entity");
+				auto selectedEntity = GetContext()->GetScene()->CreateEntity("New Entity");
 				GetContext()->SetContextEntity(selectedEntity);
 			}
 
@@ -57,7 +58,7 @@ namespace ZeoEngine {
 
 		bool bIsCurrentEntitySelected = selectedEntity == entity;
 		bool bWillDestroyEntity = false;
-		// TODO: Support viewport deletion
+		// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
 		if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
 		{
 			bWillDestroyEntity = true;
@@ -73,7 +74,7 @@ namespace ZeoEngine {
 		// Defer entity destruction
 		if (bWillDestroyEntity)
 		{
-			GetScene()->DestroyEntity(entity);
+			GetContext()->GetScene()->DestroyEntity(entity);
 			if (bIsCurrentEntitySelected)
 			{
 				GetContext()->SetContextEntity({});

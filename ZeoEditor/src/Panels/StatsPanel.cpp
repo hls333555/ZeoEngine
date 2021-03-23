@@ -6,7 +6,7 @@
 
 namespace ZeoEngine {
 
-	void StatsPanel::RenderPanel()
+	void StatsPanel::ProcessRender()
 	{
 		auto& Stats = Renderer2D::GetStats();
 		ImGui::Text("Draw Calls: %d", Stats.DrawCalls);

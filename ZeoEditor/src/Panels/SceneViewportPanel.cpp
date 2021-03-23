@@ -1,11 +1,10 @@
 #include "Panels/SceneViewportPanel.h"
 
 #include <imgui.h>
-#include <imgui_internal.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
@@ -15,12 +14,12 @@ namespace ZeoEngine {
 		GetContext()->SetEditorCamera(&m_EditorCamera);
 	}
 
-	void SceneViewportPanel::OnUpdate(DeltaTime dt)
+	void SceneViewportPanel::ProcessUpdate(DeltaTime dt)
 	{
 		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
 		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
 		// This results in never rendering an empty (black) framebuffer
-		if (FrameBufferSpec spec = GetFrameBuffer()->GetSpec();
+		if (FrameBufferSpec spec = GetContext()->GetFrameBuffer()->GetSpec();
 			m_LastViewportSize.x > 0.0f && m_LastViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_LastViewportSize.x || spec.Height != m_LastViewportSize.y))
 		{
@@ -30,7 +29,31 @@ namespace ZeoEngine {
 		m_EditorCamera.OnUpdate(dt, IsPanelFocused());
 	}
 
-	void SceneViewportPanel::OnEvent(Event& e)
+	void SceneViewportPanel::ProcessRender()
+	{
+		const auto workRect = ImGui::GetWindowWorkRect();
+		m_LastViewportSize = workRect.GetSize();
+		SetViewportBounds(workRect.Min.x, workRect.Min.y, workRect.GetSize().x, workRect.GetSize().y);
+
+		// TODO: BlockSceneEvents
+		GetContext()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
+
+		// Draw framebuffer texture
+		ImGui::GetWindowDrawList()->AddImageRounded(
+			GetContext()->GetFrameBuffer()->GetColorAttachment(),
+			// Upper left corner for the UVs to be applied at
+			workRect.Min,
+			// Lower right corner for the UVs to be applied at
+			workRect.Max,
+			// The UVs have to be flipped
+			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+			IM_COL32_WHITE,
+			ImGui::IsWindowDocked() ? 0.0f : 8.0f, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+
+		RenderToolbar();
+	}
+
+	void SceneViewportPanel::ProcessEvent(Event& e)
 	{
 		if (!IsPanelHovered()) return;
 
@@ -53,32 +76,9 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void SceneViewportPanel::RenderPanel()
-	{
-		ImGuiWindow* window = ImGui::GetCurrentWindow();
-		m_LastViewportSize = static_cast<glm::vec2>(window->InnerRect.Max) - static_cast<glm::vec2>(window->InnerRect.Min);
-		SetViewportBounds(window->InnerRect.Min.x, window->InnerRect.Min.y, window->InnerRect.GetSize().x, window->InnerRect.GetSize().y);
-
-		GetContext()->BlockEvents(!IsPanelFocused() && !IsPanelHovered());
-
-		// Draw framebuffer texture
-		ImGui::GetWindowDrawList()->AddImageRounded(
-			GetFrameBuffer()->GetColorAttachment(),
-			// Upper left corner for the UVs to be applied at
-			window->InnerRect.Min,
-			// Lower right corner for the UVs to be applied at
-			window->InnerRect.Max,
-			// The UVs have to be flipped
-			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-			IM_COL32_WHITE,
-			ImGui::IsWindowDocked() ? 0.0f : 8.0f, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-
-		RenderToolbar();
-	}
-
 	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
 	{
-		GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
+		GetContext()->GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
 	}
 
 	void SceneViewportPanel::SetViewportBounds(float x, float y, float width, float height)
@@ -87,6 +87,11 @@ namespace ZeoEngine {
 		m_ViewportBounds[0].y = y;
 		m_ViewportBounds[1].x = x + width;
 		m_ViewportBounds[1].y = y + height;
+	}
+
+	glm::vec2 SceneViewportPanel::GetViewportSize() const
+	{
+		return { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
 	}
 
 	std::pair<float, float> SceneViewportPanel::GetMouseViewportPosition()
@@ -100,13 +105,13 @@ namespace ZeoEngine {
 	void SceneViewportPanel::OnViewportResize(const glm::vec2& size)
 	{
 		// Resize FrameBuffer
-		GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+		GetContext()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
 
 		// Resize editor camera
 		m_EditorCamera.SetViewportSize(size.x, size.y);
 
 		// Resize non-FixedAspectRatio cameras
-		auto view = GetScene()->m_Registry.view<CameraComponent>();
+		auto view = GetContext()->GetScene()->m_Registry.view<CameraComponent>();
 		for (auto entity : view)
 		{
 			auto& cameraComp = view.get<CameraComponent>(entity);

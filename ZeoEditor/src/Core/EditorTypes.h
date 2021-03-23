@@ -4,44 +4,44 @@
 
 namespace ZeoEngine {
 
-	enum class EditorDockspaceType
+	enum class DockspaceType
 	{
 		NONE,
 
-		Main_Editor,
-		Particle_Editor,
+		MainEditor,
+		ParticleEditor,
 	};
 
-	enum class EditorPanelType
+	enum class PanelType
 	{
 		NONE,
 
 		// Main editor windows
-		Game_View,
-		Scene_Outline,
-		Entity_Inspector,
+		GameView,
+		SceneOutline,
+		EntityInspector,
 		Console,
 		Stats,
 		Preferences,
 		About,
 
 		// Particle editor windows
-		Particle_View,
-		Particle_Inspector,
+		ParticleView,
+		ParticleInspector,
 	};
 
-	struct EditorDockspaceSpec
+	struct DockspaceSpec
 	{
-		EditorDockspaceType Type;
+		DockspaceType Type;
 		ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_MenuBar;
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};
 
-	struct EditorPanelSpec
+	struct PanelSpec
 	{
-		EditorPanelType Type;
+		PanelType Type;
 		ImGuiWindowFlags WindowFlags = 0;
-		ImVec2 Padding = ImVec2(3.5f, 3.5f);
+		ImVec2 Padding = ImVec2(3.0f, 3.0f);
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};
 

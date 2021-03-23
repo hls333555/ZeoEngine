@@ -8,24 +8,30 @@
 
 namespace ZeoEngine {
 
+	class FrameBuffer;
+
 	class GameViewportPanel : public SceneViewportPanel
 	{
 	public:
 		using SceneViewportPanel::SceneViewportPanel;
 
-		virtual void OnEvent(Event& e) override;
-
-		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);
+		virtual void OnAttach() override;
 
 	private:
-		bool OnKeyPressed(KeyPressedEvent& e);
-		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		virtual void ProcessRender() override;
 
-		virtual void RenderPanel() override;
+		virtual void ProcessEvent(Event& e) override;
 
 		virtual void RenderToolbar() override;
 
 		void RenderGizmo();
+
+		void ProcessEntityDeletion();
+
+		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
+		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);
 
 	private:
 		int32_t m_GizmoType = 0;

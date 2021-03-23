@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
 namespace ZeoEngine {
 
-	class PreferencesPanel : public EditorPanel
+	class PreferencesPanel : public PanelBase
 	{
 	public:
-		using EditorPanel::EditorPanel;
+		using PanelBase::PanelBase;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
 
 	};
 

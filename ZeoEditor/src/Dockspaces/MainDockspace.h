@@ -1,26 +1,26 @@
 #pragma once
 
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
-	class MainDockspace : public EditorDockspace
+	class MainDockspace : public DockspaceBase
 	{
 	public:
-		using EditorDockspace::EditorDockspace;
+		using DockspaceBase::DockspaceBase;
 
 		virtual void OnAttach() override;
 
-		virtual void CreateNewScene(bool bIsFromOpenScene = false) override;
-
-		virtual EditorPanelType GetViewportPanelType() const override { return EditorPanelType::Game_View; }
+		virtual PanelType GetViewportPanelType() const override { return PanelType::GameView; }
 
 	private:
 		virtual AssetType GetAssetType() const override { return AssetType::Scene; }
+
+		void ClearSelectedEntity();
+
 		virtual void Serialize(const std::string& filePath) override;
 		virtual void Deserialize(const std::string& filePath) override;
 
-		virtual void PostRenderScene(const Ref<FrameBuffer>& frameBuffer) override;
 		virtual void PreRenderDockspace() override;
 
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;

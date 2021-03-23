@@ -1,22 +1,23 @@
 #pragma once
 
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
-	class ParticleEditorDockspace : public EditorDockspace
+	class ParticleEditorDockspace : public DockspaceBase
 	{
 	public:
-		using EditorDockspace::EditorDockspace;
+		using DockspaceBase::DockspaceBase;
 
 		virtual void OnAttach() override;
 
-		virtual EditorPanelType GetViewportPanelType() const override { return EditorPanelType::Particle_View; }
-
-		virtual void CreateNewScene(bool bIsFromOpenScene = false) override;
+		virtual PanelType GetViewportPanelType() const override { return PanelType::ParticleView; }
 
 	private:
 		virtual AssetType GetAssetType() const override { return AssetType::ParticleTemplate; }
+
+		void ReloadParticleTemplateData();
+
 		virtual void Serialize(const std::string& filePath) override;
 		virtual void Deserialize(const std::string& filePath) override;
 

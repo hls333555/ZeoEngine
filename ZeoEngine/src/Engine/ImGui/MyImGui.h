@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace ImGui {
 
@@ -21,6 +22,10 @@ namespace ImGui {
 	IMGUI_API bool TransparentButtonEx(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
 	IMGUI_API void HelpMarker(const char* desc);
+
+	IMGUI_API ImRect GetWindowWorkRect();
+
+	IMGUI_API ImVec2 GetFramePadding();
 
 }
 

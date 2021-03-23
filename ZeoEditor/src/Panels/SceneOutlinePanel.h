@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
-	class SceneOutlinePanel : public EditorPanel
+	class SceneOutlinePanel : public PanelBase
 	{
 	public:
-		using EditorPanel::EditorPanel;
+		using PanelBase::PanelBase;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
 
 		void DrawEntityNode(Entity entity);
 

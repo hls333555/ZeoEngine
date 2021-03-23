@@ -1,20 +1,20 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
 #include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
-	class AboutPanel : public EditorPanel
+	class AboutPanel : public PanelBase
 	{
 	public:
-		using EditorPanel::EditorPanel;
+		using PanelBase::PanelBase;
 
 		virtual void OnAttach() override;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
 
 	private:
 		Ref<Texture2D> m_LogoTexture;

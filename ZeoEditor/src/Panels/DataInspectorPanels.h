@@ -1,26 +1,18 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
 #include "Reflection/DataInspector.h"
 
 namespace ZeoEngine {
 
-	class DataInspectorPanel : public EditorPanel
+	class DataInspectorPanel : public PanelBase
 	{
-		friend class DataInspector;
-
 	public:
-		using EditorPanel::EditorPanel;
+		using PanelBase::PanelBase;
 
 	protected:
-		template<typename Component>
-		bool ShouldIgnoreComponent(uint32_t compId)
-		{
-			return entt::type_hash<Component>::value() == compId;
-		}
-
 		template<typename... IgnoredComponents>
 		void DrawComponents(Entity entity)
 		{
@@ -56,6 +48,12 @@ namespace ZeoEngine {
 		}
 
 	private:
+		template<typename Component>
+		bool ShouldIgnoreComponent(uint32_t compId)
+		{
+			return entt::type_hash<Component>::value() == compId;
+		}
+
 		void DrawAddComponentButton(Entity entity);
 
 	protected:
@@ -77,7 +75,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
 
 	private:
 		Entity m_LastSelectedEntity;
@@ -90,7 +88,7 @@ namespace ZeoEngine {
 		using DataInspectorPanel::DataInspectorPanel;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
 
 	};
 

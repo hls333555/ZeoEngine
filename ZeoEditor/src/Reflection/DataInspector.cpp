@@ -24,14 +24,14 @@ namespace ZeoEngine {
 		if (bShouldDisplayCompHeader)
 		{
 			// Get available content region before adding CollapsingHeader as it will occupy space
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+			const float lineHeight = ImGui::GetFrameHeight();
 			// Component collapsing header
 			bIsCompHeaderExpanded = ImGui::CollapsingHeader(compDisplayName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 			// Header tooltip
 			ShowPropertyTooltip(compType);
 
-			ImGui::SameLine(contentRegionAvailable.x - lineHeight + GImGui->Style.FramePadding.x);
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight + ImGui::GetFramePadding().x);
 
 			// Component settings button
 			{

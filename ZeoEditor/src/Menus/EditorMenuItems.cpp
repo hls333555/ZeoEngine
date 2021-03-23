@@ -1,22 +1,22 @@
-#include "Menus/EditorMenuItem.h"
+#include "Menus/EditorMenuItems.h"
 
 #include <imgui.h>
 
-#include "Menus/EditorMenu.h"
+#include "Dockspaces/DockspaceBase.h"
+#include "Engine/GameFramework/Scene.h"
 #include "Core/WindowManager.h"
 #include "Engine/Core/Input.h"
 #include "Panels/SceneViewportPanel.h"
-#include "Dockspaces/EditorDockspace.h"
 
 namespace ZeoEngine {
 
-	EditorMenuItem::EditorMenuItem(EditorMenu* context, const std::string& menuItemName, const std::string& shortcutName)
+	MenuItemBase::MenuItemBase(DockspaceBase* context, const std::string& menuItemName, const std::string& shortcutName)
 		: m_Context(context)
 		, m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
 	{
 	}
 
-	void EditorMenuItem::OnImGuiRender()
+	void MenuItemBase::OnImGuiRender()
 	{
 		if (ImGui::MenuItem(m_MenuItemName.c_str(), m_ShortcutName.c_str(), m_bSelected, m_bEnabled))
 		{
@@ -24,31 +24,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorMenuItem::OnEvent(Event& e)
+	void MenuItemBase::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorMenuItem::OnKeyPressed));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(MenuItemBase::OnKeyPressed));
 	}
 
-	bool EditorMenuItem::OnKeyPressed(KeyPressedEvent& e)
+	bool MenuItemBase::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName.empty() || e.GetRepeatCount() > 0) return false;
 
-		return OnKeyPressedOverride(e);
+		return OnKeyPressedImpl(e);
 	}
 
-	EditorDockspace* EditorMenuItem::GetEditorContext() const
-	{
-		return m_Context->GetContext();
-	}
-
-	const Ref<Scene>& EditorMenuItem::GetScene() const
-	{
-		return GetEditorContext()->GetScene();
-	}
-
-	MenuItem_Seperator::MenuItem_Seperator(EditorMenu* context, const std::string& menuItemName)
-		: EditorMenuItem(context, menuItemName)
+	MenuItem_Seperator::MenuItem_Seperator(DockspaceBase* context, const std::string& menuItemName)
+		: MenuItemBase(context, menuItemName)
 	{
 	}
 
@@ -57,8 +47,8 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	MenuItem_ToggleEditor::MenuItem_ToggleEditor(EditorMenu* context, EditorDockspaceType dockspaceType, const std::string& shortcutName)
-		: EditorMenuItem(context, GetDockspaceName(dockspaceType), shortcutName)
+	MenuItem_ToggleEditor::MenuItem_ToggleEditor(DockspaceBase* context, DockspaceType dockspaceType, const std::string& shortcutName)
+		: MenuItemBase(context, GetDockspaceName(dockspaceType), shortcutName)
 		, m_DockspaceType(dockspaceType)
 	{
 	}
@@ -74,7 +64,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		EditorMenuItem::OnImGuiRender();
+		MenuItemBase::OnImGuiRender();
 	}
 
 	void MenuItem_ToggleEditor::OnMenuItemActivated()
@@ -85,8 +75,8 @@ namespace ZeoEngine {
 		}
 	}
 
-	MenuItem_TogglePanel::MenuItem_TogglePanel(EditorMenu* context, EditorPanelType panelType, const std::string& shortcutName)
-		: EditorMenuItem(context, GetPanelName(panelType), shortcutName)
+	MenuItem_TogglePanel::MenuItem_TogglePanel(DockspaceBase* context, PanelType panelType, const std::string& shortcutName)
+		: MenuItemBase(context, GetPanelName(panelType), shortcutName)
 		, m_PanelType(panelType)
 	{
 	}
@@ -95,27 +85,27 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			auto* panel = GetEditorContext()->GetPanel(m_PanelType);
+			auto* panel = m_Context->GetPanel(m_PanelType);
 			if (panel)
 			{
 				m_bSelected = panel->GetShowPtr();
 			}
 		}
 
-		EditorMenuItem::OnImGuiRender();
+		MenuItemBase::OnImGuiRender();
 	}
 
 	void MenuItem_TogglePanel::OnMenuItemActivated()
 	{
 		if (!m_bSelected)
 		{
-			GetEditorContext()->TogglePanel(m_PanelType, true);
+			m_Context->TogglePanel(m_PanelType, true);
 		}
 	}
 
-	bool MenuItem_NewScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	bool MenuItem_NewScene::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+N" || !GetEditorContext()->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+N" || !m_Context->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -124,12 +114,10 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					GetEditorContext()->CreateNewScene();
+					m_Context->CreateNewScene();
 				}
 				break;
 			}
-			default:
-				break;
 		}
 
 		return true;
@@ -137,12 +125,12 @@ namespace ZeoEngine {
 
 	void MenuItem_NewScene::OnMenuItemActivated()
 	{
-		GetEditorContext()->CreateNewScene();
+		m_Context->CreateNewScene();
 	}
 
-	bool MenuItem_OpenScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	bool MenuItem_OpenScene::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+O" || !GetEditorContext()->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+O" || !m_Context->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -151,12 +139,10 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					GetEditorContext()->OpenScene();
+					m_Context->OpenScene();
 				}
 				break;
 			}
-			default:
-				break;
 		}
 
 		return true;
@@ -164,12 +150,12 @@ namespace ZeoEngine {
 
 	void MenuItem_OpenScene::OnMenuItemActivated()
 	{
-		GetEditorContext()->OpenScene();
+		m_Context->OpenScene();
 	}
 
-	bool MenuItem_SaveScene::OnKeyPressedOverride(KeyPressedEvent& e)
+	bool MenuItem_SaveScene::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+S" || !GetEditorContext()->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+S" || !m_Context->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -178,12 +164,10 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					GetEditorContext()->SaveScene();
+					m_Context->SaveScene();
 				}
 				break;
 			}
-			default:
-				break;
 		}
 
 		return true;
@@ -191,12 +175,12 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveScene::OnMenuItemActivated()
 	{
-		GetEditorContext()->SaveScene();
+		m_Context->SaveScene();
 	}
 
-	bool MenuItem_SaveSceneAs::OnKeyPressedOverride(KeyPressedEvent& e)
+	bool MenuItem_SaveSceneAs::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+ALT+S" || !GetEditorContext()->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+ALT+S" || !m_Context->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
@@ -208,13 +192,11 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed)
 					{
-						GetEditorContext()->SaveSceneAs();
+						m_Context->SaveSceneAs();
 					}
 				}
 				break;
 			}
-			default:
-				break;
 		}
 
 		return true;
@@ -222,7 +204,7 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveSceneAs::OnMenuItemActivated()
 	{
-		GetEditorContext()->SaveSceneAs();
+		m_Context->SaveSceneAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -257,11 +239,11 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string filePath = GetEditorContext()->GetScene()->GetPath();
+		const std::string filePath = m_Context->GetScene()->GetPath();
 		// This may be null e.g. default particle system
-		if (filePath == "") return;
+		if (filePath.empty()) return;
 
-		SceneViewportPanel* viewportPanel = GetEditorContext()->GetPanel<SceneViewportPanel>(GetEditorContext()->GetViewportPanelType());
+		SceneViewportPanel* viewportPanel = m_Context->GetPanel<SceneViewportPanel>(m_Context->GetViewportPanelType());
 		std::string snapshotName = filePath + ".png";
 		viewportPanel->Snapshot(snapshotName, 256);
 	}

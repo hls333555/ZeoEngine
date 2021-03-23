@@ -4,20 +4,19 @@
 #include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
-#include "Menus/EditorMenuItem.h"
+#include "Menus/EditorMenuItems.h"
 #include "Engine/Core/Serializer.h"
-#include "Panels/GameViewportPanel.h"
 
 namespace ZeoEngine {
 
 	void MainDockspace::OnAttach()
 	{
-		EditorDockspace::OnAttach();
+		DockspaceBase::OnAttach();
 
-		CreatePanel(EditorPanelType::Game_View);
-		CreatePanel(EditorPanelType::Scene_Outline);
-		CreatePanel(EditorPanelType::Entity_Inspector);
-		CreatePanel(EditorPanelType::Console);
+		CreatePanel(PanelType::GameView);
+		CreatePanel(PanelType::SceneOutline);
+		CreatePanel(PanelType::EntityInspector);
+		CreatePanel(PanelType::Console);
 
 		CreateMenu("File")
 			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New Scene", "CTRL+N")
@@ -33,26 +32,24 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_Cut>(ICON_FA_CUT "  Cut", "CTRL+X");
 
 		CreateMenu("Window")
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Game_View)
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Scene_Outline)
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Entity_Inspector)
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Console)
-			.MenuItem<MenuItem_ToggleEditor>(EditorDockspaceType::Particle_Editor)
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Stats)
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::Preferences)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::GameView)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::SceneOutline)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::EntityInspector)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::Console)
+			.MenuItem<MenuItem_ToggleEditor>(DockspaceType::ParticleEditor)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::Stats)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::Preferences)
 			.MenuItem<MenuItem_Seperator>()
 			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");
 
 		CreateMenu("Help")
-			.MenuItem<MenuItem_TogglePanel>(EditorPanelType::About);
+			.MenuItem<MenuItem_TogglePanel>(PanelType::About);
 
+		m_PostSceneCreate.connect<&MainDockspace::ClearSelectedEntity>(this);
 	}
 
-	void MainDockspace::CreateNewScene(bool bIsFromOpenScene)
+	void MainDockspace::ClearSelectedEntity()
 	{
-		EditorDockspace::CreateNewScene(bIsFromOpenScene);
-
-		// Clear selected entity
 		SetContextEntity({});
 	}
 
@@ -66,12 +63,6 @@ namespace ZeoEngine {
 	{
 		SceneSerializer serializer(filePath, GetScene());
 		serializer.Deserialize();
-	}
-
-	void MainDockspace::PostRenderScene(const Ref<FrameBuffer>& frameBuffer)
-	{
-		GameViewportPanel* gameViewportPanel = GetPanel<GameViewportPanel>(EditorPanelType::Game_View);
-		gameViewportPanel->ReadPixelDataFromIDBuffer(frameBuffer);
 	}
 
 	void MainDockspace::PreRenderDockspace()
@@ -93,11 +84,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
 
-		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Game_View), dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Scene_Outline), dockRightUp);
-		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Entity_Inspector), dockRightDown);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::GameView), dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::SceneOutline), dockRightUp);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::EntityInspector), dockRightDown);
 		//ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
-		ImGui::DockBuilderDockWindow(GetPanelName(EditorPanelType::Console), dockLeftDown);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::Console), dockLeftDown);
 	}
 
 }

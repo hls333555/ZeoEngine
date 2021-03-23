@@ -6,7 +6,7 @@
 
 namespace ZeoEngine {
 
-	void PreferencesPanel::RenderPanel()
+	void PreferencesPanel::ProcessRender()
 	{
 		// TODO: Write preferences to a config file
 

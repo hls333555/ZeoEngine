@@ -9,7 +9,7 @@ namespace ZeoEngine {
 		m_LogoTexture = Texture2D::Create("assets/textures/Logo.png");
 	}
 
-	void AboutPanel::RenderPanel()
+	void AboutPanel::ProcessRender()
 	{
 		ImGui::TextCentered("ZeoEngine 0.1");
 		ImGui::TextCentered("Created by SanSan");

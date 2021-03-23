@@ -2,20 +2,18 @@
 
 #include <unordered_map>
 
-#include <imgui.h>
-
 #include "Core/EditorTypes.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
 
-	class EditorDockspace;
-	class EditorPanel;
+	class DockspaceBase;
+	class PanelBase;
 	class EditorMenu;
 
-	const char* GetDockspaceName(EditorDockspaceType dockspaceType);
-	const char* GetPanelName(EditorPanelType panelType);
+	const char* GetDockspaceName(DockspaceType dockspaceType);
+	const char* GetPanelName(PanelType panelType);
 
 	class DockspaceManager
 	{
@@ -32,11 +30,11 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		EditorDockspace* ToggleDockspace(EditorDockspaceType dockspaceType, bool bOpen);
+		DockspaceBase* ToggleDockspace(DockspaceType dockspaceType, bool bOpen);
 
-		EditorDockspace* CreateDockspace(EditorDockspaceType dockspaceType);
+		DockspaceBase* CreateDockspace(DockspaceType dockspaceType);
 		template<typename T>
-		T* CreateDockspace(const EditorDockspaceSpec& spec)
+		T* CreateDockspace(const DockspaceSpec& spec)
 		{
 			T* dockspace = new T(spec);
 			m_Dockspaces.emplace(spec.Type, dockspace);
@@ -44,29 +42,33 @@ namespace ZeoEngine {
 			return dockspace;
 		}
 
-		EditorDockspace* GetDockspace(EditorDockspaceType dockspaceType);
+		DockspaceBase* GetDockspace(DockspaceType dockspaceType);
 
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		void RebuildDockLayout(EditorDockspaceType dockspaceType = EditorDockspaceType::NONE);
+		/** Rebuild layout for all dockspaces if dockspaceType is NONE. */
+		void RebuildDockLayout(DockspaceType dockspaceType = DockspaceType::NONE);
 
 	private:
-		std::unordered_map<EditorDockspaceType, EditorDockspace*> m_Dockspaces;
+		std::unordered_map<DockspaceType, DockspaceBase*> m_Dockspaces;
 	};
 
 	class PanelManager
 	{
-	public:
+		friend class DockspaceBase;
+
+	private:
 		PanelManager() = default;
 		~PanelManager();
 
-		EditorPanel* TogglePanel(EditorPanelType panelType, EditorDockspace* context, bool bOpen);
+	public:
+		PanelBase* TogglePanel(PanelType panelType, DockspaceBase* context, bool bOpen);
 
-		EditorPanel* CreatePanel(EditorPanelType panelType, EditorDockspace* context);
+		PanelBase* CreatePanel(PanelType panelType, DockspaceBase* context);
 		template<typename T>
-		T* CreatePanel(const EditorPanelSpec& spec, EditorDockspace* context)
+		T* CreatePanel(const PanelSpec& spec, DockspaceBase* context)
 		{
 			T* panel = new T(spec, context);
 			m_Panels.emplace(spec.Type, panel);
@@ -74,23 +76,26 @@ namespace ZeoEngine {
 			return panel;
 		}
 
-		EditorPanel* GetPanel(EditorPanelType panelType);
+		PanelBase* GetPanel(PanelType panelType);
 
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
 	private:
-		std::unordered_map<EditorPanelType, EditorPanel*> m_Panels;
+		std::unordered_map<PanelType, PanelBase*> m_Panels;
 	};
 
 	class MenuManager
 	{
-	public:
+		friend class DockspaceBase;
+
+	private:
 		MenuManager() = default;
 		~MenuManager();
 
-		EditorMenu& CreateMenu(const std::string& menuName, EditorDockspace* context);
+	public:
+		EditorMenu& CreateMenu(const std::string& menuName, DockspaceBase* context);
 
 		void OnImGuiRender(bool bIsMainMenu);
 		void OnEvent(Event& e);

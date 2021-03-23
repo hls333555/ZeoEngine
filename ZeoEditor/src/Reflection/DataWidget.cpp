@@ -4,9 +4,9 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Utils/PlatformUtils.h"
-#include "Panels/DataInspectorPanel.h"
+#include "Panels/DataInspectorPanels.h"
 #include "Core/WindowManager.h"
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
@@ -250,6 +250,11 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
+	static float GetDropdownWidth()
+	{
+		return ImGui::GetFontSize() + ImGui::GetFramePadding().y * 5.0f;
+	}
+
 	Texture2DDataWidget::Texture2DDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
@@ -286,9 +291,7 @@ namespace ZeoEngine {
 		if (m_DataSpec.bIsSeqElement)
 		{
 			// Make sure browser widget + dropdown button can reach desired size
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
-			ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
 		}
 		else
 		{
@@ -404,7 +407,7 @@ namespace ZeoEngine {
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						EditorDockspace* editor = DockspaceManager::Get().ToggleDockspace(EditorDockspaceType::Particle_Editor, true);
+						DockspaceBase* editor = DockspaceManager::Get().ToggleDockspace(DockspaceType::ParticleEditor, true);
 						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
 						{
 							pspc.SetTemplate(m_Buffer);
@@ -431,9 +434,7 @@ namespace ZeoEngine {
 		if (m_DataSpec.bIsSeqElement)
 		{
 			// Make sure browser widget + dropdown button can reach desired size
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
-			ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
 		}
 		else
 		{
@@ -652,9 +653,7 @@ namespace ZeoEngine {
 				else
 				{
 					// Make sure element widget + dropdown button can reach desired size
-					ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-					float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 5.0f;
-					ImGui::SetNextItemWidth(contentRegionAvailable.x - lineHeight);
+					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
 					// Draw element widget
 					m_ElementWidgetTemplate->Draw(compInstance, elementInstance);
 					ImGui::SameLine();

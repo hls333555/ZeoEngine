@@ -1,5 +1,6 @@
 #include "Core/WindowManager.h"
 
+#include <imgui.h>
 #include <IconsFontAwesome5.h>
 #include <magic_enum.hpp>
 
@@ -8,23 +9,22 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
-#include "Panels/DataInspectorPanel.h"
+#include "Panels/DataInspectorPanels.h"
 #include "Panels/ConsolePanel.h"
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
 #include "Panels/ParticleViewportPanel.h"
-#include "Panels/DataInspectorPanel.h"
 #include "Menus/EditorMenu.h"
 
 namespace ZeoEngine {
 
-	const char* GetDockspaceName(EditorDockspaceType dockspaceType)
+	const char* GetDockspaceName(DockspaceType dockspaceType)
 	{
 		switch (dockspaceType)
 		{
-			case EditorDockspaceType::Main_Editor:		return "Main Editor";
-			case EditorDockspaceType::Particle_Editor:	return ICON_FA_FIRE "  Particle Editor";
+			case DockspaceType::MainEditor:		return "Main Editor";
+			case DockspaceType::ParticleEditor:	return ICON_FA_FIRE "  Particle Editor";
 		}
 
 		const char* typeStr = magic_enum::enum_name(dockspaceType).data();
@@ -32,19 +32,19 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	const char* GetPanelName(EditorPanelType panelType)
+	const char* GetPanelName(PanelType panelType)
 	{
 		switch (panelType)
 		{
-			case EditorPanelType::Game_View:			return ICON_FA_PLAY_CIRCLE "  Game View";
-			case EditorPanelType::Scene_Outline:		return ICON_FA_SITEMAP "  Scene Outline";
-			case EditorPanelType::Entity_Inspector:		return ICON_FA_INFO_CIRCLE "  Entity Inspector";
-			case EditorPanelType::Console:				return ICON_FA_TERMINAL "  Console";
-			case EditorPanelType::Stats:				return ICON_FA_CHART_PIE "  Stats";
-			case EditorPanelType::Preferences:			return ICON_FA_COGS "  Preferences";
-			case EditorPanelType::About:				return ICON_FA_QUESTION_CIRCLE "  About";
-			case EditorPanelType::Particle_View:		return ICON_FA_PLAY_CIRCLE "  Particle View";
-			case EditorPanelType::Particle_Inspector:	return ICON_FA_INFO_CIRCLE "  Particle Inspector";
+			case PanelType::GameView:			return ICON_FA_PLAY_CIRCLE "  Game View";
+			case PanelType::SceneOutline:		return ICON_FA_SITEMAP "  Scene Outline";
+			case PanelType::EntityInspector:	return ICON_FA_INFO_CIRCLE "  Entity Inspector";
+			case PanelType::Console:			return ICON_FA_TERMINAL "  Console";
+			case PanelType::Stats:				return ICON_FA_CHART_PIE "  Stats";
+			case PanelType::Preferences:		return ICON_FA_COGS "  Preferences";
+			case PanelType::About:				return ICON_FA_QUESTION_CIRCLE "  About";
+			case PanelType::ParticleView:		return ICON_FA_PLAY_CIRCLE "  Particle View";
+			case PanelType::ParticleInspector:	return ICON_FA_INFO_CIRCLE "  Particle Inspector";
 		}
 
 		const char* typeStr = magic_enum::enum_name(panelType).data();
@@ -61,7 +61,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorDockspace* DockspaceManager::ToggleDockspace(EditorDockspaceType dockspaceType, bool bOpen)
+	DockspaceBase* DockspaceManager::ToggleDockspace(DockspaceType dockspaceType, bool bOpen)
 	{
 		auto* dockspace = GetDockspace(dockspaceType);
 		if (dockspace)
@@ -69,31 +69,28 @@ namespace ZeoEngine {
 			dockspace->m_bShow = bOpen;
 			return dockspace;
 		}
-		else
+		else if (bOpen)
 		{
-			if (bOpen)
-			{
-				return CreateDockspace(dockspaceType);
-			}
+			return CreateDockspace(dockspaceType);
 		}
 		return nullptr;
 	}
 
-	EditorDockspace* DockspaceManager::CreateDockspace(EditorDockspaceType dockspaceType)
+	DockspaceBase* DockspaceManager::CreateDockspace(DockspaceType dockspaceType)
 	{
 		const char* dockspaceName = GetDockspaceName(dockspaceType);
 		ZE_CORE_INFO("Creating dockspace: {0}", dockspaceName);
-		EditorDockspaceSpec spec;
+		DockspaceSpec spec;
 		spec.Type = dockspaceType;
 		switch (dockspaceType)
 		{
-			case EditorDockspaceType::Main_Editor:
+			case DockspaceType::MainEditor:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
 				spec.WindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 				return CreateDockspace<MainDockspace>(spec);
 			}
-			case EditorDockspaceType::Particle_Editor:
+			case DockspaceType::ParticleEditor:
 			{
 				return CreateDockspace<ParticleEditorDockspace>(spec);
 			}
@@ -103,7 +100,7 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	EditorDockspace* DockspaceManager::GetDockspace(EditorDockspaceType dockspaceType)
+	DockspaceBase* DockspaceManager::GetDockspace(DockspaceType dockspaceType)
 	{
 		auto result = m_Dockspaces.find(dockspaceType);
 		return result == m_Dockspaces.end() ? nullptr : result->second;
@@ -115,11 +112,7 @@ namespace ZeoEngine {
 
 		for (auto& [type, dockspace] : m_Dockspaces)
 		{
-			// Do not update scene if this dockspace is invisible
-			if (dockspace->m_bShow)
-			{
-				dockspace->OnUpdate(dt);
-			}
+			dockspace->OnUpdate(dt);
 		}
 	}
 
@@ -139,9 +132,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DockspaceManager::RebuildDockLayout(EditorDockspaceType dockspaceType)
+	void DockspaceManager::RebuildDockLayout(DockspaceType dockspaceType)
 	{
-		bool bShouldRebuildAll = dockspaceType == EditorDockspaceType::NONE;
+		bool bShouldRebuildAll = dockspaceType == DockspaceType::NONE;
 		for (auto& [type, dockspace] : m_Dockspaces)
 		{
 			if (bShouldRebuildAll || type == dockspaceType)
@@ -161,7 +154,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorPanel* PanelManager::TogglePanel(EditorPanelType panelType, EditorDockspace* context, bool bOpen)
+	PanelBase* PanelManager::TogglePanel(PanelType panelType, DockspaceBase* context, bool bOpen)
 	{
 		auto* panel = GetPanel(panelType);
 		if (panel)
@@ -169,65 +162,62 @@ namespace ZeoEngine {
 			panel->m_bShow = bOpen;
 			return panel;
 		}
-		else
+		else if (bOpen)
 		{
-			if (bOpen)
-			{
-				return CreatePanel(panelType, context);
-			}
+			return CreatePanel(panelType, context);
 		}
 		return nullptr;
 	}
 
-	EditorPanel* PanelManager::CreatePanel(EditorPanelType panelType, EditorDockspace* context)
+	PanelBase* PanelManager::CreatePanel(PanelType panelType, DockspaceBase* context)
 	{
 		const char* panelName = GetPanelName(panelType);
 		ZE_CORE_INFO("Creating panel: {0}", panelName);
-		EditorPanelSpec spec;
+		PanelSpec spec;
 		spec.Type = panelType;
 		switch (panelType)
 		{
-			case EditorPanelType::Game_View:
+			case PanelType::GameView:
 			{
 				return CreatePanel<GameViewportPanel>(spec, context);
 			}
-			case EditorPanelType::Scene_Outline:
+			case PanelType::SceneOutline:
 			{
 				return CreatePanel<SceneOutlinePanel>(spec, context);
 			}
-			case EditorPanelType::Entity_Inspector:
+			case PanelType::EntityInspector:
 			{
 				return CreatePanel<EntityInspectorPanel>(spec, context);
 			}
-			case EditorPanelType::Console:
+			case PanelType::Console:
 			{
 				spec.Padding = ImGui::GetStyle().WindowPadding;
 				return CreatePanel<ConsolePanel>(spec, context);
 			}
-			case EditorPanelType::Stats:
+			case PanelType::Stats:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
 				spec.Padding = ImGui::GetStyle().WindowPadding;
 				spec.InitialSize = { { 300.0f, 300.0f } };
 				return CreatePanel<StatsPanel>(spec, context);
 			}
-			case EditorPanelType::Preferences:
+			case PanelType::Preferences:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoCollapse;
 				spec.Padding = ImGui::GetStyle().WindowPadding;
 				return CreatePanel<PreferencesPanel>(spec, context);
 			}
-			case EditorPanelType::About:
+			case PanelType::About:
 			{
 				spec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize;
 				spec.InitialSize = { { 300.0f, 200.0f } };
 				return CreatePanel<AboutPanel>(spec, context);
 			}
-			case EditorPanelType::Particle_View:
+			case PanelType::ParticleView:
 			{
 				return CreatePanel<ParticleViewportPanel>(spec, context);
 			}
-			case EditorPanelType::Particle_Inspector:
+			case PanelType::ParticleInspector:
 			{
 				return CreatePanel<ParticleInspectorPanel>(spec, context);
 			}
@@ -237,7 +227,7 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	EditorPanel* PanelManager::GetPanel(EditorPanelType panelType)
+	PanelBase* PanelManager::GetPanel(PanelType panelType)
 	{
 		auto result = m_Panels.find(panelType);
 		return result == m_Panels.end() ? nullptr : result->second;
@@ -275,7 +265,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorMenu& MenuManager::CreateMenu(const std::string& menuName, EditorDockspace* context)
+	EditorMenu& MenuManager::CreateMenu(const std::string& menuName, DockspaceBase* context)
 	{
 		EditorMenu* menu = new EditorMenu(menuName, context);
 		m_Menus.emplace_back(menu);

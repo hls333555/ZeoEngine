@@ -1,16 +1,23 @@
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
-	EditorPanel::EditorPanel(const EditorPanelSpec& spec, EditorDockspace* context)
+	PanelBase::PanelBase(const PanelSpec& spec, DockspaceBase* context)
 		: m_PanelSpec(spec)
 		, m_Context(context)
 	{
 	}
 
-	void EditorPanel::OnImGuiRender()
+	void PanelBase::OnUpdate(DeltaTime dt)
+	{
+		if (!m_bShow) return;
+
+		ProcessUpdate(dt);
+	}
+
+	void PanelBase::OnImGuiRender()
 	{
 		if (!m_bShow) return;
 
@@ -25,21 +32,18 @@ namespace ZeoEngine {
 			m_bIsPanelFocused = ImGui::IsWindowFocused();
 			m_bIsPanelHovered = ImGui::IsWindowHovered();
 
-			RenderPanel();
+			ProcessRender();
 		}
 		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}
 
-	const Ref<Scene>& EditorPanel::GetScene() const
+	void PanelBase::OnEvent(Event& e)
 	{
-		return m_Context->GetScene();
-	}
+		if (!m_bShow) return;
 
-	const Ref<FrameBuffer>& EditorPanel::GetFrameBuffer() const
-	{
-		return m_Context->GetFrameBuffer();
+		ProcessEvent(e);
 	}
 
 }

@@ -215,4 +215,16 @@ namespace ImGui {
 		}
 	}
 
+	ImRect GetWindowWorkRect()
+	{
+		ImGuiContext& g = *GImGui;
+		ImGuiWindow* window = g.CurrentWindow;
+		return window->WorkRect;
+	}
+
+	ImVec2 GetFramePadding()
+	{
+		return GImGui->Style.FramePadding;
+	}
+
 }

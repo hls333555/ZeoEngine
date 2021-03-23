@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Panels/EditorPanel.h"
+#include "Panels/PanelBase.h"
 
 #include <glm/glm.hpp>
 
@@ -9,14 +9,13 @@
 
 namespace ZeoEngine {
 
-	class SceneViewportPanel : public EditorPanel
+	class SceneViewportPanel : public PanelBase
 	{
 	public:
-		using EditorPanel::EditorPanel;
-		virtual void OnAttach() override;
-		virtual void OnUpdate(DeltaTime dt) override;
-		virtual void OnEvent(Event& e) override;
+		using PanelBase::PanelBase;
 
+		virtual void OnAttach() override;
+		
 		/**
 		 * Snapshot current viewport and save it to a PNG file.
 		 * If imageWidth is non-zero, it will snapshot a centered square area using this provided imageWidth, otherwise it will snapshot the full viewport.
@@ -25,21 +24,25 @@ namespace ZeoEngine {
 		virtual void Snapshot(const std::string& imageName, uint32_t imageWidth = 0);
 
 		const glm::vec2* GetViewportBounds() const { return m_ViewportBounds; }
+		glm::vec2 GetViewportSize() const;
 
 		std::pair<float, float> GetMouseViewportPosition();
 
 	protected:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
+		virtual void ProcessEvent(Event& e) override;
 
 	private:
+		virtual void ProcessUpdate(DeltaTime dt) override;
+
 		virtual void RenderToolbar() {};
+
+		bool OnMouseScroll(MouseScrolledEvent& e);
+		bool OnFocusEntity(KeyPressedEvent& e);
 
 		void SetViewportBounds(float x, float y, float width, float height);
 
 		void OnViewportResize(const glm::vec2& size);
-
-		bool OnMouseScroll(MouseScrolledEvent& e);
-		bool OnFocusEntity(KeyPressedEvent& e);
 
 	protected:
 		EditorCamera m_EditorCamera;

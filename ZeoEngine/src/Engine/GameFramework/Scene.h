@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		entt::registry m_Registry;
 
 	private:
-		std::string m_Name{"Untitled"};
+		std::string m_Name{ "Untitled" };
 		std::string m_Path;
 
 		uint32_t m_EntityCount;

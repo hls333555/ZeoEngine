@@ -1,10 +1,9 @@
 #include "Panels/ParticleViewportPanel.h"
 
-#include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
@@ -13,17 +12,34 @@ namespace ZeoEngine {
 		SceneViewportPanel::OnAttach();
 
 		CreatePreviewParticle();
-		GetContext()->m_OnSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
+		GetContext()->m_PostSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
 	}
 
-	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
+	void ParticleViewportPanel::ProcessRender()
 	{
-		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
-		m_ParticlePreviewComp = &previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
-		GetContext()->SetContextEntity(previewParticleEntity);
-		if (!bIsFromOpenScene)
+		// Get default available region before drawing any widgets
+		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
+		SceneViewportPanel::ProcessRender();
+
+		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
+
+		// Display particle count at the top right corner of Particle View window
 		{
-			CreateDefaultParticleSystem();
+			char particleCount[16];
+			_itoa_s(ps->m_ActiveParticleCount, particleCount, 10);
+			const float particleCountWidth = ImGui::CalcTextSize(particleCount).x;
+			ImGui::SameLine(contentRegionAvailable.x - particleCountWidth);
+			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, particleCount);
+		}
+
+		// Display "Completed" text at the bottom center of Particle View window
+		if (ps->m_bSystemComplete)
+		{
+			static const char* completedStr = "Completed";
+			static const float completedWidth = ImGui::CalcTextSize(completedStr).x;
+			ImGui::SetCursorPos({ (contentRegionAvailable.x - completedWidth) * 0.5f + ImGui::GetFramePadding().x, contentRegionAvailable.y });
+			ImGui::Text(completedStr);
 		}
 	}
 
@@ -32,6 +48,17 @@ namespace ZeoEngine {
 		SceneViewportPanel::Snapshot(imageName, imageWidth);
 
 		m_ParticlePreviewComp->Template->UpdatePreviewThumbnail(imageName);
+	}
+
+	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
+	{
+		Entity previewParticleEntity = GetContext()->GetScene()->CreateEntity("Preview Particle", true);
+		m_ParticlePreviewComp = &previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		GetContext()->SetContextEntity(previewParticleEntity);
+		if (!bIsFromOpenScene)
+		{
+			CreateDefaultParticleSystem();
+		}
 	}
 
 	void ParticleViewportPanel::CreateDefaultParticleSystem()
@@ -48,40 +75,13 @@ namespace ZeoEngine {
 		// Old template's particle system reference is cleared on old scene's destruction, so just pass null here
 		m_ParticlePreviewComp->CreateParticleSystem({});
 	}
-
-	void ParticleViewportPanel::RenderPanel()
-	{
-		// Get default available region before drawing any widgets
-		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-		SceneViewportPanel::RenderPanel();
-
-		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
-		
-		// Display particle count at the top right corner of Particle View window
-		{
-			char particleCount[16];
-			_itoa_s(ps->m_ActiveParticleCount, particleCount, 10);
-			const float particleCountWidth = ImGui::CalcTextSize(particleCount).x;
-			ImGui::SameLine(contentRegionAvailable.x - particleCountWidth);
-			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, particleCount);
-		}
-
-		// Display "Completed" text at the bottom center of Particle View window
-		if (ps->m_bSystemComplete)
-		{
-			static const float completedWidth = ImGui::CalcTextSize("Completed").x;
-			ImGui::SetCursorPos({ (ImGui::GetWindowWidth() - completedWidth) * 0.5f + GImGui->Style.FramePadding.x, contentRegionAvailable.y });
-			ImGui::Text("Complete");
-		}
-	}
-
+	
 	void ParticleViewportPanel::RenderToolbar()
 	{
 		const auto& ps = m_ParticlePreviewComp->ParticleSystemRuntime;
 
 		// Place buttons at window center
-		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFontSize() - GImGui->Style.FramePadding.x * 2.0f);
+		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing());
 
 		// Toggle pause / resume
 		if (ImGui::TransparentButton(ps->IsPause() ? ICON_FA_PLAY : ICON_FA_PAUSE))

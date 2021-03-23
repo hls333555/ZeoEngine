@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	void ConsolePanel::RenderPanel()
+	void ConsolePanel::ProcessRender()
 	{
 		EditorLog::s_EditorLog.Draw();
 

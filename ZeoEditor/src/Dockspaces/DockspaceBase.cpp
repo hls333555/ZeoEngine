@@ -1,4 +1,4 @@
-#include "Dockspaces/EditorDockspace.h"
+#include "Dockspaces/DockspaceBase.h"
 
 #include <imgui_internal.h>
 
@@ -14,19 +14,21 @@
 
 namespace ZeoEngine {
 
-	EditorDockspace::EditorDockspace(const EditorDockspaceSpec& spec)
+	DockspaceBase::DockspaceBase(const DockspaceSpec& spec)
 		: m_DockspaceSpec(spec)
 	{
 	}
 
-	void EditorDockspace::OnAttach()
+	void DockspaceBase::OnAttach()
 	{
 		CreateScene();
 		CreateFrameBuffer();
 	}
 
-	void EditorDockspace::OnUpdate(DeltaTime dt)
+	void DockspaceBase::OnUpdate(DeltaTime dt)
 	{
+		if (!m_bShow) return;
+
 		m_PanelManager.OnUpdate(dt);
 
 		m_Scene->OnUpdate(dt);
@@ -46,34 +48,37 @@ namespace ZeoEngine {
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
 				m_Scene->OnRender(*m_EditorCamera);
-				PostRenderScene(m_FBO);
+				m_PostSceneRenderDel.publish(m_FBO);
 			}
 		}
 		EndFrameBuffer();
 	}
 
-	void EditorDockspace::OnImGuiRender()
+	void DockspaceBase::OnImGuiRender()
 	{
 		if (!m_bShow) return;
 
 		// Render dockspace
+		PreRenderDockspace();
 		RenderDockspace();
 		// Render panels
 		m_PanelManager.OnImGuiRender();
 	}
 
-	void EditorDockspace::OnEvent(Event& e)
+	void DockspaceBase::OnEvent(Event& e)
 	{
+		if (!m_bShow) return;
+
 		m_MenuManager.OnEvent(e);
 		m_PanelManager.OnEvent(e);
 
-		if (!m_bBlockEvents)
+		if (!m_bBlockSceneEvents)
 		{
 			m_Scene->OnEvent(e);
 		}
 	}
 
-	void EditorDockspace::PreRenderDockspace()
+	void DockspaceBase::PreRenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImVec2 centerPos{ mainViewport->Pos.x + mainViewport->Size.x / 2.0f, mainViewport->Pos.y + mainViewport->Size.y / 2.0f };
@@ -81,10 +86,8 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowSize(m_DockspaceSpec.InitialSize.Data, m_DockspaceSpec.InitialSize.Condition);
 	}
 
-	void EditorDockspace::RenderDockspace()
+	void DockspaceBase::RenderDockspace()
 	{
-		PreRenderDockspace();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		const char* dockspaceName = GetDockspaceName(m_DockspaceSpec.Type);
 		ImGui::Begin(dockspaceName, &m_bShow, m_DockspaceSpec.WindowFlags);
@@ -94,7 +97,7 @@ namespace ZeoEngine {
 		m_bIsDockspaceHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 		// Render menus (non-main-menus must be rendered winthin window context)
-		m_MenuManager.OnImGuiRender(m_DockspaceSpec.Type == EditorDockspaceType::Main_Editor);
+		m_MenuManager.OnImGuiRender(m_DockspaceSpec.Type == DockspaceType::MainEditor);
 
 		ImGuiID dockspaceID = ImGui::GetID(dockspaceName);
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)
@@ -118,33 +121,34 @@ namespace ZeoEngine {
 		ImGui::End();
 	}
 
-	void EditorDockspace::FocusContextEntity()
+	void DockspaceBase::FocusContextEntity()
 	{
 		m_EditorCamera->StartFocusEntity(m_ContextEntity);
 	}
 
-	EditorMenu& EditorDockspace::CreateMenu(const std::string& menuName)
+	EditorMenu& DockspaceBase::CreateMenu(const std::string& menuName)
 	{
 		return m_MenuManager.CreateMenu(menuName, this);
 	}
 
-	EditorPanel* EditorDockspace::TogglePanel(EditorPanelType panelType, bool bOpen)
-	{
-		return m_PanelManager.TogglePanel(panelType, this, bOpen);
-	}
-
-	void EditorDockspace::CreatePanel(EditorPanelType panelType)
+	void DockspaceBase::CreatePanel(PanelType panelType)
 	{
 		m_PanelManager.CreatePanel(panelType, this);
 	}
 
-	void EditorDockspace::CreateNewScene(bool bIsFromOpenScene)
+	PanelBase* DockspaceBase::TogglePanel(PanelType panelType, bool bOpen)
 	{
-		CreateScene();
-		m_OnSceneCreateDel.publish(bIsFromOpenScene);
+		return m_PanelManager.TogglePanel(panelType, this, bOpen);
 	}
 
-	void EditorDockspace::OpenScene()
+	void DockspaceBase::CreateNewScene(bool bIsFromOpenScene)
+	{
+		m_PreSceneCreateDel.publish(bIsFromOpenScene);
+		CreateScene();
+		m_PostSceneCreateDel.publish(bIsFromOpenScene);
+	}
+
+	void DockspaceBase::OpenScene()
 	{
 		auto filePath = FileDialogs::OpenFile(GetAssetType());
 		if (!filePath) return;
@@ -156,7 +160,7 @@ namespace ZeoEngine {
 		m_Scene->OnDeserialized();
 	}
 
-	void EditorDockspace::SaveSceneAs()
+	void DockspaceBase::SaveSceneAs()
 	{
 		auto filePath = FileDialogs::SaveFile(GetAssetType());
 		if (!filePath) return;
@@ -166,7 +170,7 @@ namespace ZeoEngine {
 		Serialize(*filePath);
 	}
 
-	void EditorDockspace::SaveScene()
+	void DockspaceBase::SaveScene()
 	{
 		const std::string scenePath = m_Scene->GetPath();
 		if (scenePath.empty())
@@ -179,23 +183,18 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorDockspace::CreateScene()
+	void DockspaceBase::CreateScene()
 	{
 		switch (m_DockspaceSpec.Type)
 		{
-		case EditorDockspaceType::Main_Editor:
-			m_Scene = CreateRef<MainEditorScene>();
-			break;
-		case EditorDockspaceType::Particle_Editor:
-			m_Scene = CreateRef<ParticleEditorScene>();
-			break;
-		default:
-			ZE_CORE_ASSERT(false);
-			break;
+			case DockspaceType::MainEditor:		m_Scene = CreateRef<MainEditorScene>(); return;
+			case DockspaceType::ParticleEditor:	m_Scene = CreateRef<ParticleEditorScene>(); return;
 		}
+
+		ZE_CORE_ASSERT(false);
 	}
 
-	void EditorDockspace::CreateFrameBuffer()
+	void DockspaceBase::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
@@ -204,12 +203,12 @@ namespace ZeoEngine {
 		m_FBO = FrameBuffer::Create(fbSpec);
 	}
 
-	void EditorDockspace::BeginFrameBuffer()
+	void DockspaceBase::BeginFrameBuffer()
 	{
 		m_FBO->Bind();
 	}
 
-	void EditorDockspace::EndFrameBuffer()
+	void DockspaceBase::EndFrameBuffer()
 	{
 		m_FBO->Unbind();
 	}

@@ -13,18 +13,18 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		void CreatePreviewParticle(bool bIsFromOpenScene = false);
-
 		virtual void Snapshot(const std::string& imageName, uint32_t imageWidth = 0) override;
 
 	private:
-		virtual void RenderPanel() override;
+		virtual void ProcessRender() override;
+
 		virtual void RenderToolbar() override;
 
+		void CreatePreviewParticle(bool bIsFromOpenScene = false);
 		void CreateDefaultParticleSystem();
 
 	private:
-		ParticleSystemPreviewComponent* m_ParticlePreviewComp;
+		ParticleSystemPreviewComponent* m_ParticlePreviewComp = nullptr;
 
 	};
 

@@ -1,6 +1,7 @@
 #include "Reflection/DataParser.h"
 
 #include "Engine/Core/Log.h"
+#include "Engine/Core/ReflectionHelper.h"
 
 namespace ZeoEngine {
 

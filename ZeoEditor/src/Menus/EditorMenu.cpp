@@ -2,11 +2,11 @@
 
 #include <imgui.h>
 
-#include "Menus/EditorMenuItem.h"
+#include "Menus/EditorMenuItems.h"
 
 namespace ZeoEngine {
 
-	EditorMenu::EditorMenu(const std::string& menuName, EditorDockspace* context)
+	EditorMenu::EditorMenu(const std::string& menuName, DockspaceBase* context)
 		: m_MenuName(menuName)
 		, m_Context(context)
 	{

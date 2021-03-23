@@ -45,6 +45,7 @@ namespace ZeoEngine {
 		// Set default style
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowRounding = 8.0f;
+		style.WindowBorderSize = 0.0f;
 		style.PopupRounding = 5.0f;
 		style.PopupBorderSize = 0.0f;
 		style.FrameRounding = 5.0f;
