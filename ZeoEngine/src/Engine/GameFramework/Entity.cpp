@@ -57,7 +57,7 @@ namespace ZeoEngine {
 			return {};
 		}
 		auto compInstance = compType.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
-		Component* comp = compInstance.try_cast<Component>();
+		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
 		AddComponentId(compId);

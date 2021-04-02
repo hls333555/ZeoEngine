@@ -137,8 +137,8 @@ entt::meta<_type>()																						\
 		.func<&ZeoEngine::Reflection::remove<_type>, entt::as_ref_t>("remove"_hs)						\
 		.func<&ZeoEngine::Reflection::get<_type>, entt::as_ref_t>("get"_hs)								\
 		.func<&ZeoEngine::Reflection::has<_type>>("has"_hs)												\
-		.func<&ZeoEngine::Reflection::bind_on_destroy<_type>>("bind_on_destroy"_hs)						\
-		.base<Component>()
+		.func<&ZeoEngine::Reflection::bind_on_destroy<_type>, entt::as_ref_t>("bind_on_destroy"_hs)		\
+		.base<IComponent>()
 
 //////////////////////////////////////////////////////////////////////////
 // Enum Registration /////////////////////////////////////////////////////

@@ -3,16 +3,11 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Scene.h"
-#include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
 
 	class Entity
 	{
-		friend class DataInspectorPanel;
-		friend class DataInspector;
-		friend class SceneSerializer;
-
 	public:
 		Entity() = default;
 		Entity(entt::entity handle, Scene* scene);
@@ -27,7 +22,7 @@ namespace ZeoEngine {
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
 			AddComponentId(entt::type_hash<T>::value());
-			m_Scene->m_Registry.on_destroy<T>().template connect<&ZeoEngine::Reflection::on_destroy<T>>();
+			m_Scene->m_Registry.on_destroy<T>().template connect<&IComponent::OnDestroy>(comp);
 			return comp;
 		}
 

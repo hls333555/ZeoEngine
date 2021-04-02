@@ -48,10 +48,10 @@ namespace ZeoEngine {
 		}
 
 	private:
-		template<typename Component>
+		template<typename IComponent>
 		bool ShouldIgnoreComponent(uint32_t compId)
 		{
-			return entt::type_hash<Component>::value() == compId;
+			return entt::type_hash<IComponent>::value() == compId;
 		}
 
 		void DrawAddComponentButton(Entity entity);

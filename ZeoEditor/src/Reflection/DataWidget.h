@@ -17,6 +17,8 @@
 
 namespace ZeoEngine {
 
+	class DataInspectorPanel;
+
 	template<typename T>
 	void ShowPropertyTooltip(T metaObj)
 	{

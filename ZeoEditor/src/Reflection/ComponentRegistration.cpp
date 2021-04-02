@@ -77,7 +77,8 @@ using namespace ZeoEngine;
 	ZE_REFL_COMPONENT(SpriteRendererComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Sprite Renderer")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("2D渲染组件")), ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Rendering")))
 		ZE_REFL_DATA(SpriteRendererComponent, TintColor)
 		ZE_REFL_DATA(SpriteRendererComponent, Texture)
-		ZE_REFL_DATA(SpriteRendererComponent, TextureTiling);
+		ZE_REFL_DATA(SpriteRendererComponent, TextureTiling)
+		ZE_REFL_DATA(SpriteRendererComponent, SortingOrder);
 
 	ZE_REFL_ENUM(SceneCamera::ProjectionType)
 		ZE_REFL_ENUM_DATA(SceneCamera::ProjectionType, Perspective, ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("透视相机")))

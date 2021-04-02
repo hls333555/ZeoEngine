@@ -107,18 +107,15 @@ namespace ZeoEngine {
 	{
 		auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 
-		// Sort entities for rendering based on z position or creation order (if z positions are equivalent)
+		// Sort sprite entities
 		spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
 		{
-			const auto& ltc = spriteGroup.get<TransformComponent>(lhs);
-			const auto& rtc = spriteGroup.get<TransformComponent>(rhs);
-			if (ltc.Translation.z == rtc.Translation.z)
-			{
-				return m_Registry.get<CoreComponent>(lhs).CreationId < m_Registry.get<CoreComponent>(rhs).CreationId;
-			}
-			return ltc.Translation.z < rtc.Translation.z;
+			const auto& lsrc = spriteGroup.get<SpriteRendererComponent>(lhs);
+			const auto& rsrc = spriteGroup.get<SpriteRendererComponent>(rhs);
+			return lsrc.SortingOrder < rsrc.SortingOrder;
 		});
 
+		// Render sprites
 		for (auto entity : spriteGroup)
 		{
 			auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);

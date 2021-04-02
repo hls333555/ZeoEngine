@@ -16,12 +16,12 @@
 
 namespace ZeoEngine {
 
-	struct Component
+	struct IComponent
 	{
 		Entity OwnerEntity;
 
-		Component() = default;
-		Component(const Component&) = default;
+		IComponent() = default;
+		IComponent(const IComponent&) = default;
 
 		// Callbacks
 		/** Called before this component has been removed from the owner entity. */
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 	};
 
 #if ENABLE_TEST_COMPONENT
-	struct TestComponent : public Component
+	struct TestComponent : public IComponent
 	{
 		enum TestEnum
 		{
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 	};
 #endif
 
-	struct CoreComponent : public Component
+	struct CoreComponent : public IComponent
 	{
 		std::string Name;
 		size_t CreationId;
@@ -128,7 +128,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct TransformComponent : public Component
+	struct TransformComponent : public IComponent
 	{
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
@@ -160,11 +160,13 @@ namespace ZeoEngine {
 
 	};
 
-	struct SpriteRendererComponent : public Component
+	struct SpriteRendererComponent : public IComponent
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 		Ref<Texture2D> Texture;
 		glm::vec2 TextureTiling{ 1.0f };
+
+		int32_t SortingOrder = 0;
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
@@ -175,7 +177,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct CameraComponent : public Component
+	struct CameraComponent : public IComponent
 	{
 		SceneCamera Camera;
 		bool bIsPrimary = true;
@@ -203,7 +205,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct NativeScriptComponent : public Component
+	struct NativeScriptComponent : public IComponent
 	{
 		using InstantiateScriptDef = ScriptableEntity*(*)();
 		using DestroyScriptDef = void(*)(NativeScriptComponent*);
@@ -221,7 +223,7 @@ namespace ZeoEngine {
 		}
 	};
 
-	struct ParticleSystemComponent : public Component
+	struct ParticleSystemComponent : public IComponent
 	{
 		Ref<ParticleTemplate> Template;
 		Ref<ParticleSystem> ParticleSystemRuntime;

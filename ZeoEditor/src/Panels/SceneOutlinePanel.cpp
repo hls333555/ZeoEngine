@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::ProcessRender()
 	{
-		// Display entities in creation order, the order is updated when a new entity is created
+		// Display entities in creation order, the order is updated when a new entity is created or destroyed
 		GetContext()->GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
 		{
 			Entity entity{ entityId, GetContext()->GetScene().get() };
