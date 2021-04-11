@@ -8,7 +8,7 @@ namespace ZeoEngine {
 
 	class ScriptableEntity
 	{
-		friend class MainEditorScene;
+		friend class NativeScriptSystem;
 
 	public:
 		virtual ~ScriptableEntity() = default;

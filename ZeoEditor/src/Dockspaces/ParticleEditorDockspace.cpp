@@ -39,33 +39,33 @@ namespace ZeoEngine {
 
 	void ParticleEditorDockspace::ReloadParticleTemplateData()
 	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& pspc)
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleLibrary::Get().ReloadAsset(pspc.Template);
+			ParticleLibrary::Get().ReloadAsset(particlePreviewComp.Template);
 		});
 	}
 
 	void ParticleEditorDockspace::Serialize(const std::string& filePath)
 	{
 		TypeSerializer serializer(filePath);
-		auto& pspc = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
+		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
 		// Only snapshot on save when thumbnail texture is null
-		if (!pspc.Template->PreviewThumbnail)
+		if (!particlePreviewComp.Template->PreviewThumbnail)
 		{
 			ParticleViewportPanel* particleViewportPanel = GetPanel<ParticleViewportPanel>(PanelType::ParticleView);
 			std::string snapshotName = filePath + ".png";
 			particleViewportPanel->Snapshot(snapshotName, 256);
 		}
-		serializer.Serialize(pspc, GetAssetType());
+		serializer.Serialize(particlePreviewComp, GetAssetType());
 	}
 
 	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
 	{
 		// Deserialize particle template data and create particle system instance
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& pspc)
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& particlePreviewComp)
 		{
-			const auto& pTemplate = ParticleLibrary::Get().GetOrLoadAsset(filePath);
-			pspc.SetTemplate(pTemplate);
+			const auto pTemplate = ParticleLibrary::Get().GetOrLoadAsset(filePath);
+			ParticleSystemInstance::Create(particlePreviewComp, pTemplate);
 		});
 	}
 

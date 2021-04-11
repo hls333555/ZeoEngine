@@ -4,9 +4,12 @@
 
 namespace ZeoEngine {
 
+	class NativeScriptSystem;
+
 	class MainEditorScene : public Scene
 	{
 	public:
+		MainEditorScene();
 		virtual ~MainEditorScene();
 
 		virtual void OnUpdate(DeltaTime dt) override;
@@ -16,15 +19,13 @@ namespace ZeoEngine {
 		virtual void OnDeserialized() override;
 
 	private:
-		virtual void OnClenup() override;
-
 		void OnUpdateEditor(DeltaTime dt);
 		void OnUpdateRuntime(DeltaTime dt);
 		void OnRenderEditor(const EditorCamera& camera);
 		void OnRenderRuntime();
 
-		void UpdateParticleSystem(DeltaTime dt);
-		void RenderPrimitives();
+	private:
+		Ref<NativeScriptSystem> m_NativeScriptSystem;
 	};
 
 }

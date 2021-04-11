@@ -5,7 +5,6 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Renderer/Texture.h"
-#include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {

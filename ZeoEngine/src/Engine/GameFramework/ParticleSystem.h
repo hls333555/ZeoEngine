@@ -57,7 +57,7 @@ namespace ZeoEngine {
 		ParticleInt Amount;
 	};
 
-	class ParticleSystem;
+	class ParticleSystemInstance;
 
 	struct ParticleTemplate
 	{
@@ -73,11 +73,11 @@ namespace ZeoEngine {
 		const std::string& GetName() const { return Name; }
 
 	public:
-		void AddParticleSystemInstance(const Ref<ParticleSystem>& psInstance)
+		void AddParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
 		{
 			ParticleSystemInstances.push_back(psInstance);
 		}
-		void RemoveParticleSystemInstance(const Ref<ParticleSystem>& psInstance)
+		void RemoveParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
 		{
 			auto it = std::find(ParticleSystemInstances.cbegin(), ParticleSystemInstances.cend(), psInstance);
 			if (it != ParticleSystemInstances.cend())
@@ -86,13 +86,14 @@ namespace ZeoEngine {
 			}
 		}
 
-		void UpdateAllParticleSystemInstances();
+		void ResimulateAllParticleSystemInstances();
 
 		void UpdatePreviewThumbnail(const std::string& imageName)
 		{
 			PreviewThumbnail = Texture2D::Create(imageName);
 		}
 
+	public:
 		bool bIsLocalSpace = false;
 
 		/** <= 0 means infinite loop */
@@ -140,21 +141,23 @@ namespace ZeoEngine {
 		std::string Name;
 
 		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
-		std::vector<Ref<ParticleSystem>> ParticleSystemInstances;
+		std::vector<Ref<ParticleSystemInstance>> ParticleSystemInstances;
 
 	};
 
-	class ParticleSystem
+	struct ParticleSystemComponent;
+
+	class ParticleSystemInstance
 	{
 		friend class ParticleViewportPanel;
 		friend struct ParticleTemplate;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
+		ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
-		static Ref<ParticleSystem> Create(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity);
+		static void Create(ParticleSystemComponent& particleComp, const Ref<ParticleTemplate>& pTemplateToOverride = {});
 
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
 

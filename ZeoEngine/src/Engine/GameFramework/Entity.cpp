@@ -60,6 +60,10 @@ namespace ZeoEngine {
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
+		if (comp->ComponentHelper)
+		{
+			comp->ComponentHelper->SetOwnerEntity(*this);
+		}
 		AddComponentId(compId);
 		Reflection::BindOnDestroy(compType, m_Scene->m_Registry);
 		return compInstance;

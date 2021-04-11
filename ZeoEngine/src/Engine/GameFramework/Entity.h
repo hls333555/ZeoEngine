@@ -21,8 +21,12 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			comp.OwnerEntity = *this;
+			if (comp.ComponentHelper)
+			{
+				comp.ComponentHelper->SetOwnerEntity(*this);
+			}
 			AddComponentId(entt::type_hash<T>::value());
-			m_Scene->m_Registry.on_destroy<T>().template connect<&IComponent::OnDestroy>(comp);
+			m_Scene->m_Registry.on_destroy<T>().template connect<&IComponentHelper::OnComponentDestroy>(comp.ComponentHelper);
 			return comp;
 		}
 

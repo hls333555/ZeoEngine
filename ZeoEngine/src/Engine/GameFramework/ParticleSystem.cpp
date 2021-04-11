@@ -48,14 +48,9 @@ namespace ZeoEngine {
 	{
 		switch (VariationType)
 		{
-		case ParticleVariationType::Constant:
-			return Val1;
-		case ParticleVariationType::RandomInRange:
-			return EvaluateRandom();
-		case ParticleVariationType::UniformInRange:
-			return EvaluateUniform();
-		default:
-			break;
+			case ParticleVariationType::Constant:		return Val1;
+			case ParticleVariationType::RandomInRange:	return EvaluateRandom();
+			case ParticleVariationType::UniformInRange:	return EvaluateUniform();
 		}
 		return T();
 	}
@@ -130,45 +125,54 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec3>;
 	template struct ParticleVariation<glm::vec4>;
 
-	void ParticleTemplate::UpdateAllParticleSystemInstances()
+	void ParticleTemplate::ResimulateAllParticleSystemInstances()
 	{
-		for (const auto& ps : ParticleSystemInstances)
+		for (const auto& psInstance : ParticleSystemInstances)
 		{
-			ps->Reevaluate();
+			psInstance->Reevaluate();
 		}
 	}
 
-	ParticleSystem::ParticleSystem(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
+	ParticleSystemInstance::ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
 		: m_ParticleTemplate(particleTemplate)
-		, m_PositionOffset(positionOffset)
 		, m_OwnerEntity(ownerEntity)
+		, m_PositionOffset(positionOffset)
 	{
 		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
 		Reevaluate();
 	}
 
-	Ref<ParticleSystem> ParticleSystem::Create(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
+	void ParticleSystemInstance::Create(ParticleSystemComponent& particleComp, const Ref<ParticleTemplate>& pTemplateToOverride)
 	{
 		// A way to allow std::make_shared() to access ParticleSystem's private constructor
-		class ParticleSystemEnableShared : public ParticleSystem
+		class ParticleSystemEnableShared : public ParticleSystemInstance
 		{
 		public:
-			ParticleSystemEnableShared(const Ref<ParticleTemplate>& particleTemplate, const glm::vec3& positionOffset, Entity ownerEntity)
-				: ParticleSystem(particleTemplate, positionOffset, ownerEntity) {}
+			ParticleSystemEnableShared(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
+				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 
-		auto ps = CreateRef<ParticleSystemEnableShared>(particleTemplate, positionOffset, ownerEntity);
-		particleTemplate->AddParticleSystemInstance(ps);
-		return ps;
+		if (particleComp.Template)
+		{
+			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+		}
+		if (pTemplateToOverride)
+		{
+			particleComp.Template = pTemplateToOverride;
+		}
+
+		auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
+		particleComp.Instance = psInstance;
+		particleComp.Template->AddParticleSystemInstance(psInstance);
 	}
 
-	void ParticleSystem::Reevaluate()
+	void ParticleSystemInstance::Reevaluate()
 	{
 		EvaluateEmitterProperties();
 		Resimulate();
 	}
 
-	void ParticleSystem::EvaluateEmitterProperties()
+	void ParticleSystemInstance::EvaluateEmitterProperties()
 	{
 		m_EmitterSpec.bIsLocalSpace = m_ParticleTemplate->bIsLocalSpace;
 
@@ -214,7 +218,7 @@ namespace ZeoEngine {
 		m_OwnerLastPosition = m_OwnerEntity.GetEntityTranslation();
 	}
 
-	void ParticleSystem::ReevaluateBurstList()
+	void ParticleSystemInstance::ReevaluateBurstList()
 	{
 		for (auto i = 0; i < m_ParticleTemplate->BurstList.size(); ++i)
 		{
@@ -229,7 +233,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::EvaluateParticleProperties(Particle& particle)
+	void ParticleSystemInstance::EvaluateParticleProperties(Particle& particle)
 	{
 		// Position
 		{
@@ -276,7 +280,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool ParticleSystem::Emit()
+	bool ParticleSystemInstance::Emit()
 	{
 		if (m_PoolIndex < 0) return false;
 
@@ -300,7 +304,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void ParticleSystem::CalculateNextPoolIndex()
+	void ParticleSystemInstance::CalculateNextPoolIndex()
 	{
 		if (m_PoolIndex == 0)
 		{
@@ -312,7 +316,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::OnUpdate(DeltaTime dt)
+	void ParticleSystemInstance::OnUpdate(DeltaTime dt)
 	{
 		if (m_bPendingDestroy || !m_bStartUpdate || m_bPauseUpdate) return;
 
@@ -434,7 +438,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::OnRender()
+	void ParticleSystemInstance::OnRender()
 	{
 		if (m_bPendingDestroy) return;
 
@@ -462,25 +466,25 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystem::ResetParticlePool()
+	void ParticleSystemInstance::ResetParticlePool()
 	{
 		m_ParticlePool.clear();
 		m_ParticlePool.resize(m_EmitterSpec.MaxParticles);
 		m_PoolIndex = m_EmitterSpec.MaxParticles - 1;
 	}
 
-	void ParticleSystem::TogglePause()
+	void ParticleSystemInstance::TogglePause()
 	{
 		m_bPauseUpdate = !m_bPauseUpdate;
 	}
 
-	void ParticleSystem::Resimulate()
+	void ParticleSystemInstance::Resimulate()
 	{
 		ResetParticlePool();
 		Reset();
 	}
 
-	void ParticleSystem::Reset()
+	void ParticleSystemInstance::Reset()
 	{
 		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
@@ -489,7 +493,7 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void ParticleSystem::Activate()
+	void ParticleSystemInstance::Activate()
 	{
 		if (m_bPendingDestroy || m_bActive)
 			return;
@@ -499,7 +503,7 @@ namespace ZeoEngine {
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
 	}
 
-	void ParticleSystem::Deactivate()
+	void ParticleSystemInstance::Deactivate()
 	{
 		m_bActive = false;
 	}
@@ -518,7 +522,7 @@ namespace ZeoEngine {
 		if (pTemplate->GetPath().empty()) return {};
 
 		DeserializeParticleTemplate(pTemplate->GetPath(), pTemplate);
-		pTemplate->UpdateAllParticleSystemInstances();
+		pTemplate->ResimulateAllParticleSystemInstances();
 		return pTemplate;
 	}
 

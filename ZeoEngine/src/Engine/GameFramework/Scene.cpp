@@ -3,8 +3,20 @@
 
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
+
+	Scene::Scene()
+	{
+		m_RenderSystem = CreateRef<RenderSystem>(this);
+		m_RenderSystem->OnCreate();
+	}
+
+	Scene::~Scene()
+	{
+		m_RenderSystem->OnDestroy();
+	}
 
 	void Scene::SetPath(const std::string& path)
 	{

@@ -8,6 +8,7 @@
 namespace ZeoEngine {
 
 	 class EditorCamera;
+	 class RenderSystem;
 
 	class Scene
 	{
@@ -15,10 +16,12 @@ namespace ZeoEngine {
 		friend class SceneSerializer;
 		friend class SceneViewportPanel;
 		friend class SceneOutlinePanel;
+		friend class ISystem;
+		friend class RenderSystem;
 
 	public:
-		Scene() = default;
-		virtual ~Scene() = default;
+		Scene();
+		virtual ~Scene();
 
 		virtual void OnUpdate(DeltaTime dt) {}
 		virtual void OnRender(const EditorCamera& camera) {}
@@ -38,10 +41,6 @@ namespace ZeoEngine {
 		/** Called after scene has been deserialized. */
 		virtual void OnDeserialized() {}
 
-	protected:
-		// Should be called manually in destructor
-		virtual void OnClenup() {}
-
 	private:
 		/** Create an entity with no default components. */
 		Entity CreateEmptyEntity();
@@ -51,11 +50,13 @@ namespace ZeoEngine {
 	protected:
 		entt::registry m_Registry;
 
+		Ref<RenderSystem> m_RenderSystem;
+
 	private:
 		std::string m_Name{ "Untitled" };
 		std::string m_Path;
 
-		uint32_t m_EntityCount;
+		uint32_t m_EntityCount = 0;
 	};
 
 }

@@ -1,35 +1,28 @@
 #pragma once
 
-#include <any>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "Engine/GameFramework/ComponentHelpers.h"
+#include "Engine/Core/CoreMacros.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Core/ReflectionCore.h"
-#include "Engine/Core/CoreMacros.h"
 
 namespace ZeoEngine {
+
+	class IComponentHelper;
 
 	struct IComponent
 	{
 		Entity OwnerEntity;
+		Ref<IComponentHelper> ComponentHelper;
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
-
-		// Callbacks
-		/** Called before this component has been removed from the owner entity. */
-		virtual void OnDestroy() {}
-		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
-		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) {}
-		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
-		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 	};
 
 #if ENABLE_TEST_COMPONENT
@@ -226,69 +219,14 @@ namespace ZeoEngine {
 	struct ParticleSystemComponent : public IComponent
 	{
 		Ref<ParticleTemplate> Template;
-		Ref<ParticleSystem> ParticleSystemRuntime;
+		Ref<ParticleSystemInstance> Instance;
 		glm::vec3 PositionOffset{ 0.0f };
 
-		ParticleSystemComponent() = default;
+		ParticleSystemComponent()
+		{
+			ComponentHelper = CreateRef<ParticleSystemComponentHelper>();
+		}
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
-
-		virtual void OnDestroy() override
-		{
-			// Clear particle system reference before this component has been removed
-			RemoveCurrentParticleSystemInstance();
-		}
-
-		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) override
-		{
-			CreateParticleSystem(Template);
-		}
-
-		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
-		{
-			Ref<ParticleTemplate> oldTemplate;
-			if (dataId == ZE_DATA_ID(Template))
-			{
-				oldTemplate = (*oldValue._Cast<Ref<ParticleTemplate>>());
-			}
-			CreateParticleSystem(oldTemplate);
-		}
-
-		void CreateParticleSystem(const Ref<ParticleTemplate>& oldTemplate)
-		{
-			// Clear last reference before creating new instance
-			if (oldTemplate)
-			{
-				oldTemplate->RemoveParticleSystemInstance(ParticleSystemRuntime);
-			}
-			if (Template)
-			{
-				ParticleSystemRuntime = ParticleSystem::Create(Template, PositionOffset, OwnerEntity);
-			}
-		}
-
-		void UpdateParticleSystem(DeltaTime dt)
-		{
-			if (ParticleSystemRuntime)
-			{
-				ParticleSystemRuntime->OnUpdate(dt);
-			}
-		}
-
-		void RenderParticleSystem()
-		{
-			if (ParticleSystemRuntime)
-			{
-				ParticleSystemRuntime->OnRender();
-			}
-		}
-
-		void RemoveCurrentParticleSystemInstance()
-		{
-			if (Template)
-			{
-				Template->RemoveParticleSystemInstance(ParticleSystemRuntime);
-			}
-		}
 
 	};
 
@@ -296,29 +234,13 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
+			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
 			Template = CreateRef<ParticleTemplate>();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
+		explicit ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
-		}
-
-		virtual void OnDataValueEditChange(uint32_t dataId, std::any oldValue) override
-		{
-			Template->UpdateAllParticleSystemInstances();
-		}
-
-		virtual void PostDataValueEditChange(uint32_t dataId, std::any oldValue) override
-		{
-			Template->UpdateAllParticleSystemInstances();
-		}
-
-		void SetTemplate(const Ref<ParticleTemplate>& pTemplate)
-		{
-			auto oldTemplate = Template;
-			Template = pTemplate;
-			CreateParticleSystem(oldTemplate);
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; } void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }

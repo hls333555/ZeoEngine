@@ -2,9 +2,9 @@
 
 #include "Panels/SceneViewportPanel.h"
 
-namespace ZeoEngine {
+#include "Engine/GameFramework/Entity.h"
 
-	struct ParticleSystemPreviewComponent;
+namespace ZeoEngine {
 
 	class ParticleViewportPanel : public SceneViewportPanel
 	{
@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		void CreateDefaultParticleSystem();
 
 	private:
-		ParticleSystemPreviewComponent* m_ParticlePreviewComp = nullptr;
+		Entity m_PreviewParticleEntity;
 
 	};
 

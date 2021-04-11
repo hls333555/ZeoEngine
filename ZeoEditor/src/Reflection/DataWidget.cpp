@@ -3,6 +3,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <IconsFontAwesome5.h>
 
+#include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Panels/DataInspectorPanels.h"
 #include "Core/WindowManager.h"
@@ -88,7 +89,7 @@ namespace ZeoEngine {
 		ZE_TRACE("Value changed during edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->OnDataValueEditChange(data.id(), oldValue);
+		comp->ComponentHelper->OnComponentDataValueEditChange(data.id(), oldValue);
 	}
 
 	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
@@ -96,7 +97,7 @@ namespace ZeoEngine {
 		ZE_TRACE("Value changed after edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->PostDataValueEditChange(data.id(), oldValue);
+		comp->ComponentHelper->PostComponentDataValueEditChange(data.id(), oldValue);
 	}
 
 	BoolDataWidget::BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
@@ -408,9 +409,9 @@ namespace ZeoEngine {
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
 						DockspaceBase* editor = DockspaceManager::Get().ToggleDockspace(DockspaceType::ParticleEditor, true);
-						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& pspc)
+						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
 						{
-							pspc.SetTemplate(m_Buffer);
+							ParticleSystemInstance::Create(particlePreviewComp, m_Buffer);
 						});
 					}
 				}
@@ -420,7 +421,7 @@ namespace ZeoEngine {
 				{
 					if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 					{
-						m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().ParticleSystemRuntime->Resimulate();
+						m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().Instance->Resimulate();
 					}
 
 					ImGui::EndPopup();
