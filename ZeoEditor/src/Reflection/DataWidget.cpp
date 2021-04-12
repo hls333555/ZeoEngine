@@ -309,6 +309,20 @@ namespace ZeoEngine {
 		if (ImGui::BeginCombo("##Texture2D", m_Buffer ? m_Buffer->GetFileName().c_str() : nullptr))
 		{
 			bool bIsBufferChanged = false;
+
+			// Clear current selection
+			if (ImGui::Selectable("Clear"))
+			{
+				bIsBufferChanged = static_cast<bool>(m_Buffer);
+				if (bIsBufferChanged)
+				{
+					m_Buffer.reset();
+					SetValueToData();
+				}
+			}
+
+			ImGui::Separator();
+
 			// Pop up file browser to select a texture from disk
 			if (ImGui::Selectable("Browse texture..."))
 			{
@@ -453,6 +467,20 @@ namespace ZeoEngine {
 		if (ImGui::BeginCombo("##ParticleTemplate", m_Buffer ? m_Buffer->GetName().c_str() : nullptr))
 		{
 			bool bIsBufferChanged = false;
+
+			// Clear current selection
+			if (ImGui::Selectable("Clear"))
+			{
+				bIsBufferChanged = static_cast<bool>(m_Buffer);
+				if (bIsBufferChanged)
+				{
+					m_Buffer.reset();
+					SetValueToData();
+				}
+			}
+
+			ImGui::Separator();
+
 			// Pop up file browser to select a particle template from disk
 			if (ImGui::Selectable("Browse particle template..."))
 			{

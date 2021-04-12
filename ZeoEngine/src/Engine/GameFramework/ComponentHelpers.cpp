@@ -29,7 +29,20 @@ namespace ZeoEngine {
 		{
 			particleComp.Template = (*oldValue._Cast<Ref<ParticleTemplate>>());
 		}
-		ParticleSystemInstance::Create(particleComp, newTemplate);
+		// Manually clear particle template selection
+		if (!newTemplate)
+		{
+			if (particleComp.Template)
+			{
+				particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+				particleComp.Template = newTemplate; // Should be empty
+				particleComp.Instance.reset();
+			}
+		}
+		else
+		{
+			ParticleSystemInstance::Create(particleComp, newTemplate);
+		}
 	}
 
 	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)

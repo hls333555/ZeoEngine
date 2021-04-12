@@ -161,9 +161,12 @@ namespace ZeoEngine {
 			particleComp.Template = pTemplateToOverride;
 		}
 
-		auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
-		particleComp.Instance = psInstance;
-		particleComp.Template->AddParticleSystemInstance(psInstance);
+		if (particleComp.Template)
+		{
+			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
+			particleComp.Instance = psInstance;
+			particleComp.Template->AddParticleSystemInstance(psInstance);
+		}
 	}
 
 	void ParticleSystemInstance::Reevaluate()
