@@ -50,11 +50,7 @@ namespace ZeoEngine::Reflection {
 	template<typename T>
 	void on_destroy(entt::registry& registry, entt::entity entity)
 	{
-		auto& compHelper = registry.get<T>(entity).ComponentHelper;
-		if (compHelper)
-		{
-			compHelper->OnComponentDestroy();
-		}
+		registry.get<T>(entity).ComponentHelper->OnComponentDestroy();
 	}
 
 	template<typename T>

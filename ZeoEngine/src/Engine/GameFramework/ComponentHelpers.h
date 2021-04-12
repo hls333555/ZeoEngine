@@ -8,9 +8,14 @@ namespace ZeoEngine {
 
 	class IComponentHelper
 	{
+	protected:
+		IComponentHelper() = default;
+		IComponentHelper(const IComponentHelper&) = default;
+
 	public:
 		/** Called before component has been removed from the owner entity. */
 		virtual void OnComponentDestroy() {}
+
 		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
@@ -26,6 +31,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual void OnComponentDestroy() override;
+
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 	};

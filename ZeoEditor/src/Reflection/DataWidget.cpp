@@ -89,7 +89,10 @@ namespace ZeoEngine {
 		ZE_TRACE("Value changed during edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->ComponentHelper->OnComponentDataValueEditChange(data.id(), oldValue);
+		if (comp->ComponentHelper)
+		{
+			comp->ComponentHelper->OnComponentDataValueEditChange(data.id(), oldValue);
+		}
 	}
 
 	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
@@ -97,7 +100,10 @@ namespace ZeoEngine {
 		ZE_TRACE("Value changed after edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->ComponentHelper->PostComponentDataValueEditChange(data.id(), oldValue);
+		if (comp->ComponentHelper)
+		{
+			comp->ComponentHelper->PostComponentDataValueEditChange(data.id(), oldValue);
+		}
 	}
 
 	BoolDataWidget::BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
