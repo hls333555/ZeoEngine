@@ -73,10 +73,13 @@ namespace ZeoEngine {
 		const std::string& GetName() const { return Name; }
 
 	public:
+		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
+
 		void AddParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
 		{
 			ParticleSystemInstances.push_back(psInstance);
 		}
+
 		void RemoveParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
 		{
 			auto it = std::find(ParticleSystemInstances.cbegin(), ParticleSystemInstances.cend(), psInstance);
@@ -157,6 +160,12 @@ namespace ZeoEngine {
 		ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
+		/**
+		 * Create a particle system instance.
+		 * It will first remove old particle system instance from reference list and create a new one and add that to reference list.
+		 * @param particleComp - Component to retrieve template and instance
+		 * @param pTemplateToOverride - If set, will override old template and create instance from this one
+		 */
 		static void Create(ParticleSystemComponent& particleComp, const Ref<ParticleTemplate>& pTemplateToOverride = {});
 
 		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
