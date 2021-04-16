@@ -45,7 +45,7 @@ using namespace ZeoEngine;
 		ZE_REFL_DATA(TestComponent, TestStruct1Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
 		ZE_REFL_DATA_GETTER_REF(TestComponent, TestStruct2GetterVar, GetTestStruct2GetterVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
 		ZE_REFL_DATA_SETTER_GETTER(TestComponent, ShowSequenceContainers, SetShowSequenceContainers, GetShowSequenceContainers, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-		ZE_REFL_DATA(TestComponent, BoolDeqVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
+		ZE_REFL_DATA(TestComponent, BoolVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
 		ZE_REFL_DATA(TestComponent, Ui8VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
 		ZE_REFL_DATA(TestComponent, Ui32VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
 		ZE_REFL_DATA(TestComponent, Ui64VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))

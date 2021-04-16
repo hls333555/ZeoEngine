@@ -74,8 +74,7 @@ namespace ZeoEngine {
 			shouldHide = false;
 			return;
 		}
-		// NOTE: If "instance" is const, the following get function will return a invalid value
-		// So do not pass instance by const reference if later you want to get data value throught it directly
+
 		auto keyDataValue = keyData.get(instance);
 
 		// Bool

@@ -111,22 +111,6 @@ namespace ZeoEngine {
 
 	ZE_REFL_REGISTRATION
 	{
-		entt::meta<bool>().ctor<>();
-		entt::meta<uint8_t>().ctor<>();
-		entt::meta<uint32_t>().ctor<>();
-		entt::meta<uint64_t>().ctor<>();
-		entt::meta<int8_t>().ctor<>();
-		entt::meta<int32_t>().ctor<>();
-		entt::meta<int64_t>().ctor<>();
-		entt::meta<float>().ctor<>();
-		entt::meta<double>().ctor<>();
-		entt::meta<std::string>().ctor<>();
-		entt::meta<glm::vec2>().ctor<>();
-		entt::meta<glm::vec3>().ctor<>();
-		entt::meta<glm::vec4>().ctor<>();
-		entt::meta<Ref<Texture2D>>().ctor<>();
-		entt::meta<Ref<ParticleTemplate>>().ctor<>();
-
 		// Register common numeric conversions for registration purpose
 		entt::meta<int32_t>()
 			.type()
@@ -151,7 +135,7 @@ namespace ZeoEngine {
 			.conv<float>();
 	}
 
-	const char* GetEnumDisplayName(entt::meta_any enumValue)
+	const char* GetEnumDisplayName(const entt::meta_any& enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing
 		for (const auto enumData : enumValue.type().data())

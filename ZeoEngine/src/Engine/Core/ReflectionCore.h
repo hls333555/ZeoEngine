@@ -44,7 +44,7 @@ namespace ZeoEngine::Reflection {
 	template<typename T>
 	bool has(entt::registry& registry, entt::entity entity) // NOTE: Do not register it by ref!
 	{
-		return registry.template has<T>(entity);
+		return registry.template all_of<T>(entity);
 	}
 
 	template<typename T>
@@ -150,7 +150,6 @@ entt::meta<_type>()																						\
  */
 #define ZE_REFL_ENUM(enumType)																			\
 entt::meta<enumType>()																					\
-	.ctor<>()																							\
 	.func<&ZeoEngine::Reflection::set_enum_value_for_seq<enumType>, entt::as_ref_t>("set_enum_value_for_seq"_hs)
 
 /**
@@ -170,7 +169,7 @@ entt::meta<enumType>()																					\
 
 /**
  * Register custom struct.
- * The struct MUST have ==operator overloading like below:
+ * The struct MUST have == operator overloading like below:
  * 
  * @code
  * bool operator==(const TestStruct1& other) const // <- This "const" is required!
@@ -188,8 +187,7 @@ entt::meta<_type>()																						\
         .prop(PropertyType::Name, #_type)																\
         .prop(PropertyType::Inherent)																	\
         .prop(PropertyType::Struct)																		\
-        .prop(std::make_tuple(__VA_ARGS__))																\
-		.ctor<>()
+        .prop(std::make_tuple(__VA_ARGS__))
 
 //////////////////////////////////////////////////////////////////////////
 // Data Registration /////////////////////////////////////////////////////

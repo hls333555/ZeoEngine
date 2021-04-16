@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
-	Ref<DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel)
+	Ref<DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
 		switch (EvaluateMetaType(type))
@@ -74,7 +74,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	void DataWidget::Init(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	void DataWidget::Init(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		m_DataSpec = dataSpec;
 		m_ContextPanel = contextPanel;
@@ -106,12 +106,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	BoolDataWidget::BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	BoolDataWidget::BoolDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void BoolDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -123,12 +123,12 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	EnumDataWidget::EnumDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	EnumDataWidget::EnumDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void EnumDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -188,12 +188,12 @@ namespace ZeoEngine {
 		m_CurrentEnumDataName = GetEnumDisplayName(m_Buffer);
 	}
 
-	StringDataWidget::StringDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	StringDataWidget::StringDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void StringDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -218,12 +218,12 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	ColorDataWidget::ColorDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	ColorDataWidget::ColorDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void ColorDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -262,12 +262,12 @@ namespace ZeoEngine {
 		return ImGui::GetFontSize() + ImGui::GetFramePadding().y * 5.0f;
 	}
 
-	Texture2DDataWidget::Texture2DDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	Texture2DDataWidget::Texture2DDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void Texture2DDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -392,12 +392,12 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	ParticleTemplateDataWidget::ParticleTemplateDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	ParticleTemplateDataWidget::ParticleTemplateDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void ParticleTemplateDataWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -551,7 +551,7 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	bool ContainerWidget::PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		m_DataSpec.Update(compInstance, instance);
 
@@ -579,7 +579,7 @@ namespace ZeoEngine {
 		ImGui::TreePop();
 	}
 
-	SequenceContainerWidget::SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	SequenceContainerWidget::SequenceContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
@@ -587,7 +587,7 @@ namespace ZeoEngine {
 		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type(), m_ContextPanel);
 	}
 
-	void SequenceContainerWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!m_ElementWidgetTemplate) return;
 
@@ -793,12 +793,12 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	AssociativeContainerWidget::AssociativeContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	AssociativeContainerWidget::AssociativeContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	void AssociativeContainerWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
@@ -827,12 +827,12 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	StructWidget::StructWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	StructWidget::StructWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
 	{
 		Init(dataSpec, contextPanel);
 	}
 
-	bool StructWidget::PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		m_DataSpec.Update(compInstance, instance);
 
@@ -848,7 +848,7 @@ namespace ZeoEngine {
 		return bIsDataTreeExpanded;
 	}
 
-	void StructWidget::Draw(const entt::meta_any& compInstance, entt::meta_any& instance)
+	void StructWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		if (!PreDraw(compInstance, instance)) return;
 

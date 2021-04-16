@@ -34,7 +34,7 @@ namespace ZeoEngine {
 
 	uint32_t GetAggregatedDataID(entt::meta_data data);
 
-	Ref<class DataWidget> ConstructBasicDataWidget(const DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel);
+	Ref<class DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel);
 
 	static const ImGuiTreeNodeFlags DefaultDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags EmptyContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
@@ -46,16 +46,15 @@ namespace ZeoEngine {
 	class DataWidget
 	{
 	public:
-		// NOTE: Component instance should be updated as it will may get invalidated when a new entity's same type of component gets constructed
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) = 0;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) = 0;
 
 	protected:
 		// Call this at the beginning of drawing!
-		virtual bool PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance) = 0;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance) = 0;
 		// Call this in the end of drawing!
 		virtual void PostDraw() = 0;
 
-		void Init(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		void Init(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
 		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
 		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue);
@@ -69,7 +68,7 @@ namespace ZeoEngine {
 	class BasicDataWidgetT : public DataWidget
 	{
 	protected:
-		virtual bool PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance) override
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance) override
 		{
 			m_DataSpec.Update(compInstance, instance);
 			UpdateBuffer();
@@ -134,16 +133,16 @@ namespace ZeoEngine {
 	class BoolDataWidget : public BasicDataWidgetT<bool>
 	{
 	public:
-		BoolDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		BoolDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	};
 
 	template<typename T, uint32_t N = 1, typename CT = T>
 	class ScalarNDataWidget : public BasicDataWidgetT<T>
 	{
 	public:
-		ScalarNDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
+		ScalarNDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 			: m_ScalarType(scalarType)
 			, m_DefaultMin(defaultMin), m_DefaultMax(defaultMax)
 			, m_Format(format)
@@ -153,7 +152,7 @@ namespace ZeoEngine {
 			Init(dataSpec, contextPanel);
 		}
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override
 		{
 			if (!PreDraw(compInstance, instance)) return;
 
@@ -166,7 +165,7 @@ namespace ZeoEngine {
 			const auto maxValue = max.value_or(m_DefaultMax);
 			const ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			void* valuePtr = nullptr;
-			if constexpr (N == 1) // C++17 constexpr if
+			if constexpr (N == 1)
 			{
 				valuePtr = &m_Buffer;
 			}
@@ -214,9 +213,9 @@ namespace ZeoEngine {
 	class EnumDataWidget : public BasicDataWidgetT<entt::meta_any>
 	{
 	public:
-		EnumDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		EnumDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 
 	protected:
 		void InitEnumDatas();
@@ -236,39 +235,39 @@ namespace ZeoEngine {
 	class StringDataWidget : public BasicDataWidgetT<std::string>
 	{
 	public:
-		StringDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		StringDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	};
 
 	class ColorDataWidget : public BasicDataWidgetT<glm::vec4>
 	{
 	public:
-		ColorDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		ColorDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	};
 
 	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
 	{
 	public:
-		Texture2DDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		Texture2DDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	};
 
 	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
 	{
 	public:
-		ParticleTemplateDataWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		ParticleTemplateDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	};
 
 	class ContainerWidget : public DataWidget
 	{
 	protected:
-		virtual bool PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 		virtual void PostDraw() override;
 
 	private:
@@ -278,9 +277,9 @@ namespace ZeoEngine {
 	class SequenceContainerWidget : public ContainerWidget
 	{
 	public:
-		SequenceContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		SequenceContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 
 	private:
 		virtual void DrawContainerOperationWidget() override;
@@ -295,9 +294,9 @@ namespace ZeoEngine {
 	class AssociativeContainerWidget : public ContainerWidget
 	{
 	public:
-		AssociativeContainerWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		AssociativeContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 
 	private:
 		virtual void DrawContainerOperationWidget() override;
@@ -310,11 +309,11 @@ namespace ZeoEngine {
 	class StructWidget : public DataWidget
 	{
 	public:
-		StructWidget(const DataSpec& dataSpec, DataInspectorPanel* contextPanel);
+		StructWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel);
 
-		virtual void Draw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 	protected:
-		virtual bool PreDraw(const entt::meta_any& compInstance, entt::meta_any& instance) override;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance) override;
 		virtual void PostDraw() override;
 
 	private:

@@ -85,7 +85,7 @@ namespace ZeoEngine {
 		TestStruct2 TestStruct2GetterVar;
 		bool ShowSequenceContainers;
 
-		std::deque<bool> BoolDeqVar;
+		std::vector<bool> BoolVecVar;
 		std::vector<uint8_t> Ui8VecVar;
 		std::vector<uint32_t> Ui32VecVar;
 		std::vector<uint64_t> Ui64VecVar;

@@ -45,32 +45,51 @@ namespace ZeoEngine {
 
 	struct DataSpec
 	{
-	public:
 		const char* DataName;
 		entt::meta_data Data;
-		entt::meta_any Instance; // Can be component instance, element instance or struct instance
-		entt::meta_any ComponentInstance;
+		// Setting instance references to mutable to make sure non-const version of as_ref() is always invoked
+		mutable entt::meta_any Instance; // Can be component instance, element instance or struct instance
+		mutable entt::meta_any ComponentInstance;
 
 		bool bIsStructSubdata;
-		bool bIsSeqElement; // NOTE: Even if this is true, Instance may not be valid!
+		bool bIsSeqElement;
 
 		DataSpec() = default;
-		DataSpec(entt::meta_data data, const entt::meta_any& compInstance, const entt::meta_any& instance, bool isStructSubdata, bool isSeqElement)
+		// NOTE: Instances should not be const otherwise const version of as_ref() will be invoked, then they will become const references and cannot get modified directly
+		DataSpec(entt::meta_data data, entt::meta_any& compInstance, entt::meta_any& instance, bool isStructSubdata, bool isSeqElement)
 			: Data(data)
-			, ComponentInstance(compInstance)
-			, Instance(instance)
+			, ComponentInstance(compInstance.as_ref())
+			, Instance(instance.as_ref())
 			, bIsStructSubdata(isStructSubdata)
 			, bIsSeqElement(isSeqElement)
 		{
 			const auto dataName = GetMetaObjectDisplayName(Data);
 			DataName = *dataName;
 		}
-
-		void Update(const entt::meta_any& compInstance, const entt::meta_any& instance)
+		DataSpec(const DataSpec& other)
 		{
-			// NOTE: After this (meta_any) assignment, "compInstance" may be invalid! Use "ComponentInstance" instead!
-			ComponentInstance = compInstance;
-			Instance = instance;
+			DataName = other.DataName;
+			Data = other.Data;
+			Instance = other.Instance.as_ref();
+			ComponentInstance = other.ComponentInstance.as_ref();
+			bIsStructSubdata = other.bIsStructSubdata;
+			bIsSeqElement = other.bIsSeqElement;
+		}
+		DataSpec& operator=(const DataSpec& other)
+		{
+			DataName = other.DataName;
+			Data = other.Data;
+			Instance = other.Instance.as_ref();
+			ComponentInstance = other.ComponentInstance.as_ref();
+			bIsStructSubdata = other.bIsStructSubdata;
+			bIsSeqElement = other.bIsSeqElement;
+			return *this;
+		}
+
+		void Update(entt::meta_any& compInstance, entt::meta_any& instance)
+		{
+			ComponentInstance = compInstance.as_ref();
+			Instance = instance.as_ref();
 		}
 
 		entt::meta_type GetType() const
@@ -83,7 +102,7 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				return Instance;
+				return Instance.as_ref(); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
 			}
 			else
 			{
@@ -130,7 +149,7 @@ namespace ZeoEngine {
 
 	}
 	
-	const char* GetEnumDisplayName(entt::meta_any enumValue);
+	const char* GetEnumDisplayName(const entt::meta_any& enumValue);
 
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)

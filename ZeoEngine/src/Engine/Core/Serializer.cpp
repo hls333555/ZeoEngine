@@ -303,7 +303,7 @@ namespace ZeoEngine {
 		bIsSeqElement ? out << YAML::BeginSeq : out << YAML::Key << *dataName << YAML::Value << YAML::BeginSeq;
 		{
 			const auto structType = bIsSeqElement ? instance.type() : data.type();
-			auto structInstance = bIsSeqElement ? instance : data.get(instance);
+			auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
 			for (const auto subData : structType.data())
 			{
 				out << YAML::BeginMap;
@@ -485,7 +485,7 @@ namespace ZeoEngine {
 	void TypeSerializer::EvaluateDeserializeStructData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
 	{
 		const auto type = bIsSeqElement ? instance.type() : data.type();
-		auto structInstance = bIsSeqElement ? instance : data.get(instance);
+		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
 		uint32_t i = 0;
 		for (const auto subData : type.data())
 		{
