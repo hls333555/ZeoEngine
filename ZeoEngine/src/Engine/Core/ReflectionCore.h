@@ -1,9 +1,9 @@
 #pragma once
 
-#include <deque>
-
 #include <entt.hpp>
 
+#ifdef MetaSequenceContainerTraitsForStdDeque
+#include <deque>
 namespace entt {
 
 	/**
@@ -23,6 +23,7 @@ namespace entt {
 	{};
 
 }
+#endif
 
 namespace ZeoEngine::Reflection {
 

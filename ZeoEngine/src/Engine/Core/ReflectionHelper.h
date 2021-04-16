@@ -115,7 +115,14 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				return Instance.cast<T>();
+				if constexpr (std::is_same<T, bool>::value)
+				{
+					return Instance.cast<typename std::vector<bool>::reference>();
+				}
+				else
+				{
+					return Instance.cast<T>();
+				}
 			}
 			else
 			{
@@ -128,7 +135,14 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				Instance.cast<T>() = value;
+				if constexpr (std::is_same<T, bool&>::value)
+				{
+					Instance.cast<typename std::vector<bool>::reference>() = value;
+				}
+				else
+				{
+					Instance.cast<T>() = value;
+				}
 			}
 			else
 			{
