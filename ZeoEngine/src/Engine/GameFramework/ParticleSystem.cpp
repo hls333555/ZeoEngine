@@ -460,11 +460,11 @@ namespace ZeoEngine {
 				glm::scale(glm::mat4(1.0f), particle.Size);
 			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color);
+				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
 			}
 			else
 			{
-				Renderer2D::DrawQuad(transform, particle.Color);
+				Renderer2D::DrawQuad(transform, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
 			}
 		}
 	}
