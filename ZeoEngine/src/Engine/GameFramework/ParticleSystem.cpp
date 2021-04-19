@@ -489,6 +489,7 @@ namespace ZeoEngine {
 
 	void ParticleSystemInstance::Reset()
 	{
+		m_bPendingDestroy = false;
 		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
 #if WITH_EDITOR
