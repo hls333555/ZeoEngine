@@ -45,14 +45,14 @@ namespace ZeoEngine {
 
 	struct DataSpec
 	{
-		const char* DataName;
+		const char* DataName = nullptr;
 		entt::meta_data Data;
 		// Setting instance references to mutable to make sure non-const version of as_ref() is always invoked
 		mutable entt::meta_any Instance; // Can be component instance, element instance or struct instance
 		mutable entt::meta_any ComponentInstance;
 
-		bool bIsStructSubdata;
-		bool bIsSeqElement;
+		bool bIsStructSubdata = false;
+		bool bIsSeqElement = false;
 
 		DataSpec() = default;
 		// NOTE: Instances should not be const otherwise const version of as_ref() will be invoked, then they will become const references and cannot get modified directly

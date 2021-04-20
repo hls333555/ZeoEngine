@@ -33,7 +33,7 @@ project "ZeoEngine"
 	includedirs
 	{
 		"src",
-		"vendor/spdlog/include",
+		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
@@ -44,16 +44,18 @@ project "ZeoEngine"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.magic_enum}",
-		"%{IncludeDir.IconFontCppHeaders}"
+		"%{IncludeDir.IconFontCppHeaders}",
+		"%{IncludeDir.doctest}"
 	}
 
 	links 
-	{ 
+	{
+		"opengl32.lib",
 		"GLFW",
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
-		"opengl32.lib",
+		"doctest",
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

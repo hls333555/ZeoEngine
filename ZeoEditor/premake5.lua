@@ -21,9 +21,8 @@ project "ZeoEditor"
 	includedirs
 	{
 		"src",
-		"%{wks.location}/ZeoEngine/vendor/spdlog/include",
 		"%{wks.location}/ZeoEngine/src",
-		"%{wks.location}/ZeoEngine/vendor",
+		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGuizmo}",
@@ -31,8 +30,8 @@ project "ZeoEditor"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.magic_enum}",
-		"%{IncludeDir.IconFontCppHeaders}"
-
+		"%{IncludeDir.IconFontCppHeaders}",
+		"%{IncludeDir.doctest}"
 	}
 
 	links

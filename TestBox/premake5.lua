@@ -1,4 +1,4 @@
-project "Sandbox"
+project "TestBox"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
@@ -10,21 +10,15 @@ project "Sandbox"
 	files
 	{
 		"src/**.h",
-		"src/**.cpp",
-	}
-
-	defines
-	{
-		"ZE_IMVEC_GLMVEC_CONV"
+		"src/**.cpp"
 	}
 
 	includedirs
 	{
+		"src",
 		"%{wks.location}/ZeoEngine/src",
-		"%{IncludeDir.spdlog}",
-		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.doctest}"
 	}
 
 	links

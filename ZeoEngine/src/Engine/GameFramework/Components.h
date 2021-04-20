@@ -7,7 +7,6 @@
 
 #include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Core/CoreMacros.h"
-#include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
@@ -15,6 +14,7 @@
 namespace ZeoEngine {
 
 	class IComponentHelper;
+	class Texture2D;
 
 	struct IComponent
 	{

@@ -3,7 +3,7 @@
 
 ZE_REFL_REGISTRATION
 {
-using namespace ZeoEngine;
+	using namespace ZeoEngine;
 
 #if ENABLE_TEST_COMPONENT
 	ZE_REFL_ENUM(TestComponent::TestEnum)
