@@ -13,13 +13,9 @@ project "Sandbox"
 		"src/**.cpp",
 	}
 
-	defines
-	{
-		"ZE_IMVEC_GLMVEC_CONV"
-	}
-
 	includedirs
 	{
+		"src",
 		"%{wks.location}/ZeoEngine/src",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.ImGui}",

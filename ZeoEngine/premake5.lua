@@ -27,7 +27,7 @@ project "ZeoEngine"
 	{
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE", -- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
-		"ZE_IMVEC_GLMVEC_CONV"
+		'IMGUI_USER_CONFIG="Engine/ImGui/MyImGuiConfig.h"'
 	}
 
 	includedirs

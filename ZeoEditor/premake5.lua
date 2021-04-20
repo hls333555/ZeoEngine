@@ -7,15 +7,15 @@ project "ZeoEditor"
 	targetdir("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir("%{wks.location}/bin-Intermediate/" .. outputdir .. "/%{prj.name}")
 
+	defines
+    {
+        'IMGUI_USER_CONFIG="Engine/ImGui/MyImGuiConfig.h"'
+    }
+
 	files
 	{
 		"src/**.h",
 		"src/**.cpp"
-	}
-
-	defines
-	{
-		"ZE_IMVEC_GLMVEC_CONV"
 	}
 
 	includedirs
