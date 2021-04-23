@@ -17,9 +17,9 @@ namespace ZeoEngine {
 			TestEnumClass1, TestEnumClass2, TestEnumClass3
 		};
 
-		struct TestStruct1
+		struct TestStruct
 		{
-			bool operator==(const TestStruct1& other) const
+			bool operator==(const TestStruct& other) const
 			{
 				return EnumVar == other.EnumVar && I32Var == other.I32Var;
 			}
@@ -28,20 +28,21 @@ namespace ZeoEngine {
 			int32_t I32Var;
 		};
 
-		struct TestStruct2
+		struct TestNestedStruct
 		{
-			bool operator==(const TestStruct2& other) const
+			bool operator==(const TestNestedStruct& other) const
 			{
-				return TestStruct1Var == other.TestStruct1Var && FloatVar == other.FloatVar;
+				return TestStructVar == other.TestStructVar && FloatVar == other.FloatVar;
 			}
 
-			TestStruct1 TestStruct1Var;
+			TestStruct TestStructVar;
 			float FloatVar;
 		};
 
-		TestStruct2& GetTestStruct2GetterVar() { return TestStruct2GetterVar; }
-		bool GetShowSequenceContainers() const { return ShowSequenceContainers; } void SetShowSequenceContainers(bool value) { ShowSequenceContainers = value; }
-		auto& GetTestStruct2VecGetterVar() { return TestStruct2VecGetterVar; }
+		TestNestedStruct& GetTestNestedStructGetterVar() { return TestNestedStructGetterVar; }
+		bool GetShowSequenceContainers() const { return bShowSequenceContainers; }
+		void SetShowSequenceContainers(bool value) { bShowSequenceContainers = value; }
+		auto& GetTestNestedStructVecGetterVar() { return TestNestedStructVecGetterVar; }
 
 		bool BoolVar;
 		uint8_t Ui8Var;
@@ -60,9 +61,10 @@ namespace ZeoEngine {
 		glm::vec4 ColorVar;
 		Ref<Texture2D> Texture2DVar;
 		Ref<ParticleTemplate> ParticleTemplateVar;
-		TestStruct1 TestStruct1Var;
-		TestStruct2 TestStruct2GetterVar;
-		bool ShowSequenceContainers;
+		TestStruct TestStructVar;
+		TestNestedStruct TestNestedStructGetterVar;
+
+		bool bShowSequenceContainers;
 
 		std::vector<bool> BoolVecVar;
 		std::vector<uint8_t> Ui8VecVar;
@@ -74,14 +76,15 @@ namespace ZeoEngine {
 		std::vector<float> FloatVecVar;
 		std::vector<double> DoubleVecVar;
 		std::vector<TestEnum> EnumVecVar;
+		std::vector<TestEnumClass> EnumClassVecVar;
 		std::vector<std::string> StringVecVar;
 		std::vector<glm::vec2> Vec2VecVar;
 		std::vector<glm::vec3> Vec3VecVar;
 		std::vector<glm::vec4> ColorVecVar;
 		std::vector<Ref<Texture2D>> Texture2DVecVar;
 		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
-		std::vector<TestStruct1> TestStruct1VecVar;
-		std::vector<TestStruct2> TestStruct2VecGetterVar;
+		std::vector<TestStruct> TestStructVecVar;
+		std::vector<TestNestedStruct> TestNestedStructVecGetterVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;

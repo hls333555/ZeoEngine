@@ -109,7 +109,7 @@ namespace ZeoEngine {
 
 	}
 
-	ZE_REFL_REGISTRATION
+	ZE_REGISTRATION
 	{
 		// Register common numeric conversions for registration purpose
 		entt::meta<int32_t>()

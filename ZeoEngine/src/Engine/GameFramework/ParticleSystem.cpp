@@ -417,7 +417,7 @@ namespace ZeoEngine {
 
 		m_bSystemComplete = m_bSystemComplete && ((!m_EmitterSpec.bIsInfiniteLoop && m_EmitterSpec.LoopCount == 0) || !m_bActive);
 
-#if WITH_EDITOR
+#if ZE_WITH_EDITOR
 		// If this completed particle system is previewed in ParticleSystem Editor, just restart it after a while
 		if (m_bSystemComplete && m_bIsPreview)
 		{
@@ -492,7 +492,7 @@ namespace ZeoEngine {
 		m_bPendingDestroy = false;
 		m_EmitterSpec.LoopCount = m_ParticleTemplate->LoopCount;
 		m_Time = m_LoopStartTime = m_SpawnTime = m_BurstTime = m_UvAnimationTime = 0.0f;
-#if WITH_EDITOR
+#if ZE_WITH_EDITOR
 		m_bFiniteLoopPrepareToRestart = true;
 #endif
 	}

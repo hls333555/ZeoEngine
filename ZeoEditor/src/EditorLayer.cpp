@@ -3,7 +3,6 @@
 #include "Core/WindowManager.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Engine/Core/CoreMacros.h"
 
 namespace ZeoEngine {
 
@@ -30,7 +29,7 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnImGuiRender()
 	{
-#if SHOW_IMGUI_DEMO
+#if ZE_SHOW_IMGUI_DEMO
 		static bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);
 #endif

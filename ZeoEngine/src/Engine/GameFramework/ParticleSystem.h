@@ -272,7 +272,7 @@ namespace ZeoEngine {
 		bool m_bPendingDestroy = false;
 
 		bool m_bIsPreview = false;
-#if WITH_EDITOR
+#if ZE_WITH_EDITOR
 		bool m_bFiniteLoopPrepareToRestart = true;
 		float m_FiniteLoopRestartInterval = 1.0f;
 		float m_FiniteLoopRestartTime = 0.0f;

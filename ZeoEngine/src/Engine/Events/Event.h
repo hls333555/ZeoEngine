@@ -4,7 +4,7 @@
 #include <functional>
 #include <ostream>
 
-#include "Engine/Core/Core.h"
+#include "Engine/Core/CoreMacros.h"
 
 namespace ZeoEngine {
 
@@ -28,11 +28,11 @@ namespace ZeoEngine {
 	enum EventCategory
 	{
 		None = 0,
-		EventCategoryApplication	= BIT(0),
-		EventCategoryInput			= BIT(1),
-		EventCategoryKeyboard		= BIT(2),
-		EventCategoryMouse			= BIT(3),
-		EventCategoryMouseButton	= BIT(4)
+		EventCategoryApplication	= ZE_BIT(0),
+		EventCategoryInput			= ZE_BIT(1),
+		EventCategoryKeyboard		= ZE_BIT(2),
+		EventCategoryMouse			= ZE_BIT(3),
+		EventCategoryMouseButton	= ZE_BIT(4)
 	};
 
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; }\

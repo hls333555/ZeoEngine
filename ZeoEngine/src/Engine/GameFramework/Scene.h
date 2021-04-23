@@ -2,6 +2,7 @@
 
 #include <entt.hpp>
 
+#include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 

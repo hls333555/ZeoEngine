@@ -158,9 +158,12 @@ namespace ZeoEngine {
 			Template = pTemplate;
 		}
 
-		bool IsLocalSpace() const { return Template->bIsLocalSpace; } void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
-		int32_t GetLoopCount() const { return Template->LoopCount; } void SetLoopCount(int32_t count) { Template->LoopCount = count; }
-		float GetLoopDuration() const { return Template->LoopDuration; } void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
+		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
+		void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
+		int32_t GetLoopCount() const { return Template->LoopCount; }
+		void SetLoopCount(int32_t count) { Template->LoopCount = count; }
+		float GetLoopDuration() const { return Template->LoopDuration; }
+		void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
 		ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
 		auto& GetBurstList() const { return Template->BurstList; }
 		ParticleVec3& GetInitialPosition() const { return Template->InitialPosition; }
@@ -169,14 +172,19 @@ namespace ZeoEngine {
 		ParticleVec3& GetSizeBegin() const { return Template->SizeBegin; }
 		ParticleVec3& GetSizeEnd() const { return Template->SizeEnd; }
 		ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
-		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; } void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
+		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; }
+		void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
 		ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
 		ParticleColor& GetColorEnd() const { return Template->ColorEnd; }
 		ParticleFloat& GetLifetime() const { return Template->Lifetime; }
-		const Ref<Texture2D>& GetTexture() const { return Template->Texture; } void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
-		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; } void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
-		uint32_t GetMaxParticles() const { return Template->MaxParticles; } void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
-		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; } void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
+		const Ref<Texture2D>& GetTexture() const { return Template->Texture; }
+		void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
+		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
+		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
+		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
+		void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
+		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; }
+		void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
 
 	};
 

@@ -18,19 +18,8 @@
 	#define ZE_DEBUGBREAK()
 #endif
 
-#define ZE_EXPAND_MACRO(x) x
-#define ZE_STRINGIFY_MACRO(x) #x
-
-#define BIT(x) (1 << x)
-
-#define ZE_BIND_EVENT_FUNC(func) [this](auto&&... args) -> decltype(auto) { return this->func(std::forward<decltype(args)>(args)...); }
-
-#define GET_MEMBER_FUNC(object, memberFn) ZeoEngine::MemberFunc(object, memberFn)
-
-#ifndef WITH_EDITOR
-// Set to 0 when toggling standalone game mode
-	#define WITH_EDITOR	1
-#endif // WITH_EDITOR
+#define ZE_WITH_EDITOR	1
+#define ZE_SHOW_IMGUI_DEMO 0
 
 namespace ZeoEngine {
 

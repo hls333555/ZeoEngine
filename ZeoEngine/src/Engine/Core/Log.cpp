@@ -4,7 +4,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#if WITH_EDITOR
+#if ZE_WITH_EDITOR
 #include "Engine/ImGui/EditorLog.h"
 #endif // WITH_EDITOR
 
@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	void Log::Init()
 	{
 		std::vector<spdlog::sink_ptr> sinks;
-#if WITH_EDITOR
+#if ZE_WITH_EDITOR
 		sinks.push_back(std::make_shared<spdlog::sinks::editorlog_sink_mt>());
 #else
 		sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());

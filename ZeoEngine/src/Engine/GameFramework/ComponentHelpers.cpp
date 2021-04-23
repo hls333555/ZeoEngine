@@ -25,7 +25,7 @@ namespace ZeoEngine {
 	{
 		auto& particleComp = m_OwnerEntity.GetComponent<ParticleSystemComponent>();
 		Ref<ParticleTemplate> newTemplate = particleComp.Template;
-		if (dataId == ZE_DATA_ID(Template))
+		if (dataId == ZDATA_ID(Template))
 		{
 			particleComp.Template = (*oldValue._Cast<Ref<ParticleTemplate>>());
 		}

@@ -5,65 +5,66 @@
 namespace ZeoEngine {
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	ZE_REFL_REGISTRATION
+	ZE_REGISTRATION
 	{
-		ZE_REFL_ENUM(TestComponent::TestEnum)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum1)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum2)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnum, TestEnum3);
+		ZENUM(TestComponent::TestEnum)
+			ZENUM_DATA(TestComponent::TestEnum, TestEnum1)
+			ZENUM_DATA(TestComponent::TestEnum, TestEnum2)
+			ZENUM_DATA(TestComponent::TestEnum, TestEnum3);
 
-		ZE_REFL_ENUM(TestComponent::TestEnumClass)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass1)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass2)
-			ZE_REFL_ENUM_DATA(TestComponent::TestEnumClass, TestEnumClass3);
+		ZENUM(TestComponent::TestEnumClass)
+			ZENUM_DATA(TestComponent::TestEnumClass, TestEnumClass1)
+			ZENUM_DATA(TestComponent::TestEnumClass, TestEnumClass2)
+			ZENUM_DATA(TestComponent::TestEnumClass, TestEnumClass3);
 
-		ZE_REFL_STRUCT(TestComponent::TestStruct1)
-			ZE_REFL_DATA(TestComponent::TestStruct1, EnumVar)
-			ZE_REFL_DATA(TestComponent::TestStruct1, I32Var);
+		ZSTRUCT(TestComponent::TestStruct)
+			ZDATA(TestComponent::TestStruct, EnumVar)
+			ZDATA(TestComponent::TestStruct, I32Var);
 
-		ZE_REFL_STRUCT(TestComponent::TestStruct2)
-			ZE_REFL_DATA(TestComponent::TestStruct2, TestStruct1Var)
-			ZE_REFL_DATA(TestComponent::TestStruct2, FloatVar);
+		ZSTRUCT(TestComponent::TestNestedStruct)
+			ZDATA(TestComponent::TestNestedStruct, TestStructVar)
+			ZDATA(TestComponent::TestNestedStruct, FloatVar);
 
-		ZE_REFL_COMPONENT(TestComponent, ZE_REFL_PROP_PAIR(DisplayName, ZE_TEXT("Test")), ZE_REFL_PROP_PAIR(Tooltip, ZE_TEXT("测试组件")))
-			ZE_REFL_DATA(TestComponent, BoolVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, Ui8Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 1))
-			ZE_REFL_DATA(TestComponent, Ui32Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 1))
-			ZE_REFL_DATA(TestComponent, Ui64Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 1))
-			ZE_REFL_DATA(TestComponent, I8Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, -1))
-			ZE_REFL_DATA(TestComponent, I32Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, -1))
-			ZE_REFL_DATA(TestComponent, I64Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, -1))
-			ZE_REFL_DATA(TestComponent, FloatVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 1.0f), ZE_REFL_PROP_PAIR(ClampMax, 360.0f), ZE_REFL_PROP(ClampOnlyDuringDragging))
-			ZE_REFL_DATA(TestComponent, DoubleVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 1.0))
-			ZE_REFL_DATA(TestComponent, EnumVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, EnumClassVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, StringVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, Vec2Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
-			ZE_REFL_DATA(TestComponent, Vec3Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")), ZE_REFL_PROP_PAIR(ClampMin, 5.0f))
-			ZE_REFL_DATA(TestComponent, ColorVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, Texture2DVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, ParticleTemplateVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, TestStruct1Var, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA_GETTER_REF(TestComponent, TestStruct2GetterVar, GetTestStruct2GetterVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA_SETTER_GETTER(TestComponent, ShowSequenceContainers, SetShowSequenceContainers, GetShowSequenceContainers, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Basic")))
-			ZE_REFL_DATA(TestComponent, BoolVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Ui8VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Ui32VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Ui64VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, I8VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(ClampMin, 1), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, I32VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, I64VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, FloatVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, DoubleVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, EnumVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, StringVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Vec2VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Vec3VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, ColorVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, Texture2DVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, ParticleTemplateVecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA(TestComponent, TestStruct1VecVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"))
-			ZE_REFL_DATA_GETTER_REF(TestComponent, TestStruct2VecGetterVar, GetTestStruct2VecGetterVar, ZE_REFL_PROP_PAIR(Category, ZE_TEXT("Sequence Container")), ZE_REFL_PROP_PAIR(HideCondition, "ShowSequenceContainers == False"));
+		ZCOMPONENT(TestComponent, ZPROP(DisplayName, ZTEXT("Test")), ZPROP(Tooltip, ZTEXT("测试组件")))
+			ZDATA(TestComponent, BoolVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, Ui8Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 1))
+			ZDATA(TestComponent, Ui32Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 1))
+			ZDATA(TestComponent, Ui64Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 1))
+			ZDATA(TestComponent, I8Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, -1))
+			ZDATA(TestComponent, I32Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, -1))
+			ZDATA(TestComponent, I64Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, -1))
+			ZDATA(TestComponent, FloatVar, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 1.0f), ZPROP(ClampMax, 360.0f), ZPROP(ClampOnlyDuringDragging))
+			ZDATA(TestComponent, DoubleVar, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 1.0))
+			ZDATA(TestComponent, EnumVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, EnumClassVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, StringVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, Vec2Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 5.0f))
+			ZDATA(TestComponent, Vec3Var, ZPROP(Category, ZTEXT("Basic")), ZPROP(ClampMin, 5.0f))
+			ZDATA(TestComponent, ColorVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, Texture2DVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, ParticleTemplateVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, TestStructVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA_GETTER_REF(TestComponent, TestNestedStructGetterVar, GetTestNestedStructGetterVar, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA_SETTER_GETTER(TestComponent, bShowSequenceContainers, SetShowSequenceContainers, GetShowSequenceContainers, ZPROP(Category, ZTEXT("Basic")))
+			ZDATA(TestComponent, BoolVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Ui8VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Ui32VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Ui64VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, I8VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(ClampMin, 1), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, I32VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, I64VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, FloatVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, DoubleVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, EnumVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, EnumClassVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, StringVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Vec2VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Vec3VecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, ColorVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, Texture2DVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, ParticleTemplateVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA(TestComponent, TestStructVecVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"))
+			ZDATA_GETTER_REF(TestComponent, TestNestedStructVecGetterVar, GetTestNestedStructVecGetterVar, ZPROP(Category, ZTEXT("Sequence Container")), ZPROP(HideCondition, "bShowSequenceContainers == False"));
 	}
 #endif
 
