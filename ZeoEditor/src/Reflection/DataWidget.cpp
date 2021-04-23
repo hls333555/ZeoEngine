@@ -730,9 +730,10 @@ namespace ZeoEngine {
 
 						// Insert to target location
 						{
-							auto element = seqView[sourceIndex];
+							auto sourceElement = seqView[sourceIndex];
 							auto targetIt = it;
-							seqView.insert(bMoveDownward ? ++targetIt : targetIt, element);
+							auto [retIt, res] = seqView.insert(bMoveDownward ? ++targetIt : targetIt, sourceElement);
+							ZE_CORE_ASSERT(res);
 						}
 
 						// Erase from source location
@@ -742,7 +743,8 @@ namespace ZeoEngine {
 							{
 								++sourceIt;
 							}
-							seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
+							auto [retIt, res] = seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
+							ZE_CORE_ASSERT(res);
 						}
 
 						// Update iterator to last draw location
@@ -753,6 +755,9 @@ namespace ZeoEngine {
 								++it;
 							}
 						}
+
+						// Update instance
+						elementInstance = *it;
 					}
 
 					ImGui::EndDragDropTarget();

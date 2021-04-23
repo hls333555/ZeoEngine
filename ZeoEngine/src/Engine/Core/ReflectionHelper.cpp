@@ -133,6 +133,8 @@ namespace ZeoEngine {
 			.type()
 			.prop(PropertyType::Inherent)
 			.conv<float>();
+
+		entt::meta<typename std::vector<bool>::reference>().conv<bool>();
 	}
 
 	const char* GetEnumDisplayName(const entt::meta_any& enumValue)
