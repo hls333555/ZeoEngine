@@ -177,7 +177,7 @@ namespace ZeoEngine {
 		else
 		{
 			DataSpec dataSpec{ data, compInstance, compInstance, false, false };
-			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, data.type(), m_Context);
+			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, data.type());
 		}
 	}
 

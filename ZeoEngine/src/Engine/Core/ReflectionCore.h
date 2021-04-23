@@ -2,7 +2,7 @@
 
 #include <entt.hpp>
 
-#ifdef MetaSequenceContainerTraitsForStdDeque
+#if 0
 #include <deque>
 namespace entt {
 

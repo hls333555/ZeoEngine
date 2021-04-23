@@ -113,21 +113,7 @@ namespace ZeoEngine {
 		template<typename T>
 		T GetValue()
 		{
-			if (bIsSeqElement)
-			{
-				if constexpr (std::is_same<T, bool>::value)
-				{
-					return Instance.cast<typename std::vector<bool>::reference>();
-				}
-				else
-				{
-					return Instance.cast<T>();
-				}
-			}
-			else
-			{
-				return Data.get(Instance).cast<T>();
-			}
+			return Reflection::GetDataValue<T>(Data, Instance, bIsSeqElement);
 		}
 
 		template<typename T>
@@ -151,6 +137,22 @@ namespace ZeoEngine {
 		}
 	};
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	/** Used to track nested struct instance from component instance. */
+	struct DataStackSpec
+	{
+		entt::meta_data Data;
+		bool bIsSeqElement = false;
+		int32_t ElementIndex = -1;
+
+		DataStackSpec(entt::meta_data data, bool isSeqElement, int32_t elementIndex)
+			: Data(data)
+			, bIsSeqElement(isSeqElement)
+			, ElementIndex(elementIndex)
+		{}
+	};
+#endif
+
 	namespace Reflection {
 
 		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
@@ -160,6 +162,37 @@ namespace ZeoEngine {
 		void BindOnDestroy(entt::meta_type compType, entt::registry& registry);
 
 		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
+
+		template<typename T>
+		T GetDataValue(entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+		{
+			if (bIsSeqElement)
+			{
+				if constexpr (std::is_same<T, bool>::value) // std::vector<bool>
+				{
+					return instance.cast<typename std::vector<bool>::reference>();
+				}
+				else if constexpr (std::is_same<T, entt::meta_any>::value) // Enum
+				{
+					return instance; // NOTE: Here as_ref() is not needed to call as instance is already a reference
+				}
+				else
+				{
+					return instance.cast<T>();
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same<T, entt::meta_any>::value) // Enum
+				{
+					return data.get(instance);
+				}
+				else
+				{
+					return data.get(instance).cast<T>();
+				}
+			}
+		}
 
 	}
 	

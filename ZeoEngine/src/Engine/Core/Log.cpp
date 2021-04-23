@@ -37,6 +37,8 @@ namespace ZeoEngine {
 		// Set the global pattern, check https://github.com/gabime/spdlog/wiki/3.-Custom-formatting for more information about formatting
 		// Call this after loggers being registered
 		spdlog::set_pattern("%^[%T] [%l] %n: %v%$");
+
+		ZE_CORE_TRACE("Log initialized");
 	}
 
 }

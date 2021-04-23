@@ -5,7 +5,6 @@
 
 #include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Utils/PlatformUtils.h"
-#include "Panels/DataInspectorPanels.h"
 #include "Core/WindowManager.h"
 #include "Dockspaces/DockspaceBase.h"
 
@@ -16,69 +15,84 @@ namespace ZeoEngine {
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
 
-	Ref<DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, DataInspectorPanel* contextPanel)
+	Ref<DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, bool bIsTest)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
 		switch (EvaluateMetaType(type))
 		{
 			case BasicMetaType::STRUCT:
-				return CreateRef<StructWidget>(dataSpec, contextPanel);
+				return CreateRef<StructWidget>(dataSpec, bIsTest);
 			case BasicMetaType::SEQCON:
 				if (bIsSeqElement)
 				{
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return {};
 				}
-				return CreateRef<SequenceContainerWidget>(dataSpec, contextPanel);
+				return CreateRef<SequenceContainerWidget>(dataSpec, bIsTest);
 			case BasicMetaType::ASSCON:
 				if (bIsSeqElement)
 				{
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return {};
 				}
-				return CreateRef<AssociativeContainerWidget>(dataSpec, contextPanel);
+				return CreateRef<AssociativeContainerWidget>(dataSpec, bIsTest);
 			case BasicMetaType::BOOL:
-				return CreateRef<BoolDataWidget>(dataSpec, contextPanel);
+				return CreateRef<BoolDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::I8:
-				return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, contextPanel, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+				return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, bIsTest, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
 			case BasicMetaType::I32:
-				return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, contextPanel, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+				return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, bIsTest, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 			case BasicMetaType::I64:
-				return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, contextPanel, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+				return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, bIsTest, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 			case BasicMetaType::UI8:
-				return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, contextPanel, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+				return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, bIsTest, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 			case BasicMetaType::UI32:
-				return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, contextPanel, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+				return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, bIsTest, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 			case BasicMetaType::UI64:
-				return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, contextPanel, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+				return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, bIsTest, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 			case BasicMetaType::FLOAT:
-				return CreateRef<ScalarNDataWidget<float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 			case BasicMetaType::DOUBLE:
-				return CreateRef<ScalarNDataWidget<double>>(dataSpec, contextPanel, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+				return CreateRef<ScalarNDataWidget<double>>(dataSpec, bIsTest, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
 			case BasicMetaType::ENUM:
-				return CreateRef<EnumDataWidget>(dataSpec, contextPanel);
+				return CreateRef<EnumDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::STRING:
-				return CreateRef<StringDataWidget>(dataSpec, contextPanel);
+				return CreateRef<StringDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::VEC2:
-				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 			case BasicMetaType::VEC3:
-				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, contextPanel, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
 			case BasicMetaType::VEC4:
-				return CreateRef<ColorDataWidget>(dataSpec, contextPanel);
+				return CreateRef<ColorDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::TEXTURE:
-				return CreateRef<Texture2DDataWidget>(dataSpec, contextPanel);
+				return CreateRef<Texture2DDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::PARTICLE:
-				return CreateRef<ParticleTemplateDataWidget>(dataSpec, contextPanel);
+				return CreateRef<ParticleTemplateDataWidget>(dataSpec, bIsTest);
 		}
 
 		return {};
 	}
 
-	void DataWidget::Init(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+#ifndef DOCTEST_CONFIG_DISABLE
+	void DataWidget::Test(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		char dataStr[64];
+		strcpy_s(dataStr, m_DataSpec.DataName);
+		char suffix[] = " (container element)";
+		if (m_DataSpec.bIsSeqElement)
+		{
+			strcat_s(dataStr, suffix);
+		}
+		INFO(dataStr);
+		TestImpl(reg, entity, dataStack, elementIndex);
+	}
+#endif
+
+	void DataWidget::Init(DataSpec& dataSpec, bool bIsTest)
 	{
 		m_DataSpec = dataSpec;
-		m_ContextPanel = contextPanel;
-		if (!m_DataSpec.bIsSeqElement)
+		m_bIsTest = bIsTest;
+		if (!bIsTest && !m_DataSpec.bIsSeqElement)
 		{
 			Draw(m_DataSpec.ComponentInstance, m_DataSpec.Instance);
 		}
@@ -86,6 +100,8 @@ namespace ZeoEngine {
 
 	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
+		if (m_bIsTest) return;
+
 		ZE_TRACE("Value changed during edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
@@ -97,6 +113,8 @@ namespace ZeoEngine {
 
 	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
 	{
+		if (m_bIsTest) return;
+
 		ZE_TRACE("Value changed after edit!");
 		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
@@ -106,9 +124,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	BoolDataWidget::BoolDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	BoolDataWidget::BoolDataWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -123,9 +141,18 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	EnumDataWidget::EnumDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+#ifndef DOCTEST_CONFIG_DISABLE
+	void BoolDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 	{
-		Init(dataSpec, contextPanel);
+		m_Buffer = true;
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	EnumDataWidget::EnumDataWidget(DataSpec& dataSpec, bool bIsTest)
+	{
+		Init(dataSpec, bIsTest);
 	}
 
 	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -188,9 +215,40 @@ namespace ZeoEngine {
 		m_CurrentEnumDataName = GetEnumDisplayName(m_Buffer);
 	}
 
-	StringDataWidget::StringDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+#ifndef DOCTEST_CONFIG_DISABLE
+	void EnumDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+{
+		if (m_EnumDatas.empty())
+		{
+			InitEnumDatas();
+		}
+
+		REQUIRE(m_EnumDatas.size() > 1);
+		uint32_t i = 0;
+		for (const auto enumData : m_EnumDatas)
+		{
+			if (i == 1)
+			{
+				m_Buffer = enumData.get({});
+				if (m_DataSpec.bIsSeqElement)
+				{
+					Reflection::SetEnumValueForSeq(m_DataSpec.Instance, m_Buffer);
+				}
+				else
+				{
+					SetValueToData();
+				}
+				CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+				break;
+			}
+			++i;
+		}
+	}
+#endif
+
+	StringDataWidget::StringDataWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -218,9 +276,18 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	ColorDataWidget::ColorDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+#ifndef DOCTEST_CONFIG_DISABLE
+	void StringDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+{
+		m_Buffer = std::string("Test");
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	ColorDataWidget::ColorDataWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -257,14 +324,23 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	void ColorDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+{
+		m_Buffer = glm::vec4(10.0f);
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
 	static float GetDropdownWidth()
 	{
 		return ImGui::GetFontSize() + ImGui::GetFramePadding().y * 5.0f;
 	}
 
-	Texture2DDataWidget::Texture2DDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	Texture2DDataWidget::Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -392,9 +468,18 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
-	ParticleTemplateDataWidget::ParticleTemplateDataWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+#ifndef DOCTEST_CONFIG_DISABLE
+	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+{
+		m_Buffer = Texture2DLibrary::Get().GetOrLoadAsset("assets/textures/Checkerboard_Alpha.png");
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	ParticleTemplateDataWidget::ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -551,6 +636,15 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+{
+		m_Buffer = ParticleLibrary::Get().GetOrLoadAsset("assets/particles/Test.zparticle");
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
 	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
 	{
 		m_DataSpec.Update(compInstance, instance);
@@ -579,12 +673,15 @@ namespace ZeoEngine {
 		ImGui::TreePop();
 	}
 
-	SequenceContainerWidget::SequenceContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	SequenceContainerWidget::SequenceContainerWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
-		DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
-		auto seqView = m_DataSpec.GetValue().as_sequence_container();
-		m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type(), m_ContextPanel);
+		Init(dataSpec, bIsTest);
+		if (!bIsTest)
+		{
+			DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
+			auto seqView = m_DataSpec.GetValue().as_sequence_container();
+			m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type());
+		}
 	}
 
 	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -709,6 +806,21 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	void SequenceContainerWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		auto seqView = m_DataSpec.GetValue().as_sequence_container();
+		auto retIt = InsertValue(seqView, seqView.end());
+		REQUIRE(seqView.size() == 1);
+		auto elementInstance = *retIt; // This line is necessary!
+		DataSpec elementDataSpec{ m_DataSpec.Data, m_DataSpec.ComponentInstance, elementInstance, false, true };
+		auto elementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type(), true);
+		elementWidgetTemplate->Test(reg, entity, dataStack, 0);
+		seqView.clear();
+		REQUIRE(seqView.size() == 0);
+	}
+#endif
+
 	void SequenceContainerWidget::DrawContainerOperationWidget()
 	{
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
@@ -793,9 +905,9 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	AssociativeContainerWidget::AssociativeContainerWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	AssociativeContainerWidget::AssociativeContainerWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -827,9 +939,9 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	StructWidget::StructWidget(DataSpec& dataSpec, DataInspectorPanel* contextPanel)
+	StructWidget::StructWidget(DataSpec& dataSpec, bool bIsTest)
 	{
-		Init(dataSpec, contextPanel);
+		Init(dataSpec, bIsTest);
 	}
 
 	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -888,6 +1000,26 @@ namespace ZeoEngine {
 		PostDraw();
 	}
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	void StructWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		const auto structType = m_DataSpec.GetType();
+		auto structInstance = m_DataSpec.GetValue();
+		std::list<entt::meta_data> subdatas;
+		for (const auto subdata : structType.data())
+		{
+			subdatas.push_front(subdata);
+		}
+		dataStack.emplace_back(m_DataSpec.Data, m_DataSpec.bIsSeqElement, elementIndex);
+		for (const auto subdata : subdatas)
+		{
+			DataSpec subdataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
+			ConstructBasicDataWidget(subdataSpec, subdata.type(), true)->Test(reg, entity, dataStack);
+		}
+		dataStack.pop_back();
+	}
+#endif
+
 	void StructWidget::PostDraw()
 	{
 		ImGui::TreePop();
@@ -919,8 +1051,8 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			DataSpec dataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
-			m_SubdataWidgets[aggregatedSubdataId] = ConstructBasicDataWidget(dataSpec, subdata.type(), m_ContextPanel);
+			DataSpec subdataSpec{ subdata, m_DataSpec.ComponentInstance, structInstance, true, false };
+			m_SubdataWidgets[aggregatedSubdataId] = ConstructBasicDataWidget(subdataSpec, subdata.type());
 		}
 	}
 

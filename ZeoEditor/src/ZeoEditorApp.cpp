@@ -3,6 +3,7 @@
 #include "Engine/Core/EntryPoint.h"
 
 #include "EditorLayer.h"
+#include "Test/TestLayer.h"
 
 namespace ZeoEngine {
 
@@ -13,6 +14,7 @@ namespace ZeoEngine {
 			: Application("Zeo Editor")
 		{
 			PushLayer(new EditorLayer());
+			PushLayer(new TestLayer());
 		}
 
 		~ZeoEditor()
