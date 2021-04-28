@@ -1010,7 +1010,7 @@ namespace ZeoEngine {
 	{
 		const auto structType = m_DataSpec.GetType();
 		auto structInstance = m_DataSpec.GetValue();
-		std::list<entt::meta_data> subdatas;
+		std::deque<entt::meta_data> subdatas;
 		for (const auto subdata : structType.data())
 		{
 			subdatas.push_front(subdata);

@@ -1,4 +1,4 @@
-#include "Panels/DataInspectorPanels.h"
+#include "Panels/InspectorPanels.h"
 
 #include <IconsFontAwesome5.h>
 
@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	void DataInspectorPanel::DrawAddComponentButton(Entity entity)
+	void InspectorPanel::DrawAddComponentButton(Entity entity)
 	{
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
@@ -23,6 +23,8 @@ namespace ZeoEngine {
 		{
 			if (m_bIsCategorizedComponentsDirty)
 			{
+				m_CategorizedComponents.clear();
+
 				// Iterate all registered components
 				for (const auto compType : entt::resolve())
 				{
@@ -35,6 +37,7 @@ namespace ZeoEngine {
 					// Categorize components
 					m_CategorizedComponents[categoryName].push_back(compType.info().hash());
 				}
+
 				m_bIsCategorizedComponentsDirty = false;
 			}
 
@@ -50,9 +53,7 @@ namespace ZeoEngine {
 							// Instance may be null as AddComponentById() failed
 							if (compInstance)
 							{
-								const auto compType = entt::resolve(compId);
-								// Categorize datas on this newly added component
-								m_DataInspector.PreprocessComponent(compType);
+								MarkComponentInspectorsDirty();
 							}
 						}
 					}
@@ -84,8 +85,7 @@ namespace ZeoEngine {
 				DrawComponents(m_LastSelectedEntity);
 			}
 			m_LastSelectedEntity = selectedEntity;
-
-			m_DataInspector.OnSelectedEntityChanged();
+			OnSelectedEntityChanged();
 			return;
 		}
 		if (selectedEntity)
@@ -93,6 +93,11 @@ namespace ZeoEngine {
 			DrawComponents(selectedEntity);
 		}
 		m_LastSelectedEntity = selectedEntity;
+	}
+
+	void EntityInspectorPanel::OnSelectedEntityChanged()
+	{
+		MarkComponentInspectorsDirty();
 	}
 
 	void ParticleInspectorPanel::ProcessRender()

@@ -3,11 +3,11 @@
 #include "Panels/PanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
-#include "Reflection/DataInspector.h"
+#include "Reflection/ComponentInspector.h"
 
 namespace ZeoEngine {
 
-	class DataInspectorPanel : public PanelBase
+	class InspectorPanel : public PanelBase
 	{
 	public:
 		using PanelBase::PanelBase;
@@ -19,21 +19,35 @@ namespace ZeoEngine {
 			// Push entity id
 			ImGui::PushID(static_cast<uint32_t>(entity));
 			{
-				// Process components on this entity
-				for (const auto compId : entity.GetOrderedComponentIds())
+				if (m_bIsComponentInspectorsDirty)
 				{
-					// NOTE: This pair of brackets inside if statement are required for template argument expansion!
-					if ((ShouldIgnoreComponent<IgnoredComponents>(compId) || ...)) continue;
+					m_ComponentInspectors.clear();
 
-					// Push component id
-					ImGui::PushID(compId);
+					// Process components on this entity
+					for (const auto compId : entity.GetOrderedComponentIds())
 					{
-						const auto compType = entt::resolve(compId);
-						m_DataInspector.ProcessComponent(compType, entity);
+						// NOTE: This pair of brackets inside if statement are required for template argument expansion!
+						if ((ShouldIgnoreComponent<IgnoredComponents>(compId) || ...)) continue;
+
+						m_ComponentInspectors.emplace_back(compId, entity);
 					}
-					ImGui::PopID();
+
+					m_bIsComponentInspectorsDirty = false;
 				}
-				m_DataInspector.OnDrawComponentsComplete();
+
+				for (auto it = m_ComponentInspectors.begin(); it != m_ComponentInspectors.end();)
+				{
+					auto compId = it->ProcessComponent();
+					if (compId != -1)
+					{
+						entity.RemoveComponentById(compId);
+						it = m_ComponentInspectors.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
 			}
 			ImGui::PopID();
 
@@ -47,6 +61,8 @@ namespace ZeoEngine {
 			}
 		}
 
+		void MarkComponentInspectorsDirty() { m_bIsComponentInspectorsDirty = true; }
+
 	private:
 		template<typename IComponent>
 		bool ShouldIgnoreComponent(uint32_t compId)
@@ -58,34 +74,38 @@ namespace ZeoEngine {
 
 	protected:
 		bool m_bAllowAddingComponents = false;
-		DataInspector m_DataInspector{ this };
 
 	private:
+		std::vector<ComponentInspector> m_ComponentInspectors;
+		bool m_bIsComponentInspectorsDirty = true;
+
 		/** Map from category to list of component ids, used to draw categorized components in AddComponent popup */
 		std::map<std::string, std::vector<uint32_t>> m_CategorizedComponents;
 		bool m_bIsCategorizedComponentsDirty = true;
 
 	};
 
-	class EntityInspectorPanel : public DataInspectorPanel
+	class EntityInspectorPanel : public InspectorPanel
 	{
 	public:
-		using DataInspectorPanel::DataInspectorPanel;
+		using InspectorPanel::InspectorPanel;
 
 		virtual void OnAttach() override;
 
 	private:
 		virtual void ProcessRender() override;
 
+		void OnSelectedEntityChanged();
+
 	private:
 		Entity m_LastSelectedEntity;
 
 	};
 
-	class ParticleInspectorPanel : public DataInspectorPanel
+	class ParticleInspectorPanel : public InspectorPanel
 	{
 	public:
-		using DataInspectorPanel::DataInspectorPanel;
+		using InspectorPanel::InspectorPanel;
 
 	private:
 		virtual void ProcessRender() override;

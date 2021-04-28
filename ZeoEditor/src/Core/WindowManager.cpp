@@ -9,7 +9,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
-#include "Panels/DataInspectorPanels.h"
+#include "Panels/InspectorPanels.h"
 #include "Panels/ConsolePanel.h"
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"

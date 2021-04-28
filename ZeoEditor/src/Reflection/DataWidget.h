@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <deque>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -267,7 +268,7 @@ namespace ZeoEngine {
 
 	private:
 		const char* m_CurrentEnumDataName = nullptr;
-		std::list<entt::meta_data> m_EnumDatas;
+		std::deque<entt::meta_data> m_EnumDatas;
 	};
 
 	class StringDataWidget : public BasicDataWidgetT<std::string>
@@ -396,8 +397,8 @@ namespace ZeoEngine {
 		/** Map from aggregated subdata id to DataWidget instance */
 		std::unordered_map<uint32_t, Ref<DataWidget>> m_SubdataWidgets;
 
-		/** List of all its subdata, used to draw ordered registered subdatas in DataInspectorPanel */
-		std::list<uint32_t> m_PreprocessedSubdatas;
+		/** List of all its subdata, used to draw ordered registered subdatas */
+		std::deque<uint32_t> m_PreprocessedSubdatas;
 		bool m_bIsPreprocessedSubdatasDirty = true;
 	};
 

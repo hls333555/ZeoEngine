@@ -27,7 +27,7 @@ namespace ZeoEngine {
 		auto& testComp = reg.emplace<TestComponent>(entity);
 		entt::meta_any compInstance{ std::ref(testComp) }; // NOTE: We must use std::ref() to create aliases for unmanaged objects
 		const auto compType = compInstance.type();
-		std::list<entt::meta_data> datas;
+		std::deque<entt::meta_data> datas;
 		for (const auto data : compType.data())
 		{
 			datas.push_front(data);
