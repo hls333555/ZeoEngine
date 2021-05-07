@@ -17,6 +17,7 @@
 #include "Engine/GameFramework/Components.h"
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
+#include "Engine/ImGui/TextFilter.h"
 
 namespace ZeoEngine {
 
@@ -308,6 +309,9 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
 #endif
+
+	private:
+		TextFilter m_Filter;
 	};
 
 	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
@@ -321,6 +325,9 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
 #endif
+
+	private:
+		TextFilter m_Filter;
 	};
 
 	class ContainerWidget : public DataWidget

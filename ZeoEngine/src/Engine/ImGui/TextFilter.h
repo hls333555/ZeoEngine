@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		char                MinWordSize;    // Minimum number of characters before a word is used for matching, can help improve UX by avoiding mass matching against 1 or 2 characters
 
 		TextFilter(const char* default_filter = "", TextFilterMode default_filter_mode = TextFilterMode_And);
-		bool Draw(const char* label = "Filter (inc -exc)", float width = 0.0f);  // Helper calling InputText+Build
+		bool Draw(const char* label = "Filter (inc -exc)", const char* hint = "Search", float width = 0.0f);  // Helper calling InputText+Build
 		bool PassFilter(const char* text, const char* text_end = NULL) const;
 		void Build();
 		void Clear() { InputBuf[0] = 0; Build(); }

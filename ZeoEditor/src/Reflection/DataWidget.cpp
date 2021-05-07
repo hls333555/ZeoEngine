@@ -418,42 +418,47 @@ namespace ZeoEngine {
 
 			ImGui::Separator();
 
+			m_Filter.Draw("##Texture2DAssetFilter", "Search textures");
+			
 			// List all loaded textures from Texture2DLibrary
 			for (const auto& [path, texture] : library.GetAssetsMap())
 			{
-				// Push texture path as id
-				ImGui::PushID(texture->GetPath().c_str());
+				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(texture->GetFileName().c_str()))
 				{
-					constexpr float textureThumbnailWidth = 30.0f;
-					bool bIsSelected = ImGui::Selectable("##TextureDropdownThumbnail", false, 0, ImVec2(0.0f, textureThumbnailWidth));
-					// Display texture path tooltip for drop-down item
-					if (ImGui::IsItemHovered())
+					// Push texture path as id
+					ImGui::PushID(path.c_str());
 					{
-						ImGui::SetTooltipWithPadding("%s", texture->GetPath().c_str());
-					}
-
-					ImGui::SameLine();
-
-					// Draw texture thumbnail
-					ImGui::Image(texture->GetTexture(),
-						ImVec2(textureThumbnailWidth, textureThumbnailWidth),
-						ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-
-					ImGui::SameLine();
-
-					// Display texture name
-					ImGui::Text(texture->GetFileName().c_str());
-					if (bIsSelected)
-					{
-						bIsBufferChanged = texture != m_Buffer;
-						if (bIsBufferChanged)
+						constexpr float textureThumbnailWidth = 30.0f;
+						bool bIsSelected = ImGui::Selectable("##Texture2DDropdownThumbnail", false, 0, ImVec2(0.0f, textureThumbnailWidth));
+						// Display texture path tooltip for drop-down item
+						if (ImGui::IsItemHovered())
 						{
-							m_Buffer = texture;
-							SetValueToData();
+							ImGui::SetTooltipWithPadding("%s", path.c_str());
+						}
+
+						ImGui::SameLine();
+
+						// Draw texture thumbnail
+						ImGui::Image(texture->GetTexture(),
+							ImVec2(textureThumbnailWidth, textureThumbnailWidth),
+							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+						ImGui::SameLine();
+
+						// Display texture name
+						ImGui::Text(texture->GetFileName().c_str());
+						if (bIsSelected)
+						{
+							bIsBufferChanged = texture != m_Buffer;
+							if (bIsBufferChanged)
+							{
+								m_Buffer = texture;
+								SetValueToData();
+							}
 						}
 					}
+					ImGui::PopID();
 				}
-				ImGui::PopID();
 			}
 
 			ImGui::EndCombo();
@@ -585,43 +590,48 @@ namespace ZeoEngine {
 
 			ImGui::Separator();
 
+			m_Filter.Draw("##ParticleTemplateAssetFilter", "Search particle templates");
+
 			// List all loaded templates from ParticleLibrary
 			for (const auto& [path, pTemplate] : library.GetAssetsMap())
 			{
-				// Push particle template path as id
-				ImGui::PushID(pTemplate->GetPath().c_str());
+				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(pTemplate->GetName().c_str()))
 				{
-					const float pTemplateThumbnailWidth = 30.0f;
-					bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
-					// Display particle template path tooltip for drop-down item
-					if (ImGui::IsItemHovered())
+					// Push particle template path as id
+					ImGui::PushID(path.c_str());
 					{
-						ImGui::SetTooltipWithPadding("%s", pTemplate->GetPath().c_str());
-					}
-
-					ImGui::SameLine();
-
-					// Draw particle template thumbnail
-					auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
-					ImGui::Image(thumbnailTexture->GetTexture(),
-						ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
-						ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-
-					ImGui::SameLine();
-
-					// Display particle template name
-					ImGui::Text(pTemplate->GetName().c_str());
-					if (bIsSelected)
-					{
-						bIsBufferChanged = pTemplate != m_Buffer;
-						if (bIsBufferChanged)
+						const float pTemplateThumbnailWidth = 30.0f;
+						bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
+						// Display particle template path tooltip for drop-down item
+						if (ImGui::IsItemHovered())
 						{
-							m_Buffer = pTemplate;
-							SetValueToData();
+							ImGui::SetTooltipWithPadding("%s", path.c_str());
+						}
+
+						ImGui::SameLine();
+
+						// Draw particle template thumbnail
+						auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
+						ImGui::Image(thumbnailTexture->GetTexture(),
+							ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
+							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+						ImGui::SameLine();
+
+						// Display particle template name
+						ImGui::Text(pTemplate->GetName().c_str());
+						if (bIsSelected)
+						{
+							bIsBufferChanged = pTemplate != m_Buffer;
+							if (bIsBufferChanged)
+							{
+								m_Buffer = pTemplate;
+								SetValueToData();
+							}
 						}
 					}
+					ImGui::PopID();
 				}
-				ImGui::PopID();
 			}
 
 			ImGui::EndCombo();

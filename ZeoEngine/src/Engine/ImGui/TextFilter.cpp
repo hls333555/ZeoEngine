@@ -34,13 +34,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool TextFilter::Draw(const char* label, float width)
+	bool TextFilter::Draw(const char* label, const char* hint, float width)
 	{
 		if (width != 0.0f)
 		{
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() - ImGui::GetFramePadding().x);
 		}
-		bool value_changed = ImGui::InputTextWithHint(label, "Search log", InputBuf, IM_ARRAYSIZE(InputBuf));
+		bool value_changed = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf));
 		ImGui::SameLine();
 		ImGui::HelpMarker(
 			R"(Filter usage:
