@@ -26,7 +26,6 @@ project "ZeoEditor"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.magic_enum}",

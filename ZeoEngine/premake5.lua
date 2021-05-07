@@ -40,7 +40,6 @@ project "ZeoEngine"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.rapidjson}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.magic_enum}",
