@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		glm::vec2 TexCoord;
 		float TexIndex;
 		glm::vec2 TilingFactor;
-		glm::vec2 UVOffset;
+		glm::vec2 UvOffset;
 
 		// Editor-only
 		int32_t EntityID;
@@ -63,6 +63,13 @@ namespace ZeoEngine {
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
+		struct CameraData
+		{
+			glm::mat4 ViewProjection;
+		};
+		CameraData CameraBuffer;
+		Ref<UniformBuffer> CameraUniformBuffer;
+
 		Statistics Stats;
 	};
 
@@ -78,8 +85,8 @@ namespace ZeoEngine {
 		static void EndScene();
 	private:
 		static void Flush();
-		static void Reset();
-		static void FlushAndReset();
+		static void StartBatch();
+		static void NextBatch();
 
 	public:
 		// Primitives

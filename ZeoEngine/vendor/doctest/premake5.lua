@@ -1,8 +1,6 @@
 project "doctest"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
-    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-Intermediate/" .. outputdir .. "/%{prj.name}")

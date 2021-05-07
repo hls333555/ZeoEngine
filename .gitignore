@@ -52,3 +52,8 @@ imgui.ini
 *.json
 temp/
 *.log
+
+# Directories
+ZeoEngine/vendor/VulkanSDK
+ZeoEditor/assets/cache
+scripts/__pycache__

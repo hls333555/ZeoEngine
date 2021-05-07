@@ -2,6 +2,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Core/Application.h"
@@ -24,7 +25,7 @@ namespace ZeoEngine {
 			{ ShaderDataType::Float2, "a_TexCoord"     },
 			{ ShaderDataType::Float,  "a_TexIndex"     },
 			{ ShaderDataType::Float2, "a_TilingFactor" },
-			{ ShaderDataType::Float2, "a_UVOffset"     },
+			{ ShaderDataType::Float2, "a_UvOffset"     },
 			{ ShaderDataType::Int,    "a_EntityID"     },
 		};
 		s_Data.QuadVBO->SetLayout(squareLayout);
@@ -65,11 +66,10 @@ namespace ZeoEngine {
 			samplers[i] = i;
 		}
 		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
-		// TextureShader is bound here!
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
+
+		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
 
 	}
 
@@ -84,22 +84,19 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+		s_Data.CameraBuffer.ViewProjection = camera.GetProjection() * glm::inverse(transform);
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
-
-		Reset();
+		StartBatch();
 	}
 
 	void Renderer2D::BeginScene(const EditorCamera& camera)
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetViewProjection();
-
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
-
-		Reset();
+		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
+		StartBatch();
 	}
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
@@ -108,35 +105,36 @@ namespace ZeoEngine {
 
 		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
-		Reset();
+		StartBatch();
 	}
 
 	void Renderer2D::EndScene()
 	{
 		ZE_PROFILE_FUNCTION();
 
-		auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
-		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
-
-		// If we have nothing to draw, just skip flushing
-		if (dataSize != 0)
-		{
-			Flush();
-		}
+		Flush();
 	}
 
 	void Renderer2D::Flush()
 	{
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; ++i)
+		if (s_Data.QuadIndexCount == 0)
+			return; // Nothing to draw
+
+		auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
+		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+		// Bind textures
+		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 		{
 			s_Data.TextureSlots[i]->Bind(i);
 		}
 
+		s_Data.TextureShader->Bind();
 		RenderCommand::DrawIndexed(s_Data.QuadVAO, s_Data.QuadIndexCount);
 		++s_Data.Stats.DrawCalls;
 	}
 
-	void Renderer2D::Reset()
+	void Renderer2D::StartBatch()
 	{
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -144,10 +142,10 @@ namespace ZeoEngine {
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	void Renderer2D::FlushAndReset()
+	void Renderer2D::NextBatch()
 	{
 		EndScene();
-		Reset();
+		StartBatch();
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
@@ -171,7 +169,7 @@ namespace ZeoEngine {
 
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
-			FlushAndReset();
+			NextBatch();
 		}
 
 		constexpr size_t quadVertexCount = 4;
@@ -188,7 +186,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->UvOffset = uvOffset;
 			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
@@ -219,7 +217,7 @@ namespace ZeoEngine {
 
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
-			FlushAndReset();
+			NextBatch();
 		}
 
 		float textureIndex = 0.0f;
@@ -235,7 +233,7 @@ namespace ZeoEngine {
 		{
 			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
 			{
-				FlushAndReset();
+				NextBatch();
 			}
 
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
@@ -252,7 +250,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->UvOffset = uvOffset;
 			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}
@@ -283,7 +281,7 @@ namespace ZeoEngine {
 
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
-			FlushAndReset();
+			NextBatch();
 		}
 
 		constexpr size_t quadVertexCount = 4;
@@ -302,7 +300,7 @@ namespace ZeoEngine {
 		{
 			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
 			{
-				FlushAndReset();
+				NextBatch();
 			}
 
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
@@ -316,7 +314,7 @@ namespace ZeoEngine {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->UVOffset = uvOffset;
+			s_Data.QuadVertexBufferPtr->UvOffset = uvOffset;
 			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			++s_Data.QuadVertexBufferPtr;
 		}

@@ -1,15 +1,18 @@
 #pragma once
 
 #include "Engine/Debug/Instrumentor.h"
+#include "Engine/Core/Application.h"
 
 #ifdef ZE_PLATFORM_WINDOWS
-//extern ZeoEngine::Application* ZeoEngine::CreateApplication();
+
+extern ZeoEngine::Application* ZeoEngine::CreateApplication(ApplicationCommandLineArgs args);
+
 int main(int argc, char** argv)
 {
 	ZeoEngine::Log::Init();
 
 	ZE_PROFILE_BEGIN_SESSION("Startup", "ZeoEngineProfile_Startup.json");
-	auto app = ZeoEngine::CreateApplication();
+	auto app = ZeoEngine::CreateApplication({ argc, argv });
 	ZE_PROFILE_END_SESSION();
 
 	ZE_PROFILE_BEGIN_SESSION("Runtime", "ZeoEngineProfile_Runtime.json");

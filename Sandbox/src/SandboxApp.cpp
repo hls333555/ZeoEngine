@@ -7,7 +7,8 @@
 class SandBox : public ZeoEngine::Application
 {
 public:
-	SandBox()
+	SandBox(ZeoEngine::ApplicationCommandLineArgs args)
+		: Application("Sandbox", args)
 	{
 		PushLayer(new ZeoEngine::GameLayer());
 	}
@@ -18,7 +19,7 @@ public:
 
 };
 
-ZeoEngine::Application* ZeoEngine::CreateApplication()
+ZeoEngine::Application* ZeoEngine::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new SandBox();
+	return new SandBox(args);
 }

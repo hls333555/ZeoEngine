@@ -15,15 +15,28 @@ namespace ZeoEngine {
 
 	class ImGuiLayer;
 
+	struct ApplicationCommandLineArgs
+	{
+		int Count = 0;
+		char** Args = nullptr;
+
+		const char* operator[](int index) const
+		{
+			ZE_CORE_ASSERT(index < Count);
+			return Args[index];
+		}
+	};
+
 	class Application
 	{
 		friend int ::main(int argc, char** argv);
 
 	public:
-		Application(const std::string& name = "Zeo App");
+		Application(const std::string& name = "Zeo App", ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
 		virtual ~Application();
 
 		static Application& Get() { return *s_Instance; }
+		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 		Window& GetWindow() { return *m_Window; }
 
 		void Close();
@@ -55,6 +68,7 @@ namespace ZeoEngine {
 		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:
+		ApplicationCommandLineArgs m_CommandLineArgs;
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_bRunning = true;
@@ -67,5 +81,5 @@ namespace ZeoEngine {
 	};
 
 	// To be defined in the CLIENT
-	Application* CreateApplication();
+	Application* CreateApplication(ApplicationCommandLineArgs args);
 }
