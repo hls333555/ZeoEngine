@@ -14,6 +14,14 @@
 
 namespace ZeoEngine {
 
+	// How the shader pipeline works:
+	// 1. Take the vulkan gsl code
+	// 2. Compile it using SPIR-V into a binary file
+	// 3. Take that binary file and feed it into SPIR-V cross compiler which gives us the opengl compatible gsl text file, which is just a string
+	// 4. Take that string and compile it but this time using opengl
+	// 5. Cache both those binary files to disk
+	// 6. Give binary to opengl
+
 	namespace Utils {
 
 		static GLenum ShaderTypeFromString(const std::string& type)
