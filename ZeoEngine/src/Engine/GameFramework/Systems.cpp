@@ -20,11 +20,6 @@ namespace ZeoEngine {
 				particleComp.Instance->OnUpdate(dt);
 			}
 		});
-
-		ForEachView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
-		{
-			particlePreviewComp.Instance->OnUpdate(dt);
-		});
 	}
 
 	void RenderSystem::OnRenderEditor(const EditorCamera& camera)
@@ -89,11 +84,6 @@ namespace ZeoEngine {
 				particleComp.Instance->OnRender();
 			}
 		});
-
-		ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
-		{
-			particlePreviewComp.Instance->OnRender();
-		});
 	}
 
 	static void RemoveParticleSystemInstance(ParticleSystemComponent& particleComp)
@@ -110,7 +100,30 @@ namespace ZeoEngine {
 		{
 			RemoveParticleSystemInstance(particleComp);
 		});
+	}
 
+	void ParticlePreviewRenderSystem::OnUpdate(DeltaTime dt)
+	{
+		ForEachView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
+		{
+			particlePreviewComp.Instance->OnUpdate(dt);
+		});
+	}
+
+	void ParticlePreviewRenderSystem::OnRender(const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+		{
+			ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+			{
+				particlePreviewComp.Instance->OnRender();
+			});
+		}
+		Renderer2D::EndScene();
+	}
+
+	void ParticlePreviewRenderSystem::OnDestroy()
+	{
 		ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 		{
 			RemoveParticleSystemInstance(particlePreviewComp);

@@ -4,6 +4,7 @@
 
 namespace ZeoEngine {
 
+	class RenderSystem;
 	class NativeScriptSystem;
 
 	class MainEditorScene : public Scene
@@ -25,6 +26,7 @@ namespace ZeoEngine {
 		void OnRenderRuntime();
 
 	private:
+		Ref<RenderSystem> m_RenderSystem;
 		Ref<NativeScriptSystem> m_NativeScriptSystem;
 	};
 

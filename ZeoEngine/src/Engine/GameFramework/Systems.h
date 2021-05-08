@@ -42,6 +42,16 @@ namespace ZeoEngine {
 		void OnRender();
 	};
 
+	class ParticlePreviewRenderSystem : public ISystem
+	{
+	public:
+		using ISystem::ISystem;
+
+		virtual void OnUpdate(DeltaTime dt) override;
+		void OnRender(const EditorCamera& camera);
+		virtual void OnDestroy() override;
+	};
+
 	class NativeScriptSystem : public ISystem
 	{
 	public:

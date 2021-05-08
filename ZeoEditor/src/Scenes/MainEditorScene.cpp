@@ -7,12 +7,15 @@ namespace ZeoEngine {
 
 	MainEditorScene::MainEditorScene()
 	{
+		m_RenderSystem = CreateRef<RenderSystem>(this);
+		m_RenderSystem->OnCreate();
 		m_NativeScriptSystem = CreateRef<NativeScriptSystem>(this);
 		m_NativeScriptSystem->OnCreate();
 	}
 
 	MainEditorScene::~MainEditorScene()
 	{
+		m_RenderSystem->OnDestroy();
 		m_NativeScriptSystem->OnDestroy();
 	}
 

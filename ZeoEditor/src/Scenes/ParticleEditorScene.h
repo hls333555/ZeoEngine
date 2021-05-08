@@ -4,13 +4,19 @@
 
 namespace ZeoEngine {
 
+	class ParticlePreviewRenderSystem;
+
 	class ParticleEditorScene : public Scene
 	{
 	public:
-		ParticleEditorScene() = default;
+		ParticleEditorScene();
+		virtual ~ParticleEditorScene();
 
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnRender(const EditorCamera& camera) override;
+
+	private:
+		Ref<ParticlePreviewRenderSystem> m_ParticlePreviewRenderSystem;
 	};
 
 }

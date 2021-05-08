@@ -5,14 +5,25 @@
 
 namespace ZeoEngine {
 
+	ParticleEditorScene::ParticleEditorScene()
+	{
+		m_ParticlePreviewRenderSystem = CreateRef<ParticlePreviewRenderSystem>(this);
+		m_ParticlePreviewRenderSystem->OnCreate();
+	}
+
+	ParticleEditorScene::~ParticleEditorScene()
+	{
+		m_ParticlePreviewRenderSystem->OnDestroy();
+	}
+
 	void ParticleEditorScene::OnUpdate(DeltaTime dt)
 	{
-		m_RenderSystem->OnUpdate(dt);
+		m_ParticlePreviewRenderSystem->OnUpdate(dt);
 	}
 
 	void ParticleEditorScene::OnRender(const EditorCamera& camera)
 	{
-		m_RenderSystem->OnRenderEditor(camera);
+		m_ParticlePreviewRenderSystem->OnRender(camera);
 	}
 
 }

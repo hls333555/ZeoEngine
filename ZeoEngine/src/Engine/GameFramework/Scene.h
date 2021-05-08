@@ -9,7 +9,6 @@
 namespace ZeoEngine {
 
 	 class EditorCamera;
-	 class RenderSystem;
 
 	class Scene
 	{
@@ -21,8 +20,8 @@ namespace ZeoEngine {
 		friend class RenderSystem;
 
 	public:
-		Scene();
-		virtual ~Scene();
+		Scene() = default;
+		virtual ~Scene() = default;
 
 		virtual void OnUpdate(DeltaTime dt) {}
 		virtual void OnRender(const EditorCamera& camera) {}
@@ -50,8 +49,6 @@ namespace ZeoEngine {
 
 	protected:
 		entt::registry m_Registry;
-
-		Ref<RenderSystem> m_RenderSystem;
 
 	private:
 		std::string m_Name{ "Untitled" };
