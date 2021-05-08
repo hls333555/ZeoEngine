@@ -12,9 +12,13 @@ from zipfile import ZipFile
 VULKAN_SDK = os.environ.get('VULKAN_SDK')
 VULKAN_SDK_INSTALLER_URL = 'https://sdk.lunarg.com/sdk/download/1.2.170.0/windows/vulkan_sdk.exe'
 ZEOENGINE_VULKAN_VERSION = '1.2.170.0'
+VULKAN_SDK_PATH = 'ZeoEngine/vendor/VulkanSDK'
 VULKAN_SDK_EXE_PATH = 'ZeoEngine/vendor/VulkanSDK/VulkanSDK.exe'
 
 def InstallVulkanSDK():
+    if not os.path.exists(VULKAN_SDK_PATH):
+        os.makedirs(VULKAN_SDK_PATH)
+    
     print('Downloading {} to {}'.format(VULKAN_SDK_INSTALLER_URL, VULKAN_SDK_EXE_PATH))
     Utils.DownloadFile(VULKAN_SDK_INSTALLER_URL, VULKAN_SDK_EXE_PATH)
     print("Done!")
