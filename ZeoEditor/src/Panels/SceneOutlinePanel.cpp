@@ -11,6 +11,10 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::ProcessRender()
 	{
+		m_Filter.Draw("##SceneOutlineAssetFilter", "Search entities", -1.0f);
+		
+		ImGui::Separator();
+
 		// Display entities in creation order, the order is updated when a new entity is created or destroyed
 		GetContext()->GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
 		{
@@ -43,41 +47,45 @@ namespace ZeoEngine {
 		auto& coreComp = entity.GetComponent<CoreComponent>();
 		if (coreComp.bIsInternal) return;
 
-		auto selectedEntity = GetContext()->GetContextEntity();
-		ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, coreComp.Name.c_str());
-		if (ImGui::IsItemClicked())
+		const char* entityName = coreComp.Name.c_str();
+		if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(entityName))
 		{
-			GetContext()->SetContextEntity(entity);
-		}
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-		{
-			GetContext()->FocusContextEntity();
-		}
-
-		bool bIsCurrentEntitySelected = selectedEntity == entity;
-		bool bWillDestroyEntity = false;
-		// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
-		if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
-		{
-			bWillDestroyEntity = true;
-		}
-
-		if (bIsTreeExpanded)
-		{
-			// TODO: Display child entities
-
-			ImGui::TreePop();
-		}
-
-		// Defer entity destruction
-		if (bWillDestroyEntity)
-		{
-			GetContext()->GetScene()->DestroyEntity(entity);
-			if (bIsCurrentEntitySelected)
+			auto selectedEntity = GetContext()->GetContextEntity();
+			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, entityName);
+			if (ImGui::IsItemClicked())
 			{
-				GetContext()->SetContextEntity({});
+				GetContext()->SetContextEntity(entity);
+			}
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+			{
+				GetContext()->FocusContextEntity();
+			}
+
+			bool bIsCurrentEntitySelected = selectedEntity == entity;
+			bool bWillDestroyEntity = false;
+			// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
+			if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
+			{
+				bWillDestroyEntity = true;
+			}
+
+			if (bIsTreeExpanded)
+			{
+				// TODO: Display child entities
+
+				ImGui::TreePop();
+			}
+
+			// Defer entity destruction
+			if (bWillDestroyEntity)
+			{
+				GetContext()->GetScene()->DestroyEntity(entity);
+				if (bIsCurrentEntitySelected)
+				{
+					GetContext()->SetContextEntity({});
+				}
 			}
 		}
 		
