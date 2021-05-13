@@ -20,6 +20,7 @@ namespace ZeoEngine {
 		GameView,
 		SceneOutline,
 		EntityInspector,
+		ContentBrowser,
 		Console,
 		Stats,
 		Preferences,

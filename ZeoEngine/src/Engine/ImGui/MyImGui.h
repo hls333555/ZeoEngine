@@ -27,6 +27,8 @@ namespace ImGui {
 
 	IMGUI_API ImVec2 GetFramePadding();
 
+	IMGUI_API void VSplitter(const char* str_id, ImVec2* size);
+
 }
 
 namespace ZeoEngine {

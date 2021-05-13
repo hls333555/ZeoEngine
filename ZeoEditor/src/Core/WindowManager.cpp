@@ -10,6 +10,7 @@
 #include "Panels/GameViewportPanel.h"
 #include "Panels/SceneOutlinePanel.h"
 #include "Panels/InspectorPanels.h"
+#include "Panels/ContentBrowserPanel.h"
 #include "Panels/ConsolePanel.h"
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
@@ -39,6 +40,7 @@ namespace ZeoEngine {
 			case PanelType::GameView:			return ICON_FA_PLAY_CIRCLE "  Game View";
 			case PanelType::SceneOutline:		return ICON_FA_SITEMAP "  Scene Outline";
 			case PanelType::EntityInspector:	return ICON_FA_INFO_CIRCLE "  Entity Inspector";
+			case PanelType::ContentBrowser:		return ICON_FA_FOLDER "  Content Browser";
 			case PanelType::Console:			return ICON_FA_TERMINAL "  Console";
 			case PanelType::Stats:				return ICON_FA_CHART_PIE "  Stats";
 			case PanelType::Preferences:		return ICON_FA_COGS "  Preferences";
@@ -188,6 +190,10 @@ namespace ZeoEngine {
 			case PanelType::EntityInspector:
 			{
 				return CreatePanel<EntityInspectorPanel>(spec, context);
+			}
+			case PanelType::ContentBrowser:
+			{
+				return CreatePanel<ContentBrowserPanel>(spec, context);
 			}
 			case PanelType::Console:
 			{

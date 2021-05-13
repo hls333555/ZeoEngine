@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		CreatePanel(PanelType::GameView);
 		CreatePanel(PanelType::SceneOutline);
 		CreatePanel(PanelType::EntityInspector);
+		CreatePanel(PanelType::ContentBrowser);
 		CreatePanel(PanelType::Console);
 
 		CreateMenu("File")
@@ -35,6 +36,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel>(PanelType::GameView)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::SceneOutline)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::EntityInspector)
+			.MenuItem<MenuItem_TogglePanel>(PanelType::ContentBrowser)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Console)
 			.MenuItem<MenuItem_ToggleEditor>(DockspaceType::ParticleEditor)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Stats)
@@ -83,12 +85,14 @@ namespace ZeoEngine {
 		ImGuiID dockLeftDown = ImGui::DockBuilderSplitNode(dockLeft, ImGuiDir_Down, 0.3f, nullptr, &dockLeftUp);
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
+		ImGuiID dockLeftDownRight;
+		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.3f, nullptr, &dockLeftDownRight);
 
 		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::GameView), dockLeftUpRight);
 		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::SceneOutline), dockRightUp);
 		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::EntityInspector), dockRightDown);
-		//ImGui::DockBuilderDockWindow(CLASS_BROWSER_NAME, dockLeftUpLeft);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::Console), dockLeftDown);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::ContentBrowser), dockLeftDownLeft);
+		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::Console), dockLeftDownRight);
 	}
 
 }

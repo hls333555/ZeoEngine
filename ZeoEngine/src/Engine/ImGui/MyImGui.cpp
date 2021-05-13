@@ -227,4 +227,24 @@ namespace ImGui {
 		return GImGui->Style.FramePadding;
 	}
 
+	void VSplitter(const char* str_id, ImVec2* size)
+	{
+		ImVec2 screen_pos = GetCursorScreenPos();
+		InvisibleButton(str_id, ImVec2(3, -1));
+		ImVec2 end_pos = screen_pos + GetItemRectSize();
+		ImGuiWindow* window = GetCurrentWindow();
+		ImVec4* colors = GetStyle().Colors;
+		ImU32 color = GetColorU32(IsItemActive() || IsItemHovered() ? colors[ImGuiCol_ButtonActive] : colors[ImGuiCol_Button]);
+		window->DrawList->AddRectFilled(screen_pos, end_pos, color);
+		if (IsItemHovered())
+		{
+			SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+		}
+		if (IsItemActive())
+		{
+			size->x = ImMax(1.0f, GetIO().MouseDelta.x + size->x);
+			SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+		}
+	}
+
 }
