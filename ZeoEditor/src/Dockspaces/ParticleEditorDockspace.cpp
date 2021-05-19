@@ -41,7 +41,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleLibrary::Get().ReloadAsset(particlePreviewComp.Template);
+			ParticleLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetPath());
 		});
 	}
 
@@ -61,11 +61,9 @@ namespace ZeoEngine {
 
 	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
 	{
-		// Deserialize particle template data and create particle system instance
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& particlePreviewComp)
 		{
-			const auto pTemplate = ParticleLibrary::Get().GetOrLoadAsset(filePath);
-			ParticleSystemInstance::Create(particlePreviewComp, pTemplate);
+			particlePreviewComp.Template = ParticleLibrary::Get().LoadAsset(filePath);
 		});
 	}
 

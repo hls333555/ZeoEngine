@@ -6,6 +6,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -36,21 +37,21 @@ namespace ZeoEngine {
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type)
 	{
-		if (DoesPropExist(PropertyType::Struct, type))
+		if (type.is_enum())
 		{
-			return BasicMetaType::STRUCT;
+			return BasicMetaType::ENUM;
 		}
 		else if (type.is_sequence_container())
 		{
 			return BasicMetaType::SEQCON;
 		}
+		if (DoesPropExist(PropertyType::Struct, type))
+		{
+			return BasicMetaType::STRUCT;
+		}
 		else if (type.is_associative_container())
 		{
 			return BasicMetaType::ASSCON;
-		}
-		else if (type.is_enum())
-		{
-			return BasicMetaType::ENUM;
 		}
 		else
 		{
@@ -72,8 +73,8 @@ namespace ZeoEngine {
 				case entt::type_hash<glm::vec2>::value():				return BasicMetaType::VEC2;
 				case entt::type_hash<glm::vec3>::value():				return BasicMetaType::VEC3;
 				case entt::type_hash<glm::vec4>::value():				return BasicMetaType::VEC4;
-				case entt::type_hash<Ref<Texture2D>>::value():			return BasicMetaType::TEXTURE;
-				case entt::type_hash<Ref<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
+				case entt::type_hash<Asset<Texture2D>>::value():		return BasicMetaType::TEXTURE;
+				case entt::type_hash<Asset<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
 			}
 		}
 

@@ -8,6 +8,13 @@
 
 namespace ZeoEngine {
 
+	void InspectorPanel::OnAttach()
+	{
+		PanelBase::OnAttach();
+
+		GetContext()->m_PostSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
+	}
+
 	void InspectorPanel::DrawAddComponentButton(Entity entity)
 	{
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();

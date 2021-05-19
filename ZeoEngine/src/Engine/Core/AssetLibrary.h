@@ -1,72 +1,54 @@
 #pragma once
 
+#include <entt.hpp>
+
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
-	/**
-	 * Base template class for asset management.
-	 * You should add a static create function in your derived class like below:
-	 * @code
-	 * public:
-	 * static MyAssetLibrary& Get()
-	 * {
-	 *     static MyAssetLibrary instance;
-	 *     return instance;
-	 * }
-	 * @endcode
-	 */
-	template<typename T>
-	class AssetLibrary
+	template<typename AssetLibraryClass, typename AssetClass, typename AssetLoaderClass>
+	class AssetLibrary : private entt::resource_cache<AssetClass>
 	{
+	public:
+		static AssetLibraryClass& Get()
+		{
+			static AssetLibraryClass instance;
+			return instance;
+		}
+
+		Asset<AssetClass> LoadAsset(AssetPath path)
+		{
+			return load<AssetLoaderClass>(path.ToId(), path.ToString());
+		}
+
+		virtual Asset<AssetClass> ReloadAsset(AssetPath path)
+		{
+			return reload<AssetLoaderClass>(path.ToId(), path.ToString());
+		}
+
+		Asset<AssetClass> GetAsset(AssetPath path)
+		{
+			const auto id = path.ToId();
+			ZE_CORE_ASSERT(contains(id));
+
+			return handle(id);
+		}
+
+		bool HasAsset(AssetPath path)
+		{
+			return contains(path.ToId());
+		}
+
+		template<typename Func>
+		void ForEach(Func func) const
+		{
+			each(func);
+		}
+
 	protected:
 		AssetLibrary() = default;
-	public:
 		AssetLibrary(const AssetLibrary&) = delete;
 		AssetLibrary& operator=(const AssetLibrary&) = delete;
-
-		const auto& GetAssetsMap() const { return m_Assets; }
-
-		virtual T LoadAsset(const std::string& path) = 0;
-		T GetOrLoadAsset(const std::string& path)
-		{
-			if (DoesAssetExist(path))
-			{
-				return m_Assets[GetRelativePath(path)];
-			}
-			else
-			{
-				return LoadAsset(path);
-			}
-		}
-
-		T GetAsset(const std::string& path)
-		{
-			ZE_CORE_ASSERT(DoesAssetExist(path), "{0} not found!", GetDisplayAssetName());
-			return m_Assets[GetRelativePath(path)];
-		}
-
-		bool DoesAssetExist(const std::string& path) const
-		{
-			return m_Assets.find(GetRelativePath(path)) != m_Assets.end();
-		}
-
-	protected:
-		void AddAsset(const T& asset)
-		{
-			const std::string& path = asset->GetPath();
-			AddAsset(path, asset);
-		}
-
-	private:
-		void AddAsset(const std::string& path, const T& asset)
-		{
-			m_Assets[GetRelativePath(path)] = asset;
-		}
-
-		virtual const char* GetDisplayAssetName() const = 0;
-
-	private:
-		std::unordered_map<std::string, T> m_Assets;
-
 	};
 
 }

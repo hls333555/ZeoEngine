@@ -71,7 +71,7 @@ namespace ZeoEngine {
 	struct SpriteRendererComponent : public IComponent
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		Ref<Texture2D> Texture;
+		Asset<Texture2D> Texture;
 		glm::vec2 TextureTiling{ 1.0f };
 
 		int32_t SortingOrder = 0;
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const Ref<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
+		SpriteRendererComponent(const Asset<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
 			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 	};
@@ -133,7 +133,7 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		Ref<ParticleTemplate> Template;
+		Asset<ParticleTemplate> Template;
 		Ref<ParticleSystemInstance> Instance;
 		glm::vec3 PositionOffset{ 0.0f };
 
@@ -150,10 +150,10 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent()
 		{
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
-			Template = CreateRef<ParticleTemplate>();
+			Template = ParticleTemplate::Create();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		explicit ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& pTemplate)
+		explicit ParticleSystemPreviewComponent(const Asset<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
 		}
@@ -164,27 +164,27 @@ namespace ZeoEngine {
 		void SetLoopCount(int32_t count) { Template->LoopCount = count; }
 		float GetLoopDuration() const { return Template->LoopDuration; }
 		void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
-		ParticleFloat& GetSpawnRate() const { return Template->SpawnRate; }
-		auto& GetBurstList() const { return Template->BurstList; }
-		ParticleVec3& GetInitialPosition() const { return Template->InitialPosition; }
-		ParticleVec3& GetInitialRotation() const { return Template->InitialRotation; }
-		ParticleVec3& GetRotationRate() const { return Template->RotationRate; }
-		ParticleVec3& GetSizeBegin() const { return Template->SizeBegin; }
-		ParticleVec3& GetSizeEnd() const { return Template->SizeEnd; }
-		ParticleVec3& GetInitialVelocity() const { return Template->InitialVelocity; }
+		ParticleFloat& GetSpawnRate() { return Template->SpawnRate; }
+		auto& GetBurstList() { return Template->BurstList; }
+		ParticleVec3& GetInitialPosition() { return Template->InitialPosition; }
+		ParticleVec3& GetInitialRotation() { return Template->InitialRotation; }
+		ParticleVec3& GetRotationRate() { return Template->RotationRate; }
+		ParticleVec3& GetSizeBegin() { return Template->SizeBegin; }
+		ParticleVec3& GetSizeEnd() { return Template->SizeEnd; }
+		ParticleVec3& GetInitialVelocity() { return Template->InitialVelocity; }
 		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; }
 		void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
-		ParticleColor& GetColorBegin() const { return Template->ColorBegin; }
-		ParticleColor& GetColorEnd() const { return Template->ColorEnd; }
-		ParticleFloat& GetLifetime() const { return Template->Lifetime; }
-		const Ref<Texture2D>& GetTexture() const { return Template->Texture; }
-		void SetTexture(const Ref<Texture2D>& texture) { Template->Texture = texture; }
+		ParticleColor& GetColorBegin() { return Template->ColorBegin; }
+		ParticleColor& GetColorEnd() { return Template->ColorEnd; }
+		ParticleFloat& GetLifetime() { return Template->Lifetime; }
+		const Asset<Texture2D>& GetTexture() const { return Template->Texture; }
+		void SetTexture(const Asset<Texture2D>& texture) { Template->Texture = texture; }
 		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
 		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
 		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
 		void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
-		const Ref<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; }
-		void SetPreviewThumbnail(const Ref<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
+		const Asset<Texture2D>& GetPreviewThumbnail() const { return Template->PreviewThumbnail; }
+		void SetPreviewThumbnail(const Asset<Texture2D>& texture) { Template->PreviewThumbnail = texture; }
 
 	};
 

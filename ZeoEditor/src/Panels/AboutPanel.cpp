@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		const float logoSize = 100.0f;
 		// Center the logo
 		ImGui::Indent((ImGui::GetContentRegionAvail().x - logoSize) * 0.5f);
-		ImGui::Image(m_LogoTexture->GetTexture(),
+		ImGui::Image(m_LogoTexture->GetTextureID(),
 			{ logoSize, logoSize },
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 	}

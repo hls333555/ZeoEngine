@@ -18,6 +18,7 @@
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
 #include "Engine/ImGui/TextFilter.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -298,7 +299,7 @@ namespace ZeoEngine {
 #endif
 	};
 
-	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
+	class Texture2DDataWidget : public BasicDataWidgetT<Asset<Texture2D>>
 	{
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -314,7 +315,7 @@ namespace ZeoEngine {
 		TextFilter m_Filter;
 	};
 
-	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
+	class ParticleTemplateDataWidget : public BasicDataWidgetT<Asset<ParticleTemplate>>
 	{
 	public:
 		ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest);

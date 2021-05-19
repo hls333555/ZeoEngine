@@ -24,24 +24,22 @@ namespace ZeoEngine {
 	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
 		auto& particleComp = m_OwnerEntity.GetComponent<ParticleSystemComponent>();
-		Ref<ParticleTemplate> newTemplate = particleComp.Template;
 		if (dataId == ZDATA_ID(Template))
 		{
-			particleComp.Template = (*oldValue._Cast<Ref<ParticleTemplate>>());
+			Asset<ParticleTemplate> oldTemplate = (*oldValue._Cast<Asset<ParticleTemplate>>());
+			if (oldTemplate)
+			{
+				oldTemplate->RemoveParticleSystemInstance(particleComp.Instance);
+			}
 		}
 		// Manually clear particle template selection
-		if (!newTemplate)
+		if (!particleComp.Template)
 		{
-			if (particleComp.Template)
-			{
-				particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
-				particleComp.Template = newTemplate; // Should be empty
-				particleComp.Instance.reset();
-			}
+			particleComp.Instance.reset();
 		}
 		else
 		{
-			ParticleSystemInstance::Create(particleComp, newTemplate);
+			ParticleSystemInstance::Create(particleComp);
 		}
 	}
 

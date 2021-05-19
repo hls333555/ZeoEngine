@@ -15,6 +15,8 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnRender(const EditorCamera& camera) override;
 
+		virtual void OnDeserialized() override;
+
 	private:
 		Ref<ParticlePreviewRenderSystem> m_ParticlePreviewRenderSystem;
 	};

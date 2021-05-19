@@ -5,6 +5,7 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/AssetLibrary.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -18,7 +19,7 @@ namespace ZeoEngine {
 		virtual const std::string& GetPath() const = 0; // This path is canonical.
 		virtual const std::string& GetFileName() const = 0;
 		virtual bool HasAlpha() const = 0;
-		virtual void* GetTexture() const = 0;
+		virtual void* GetTextureID() const = 0;
 
 		/** Upload a block of memory with texture data to GPU. */
 		virtual void SetData(void* data, uint32_t size) = 0;
@@ -39,19 +40,14 @@ namespace ZeoEngine {
 
 	};
 
-	class Texture2DLibrary : public AssetLibrary<Ref<Texture2D>>
+	struct Texture2DLoader final : entt::resource_loader<Texture2DLoader, Texture2D>
 	{
-	public:
-		static Texture2DLibrary& Get()
+		Asset<Texture2D> load(const std::string& path) const
 		{
-			static Texture2DLibrary instance;
-			return instance;
+			return Texture2D::Create(path);
 		}
-
-		virtual Ref<Texture2D> LoadAsset(const std::string& path) override;
-
-	private:
-		virtual const char* GetDisplayAssetName() const override { return "Texture"; }
 	};
+
+	class Texture2DLibrary : public AssetLibrary<Texture2DLibrary, Texture2D, Texture2DLoader>{};
 
 }

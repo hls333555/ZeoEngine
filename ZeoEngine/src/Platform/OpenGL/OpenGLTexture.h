@@ -18,7 +18,7 @@ namespace ZeoEngine {
 		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual const std::string& GetFileName() const override { return m_FileName; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
-		virtual void* GetTexture() const override { return (void*)(intptr_t)m_RendererID; }
+		virtual void* GetTextureID() const override { return (void*)(intptr_t)m_RendererID; }
 
 		virtual void SetData(void* data, uint32_t size) override;
 

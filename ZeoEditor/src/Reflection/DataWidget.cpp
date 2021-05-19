@@ -353,12 +353,12 @@ namespace ZeoEngine {
 			auto backgroundTexture = library.GetAsset("assets/textures/Checkerboard_Alpha.png");
 			constexpr float texturePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
-			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTextureID(),
 				ImGui::GetCursorScreenPos(),
 				{ ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 			// Draw our texture on top of that
-			ImGui::Image(m_Buffer ? m_Buffer->GetTexture() : nullptr,
+			ImGui::Image(m_Buffer ? m_Buffer->GetTextureID() : nullptr,
 				{ texturePreviewWidth, texturePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
@@ -392,7 +392,7 @@ namespace ZeoEngine {
 				bIsBufferChanged = static_cast<bool>(m_Buffer);
 				if (bIsBufferChanged)
 				{
-					m_Buffer.reset();
+					m_Buffer = {};
 					SetValueToData();
 				}
 			}
@@ -406,7 +406,7 @@ namespace ZeoEngine {
 				if (filePath)
 				{
 					// Add selected texture to the library
-					Ref<Texture2D> loadedTexture = library.GetOrLoadAsset(*filePath);
+					Asset<Texture2D> loadedTexture = library.LoadAsset(*filePath);
 					bIsBufferChanged = loadedTexture != m_Buffer;
 					if (bIsBufferChanged)
 					{
@@ -421,25 +421,25 @@ namespace ZeoEngine {
 			m_Filter.Draw("##Texture2DAssetFilter", "Search textures");
 			
 			// List all loaded textures from Texture2DLibrary
-			for (const auto& [path, texture] : library.GetAssetsMap())
+			library.ForEach([&](const entt::id_type id, const Asset<Texture2D>& texture)
 			{
 				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(texture->GetFileName().c_str()))
 				{
-					// Push texture path as id
-					ImGui::PushID(path.c_str());
+					// Push texture path id
+					ImGui::PushID(id);
 					{
 						constexpr float textureThumbnailWidth = 30.0f;
 						bool bIsSelected = ImGui::Selectable("##Texture2DDropdownThumbnail", false, 0, ImVec2(0.0f, textureThumbnailWidth));
 						// Display texture path tooltip for drop-down item
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::SetTooltipWithPadding("%s", path.c_str());
+							ImGui::SetTooltipWithPadding("%s", texture->GetPath());
 						}
 
 						ImGui::SameLine();
 
 						// Draw texture thumbnail
-						ImGui::Image(texture->GetTexture(),
+						ImGui::Image(texture->GetTextureID(),
 							ImVec2(textureThumbnailWidth, textureThumbnailWidth),
 							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
@@ -459,7 +459,7 @@ namespace ZeoEngine {
 					}
 					ImGui::PopID();
 				}
-			}
+			});
 
 			ImGui::EndCombo();
 		}
@@ -476,7 +476,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = Texture2DLibrary::Get().GetOrLoadAsset("assets/textures/Checkerboard_Alpha.png");
+		m_Buffer = Texture2DLibrary::Get().LoadAsset("assets/textures/Checkerboard_Alpha.png");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -498,13 +498,13 @@ namespace ZeoEngine {
 		{
 			constexpr float pTemplatePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
-			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTexture(),
+			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTextureID(),
 				ImGui::GetCursorScreenPos(),
 				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 			// Draw preview thumbnail on top of that
 			auto thumbnailTexture = m_Buffer && m_Buffer->PreviewThumbnail ? m_Buffer->PreviewThumbnail : backgroundTexture;
-			ImGui::Image(thumbnailTexture->GetTexture(),
+			ImGui::Image(thumbnailTexture->GetTextureID(),
 				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
@@ -521,7 +521,8 @@ namespace ZeoEngine {
 						DockspaceBase* editor = DockspaceManager::Get().ToggleDockspace(DockspaceType::ParticleEditor, true);
 						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
 						{
-							ParticleSystemInstance::Create(particlePreviewComp, m_Buffer);
+							particlePreviewComp.Template = m_Buffer;
+							ParticleSystemInstance::Create(particlePreviewComp);
 						});
 					}
 				}
@@ -564,7 +565,7 @@ namespace ZeoEngine {
 				bIsBufferChanged = static_cast<bool>(m_Buffer);
 				if (bIsBufferChanged)
 				{
-					m_Buffer.reset();
+					m_Buffer = {};
 					SetValueToData();
 				}
 			}
@@ -578,7 +579,7 @@ namespace ZeoEngine {
 				if (filePath)
 				{
 					// Add selected particle template to the library
-					Ref<ParticleTemplate> loadedTemplate = library.GetOrLoadAsset(*filePath);
+					Asset<ParticleTemplate> loadedTemplate = library.LoadAsset(*filePath);
 					bIsBufferChanged = loadedTemplate != m_Buffer;
 					if (bIsBufferChanged)
 					{
@@ -593,26 +594,26 @@ namespace ZeoEngine {
 			m_Filter.Draw("##ParticleTemplateAssetFilter", "Search particle templates");
 
 			// List all loaded templates from ParticleLibrary
-			for (const auto& [path, pTemplate] : library.GetAssetsMap())
+			library.ForEach([&](const entt::id_type id, const Asset<ParticleTemplate>& pTemplate)
 			{
 				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(pTemplate->GetName().c_str()))
 				{
-					// Push particle template path as id
-					ImGui::PushID(path.c_str());
+					// Push particle template path id
+					ImGui::PushID(id);
 					{
 						const float pTemplateThumbnailWidth = 30.0f;
 						bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
 						// Display particle template path tooltip for drop-down item
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::SetTooltipWithPadding("%s", path.c_str());
+							ImGui::SetTooltipWithPadding("%s", pTemplate->GetPath());
 						}
 
 						ImGui::SameLine();
 
 						// Draw particle template thumbnail
 						auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
-						ImGui::Image(thumbnailTexture->GetTexture(),
+						ImGui::Image(thumbnailTexture->GetTextureID(),
 							ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
 							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
@@ -632,7 +633,7 @@ namespace ZeoEngine {
 					}
 					ImGui::PopID();
 				}
-			}
+			});
 
 			ImGui::EndCombo();
 		}
@@ -649,7 +650,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = ParticleLibrary::Get().GetOrLoadAsset("assets/particles/Test.zparticle");
+		m_Buffer = ParticleLibrary::Get().LoadAsset("assets/particles/Test.zparticle");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

@@ -38,11 +38,4 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Texture2D> Texture2DLibrary::LoadAsset(const std::string& path)
-	{
-		auto texture = Texture2D::Create(path);
-		AddAsset(texture);
-		return texture;
-	}
-
 }

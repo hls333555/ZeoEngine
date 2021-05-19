@@ -59,8 +59,8 @@ namespace ZeoEngine {
 		glm::vec2 Vec2Var;
 		glm::vec3 Vec3Var;
 		glm::vec4 ColorVar;
-		Ref<Texture2D> Texture2DVar;
-		Ref<ParticleTemplate> ParticleTemplateVar;
+		Asset<Texture2D> Texture2DVar;
+		Asset<ParticleTemplate> ParticleTemplateVar;
 		TestStruct TestStructVar;
 		TestNestedStruct TestNestedStructGetterVar;
 
@@ -81,8 +81,8 @@ namespace ZeoEngine {
 		std::vector<glm::vec2> Vec2VecVar;
 		std::vector<glm::vec3> Vec3VecVar;
 		std::vector<glm::vec4> ColorVecVar;
-		std::vector<Ref<Texture2D>> Texture2DVecVar;
-		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
+		std::vector<Asset<Texture2D>> Texture2DVecVar;
+		std::vector<Asset<ParticleTemplate>> ParticleTemplateVecVar;
 		std::vector<TestStruct> TestStructVecVar;
 		std::vector<TestNestedStruct> TestNestedStructVecGetterVar;
 
