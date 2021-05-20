@@ -10,5 +10,7 @@ namespace ZeoEngine {
 	std::string GetFileNameFromPath(const std::string& path);
 	/** Returns file name excluding file extension. */
 	std::string GetNameFromPath(const std::string& path);
+	/** Returns file extension. */
+	std::string GetExtensionFromPath(const std::string& path);
 
 }

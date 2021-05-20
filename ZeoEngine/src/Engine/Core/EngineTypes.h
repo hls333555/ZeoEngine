@@ -15,8 +15,11 @@ namespace ZeoEngine {
 		Texture,
 	};
 
-	template<typename T>
-	using Asset = entt::resource_handle<T>;
+	template<typename Resource>
+	using Asset = entt::resource_handle<Resource>;
+
+	template<typename Loader, typename Resource>
+	using AssetLoader = entt::resource_loader<Loader, Resource>;
 
 	template<typename T>
 	bool operator==(const Asset<T>& lhs, const Asset<T>& rhs)

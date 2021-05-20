@@ -54,16 +54,11 @@ namespace ZeoEngine {
 	{
 		switch (type)
 		{
-		case AssetType::Scene:
-			return "Zeo Scene (*.zscene)\0*.zscene\0";
-		case AssetType::ParticleTemplate:
-			return "Zeo Particle Template (*.zparticle)\0*.zparticle";
-		case AssetType::Texture:
-			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
-		default:
-			break;
+			case AssetType::Scene:				return "Zeo Scene (*.zscene)\0*.zscene\0";
+			case AssetType::ParticleTemplate:	return "Zeo Particle Template (*.zparticle)\0*.zparticle";
+			case AssetType::Texture:			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
+			default:							return nullptr;
 		}
-		return nullptr;
 	}
 
 }

@@ -25,4 +25,9 @@ namespace ZeoEngine {
 		return std::filesystem::path{ path }.stem().string();
 	}
 
+	std::string GetExtensionFromPath(const std::string& path)
+	{
+		return std::filesystem::path{ path }.extension().string();
+	}
+
 }

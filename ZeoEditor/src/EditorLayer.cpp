@@ -1,6 +1,7 @@
 #include "EditorLayer.h"
 
 #include "Core/EditorManager.h"
+#include "Core/AssetManager.h"
 #include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
@@ -17,6 +18,7 @@ namespace ZeoEngine {
 		EngineLayer::OnAttach();
 
 		EditorManager::Get().CreateEditor(EditorType::MainEditor);
+		AssetManager::Get().Init();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)

@@ -7,6 +7,7 @@
 #include "Engine/Utils/PlatformUtils.h"
 #include "Core/EditorManager.h"
 #include "Editors/EditorBase.h"
+#include "Core/AssetManager.h"
 
 namespace ZeoEngine {
 
@@ -518,12 +519,7 @@ namespace ZeoEngine {
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						EditorBase* editor = EditorManager::Get().OpenEditor(EditorType::ParticleEditor);
-						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
-						{
-							particlePreviewComp.Template = m_Buffer;
-							ParticleSystemInstance::Create(particlePreviewComp);
-						});
+						AssetManager::Get().OpenAsset(m_Buffer->GetPath());
 					}
 				}
 

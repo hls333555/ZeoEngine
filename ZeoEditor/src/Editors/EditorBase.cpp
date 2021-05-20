@@ -101,10 +101,15 @@ namespace ZeoEngine {
 		auto filePath = FileDialogs::OpenFile(GetAssetType());
 		if (!filePath) return;
 
+		OpenScene(*filePath);
+	}
+
+	void EditorBase::OpenScene(const std::string& path)
+	{
 		CreateNewScene(true);
 		// Save scene path
-		m_Scene->SetPath(*filePath);
-		Deserialize(*filePath);
+		m_Scene->SetPath(path);
+		Deserialize(path);
 		m_Scene->OnDeserialized();
 	}
 

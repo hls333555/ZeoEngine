@@ -40,7 +40,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct Texture2DLoader final : entt::resource_loader<Texture2DLoader, Texture2D>
+	struct Texture2DLoader final : AssetLoader<Texture2DLoader, Texture2D>
 	{
 		Asset<Texture2D> load(const std::string& path) const
 		{

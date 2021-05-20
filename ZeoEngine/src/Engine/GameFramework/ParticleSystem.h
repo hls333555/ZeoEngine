@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <entt.hpp>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
@@ -285,7 +284,7 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleLoader final : entt::resource_loader<ParticleLoader, ParticleTemplate>
+	struct ParticleLoader final : AssetLoader<ParticleLoader, ParticleTemplate>
 	{
 		Asset<ParticleTemplate> load(const std::string& path) const
 		{

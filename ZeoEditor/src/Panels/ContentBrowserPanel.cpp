@@ -4,6 +4,7 @@
 
 #include "Engine/Core/Assert.h"
 #include "Engine/Debug/BenchmarkTimer.h"
+#include "Core/AssetManager.h"
 
 namespace ZeoEngine {
 
@@ -238,7 +239,7 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path)
 	{
-		
+		AssetManager::Get().OpenAsset(path.string());
 	}
 
 }

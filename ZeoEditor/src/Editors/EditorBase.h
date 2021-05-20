@@ -49,6 +49,7 @@ namespace ZeoEngine {
 		/** Create an empty scene and init camera. */
 		void CreateNewScene(bool bIsFromOpenScene = false);
 		void OpenScene();
+		void OpenScene(const std::string& path);
 		void SaveScene();
 		void SaveSceneAs();
 
