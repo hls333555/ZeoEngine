@@ -150,8 +150,7 @@ namespace ZeoEngine {
 	{
 		if (Path.empty()) return;
 
-		TypeSerializer serializer(Path);
-		serializer.Deserialize(ParticleSystemPreviewComponent{ shared_from_this() }, AssetType::ParticleTemplate);
+		AssetSerializer::Deserialize(Path, AssetType::ParticleTemplate, ParticleSystemPreviewComponent{ shared_from_this() });
 	}
 
 	void ParticleTemplate::ResimulateAllParticleSystemInstances()

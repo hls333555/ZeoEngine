@@ -13,14 +13,12 @@ namespace ZeoEngine {
 
 	void MainEditor::Serialize(const std::string& filePath)
 	{
-		SceneSerializer serializer(filePath, GetScene());
-		serializer.Serialize();
+		SceneSerializer::Serialize(filePath, GetScene());
 	}
 
 	void MainEditor::Deserialize(const std::string& filePath)
 	{
-		SceneSerializer serializer(filePath, GetScene());
-		serializer.Deserialize();
+		SceneSerializer::Deserialize(filePath, GetScene());
 	}
 
 	void MainEditor::ClearSelectedEntity()

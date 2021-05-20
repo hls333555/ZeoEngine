@@ -17,7 +17,6 @@ namespace ZeoEngine {
 
 	void ParticleEditor::Serialize(const std::string& filePath)
 	{
-		TypeSerializer serializer(filePath);
 		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
 		// Only snapshot on save when thumbnail texture is null
 		if (!particlePreviewComp.Template->PreviewThumbnail)
@@ -26,7 +25,7 @@ namespace ZeoEngine {
 			std::string snapshotName = filePath + ".png";
 			particleViewportPanel->Snapshot(snapshotName, 256);
 		}
-		serializer.Serialize(particlePreviewComp, GetAssetType());
+		AssetSerializer::Serialize(filePath, GetAssetType(), particlePreviewComp);
 	}
 
 	void ParticleEditor::Deserialize(const std::string& filePath)
