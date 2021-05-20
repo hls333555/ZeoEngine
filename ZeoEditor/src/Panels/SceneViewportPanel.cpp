@@ -4,14 +4,15 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/KeyCodes.h"
-#include "Dockspaces/DockspaceBase.h"
+#include "Editors/EditorBase.h"
+#include "Engine/Renderer/Buffer.h"
 
 namespace ZeoEngine {
 
 	void SceneViewportPanel::OnAttach()
 	{
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
-		GetContext()->SetEditorCamera(&m_EditorCamera);
+		GetOwningEditor()->SetEditorCamera(&m_EditorCamera);
 	}
 
 	void SceneViewportPanel::ProcessUpdate(DeltaTime dt)
@@ -19,7 +20,7 @@ namespace ZeoEngine {
 		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
 		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
 		// This results in never rendering an empty (black) framebuffer
-		if (FrameBufferSpec spec = GetContext()->GetFrameBuffer()->GetSpec();
+		if (FrameBufferSpec spec = GetOwningEditor()->GetFrameBuffer()->GetSpec();
 			m_LastViewportSize.x > 0.0f && m_LastViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_LastViewportSize.x || spec.Height != m_LastViewportSize.y))
 		{
@@ -36,11 +37,11 @@ namespace ZeoEngine {
 		SetViewportBounds(workRect.Min.x, workRect.Min.y, workRect.GetSize().x, workRect.GetSize().y);
 
 		// TODO: BlockSceneEvents
-		GetContext()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
+		GetOwningEditor()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
 		ImGui::GetWindowDrawList()->AddImageRounded(
-			GetContext()->GetFrameBuffer()->GetColorAttachment(),
+			GetOwningEditor()->GetFrameBuffer()->GetColorAttachment(),
 			// Upper left corner for the UVs to be applied at
 			workRect.Min,
 			// Lower right corner for the UVs to be applied at
@@ -71,14 +72,14 @@ namespace ZeoEngine {
 	{
 		if (e.GetKeyCode() == Key::F)
 		{
-			GetContext()->FocusContextEntity();
+			GetOwningEditor()->FocusContextEntity();
 		}
 		return false;
 	}
 
 	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
 	{
-		GetContext()->GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
+		GetOwningEditor()->GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
 	}
 
 	void SceneViewportPanel::SetViewportBounds(float x, float y, float width, float height)
@@ -105,13 +106,13 @@ namespace ZeoEngine {
 	void SceneViewportPanel::OnViewportResize(const glm::vec2& size)
 	{
 		// Resize FrameBuffer
-		GetContext()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+		GetOwningEditor()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
 
 		// Resize editor camera
 		m_EditorCamera.SetViewportSize(size.x, size.y);
 
 		// Resize non-FixedAspectRatio cameras
-		auto view = GetContext()->GetScene()->m_Registry.view<CameraComponent>();
+		auto view = GetOwningEditor()->GetScene()->m_Registry.view<CameraComponent>();
 		for (auto entity : view)
 		{
 			auto& cameraComp = view.get<CameraComponent>(entity);

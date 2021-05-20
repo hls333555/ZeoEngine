@@ -140,6 +140,12 @@ namespace ZeoEngine {
 		return pTemplate;
 	}
 
+	void ParticleTemplate::Reload()
+	{
+		Deserialize();
+		ResimulateAllParticleSystemInstances();
+	}
+
 	void ParticleTemplate::Deserialize()
 	{
 		if (Path.empty()) return;

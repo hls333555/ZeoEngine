@@ -74,7 +74,7 @@ namespace ZeoEngine {
 		const std::string& GetPath() const { return Path; }
 		const std::string& GetName() const { return Name; }
 
-		void Deserialize();
+		void Reload();
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -98,6 +98,9 @@ namespace ZeoEngine {
 		{
 			PreviewThumbnail = Texture2D::Create(imagePath);
 		}
+
+	private:
+		void Deserialize();
 
 	public:
 		bool bIsLocalSpace = false;
@@ -297,8 +300,8 @@ namespace ZeoEngine {
 		{
 			if (path.IsEmpty()) return {};
 
-			auto pTemplate = AssetLibrary::ReloadAsset(path);
-			pTemplate->ResimulateAllParticleSystemInstances();
+			auto pTemplate = GetAsset(path);
+			pTemplate->Reload();
 			return pTemplate;
 		}
 	};

@@ -6,8 +6,6 @@
 
 namespace ZeoEngine {
 
-	class DockspaceBase;
-
 	// TODO: PIEState
 	enum class PIEState
 	{

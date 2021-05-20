@@ -6,6 +6,14 @@
 
 namespace ZeoEngine {
 
+	void PreferencesPanel::OnAttach()
+	{
+		PanelBase::OnAttach();
+
+		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse;
+		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+	}
+
 	void PreferencesPanel::ProcessRender()
 	{
 		// TODO: Write preferences to a config file

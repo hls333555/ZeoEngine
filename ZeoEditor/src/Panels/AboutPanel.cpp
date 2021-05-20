@@ -6,6 +6,11 @@ namespace ZeoEngine {
 
 	void AboutPanel::OnAttach()
 	{
+		PanelBase::OnAttach();
+
+		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize;
+		m_PanelSpec.InitialSize = { { 300.0f, 200.0f } };
+
 		m_LogoTexture = Texture2D::Create("assets/textures/Logo.png");
 	}
 

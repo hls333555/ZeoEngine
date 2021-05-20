@@ -5,8 +5,8 @@
 
 #include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Utils/PlatformUtils.h"
-#include "Core/WindowManager.h"
-#include "Dockspaces/DockspaceBase.h"
+#include "Core/EditorManager.h"
+#include "Editors/EditorBase.h"
 
 namespace ZeoEngine {
 
@@ -433,7 +433,7 @@ namespace ZeoEngine {
 						// Display texture path tooltip for drop-down item
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::SetTooltipWithPadding("%s", texture->GetPath());
+							ImGui::SetTooltipWithPadding("%s", texture->GetPath().c_str());
 						}
 
 						ImGui::SameLine();
@@ -518,7 +518,7 @@ namespace ZeoEngine {
 					// Double-click on the preview thumbnail to open the particle editor
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
-						DockspaceBase* editor = DockspaceManager::Get().ToggleDockspace(DockspaceType::ParticleEditor, true);
+						EditorBase* editor = EditorManager::Get().OpenEditor(EditorType::ParticleEditor);
 						editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
 						{
 							particlePreviewComp.Template = m_Buffer;
@@ -606,7 +606,7 @@ namespace ZeoEngine {
 						// Display particle template path tooltip for drop-down item
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::SetTooltipWithPadding("%s", pTemplate->GetPath());
+							ImGui::SetTooltipWithPadding("%s", pTemplate->GetPath().c_str());
 						}
 
 						ImGui::SameLine();

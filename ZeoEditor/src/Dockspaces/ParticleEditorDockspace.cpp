@@ -5,9 +5,7 @@
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Engine/Core/Serializer.h"
-#include "Engine/GameFramework/Components.h"
-#include "Panels/ParticleViewportPanel.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -32,39 +30,7 @@ namespace ZeoEngine {
 		CreateMenu("Window")
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleView)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleInspector);
-
-		// When a new scene is created, all previous particle's changes should be discarded
-		m_PreSceneCreate.connect<&ParticleEditorDockspace::ReloadParticleTemplateData>(this);
-	}
-
-	void ParticleEditorDockspace::ReloadParticleTemplateData()
-	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
-		{
-			ParticleLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetPath());
-		});
-	}
-
-	void ParticleEditorDockspace::Serialize(const std::string& filePath)
-	{
-		TypeSerializer serializer(filePath);
-		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
-		// Only snapshot on save when thumbnail texture is null
-		if (!particlePreviewComp.Template->PreviewThumbnail)
-		{
-			ParticleViewportPanel* particleViewportPanel = GetPanel<ParticleViewportPanel>(PanelType::ParticleView);
-			std::string snapshotName = filePath + ".png";
-			particleViewportPanel->Snapshot(snapshotName, 256);
-		}
-		serializer.Serialize(particlePreviewComp, GetAssetType());
-	}
-
-	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
-	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& particlePreviewComp)
-		{
-			particlePreviewComp.Template = ParticleLibrary::Get().LoadAsset(filePath);
-		});
+		
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)

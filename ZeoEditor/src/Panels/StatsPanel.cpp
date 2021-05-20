@@ -6,6 +6,15 @@
 
 namespace ZeoEngine {
 
+	void StatsPanel::OnAttach()
+	{
+		PanelBase::OnAttach();
+
+		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+		m_PanelSpec.InitialSize = { { 300.0f, 300.0f } };
+	}
+
 	void StatsPanel::ProcessRender()
 	{
 		auto& Stats = Renderer2D::GetStats();

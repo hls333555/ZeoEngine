@@ -1,8 +1,7 @@
 #include "EditorLayer.h"
 
-#include "Core/WindowManager.h"
-#include "Engine/Core/Input.h"
-#include "Engine/Core/KeyCodes.h"
+#include "Core/EditorManager.h"
+#include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
 
@@ -17,14 +16,16 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		DockspaceManager::Get().CreateDockspace(DockspaceType::MainEditor);
+		EditorManager::Get().CreateEditor(EditorType::MainEditor);
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
 		EngineLayer::OnUpdate(dt);
 
-		DockspaceManager::Get().OnUpdate(dt);
+		// TODO: Check
+		Renderer2D::ResetStats();
+		EditorManager::Get().OnUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -34,33 +35,33 @@ namespace ZeoEngine {
 		ImGui::ShowDemoWindow(&bShow);
 #endif
 
-		DockspaceManager::Get().OnImGuiRender();
+		EditorManager::Get().OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		DockspaceManager::Get().OnEvent(event);
+		EditorManager::Get().OnEvent(event);
 	}
 
 	// TODO:
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
-		// Start PIE by pressing Alt+P
-		if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
-		{
-			if (pieState == PIEState::None)
-			{
-				StartPIE();
-			}
-		}
-		// Exit PIE by pressing Esc
-		if (Input::IsKeyPressed(Key::Escape))
-		{
-			if (pieState != PIEState::None)
-			{
-				StopPIE();
-			}
-		}
+		//// Start PIE by pressing Alt+P
+		//if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
+		//{
+		//	if (pieState == PIEState::None)
+		//	{
+		//		StartPIE();
+		//	}
+		//}
+		//// Exit PIE by pressing Esc
+		//if (Input::IsKeyPressed(Key::Escape))
+		//{
+		//	if (pieState != PIEState::None)
+		//	{
+		//		StopPIE();
+		//	}
+		//}
 		return false;
 	}
 

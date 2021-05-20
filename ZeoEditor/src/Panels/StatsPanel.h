@@ -9,6 +9,8 @@ namespace ZeoEngine {
 	public:
 		using PanelBase::PanelBase;
 
+		virtual void OnAttach() override;
+
 	private:
 		virtual void ProcessRender() override;
 

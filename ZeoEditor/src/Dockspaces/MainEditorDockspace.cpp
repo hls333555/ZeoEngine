@@ -1,17 +1,20 @@
-#include "Dockspaces/MainDockspace.h"
+#include "Dockspaces/MainEditorDockspace.h"
 
 #include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Engine/Core/Serializer.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
-	void MainDockspace::OnAttach()
+	void MainEditorDockspace::OnAttach()
 	{
 		DockspaceBase::OnAttach();
+
+		m_DockspaceSpec.WindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
+		m_DockspaceSpec.WindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 		CreatePanel(PanelType::GameView);
 		CreatePanel(PanelType::SceneOutline);
@@ -38,7 +41,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel>(PanelType::EntityInspector)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ContentBrowser)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Console)
-			.MenuItem<MenuItem_ToggleEditor>(DockspaceType::ParticleEditor)
+			.MenuItem<MenuItem_ToggleEditor>(EditorType::ParticleEditor)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Stats)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Preferences)
 			.MenuItem<MenuItem_Seperator>()
@@ -46,28 +49,10 @@ namespace ZeoEngine {
 
 		CreateMenu("Help")
 			.MenuItem<MenuItem_TogglePanel>(PanelType::About);
-
-		m_PostSceneCreate.connect<&MainDockspace::ClearSelectedEntity>(this);
+		
 	}
 
-	void MainDockspace::ClearSelectedEntity()
-	{
-		SetContextEntity({});
-	}
-
-	void MainDockspace::Serialize(const std::string& filePath)
-	{
-		SceneSerializer serializer(filePath, GetScene());
-		serializer.Serialize();
-	}
-
-	void MainDockspace::Deserialize(const std::string& filePath)
-	{
-		SceneSerializer serializer(filePath, GetScene());
-		serializer.Deserialize();
-	}
-
-	void MainDockspace::PreRenderDockspace()
+	void MainEditorDockspace::PreRenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(mainViewport->WorkPos);
@@ -75,7 +60,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowViewport(mainViewport->ID);
 	}
 
-	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)
+	void MainEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.2f, nullptr, &dockLeft);

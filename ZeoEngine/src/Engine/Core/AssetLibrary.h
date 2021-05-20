@@ -18,12 +18,21 @@ namespace ZeoEngine {
 
 		Asset<AssetClass> LoadAsset(AssetPath path)
 		{
+			ZE_CORE_ASSERT(!path.IsEmpty());
+
 			return load<AssetLoaderClass>(path.ToId(), path.ToString());
 		}
 
 		virtual Asset<AssetClass> ReloadAsset(AssetPath path)
 		{
+			ZE_CORE_ASSERT(!path.IsEmpty());
+
 			return reload<AssetLoaderClass>(path.ToId(), path.ToString());
+		}
+
+		void DiscardAsset(AssetPath path)
+		{
+			discard(path.ToId());
 		}
 
 		Asset<AssetClass> GetAsset(AssetPath path)
