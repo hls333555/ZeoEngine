@@ -7,6 +7,7 @@
 #include <array>
 
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/ImGui/TextFilter.h"
 
 namespace ZeoEngine {
 
@@ -29,6 +30,7 @@ namespace ZeoEngine {
 		void PreprocessDirectoryHierarchy();
 		void PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory, const std::filesystem::path& topBaseDirectory);
 
+		void DrawTopBar();
 		void DrawLeftColumn();
 		void DrawColumnSplitter(float contentWidth);
 		void DrawRightColumn();
@@ -36,7 +38,9 @@ namespace ZeoEngine {
 		void DrawDirectoryHierarchy();
 		void DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
 
+		void DrawDirectorySelector();
 		void DrawPathsInDirectory();
+		void DrawFilteredAssetsInDirectoryRecursively();
 		void DrawSelectablePath(const char* name, const std::filesystem::path& path);
 		void DrawDirectory(const std::filesystem::path& path);
 		void DrawAsset(const std::filesystem::path& path);
@@ -60,6 +64,8 @@ namespace ZeoEngine {
 		std::unordered_map<std::string, std::vector<std::filesystem::path>> m_DirectoryHierarchy;
 		/** Map from asset path string to asset icon */
 		std::unordered_map<std::string, const char*> m_AssetIcons;
+
+		TextFilter m_Filter;
 	};
 
 }

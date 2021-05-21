@@ -17,15 +17,21 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::ProcessRender()
 	{
+		DrawTopBar();
+
+		ImGui::Separator();
+
 		float contentWidth = ImGui::GetContentRegionAvail().x;
 
 		DrawLeftColumn();
 
-		ImGui::SameLine();
+		static constexpr float spacing = 3.0f;
+
+		ImGui::SameLine(0.0f, spacing);
 
 		DrawColumnSplitter(contentWidth);
 
-		ImGui::SameLine();
+		ImGui::SameLine(0.0f, spacing);
 
 		DrawRightColumn();
 	}
@@ -56,38 +62,55 @@ namespace ZeoEngine {
 		}
 	}
 
+	void ContentBrowserPanel::DrawTopBar()
+	{
+		// Filters menu
+		if (ImGui::BeginPopupWithPadding("Filters"))
+		{
+			// TODO: AssetType Filter
+			ImGui::EndPopup();
+		}
+		if (ImGui::Button(ICON_FA_FILTER  "Filters"))
+		{
+			ImGui::OpenPopup("Filters");
+		}
+
+		ImGui::SameLine();
+
+		m_Filter.Draw("##ContentBrowserFilter", "Search assets", -1.0f);
+	}
+
 	void ContentBrowserPanel::DrawLeftColumn()
 	{
-		DrawDirectoryHierarchy();
+		if (ImGui::BeginChild("ContentBrowserLeftColumn", ImVec2(m_LeftColumnWidth, 0.0f)))
+		{
+			DrawDirectoryHierarchy();
+		}
+
+		ImGui::EndChild();
 	}
 
 	void ContentBrowserPanel::DrawDirectoryHierarchy()
 	{
-		ImVec2 size(m_LeftColumnWidth, 0.0f);
-		if (ImGui::BeginChild("ContentBrowserLeftColumn", size))
+		m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
+
+		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == m_AssetRootDirectory ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+		flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
+		static const char* rootDirectoryName = ICON_FA_FOLDER " Assets";
+		bool bIsRootTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
+		m_DirectorySpecs[m_AssetRootDirectory.string()].TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
+		if (ImGui::IsItemClicked())
 		{
-			m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
-
-			ImGuiTreeNodeFlags flags = (m_SelectedDirectory == m_AssetRootDirectory ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-			flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-			static const char* rootDirectoryName = ICON_FA_FOLDER " Assets";
-			bool bIsRootTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
-			m_DirectorySpecs[m_AssetRootDirectory.string()].TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
-			if (ImGui::IsItemClicked())
-			{
-				m_SelectedDirectory = m_AssetRootDirectory;
-			}
-			if (bIsRootTreeExpanded)
-			{
-				//BenchmarkTimer bt;
-				DrawDirectoryHierarchyRecursively(m_AssetRootDirectory);
-				//std::cout << bt.ElapsedMillis() << std::endl;
-
-				ImGui::TreePop();
-			}
+			m_SelectedDirectory = m_AssetRootDirectory;
 		}
+		if (bIsRootTreeExpanded)
+		{
+			//BenchmarkTimer bt;
+			DrawDirectoryHierarchyRecursively(m_AssetRootDirectory);
+			//std::cout << bt.ElapsedMillis() << std::endl;
 
-		ImGui::EndChild();
+			ImGui::TreePop();
+		}
 	}
 
 	void ContentBrowserPanel::DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory)
@@ -144,56 +167,112 @@ namespace ZeoEngine {
 	{
 		ImVec2 leftColumnSize(m_LeftColumnWidth, 0.0f);
 		ImGui::VSplitter("ContentBrowserVSplitter", &leftColumnSize);
-		static const float columnPadding = 15.0f;
+		static constexpr float columnPadding = 15.0f;
 		m_LeftColumnWidth = glm::clamp(leftColumnSize.x, columnPadding, contentWidth - columnPadding);
 	}
 
 	void ContentBrowserPanel::DrawRightColumn()
 	{
-		DrawPathsInDirectory();
-	}
-
-	void ContentBrowserPanel::DrawPathsInDirectory()
-	{
 		if (ImGui::BeginChild("ContentBrowserRightColumn"))
 		{
-			std::filesystem::directory_iterator list(m_SelectedDirectory);
-			bool bIsDirectoryEmpty = true;
-			for (auto& it : list)
-			{
-				const auto& path = it.path();
-				switch (it.status().type())
-				{
-					// Draw directory
-					case std::filesystem::file_type::directory:
-					{
-						bIsDirectoryEmpty = false;
-						DrawDirectory(path);
+			DrawDirectorySelector();
 
-						break;
-					}
-					// Draw asset
-					case std::filesystem::file_type::regular:
-					{
-						if (path.extension().string() == g_EngineAssetExtension)
-						{
-							bIsDirectoryEmpty = false;
-							DrawAsset(path);
-						}
-						break;
-					}
-				}
+			ImGui::Separator();
+
+			if (!m_Filter.IsActive())
+			{
+				DrawPathsInDirectory();
 			}
-
-			if (bIsDirectoryEmpty)
+			else
 			{
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-				ImGui::TextCentered("This folder is empty");
-				ImGui::PopStyleColor();
+				DrawFilteredAssetsInDirectoryRecursively();
 			}
 		}
 
 		ImGui::EndChild();
+	}
+
+	void ContentBrowserPanel::DrawDirectorySelector()
+	{
+		for (auto it = m_SelectedDirectory.begin(); it != m_SelectedDirectory.end(); ++it)
+		{
+			ImGui::SameLine(0.0f, 0.0f);
+			if (ImGui::TransparentSmallButton(it->string().c_str()))
+			{
+				std::filesystem::path jumpToDirectory;
+				for (auto it2 = m_SelectedDirectory.begin(); it2 != m_SelectedDirectory.end(); ++it2)
+				{
+					jumpToDirectory /= *it2;
+					if (it2 == it) break;
+				}
+				m_SelectedDirectory = jumpToDirectory;
+			}
+			ImGui::SameLine(0.0f, 0.0f);
+			ImGui::Text("/");
+		}
+	}
+
+	void ContentBrowserPanel::DrawPathsInDirectory()
+	{
+		std::filesystem::directory_iterator list(m_SelectedDirectory);
+		bool bIsDirectoryEmpty = true;
+		for (auto& it : list)
+		{
+			const auto& path = it.path();
+			switch (it.status().type())
+			{
+				// Draw directory
+				case std::filesystem::file_type::directory:
+				{
+					bIsDirectoryEmpty = false;
+					DrawDirectory(path);
+
+					break;
+				}
+				// Draw asset
+				case std::filesystem::file_type::regular:
+				{
+					if (path.extension().string() == g_EngineAssetExtension)
+					{
+						bIsDirectoryEmpty = false;
+						DrawAsset(path);
+					}
+					break;
+				}
+			}
+		}
+
+		if (bIsDirectoryEmpty)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+			ImGui::TextCentered("This folder is empty");
+			ImGui::PopStyleColor();
+		}
+	}
+
+	void ContentBrowserPanel::DrawFilteredAssetsInDirectoryRecursively()
+	{
+		bool bIsFilteredEmpty = true;
+		std::filesystem::recursive_directory_iterator list(m_SelectedDirectory);
+		for (auto& it : list)
+		{
+			if (!it.is_regular_file()) continue;
+
+			const auto& path = it.path();
+			if (path.extension().string() == g_EngineAssetExtension
+				&& m_Filter.PassFilter(path.stem().string().c_str()))
+			{
+				bIsFilteredEmpty = false;
+				DrawAsset(path);
+			}
+		}
+
+		if (bIsFilteredEmpty)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+			ImGui::TextCentered("There is nothing to display -_-");
+			ImGui::PopStyleColor();
+		}
 	}
 
 	void ContentBrowserPanel::DrawSelectablePath(const char* name, const std::filesystem::path& path)
