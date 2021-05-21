@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -30,8 +31,8 @@ namespace ZeoEngine {
 		AssetManager& operator=(const AssetManager&) = delete;
 
 	private:
-		/** Map from file extension to asset actions */
-		std::unordered_map<std::string, Ref<AssetActions>> m_AssetActions;
+		/** Map from asset type to asset actions */
+		std::unordered_map<AssetType, Ref<AssetActions>> m_AssetActions;
 	};
 
 }

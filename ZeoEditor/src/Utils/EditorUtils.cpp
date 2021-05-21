@@ -7,7 +7,7 @@
 
 namespace ZeoEngine {
 
-	const char* GetEditorName(EditorType editorType)
+	const char* EditorUtils::GetEditorName(EditorType editorType)
 	{
 		switch (editorType)
 		{
@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	const char* GetPanelName(PanelType panelType)
+	const char* EditorUtils::GetPanelName(PanelType panelType)
 	{
 		switch (panelType)
 		{

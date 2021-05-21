@@ -62,8 +62,8 @@ namespace ZeoEngine {
 	{
 	private:
 		explicit ParticleTemplate(const std::string& path)
-			: Path(GetRelativePath(path))
-			, Name(GetNameFromPath(path))
+			: Path(FileUtils::GetRelativePath(path))
+			, Name(FileUtils::GetNameFromPath(path))
 		{
 		}
 

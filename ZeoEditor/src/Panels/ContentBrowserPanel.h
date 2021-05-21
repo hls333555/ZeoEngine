@@ -4,6 +4,9 @@
 
 #include <filesystem>
 #include <optional>
+#include <array>
+
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -38,8 +41,6 @@ namespace ZeoEngine {
 
 	private:
 		const std::filesystem::path m_AssetRootDirectory{ std::filesystem::path{ "assets" } };
-		/** Only these assets will be shown in Asset Browser */
-		std::vector<std::string> m_SupportedAssetExtensions = { ".zscene", ".zparticle", ".glsl", ".png" };
 
 		float m_LeftColumnWidth = 200.0f;
 		uint32_t m_LeftColumnWindowId;

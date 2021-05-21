@@ -73,11 +73,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftDownRight;
 		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.3f, nullptr, &dockLeftDownRight);
 
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::GameView), dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::SceneOutline), dockRightUp);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::EntityInspector), dockRightDown);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::ContentBrowser), dockLeftDownLeft);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::Console), dockLeftDownRight);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::GameView), dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::SceneOutline), dockRightUp);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::EntityInspector), dockRightDown);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ContentBrowser), dockLeftDownLeft);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::Console), dockLeftDownRight);
 	}
 
 }

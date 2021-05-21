@@ -85,12 +85,13 @@ namespace ZeoEngine {
 			YAML::Emitter out;
 
 			auto assetTypeName = magic_enum::enum_name(assetType).data();
-			const std::string assetName = GetNameFromPath(path);
+			const std::string assetName = FileUtils::GetNameFromPath(path);
 			ZE_CORE_TRACE("Serializing {0} '{1}'", assetTypeName, assetName);
 
 			out << YAML::BeginMap;
 			{
-				out << YAML::Key << assetTypeName << YAML::Value << assetName;
+				out << YAML::Key << g_AssetTypeToken << YAML::Value << assetTypeName;
+				out << YAML::Key << g_AssetNameToken << YAML::Value << assetName;
 				func(out);
 			}
 			out << YAML::EndMap;

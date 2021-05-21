@@ -55,7 +55,7 @@ namespace ZeoEngine {
 	}
 
 	MenuItem_ToggleEditor::MenuItem_ToggleEditor(EditorBase* owningEditor, EditorType editorType, const std::string& shortcutName)
-		: MenuItemBase(owningEditor, GetEditorName(editorType), shortcutName)
+		: MenuItemBase(owningEditor, EditorUtils::GetEditorName(editorType), shortcutName)
 		, m_EditorType(editorType)
 	{
 	}
@@ -82,7 +82,7 @@ namespace ZeoEngine {
 	}
 
 	MenuItem_TogglePanel::MenuItem_TogglePanel(EditorBase* owningEditor, PanelType panelType, const std::string& shortcutName)
-		: MenuItemBase(owningEditor, GetPanelName(panelType), shortcutName)
+		: MenuItemBase(owningEditor, EditorUtils::GetPanelName(panelType), shortcutName)
 		, m_PanelType(panelType)
 	{
 	}

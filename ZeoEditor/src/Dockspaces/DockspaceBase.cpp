@@ -44,7 +44,7 @@ namespace ZeoEngine {
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		EditorType editorType = m_OwningEditor->GetEditorType();
-		const char* editorName = GetEditorName(editorType);
+		const char* editorName = EditorUtils::GetEditorName(editorType);
 		ImGui::Begin(editorName, m_OwningEditor->GetShowPtr(), m_DockspaceSpec.WindowFlags);
 		ImGui::PopStyleVar();
 

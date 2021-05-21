@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	void Scene::SetPath(const std::string& path)
 	{
 		m_Path = path;
-		m_Name = GetNameFromPath(path);
+		m_Name = FileUtils::GetNameFromPath(path);
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)

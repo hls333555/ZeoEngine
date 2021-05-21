@@ -2,8 +2,6 @@
 
 #include <entt.hpp>
 
-#include "Engine/Utils/EngineUtils.h"
-
 namespace ZeoEngine {
 
 	enum class AssetType
@@ -12,8 +10,12 @@ namespace ZeoEngine {
 
 		Scene,
 		ParticleTemplate,
-		Texture,
+		Texture2D,
 	};
+
+	extern const char* g_EngineAssetExtension;
+	extern const char* g_AssetTypeToken;
+	extern const char* g_AssetNameToken;
 
 	template<typename Resource>
 	using Asset = entt::resource_handle<Resource>;
@@ -35,14 +37,8 @@ namespace ZeoEngine {
 	class AssetPath
 	{
 	public:
-		AssetPath(const char* path)
-			: m_RelativePath(GetRelativePath(path))
-		{
-		}
-		AssetPath(const std::string& path)
-			: m_RelativePath(GetRelativePath(path))
-		{
-		}
+		AssetPath(const char* path);
+		AssetPath(const std::string& path);
 
 		bool IsEmpty() { return m_RelativePath.empty(); }
 

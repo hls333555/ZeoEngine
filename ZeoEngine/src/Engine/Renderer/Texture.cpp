@@ -24,7 +24,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2D::Create(const std::string& path)
 	{
-		const auto canonicalPath = GetRelativePath(path);
+		const auto canonicalPath = FileUtils::GetRelativePath(path);
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:

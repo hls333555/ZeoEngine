@@ -2,26 +2,28 @@
 
 #include "Core/AssetActions.h"
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
-		m_AssetActions[".zscene"] = CreateRef<SceneAssetActions>();
-		m_AssetActions[".zparticle"] = CreateRef<ParticleAssetActions>();
+		m_AssetActions[AssetType::Scene] = CreateRef<SceneAssetActions>();
+		m_AssetActions[AssetType::ParticleTemplate] = CreateRef<ParticleAssetActions>();
+		m_AssetActions[AssetType::Texture2D] = CreateRef<Texture2DAssetActions>();
 	}
 
 	bool AssetManager::OpenAsset(const std::string& path)
 	{
-		std::string extension = GetExtensionFromPath(path);
-		auto result = m_AssetActions.find(extension);
+		AssetType assetType = FileUtils::GetAssetTypeFromFile(path);
+		auto result = m_AssetActions.find(assetType);
 		if (result != m_AssetActions.end())
 		{
 			result->second->OpenAsset(path);
 			return true;
 		}
 
-		ZE_CORE_WARN("Failed to open asset: {0}. Unknown extension!", GetFileNameFromPath(path));
+		ZE_CORE_WARN("Failed to open asset: {0}. Unknown file format!", FileUtils::GetFileNameFromPath(path));
 		return false;
 	}
 

@@ -24,7 +24,7 @@ namespace ZeoEngine {
 
 	PanelBase* PanelManager::CreatePanel(PanelType type, EditorBase* owningEditor)
 	{
-		const char* panelName = GetPanelName(type);
+		const char* panelName = EditorUtils::GetPanelName(type);
 		ZE_CORE_INFO("Creating panel: {0}", panelName);
 		PanelBase* panel = nullptr;
 		switch (type)

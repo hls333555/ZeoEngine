@@ -100,7 +100,7 @@ namespace ZeoEngine {
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 		: m_FilePath(filePath)
-		, m_Name(GetNameFromPath(filePath))
+		, m_Name(FileUtils::GetNameFromPath(filePath))
 	{
 		ZE_PROFILE_FUNCTION();
 

@@ -496,16 +496,17 @@ namespace ZeoEngine {
 	std::optional<YAML::Node> Serializer::PreDeserialize(const std::string& path, AssetType assetType)
 	{
 		auto data = YAML::LoadFile(path);
-		auto assetTypeName = magic_enum::enum_name(assetType).data();
-		if (!data[assetTypeName])
+		auto assetTypeStr = magic_enum::enum_name(assetType).data();
+		auto assetTypeData = data[g_AssetTypeToken];
+		if (!assetTypeData || assetTypeData.as<std::string>() != assetTypeStr)
 		{
-			const std::string fileName = GetFileNameFromPath(path);
-			ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", fileName, assetTypeName);
+			const std::string fileName = FileUtils::GetFileNameFromPath(path);
+			ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", fileName, assetTypeStr);
 			return {};
 		}
 
-		std::string assetName = data[assetTypeName].as<std::string>();
-		ZE_CORE_TRACE("Deserializing {0} '{1}'", assetTypeName, assetName);
+		std::string assetStr = data[g_AssetNameToken].as<std::string>();
+		ZE_CORE_TRACE("Deserializing {0} '{1}'", assetTypeStr, assetStr);
 		return data;
 	}
 

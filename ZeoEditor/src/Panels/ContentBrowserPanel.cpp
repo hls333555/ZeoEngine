@@ -168,7 +168,7 @@ namespace ZeoEngine {
 						bIsDirectoryEmpty = false;
 
 						char directoryName[128] = ICON_FA_FOLDER " ";
-						strcat_s(directoryName, path.filename().string().c_str());
+						strcat_s(directoryName, path.stem().string().c_str());
 						if (ImGui::Selectable(directoryName, m_SelectedPath == path))
 						{
 							m_SelectedPath = path;
@@ -185,12 +185,12 @@ namespace ZeoEngine {
 					// Draw asset
 					case std::filesystem::file_type::regular:
 					{
-						if (std::find(m_SupportedAssetExtensions.cbegin(), m_SupportedAssetExtensions.cend(), path.extension().string()) != m_SupportedAssetExtensions.cend())
+						if (path.extension().string() == g_EngineAssetExtension)
 						{
 							bIsDirectoryEmpty = false;
 
 							char assetName[128] = ICON_FA_FILE " ";
-							strcat_s(assetName, path.filename().string().c_str());
+							strcat_s(assetName, path.stem().string().c_str());
 							if (ImGui::Selectable(assetName, m_SelectedPath == path))
 							{
 								m_SelectedPath = path;

@@ -25,8 +25,8 @@ namespace ZeoEngine {
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
-		: m_Path(GetRelativePath(path))
-		, m_FileName(GetFileNameFromPath(path))
+		: m_Path(FileUtils::GetRelativePath(path))
+		, m_FileName(FileUtils::GetFileNameFromPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 

@@ -403,7 +403,7 @@ namespace ZeoEngine {
 			// Pop up file browser to select a texture from disk
 			if (ImGui::Selectable("Browse texture..."))
 			{
-				auto filePath = FileDialogs::OpenFile(AssetType::Texture);
+				auto filePath = FileDialogs::OpenFile(AssetType::Texture2D);
 				if (filePath)
 				{
 					// Add selected texture to the library
@@ -646,7 +646,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = ParticleLibrary::Get().LoadAsset("assets/particles/Test.zparticle");
+		m_Buffer = ParticleLibrary::Get().LoadAsset("assets/particles/Test.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

@@ -4,7 +4,11 @@
 
 namespace ZeoEngine {
 
-	const char* GetEditorName(EditorType editorType);
-	const char* GetPanelName(PanelType panelType);
-
+	class EditorUtils
+	{
+	public:
+		static const char* GetEditorName(EditorType editorType);
+		static const char* GetPanelName(PanelType panelType);
+	};
+	
 }

@@ -1,4 +1,5 @@
-Scene: Test
+AssetType: Scene
+AssetName: Test
 Entities:
   - Entity: 0
     Components:
@@ -35,7 +36,7 @@ Entities:
         TintColor: [1, 1, 1, 1]
       - Component: 91661578
         PositionOffset: [0, 0, 0]
-        Template: assets\particles\Test.zparticle
+        Template: assets\particles\Test.zasset
   - Entity: 2
     Components:
       - Component: 3590015414
@@ -51,4 +52,4 @@ Entities:
         TintColor: [1, 1, 1, 1]
       - Component: 91661578
         PositionOffset: [0, 0, 0]
-        Template: assets\particles\Test.zparticle
+        Template: assets\particles\Test.zasset

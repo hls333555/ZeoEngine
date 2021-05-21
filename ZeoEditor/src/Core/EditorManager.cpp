@@ -42,7 +42,7 @@ namespace ZeoEngine {
 
 	EditorBase* EditorManager::CreateEditor(EditorType type)
 	{
-		const char* editorName = GetEditorName(type);
+		const char* editorName = EditorUtils::GetEditorName(type);
 		ZE_CORE_INFO("Creating editor: {0}", editorName);
 		EditorBase* editor = nullptr;
 		switch (type)
