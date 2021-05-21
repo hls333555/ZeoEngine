@@ -12,7 +12,9 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::OnAttach()
 	{
+		BenchmarkTimer timer;
 		PreprocessDirectoryHierarchy();
+		ZE_CORE_WARN("Directory hierarchy preprocessing took {0} ms", timer.ElapsedMillis());
 	}
 
 	void ContentBrowserPanel::ProcessRender()
@@ -36,30 +38,99 @@ namespace ZeoEngine {
 		DrawRightColumn();
 	}
 
+	namespace Utils {
+
+		static bool ShouldAddPath(const std::filesystem::directory_entry& entry)
+		{
+			switch (entry.status().type())
+			{
+				case std::filesystem::file_type::directory:
+					return true;
+				case std::filesystem::file_type::regular:
+					if (entry.path().extension().string() == g_EngineAssetExtension)
+					{
+						return true;
+					}
+			}
+			return false;
+		}
+
+		static std::string FileNameToUpperCase(const std::filesystem::path& fileName)
+		{
+			auto str = fileName.string();
+			std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+			return str;
+		}
+
+	}
+
 	void ContentBrowserPanel::PreprocessDirectoryHierarchy()
 	{
+		m_DirectoryHierarchy.emplace_back(std::make_pair(m_AssetRootDirectory, std::vector<std::filesystem::directory_entry>{}));
+
 		std::filesystem::directory_iterator list(m_AssetRootDirectory);
 		for (auto& it : list)
 		{
-			if (!it.is_directory()) continue;
+			if (Utils::ShouldAddPath(it))
+			{
+				m_DirectoryHierarchy[0].second.emplace_back(it);
+				m_DirectoryHierarchy.emplace_back(std::make_pair(it, std::vector<std::filesystem::directory_entry>{}));
+			}
 
-			const auto& directory = it.path();
-			m_DirectoryHierarchy[directory.string()].emplace_back(directory);
-			PreprocessDirectoryHierarchyRecursively(directory, directory);
+			if (it.is_directory())
+			{
+				PreprocessDirectoryHierarchyRecursively(it.path());
+			}
 		}
+
+		SortDirectoryHierarchy();
 	}
 
-	void ContentBrowserPanel::PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory, const std::filesystem::path& topBaseDirectory)
+	void ContentBrowserPanel::PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory)
 	{
 		std::filesystem::directory_iterator list(baseDirectory);
 		for (auto& it : list)
 		{
-			if (!it.is_directory()) continue;
+			if (Utils::ShouldAddPath(it))
+			{
+				auto result = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&baseDirectory](const auto& pair)
+				{
+					return pair.first == baseDirectory;
+				});
+				if (result != m_DirectoryHierarchy.cend())
+				{
+					result->second.emplace_back(it);
+				}
+				m_DirectoryHierarchy.emplace_back(std::make_pair(it, std::vector<std::filesystem::directory_entry>{}));
+			}
 
-			const auto& directory = it.path();
-			m_DirectoryHierarchy[topBaseDirectory.string()].emplace_back(directory);
-			PreprocessDirectoryHierarchyRecursively(directory, topBaseDirectory);
+			if (it.is_directory())
+			{
+				PreprocessDirectoryHierarchyRecursively(it.path());
+			}
 		}
+	}
+
+	void ContentBrowserPanel::SortDirectoryHierarchy()
+	{
+		for (auto& [baseDirectory, subDirectories] : m_DirectoryHierarchy)
+		{
+			std::sort(subDirectories.begin(), subDirectories.end(), [](const auto& lhs, const auto& rhs)
+			{
+				return lhs.is_directory() && !rhs.is_directory() ||
+					(((lhs.is_directory() && rhs.is_directory()) || (!lhs.is_directory() && !rhs.is_directory())) &&
+					// Default comparison behaviour: "NewFolder" is ahead of "cache"
+					// So we have to convert file name to upper or lower case before comparing
+					// Comparison behaviour after conversion: "cache" is ahead of "NewFolder"
+					Utils::FileNameToUpperCase(lhs.path().filename()) < Utils::FileNameToUpperCase(rhs.path().filename()));
+			});
+		}
+		std::sort(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [](const auto& lhs, const auto& rhs)
+		{
+			return lhs.first.is_directory() && !rhs.first.is_directory() ||
+				(((lhs.first.is_directory() && rhs.first.is_directory()) || (!lhs.first.is_directory() && !rhs.first.is_directory())) &&
+				Utils::FileNameToUpperCase(lhs.first.path().filename()) < Utils::FileNameToUpperCase(rhs.first.path().filename()));
+		});
 	}
 
 	void ContentBrowserPanel::DrawTopBar()
@@ -115,8 +186,13 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory)
 	{
-		std::filesystem::directory_iterator list(baseDirectory);
-		for (auto& it : list)
+		auto baseDirectoryIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&baseDirectory](const auto& pair)
+		{
+			return pair.first == baseDirectory;
+		});
+		if (baseDirectoryIt == m_DirectoryHierarchy.cend()) return;
+
+		for (const auto& it : baseDirectoryIt->second)
 		{
 			if (!it.is_directory()) continue;
 
@@ -175,7 +251,7 @@ namespace ZeoEngine {
 	{
 		if (ImGui::BeginChild("ContentBrowserRightColumn"))
 		{
-			DrawDirectorySelector();
+			DrawDirectoryNavigator();
 
 			ImGui::Separator();
 
@@ -192,7 +268,7 @@ namespace ZeoEngine {
 		ImGui::EndChild();
 	}
 
-	void ContentBrowserPanel::DrawDirectorySelector()
+	void ContentBrowserPanel::DrawDirectoryNavigator()
 	{
 		for (auto it = m_SelectedDirectory.begin(); it != m_SelectedDirectory.end(); ++it)
 		{
@@ -214,9 +290,14 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawPathsInDirectory()
 	{
-		std::filesystem::directory_iterator list(m_SelectedDirectory);
+		auto selectedPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&](const auto& pair)
+		{
+			return pair.first == m_SelectedDirectory;
+		});
+		if (selectedPathIt == m_DirectoryHierarchy.cend()) return;
+
 		bool bIsDirectoryEmpty = true;
-		for (auto& it : list)
+		for (const auto& it : selectedPathIt->second)
 		{
 			const auto& path = it.path();
 			switch (it.status().type())
@@ -324,26 +405,61 @@ namespace ZeoEngine {
 	{
 		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowId)->DC.StateStorage;
 		// Manually toggle upper-level tree node open iteratively
-		for (const auto& [topBaseDirectory, subDirectories] : m_DirectoryHierarchy)
+		auto currentDirectory = directory;
+		while (currentDirectory != m_AssetRootDirectory)
 		{
-			for (auto i = 0; i < subDirectories.size(); ++i)
-			{
-				if (subDirectories[i] == directory)
-				{
-					for (auto j = i; j >= 0; --j)
-					{
-						storage->SetInt(m_DirectorySpecs[subDirectories[j].string()].TreeNodeId, true);
-					}
-					storage->SetInt(m_DirectorySpecs[m_AssetRootDirectory.string()].TreeNodeId, true);
-					break;
-				}
-			}
+			storage->SetInt(m_DirectorySpecs[currentDirectory.string()].TreeNodeId, true);
+			currentDirectory = currentDirectory.parent_path();
 		}
+		storage->SetInt(m_DirectorySpecs[currentDirectory.string()].TreeNodeId, true);
 	}
 
 	void ContentBrowserPanel::HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path)
 	{
 		AssetManager::Get().OpenAsset(path.string());
+	}
+
+	void ContentBrowserPanel::OnPathCreated(const std::filesystem::path& path)
+	{
+		auto& parentPath = path.parent_path();
+
+		auto parentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&parentPath](const auto& pair)
+		{
+			return pair.first == parentPath;
+		});
+		ZE_CORE_ASSERT(parentPathIt != m_DirectoryHierarchy.end());
+
+		parentPathIt->second.emplace_back(path);
+		m_DirectoryHierarchy.emplace_back(std::make_pair(path, std::vector<std::filesystem::directory_entry>{}));
+
+		SortDirectoryHierarchy();
+	}
+
+	void ContentBrowserPanel::OnPathRemoved(const std::filesystem::path& path)
+	{
+		auto& parentPath = path.parent_path();
+
+		auto parentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&parentPath](const auto& pair)
+		{
+			return pair.first == parentPath;
+		});
+		ZE_CORE_ASSERT(parentPathIt != m_DirectoryHierarchy.end());
+
+		auto currentPathInParentIt = std::find_if(parentPathIt->second.begin(), parentPathIt->second.end(), [&path](const auto& currentPath)
+		{
+			return currentPath == path;
+		});
+		ZE_CORE_ASSERT(currentPathInParentIt != parentPathIt->second.end());
+
+		parentPathIt->second.erase(currentPathInParentIt);
+
+		auto currentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&path](const auto& pair)
+		{
+			return pair.first == path;
+		});
+		ZE_CORE_ASSERT(currentPathIt != m_DirectoryHierarchy.end());
+
+		m_DirectoryHierarchy.erase(currentPathIt);
 	}
 
 }

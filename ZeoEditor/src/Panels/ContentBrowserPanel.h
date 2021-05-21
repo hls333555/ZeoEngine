@@ -4,7 +4,6 @@
 
 #include <filesystem>
 #include <optional>
-#include <array>
 
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
@@ -28,7 +27,13 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 
 		void PreprocessDirectoryHierarchy();
-		void PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory, const std::filesystem::path& topBaseDirectory);
+		void PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
+		/**
+		 * Sorting:
+		 * Directories first, assets second
+		 * In alphabetical order
+		 */
+		void SortDirectoryHierarchy();
 
 		void DrawTopBar();
 		void DrawLeftColumn();
@@ -38,7 +43,7 @@ namespace ZeoEngine {
 		void DrawDirectoryHierarchy();
 		void DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
 
-		void DrawDirectorySelector();
+		void DrawDirectoryNavigator();
 		void DrawPathsInDirectory();
 		void DrawFilteredAssetsInDirectoryRecursively();
 		void DrawSelectablePath(const char* name, const std::filesystem::path& path);
@@ -47,6 +52,11 @@ namespace ZeoEngine {
 
 		void HandleRightColumnDirectoryDoubleClicked(const std::filesystem::path& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path);
+
+		/** Called when a new directory or asset is created in ContentBrowser. */
+		void OnPathCreated(const std::filesystem::path& path);
+		/** Called when an existing directory or asset is removed from ContentBrowser. */
+		void OnPathRemoved(const std::filesystem::path& path);
 
 	private:
 		const std::filesystem::path m_AssetRootDirectory{ std::filesystem::path{ "assets" } };
@@ -58,10 +68,10 @@ namespace ZeoEngine {
 		std::filesystem::path m_SelectedDirectory{ m_AssetRootDirectory };
 		/** Selected folder/asset in the right column */
 		std::filesystem::path m_SelectedPath;
+		/** Map from base path to list of its direct sub-directories and assets in order */
+		std::vector<std::pair<std::filesystem::directory_entry, std::vector<std::filesystem::directory_entry>>> m_DirectoryHierarchy;
 		/** Map from directory string to directory specification */
 		std::unordered_map<std::string, DirectorySpec> m_DirectorySpecs;
-		/** Map from top base directory string to list of itself and its sub-directories */
-		std::unordered_map<std::string, std::vector<std::filesystem::path>> m_DirectoryHierarchy;
 		/** Map from asset path string to asset icon */
 		std::unordered_map<std::string, const char*> m_AssetIcons;
 
