@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/EditorTypes.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -9,6 +10,7 @@ namespace ZeoEngine {
 	public:
 		static const char* GetEditorName(EditorType editorType);
 		static const char* GetPanelName(PanelType panelType);
+		static const char* GetAssetIcon(AssetType assetType);
 	};
 	
 }

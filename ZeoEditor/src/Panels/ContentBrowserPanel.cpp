@@ -5,6 +5,8 @@
 #include "Engine/Core/Assert.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Core/AssetManager.h"
+#include "Engine/Utils/EngineUtils.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -166,20 +168,8 @@ namespace ZeoEngine {
 					case std::filesystem::file_type::directory:
 					{
 						bIsDirectoryEmpty = false;
+						DrawDirectory(path);
 
-						char directoryName[128] = ICON_FA_FOLDER " ";
-						strcat_s(directoryName, path.stem().string().c_str());
-						if (ImGui::Selectable(directoryName, m_SelectedPath == path))
-						{
-							m_SelectedPath = path;
-						}
-						// Double-click to open directory in the right column
-						if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-						{
-							m_SelectedDirectory = path;
-
-							HandleRightColumnDirectoryDoubleClicked(path);
-						}
 						break;
 					}
 					// Draw asset
@@ -188,17 +178,7 @@ namespace ZeoEngine {
 						if (path.extension().string() == g_EngineAssetExtension)
 						{
 							bIsDirectoryEmpty = false;
-
-							char assetName[128] = ICON_FA_FILE " ";
-							strcat_s(assetName, path.stem().string().c_str());
-							if (ImGui::Selectable(assetName, m_SelectedPath == path))
-							{
-								m_SelectedPath = path;
-							}
-							if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-							{
-								HandleRightColumnAssetDoubleClicked(path);
-							}
+							DrawAsset(path);
 						}
 						break;
 					}
@@ -214,6 +194,46 @@ namespace ZeoEngine {
 		}
 
 		ImGui::EndChild();
+	}
+
+	void ContentBrowserPanel::DrawDirectory(const std::filesystem::path& path)
+	{
+		char directoryName[128] = ICON_FA_FOLDER " ";
+		strcat_s(directoryName, path.stem().string().c_str());
+		if (ImGui::Selectable(directoryName, m_SelectedPath == path))
+		{
+			m_SelectedPath = path;
+		}
+		// Double-click to open directory in the right column
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+		{
+			m_SelectedDirectory = path;
+
+			HandleRightColumnDirectoryDoubleClicked(path);
+		}
+	}
+
+	void ContentBrowserPanel::DrawAsset(const std::filesystem::path& path)
+	{
+		const std::string pathStr = path.string();
+		if (m_AssetIcons.find(pathStr) == m_AssetIcons.end())
+		{
+			AssetType assetType = FileUtils::GetAssetTypeFromFile(path.string());
+			m_AssetIcons[pathStr] = EditorUtils::GetAssetIcon(assetType);
+		}
+
+		char assetName[128] = "";
+		strcat_s(assetName, m_AssetIcons[pathStr]);
+		strcat_s(assetName, path.stem().string().c_str());
+		if (ImGui::Selectable(assetName, m_SelectedPath == path))
+		{
+			m_SelectedPath = path;
+		}
+		// Double-click to open asset editor
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+		{
+			HandleRightColumnAssetDoubleClicked(path);
+		}
 	}
 
 	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::filesystem::path& directory)

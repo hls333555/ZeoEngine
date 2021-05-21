@@ -36,6 +36,9 @@ namespace ZeoEngine {
 		void DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
 		void DrawAssetsInDirectory();
 
+		void DrawDirectory(const std::filesystem::path& path);
+		void DrawAsset(const std::filesystem::path& path);
+
 		void HandleRightColumnDirectoryDoubleClicked(const std::filesystem::path& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path);
 
@@ -53,6 +56,8 @@ namespace ZeoEngine {
 		std::unordered_map<std::string, DirectorySpec> m_DirectorySpecs;
 		/** Map from top base directory string to list of itself and its sub-directories */
 		std::unordered_map<std::string, std::vector<std::filesystem::path>> m_DirectoryHierarchy;
+		/** Map from asset path string to asset icon */
+		std::unordered_map<std::string, const char*> m_AssetIcons;
 	};
 
 }
