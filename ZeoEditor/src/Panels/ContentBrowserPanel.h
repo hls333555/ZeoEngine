@@ -32,10 +32,12 @@ namespace ZeoEngine {
 		void DrawLeftColumn();
 		void DrawColumnSplitter(float contentWidth);
 		void DrawRightColumn();
+
 		void DrawDirectoryHierarchy();
 		void DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
-		void DrawAssetsInDirectory();
 
+		void DrawPathsInDirectory();
+		void DrawSelectablePath(const char* name, const std::filesystem::path& path);
 		void DrawDirectory(const std::filesystem::path& path);
 		void DrawAsset(const std::filesystem::path& path);
 

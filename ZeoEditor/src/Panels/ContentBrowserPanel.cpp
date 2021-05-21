@@ -150,10 +150,10 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawRightColumn()
 	{
-		DrawAssetsInDirectory();
+		DrawPathsInDirectory();
 	}
 
-	void ContentBrowserPanel::DrawAssetsInDirectory()
+	void ContentBrowserPanel::DrawPathsInDirectory()
 	{
 		if (ImGui::BeginChild("ContentBrowserRightColumn"))
 		{
@@ -196,14 +196,22 @@ namespace ZeoEngine {
 		ImGui::EndChild();
 	}
 
+	void ContentBrowserPanel::DrawSelectablePath(const char* name, const std::filesystem::path& path)
+	{
+		static constexpr float indentWidth = 5.0f;
+		ImGui::Indent(indentWidth);
+		if (ImGui::Selectable(name, m_SelectedPath == path))
+		{
+			m_SelectedPath = path;
+		}
+		ImGui::Unindent(indentWidth);
+	}
+
 	void ContentBrowserPanel::DrawDirectory(const std::filesystem::path& path)
 	{
 		char directoryName[128] = ICON_FA_FOLDER " ";
 		strcat_s(directoryName, path.stem().string().c_str());
-		if (ImGui::Selectable(directoryName, m_SelectedPath == path))
-		{
-			m_SelectedPath = path;
-		}
+		DrawSelectablePath(directoryName, path);
 		// Double-click to open directory in the right column
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 		{
@@ -225,10 +233,7 @@ namespace ZeoEngine {
 		char assetName[128] = "";
 		strcat_s(assetName, m_AssetIcons[pathStr]);
 		strcat_s(assetName, path.stem().string().c_str());
-		if (ImGui::Selectable(assetName, m_SelectedPath == path))
-		{
-			m_SelectedPath = path;
-		}
+		DrawSelectablePath(assetName, path);
 		// Double-click to open asset editor
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 		{
