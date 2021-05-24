@@ -4,7 +4,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/AssetLibrary.h"
 
@@ -62,8 +62,8 @@ namespace ZeoEngine {
 	{
 	private:
 		explicit ParticleTemplate(const std::string& path)
-			: Path(FileUtils::GetRelativePath(path))
-			, Name(FileUtils::GetNameFromPath(path))
+			: Path(PathUtils::GetRelativePath(path))
+			, Name(PathUtils::GetNameFromPath(path))
 		{
 		}
 

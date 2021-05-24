@@ -2,7 +2,8 @@
 
 #include "Core/AssetActions.h"
 #include "Core/AssetFactory.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Renderer/Texture.h"
@@ -37,7 +38,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::OpenAsset(const std::string& path)
 	{
-		AssetTypeId typeId = FileUtils::GetAssetTypeIdFromFile(path);
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec<AssetSpec>(path)->TypeId;
 		auto result = m_AssetActions.find(typeId);
 		if (result != m_AssetActions.end())
 		{
@@ -45,7 +46,7 @@ namespace ZeoEngine {
 			return true;
 		}
 
-		ZE_CORE_WARN("Failed to open asset: {0}. Unknown file format!", FileUtils::GetFileNameFromPath(path));
+		ZE_CORE_WARN("Failed to open asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
 		return false;
 	}
 

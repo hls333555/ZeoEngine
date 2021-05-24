@@ -4,13 +4,10 @@
 
 namespace ZeoEngine {
 
-	extern const char* g_EngineAssetExtension;
 	extern const char* g_AssetTypeToken;
 
 	using AssetTypeId = uint32_t;
 	using AssetTypeName = std::string_view;
-
-	extern AssetTypeId g_InvalidAssetType;
 
 	template<typename AssetClass>
 	class AssetType

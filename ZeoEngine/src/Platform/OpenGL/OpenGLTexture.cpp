@@ -3,7 +3,7 @@
 
 #include <stb_image.h>
 
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
@@ -25,8 +25,8 @@ namespace ZeoEngine {
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
-		: m_Path(FileUtils::GetRelativePath(path))
-		, m_FileName(FileUtils::GetFileNameFromPath(path))
+		: m_Path(PathUtils::GetRelativePath(path))
+		, m_FileName(PathUtils::GetFileNameFromPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 

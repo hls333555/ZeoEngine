@@ -3,7 +3,7 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 

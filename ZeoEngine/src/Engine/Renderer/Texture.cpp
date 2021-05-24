@@ -3,7 +3,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
@@ -24,7 +24,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2D::Create(const std::string& path)
 	{
-		const auto canonicalPath = FileUtils::GetRelativePath(path);
+		const auto canonicalPath = PathUtils::GetRelativePath(path);
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:

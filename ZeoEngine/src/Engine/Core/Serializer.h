@@ -84,7 +84,7 @@ namespace ZeoEngine {
 		{
 			YAML::Emitter out;
 
-			const std::string assetName = FileUtils::GetNameFromPath(path);
+			const std::string assetName = PathUtils::GetNameFromPath(path);
 			ZE_CORE_TRACE("Serializing {0} '{1}'", AssetType<AssetClass>::Name(), assetName);
 
 			out << YAML::BeginMap;
@@ -106,12 +106,12 @@ namespace ZeoEngine {
 			auto typeName = AssetType<AssetClass>::Name();
 			if (!assetTypeData || assetTypeData.as<AssetTypeId>() != AssetType<AssetClass>::Id())
 			{
-				const std::string assetFileName = FileUtils::GetFileNameFromPath(path);
+				const std::string assetFileName = PathUtils::GetFileNameFromPath(path);
 				ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", assetFileName, typeName);
 				return {};
 			}
 
-			const std::string assetName = FileUtils::GetNameFromPath(path);
+			const std::string assetName = PathUtils::GetNameFromPath(path);
 			ZE_CORE_TRACE("Deserializing {0} '{1}'", typeName, assetName);
 			return data;
 		}

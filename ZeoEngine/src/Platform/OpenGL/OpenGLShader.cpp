@@ -9,7 +9,7 @@
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
@@ -100,7 +100,7 @@ namespace ZeoEngine {
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 		: m_FilePath(filePath)
-		, m_Name(FileUtils::GetNameFromPath(filePath))
+		, m_Name(PathUtils::GetNameFromPath(filePath))
 	{
 		ZE_PROFILE_FUNCTION();
 

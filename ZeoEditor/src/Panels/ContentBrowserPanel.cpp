@@ -1,55 +1,29 @@
 #include "Panels/ContentBrowserPanel.h"
 
 #include <IconsFontAwesome5.h>
-#include <magic_enum.hpp>
 
-#include "Engine/Core/Assert.h"
 #include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Core/Assert.h"
 #include "Core/AssetManager.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Utils/EditorUtils.h"
 #include "Core/AssetManager.h"
 #include "Core/AssetFactory.h"
 #include "Core/AssetActions.h"
+#include "Engine/Core/AssetRegistry.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
-#define PATH_BUFFER_SIZE 128
+#define MAX_PATH_SIZE 128
 
 namespace ZeoEngine {
 
-	namespace Utils {
-
-		static bool ShouldAddPath(const std::filesystem::directory_entry& entry)
-		{
-			switch (entry.status().type())
-			{
-				case std::filesystem::file_type::directory:
-					return true;
-				case std::filesystem::file_type::regular:
-					if (entry.path().extension().string() == g_EngineAssetExtension)
-					{
-						return true;
-					}
-			}
-			return false;
-		}
-
-		static std::string FileNameToUpperCase(const std::filesystem::path& fileName)
-		{
-			auto str = fileName.string();
-			std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-			return str;
-		}
-
-	}
-
 	void ContentBrowserPanel::OnAttach()
 	{
-		BenchmarkTimer timer;
-		ConstructDirectoryHierarchy();
-		ZE_CORE_WARN("Directory hierarchy construction took {0} ms", timer.ElapsedMillis());
+		m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
 
+		AssetRegistry::Get().ConstructPathTree();
+		
 		AssetManager::Get().RegisterAssetFactory(AssetType<Scene>::Id(), CreateRef<SceneAssetFactory>());
 		AssetManager::Get().RegisterAssetFactory(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleTemplateAssetFactory>());
 	}
@@ -91,18 +65,14 @@ namespace ZeoEngine {
 			case Key::Delete:
 				if (!m_SelectedPath.empty())
 				{
-					// TODO: Pop up a deletion dialog
-					std::filesystem::remove_all(m_SelectedPath);
-					OnPathRemoved(m_SelectedPath);
-					m_SelectedPath.clear();
+					ProcessPathDeletion(m_SelectedPath);
 				}
 				break;
-			// TODO: FIXME
 			// Rename selected directory or asset
 			case Key::F2:
 				if (!m_SelectedPath.empty())
 				{
-					m_PathJustCreated = m_SelectedPath;
+					m_PathToRename = m_SelectedPath;
 				}
 				break;
 			// Open selected directory or asset
@@ -128,75 +98,6 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void ContentBrowserPanel::ConstructDirectoryHierarchy()
-	{
-		m_DirectoryHierarchy.emplace_back(std::make_pair(m_AssetRootDirectory, std::vector<std::filesystem::directory_entry>{}));
-
-		std::filesystem::directory_iterator list(m_AssetRootDirectory);
-		for (auto& it : list)
-		{
-			if (Utils::ShouldAddPath(it))
-			{
-				m_DirectoryHierarchy[0].second.emplace_back(it);
-				m_DirectoryHierarchy.emplace_back(std::make_pair(it, std::vector<std::filesystem::directory_entry>{}));
-			}
-
-			if (it.is_directory())
-			{
-				ConstructDirectoryHierarchyRecursively(it.path());
-			}
-		}
-
-		SortDirectoryHierarchy();
-	}
-
-	void ContentBrowserPanel::ConstructDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory)
-	{
-		std::filesystem::directory_iterator list(baseDirectory);
-		for (auto& it : list)
-		{
-			if (Utils::ShouldAddPath(it))
-			{
-				auto result = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&baseDirectory](const auto& pair)
-				{
-					return pair.first == baseDirectory;
-				});
-				if (result != m_DirectoryHierarchy.cend())
-				{
-					result->second.emplace_back(it);
-				}
-				m_DirectoryHierarchy.emplace_back(std::make_pair(it, std::vector<std::filesystem::directory_entry>{}));
-			}
-
-			if (it.is_directory())
-			{
-				ConstructDirectoryHierarchyRecursively(it.path());
-			}
-		}
-	}
-
-	void ContentBrowserPanel::SortDirectoryHierarchy()
-	{
-		for (auto& [baseDirectory, subDirectories] : m_DirectoryHierarchy)
-		{
-			std::sort(subDirectories.begin(), subDirectories.end(), [](const auto& lhs, const auto& rhs)
-			{
-				return lhs.is_directory() && !rhs.is_directory() ||
-					(((lhs.is_directory() && rhs.is_directory()) || (!lhs.is_directory() && !rhs.is_directory())) &&
-					// Default comparison behaviour for directories: "NewFolder" is ahead of "cache"
-					// So we have to convert file name to upper or lower case before comparing
-					// Comparison behaviour after conversion: "cache" is ahead of "NewFolder"
-					Utils::FileNameToUpperCase(lhs.path().filename()) < Utils::FileNameToUpperCase(rhs.path().filename()));
-			});
-		}
-		std::sort(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [](const auto& lhs, const auto& rhs)
-		{
-			return lhs.first.is_directory() && !rhs.first.is_directory() ||
-				(((lhs.first.is_directory() && rhs.first.is_directory()) || (!lhs.first.is_directory() && !rhs.first.is_directory())) &&
-				Utils::FileNameToUpperCase(lhs.first.path().filename()) < Utils::FileNameToUpperCase(rhs.first.path().filename()));
-		});
-	}
-
 	void ContentBrowserPanel::DrawTopBar()
 	{
 		// Filters menu
@@ -219,88 +120,64 @@ namespace ZeoEngine {
 	{
 		if (ImGui::BeginChild("ContentBrowserLeftColumn", ImVec2(m_LeftColumnWidth, 0.0f)))
 		{
-			DrawDirectoryHierarchy();
+			DrawDirectoryTree();
 		}
 
 		ImGui::EndChild();
 	}
 
-	void ContentBrowserPanel::DrawDirectoryHierarchy()
+	void ContentBrowserPanel::DrawDirectoryTree()
 	{
 		m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
 
-		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == m_AssetRootDirectory ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == AssetRegistry::GetAssetRootDirectory() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 		static const char* rootDirectoryName = ICON_FA_FOLDER " Assets";
 		bool bIsRootTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
-		m_DirectorySpecs[m_AssetRootDirectory.string()].TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
+		AssetRegistry::Get().GetPathSpec<DirectorySpec>(AssetRegistry::GetAssetRootDirectory())->TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
 		if (ImGui::IsItemClicked())
 		{
-			m_SelectedDirectory = m_AssetRootDirectory;
+			m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
 		}
 		if (bIsRootTreeExpanded)
 		{
 			//BenchmarkTimer bt;
-			DrawDirectoryHierarchyRecursively(m_AssetRootDirectory);
+			DrawDirectoryTreeRecursively(AssetRegistry::GetAssetRootDirectory());
 			//std::cout << bt.ElapsedMillis() << std::endl;
 
 			ImGui::TreePop();
 		}
 	}
 
-	void ContentBrowserPanel::DrawDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory)
+	void ContentBrowserPanel::DrawDirectoryTreeRecursively(const std::string& baseDirectory)
 	{
-		auto baseDirectoryIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&baseDirectory](const auto& pair)
+		AssetRegistry& ar = AssetRegistry::Get();
+		ar.ForEachPathInDirectory(baseDirectory, [this, &ar](const std::string& path)
 		{
-			return pair.first == baseDirectory;
-		});
-		if (baseDirectoryIt == m_DirectoryHierarchy.cend()) return;
+			auto directorySpec = ar.GetPathSpec<DirectorySpec>(path);
+			if (!directorySpec) return;
 
-		for (const auto& it : baseDirectoryIt->second)
-		{
-			if (!it.is_directory()) continue;
-
-			char directoryName[PATH_BUFFER_SIZE] = ICON_FA_FOLDER " ";
-			const auto& directory = it.path();
-			strcat_s(directoryName, directory.filename().string().c_str());
-			ImGuiTreeNodeFlags flags = (m_SelectedDirectory == directory ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+			char directoryName[MAX_PATH_SIZE] = ICON_FA_FOLDER " ";
+			strcat_s(directoryName, directorySpec->PathName.c_str());
+			ImGuiTreeNodeFlags flags = (m_SelectedDirectory == path ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool bHasAnySubDirectory = false;
-			const auto direcotyStr = directory.string();
-			if (m_DirectorySpecs[direcotyStr].bHasSubDirectory)
-			{
-				bHasAnySubDirectory = *m_DirectorySpecs[direcotyStr].bHasSubDirectory;
-			}
-			else
-			{
-				std::filesystem::directory_iterator subList(directory);
-				for (auto& subIt : subList)
-				{
-					if (subIt.is_directory())
-					{
-						bHasAnySubDirectory = true;
-						break;
-					}
-				}
-				m_DirectorySpecs[direcotyStr].bHasSubDirectory = bHasAnySubDirectory;
-			}
-			if (!bHasAnySubDirectory)
+			if (!directorySpec->bHasAnySubDirectory)
 			{
 				flags |= ImGuiTreeNodeFlags_Leaf;
 			}
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(directoryName, flags);
-			m_DirectorySpecs[direcotyStr].TreeNodeId = ImGui::GetCurrentWindow()->GetID(directoryName);
+			directorySpec->TreeNodeId = ImGui::GetCurrentWindow()->GetID(directoryName);
 			if (ImGui::IsItemClicked())
 			{
-				m_SelectedDirectory = directory;
+				m_SelectedDirectory = path;
 			}
 			if (bIsTreeExpanded)
 			{
-				DrawDirectoryHierarchyRecursively(directory);
+				DrawDirectoryTreeRecursively(path);
 
 				ImGui::TreePop();
 			}
-		}
+		});
 	}
 
 	void ContentBrowserPanel::DrawColumnSplitter(float contentWidth)
@@ -342,58 +219,47 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawDirectoryNavigator()
 	{
-		for (auto it = m_SelectedDirectory.begin(); it != m_SelectedDirectory.end(); ++it)
+		int32_t i = 0;
+		PathUtils::ForEachParentPathInPath(m_SelectedDirectory, [this, &i](const std::string& name)
 		{
 			ImGui::SameLine(0.0f, 0.0f);
-			if (ImGui::TransparentSmallButton(it->string().c_str()))
+			if (ImGui::TransparentSmallButton(name.c_str()))
 			{
-				std::filesystem::path jumpToDirectory;
-				for (auto it2 = m_SelectedDirectory.begin(); it2 != m_SelectedDirectory.end(); ++it2)
+				std::string jumpToDirectory;
+				int32_t j = 0;
+				PathUtils::ForEachParentPathInPath(m_SelectedDirectory, [&jumpToDirectory, i, &j](const std::string& name)
 				{
-					jumpToDirectory /= *it2;
-					if (it2 == it) break;
-				}
-				m_SelectedDirectory = jumpToDirectory;
+					jumpToDirectory = PathUtils::AppendPath(jumpToDirectory, name);
+					if (j++ == i) return true;
+					return false;
+				});
+				m_SelectedDirectory = std::move(jumpToDirectory);
 			}
 			ImGui::SameLine(0.0f, 0.0f);
 			ImGui::Text("/");
-		}
+
+			++i;
+			return false;
+		});
 	}
 
 	void ContentBrowserPanel::DrawPathsInDirectory()
 	{
-		auto selectedPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&](const auto& pair)
-		{
-			return pair.first == m_SelectedDirectory;
-		});
-		if (selectedPathIt == m_DirectoryHierarchy.cend()) return;
-
 		bool bIsDirectoryEmpty = true;
-		for (const auto& it : selectedPathIt->second)
+		AssetRegistry& ar = AssetRegistry::Get();
+		ar.ForEachPathInDirectory(m_SelectedDirectory, [&](const std::string& path)
 		{
-			const auto& path = it.path();
-			switch (it.status().type())
+			bIsDirectoryEmpty = false;
+			auto assetSpec = ar.GetPathSpec<AssetSpec>(path);
+			if (assetSpec)
 			{
-				// Draw directory
-				case std::filesystem::file_type::directory:
-				{
-					bIsDirectoryEmpty = false;
-					DrawDirectory(path);
-
-					break;
-				}
-				// Draw asset
-				case std::filesystem::file_type::regular:
-				{
-					if (path.extension().string() == g_EngineAssetExtension)
-					{
-						bIsDirectoryEmpty = false;
-						DrawAsset(path);
-					}
-					break;
-				}
+				DrawAsset(path);
 			}
-		}
+			else
+			{
+				DrawDirectory(path);
+			}
+		});
 
 		if (bIsDirectoryEmpty)
 		{
@@ -406,20 +272,20 @@ namespace ZeoEngine {
 	// TODO: Consider caching the result
 	void ContentBrowserPanel::DrawFilteredAssetsInDirectoryRecursively()
 	{
+		//BenchmarkTimer bt;
 		bool bIsFilteredEmpty = true;
-		std::filesystem::recursive_directory_iterator list(m_SelectedDirectory);
-		for (auto& it : list)
+		AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty](const std::string& path)
 		{
-			if (!it.is_regular_file()) continue;
+			auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+			if (!assetSpec) return;
 
-			const auto& path = it.path();
-			if (path.extension().string() == g_EngineAssetExtension
-				&& m_Filter.PassFilter(path.stem().string().c_str()))
+			if (m_Filter.PassFilter(assetSpec->PathName.c_str()))
 			{
 				bIsFilteredEmpty = false;
 				DrawAsset(path);
 			}
-		}
+		});
+		//std::cout << bt.ElapsedMillis() << std::endl;
 
 		if (bIsFilteredEmpty)
 		{
@@ -434,31 +300,29 @@ namespace ZeoEngine {
 		// Right-click on blank space
 		if (ImGui::BeginPopupContextWindowWithPadding(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
-			// TODO: Refactor: Actually create directory or asset after renaming
+			// Actual directory or asset is created after renaming
 
 			if (ImGui::MenuItem(ICON_FA_FOLDER_PLUS "  Create New Folder"))
 			{
-				auto newPath = m_SelectedDirectory / "NewFolder";
-				std::filesystem::create_directory(newPath);
-				OnPathCreated(newPath);
+				std::string newPath = GetAvailableNewPathName("NewFolder", false);
+				RequestPathCreation(newPath, false);
 			}
 
 			ImGui::Separator();
 
-			AssetManager::Get().ForEachAssetFactory([&](AssetTypeId typeId, const Ref<AssetFactoryBase>& factory)
+			AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<AssetFactoryBase>& factory)
 			{
-				char name[PATH_BUFFER_SIZE];
+				char name[MAX_PATH_SIZE];
 				strcpy_s(name, factory->GetAssetTypeIcon());
 				strcat_s(name, " ");
 				strcat_s(name, factory->GetAssetTypeName());
 				if (ImGui::MenuItem(name))
 				{
-					char newName[PATH_BUFFER_SIZE] = "New";
-					strcat_s(newName, factory->GetNormalizedAssetTypeName());
-					strcat_s(newName, g_EngineAssetExtension);
-					auto newPath = m_SelectedDirectory / newName;
-					AssetManager::Get().CreateAsset(typeId, newPath.string());
-					OnPathCreated(newPath);
+					char baseName[MAX_PATH_SIZE] = "New";
+					strcat_s(baseName, factory->GetNormalizedAssetTypeName());
+					std::string newPath = GetAvailableNewPathName(baseName, true);
+					RequestPathCreation(newPath, true);
+					AssetRegistry::Get().GetPathSpec<AssetSpec>(newPath)->TypeId = typeId;
 				}
 			});
 
@@ -466,17 +330,44 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawSelectablePath(const char* icon, const std::filesystem::path& path)
+	std::string ContentBrowserPanel::GetAvailableNewPathName(const char* baseName, bool bIsAsset)
+	{
+		int32_t i = 0;
+		char suffix[10];
+		char newName[MAX_PATH_SIZE];
+		strcpy_s(newName, baseName);
+		if (bIsAsset)
+		{
+			strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+		}
+		std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, newName);
+		while (AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+		{
+			_itoa_s(++i, suffix, 10);
+			strcpy_s(newName, baseName);
+			strcat_s(newName, suffix);
+			if (bIsAsset)
+			{
+				strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+			}
+			newPath = PathUtils::AppendPath(m_SelectedDirectory, newName);
+		}
+		return newPath;
+	}
+
+	void ContentBrowserPanel::DrawSelectablePath(const char* icon, const std::string& path)
 	{
 		static constexpr float indentWidth = 5.0f;
-		const bool bPathNeedsRenaming = m_PathJustCreated == path;
+		const bool bPathNeedsRenaming = m_PathToRename == path;
 		ImGui::Indent(indentWidth);
 		{
-			char name[PATH_BUFFER_SIZE];
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			auto pathName = spec->PathName.c_str();
+			char name[MAX_PATH_SIZE];
 			strcpy_s(name, icon);
 			if (!bPathNeedsRenaming)
 			{
-				strcat_s(name, path.stem().string().c_str());
+				strcat_s(name, pathName);
 			}
 			else
 			{
@@ -493,29 +384,41 @@ namespace ZeoEngine {
 
 				ImGui::SameLine(0.0f, 0.0f);
 
-				ImGui::SetKeyboardFocusHere();
-				ImGui::SetNextItemWidth(-1.0f);
-				static char renameBuffer[PATH_BUFFER_SIZE];
-				strcpy_s(renameBuffer, path.stem().string().c_str());
-				if (ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+				static bool bHasKeyboardFocused = false;
+				if (!bHasKeyboardFocused)
 				{
-					// Add file extension .zasset automatically
-					if (std::filesystem::directory_entry{ path }.is_regular_file())
+					// Focus input once
+					ImGui::SetKeyboardFocusHere();
+					bHasKeyboardFocused = true;
+				}
+				ImGui::SetNextItemWidth(-1.0f);
+				char renameBuffer[MAX_PATH_SIZE];
+				strcpy_s(renameBuffer, pathName);
+				ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
+				// TODO: The following will not get called on right-click
+				if (ImGui::IsItemDeactivated())
+				{
+					auto assetSpec = std::dynamic_pointer_cast<AssetSpec>(spec);
+					if (assetSpec)
 					{
-						strcat_s(renameBuffer, g_EngineAssetExtension);
-
+						// Add engine file extension automatically
+						strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
 					}
-					const auto newPath = path.parent_path() / renameBuffer;
-					std::filesystem::rename(path, newPath);
-					OnPathRenamed(path, newPath);
-					m_PathJustCreated.clear();
+					std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
+					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+					{
+						ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
+						newPath = path;
+					}
+					ProcessPathRenaming(path, newPath, assetSpec);
+					bHasKeyboardFocused = false;
 				}
 			}
 		}
 		ImGui::Unindent(indentWidth);
 	}
 
-	void ContentBrowserPanel::DrawDirectory(const std::filesystem::path& path)
+	void ContentBrowserPanel::DrawDirectory(const std::string& path)
 	{
 		DrawSelectablePath(ICON_FA_FOLDER " ", path);
 		// Double-click to open directory in the right column
@@ -526,16 +429,11 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawAsset(const std::filesystem::path& path)
+	void ContentBrowserPanel::DrawAsset(const std::string& path)
 	{
-		const std::string pathStr = path.string();
-		if (m_AssetIcons.find(pathStr) == m_AssetIcons.end())
-		{
-			AssetTypeId typeId = FileUtils::GetAssetTypeIdFromFile(path.string());
-			m_AssetIcons[pathStr] = AssetManager::Get().GetAssetFactoryByAssetType(typeId)->GetAssetTypeIcon();
-		}
-
-		DrawSelectablePath(m_AssetIcons[pathStr], path);
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec<AssetSpec>(path)->TypeId;
+		const char* icon = AssetManager::Get().GetAssetFactoryByAssetType(typeId)->GetAssetTypeIcon();
+		DrawSelectablePath(icon, path);
 		// Double-click to open asset editor
 		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 		{
@@ -543,120 +441,66 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::filesystem::path& directory)
+	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::string& directory)
 	{
 		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowId)->DC.StateStorage;
 		// Manually toggle upper-level tree node open iteratively
 		auto currentDirectory = directory;
-		while (currentDirectory != m_AssetRootDirectory)
+		auto& ar = AssetRegistry::Get();
+		while (currentDirectory != AssetRegistry::GetAssetRootDirectory())
 		{
-			storage->SetInt(m_DirectorySpecs[currentDirectory.string()].TreeNodeId, true);
-			currentDirectory = currentDirectory.parent_path();
+			storage->SetInt(ar.GetPathSpec<DirectorySpec>(currentDirectory)->TreeNodeId, true);
+			currentDirectory = PathUtils::GetParentPath(currentDirectory);
 		}
-		storage->SetInt(m_DirectorySpecs[currentDirectory.string()].TreeNodeId, true);
+		storage->SetInt(ar.GetPathSpec<DirectorySpec>(currentDirectory)->TreeNodeId, true);
 	}
 
-	void ContentBrowserPanel::HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path)
+	void ContentBrowserPanel::HandleRightColumnAssetDoubleClicked(const std::string& path)
 	{
-		AssetManager::Get().OpenAsset(path.string());
+		AssetManager::Get().OpenAsset(path);
 	}
 
-	void ContentBrowserPanel::OnPathCreated(const std::filesystem::path& path)
+	void ContentBrowserPanel::RequestPathCreation(const std::string& path, bool bIsAsset)
 	{
-		m_PathJustCreated = path;
-
-		auto& parentPath = path.parent_path();
-		auto parentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&parentPath](const auto& pair)
-		{
-			return pair.first == parentPath;
-		});
-		ZE_CORE_ASSERT(parentPathIt != m_DirectoryHierarchy.end());
-
-		parentPathIt->second.emplace_back(path);
-		m_DirectoryHierarchy.emplace_back(std::make_pair(path, std::vector<std::filesystem::directory_entry>{}));
-
-		SortDirectoryHierarchy();
+		m_PathToRename = path;
+		m_PathToCreate = path;
+		AssetRegistry::Get().OnPathCreated(path, bIsAsset);
 	}
 
-	void ContentBrowserPanel::OnPathRemoved(const std::filesystem::path& path)
+	void ContentBrowserPanel::ProcessPathDeletion(const std::string& path)
 	{
-		auto& parentPath = path.parent_path();
-		auto parentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&parentPath](const auto& pair)
+		// TODO: Pop up a deletion dialog
+		PathUtils::DeletePath(path);
+		AssetRegistry::Get().OnPathRemoved(path);
+		m_SelectedPath.clear();
+	}
+
+	void ContentBrowserPanel::ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, const Ref<AssetSpec>& assetSpec)
+	{
+		if (m_PathToCreate.empty())
 		{
-			return pair.first == parentPath;
-		});
-		ZE_CORE_ASSERT(parentPathIt != m_DirectoryHierarchy.end());
-
-		auto currentPathInParentIt = std::find_if(parentPathIt->second.begin(), parentPathIt->second.end(), [&path](const auto& currentPath)
-		{
-			return currentPath == path;
-		});
-		ZE_CORE_ASSERT(currentPathInParentIt != parentPathIt->second.end());
-
-		parentPathIt->second.erase(currentPathInParentIt);
-
-		auto currentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&path](const auto& pair)
-		{
-			return pair.first == path;
-		});
-		ZE_CORE_ASSERT(currentPathIt != m_DirectoryHierarchy.end());
-
-		m_DirectoryHierarchy.erase(currentPathIt);
-
-		auto directoryIt = m_DirectorySpecs.find(path.string());
-		if (directoryIt != m_DirectorySpecs.end())
-		{
-			m_DirectorySpecs.erase(directoryIt);
+			// Regular renaming process
+			PathUtils::RenamePath(oldPath, newPath);
 		}
-
-		auto assetIt = m_AssetIcons.find(path.string());
-		if (assetIt != m_AssetIcons.end())
+		else
 		{
-			m_AssetIcons.erase(assetIt);
+			// Triggered by path creation
+			if (assetSpec)
+			{
+				AssetManager::Get().CreateAsset(assetSpec->TypeId, newPath);
+			}
+			else
+			{
+				PathUtils::CreateDirectory(newPath);
+			}
+			m_PathToCreate.clear();
 		}
-	}
-
-	void ContentBrowserPanel::OnPathRenamed(const std::filesystem::path& oldPath, const std::filesystem::path& newPath)
-	{
 		m_SelectedPath = newPath;
-
-		auto& parentPath = newPath.parent_path();
-		auto currentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&oldPath](const auto& pair)
+		if (newPath != oldPath)
 		{
-			return pair.first == oldPath;
-		});
-		ZE_CORE_ASSERT(currentPathIt != m_DirectoryHierarchy.end());
-
-		m_DirectoryHierarchy.emplace_back(std::make_pair(newPath, currentPathIt->second));
-		m_DirectoryHierarchy.erase(currentPathIt);
-
-		auto parentPathIt = std::find_if(m_DirectoryHierarchy.begin(), m_DirectoryHierarchy.end(), [&parentPath](const auto& pair)
-		{
-			return pair.first == parentPath;
-		});
-		ZE_CORE_ASSERT(parentPathIt != m_DirectoryHierarchy.end());
-		auto currentPathInParentIt = std::find_if(parentPathIt->second.begin(), parentPathIt->second.end(), [&oldPath](const auto& currentPath)
-		{
-			return currentPath == oldPath;
-		});
-		ZE_CORE_ASSERT(currentPathInParentIt != parentPathIt->second.end());
-
-		parentPathIt->second.erase(currentPathInParentIt);
-		parentPathIt->second.emplace_back(newPath);
-
-		auto directoryIt = m_DirectorySpecs.find(oldPath.string());
-		if (directoryIt != m_DirectorySpecs.end())
-		{
-			m_DirectorySpecs.erase(directoryIt);
+			AssetRegistry::Get().OnPathRenamed(oldPath, newPath, static_cast<bool>(assetSpec));
 		}
-
-		auto assetIt = m_AssetIcons.find(oldPath.string());
-		if (assetIt != m_AssetIcons.end())
-		{
-			m_AssetIcons.erase(assetIt);
-		}
-
-		SortDirectoryHierarchy();
+		m_PathToRename.clear();
 	}
 
 }
