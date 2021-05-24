@@ -1,5 +1,4 @@
-AssetType: Scene
-AssetName: Test
+AssetType: 3144214753
 Entities:
   - Entity: 0
     Components:

@@ -11,11 +11,11 @@ namespace ZeoEngine {
 	{
 	public:
 		// These return empty strings if cancelled
-		static std::optional<std::string> OpenFile(AssetType type);
-		static std::optional<std::string> SaveFile(AssetType type);
+		static std::optional<std::string> OpenFile(AssetTypeId typeId);
+		static std::optional<std::string> SaveFile(AssetTypeId typeId);
 
 	private:
-		static const char* GetAssetFilterFromAssetType(AssetType type);
+		static const char* GetAssetFilterFromAssetType(AssetTypeId typeId);
 	};
 
 }

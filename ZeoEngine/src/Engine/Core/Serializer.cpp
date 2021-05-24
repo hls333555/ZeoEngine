@@ -490,50 +490,6 @@ namespace ZeoEngine {
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// Serializer ////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	std::optional<YAML::Node> Serializer::PreDeserialize(const std::string& path, AssetType assetType)
-	{
-		auto data = YAML::LoadFile(path);
-		auto assetTypeStr = magic_enum::enum_name(assetType).data();
-		auto assetTypeData = data[g_AssetTypeToken];
-		if (!assetTypeData || assetTypeData.as<std::string>() != assetTypeStr)
-		{
-			const std::string fileName = FileUtils::GetFileNameFromPath(path);
-			ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", fileName, assetTypeStr);
-			return {};
-		}
-
-		std::string assetStr = data[g_AssetNameToken].as<std::string>();
-		ZE_CORE_TRACE("Deserializing {0} '{1}'", assetTypeStr, assetStr);
-		return data;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// AssetSerializer ///////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	void AssetSerializer::Serialize(const std::string& path, AssetType assetType, entt::meta_any instance)
-	{
-		Serialize_t(path, assetType, [&](YAML::Emitter& out)
-		{
-			ComponentSerializer cs;
-			cs.Serialize(out, instance);
-		});
-	}
-
-	bool AssetSerializer::Deserialize(const std::string& path, AssetType assetType, entt::meta_any instance)
-	{
-		auto data = PreDeserialize(path, assetType);
-		if (!data) return false;
-
-		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
-		return true;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
 	// SceneSerializer ///////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
@@ -595,7 +551,7 @@ namespace ZeoEngine {
 
 	void SceneSerializer::Serialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		Serialize_t(path, AssetType::Scene, [&](YAML::Emitter& out)
+		Serialize_t<Scene>(path, [&](YAML::Emitter& out)
 		{
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
@@ -619,7 +575,7 @@ namespace ZeoEngine {
 
 	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		auto data = PreDeserialize(path, AssetType::Scene);
+		auto data = PreDeserialize<Scene>(path);
 		if (!data) return false;
 
 		auto entities = (*data)["Entities"];

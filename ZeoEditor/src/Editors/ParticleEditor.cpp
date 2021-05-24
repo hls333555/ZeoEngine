@@ -15,6 +15,11 @@ namespace ZeoEngine {
 		m_PreSceneCreate.connect<&ParticleEditor::ReloadParticleTemplateData>(this);
 	}
 
+	AssetTypeId ParticleEditor::GetAssetTypeId() const
+	{
+		return AssetType<ParticleTemplate>::Id();
+	}
+
 	void ParticleEditor::Serialize(const std::string& filePath)
 	{
 		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
@@ -25,7 +30,7 @@ namespace ZeoEngine {
 			std::string snapshotName = filePath + ".png";
 			particleViewportPanel->Snapshot(snapshotName, 256);
 		}
-		AssetSerializer::Serialize(filePath, GetAssetType(), particlePreviewComp);
+		AssetSerializer::Serialize<ParticleTemplate>(filePath, particlePreviewComp);
 	}
 
 	void ParticleEditor::Deserialize(const std::string& filePath)

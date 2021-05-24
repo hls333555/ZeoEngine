@@ -98,7 +98,7 @@ namespace ZeoEngine {
 
 	void EditorBase::OpenScene()
 	{
-		auto filePath = FileDialogs::OpenFile(GetAssetType());
+		auto filePath = FileDialogs::OpenFile(GetAssetTypeId());
 		if (!filePath) return;
 
 		OpenScene(*filePath);
@@ -115,7 +115,7 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveSceneAs()
 	{
-		auto filePath = FileDialogs::SaveFile(GetAssetType());
+		auto filePath = FileDialogs::SaveFile(GetAssetTypeId());
 		if (!filePath) return;
 
 		// Save scene path

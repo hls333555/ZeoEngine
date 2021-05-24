@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
 
@@ -25,9 +26,12 @@ namespace ZeoEngine {
 
 	private:
 		virtual void ProcessRender() override;
+		virtual void ProcessEvent(Event& e);
 
-		void PreprocessDirectoryHierarchy();
-		void PreprocessDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
+		bool OnKeyPressed(KeyPressedEvent& e);
+
+		void ConstructDirectoryHierarchy();
+		void ConstructDirectoryHierarchyRecursively(const std::filesystem::path& baseDirectory);
 		/**
 		 * Sorting:
 		 * Directories first, assets second
@@ -46,6 +50,7 @@ namespace ZeoEngine {
 		void DrawDirectoryNavigator();
 		void DrawPathsInDirectory();
 		void DrawFilteredAssetsInDirectoryRecursively();
+		void DrawWindowContextMenu();
 		void DrawSelectablePath(const char* name, const std::filesystem::path& path);
 		void DrawDirectory(const std::filesystem::path& path);
 		void DrawAsset(const std::filesystem::path& path);
@@ -53,10 +58,12 @@ namespace ZeoEngine {
 		void HandleRightColumnDirectoryDoubleClicked(const std::filesystem::path& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::filesystem::path& path);
 
-		/** Called when a new directory or asset is created in ContentBrowser. */
+		/** Called when a new directory or asset is created within the ContentBrowser. */
 		void OnPathCreated(const std::filesystem::path& path);
-		/** Called when an existing directory or asset is removed from ContentBrowser. */
+		/** Called when an existing directory or asset is removed within the ContentBrowser. */
 		void OnPathRemoved(const std::filesystem::path& path);
+		/** Called when a directory or asset is renamed within the ContentBrowser. */
+		void OnPathRenamed(const std::filesystem::path& oldPath, const std::filesystem::path& newPath);
 
 	private:
 		const std::filesystem::path m_AssetRootDirectory{ std::filesystem::path{ "assets" } };
@@ -64,10 +71,13 @@ namespace ZeoEngine {
 		float m_LeftColumnWidth = 200.0f;
 		uint32_t m_LeftColumnWindowId;
 
-		/** Selected folder in the left column */
+		/** Selected directory in the left column */
 		std::filesystem::path m_SelectedDirectory{ m_AssetRootDirectory };
-		/** Selected folder/asset in the right column */
+		/** Selected directory/asset in the right column */
 		std::filesystem::path m_SelectedPath;
+		/** Directory or asset just created within the ContentBrowser */
+		std::filesystem::path m_PathJustCreated;
+
 		/** Map from base path to list of its direct sub-directories and assets in order */
 		std::vector<std::pair<std::filesystem::directory_entry, std::vector<std::filesystem::directory_entry>>> m_DirectoryHierarchy;
 		/** Map from directory string to directory specification */

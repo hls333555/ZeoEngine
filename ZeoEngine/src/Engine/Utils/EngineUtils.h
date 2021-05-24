@@ -18,8 +18,8 @@ namespace ZeoEngine {
 		/** Returns file extension. */
 		static std::string GetExtensionFromPath(const std::string& path);
 
-		/** Read file and parse its type. */
-		static AssetType GetAssetTypeFromFile(const std::string& path);
+		/** Parse file and retrieve its type. */
+		static AssetTypeId GetAssetTypeIdFromFile(const std::string& path);
 	};
 
 }

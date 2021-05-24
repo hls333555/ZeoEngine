@@ -29,8 +29,8 @@ namespace ZeoEngine {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
 		if (ImGui::Begin(EditorUtils::GetPanelName(m_PanelType), &m_bShow, m_PanelSpec.WindowFlags))
 		{
-			m_bIsPanelFocused = ImGui::IsWindowFocused();
-			m_bIsPanelHovered = ImGui::IsWindowHovered();
+			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 			ProcessRender();
 		}

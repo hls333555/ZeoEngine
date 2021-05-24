@@ -4,18 +4,31 @@
 
 namespace ZeoEngine {
 
-	enum class AssetType
-	{
-		NONE,
-
-		Scene,
-		ParticleTemplate,
-		Texture2D,
-	};
-
 	extern const char* g_EngineAssetExtension;
 	extern const char* g_AssetTypeToken;
-	extern const char* g_AssetNameToken;
+
+	using AssetTypeId = uint32_t;
+	using AssetTypeName = std::string_view;
+
+	extern AssetTypeId g_InvalidAssetType;
+
+	template<typename AssetClass>
+	class AssetType
+	{
+	public:
+		static constexpr AssetTypeId Id()
+		{
+			return entt::type_hash<AssetClass>::value();
+		}
+
+		/** For debug purposes only. */
+		static constexpr AssetTypeName Name()
+		{
+			auto view =  entt::type_name<AssetClass>::value();
+			auto separator = view.rfind("::");
+			return view.substr(separator + 2, view.size() - separator);
+		}
+	};
 
 	template<typename Resource>
 	using Asset = entt::resource_handle<Resource>;

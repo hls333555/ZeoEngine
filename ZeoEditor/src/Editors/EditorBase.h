@@ -56,7 +56,7 @@ namespace ZeoEngine {
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
 
 	private:
-		virtual AssetType GetAssetType() const = 0;
+		virtual AssetTypeId GetAssetTypeId() const = 0;
 		virtual void Serialize(const std::string& filePath) {}
 		virtual void Deserialize(const std::string& filePath) {}
 

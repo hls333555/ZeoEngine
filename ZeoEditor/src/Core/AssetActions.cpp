@@ -7,12 +7,12 @@
 
 namespace ZeoEngine {
 
-	void SceneAssetActions::OpenAsset(const std::string& path)
+	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().GetEditor(EditorType::MainEditor)->OpenScene(path);
 	}
 
-	void ParticleAssetActions::OpenAsset(const std::string& path)
+	void ParticleAssetActions::OpenAsset(const std::string& path) const
 	{
 		auto particleAsset = ParticleLibrary::Get().LoadAsset(path);
 		EditorBase* editor = EditorManager::Get().OpenEditor(EditorType::ParticleEditor);

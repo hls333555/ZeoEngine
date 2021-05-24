@@ -1,5 +1,4 @@
-AssetType: ParticleTemplate
-AssetName: Test
+AssetType: 719270048
 PreviewThumbnail: assets\particles\Test.zparticle.png
 MaxParticles: 500
 SubImageSize: [0, 0]

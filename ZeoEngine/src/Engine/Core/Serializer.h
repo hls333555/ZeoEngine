@@ -2,8 +2,8 @@
 
 #include "Engine/GameFramework/Entity.h"
 
+#include <fstream>
 #include <yaml-cpp/yaml.h>
-#include <magic_enum.hpp>
 
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Utils/PlatformUtils.h"
@@ -79,19 +79,17 @@ namespace ZeoEngine {
 	class Serializer
 	{
 	protected:
-		template<typename Func>
-		static void Serialize_t(const std::string& path, AssetType assetType, Func func)
+		template<typename AssetClass, typename Func>
+		static void Serialize_t(const std::string& path, Func func)
 		{
 			YAML::Emitter out;
 
-			auto assetTypeName = magic_enum::enum_name(assetType).data();
 			const std::string assetName = FileUtils::GetNameFromPath(path);
-			ZE_CORE_TRACE("Serializing {0} '{1}'", assetTypeName, assetName);
+			ZE_CORE_TRACE("Serializing {0} '{1}'", AssetType<AssetClass>::Name(), assetName);
 
 			out << YAML::BeginMap;
 			{
-				out << YAML::Key << g_AssetTypeToken << YAML::Value << assetTypeName;
-				out << YAML::Key << g_AssetNameToken << YAML::Value << assetName;
+				out << YAML::Key << g_AssetTypeToken << YAML::Value << AssetType<AssetClass>::Id();
 				func(out);
 			}
 			out << YAML::EndMap;
@@ -100,14 +98,48 @@ namespace ZeoEngine {
 			fout << out.c_str();
 		}
 
-		static std::optional<YAML::Node> PreDeserialize(const std::string& path, AssetType assetType);
+		template<typename AssetClass>
+		static std::optional<YAML::Node> PreDeserialize(const std::string& path)
+		{
+			auto data = YAML::LoadFile(path);
+			auto assetTypeData = data[g_AssetTypeToken];
+			auto typeName = AssetType<AssetClass>::Name();
+			if (!assetTypeData || assetTypeData.as<AssetTypeId>() != AssetType<AssetClass>::Id())
+			{
+				const std::string assetFileName = FileUtils::GetFileNameFromPath(path);
+				ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", assetFileName, typeName);
+				return {};
+			}
+
+			const std::string assetName = FileUtils::GetNameFromPath(path);
+			ZE_CORE_TRACE("Deserializing {0} '{1}'", typeName, assetName);
+			return data;
+		}
 	};
 
 	class AssetSerializer : public Serializer
 	{
 	public:
-		static void Serialize(const std::string& path, AssetType assetType, entt::meta_any instance);
-		static bool Deserialize(const std::string& path, AssetType assetType, entt::meta_any instance);
+		template<typename AssetClass>
+		static void Serialize(const std::string& path, entt::meta_any instance)
+		{
+			Serialize_t<AssetClass>(path, [&](YAML::Emitter& out)
+			{
+				ComponentSerializer cs;
+				cs.Serialize(out, instance);
+			});
+		}
+
+		template<typename AssetClass>
+		static bool Deserialize(const std::string& path, entt::meta_any instance)
+		{
+			auto data = PreDeserialize<AssetClass>(path);
+			if (!data) return false;
+
+			ComponentSerializer cs;
+			cs.Deserialize(*data, instance);
+			return true;
+		}
 	};
 
 	class SceneSerializer : public Serializer

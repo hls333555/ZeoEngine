@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual AssetType GetAssetType() const override { return AssetType::Scene; }
+		virtual AssetTypeId GetAssetTypeId() const override;
 		virtual void Serialize(const std::string& filePath) override;
 		virtual void Deserialize(const std::string& filePath) override;
 

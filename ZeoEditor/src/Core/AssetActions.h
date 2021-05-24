@@ -4,28 +4,28 @@
 
 namespace ZeoEngine {
 
-	class AssetActions
+	class IAssetActions
 	{
 	public:
-		virtual void OpenAsset(const std::string& path) = 0;
+		virtual void OpenAsset(const std::string& path) const = 0;
 	};
 
-	class SceneAssetActions final : public AssetActions
+	class SceneAssetActions final : public IAssetActions
 	{
 	public:
-		virtual void OpenAsset(const std::string& path) override;
+		virtual void OpenAsset(const std::string& path) const override;
 	};
 
-	class Texture2DAssetActions final : public AssetActions
+	class ParticleAssetActions : public IAssetActions
 	{
 	public:
-		virtual void OpenAsset(const std::string& path) override {}
+		virtual void OpenAsset(const std::string& path) const override;
 	};
 
-	class ParticleAssetActions : public AssetActions
+	class Texture2DAssetActions final : public IAssetActions
 	{
 	public:
-		virtual void OpenAsset(const std::string& path) override;
+		virtual void OpenAsset(const std::string& path) const override {}
 	};
 
 }

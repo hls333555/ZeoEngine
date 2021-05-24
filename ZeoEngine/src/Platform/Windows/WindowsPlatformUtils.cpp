@@ -7,10 +7,12 @@
 #include <GLFW/glfw3native.h>
 
 #include "Engine/Core/Application.h"
+#include "Engine/GameFramework/Scene.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::OpenFile(AssetType type)
+	std::optional<std::string> FileDialogs::OpenFile(AssetTypeId typeId)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -19,7 +21,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = GetAssetFilterFromAssetType(type);
+		ofn.lpstrFilter = GetAssetFilterFromAssetType(typeId);
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		if (GetOpenFileNameA(&ofn) == TRUE)
@@ -29,7 +31,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	std::optional<std::string> FileDialogs::SaveFile(AssetType type)
+	std::optional<std::string> FileDialogs::SaveFile(AssetTypeId typeId)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -38,7 +40,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = GetAssetFilterFromAssetType(type);
+		ofn.lpstrFilter = GetAssetFilterFromAssetType(typeId);
 		ofn.nFilterIndex = 1;
 		// Sets the default extension by extracting it from the filter
 		ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;
@@ -50,14 +52,14 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	const char* FileDialogs::GetAssetFilterFromAssetType(AssetType type)
+	const char* FileDialogs::GetAssetFilterFromAssetType(AssetTypeId typeId)
 	{
-		switch (type)
+		switch (typeId)
 		{
-			case AssetType::Scene:
-			case AssetType::ParticleTemplate:	return "Zeo Asset (*.zasset)\0*.zasset";
-			case AssetType::Texture2D:			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
-			default:							return nullptr;
+			case AssetType<Scene>::Id():
+			case AssetType<ParticleTemplate>::Id():	return "Zeo Asset (*.zasset)\0*.zasset";
+			case AssetType<Texture2D>::Id():			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
+			default:									return nullptr;
 		}
 	}
 

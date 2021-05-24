@@ -7,7 +7,7 @@ namespace ZeoEngine {
 
 	const char* g_EngineAssetExtension = ".zasset";
 	const char* g_AssetTypeToken = "AssetType";
-	const char* g_AssetNameToken = "AssetName";
+	AssetTypeId g_InvalidAssetType = -1;
 
 	AssetPath::AssetPath(const char* path)
 		: m_RelativePath(FileUtils::GetRelativePath(path))

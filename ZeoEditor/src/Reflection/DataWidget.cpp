@@ -403,7 +403,7 @@ namespace ZeoEngine {
 			// Pop up file browser to select a texture from disk
 			if (ImGui::Selectable("Browse texture..."))
 			{
-				auto filePath = FileDialogs::OpenFile(AssetType::Texture2D);
+				auto filePath = FileDialogs::OpenFile(AssetType<Texture2D>::Id());
 				if (filePath)
 				{
 					// Add selected texture to the library
@@ -571,7 +571,7 @@ namespace ZeoEngine {
 			// Pop up file browser to select a particle template from disk
 			if (ImGui::Selectable("Browse particle template..."))
 			{
-				auto filePath = FileDialogs::OpenFile(AssetType::ParticleTemplate);
+				auto filePath = FileDialogs::OpenFile(AssetType<ParticleTemplate>::Id());
 				if (filePath)
 				{
 					// Add selected particle template to the library
