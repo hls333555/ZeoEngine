@@ -87,6 +87,7 @@ namespace ZeoEngine {
 					return;
 				}
 				assetSpec->TypeId = *typeId;
+				m_AssetSpecsById[*typeId].emplace_back(assetSpec);
 			}
 			m_PathSpecs[path] = std::move(assetSpec);
 		}

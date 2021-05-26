@@ -72,7 +72,7 @@ namespace ZeoEngine {
 		// Pass in the window data which will be used in the following callbacks
 		// This way, we do not need to capture the m_Data for lambda functions
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
+		SetVSync(false);
 
 		// ---Set GLFW callbacks------------------------------------------------------------------------------------
 

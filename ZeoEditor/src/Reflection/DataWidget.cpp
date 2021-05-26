@@ -7,7 +7,7 @@
 #include "Engine/Utils/PlatformUtils.h"
 #include "Core/EditorManager.h"
 #include "Editors/EditorBase.h"
-#include "Core/AssetManager.h"
+#include "Engine/Core/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -348,13 +348,13 @@ namespace ZeoEngine {
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
+		// TODO: Replace with AssetBrowser
 		Texture2DLibrary& library = Texture2DLibrary::Get();
 		// Texture preview
 		{
-			auto backgroundTexture = library.GetAsset("assets/textures/Checkerboard_Alpha.png");
 			constexpr float texturePreviewWidth = 75.0f;
 			// Draw checkerboard texture as background first
-			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTextureID(),
+			ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
 				ImGui::GetCursorScreenPos(),
 				{ ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
@@ -477,7 +477,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = Texture2DLibrary::Get().LoadAsset("assets/textures/Checkerboard_Alpha.png");
+		m_Buffer = Texture2D::s_DefaultBackgroundTexture;
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -492,152 +492,20 @@ namespace ZeoEngine {
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
-		ParticleLibrary& library = ParticleLibrary::Get();
-		Texture2DLibrary& texture2DLib = Texture2DLibrary::Get();
-		auto backgroundTexture = texture2DLib.GetAsset("assets/textures/Checkerboard_Alpha.png");
-		// Particle template preview
-		{
-			constexpr float pTemplatePreviewWidth = 75.0f;
-			// Draw checkerboard texture as background first
-			ImGui::GetWindowDrawList()->AddImage(backgroundTexture->GetTextureID(),
-				ImGui::GetCursorScreenPos(),
-				{ ImGui::GetCursorScreenPos().x + pTemplatePreviewWidth, ImGui::GetCursorScreenPos().y + pTemplatePreviewWidth },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-			// Draw preview thumbnail on top of that
-			auto thumbnailTexture = m_Buffer && m_Buffer->PreviewThumbnail ? m_Buffer->PreviewThumbnail : backgroundTexture;
-			ImGui::Image(thumbnailTexture->GetTextureID(),
-				{ pTemplatePreviewWidth, pTemplatePreviewWidth },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
-			
-			// If particle template is set...
-			if (m_Buffer)
-			{
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::SetTooltipWithPadding("Double-click to open the particle editor\nRight-click to open the context menu");
-					// Double-click on the preview thumbnail to open the particle editor
-					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-					{
-						AssetManager::Get().OpenAsset(m_Buffer->GetPath());
-					}
-				}
-
-				// Right-click on the preview thumbnail to open the popup menu
-				if (ImGui::BeginPopupContextItemWithPadding("ParticleTemplateOptiones"))
-				{
-					if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
-					{
-						m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().Instance->Resimulate();
-					}
-
-					ImGui::EndPopup();
-				}
-			}
-			
-		}
-
-		ImGui::SameLine();
-
-		if (m_DataSpec.bIsSeqElement)
-		{
-			// Make sure browser widget + dropdown button can reach desired size
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
-		}
-		else
-		{
-			// Align width to the right side
-			ImGui::SetNextItemWidth(-1.0f);
-		}
-
+		// Make sure browser widget + dropdown button can reach desired size
+		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
 		// Particle template browser
-		if (ImGui::BeginCombo("##ParticleTemplate", m_Buffer ? m_Buffer->GetName().c_str() : nullptr))
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, [this]()
 		{
-			bool bIsBufferChanged = false;
-
-			// Clear current selection
-			if (ImGui::Selectable("Clear"))
+			if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 			{
-				bIsBufferChanged = static_cast<bool>(m_Buffer);
-				if (bIsBufferChanged)
-				{
-					m_Buffer = {};
-					SetValueToData();
-				}
+				m_DataSpec.ComponentInstance.cast<ParticleSystemComponent>().Instance->Resimulate();
 			}
-
-			ImGui::Separator();
-
-			// Pop up file browser to select a particle template from disk
-			if (ImGui::Selectable("Browse particle template..."))
-			{
-				auto filePath = FileDialogs::OpenFile(AssetType<ParticleTemplate>::Id());
-				if (filePath)
-				{
-					// Add selected particle template to the library
-					Asset<ParticleTemplate> loadedTemplate = library.LoadAsset(*filePath);
-					bIsBufferChanged = loadedTemplate != m_Buffer;
-					if (bIsBufferChanged)
-					{
-						m_Buffer = loadedTemplate;
-						SetValueToData();
-					}
-				}
-			}
-
-			ImGui::Separator();
-
-			m_Filter.Draw("##ParticleTemplateAssetFilter", "Search particle templates");
-
-			// List all loaded templates from ParticleLibrary
-			library.ForEach([&](const entt::id_type id, const Asset<ParticleTemplate>& pTemplate)
-			{
-				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(pTemplate->GetName().c_str()))
-				{
-					// Push particle template path id
-					ImGui::PushID(id);
-					{
-						const float pTemplateThumbnailWidth = 30.0f;
-						bool bIsSelected = ImGui::Selectable("##ParticleTemplateDropdownThumbnail", false, 0, ImVec2(0.0f, pTemplateThumbnailWidth));
-						// Display particle template path tooltip for drop-down item
-						if (ImGui::IsItemHovered())
-						{
-							ImGui::SetTooltipWithPadding("%s", pTemplate->GetPath().c_str());
-						}
-
-						ImGui::SameLine();
-
-						// Draw particle template thumbnail
-						auto thumbnailTexture = pTemplate && pTemplate->PreviewThumbnail ? pTemplate->PreviewThumbnail : backgroundTexture;
-						ImGui::Image(thumbnailTexture->GetTextureID(),
-							ImVec2(pTemplateThumbnailWidth, pTemplateThumbnailWidth),
-							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-
-						ImGui::SameLine();
-
-						// Display particle template name
-						ImGui::Text(pTemplate->GetName().c_str());
-						if (bIsSelected)
-						{
-							bIsBufferChanged = pTemplate != m_Buffer;
-							if (bIsBufferChanged)
-							{
-								m_Buffer = pTemplate;
-								SetValueToData();
-							}
-						}
-					}
-					ImGui::PopID();
-				}
-			});
-
-			ImGui::EndCombo();
-		}
-
-		// Display particle template path tooltip for current selection
-		if (m_Buffer && ImGui::IsItemHovered())
+		});
+		if (bIsBufferChanged)
 		{
-			ImGui::SetTooltipWithPadding("%s", m_Buffer->GetPath().c_str());
+			m_Buffer = retSpec ? ParticleLibrary::Get().LoadAsset(retSpec->Path) : Asset<ParticleTemplate>{};
+			SetValueToData();
 		}
 
 		PostDraw();

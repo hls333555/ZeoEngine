@@ -49,6 +49,20 @@ namespace ZeoEngine {
 		return std::filesystem::create_directory(directory);
 	}
 
+	void PathUtils::CreateEmptyAsset(AssetTypeId typeId, const std::string& path)
+	{
+		YAML::Emitter out;
+
+		out << YAML::BeginMap;
+		{
+			out << YAML::Key << g_AssetTypeToken << YAML::Value << typeId;
+		}
+		out << YAML::EndMap;
+
+		std::ofstream fout(path);
+		fout << out.c_str();
+	}
+
 	void PathUtils::RenamePath(const std::string& oldPath, const std::string& newPath)
 	{
 		std::filesystem::rename(oldPath, newPath);

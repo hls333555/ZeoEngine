@@ -4,6 +4,7 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -30,6 +31,7 @@ namespace ZeoEngine {
 		using PathSpec::PathSpec;
 		
 		AssetTypeId TypeId;
+		Ref<Texture2D> ThumbnailTexture;
 	};
 
 	class AssetRegistry
@@ -90,6 +92,18 @@ namespace ZeoEngine {
 			}
 		}
 
+		template<typename Func>
+		void ForEachAssetByTypeId(AssetTypeId typeId, Func func)
+		{
+			if (auto it = m_AssetSpecsById.find(typeId); it != m_AssetSpecsById.cend())
+			{
+				for (const auto& assetSpec : it->second)
+				{
+					func(assetSpec);
+				}
+			}
+		}
+
 		void OnPathCreated(const std::string& path, bool bIsAsset);
 		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
@@ -127,6 +141,8 @@ namespace ZeoEngine {
 		std::vector<std::pair<std::string, std::vector<std::string>>> m_PathTree;
 		/** Map from path string to path spec */
 		std::unordered_map<std::string, Ref<PathSpec>> m_PathSpecs;
+		/** Map from asset type id to list of asset spec of this type */
+		std::unordered_map<AssetTypeId, std::vector<Ref<AssetSpec>>> m_AssetSpecsById;
 	};
 
 }

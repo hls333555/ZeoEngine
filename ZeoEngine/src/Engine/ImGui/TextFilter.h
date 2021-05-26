@@ -40,6 +40,7 @@ namespace ZeoEngine {
 
 		TextFilter(const char* default_filter = "", TextFilterMode default_filter_mode = TextFilterMode_And);
 		bool Draw(const char* label = "Filter (inc -exc)", const char* hint = "Search", float width = 0.0f);  // Helper calling InputText+Build
+		void DrawEmptyText();
 		bool PassFilter(const char* text, const char* text_end = NULL) const;
 		void Build();
 		void Clear() { InputBuf[0] = 0; Build(); }

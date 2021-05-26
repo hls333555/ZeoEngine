@@ -56,6 +56,13 @@ namespace ZeoEngine {
 		return value_changed;
 	}
 
+	void TextFilter::DrawEmptyText()
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+		ImGui::TextCentered("There is nothing to display -_-");
+		ImGui::PopStyleColor();
+	}
+
 	static void AddWordToTextRange(const char* begin, const char* end, ImVector<TextFilter::TextRange>* out, char minWordSize)
 	{
 		if (*begin == '-')

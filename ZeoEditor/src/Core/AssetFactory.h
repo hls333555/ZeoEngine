@@ -12,19 +12,14 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeIcon() const = 0;
 		virtual const char* GetAssetTypeName() const = 0;
-		virtual void CreateAsset(const std::string& path) = 0;
+		virtual bool ShouldShowInContextMenu() const = 0;
+		virtual void CreateAsset(AssetTypeId typeId, const std::string& path) = 0;
 	};
 
 	class AssetFactoryBase : public IAssetFactory
 	{
 	public:
-		virtual void CreateAsset(const std::string& path) override;
-		const char* GetNormalizedAssetTypeName() const;
-
-		void SetAssetType(AssetTypeId typeId) { m_AssetType = typeId; }
-
-	private:
-		AssetTypeId m_AssetType;
+		virtual void CreateAsset(AssetTypeId typeId, const std::string& path) override;
 	};
 
 	class SceneAssetFactory : public AssetFactoryBase
@@ -32,6 +27,7 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeIcon() const override { return ICON_FA_MOUNTAIN; }
 		virtual const char* GetAssetTypeName() const override { return "Scene"; }
+		virtual bool ShouldShowInContextMenu() const override { return true; }
 	};
 
 	class ParticleTemplateAssetFactory : public AssetFactoryBase
@@ -39,6 +35,7 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeIcon() const override { return ICON_FA_FIRE_ALT; }
 		virtual const char* GetAssetTypeName() const override { return "Particle Template"; }
+		virtual bool ShouldShowInContextMenu() const override { return true; }
 	};
 
 	class Texture2DAssetFactory : public AssetFactoryBase
@@ -46,6 +43,7 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeIcon() const override { return ICON_FA_IMAGE; }
 		virtual const char* GetAssetTypeName() const override { return "Texture2D"; }
+		virtual bool ShouldShowInContextMenu() const override { return false; }
 	};
 
 }

@@ -18,6 +18,7 @@
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
 #include "Engine/ImGui/TextFilter.h"
+#include "Reflection/AssetBrowser.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
@@ -328,7 +329,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		TextFilter m_Filter;
+		AssetBrowser m_Browser{ AssetType<ParticleTemplate>::Id() };
 	};
 
 	class ContainerWidget : public DataWidget

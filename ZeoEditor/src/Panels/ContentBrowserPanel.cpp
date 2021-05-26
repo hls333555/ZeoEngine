@@ -18,14 +18,37 @@
 
 namespace ZeoEngine {
 
+	namespace Utils {
+	
+		static const char* GetFormatedAssetTypeName(const char* typeName)
+		{
+			if (!typeName) return nullptr;
+
+			char* newName = new char[strlen(typeName) + 1];
+			strcpy_s(newName, strlen(typeName) + 1, typeName);
+			int32_t i = 0, j = 0;
+			for (; newName[i] != '\0'; ++i)
+			{
+				if (newName[i] != ' ')
+				{
+					newName[j++] = newName[i];
+				}
+				else if (newName[i] != '\0')
+				{
+					newName[i + 1] = std::toupper(newName[i + 1]);
+				}
+			}
+
+			newName[j] = '\0';
+
+			return newName;
+		}
+
+	}
+
 	void ContentBrowserPanel::OnAttach()
 	{
 		m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
-
-		AssetRegistry::Get().ConstructPathTree();
-		
-		AssetManager::Get().RegisterAssetFactory(AssetType<Scene>::Id(), CreateRef<SceneAssetFactory>());
-		AssetManager::Get().RegisterAssetFactory(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleTemplateAssetFactory>());
 	}
 
 	void ContentBrowserPanel::ProcessRender()
@@ -289,9 +312,7 @@ namespace ZeoEngine {
 
 		if (bIsFilteredEmpty)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-			ImGui::TextCentered("There is nothing to display -_-");
-			ImGui::PopStyleColor();
+			m_Filter.DrawEmptyText();
 		}
 	}
 
@@ -310,8 +331,10 @@ namespace ZeoEngine {
 
 			ImGui::Separator();
 
-			AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<AssetFactoryBase>& factory)
+			AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
 			{
+				if (!factory->ShouldShowInContextMenu()) return;
+
 				char name[MAX_PATH_SIZE];
 				strcpy_s(name, factory->GetAssetTypeIcon());
 				strcat_s(name, " ");
@@ -319,7 +342,7 @@ namespace ZeoEngine {
 				if (ImGui::MenuItem(name))
 				{
 					char baseName[MAX_PATH_SIZE] = "New";
-					strcat_s(baseName, factory->GetNormalizedAssetTypeName());
+					strcat_s(baseName, Utils::GetFormatedAssetTypeName(factory->GetAssetTypeName()));
 					std::string newPath = GetAvailableNewPathName(baseName, true);
 					RequestPathCreation(newPath, true);
 					AssetRegistry::Get().GetPathSpec<AssetSpec>(newPath)->TypeId = typeId;
@@ -367,6 +390,7 @@ namespace ZeoEngine {
 			strcpy_s(name, icon);
 			if (!bPathNeedsRenaming)
 			{
+				strcat_s(name, " ");
 				strcat_s(name, pathName);
 			}
 			else

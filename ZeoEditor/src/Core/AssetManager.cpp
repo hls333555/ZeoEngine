@@ -12,9 +12,18 @@ namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
+		RegisterAssetFactory(AssetType<Scene>::Id(), CreateRef<SceneAssetFactory>());
+		RegisterAssetFactory(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleTemplateAssetFactory>());
+		RegisterAssetFactory(AssetType<Texture2D>::Id(), CreateRef<Texture2DAssetFactory>());
+
 		RegisterAssetActions(AssetType<Scene>::Id(), CreateRef<SceneAssetActions>());
 		RegisterAssetActions(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(AssetType<Texture2D>::Id(), CreateRef<Texture2DAssetActions>());
+	}
+
+	bool AssetManager::RegisterAssetFactory(AssetTypeId typeId, Ref<IAssetFactory> factory)
+	{
+		return m_AssetFactories.insert(std::make_pair(typeId, factory)).second;
 	}
 
 	bool AssetManager::RegisterAssetActions(AssetTypeId typeId, Ref<IAssetActions> actions)
@@ -22,18 +31,12 @@ namespace ZeoEngine {
 		return m_AssetActions.insert(std::make_pair(typeId, actions)).second;
 	}
 
-	bool AssetManager::RegisterAssetFactory(AssetTypeId typeId, Ref<AssetFactoryBase> factory)
-	{
-		factory->SetAssetType(typeId);
-		return m_AssetFactories.insert(std::make_pair(typeId, factory)).second;
-	}
-
 	void AssetManager::CreateAsset(AssetTypeId typeId, const std::string& path) const
 	{
 		auto it = m_AssetFactories.find(typeId);
 		if (it == m_AssetFactories.end()) return;
 
-		it->second->CreateAsset(path);
+		it->second->CreateAsset(typeId, path);
 	}
 
 	bool AssetManager::OpenAsset(const std::string& path)
@@ -50,9 +53,9 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	Ref<IAssetActions> AssetManager::GetAssetActionsByAssetType(AssetTypeId typeId)
+	Ref<IAssetFactory> AssetManager::GetAssetFactoryByAssetType(AssetTypeId typeId)
 	{
-		if (auto it = m_AssetActions.find(typeId); it != m_AssetActions.cend())
+		if (auto it = m_AssetFactories.find(typeId); it != m_AssetFactories.cend())
 		{
 			return it->second;
 		}
@@ -60,9 +63,9 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	Ref<AssetFactoryBase> AssetManager::GetAssetFactoryByAssetType(AssetTypeId typeId)
+	Ref<IAssetActions> AssetManager::GetAssetActionsByAssetType(AssetTypeId typeId)
 	{
-		if (auto it = m_AssetFactories.find(typeId); it != m_AssetFactories.cend())
+		if (auto it = m_AssetActions.find(typeId); it != m_AssetActions.cend())
 		{
 			return it->second;
 		}

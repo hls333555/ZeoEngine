@@ -38,6 +38,7 @@ namespace ZeoEngine {
 		/** Used for loading a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path);
 
+		static Ref<Texture2D> s_DefaultBackgroundTexture;
 	};
 
 	struct Texture2DLoader final : AssetLoader<Texture2DLoader, Texture2D>

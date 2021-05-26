@@ -29,6 +29,8 @@ namespace ZeoEngine {
 
 		/** Create a directory and returns true if succeeded. */
 		static bool CreateDirectory(const std::string& directory);
+		/** Create an empty asset of specified type. */
+		static void CreateEmptyAsset(AssetTypeId typeId, const std::string& path);
 		/** Rename a path. */
 		static void RenamePath(const std::string& oldPath, const std::string& newPath);
 		/** Remove a path (and its sub-paths). Returns number of paths removed. */

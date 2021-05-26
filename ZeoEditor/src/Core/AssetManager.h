@@ -7,8 +7,8 @@
 
 namespace ZeoEngine {
 
+	class IAssetFactory;
 	class IAssetActions;
-	class AssetFactoryBase;
 
 	class AssetManager
 	{
@@ -21,18 +21,18 @@ namespace ZeoEngine {
 			return instance;
 		}
 
+		/** Register asset factory. Returns true if the registration succeeded, false otherwise. */
+		bool RegisterAssetFactory(AssetTypeId typeId, Ref<IAssetFactory> factory);
 		/** Register asset actions. Returns true if the registration succeeded, false otherwise. */
 		bool RegisterAssetActions(AssetTypeId typeId, Ref<IAssetActions> actions);
-		/** Register asset factory. Returns true if the registration succeeded, false otherwise. */
-		bool RegisterAssetFactory(AssetTypeId typeId, Ref<AssetFactoryBase> factory);
 
 		/** Construct a new asset. */
 		void CreateAsset(AssetTypeId typeId, const std::string& path) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path);
 
+		Ref<IAssetFactory> GetAssetFactoryByAssetType(AssetTypeId typeId);
 		Ref<IAssetActions> GetAssetActionsByAssetType(AssetTypeId typeId);
-		Ref<AssetFactoryBase> GetAssetFactoryByAssetType(AssetTypeId typeId);
 
 		template <typename Func>
 		void ForEachAssetFactory(Func func) const
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 				{
 					func(curr->first);
 				}
-				else if constexpr (std::is_invocable_v<Func, Ref<AssetFactoryBase>>)
+				else if constexpr (std::is_invocable_v<Func, Ref<IAssetFactory>>)
 				{
 					func(curr->second);
 				}
@@ -68,10 +68,10 @@ namespace ZeoEngine {
 		AssetManager& operator=(const AssetManager&) = delete;
 
 	private:
-		/** Map from asset type hash to asset actions */
+		/** Map from asset type id to asset factory */
+		std::unordered_map<AssetTypeId, Ref<IAssetFactory>> m_AssetFactories;
+		/** Map from asset type id to asset actions */
 		std::unordered_map<AssetTypeId, Ref<IAssetActions>> m_AssetActions;
-		/** Map from asset type hash to asset factory */
-		std::unordered_map<AssetTypeId, Ref<AssetFactoryBase>> m_AssetFactories;
 	};
 
 }
