@@ -201,7 +201,7 @@ namespace ZeoEngine {
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
 
-		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) = 0;
+		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
 
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
 	};

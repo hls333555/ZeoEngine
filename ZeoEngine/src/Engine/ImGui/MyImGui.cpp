@@ -8,6 +8,7 @@ namespace ImGui {
 
 	static ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 	static ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
+	static ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs) { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
 
 	void TextCentered(const char* fmt, ...)
 	{
@@ -234,7 +235,7 @@ namespace ImGui {
 		ImVec2 end_pos = screen_pos + GetItemRectSize();
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;
-		ImU32 color = GetColorU32(IsItemActive() || IsItemHovered() ? colors[ImGuiCol_ButtonActive] : colors[ImGuiCol_Button]);
+		ImU32 color = GetColorU32(IsItemActive() ? colors[ImGuiCol_SeparatorActive] : (IsItemHovered() ? colors[ImGuiCol_SeparatorHovered] : colors[ImGuiCol_Separator]));
 		window->DrawList->AddRectFilled(screen_pos, end_pos, color);
 		if (IsItemHovered())
 		{

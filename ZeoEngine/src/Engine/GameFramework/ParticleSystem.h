@@ -93,11 +93,6 @@ namespace ZeoEngine {
 
 		void ResimulateAllParticleSystemInstances();
 
-		void UpdatePreviewThumbnail(const std::string& imagePath)
-		{
-			PreviewThumbnail = Texture2D::Create(imagePath);
-		}
-
 	private:
 		void Deserialize();
 
@@ -141,8 +136,6 @@ namespace ZeoEngine {
 		glm::vec2 SubImageSize{ 0.0f };
 
 		uint32_t MaxParticles = 500;
-
-		Asset<Texture2D> PreviewThumbnail;
 
 	private:
 		std::string Path;

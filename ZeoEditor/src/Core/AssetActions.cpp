@@ -1,4 +1,4 @@
-#include "Core/AssetActions.h"
+#include "Engine/Core/AssetActions.h"
 
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Core/EditorManager.h"
@@ -16,6 +16,7 @@ namespace ZeoEngine {
 	{
 		auto particleAsset = ParticleLibrary::Get().LoadAsset(path);
 		EditorBase* editor = EditorManager::Get().OpenEditor(EditorType::ParticleEditor);
+		editor->GetScene()->SetPath(path);
 		editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
 		{
 			particlePreviewComp.Template = particleAsset;

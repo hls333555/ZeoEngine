@@ -67,7 +67,7 @@ namespace ZeoEngine {
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
 
-		virtual void Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth) override;
+		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) override;
 
 	private:
 		FrameBufferSpec m_Spec;

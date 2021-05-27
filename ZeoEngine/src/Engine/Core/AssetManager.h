@@ -9,6 +9,7 @@ namespace ZeoEngine {
 
 	class IAssetFactory;
 	class IAssetActions;
+	class Texture2D;
 
 	class AssetManager
 	{
@@ -59,8 +60,12 @@ namespace ZeoEngine {
 			}
 		}
 
+		Ref<Texture2D> GetAssetTypeIcon(AssetTypeId typeId) const;
+		Ref<Texture2D> GetFolderIcon() const { return m_FolderIcon; }
+
 	private:
 		void Init();
+		void LoadAssetTypeIcons();
 
 	protected:
 		AssetManager() = default;
@@ -72,6 +77,10 @@ namespace ZeoEngine {
 		std::unordered_map<AssetTypeId, Ref<IAssetFactory>> m_AssetFactories;
 		/** Map from asset type id to asset actions */
 		std::unordered_map<AssetTypeId, Ref<IAssetActions>> m_AssetActions;
+
+		/** Map from asset type id to its type icon texture */
+		std::unordered_map<AssetTypeId, Ref<Texture2D>> m_AssetTypeIcons;
+		Ref<Texture2D> m_FolderIcon;
 	};
 
 }

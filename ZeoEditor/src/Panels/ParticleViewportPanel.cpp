@@ -43,13 +43,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
-	{
-		SceneViewportPanel::Snapshot(imageName, imageWidth);
-
-		m_PreviewParticleEntity.GetComponent<ParticleSystemPreviewComponent>().Template->UpdatePreviewThumbnail(imageName);
-	}
-
 	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
 	{
 		m_PreviewParticleEntity = GetOwningEditor()->GetScene()->CreateEntity("Preview Particle", true);

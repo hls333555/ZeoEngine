@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		Texture2D::s_DefaultBackgroundTexture = Texture2D::Create("assets/textures/Checkerboard_Alpha.png");
+		Texture2D::s_DefaultBackgroundTexture = Texture2D::Create("assets/editor/textures/DefaultBackground.png", true);
 	}
 
 }

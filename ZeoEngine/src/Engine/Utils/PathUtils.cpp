@@ -44,9 +44,19 @@ namespace ZeoEngine {
 		return (path / appendPath).string();
 	}
 
+	bool PathUtils::DoesPathExist(const std::string& path)
+	{
+		return std::filesystem::exists(path);
+	}
+
 	bool PathUtils::CreateDirectory(const std::string& directory)
 	{
 		return std::filesystem::create_directory(directory);
+	}
+
+	bool PathUtils::CreateDirectories(const std::string& directory)
+	{
+		return std::filesystem::create_directories(directory);
 	}
 
 	void PathUtils::CreateEmptyAsset(AssetTypeId typeId, const std::string& path)

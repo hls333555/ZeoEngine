@@ -53,6 +53,9 @@ namespace ZeoEngine {
 		void SaveScene();
 		void SaveSceneAs();
 
+		bool GetPendingClearColorTransparent() const { return m_bPendingClearColorTransparent; }
+		void SetPendingClearColorTransparent(bool bValue) { m_bPendingClearColorTransparent  = bValue; }
+
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
 
 	private:
@@ -93,6 +96,8 @@ namespace ZeoEngine {
 		DockspaceBase* m_Dockspace = nullptr;
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;
+
+		bool m_bPendingClearColorTransparent = false;
 
 		bool m_bBlockSceneEvents = true;
 

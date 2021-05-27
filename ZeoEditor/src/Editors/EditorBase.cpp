@@ -45,7 +45,12 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
 
-				RenderCommand::SetClearColor({ 0.25f, 0.25f, 0.25f, 1.0f });
+				glm::vec4 clearColor = { 0.25f, 0.25f, 0.25f, 1.0f };
+				if (m_bPendingClearColorTransparent)
+				{
+					clearColor.a = 0.0f;
+				}
+				RenderCommand::SetClearColor(clearColor);
 				RenderCommand::Clear();
 				// Clear entity ID attachment to -1
 				m_FBO->ClearAttachment(1, -1);

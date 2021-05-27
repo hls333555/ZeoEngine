@@ -13,11 +13,6 @@ namespace ZeoEngine {
 		static const char* GetEditorName(EditorType editorType);
 		static const char* GetPanelName(PanelType panelType);
 
-		template<typename T>
-		static const char* GetNameFromEnumType(T type)
-		{
-			return magic_enum::enum_name(type).data();
-		}
 	};
 	
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <optional>
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
@@ -29,13 +29,21 @@ namespace ZeoEngine {
 	struct AssetSpec : public PathSpec
 	{
 		using PathSpec::PathSpec;
+
+		void UpdateThumbnail(const std::string& path)
+		{
+			ThumbnailTexture = Texture2D::Create(path);
+		}
 		
 		AssetTypeId TypeId;
-		Ref<Texture2D> ThumbnailTexture;
+		Ref<Texture2D> ThumbnailTexture; // Can be null if no capture is performed
 	};
 
 	class AssetRegistry
 	{
+		friend class EditorLayer;
+		friend class ThumbnailManager;
+
 	public:
 		static AssetRegistry& Get()
 		{
@@ -45,8 +53,6 @@ namespace ZeoEngine {
 
 		static constexpr const char* GetAssetRootDirectory() { return "assets"; }
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
-
-		void ConstructPathTree();
 
 		template<typename T = PathSpec>
 		Ref<T> GetPathSpec(const std::string& path) const
@@ -104,23 +110,32 @@ namespace ZeoEngine {
 			}
 		}
 
-		void OnPathCreated(const std::string& path, bool bIsAsset);
+		void OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
 		void OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset);
 
 	private:
+		void Init();
+
+		void ConstructPathTree();
 		void ConstructPathTreeRecursively(const std::string& baseDirectory);
 
 		/**
-		 * Add a path to the path tree.
+		 * Add a directory to the path tree.
 		 * 
 		 * @param baseDirectory - Parent path
 		 * @param path - Path to add
-		 * @param bIsAsset - This path is an asset rather than a directory
-		 * @param bIsTemp - Indicates this function is called during path creation. The real path is not constructed yet.
 		 */
-		void AddPathToTree(const std::string& baseDirectory, const std::string& path, bool bIsAsset, bool bIsTemp);
+		void AddPathToTree(const std::string& baseDirectory, const std::string& path);
+		/**
+		 * Add an asset to the path tree.
+		 * 
+		 * @param baseDirectory - Parent path
+		 * @param path - Path to add
+		 * @param optionalAssetTypeId - If not set, type id is retrieved from file
+		 */
+		void AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		void RemovePathFromTree(const std::string& baseDirectory, const std::string& path);
 		void RenamePathInTree(const std::string& baseDirectory, const std::string& oldPath, const std::string& newPath, bool bIsAsset);
 

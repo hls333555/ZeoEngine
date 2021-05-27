@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path)
+	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps)
 	{
 		const auto canonicalPath = PathUtils::GetRelativePath(path);
 		switch (Renderer::GetAPI())
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(canonicalPath);
+				return CreateRef<OpenGLTexture2D>(canonicalPath, bAutoGenerateMipmaps);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;

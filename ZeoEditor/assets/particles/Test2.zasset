@@ -1,5 +1,4 @@
 AssetType: 719270048
-PreviewThumbnail: assets\particles\Test2.zparticle.png
 MaxParticles: 500
 SubImageSize: [4, 2]
 Texture: ..\Sandbox\assets\textures\Explosion_2x4.png

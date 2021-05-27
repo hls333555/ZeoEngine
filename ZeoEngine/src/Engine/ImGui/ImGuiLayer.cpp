@@ -114,14 +114,14 @@ namespace ZeoEngine {
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Load full Chinese characters
-		io.Fonts->AddFontFromFileTTF("assets/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+		io.Fonts->AddFontFromFileTTF("assets/editor/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
 
 		ImFontConfig config;
 		config.MergeMode = true; // Merge into first font
 		config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
 		static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 		// Load font awesome 5 icons
-		io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_FAS, 13.0f, &config, iconRanges);
+		io.Fonts->AddFontFromFileTTF("assets/editor/fonts/" FONT_ICON_FILE_NAME_FAS, 13.0f, &config, iconRanges);
 
 		io.Fonts->Build();
 	}
@@ -129,7 +129,8 @@ namespace ZeoEngine {
 	void ImGuiLayer::SetDarkThemeColors()
 	{
 		auto& colors = ImGui::GetStyle().Colors;
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.13f, 0.135f, 0.14f, 1.0f };
+		colors[ImGuiCol_PopupBg] = ImVec4{ 0.12f, 0.12f, 0.12f, 0.95f };
 
 		// Headers
 		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };

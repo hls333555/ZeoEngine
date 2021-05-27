@@ -27,8 +27,13 @@ namespace ZeoEngine {
 		/** Append a path to the base path. Returns the appended path. */
 		[[nodiscard]] static std::string AppendPath(const std::string& basePath, const std::string& appendPath);
 
-		/** Create a directory and returns true if succeeded. */
+		/** Returns true if path exists. */
+		static bool DoesPathExist(const std::string& path);
+
+		/** Create a direct directory and returns true if succeeded. */
 		static bool CreateDirectory(const std::string& directory);
+		/** Create a directory recursively and returns true if succeeded. */
+		static bool CreateDirectories(const std::string& directory);
 		/** Create an empty asset of specified type. */
 		static void CreateEmptyAsset(AssetTypeId typeId, const std::string& path);
 		/** Rename a path. */

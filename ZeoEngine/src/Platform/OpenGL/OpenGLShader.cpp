@@ -66,9 +66,9 @@ namespace ZeoEngine {
 		static void CreateCacheDirectoryIfNeeded()
 		{
 			std::string cacheDirectory = GetCacheDirectory();
-			if (!std::filesystem::exists(cacheDirectory))
+			if (!PathUtils::DoesPathExist(cacheDirectory))
 			{
-				std::filesystem::create_directories(cacheDirectory);
+				PathUtils::CreateDirectories(cacheDirectory);
 			}
 		}
 

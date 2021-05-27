@@ -6,7 +6,8 @@
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
-#include "Core/AssetManager.h"
+#include "Engine/Core/AssetManager.h"
+#include "Engine/Core/AssetFactory.h"
 
 namespace ZeoEngine {
 
@@ -33,27 +34,23 @@ namespace ZeoEngine {
 			{
 				// Asset preview
 				{
-					static constexpr float assetPreviewWidth = 75.0f;
-					auto thumbnailTexture = retSpec && retSpec->ThumbnailTexture ? retSpec->ThumbnailTexture : Ref<Texture2D>{};
-					// For transparent texture
-					if (thumbnailTexture && thumbnailTexture->HasAlpha())
-					{
-						// Draw background first
-						ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-							{ ImGui::GetCursorScreenPos().x + 1.0f, ImGui::GetCursorScreenPos().y + 1.0f },
-							{ ImGui::GetCursorScreenPos().x + assetPreviewWidth + 1.0f, ImGui::GetCursorScreenPos().y + assetPreviewWidth + 1.0f },
-							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-					}
-					
-					// Draw preview thumbnail or default texture
-					ImGui::Image(thumbnailTexture ? thumbnailTexture->GetTextureID() : Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-						{ assetPreviewWidth, assetPreviewWidth },
-						{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-						{ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.2f, 0.2f, 0.2f, 1.0f });
+					static const float assetPreviewWidth = ImGui::GetStyle().Alpha * 64.0f;
 
 					// If asset is set...
 					if (retSpec)
 					{
+						// Draw background first
+						ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+							{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
+							{ ImGui::GetCursorScreenPos().x + assetPreviewWidth, ImGui::GetCursorScreenPos().y + assetPreviewWidth },
+							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+						auto thumbnailTexture = retSpec->ThumbnailTexture ? retSpec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(TypeId);
+						// Draw asset thumbnail or default icon
+						ImGui::Image(thumbnailTexture->GetTextureID(),
+							{ assetPreviewWidth, assetPreviewWidth },
+							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
 						if (ImGui::IsItemHovered())
 						{
 							// Double-click on the preview thumbnail to open the asset editor
@@ -71,7 +68,12 @@ namespace ZeoEngine {
 							ImGui::EndPopup();
 						}
 					}
-
+					else
+					{
+						ImGui::Image(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+							{ assetPreviewWidth, assetPreviewWidth },
+							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+					}
 				}
 
 				ImGui::SameLine();
@@ -104,8 +106,8 @@ namespace ZeoEngine {
 							// Push asset path as id
 							ImGui::PushID(spec->Path.c_str());
 							{
-								static constexpr float assetThumbnailWidth = 30.0f;
-								bool bIsSelected = ImGui::Selectable("##AssetThumbnail", false, 0, ImVec2(0.0f, assetThumbnailWidth));
+								static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+								bool bIsSelected = ImGui::Selectable("##AssetSelectable", false, 0, ImVec2(0.0f, assetThumbnailWidth));
 								// Display asset path tooltip for drop-down asset
 								if (ImGui::IsItemHovered())
 								{
@@ -114,18 +116,37 @@ namespace ZeoEngine {
 
 								ImGui::SameLine();
 
-								if (spec->ThumbnailTexture)
+								bool bThumbnailExists = static_cast<bool>(spec->ThumbnailTexture);
+								if (bThumbnailExists)
 								{
-									// Draw asset thumbnail
-									ImGui::Image(spec->ThumbnailTexture->GetTextureID(),
-										ImVec2(assetThumbnailWidth, assetThumbnailWidth),
-										ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+									// Draw background first if thumbnail exists
+									ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+										{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
+										{ ImGui::GetCursorScreenPos().x + assetThumbnailWidth, ImGui::GetCursorScreenPos().y + assetThumbnailWidth },
+										{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 								}
+
+								auto thumbnailTexture = bThumbnailExists ? spec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(TypeId);
+								// Draw asset thumbnail or default icon
+								ImGui::Image(thumbnailTexture->GetTextureID(),
+									{ assetThumbnailWidth, assetThumbnailWidth },
+									{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 								ImGui::SameLine();
 
-								// Display asset name
-								ImGui::Text(spec->PathName.c_str());
+								// Align text
+								ImGui::BeginGroup();
+								{
+									// Make two lines of text more compact
+									ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+									// Display asset name
+									ImGui::Text(spec->PathName.c_str());
+									// Display asset type name
+									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(TypeId)->GetAssetTypeName());
+									ImGui::PopStyleVar();
+								}
+								ImGui::EndGroup();
+
 								if (bIsSelected)
 								{
 									bIsValueChanged = spec != retSpec;

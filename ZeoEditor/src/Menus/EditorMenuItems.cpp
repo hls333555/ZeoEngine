@@ -249,8 +249,7 @@ namespace ZeoEngine {
 		if (filePath.empty()) return;
 
 		SceneViewportPanel* viewportPanel = GetOwningDockspace()->GetPanel<SceneViewportPanel>(GetOwningDockspace()->GetViewportPanelType());
-		std::string snapshotName = filePath + ".png";
-		viewportPanel->Snapshot(snapshotName, 256);
+		viewportPanel->Snapshot(filePath, 256);
 	}
 
 }

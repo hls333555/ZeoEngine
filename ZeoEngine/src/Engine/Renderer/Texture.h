@@ -36,7 +36,7 @@ namespace ZeoEngine {
 		/** Used for constructing a texture from memory. */
 		static Ref<Texture2D> Create(uint32_t width, uint32_t height);
 		/** Used for loading a texture from disk. */
-		static Ref<Texture2D> Create(const std::string& path);
+		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false);
 
 		static Ref<Texture2D> s_DefaultBackgroundTexture;
 	};

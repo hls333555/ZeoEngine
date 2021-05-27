@@ -2,6 +2,8 @@
 
 #include "Panels/PanelBase.h"
 
+#include <optional>
+
 #include "Engine/Core/Core.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
@@ -40,14 +42,12 @@ namespace ZeoEngine {
 		/** Try to find an available path name in current directory by appending suffix to it. */
 		std::string GetAvailableNewPathName(const char* baseName, bool bIsAsset);
 
-		void DrawSelectablePath(const char* name, const std::string& path);
-		void DrawDirectory(const std::string& path);
-		void DrawAsset(const std::string& path);
+		void DrawSelectablePath(const std::string& path);
 
 		void HandleRightColumnDirectoryDoubleClicked(const std::string& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::string& path);
 
-		void RequestPathCreation(const std::string& path, bool bIsAsset);
+		void RequestPathCreation(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		void ProcessPathDeletion(const std::string& path);
 		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, const Ref<AssetSpec>& assetSpec);
 

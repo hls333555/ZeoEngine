@@ -4,12 +4,11 @@
 
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Assert.h"
-#include "Core/AssetManager.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Utils/EditorUtils.h"
-#include "Core/AssetManager.h"
-#include "Core/AssetFactory.h"
-#include "Core/AssetActions.h"
+#include "Engine/Core/AssetManager.h"
+#include "Engine/Core/AssetFactory.h"
+#include "Engine/Core/AssetActions.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
@@ -273,15 +272,7 @@ namespace ZeoEngine {
 		ar.ForEachPathInDirectory(m_SelectedDirectory, [&](const std::string& path)
 		{
 			bIsDirectoryEmpty = false;
-			auto assetSpec = ar.GetPathSpec<AssetSpec>(path);
-			if (assetSpec)
-			{
-				DrawAsset(path);
-			}
-			else
-			{
-				DrawDirectory(path);
-			}
+			DrawSelectablePath(path);
 		});
 
 		if (bIsDirectoryEmpty)
@@ -305,7 +296,7 @@ namespace ZeoEngine {
 			if (m_Filter.PassFilter(assetSpec->PathName.c_str()))
 			{
 				bIsFilteredEmpty = false;
-				DrawAsset(path);
+				DrawSelectablePath(path);
 			}
 		});
 		//std::cout << bt.ElapsedMillis() << std::endl;
@@ -323,30 +314,60 @@ namespace ZeoEngine {
 		{
 			// Actual directory or asset is created after renaming
 
-			if (ImGui::MenuItem(ICON_FA_FOLDER_PLUS "  Create New Folder"))
+			const float thumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+
+			bool bIsFolderCreationSelected = ImGui::Selectable("##FolderCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
+
+			ImGui::SameLine();
+
+			// Draw folder icon
+			ImGui::Image(AssetManager::Get().GetFolderIcon()->GetTextureID(),
+				{ thumbnailWidth, thumbnailWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+			ImGui::SameLine();
+
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("Create New Folder");
+
+			if (bIsFolderCreationSelected)
 			{
 				std::string newPath = GetAvailableNewPathName("NewFolder", false);
-				RequestPathCreation(newPath, false);
+				RequestPathCreation(newPath, {});
 			}
 
 			ImGui::Separator();
 
-			AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
+			AssetManager::Get().ForEachAssetFactory([this, thumbnailWidth](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
 			{
 				if (!factory->ShouldShowInContextMenu()) return;
 
-				char name[MAX_PATH_SIZE];
-				strcpy_s(name, factory->GetAssetTypeIcon());
-				strcat_s(name, " ");
-				strcat_s(name, factory->GetAssetTypeName());
-				if (ImGui::MenuItem(name))
+				// Push asset type id
+				ImGui::PushID(typeId);
 				{
-					char baseName[MAX_PATH_SIZE] = "New";
-					strcat_s(baseName, Utils::GetFormatedAssetTypeName(factory->GetAssetTypeName()));
-					std::string newPath = GetAvailableNewPathName(baseName, true);
-					RequestPathCreation(newPath, true);
-					AssetRegistry::Get().GetPathSpec<AssetSpec>(newPath)->TypeId = typeId;
+					bool bIsAssetCreationSelected = ImGui::Selectable("##AssetCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
+
+					ImGui::SameLine();
+
+					// Draw asset type icon
+					ImGui::Image(AssetManager::Get().GetAssetTypeIcon(typeId)->GetTextureID(),
+						{ thumbnailWidth, thumbnailWidth },
+						{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+					ImGui::SameLine();
+
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text(factory->GetAssetTypeName());
+
+					if (bIsAssetCreationSelected)
+					{
+						char baseName[MAX_PATH_SIZE] = "New";
+						strcat_s(baseName, Utils::GetFormatedAssetTypeName(factory->GetAssetTypeName()));
+						std::string newPath = GetAvailableNewPathName(baseName, true);
+						RequestPathCreation(newPath, typeId);
+					}
 				}
+				ImGui::PopID();
 			});
 
 			ImGui::EndPopup();
@@ -378,91 +399,119 @@ namespace ZeoEngine {
 		return newPath;
 	}
 
-	void ContentBrowserPanel::DrawSelectablePath(const char* icon, const std::string& path)
+	void ContentBrowserPanel::DrawSelectablePath(const std::string& path)
 	{
-		static constexpr float indentWidth = 5.0f;
-		const bool bPathNeedsRenaming = m_PathToRename == path;
-		ImGui::Indent(indentWidth);
+		// Push path as id
+		ImGui::PushID(path.c_str());
 		{
+			static constexpr float indentWidth = 5.0f;
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
-			auto pathName = spec->PathName.c_str();
-			char name[MAX_PATH_SIZE];
-			strcpy_s(name, icon);
-			if (!bPathNeedsRenaming)
+			auto assetSpec = std::dynamic_pointer_cast<AssetSpec>(spec);
+			const bool bPathNeedsRenaming = m_PathToRename == path;
+			static const float thumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
+			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
+			// TODO: Display path tooltip
+			if (ImGui::IsItemHovered())
 			{
-				strcat_s(name, " ");
-				strcat_s(name, pathName);
+				ImGui::SetTooltipWithPadding("%s", path.c_str());
 			}
-			else
+
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
-				ImGui::AlignTextToFramePadding();
+				if (assetSpec)
+				{
+					// Double-click to open asset editor
+					HandleRightColumnAssetDoubleClicked(path);
+				}
+				else
+				{
+					m_SelectedDirectory = path;
+					// Double-click to open directory in the right column
+					HandleRightColumnDirectoryDoubleClicked(path);
+				}
 			}
-			if (ImGui::Selectable(name, m_SelectedPath == path))
+
+			ImGui::SameLine();
+
+			if (assetSpec && assetSpec->ThumbnailTexture)
+			{
+				// Draw background first if thumbnail exists
+				ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+					{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
+					{ ImGui::GetCursorScreenPos().x + thumbnailWidth, ImGui::GetCursorScreenPos().y + thumbnailWidth },
+					{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+			}
+
+			auto& am = AssetManager::Get();
+			auto thumbnailTexture = assetSpec ? (assetSpec->ThumbnailTexture ? assetSpec->ThumbnailTexture : am.GetAssetTypeIcon(assetSpec->TypeId)) : am.GetFolderIcon();
+			// Draw thumbnail or default icon
+			ImGui::Image(thumbnailTexture->GetTextureID(),
+				{ thumbnailWidth, thumbnailWidth },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+			ImGui::SameLine();
+
+			ImGui::BeginGroup();
+			{
+				auto pathName = spec->PathName.c_str();
+				if (!bPathNeedsRenaming)
+				{
+					// Make two lines of text more compact
+					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+					// Display directory/asset name
+					ImGui::Text(pathName);
+					// Display type name
+					ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, assetSpec ? am.GetAssetFactoryByAssetType(assetSpec->TypeId)->GetAssetTypeName() : "Folder");
+					ImGui::PopStyleVar();
+				}
+				else
+				{
+					// Clear selection as long as renaming is in process
+					m_SelectedPath.clear();
+
+					ImGui::SameLine(0.0f, 0.0f);
+
+					static bool bHasKeyboardFocused = false;
+					if (!bHasKeyboardFocused)
+					{
+						// Focus input once
+						ImGui::SetKeyboardFocusHere();
+						bHasKeyboardFocused = true;
+					}
+					ImGui::SetNextItemWidth(ImGui::CalcTextSize(pathName).x + ImGui::GetFramePadding().x * 2.0f);
+					char renameBuffer[MAX_PATH_SIZE];
+					strcpy_s(renameBuffer, pathName);
+					ImGui::Indent(1.0f);
+					ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
+					ImGui::Unindent();
+					// TODO: The following will not get called on right-click
+					if (ImGui::IsItemDeactivated())
+					{
+						if (assetSpec)
+						{
+							// Add engine file extension automatically
+							strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
+						}
+						std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
+						if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+						{
+							ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
+							newPath = path;
+						}
+						ProcessPathRenaming(path, newPath, assetSpec);
+						bHasKeyboardFocused = false;
+					}
+				}
+			}
+			ImGui::EndGroup();
+
+			if (bIsSelected)
 			{
 				m_SelectedPath = path;
 			}
-			if (bPathNeedsRenaming)
-			{
-				// Clear selection as long as renaming is in process
-				m_SelectedPath.clear();
-
-				ImGui::SameLine(0.0f, 0.0f);
-
-				static bool bHasKeyboardFocused = false;
-				if (!bHasKeyboardFocused)
-				{
-					// Focus input once
-					ImGui::SetKeyboardFocusHere();
-					bHasKeyboardFocused = true;
-				}
-				ImGui::SetNextItemWidth(-1.0f);
-				char renameBuffer[MAX_PATH_SIZE];
-				strcpy_s(renameBuffer, pathName);
-				ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
-				// TODO: The following will not get called on right-click
-				if (ImGui::IsItemDeactivated())
-				{
-					auto assetSpec = std::dynamic_pointer_cast<AssetSpec>(spec);
-					if (assetSpec)
-					{
-						// Add engine file extension automatically
-						strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
-					}
-					std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
-					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
-					{
-						ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
-						newPath = path;
-					}
-					ProcessPathRenaming(path, newPath, assetSpec);
-					bHasKeyboardFocused = false;
-				}
-			}
 		}
-		ImGui::Unindent(indentWidth);
-	}
-
-	void ContentBrowserPanel::DrawDirectory(const std::string& path)
-	{
-		DrawSelectablePath(ICON_FA_FOLDER " ", path);
-		// Double-click to open directory in the right column
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-		{
-			m_SelectedDirectory = path;
-			HandleRightColumnDirectoryDoubleClicked(path);
-		}
-	}
-
-	void ContentBrowserPanel::DrawAsset(const std::string& path)
-	{
-		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec<AssetSpec>(path)->TypeId;
-		const char* icon = AssetManager::Get().GetAssetFactoryByAssetType(typeId)->GetAssetTypeIcon();
-		DrawSelectablePath(icon, path);
-		// Double-click to open asset editor
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-		{
-			HandleRightColumnAssetDoubleClicked(path);
-		}
+		ImGui::PopID();
 	}
 
 	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::string& directory)
@@ -484,11 +533,11 @@ namespace ZeoEngine {
 		AssetManager::Get().OpenAsset(path);
 	}
 
-	void ContentBrowserPanel::RequestPathCreation(const std::string& path, bool bIsAsset)
+	void ContentBrowserPanel::RequestPathCreation(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
 	{
 		m_PathToRename = path;
 		m_PathToCreate = path;
-		AssetRegistry::Get().OnPathCreated(path, bIsAsset);
+		AssetRegistry::Get().OnPathCreated(path, optionalAssetTypeId);
 	}
 
 	void ContentBrowserPanel::ProcessPathDeletion(const std::string& path)
@@ -503,8 +552,11 @@ namespace ZeoEngine {
 	{
 		if (m_PathToCreate.empty())
 		{
-			// Regular renaming process
-			PathUtils::RenamePath(oldPath, newPath);
+			if (newPath != oldPath)
+			{
+				// Regular renaming process
+				PathUtils::RenamePath(oldPath, newPath);
+			}
 		}
 		else
 		{

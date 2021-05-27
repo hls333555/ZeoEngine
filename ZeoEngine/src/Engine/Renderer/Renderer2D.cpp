@@ -65,7 +65,7 @@ namespace ZeoEngine {
 		{
 			samplers[i] = i;
 		}
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data.TextureShader = Shader::Create("assets/editor/shaders/Texture.glsl");
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 

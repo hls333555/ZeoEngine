@@ -10,7 +10,7 @@ namespace ZeoEngine {
 	{
 	public:
 		OpenGLTexture2D(uint32_t width, uint32_t height);
-		OpenGLTexture2D(const std::string& path);
+		OpenGLTexture2D(const std::string& path, bool bAutoGenerateMipmaps);
 		virtual ~OpenGLTexture2D();
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
@@ -34,6 +34,7 @@ namespace ZeoEngine {
 		std::string m_Path;
 		std::string m_FileName;
 		uint32_t m_Width, m_Height;
+		uint32_t m_MipmapLevels = 1;
 		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 		bool m_bHasAlpha = false;

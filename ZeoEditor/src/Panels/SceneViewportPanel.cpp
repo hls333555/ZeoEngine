@@ -6,6 +6,8 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Editors/EditorBase.h"
 #include "Engine/Renderer/Buffer.h"
+#include "Engine/Core/ThumbnailManager.h"
+#include "Engine/Core/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -13,6 +15,7 @@ namespace ZeoEngine {
 	{
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		GetOwningEditor()->SetEditorCamera(&m_EditorCamera);
+		GetOwningEditor()->m_PostSceneRender.connect<&SceneViewportPanel::OnProcessSnapshot>(this);
 	}
 
 	void SceneViewportPanel::ProcessUpdate(DeltaTime dt)
@@ -77,9 +80,25 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void SceneViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
+	void SceneViewportPanel::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverrideThumbnail)
 	{
-		GetOwningEditor()->GetFrameBuffer()->Snapshot(imageName, static_cast<uint32_t>(m_LastViewportSize.x), static_cast<uint32_t>(m_LastViewportSize.y), imageWidth);
+		std::string thumbnailPath = ThumbnailManager::GetAssetThumbnailPath(assetPath);
+		if (!bOverrideThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
+
+		m_SnapshotSpec.AssetPath = assetPath;
+		m_SnapshotSpec.ThumbnailPath = thumbnailPath;
+		m_SnapshotSpec.ImageWidth = imageWidth;
+		GetOwningEditor()->SetPendingClearColorTransparent(true);
+	}
+
+	void SceneViewportPanel::OnProcessSnapshot()
+	{
+		if (GetOwningEditor()->GetPendingClearColorTransparent())
+		{
+			GetOwningEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
+			AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail(m_SnapshotSpec.ThumbnailPath);
+			GetOwningEditor()->SetPendingClearColorTransparent(false);
+		}
 	}
 
 	void SceneViewportPanel::SetViewportBounds(float x, float y, float width, float height)
