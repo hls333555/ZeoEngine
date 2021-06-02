@@ -36,7 +36,7 @@ namespace ZeoEngine {
 		}
 		
 		AssetTypeId TypeId;
-		Ref<Texture2D> ThumbnailTexture; // Can be null if no capture is performed
+		Ref<Texture2D> ThumbnailTexture; // Can be null if no captured cache found
 	};
 
 	class AssetRegistry

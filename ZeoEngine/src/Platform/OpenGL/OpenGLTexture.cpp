@@ -34,7 +34,7 @@ namespace ZeoEngine {
 		int width, height, channels;
 		stbi_uc* data = nullptr;
 		{
-			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&)");
+			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&, bool)");
 
 			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		}
