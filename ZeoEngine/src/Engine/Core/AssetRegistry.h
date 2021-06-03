@@ -22,6 +22,7 @@ namespace ZeoEngine {
 	{
 		using PathSpec::PathSpec;
 
+		bool bIsTreeExpanded = false;
 		uint32_t TreeNodeId = 0;
 		bool bHasAnySubDirectory = false;
 	};

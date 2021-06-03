@@ -154,14 +154,15 @@ namespace ZeoEngine {
 
 		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == AssetRegistry::GetAssetRootDirectory() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-		static const char* rootDirectoryName = ICON_FA_FOLDER " Assets";
-		bool bIsRootTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
+		auto directorySpec = AssetRegistry::Get().GetPathSpec<DirectorySpec>(AssetRegistry::GetAssetRootDirectory());
+		const char* rootDirectoryName = directorySpec->bIsTreeExpanded ? ICON_FA_FOLDER_OPEN " Assets###Assets" : ICON_FA_FOLDER " Assets###Assets";
+		directorySpec->bIsTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
 		AssetRegistry::Get().GetPathSpec<DirectorySpec>(AssetRegistry::GetAssetRootDirectory())->TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
 		}
-		if (bIsRootTreeExpanded)
+		if (directorySpec->bIsTreeExpanded)
 		{
 			//BenchmarkTimer bt;
 			DrawDirectoryTreeRecursively(AssetRegistry::GetAssetRootDirectory());
@@ -180,24 +181,36 @@ namespace ZeoEngine {
 			if (!directorySpec) return;
 
 			char directoryName[MAX_PATH_SIZE] = ICON_FA_FOLDER " ";
-			strcat_s(directoryName, directorySpec->PathName.c_str());
+			if (directorySpec->bIsTreeExpanded)
+			{
+				strcpy_s(directoryName, ICON_FA_FOLDER_OPEN " ");
+			}
+			const char* name = directorySpec->PathName.c_str();
+			strcat_s(directoryName, name);
+			strcat_s(directoryName, "###");
+			strcat_s(directoryName, name);
 			ImGuiTreeNodeFlags flags = (m_SelectedDirectory == path ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 			if (!directorySpec->bHasAnySubDirectory)
 			{
 				flags |= ImGuiTreeNodeFlags_Leaf;
 			}
-			bool bIsTreeExpanded = ImGui::TreeNodeEx(directoryName, flags);
+			directorySpec->bIsTreeExpanded = ImGui::TreeNodeEx(directoryName, flags);
 			directorySpec->TreeNodeId = ImGui::GetCurrentWindow()->GetID(directoryName);
 			if (ImGui::IsItemClicked())
 			{
 				m_SelectedDirectory = path;
 			}
-			if (bIsTreeExpanded)
+			if (directorySpec->bIsTreeExpanded)
 			{
 				DrawDirectoryTreeRecursively(path);
 
 				ImGui::TreePop();
+			}
+			// Do not show folder_open icon if this is a leaf directory
+			if (!directorySpec->bHasAnySubDirectory)
+			{
+				directorySpec->bIsTreeExpanded = false;
 			}
 		});
 	}
