@@ -271,7 +271,7 @@ namespace ZeoEngine {
 				m_SelectedDirectory = std::move(jumpToDirectory);
 			}
 			ImGui::SameLine(0.0f, 0.0f);
-			ImGui::Text("/");
+			ImGui::Text(ICON_FA_ARROW_RIGHT);
 
 			++i;
 			return false;
