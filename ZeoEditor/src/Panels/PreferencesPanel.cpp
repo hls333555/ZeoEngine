@@ -20,9 +20,9 @@ namespace ZeoEngine {
 
 		// VSync
 		{
-			static bool bEnableVSync = true;
-			ImGui::Checkbox("VSync", &bEnableVSync);
 			auto& window = Application::Get().GetWindow();
+			static bool bEnableVSync = window.IsVSync();
+			ImGui::Checkbox("VSync", &bEnableVSync);
 			window.SetVSync(bEnableVSync);
 		}
 	}
