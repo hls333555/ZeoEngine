@@ -1,7 +1,7 @@
-AssetType: 719270048
+AssetType: 849720341
 MaxParticles: 500
 SubImageSize: [4, 2]
-Texture: ..\Sandbox\assets\textures\Explosion_2x4.png
+Texture: assets\textures\Explosion_2x4.png.zasset
 Lifetime:
   - ValueHigh: 0
   - Value: 0.400000006

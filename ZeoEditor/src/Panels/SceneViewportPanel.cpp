@@ -63,7 +63,7 @@ namespace ZeoEngine {
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(SceneViewportPanel::OnMouseScroll));
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewportPanel::OnFocusEntity));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewportPanel::OnKeyPressed));
 	}
 
 	bool SceneViewportPanel::OnMouseScroll(MouseScrolledEvent& e)
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		return m_EditorCamera.OnMouseScroll(e);
 	}
 
-	bool SceneViewportPanel::OnFocusEntity(KeyPressedEvent& e)
+	bool SceneViewportPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (e.GetKeyCode() == Key::F)
 		{
@@ -82,7 +82,7 @@ namespace ZeoEngine {
 
 	void SceneViewportPanel::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverrideThumbnail)
 	{
-		std::string thumbnailPath = ThumbnailManager::GetAssetThumbnailPath(assetPath);
+		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});
 		if (!bOverrideThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
 
 		m_SnapshotSpec.AssetPath = assetPath;

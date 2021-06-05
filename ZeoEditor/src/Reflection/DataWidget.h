@@ -17,7 +17,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
-#include "Engine/ImGui/TextFilter.h"
 #include "Reflection/AssetBrowser.h"
 #include "Engine/Core/EngineTypes.h"
 
@@ -300,7 +299,7 @@ namespace ZeoEngine {
 #endif
 	};
 
-	class Texture2DDataWidget : public BasicDataWidgetT<Asset<Texture2D>>
+	class Texture2DDataWidget : public BasicDataWidgetT<AssetHandle<Texture2DAsset>>
 	{
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -313,10 +312,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		TextFilter m_Filter;
+		AssetBrowser m_Browser{ Texture2DAsset::TypeId() };
 	};
 
-	class ParticleTemplateDataWidget : public BasicDataWidgetT<Asset<ParticleTemplate>>
+	class ParticleTemplateDataWidget : public BasicDataWidgetT<AssetHandle<ParticleTemplateAsset>>
 	{
 	public:
 		ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -329,7 +328,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ AssetType<ParticleTemplate>::Id() };
+		AssetBrowser m_Browser{ ParticleTemplateAsset::TypeId() };
 	};
 
 	class ContainerWidget : public DataWidget

@@ -43,7 +43,7 @@ namespace ZeoEngine {
 		void OnProcessSnapshot();
 
 		bool OnMouseScroll(MouseScrolledEvent& e);
-		bool OnFocusEntity(KeyPressedEvent& e);
+		bool OnKeyPressed(KeyPressedEvent& e);
 
 		void SetViewportBounds(float x, float y, float width, float height);
 

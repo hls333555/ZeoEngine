@@ -23,10 +23,10 @@ namespace ZeoEngine {
 		CreatePanel(PanelType::Console);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New Scene", "CTRL+N")
-			.MenuItem<MenuItem_OpenScene>(ICON_FA_FILE_IMPORT "  Open Scene", "CTRL+O")
-			.MenuItem<MenuItem_SaveScene>(ICON_FA_SAVE "  Save Scene", "CTRL+S")
-			.MenuItem<MenuItem_SaveSceneAs>(ICON_FA_SAVE "  Save Scene As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New Scene", "CTRL+N")
+			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load Scene", "CTRL+O")
+			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save Scene", "CTRL+S")
+			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save Scene As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
@@ -41,7 +41,6 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel>(PanelType::EntityInspector)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ContentBrowser)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Console)
-			.MenuItem<MenuItem_ToggleEditor>(EditorType::ParticleEditor)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Stats)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::Preferences)
 			.MenuItem<MenuItem_Seperator>()

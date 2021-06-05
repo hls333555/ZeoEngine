@@ -17,10 +17,10 @@ namespace ZeoEngine {
 		CreatePanel(PanelType::ParticleInspector);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New particle template", "CTRL+N")
-			.MenuItem<MenuItem_OpenScene>(ICON_FA_FILE_IMPORT "  Open particle template", "CTRL+O")
-			.MenuItem<MenuItem_SaveScene>(ICON_FA_SAVE "  Save particle template", "CTRL+S")
-			.MenuItem<MenuItem_SaveSceneAs>(ICON_FA_SAVE "  Save particle template As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New particle template", "CTRL+N")
+			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load particle template", "CTRL+O")
+			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save particle template", "CTRL+S")
+			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save particle template As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")

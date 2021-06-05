@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		
 		if (ImGui::TreeNodeEx("Particle Template", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			ParticleLibrary::Get().ForEach([&](const entt::id_type id, const Asset<ParticleTemplate>& pTemplate)
+			ParticleTemplateAssetLibrary::Get().ForEach([&](const entt::id_type id, const AssetHandle<ParticleTemplateAsset>& pTemplate)
 			{
 				std::ostringstream stringStream;
 				stringStream << pTemplate->GetPath() << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";

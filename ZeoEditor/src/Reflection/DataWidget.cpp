@@ -348,127 +348,14 @@ namespace ZeoEngine {
 	{
 		if (!PreDraw(compInstance, instance)) return;
 
-		// TODO: Replace with AssetBrowser
-		Texture2DLibrary& library = Texture2DLibrary::Get();
-		// Texture preview
+		// Make sure browser widget + dropdown button can reach desired size
+		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
+		// Texture2D asset browser
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, [](){});
+		if (bIsBufferChanged)
 		{
-			constexpr float texturePreviewWidth = 75.0f;
-			// Draw checkerboard texture as background first
-			ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-				ImGui::GetCursorScreenPos(),
-				{ ImGui::GetCursorScreenPos().x + texturePreviewWidth, ImGui::GetCursorScreenPos().y + texturePreviewWidth },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-			// Draw our texture on top of that
-			ImGui::Image(m_Buffer ? m_Buffer->GetTextureID() : nullptr,
-				{ texturePreviewWidth, texturePreviewWidth },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-				m_Buffer ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 0.0f });
-			// Display texture info tooltip
-			if (m_Buffer && ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltipWithPadding("Resolution: %dx%d\nHas alpha: %s", m_Buffer->GetWidth(), m_Buffer->GetHeight(), m_Buffer->HasAlpha() ? "true" : "false");
-			}
-		}
-
-		ImGui::SameLine();
-
-		if (m_DataSpec.bIsSeqElement)
-		{
-			// Make sure browser widget + dropdown button can reach desired size
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
-		}
-		else
-		{
-			// Align width to the right side
-			ImGui::SetNextItemWidth(-1.0f);
-		}
-		// Texture browser
-		if (ImGui::BeginCombo("##Texture2D", m_Buffer ? m_Buffer->GetFileName().c_str() : nullptr))
-		{
-			bool bIsBufferChanged = false;
-
-			// Clear current selection
-			if (ImGui::Selectable("Clear"))
-			{
-				bIsBufferChanged = static_cast<bool>(m_Buffer);
-				if (bIsBufferChanged)
-				{
-					m_Buffer = {};
-					SetValueToData();
-				}
-			}
-
-			ImGui::Separator();
-
-			// Pop up file browser to select a texture from disk
-			if (ImGui::Selectable("Browse texture..."))
-			{
-				auto filePath = FileDialogs::OpenFile(AssetType<Texture2D>::Id());
-				if (filePath)
-				{
-					// Add selected texture to the library
-					Asset<Texture2D> loadedTexture = library.LoadAsset(*filePath);
-					bIsBufferChanged = loadedTexture != m_Buffer;
-					if (bIsBufferChanged)
-					{
-						m_Buffer = loadedTexture;
-						SetValueToData();
-					}
-				}
-			}
-
-			ImGui::Separator();
-
-			m_Filter.Draw("##Texture2DAssetFilter", "Search textures");
-			
-			// List all loaded textures from Texture2DLibrary
-			library.ForEach([&](const entt::id_type id, const Asset<Texture2D>& texture)
-			{
-				if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(texture->GetFileName().c_str()))
-				{
-					// Push texture path id
-					ImGui::PushID(id);
-					{
-						constexpr float textureThumbnailWidth = 30.0f;
-						bool bIsSelected = ImGui::Selectable("##Texture2DDropdownThumbnail", false, 0, ImVec2(0.0f, textureThumbnailWidth));
-						// Display texture path tooltip for drop-down item
-						if (ImGui::IsItemHovered())
-						{
-							ImGui::SetTooltipWithPadding("%s", texture->GetPath().c_str());
-						}
-
-						ImGui::SameLine();
-
-						// Draw texture thumbnail
-						ImGui::Image(texture->GetTextureID(),
-							ImVec2(textureThumbnailWidth, textureThumbnailWidth),
-							ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-
-						ImGui::SameLine();
-
-						// Display texture name
-						ImGui::Text(texture->GetFileName().c_str());
-						if (bIsSelected)
-						{
-							bIsBufferChanged = texture != m_Buffer;
-							if (bIsBufferChanged)
-							{
-								m_Buffer = texture;
-								SetValueToData();
-							}
-						}
-					}
-					ImGui::PopID();
-				}
-			});
-
-			ImGui::EndCombo();
-		}
-
-		// Display texture path tooltip for current selection
-		if (m_Buffer && ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltipWithPadding("%s", m_Buffer->GetPath().c_str());
+			m_Buffer = retSpec ? Texture2DAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2DAsset>{};
+			SetValueToData();
 		}
 
 		PostDraw();
@@ -477,7 +364,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = Texture2D::s_DefaultBackgroundTexture;
+		m_Buffer = Texture2DAssetLibrary::Get().LoadAsset("assets/textures/Ship.png.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -494,7 +381,7 @@ namespace ZeoEngine {
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
-		// Particle template browser
+		// Particle template asset browser
 		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, [this]()
 		{
 			if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
@@ -504,7 +391,7 @@ namespace ZeoEngine {
 		});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? ParticleLibrary::Get().LoadAsset(retSpec->Path) : Asset<ParticleTemplate>{};
+			m_Buffer = retSpec ? ParticleTemplateAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ParticleTemplateAsset>{};
 			SetValueToData();
 		}
 
@@ -514,7 +401,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = ParticleLibrary::Get().LoadAsset("assets/particles/Test.zasset");
+		m_Buffer = ParticleTemplateAssetLibrary::Get().LoadAsset("assets/particles/Test.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

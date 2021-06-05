@@ -16,18 +16,20 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		Asset<AssetClass> LoadAsset(AssetPath path)
+		template<typename... Args>
+		AssetHandle<AssetClass> LoadAsset(AssetPath path, Args &&... args)
 		{
 			ZE_CORE_ASSERT(!path.IsEmpty());
 
-			return load<AssetLoaderClass>(path.ToId(), path.ToString());
+			return load<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
 		}
 
-		virtual Asset<AssetClass> ReloadAsset(AssetPath path)
+		template<typename... Args>
+		AssetHandle<AssetClass> ReloadAsset(AssetPath path, Args &&... args)
 		{
 			ZE_CORE_ASSERT(!path.IsEmpty());
 
-			return reload<AssetLoaderClass>(path.ToId(), path.ToString());
+			return reload<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
 		}
 
 		void DiscardAsset(AssetPath path)
@@ -35,7 +37,7 @@ namespace ZeoEngine {
 			discard(path.ToId());
 		}
 
-		Asset<AssetClass> GetAsset(AssetPath path)
+		AssetHandle<AssetClass> GetAsset(AssetPath path)
 		{
 			const auto id = path.ToId();
 			ZE_CORE_ASSERT(contains(id));

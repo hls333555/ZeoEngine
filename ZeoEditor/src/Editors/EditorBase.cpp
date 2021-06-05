@@ -9,6 +9,7 @@
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Debug/BenchmarkTimer.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
@@ -94,51 +95,62 @@ namespace ZeoEngine {
 		m_bShow = true;
 	}
 
-	void EditorBase::CreateNewScene(bool bIsFromOpenScene)
+	void EditorBase::NewAsset(bool bIsFromLoad)
 	{
-		m_PreSceneCreateDel.publish(bIsFromOpenScene);
+		m_PreSceneCreateDel.publish(bIsFromLoad);
 		CreateScene();
-		m_PostSceneCreateDel.publish(bIsFromOpenScene);
+		PostSceneCreate(bIsFromLoad);
+		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
 
-	void EditorBase::OpenScene()
+	void EditorBase::LoadAsset()
 	{
 		auto filePath = FileDialogs::OpenFile(GetAssetTypeId());
 		if (!filePath) return;
 
-		OpenScene(*filePath);
+		LoadAsset(*filePath);
 	}
 
-	void EditorBase::OpenScene(const std::string& path)
+	void EditorBase::LoadAsset(const std::string& path)
 	{
-		CreateNewScene(true);
-		// Save scene path
-		m_Scene->SetPath(path);
-		Deserialize(path);
-		m_Scene->OnDeserialized();
+		BenchmarkTimer timer;
+
+		NewAsset(true);
+		LoadAssetImpl(path);
+		m_Scene->PostLoad();
+		m_PostSceneLoadDel.publish();
+
+		ZE_CORE_WARN("Loading {0} took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveSceneAs()
+	void EditorBase::SaveAsset()
+	{
+		const std::string assetPath = GetAssetPath();
+		if (assetPath.empty())
+		{
+			SaveAssetAs();
+		}
+		else
+		{
+			SaveAsset(assetPath);
+		}
+	}
+
+	void EditorBase::SaveAsset(const std::string& path)
+	{
+		BenchmarkTimer timer;
+
+		SaveAssetImpl(path);
+
+		ZE_CORE_WARN("Saving {0} took {1} ms", path, timer.ElapsedMillis());
+	}
+
+	void EditorBase::SaveAssetAs()
 	{
 		auto filePath = FileDialogs::SaveFile(GetAssetTypeId());
 		if (!filePath) return;
 
-		// Save scene path
-		m_Scene->SetPath(*filePath);
-		Serialize(*filePath);
-	}
-
-	void EditorBase::SaveScene()
-	{
-		const std::string& scenePath = m_Scene->GetPath();
-		if (scenePath.empty())
-		{
-			SaveSceneAs();
-		}
-		else
-		{
-			Serialize(scenePath);
-		}
+		SaveAsset(*filePath);
 	}
 
 	void EditorBase::CreateDockspace()

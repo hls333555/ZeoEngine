@@ -2,9 +2,11 @@
 
 #include <entt.hpp>
 
+#include "Engine/Core/Asset.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
+#include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -27,19 +29,16 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) {}
 		virtual void OnEvent(Event& e) {}
 
-		const std::string& GetName() const { return m_Name; }
-		const std::string& GetPath() const { return m_Path; }
-		void SetPath(const std::string& path);
-
 		/**
 		 * Create an entity with default components.
+		 * 
 		 * @param bIsInternal - If true, this entity will not show in SceneOutlinePanel.
 		 */
 		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
 		void DestroyEntity(Entity entity);
 
-		/** Called after scene has been deserialized. */
-		virtual void OnDeserialized() {}
+		/** Called after all data have been loaded. */
+		virtual void PostLoad() {}
 
 	private:
 		/** Create an entity with no default components. */
@@ -51,10 +50,37 @@ namespace ZeoEngine {
 		entt::registry m_Registry;
 
 	private:
-		std::string m_Name{ "Untitled" };
-		std::string m_Path;
-
 		uint32_t m_EntityCount = 0;
 	};
+
+	class SceneAsset : public AssetImpl<SceneAsset>
+	{
+	private:
+		explicit SceneAsset(const std::string& path);
+
+	public:
+		static Ref<SceneAsset> Create(const std::string& path);
+
+		/** Update scene reference and deserialize scene data. */
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
+		/** Clear scene referenece. */
+		void ClearScene() { m_Scene.reset(); }
+
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+
+	private:
+		Ref<Scene> m_Scene;
+	};
+
+	struct SceneAssetLoader final : AssetLoader<SceneAssetLoader, SceneAsset>
+	{
+		AssetHandle<SceneAsset> load(const std::string& path) const
+		{
+			return SceneAsset::Create(path);
+		}
+	};
+
+	class SceneAssetLibrary : public AssetLibrary<SceneAssetLibrary, SceneAsset, SceneAssetLoader>{};
 
 }

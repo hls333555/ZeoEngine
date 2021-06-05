@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		GetOwningEditor()->m_PostSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
+		GetOwningEditor()->m_PreSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
 	}
 
 	void InspectorPanel::DrawAddComponentButton(Entity entity)

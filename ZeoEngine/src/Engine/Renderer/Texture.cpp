@@ -40,4 +40,32 @@ namespace ZeoEngine {
 		}
 	}
 
+	Texture2DAsset::Texture2DAsset(const std::string& path)
+		: AssetImpl(path)
+	{
+		m_TexturePath = GetTexturePath(path);
+		ZE_CORE_ASSERT(PathUtils::DoesPathExist(m_TexturePath));
+		m_Texture = Texture2D::Create(m_TexturePath);
+		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
+	}
+
+	Ref<Texture2DAsset> Texture2DAsset::Create(const std::string& path)
+	{
+		// A way to allow std::make_shared() to access Texture2DAsset's private constructor
+		class Texture2DAssetEnableShared : public Texture2DAsset
+		{
+		public:
+			explicit Texture2DAssetEnableShared(const std::string& path)
+				: Texture2DAsset(path) {}
+		};
+
+		return CreateRef<Texture2DAssetEnableShared>(path);
+	}
+
+	std::string Texture2DAsset::GetTexturePath(const std::string& path)
+	{
+		auto pos = path.rfind(".");
+		return path.substr(0, pos);
+	}
+
 }

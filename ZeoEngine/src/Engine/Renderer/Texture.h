@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 #include "Engine/Core/EngineTypes.h"
 
@@ -16,8 +17,6 @@ namespace ZeoEngine {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
-		virtual const std::string& GetPath() const = 0; // This path is canonical.
-		virtual const std::string& GetFileName() const = 0;
 		virtual bool HasAlpha() const = 0;
 		virtual void* GetTextureID() const = 0;
 
@@ -27,7 +26,6 @@ namespace ZeoEngine {
 		virtual void Bind(uint32_t slot = 0) const = 0;
 
 		virtual bool operator==(const Texture& other) const = 0;
-
 	};
 
 	class Texture2D : public Texture
@@ -41,14 +39,35 @@ namespace ZeoEngine {
 		static Ref<Texture2D> s_DefaultBackgroundTexture;
 	};
 
-	struct Texture2DLoader final : AssetLoader<Texture2DLoader, Texture2D>
+	class Texture2DAsset : public AssetImpl<Texture2DAsset>
 	{
-		Asset<Texture2D> load(const std::string& path) const
+	private:
+		explicit Texture2DAsset(const std::string& path);
+
+	public:
+		static Ref<Texture2DAsset> Create(const std::string& path);
+
+		static std::string GetTexturePath(const std::string& path);
+
+		const Ref<Texture2D>& GetTexture() const { return m_Texture; }
+
+		// TODO:
+		virtual void Serialize(const std::string& path) override {}
+		virtual void Deserialize() override {}
+
+	private:
+		std::string m_TexturePath;
+		Ref<Texture2D> m_Texture;
+	};
+
+	struct Texture2DAssetLoader final : AssetLoader<Texture2DAssetLoader, Texture2DAsset>
+	{
+		AssetHandle<Texture2DAsset> load(const std::string& path) const
 		{
-			return Texture2D::Create(path);
+			return Texture2DAsset::Create(path);
 		}
 	};
 
-	class Texture2DLibrary : public AssetLibrary<Texture2DLibrary, Texture2D, Texture2DLoader>{};
+	class Texture2DAssetLibrary : public AssetLibrary<Texture2DAssetLibrary, Texture2DAsset, Texture2DAssetLoader>{};
 
 }

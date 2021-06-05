@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
 	class Texture2D;
@@ -15,10 +17,9 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		/** Try to get asset thumbnail from cache. Returns null if not found. */
-		Ref<Texture2D> GetAssetThumbnail(const std::string& path);
-
-		static std::string GetAssetThumbnailPath(const std::string& assetPath);
+		/** Try to get asset thumbnail from disk. Returns null if not found. */
+		Ref<Texture2D> GetAssetThumbnail(const std::string& path, AssetTypeId typeId);
+		std::string GetAssetThumbnailPath(const std::string& assetPath, AssetTypeId typeId);
 
 	private:
 		void Init();
@@ -27,7 +28,6 @@ namespace ZeoEngine {
 		ThumbnailManager() = default;
 		ThumbnailManager(const ThumbnailManager&) = delete;
 		ThumbnailManager& operator=(const ThumbnailManager&) = delete;
-
 	};
 
 }

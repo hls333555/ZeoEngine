@@ -89,7 +89,7 @@ namespace ZeoEngine {
 		PanelType m_PanelType;
 	};
 
-	class MenuItem_NewScene : public MenuItemBase
+	class MenuItem_NewAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -99,7 +99,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_OpenScene : public MenuItemBase
+	class MenuItem_LoadAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -109,7 +109,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveScene : public MenuItemBase
+	class MenuItem_SaveAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -119,7 +119,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveSceneAs : public MenuItemBase
+	class MenuItem_SaveAssetAs : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;

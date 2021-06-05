@@ -13,7 +13,7 @@
 namespace ZeoEngine {
 
 	class IComponentHelper;
-	class Texture2D;
+	class Texture2DAsset;
 
 	struct IComponent
 	{
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 	struct SpriteRendererComponent : public IComponent
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		Asset<Texture2D> Texture;
+		AssetHandle<Texture2DAsset> Texture;
 		glm::vec2 TextureTiling{ 1.0f };
 
 		int32_t SortingOrder = 0;
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const Asset<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
+		SpriteRendererComponent(const AssetHandle<Texture2DAsset>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
 			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 	};
@@ -133,7 +133,7 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		Asset<ParticleTemplate> Template;
+		AssetHandle<ParticleTemplateAsset> Template;
 		Ref<ParticleSystemInstance> Instance;
 		glm::vec3 PositionOffset{ 0.0f };
 
@@ -150,10 +150,10 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent()
 		{
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
-			Template = ParticleTemplate::Create();
+			Template = ParticleTemplateAsset::Create({});
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		explicit ParticleSystemPreviewComponent(const Asset<ParticleTemplate>& pTemplate)
+		explicit ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
 		{
 			Template = pTemplate;
 		}
@@ -177,8 +177,8 @@ namespace ZeoEngine {
 		ParticleColor& GetColorBegin() { return Template->ColorBegin; }
 		ParticleColor& GetColorEnd() { return Template->ColorEnd; }
 		ParticleFloat& GetLifetime() { return Template->Lifetime; }
-		const Asset<Texture2D>& GetTexture() const { return Template->Texture; }
-		void SetTexture(const Asset<Texture2D>& texture) { Template->Texture = texture; }
+		const AssetHandle<Texture2DAsset>& GetTexture() const { return Template->Texture; }
+		void SetTexture(const AssetHandle<Texture2DAsset>& texture) { Template->Texture = texture; }
 		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
 		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
 		uint32_t GetMaxParticles() const { return Template->MaxParticles; }

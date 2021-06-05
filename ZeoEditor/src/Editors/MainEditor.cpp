@@ -1,6 +1,6 @@
 #include "Editors/MainEditor.h"
 
-#include "Engine/Core/Serializer.h"
+#include "Engine/GameFramework/Scene.h"
 
 namespace ZeoEngine {
 
@@ -8,22 +8,37 @@ namespace ZeoEngine {
 	{
 		EditorBase::OnAttach();
 
-		m_PostSceneCreate.connect<&MainEditor::ClearSelectedEntity>(this);
+		m_PreSceneCreate.connect<&MainEditor::ClearSelectedEntity>(this);
+	}
+
+	std::string MainEditor::GetAssetPath() const
+	{
+		return m_SceneAsset ? m_SceneAsset->GetPath() : "";
+	}
+
+	void MainEditor::PostSceneCreate(bool bIsFromLoad)
+	{
+		if (m_SceneAsset)
+		{
+			m_SceneAsset->ClearScene();
+			m_SceneAsset = {};
+		}
 	}
 
 	AssetTypeId MainEditor::GetAssetTypeId() const
 	{
-		return AssetType<Scene>::Id();
+		return SceneAsset::TypeId();
 	}
 
-	void MainEditor::Serialize(const std::string& filePath)
+	void MainEditor::LoadAssetImpl(const std::string& path)
 	{
-		SceneSerializer::Serialize(filePath, GetScene());
+		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
+		m_SceneAsset->UpdateScene(GetScene());
 	}
 
-	void MainEditor::Deserialize(const std::string& filePath)
+	void MainEditor::SaveAssetImpl(const std::string& path)
 	{
-		SceneSerializer::Deserialize(filePath, GetScene());
+		m_SceneAsset->Serialize(path);
 	}
 
 	void MainEditor::ClearSelectedEntity()

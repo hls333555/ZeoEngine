@@ -1,4 +1,4 @@
-AssetType: 3144214753
+AssetType: 4099385791
 Entities:
   - Entity: 0
     Components:
@@ -31,7 +31,7 @@ Entities:
         Translation: [-1, 0, 0]
       - Component: 2229143245
         TextureTiling: [1, 1]
-        Texture: ..\Sandbox\assets\textures\Ship.png
+        Texture: assets\textures\Ship.png.zasset
         TintColor: [1, 1, 1, 1]
       - Component: 91661578
         PositionOffset: [0, 0, 0]
@@ -47,7 +47,7 @@ Entities:
         Translation: [1, 0, 0]
       - Component: 2229143245
         TextureTiling: [1, 1]
-        Texture: ..\Sandbox\assets\textures\Ship2.png
+        Texture: assets\textures\Ship2.png.zasset
         TintColor: [1, 1, 1, 1]
       - Component: 91661578
         PositionOffset: [0, 0, 0]

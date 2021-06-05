@@ -9,19 +9,12 @@ namespace ZeoEngine {
 
 	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().GetEditor(EditorType::MainEditor)->OpenScene(path);
+		EditorManager::Get().GetEditor(EditorType::MainEditor)->LoadAsset(path);
 	}
 
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
 	{
-		auto particleAsset = ParticleLibrary::Get().LoadAsset(path);
-		EditorBase* editor = EditorManager::Get().OpenEditor(EditorType::ParticleEditor);
-		editor->GetScene()->SetPath(path);
-		editor->GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&](auto& particlePreviewComp)
-		{
-			particlePreviewComp.Template = particleAsset;
-			ParticleSystemInstance::Create(particlePreviewComp);
-		});
+		EditorManager::Get().OpenEditor(EditorType::ParticleEditor)->LoadAsset(path);
 	}
 
 }

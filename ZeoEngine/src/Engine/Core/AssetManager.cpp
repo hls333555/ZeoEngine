@@ -33,13 +33,13 @@ namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
-		RegisterAssetFactory(AssetType<Scene>::Id(), CreateRef<SceneAssetFactory>());
-		RegisterAssetFactory(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleTemplateAssetFactory>());
-		RegisterAssetFactory(AssetType<Texture2D>::Id(), CreateRef<Texture2DAssetFactory>());
+		RegisterAssetFactory(SceneAsset::TypeId(), CreateRef<SceneAssetFactory>());
+		RegisterAssetFactory(ParticleTemplateAsset::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
+		RegisterAssetFactory(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetFactory>());
 
-		RegisterAssetActions(AssetType<Scene>::Id(), CreateRef<SceneAssetActions>());
-		RegisterAssetActions(AssetType<ParticleTemplate>::Id(), CreateRef<ParticleAssetActions>());
-		RegisterAssetActions(AssetType<Texture2D>::Id(), CreateRef<Texture2DAssetActions>());
+		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
+		RegisterAssetActions(ParticleTemplateAsset::TypeId(), CreateRef<ParticleAssetActions>());
+		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
 
 		LoadAssetTypeIcons();
 	}

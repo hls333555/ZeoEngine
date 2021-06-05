@@ -108,7 +108,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool MenuItem_NewScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_NewAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName != "CTRL+N" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
@@ -119,7 +119,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_OwningEditor->CreateNewScene();
+					m_OwningEditor->NewAsset();
 				}
 				break;
 			}
@@ -128,12 +128,12 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_NewScene::OnMenuItemActivated()
+	void MenuItem_NewAsset::OnMenuItemActivated()
 	{
-		m_OwningEditor->CreateNewScene();
+		m_OwningEditor->NewAsset();
 	}
 
-	bool MenuItem_OpenScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_LoadAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName != "CTRL+O" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
@@ -144,7 +144,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_OwningEditor->OpenScene();
+					m_OwningEditor->LoadAsset();
 				}
 				break;
 			}
@@ -153,12 +153,12 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_OpenScene::OnMenuItemActivated()
+	void MenuItem_LoadAsset::OnMenuItemActivated()
 	{
-		m_OwningEditor->OpenScene();
+		m_OwningEditor->LoadAsset();
 	}
 
-	bool MenuItem_SaveScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_SaveAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName != "CTRL+S" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
@@ -169,7 +169,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_OwningEditor->SaveScene();
+					m_OwningEditor->SaveAsset();
 				}
 				break;
 			}
@@ -178,12 +178,12 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_SaveScene::OnMenuItemActivated()
+	void MenuItem_SaveAsset::OnMenuItemActivated()
 	{
-		m_OwningEditor->SaveScene();
+		m_OwningEditor->SaveAsset();
 	}
 
-	bool MenuItem_SaveSceneAs::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_SaveAssetAs::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName != "CTRL+ALT+S" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
@@ -197,7 +197,7 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed)
 					{
-						m_OwningEditor->SaveSceneAs();
+						m_OwningEditor->SaveAssetAs();
 					}
 				}
 				break;
@@ -207,9 +207,9 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_SaveSceneAs::OnMenuItemActivated()
+	void MenuItem_SaveAssetAs::OnMenuItemActivated()
 	{
-		m_OwningEditor->SaveSceneAs();
+		m_OwningEditor->SaveAssetAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -244,12 +244,12 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string& filePath = m_OwningEditor->GetScene()->GetPath();
+		const std::string assetPath = m_OwningEditor->GetAssetPath();
 		// This may be null e.g. default particle system
-		if (filePath.empty()) return;
+		if (assetPath.empty()) return;
 
 		SceneViewportPanel* viewportPanel = GetOwningDockspace()->GetPanel<SceneViewportPanel>(GetOwningDockspace()->GetViewportPanelType());
-		viewportPanel->Snapshot(filePath, 256);
+		viewportPanel->Snapshot(assetPath, 256);
 	}
 
 }

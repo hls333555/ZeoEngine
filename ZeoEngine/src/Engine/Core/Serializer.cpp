@@ -83,41 +83,41 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<Asset<Texture2D>>
+	struct convert<AssetHandle<Texture2DAsset>>
 	{
-		static Node encode(const Asset<Texture2D>& rhs)
+		static Node encode(const AssetHandle<Texture2DAsset>& rhs)
 		{
 			Node node;
 			node.push_back(rhs ? rhs->GetPath() : "");
 			return node;
 		}
 
-		static bool decode(const Node& node, Asset<Texture2D>& rhs)
+		static bool decode(const Node& node, AssetHandle<Texture2DAsset>& rhs)
 		{
 			const auto& path = node.as<std::string>();
 			if (path.empty()) return true;
 
-			rhs = Texture2DLibrary::Get().LoadAsset(path);
+			rhs = Texture2DAssetLibrary::Get().LoadAsset(path);
 			return true;
 		}
 	};
 
 	template<>
-	struct convert<Asset<ParticleTemplate>>
+	struct convert<AssetHandle<ParticleTemplateAsset>>
 	{
-		static Node encode(const Asset<ParticleTemplate>& rhs)
+		static Node encode(const AssetHandle<ParticleTemplateAsset>& rhs)
 		{
 			Node node;
 			node.push_back(rhs ? rhs->GetPath() : "");
 			return node;
 		}
 
-		static bool decode(const Node& node, Asset<ParticleTemplate>& rhs)
+		static bool decode(const Node& node, AssetHandle<ParticleTemplateAsset>& rhs)
 		{
 			const auto& path = node.as<std::string>();
 			if (path.empty()) return true;
 
-			rhs = ParticleLibrary::Get().LoadAsset(path);
+			rhs = ParticleTemplateAssetLibrary::Get().LoadAsset(path);
 			return true;
 		}
 	};
@@ -153,13 +153,13 @@ namespace ZeoEngine {
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Asset<Texture2D>& texture)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<Texture2DAsset>& texture)
 	{
 		out << (texture ? texture->GetPath() : "");
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Asset<ParticleTemplate>& pTemplate)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<ParticleTemplateAsset>& pTemplate)
 	{
 		out << (pTemplate ? pTemplate->GetPath() : "");
 		return out;
@@ -248,10 +248,10 @@ namespace ZeoEngine {
 				SerializeData<glm::vec4>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
-				SerializeData<Asset<Texture2D>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<Texture2DAsset>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				SerializeData<Asset<ParticleTemplate>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<ParticleTemplateAsset>>(out, data, instance, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -401,10 +401,10 @@ namespace ZeoEngine {
 				DeserializeData<glm::vec4>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
-				DeserializeData<Asset<Texture2D>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<Texture2DAsset>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				DeserializeData<Asset<ParticleTemplate>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<ParticleTemplateAsset>>(data, instance, value, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -551,7 +551,7 @@ namespace ZeoEngine {
 
 	void SceneSerializer::Serialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		Serialize_t<Scene>(path, [&](YAML::Emitter& out)
+		Serialize_t<SceneAsset>(path, [&](YAML::Emitter& out)
 		{
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
@@ -575,7 +575,7 @@ namespace ZeoEngine {
 
 	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		auto data = PreDeserialize<Scene>(path);
+		auto data = PreDeserialize<SceneAsset>(path);
 		if (!data) return false;
 
 		auto entities = (*data)["Entities"];

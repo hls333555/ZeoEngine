@@ -107,7 +107,7 @@ namespace ZeoEngine {
 		{
 			assetSpec->TypeId = *optionalAssetTypeId;
 		}
-		assetSpec->ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(path);
+		assetSpec->ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(path, assetSpec->TypeId);
 		m_AssetSpecsById[assetSpec->TypeId].emplace_back(assetSpec);
 		m_PathSpecs[path] = std::move(assetSpec);
 

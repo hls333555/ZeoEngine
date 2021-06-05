@@ -63,6 +63,11 @@ namespace ZeoEngine {
 						// Right-click on the preview thumbnail to open the popup menu
 						if (ImGui::BeginPopupContextItemWithPadding("AssetOptions"))
 						{
+							if (ImGui::MenuItem(ICON_FA_EDIT "  Open"))
+							{
+								AssetManager::Get().OpenAsset(retSpec->Path);
+							}
+
 							rightClickFunc();
 
 							ImGui::EndPopup();

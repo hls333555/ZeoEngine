@@ -7,39 +7,20 @@ namespace ZeoEngine {
 	extern const char* g_AssetTypeToken;
 
 	using AssetTypeId = uint32_t;
-	using AssetTypeName = std::string_view;
 
 	template<typename AssetClass>
-	class AssetType
-	{
-	public:
-		static constexpr AssetTypeId Id()
-		{
-			return entt::type_hash<AssetClass>::value();
-		}
+	using AssetHandle = entt::resource_handle<AssetClass>;
 
-		/** For debug purposes only. */
-		static constexpr AssetTypeName Name()
-		{
-			auto view =  entt::type_name<AssetClass>::value();
-			auto separator = view.rfind("::");
-			return view.substr(separator + 2, view.size() - separator);
-		}
-	};
-
-	template<typename Resource>
-	using Asset = entt::resource_handle<Resource>;
-
-	template<typename Loader, typename Resource>
-	using AssetLoader = entt::resource_loader<Loader, Resource>;
+	template<typename AssetLoaderClass, typename AssetClass>
+	using AssetLoader = entt::resource_loader<AssetLoaderClass, AssetClass>;
 
 	template<typename T>
-	bool operator==(const Asset<T>& lhs, const Asset<T>& rhs)
+	bool operator==(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
 	{
 		return (!lhs && !rhs) || (lhs && rhs && std::addressof(*lhs) == std::addressof(*rhs));
 	}
 	template<typename T>
-	bool operator!=(const Asset<T>& lhs, const Asset<T>& rhs)
+	bool operator!=(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
 	{
 		return !(lhs == rhs);
 	}
@@ -50,10 +31,12 @@ namespace ZeoEngine {
 		AssetPath(const char* path);
 		AssetPath(const std::string& path);
 
+		const std::string& GetPath() const { return m_RelativePath; }
+		std::string GetName() const;
+
 		bool IsEmpty() { return m_RelativePath.empty(); }
 
-		std::string ToString() { return m_RelativePath; }
-		uint32_t ToId() { return entt::hashed_string{ m_RelativePath.c_str() }; }
+		uint32_t ToId() const { return entt::hashed_string{ m_RelativePath.c_str() }; }
 
 	private:
 		std::string m_RelativePath;

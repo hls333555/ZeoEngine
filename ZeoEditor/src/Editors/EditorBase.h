@@ -10,6 +10,7 @@ namespace ZeoEngine {
 
 	class EditorCamera;
 	class DockspaceBase;
+	class IAsset;
 	class Scene;
 	class FrameBuffer;
 
@@ -46,22 +47,28 @@ namespace ZeoEngine {
 
 		void Open();
 
-		/** Create an empty scene and init camera. */
-		void CreateNewScene(bool bIsFromOpenScene = false);
-		void OpenScene();
-		void OpenScene(const std::string& path);
-		void SaveScene();
-		void SaveSceneAs();
+		/** Create an empty scene and initialize camera. */
+		void NewAsset(bool bIsFromLoad = false);
+		void LoadAsset();
+		/** Create an empty scene and load asset from disk. */
+		void LoadAsset(const std::string& path);
+		void SaveAsset();
+		void SaveAsset(const std::string& path);
+		void SaveAssetAs();
 
 		bool GetPendingClearColorTransparent() const { return m_bPendingClearColorTransparent; }
 		void SetPendingClearColorTransparent(bool bValue) { m_bPendingClearColorTransparent  = bValue; }
 
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
 
+		virtual std::string GetAssetPath() const = 0;
+
 	private:
+		virtual void PostSceneCreate(bool bIsFromLoad) {}
+
 		virtual AssetTypeId GetAssetTypeId() const = 0;
-		virtual void Serialize(const std::string& filePath) {}
-		virtual void Deserialize(const std::string& filePath) {}
+		virtual void LoadAssetImpl(const std::string& path) = 0;
+		virtual void SaveAssetImpl(const std::string& path) = 0;
 
 		void CreateDockspace();
 
@@ -73,16 +80,21 @@ namespace ZeoEngine {
 
 	public:
 		/**
-		 * Called before scene is created.
-		 * The bool argument indicates whether the scene is created by "OpenScene" or "NewScene"
+		 * Called before scene being created.
+		 * The bool argument indicates whether the scene is created by "Load" or "New"
 		 */
 		entt::sink<void(bool)> m_PreSceneCreate{ m_PreSceneCreateDel };
 		/**
-		 * Called after scene is created.
-		 * The bool argument indicates whether the scene is created by "OpenScene" or "NewScene"
+		 * Called after scene being created.
+		 * The bool argument indicates whether the scene is created by "Load" or "New"
 		 */
 		entt::sink<void(bool)> m_PostSceneCreate{ m_PostSceneCreateDel };
-		/** Called after scene is rendered. */
+		/**
+		 * Called after scene being loaded.
+		 * All data have been loaded, initialization stuff can be done here (e.g. particle system creation)
+		 */
+		entt::sink<void()> m_PostSceneLoad{ m_PostSceneLoadDel };
+		/** Called after scene being rendered. */
 		entt::sink<void(const Ref<FrameBuffer>&)> m_PostSceneRender{ m_PostSceneRenderDel };
 
 	private:
@@ -102,6 +114,7 @@ namespace ZeoEngine {
 		bool m_bBlockSceneEvents = true;
 
 		entt::sigh<void(bool)> m_PreSceneCreateDel, m_PostSceneCreateDel;
+		entt::sigh<void()> m_PostSceneLoadDel;
 		entt::sigh<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
 	};
 

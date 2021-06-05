@@ -56,10 +56,10 @@ namespace ZeoEngine {
 	{
 		switch (typeId)
 		{
-			case AssetType<Scene>::Id():
-			case AssetType<ParticleTemplate>::Id():	return "Zeo Asset (*.zasset)\0*.zasset";
-			case AssetType<Texture2D>::Id():			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
-			default:									return nullptr;
+			case SceneAsset::TypeId():
+			case ParticleTemplateAsset::TypeId():	return "Zeo Asset (*.zasset)\0*.zasset";
+			case Texture2DAsset::TypeId():			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
+			default:								return nullptr;
 		}
 	}
 

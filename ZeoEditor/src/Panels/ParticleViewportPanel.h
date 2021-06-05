@@ -18,7 +18,7 @@ namespace ZeoEngine {
 
 		virtual void RenderToolbar() override;
 
-		void CreatePreviewParticle(bool bIsFromOpenScene = false);
+		void CreatePreviewParticle(bool bIsFromOpen = false);
 		void CreateDefaultParticleSystem();
 
 	private:

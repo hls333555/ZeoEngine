@@ -6,6 +6,7 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
@@ -58,20 +59,16 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	struct ParticleTemplate : public std::enable_shared_from_this<ParticleTemplate>
+	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetImpl<ParticleTemplateAsset>
 	{
 	private:
-		explicit ParticleTemplate(const std::string& path)
-			: Path(PathUtils::GetRelativePath(path))
-			, Name(PathUtils::GetNameFromPath(path))
-		{
-		}
+		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
-		static Ref<ParticleTemplate> Create(const std::string& path = {});
+		static Ref<ParticleTemplateAsset> Create(const std::string& path);
 
-		const std::string& GetPath() const { return Path; }
-		const std::string& GetName() const { return Name; }
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
 
 		void Reload();
 
@@ -92,9 +89,6 @@ namespace ZeoEngine {
 		}
 
 		void ResimulateAllParticleSystemInstances();
-
-	private:
-		void Deserialize();
 
 	public:
 		bool bIsLocalSpace = false;
@@ -126,7 +120,7 @@ namespace ZeoEngine {
 
 		ParticleFloat Lifetime;
 
-		Asset<Texture2D> Texture;
+		AssetHandle<Texture2DAsset> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
@@ -138,9 +132,6 @@ namespace ZeoEngine {
 		uint32_t MaxParticles = 500;
 
 	private:
-		std::string Path;
-		std::string Name;
-
 		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
 		std::vector<Ref<ParticleSystemInstance>> ParticleSystemInstances;
 
@@ -151,11 +142,11 @@ namespace ZeoEngine {
 	class ParticleSystemInstance
 	{
 		friend class ParticleViewportPanel;
-		friend struct ParticleTemplate;
+		friend class ParticleTemplateAsset;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const Asset<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
 		/**
@@ -165,7 +156,7 @@ namespace ZeoEngine {
 		 */
 		static void Create(ParticleSystemComponent& particleComp);
 
-		Asset<ParticleTemplate>& GetParticleTemplate() { return m_ParticleTemplate; }
+		AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -191,7 +182,7 @@ namespace ZeoEngine {
 			float LoopDuration;
 			float SpawnRate;
 			std::vector<BurstDataSpec> BurstList;
-			Asset<Texture2D> Texture;
+			AssetHandle<Texture2DAsset> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
 			glm::vec3 InheritVelocityRatio{ 0.0f };
@@ -243,7 +234,7 @@ namespace ZeoEngine {
 		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
-		Asset<ParticleTemplate> m_ParticleTemplate;
+		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
@@ -277,18 +268,18 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleLoader final : AssetLoader<ParticleLoader, ParticleTemplate>
+	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
 	{
-		Asset<ParticleTemplate> load(const std::string& path) const
+		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
 		{
-			return ParticleTemplate::Create(path);
+			return ParticleTemplateAsset::Create(path);
 		}
 	};
 	
-	class ParticleLibrary : public AssetLibrary<ParticleLibrary, ParticleTemplate, ParticleLoader>
+	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>
 	{
 	public:
-		virtual Asset<ParticleTemplate> ReloadAsset(AssetPath path) override
+		AssetHandle<ParticleTemplateAsset> ReloadAsset(AssetPath path)
 		{
 			if (path.IsEmpty()) return {};
 
