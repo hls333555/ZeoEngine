@@ -131,6 +131,7 @@ namespace ZeoEngine {
 		auto& colors = ImGui::GetStyle().Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.13f, 0.135f, 0.14f, 1.0f };
 		colors[ImGuiCol_PopupBg] = ImVec4{ 0.05f, 0.05f, 0.05f, 0.95f };
+		colors[ImGuiCol_ModalWindowDimBg] = ImVec4{ 0.13f, 0.13f, 0.13f, 0.8f };
 
 		// Headers
 		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };

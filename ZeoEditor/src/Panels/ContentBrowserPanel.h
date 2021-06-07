@@ -63,6 +63,8 @@ namespace ZeoEngine {
 		std::string m_PathToRename;
 		/** Directory or asset waiting for creation */
 		std::string m_PathToCreate;
+		/** Directory or asset waiting for deletion */
+		std::string m_PathToDelete;
 
 		TextFilter m_Filter;
 	};

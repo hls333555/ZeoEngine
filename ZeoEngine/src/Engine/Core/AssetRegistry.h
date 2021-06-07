@@ -137,7 +137,13 @@ namespace ZeoEngine {
 		 * @param optionalAssetTypeId - If not set, type id is retrieved from file
 		 */
 		void AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
-		void RemovePathFromTree(const std::string& baseDirectory, const std::string& path);
+		/**
+		 * Remove a path from the path tree.
+		 * If path is a directory, it will recursively remove its child paths.
+		 * Path parameter should be copied during recursion.
+		 * Returns the iterator next to the removed one.
+		 */
+		std::vector<std::string>::iterator RemovePathFromTree(std::string path);
 		void RenamePathInTree(const std::string& baseDirectory, const std::string& oldPath, const std::string& newPath, bool bIsAsset);
 
 		/**

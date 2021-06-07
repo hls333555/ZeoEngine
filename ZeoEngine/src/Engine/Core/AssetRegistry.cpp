@@ -121,26 +121,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	void AssetRegistry::RemovePathFromTree(const std::string& baseDirectory, const std::string& path)
+	std::vector<std::string>::iterator AssetRegistry::RemovePathFromTree(std::string path)
 	{
-		auto parentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
+		if (auto assetSpec = GetPathSpec<AssetSpec>(path))
 		{
-			return pair.first == baseDirectory;
-		});
-		ZE_CORE_ASSERT(parentPathIt != m_PathTree.end());
-		auto currentPathInParentIt = std::find(parentPathIt->second.begin(), parentPathIt->second.end(), path);
-		ZE_CORE_ASSERT(currentPathInParentIt != parentPathIt->second.end());
-		parentPathIt->second.erase(currentPathInParentIt);
-		auto baseDirectorySpec = GetPathSpec<DirectorySpec>(baseDirectory);
-		ZE_CORE_ASSERT(baseDirectorySpec);
-		baseDirectorySpec->bHasAnySubDirectory = false;
-		for (const auto& subPath : parentPathIt->second)
-		{
-			if (GetPathSpec<DirectorySpec>(subPath))
-			{
-				baseDirectorySpec->bHasAnySubDirectory = true;
-				break;
-			}
+			auto& assetSpecs = m_AssetSpecsById[assetSpec->TypeId];
+			auto specIt = std::find(assetSpecs.begin(), assetSpecs.end(), assetSpec);
+			ZE_CORE_ASSERT(specIt != assetSpecs.end());
+			assetSpecs.erase(specIt);
 		}
 
 		auto currentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&path](const auto& pair)
@@ -150,20 +138,41 @@ namespace ZeoEngine {
 		// For assets, currentPathIt should be invalid
 		if (currentPathIt != m_PathTree.end())
 		{
+			for (auto it = currentPathIt->second.begin(); it != currentPathIt->second.end();)
+			{
+				// Remove path from tree recursively
+				it = RemovePathFromTree(*it);
+			}
 			m_PathTree.erase(currentPathIt);
 		}
 
-		if (auto assetSpec = GetPathSpec<AssetSpec>(path))
+		std::string parentPath = PathUtils::GetParentPath(path);
+		auto parentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&parentPath](const auto& pair)
 		{
-			auto& assetSpecs = m_AssetSpecsById[assetSpec->TypeId];
-			auto specIt = std::find(assetSpecs.begin(), assetSpecs.end(), assetSpec);
-			ZE_CORE_ASSERT(specIt != assetSpecs.end());
-			assetSpecs.erase(specIt);
+			return pair.first == parentPath;
+		});
+		ZE_CORE_ASSERT(parentPathIt != m_PathTree.end());
+		auto currentPathInParentIt = std::find(parentPathIt->second.begin(), parentPathIt->second.end(), path);
+		ZE_CORE_ASSERT(currentPathInParentIt != parentPathIt->second.end());
+		// Return the iterator for next loop use
+		auto retIt = parentPathIt->second.erase(currentPathInParentIt);
+		auto parentPathSpec = GetPathSpec<DirectorySpec>(parentPath);
+		ZE_CORE_ASSERT(parentPathSpec);
+		parentPathSpec->bHasAnySubDirectory = false;
+		for (const auto& subPath : parentPathIt->second)
+		{
+			if (GetPathSpec<DirectorySpec>(subPath))
+			{
+				parentPathSpec->bHasAnySubDirectory = true;
+				break;
+			}
 		}
 
 		auto specIt = m_PathSpecs.find(path);
 		ZE_CORE_ASSERT(specIt != m_PathSpecs.end());
 		m_PathSpecs.erase(specIt);
+
+		return retIt;
 	}
 
 	void AssetRegistry::RenamePathInTree(const std::string& baseDirectory, const std::string& oldPath, const std::string& newPath, bool bIsAsset)
@@ -237,8 +246,11 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnPathRemoved(const std::string& path)
 	{
-		std::string parentPath = PathUtils::GetParentPath(path);
-		RemovePathFromTree(parentPath, path);
+		BenchmarkTimer timer;
+
+		RemovePathFromTree(path);
+
+		ZE_CORE_WARN("Path removal took {0} ms", timer.ElapsedMillis());
 	}
 
 	void AssetRegistry::OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset)

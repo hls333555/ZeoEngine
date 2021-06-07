@@ -87,7 +87,7 @@ namespace ZeoEngine {
 			case Key::Delete:
 				if (!m_SelectedPath.empty())
 				{
-					ProcessPathDeletion(m_SelectedPath);
+					m_PathToDelete = m_SelectedPath;
 				}
 				break;
 			// Rename selected directory or asset
@@ -247,6 +247,11 @@ namespace ZeoEngine {
 			}
 
 			DrawWindowContextMenu();
+
+			if (!m_PathToDelete.empty())
+			{
+				ProcessPathDeletion(m_PathToDelete);
+			}
 		}
 
 		ImGui::EndChild();
@@ -571,10 +576,47 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::ProcessPathDeletion(const std::string& path)
 	{
-		// TODO: Pop up a deletion dialog
-		PathUtils::DeletePath(path);
-		AssetRegistry::Get().OnPathRemoved(path);
-		m_SelectedPath.clear();
+		static ImVec2 buttonSize{ 120.0f, 0.0f };
+		ImGui::OpenPopup("Delete?");
+		// Deletion request dialog
+		if (ImGui::BeginPopupModal("Delete?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("The selected folder/asset will be permanently deleted.\nThis operation cannot be undone!\n\n");
+
+			if (ImGui::Button("OK", buttonSize))
+			{
+				auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+				if (!assetSpec)
+				{
+					// Delete a directory
+					PathUtils::DeletePath(path);
+					AssetRegistry::Get().OnPathRemoved(path);
+				}
+				else
+				{
+					// Delete an asset
+					AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId)->DeleteAsset(path);
+				}
+				// Clear current selection
+				m_SelectedPath.clear();
+				m_PathToDelete.clear();
+
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SetItemDefaultFocus();
+
+			float availableWidth = ImGui::GetContentRegionAvail().x;
+			ImGui::SameLine(availableWidth - buttonSize.x);
+
+			if (ImGui::Button("Cancel", buttonSize))
+			{
+				m_PathToDelete.clear();
+
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void ContentBrowserPanel::ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, const Ref<AssetSpec>& assetSpec)
