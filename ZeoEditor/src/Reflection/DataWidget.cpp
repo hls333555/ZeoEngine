@@ -470,11 +470,15 @@ namespace ZeoEngine {
 				ImGui::SetTooltipWithPadding("Drag to re-arrange elements");
 			}
 
-			// Drag-drop operation
+			// Drag to re-arrange sequence container elements
 			{
+				uint32_t id = GetAggregatedDataID(m_DataSpec.Data);
+				char dragTypeBuffer[64];
+				_itoa_s(id, dragTypeBuffer, 10);
+				strcat_s(dragTypeBuffer, "SequenceContainerElement");
 				if (ImGui::BeginDragDropSource())
 				{
-					ImGui::SetDragDropPayload("DragSeqContainerIndex", &i, sizeof(uint32_t));
+					ImGui::SetDragDropPayload(dragTypeBuffer, &i, sizeof(uint32_t));
 					ImGui::Text("Place it here");
 
 					ImGui::EndDragDropSource();
@@ -482,7 +486,7 @@ namespace ZeoEngine {
 
 				if (ImGui::BeginDragDropTarget())
 				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragSeqContainerIndex"))
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(dragTypeBuffer))
 					{
 						ZE_CORE_ASSERT(payload->DataSize == sizeof(uint32_t));
 
