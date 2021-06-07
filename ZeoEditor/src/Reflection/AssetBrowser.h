@@ -79,6 +79,19 @@ namespace ZeoEngine {
 							{ assetPreviewWidth, assetPreviewWidth },
 							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 					}
+
+					// Accept asset dragging from the Content Browser
+					if (ImGui::BeginDragDropTarget())
+					{
+						char typeStr[32];
+						_itoa_s(TypeId, typeStr, 10);
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(typeStr))
+						{
+							auto spec = *(const Ref<AssetSpec>*)payload->Data;
+							bIsValueChanged = spec != retSpec;
+							retSpec = spec;
+						}
+					}
 				}
 
 				ImGui::SameLine();

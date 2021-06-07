@@ -430,6 +430,22 @@ namespace ZeoEngine {
 				ImGui::SetTooltipWithPadding("%s", path.c_str());
 			}
 
+			// Begin dragging asset
+			if (assetSpec && ImGui::BeginDragDropSource())
+			{
+				char typeStr[32];
+				_itoa_s(assetSpec->TypeId, typeStr, 10);
+				ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
+				
+				auto thumbnailTexture = assetSpec->ThumbnailTexture ? assetSpec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(assetSpec->TypeId);
+				// Draw thumbnail or default icon
+				ImGui::Image(thumbnailTexture->GetTextureID(),
+					{ thumbnailWidth, thumbnailWidth },
+					{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+				ImGui::EndDragDropSource();
+			}
+
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
 				if (assetSpec)
