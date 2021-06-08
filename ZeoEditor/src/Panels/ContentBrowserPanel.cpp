@@ -12,6 +12,7 @@
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 #define MAX_PATH_SIZE 128
 
@@ -137,6 +138,23 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawTopBar()
 	{
+		// Import an asset via file dialog
+		if (ImGui::Button(ICON_FA_FILE_IMPORT " Import"))
+		{
+			auto filePath = FileDialogs::OpenFile();
+			if (filePath)
+			{
+				std::string extension = PathUtils::GetExtensionFromPath(*filePath);
+				std::string assetName = PathUtils::GetFileNameFromPath(*filePath);
+				std::string destPath = PathUtils::AppendPath(m_SelectedDirectory, assetName);
+				auto& am = AssetManager::Get();
+				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), *filePath, destPath);
+			}
+		}
+		ImGui::SetTooltipWithPadding("Import to %s", m_SelectedDirectory.c_str());
+
+		ImGui::SameLine();
+
 		// Filters menu
 		if (ImGui::BeginPopupWithPadding("Filters"))
 		{
@@ -152,7 +170,7 @@ namespace ZeoEngine {
 			
 			ImGui::EndPopup();
 		}
-		if (ImGui::Button(ICON_FA_FILTER  "Filters"))
+		if (ImGui::Button(ICON_FA_FILTER " Filters"))
 		{
 			ImGui::OpenPopup("Filters");
 		}

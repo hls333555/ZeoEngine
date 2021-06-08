@@ -12,13 +12,20 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const = 0;
 		virtual bool ShouldShowInContextMenu() const = 0;
-		virtual void CreateAsset(AssetTypeId typeId, const std::string& path) = 0;
+		virtual void CreateAsset(const std::string& path) = 0;
+		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) = 0;
 	};
 
 	class AssetFactoryBase : public IAssetFactory
 	{
+		friend class AssetManager;
+
 	public:
-		virtual void CreateAsset(AssetTypeId typeId, const std::string& path) override;
+		virtual void CreateAsset(const std::string& path) override;
+		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) override;
+
+	protected:
+		AssetTypeId m_TypeId;
 	};
 
 	class SceneAssetFactory : public AssetFactoryBase

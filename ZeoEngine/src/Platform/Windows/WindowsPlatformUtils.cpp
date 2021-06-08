@@ -7,12 +7,11 @@
 #include <GLFW/glfw3native.h>
 
 #include "Engine/Core/Application.h"
-#include "Engine/GameFramework/Scene.h"
-#include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Core/AssetManager.h"
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::OpenFile(AssetTypeId typeId)
+	std::optional<std::string> FileDialogs::OpenFile()
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -21,7 +20,8 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = GetAssetFilterFromAssetType(typeId);
+		std::string filterStr = GetSupportedAssetFilter();
+		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 		if (GetOpenFileNameA(&ofn) == TRUE)
@@ -31,7 +31,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	std::optional<std::string> FileDialogs::SaveFile(AssetTypeId typeId)
+	std::optional<std::string> FileDialogs::SaveFile()
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -40,7 +40,8 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = GetAssetFilterFromAssetType(typeId);
+		std::string filterStr = GetSupportedAssetFilter();
+		ofn.lpstrFilter = filterStr.c_str();
 		ofn.nFilterIndex = 1;
 		// Sets the default extension by extracting it from the filter
 		ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;
@@ -52,15 +53,24 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	const char* FileDialogs::GetAssetFilterFromAssetType(AssetTypeId typeId)
+	std::string FileDialogs::GetSupportedAssetFilter()
 	{
-		switch (typeId)
+		std::string extensionStr;
+		for (auto it = AssetManager::Get().m_SupportedFileExtensions.begin();;)
 		{
-			case SceneAsset::TypeId():
-			case ParticleTemplateAsset::TypeId():	return "Zeo Asset (*.zasset)\0*.zasset";
-			case Texture2DAsset::TypeId():			return "PNG (*.png)\0*.png"; // TODO: Support more texture format
-			default:								return nullptr;
+			extensionStr += it->first;
+			if (++it != AssetManager::Get().m_SupportedFileExtensions.end())
+			{
+				extensionStr += ";*";
+			}
+			else
+			{
+				break;
+			}
 		}
+		std::stringstream ss;
+		ss << "All supported Files (*" << extensionStr << ")" << '\0' << "*" << extensionStr << '\0'; // NOTE: The \0 must be char instead of string!
+		return ss.str();
 	}
 
 }

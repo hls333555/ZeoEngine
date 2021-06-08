@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <optional>
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
@@ -14,6 +15,7 @@ namespace ZeoEngine {
 	class AssetManager
 	{
 		friend class EditorLayer;
+		friend class FileDialogs;
 
 	public:
 		static AssetManager& Get()
@@ -29,6 +31,8 @@ namespace ZeoEngine {
 
 		/** Construct a new asset. */
 		void CreateAsset(AssetTypeId typeId, const std::string& path) const;
+		/** Import a new asset from file dialog by copying it from srcPath to destPath. */
+		void ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path);
 
@@ -63,9 +67,12 @@ namespace ZeoEngine {
 		Ref<Texture2D> GetAssetTypeIcon(AssetTypeId typeId) const;
 		Ref<Texture2D> GetFolderIcon() const { return m_FolderIcon; }
 
+		std::optional<AssetTypeId> GetTypdIdFromFileExtension(const std::string& extension);
+
 	private:
 		void Init();
 		void LoadAssetTypeIcons();
+		void InitSupportedFileExtensions();
 
 	protected:
 		AssetManager() = default;
@@ -81,6 +88,9 @@ namespace ZeoEngine {
 		/** Map from asset type id to its type icon texture */
 		std::unordered_map<AssetTypeId, Ref<Texture2D>> m_AssetTypeIcons;
 		Ref<Texture2D> m_FolderIcon;
+
+		/** Map from supported file extension to asset type Id */
+		std::unordered_map<std::string, AssetTypeId> m_SupportedFileExtensions;
 	};
 
 }

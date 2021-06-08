@@ -105,7 +105,7 @@ namespace ZeoEngine {
 
 	void EditorBase::LoadAsset()
 	{
-		auto filePath = FileDialogs::OpenFile(GetAssetTypeId());
+		auto filePath = FileDialogs::OpenFile();
 		if (!filePath) return;
 
 		LoadAsset(*filePath);
@@ -147,7 +147,7 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveAssetAs()
 	{
-		auto filePath = FileDialogs::SaveFile(GetAssetTypeId());
+		auto filePath = FileDialogs::SaveFile();
 		if (!filePath) return;
 
 		SaveAsset(*filePath);

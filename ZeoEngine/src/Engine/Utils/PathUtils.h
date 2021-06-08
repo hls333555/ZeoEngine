@@ -40,6 +40,8 @@ namespace ZeoEngine {
 		static void RenamePath(const std::string& oldPath, const std::string& newPath);
 		/** Remove a path (and its sub-paths). Returns number of paths removed. */
 		static uintmax_t DeletePath(const std::string& path, bool bRecursively = true);
+		/** Copy an asset to another place. Returns false if failed. */
+		static bool CopyAsset(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite);
 
 		/**
 		 * Iterate through the path's parent path.

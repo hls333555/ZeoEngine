@@ -42,10 +42,12 @@ namespace ZeoEngine {
 		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
 
 		LoadAssetTypeIcons();
+		InitSupportedFileExtensions();
 	}
 
 	bool AssetManager::RegisterAssetFactory(AssetTypeId typeId, Ref<IAssetFactory> factory)
 	{
+		std::dynamic_pointer_cast<AssetFactoryBase>(factory)->m_TypeId = typeId;
 		return m_AssetFactories.insert(std::make_pair(typeId, factory)).second;
 	}
 
@@ -59,7 +61,15 @@ namespace ZeoEngine {
 		auto it = m_AssetFactories.find(typeId);
 		if (it == m_AssetFactories.end()) return;
 
-		it->second->CreateAsset(typeId, path);
+		it->second->CreateAsset(path);
+	}
+
+	void AssetManager::ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const
+	{
+		auto it = m_AssetFactories.find(typeId);
+		if (it == m_AssetFactories.end()) return;
+
+		it->second->ImportAsset(srcPath, destPath);
 	}
 
 	bool AssetManager::OpenAsset(const std::string& path)
@@ -106,6 +116,16 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	std::optional<AssetTypeId> AssetManager::GetTypdIdFromFileExtension(const std::string& extension)
+	{
+		if (auto it = m_SupportedFileExtensions.find(extension); it != m_SupportedFileExtensions.cend())
+		{
+			return it->second;
+		}
+
+		return {};
+	}
+
 	void AssetManager::LoadAssetTypeIcons()
 	{
 		for (const auto& [typeId, factory] : m_AssetFactories)
@@ -117,6 +137,12 @@ namespace ZeoEngine {
 		}
 
 		m_FolderIcon = Texture2D::Create(Utils::GetFolderIconPath(), true);
+	}
+
+	void AssetManager::InitSupportedFileExtensions()
+	{
+		m_SupportedFileExtensions.insert(std::make_pair(".png", Texture2DAsset::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".tga", Texture2DAsset::TypeId()));
 	}
 
 }

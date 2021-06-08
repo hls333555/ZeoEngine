@@ -90,6 +90,11 @@ namespace ZeoEngine {
 		}
 	}
 
+	bool PathUtils::CopyAsset(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite)
+	{
+		return std::filesystem::copy_file(srcPath, destPath, bShouldOverwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none);
+	}
+
 	std::optional<AssetTypeId> PathUtils::ParseAssetTypeIdFromFile(const std::string& path)
 	{
 		std::string extension = GetExtensionFromPath(path);
