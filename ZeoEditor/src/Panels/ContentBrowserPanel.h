@@ -26,6 +26,8 @@ namespace ZeoEngine {
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 
+		void InitAssetTypeFilters();
+
 		void DrawTopBar();
 		void DrawLeftColumn();
 		void DrawColumnSplitter(float contentWidth);
@@ -59,12 +61,24 @@ namespace ZeoEngine {
 		std::string m_SelectedDirectory;
 		/** Selected directory/asset in the right column */
 		std::string m_SelectedPath;
+
+		/** Directory waiting for opening */
+		std::string m_DirectoryToOpen;
 		/** Directory or asset waiting for renaming */
 		std::string m_PathToRename;
 		/** Directory or asset waiting for creation */
 		std::string m_PathToCreate;
 		/** Directory or asset waiting for deletion */
 		std::string m_PathToDelete;
+
+		struct AssetTypeFilterSpec
+		{
+			AssetTypeId TypeId;
+			const char* TypeName;
+			bool bIsFilterActive = false;
+		};
+		std::vector<AssetTypeFilterSpec> m_AssetTypeFilters;
+		bool m_bIsAnyTypeFilterActive = false;
 
 		TextFilter m_Filter;
 	};

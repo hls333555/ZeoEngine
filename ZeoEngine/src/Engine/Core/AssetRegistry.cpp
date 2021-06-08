@@ -73,6 +73,17 @@ namespace ZeoEngine {
 		return std::find(it->second.begin(), it->second.end(), path) != it->second.end();
 	}
 	
+	const std::vector<std::string>& AssetRegistry::GetPathsInDirectory(const std::string& directory)
+	{
+		auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&directory](const auto& pair)
+		{
+			return pair.first == directory;
+		});
+		if (it == m_PathTree.end()) return {};
+
+		return it->second;
+	}
+
 	void AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path)
 	{
 		m_PathTree.emplace_back(std::make_pair(path, std::vector<std::string>{}));

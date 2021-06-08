@@ -43,11 +43,18 @@ namespace ZeoEngine {
 			return newName;
 		}
 
+		static float GetThumbnailWidth()
+		{
+			return ImGui::GetStyle().Alpha * 32.0f;
+		}
+
 	}
 
 	void ContentBrowserPanel::OnAttach()
 	{
 		m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
+
+		InitAssetTypeFilters();
 	}
 
 	void ContentBrowserPanel::ProcessRender()
@@ -120,12 +127,29 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	void ContentBrowserPanel::InitAssetTypeFilters()
+	{
+		AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
+		{
+			m_AssetTypeFilters.emplace_back(AssetTypeFilterSpec{ typeId, factory->GetAssetTypeName(), false });
+		});
+	}
+
 	void ContentBrowserPanel::DrawTopBar()
 	{
 		// Filters menu
 		if (ImGui::BeginPopupWithPadding("Filters"))
 		{
-			// TODO: AssetType Filter
+			m_bIsAnyTypeFilterActive = false;
+			for (auto& filterSpec : m_AssetTypeFilters)
+			{
+				ImGui::Checkbox(filterSpec.TypeName, &filterSpec.bIsFilterActive);
+				if (filterSpec.bIsFilterActive)
+				{
+					m_bIsAnyTypeFilterActive = true;
+				}
+			}
+			
 			ImGui::EndPopup();
 		}
 		if (ImGui::Button(ICON_FA_FILTER  "Filters"))
@@ -231,7 +255,7 @@ namespace ZeoEngine {
 
 			ImGui::Separator();
 
-			if (!m_Filter.IsActive())
+			if (!m_Filter.IsActive() && !m_bIsAnyTypeFilterActive)
 			{
 				DrawPathsInDirectory();
 			}
@@ -285,23 +309,38 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawPathsInDirectory()
 	{
-		bool bIsDirectoryEmpty = true;
-		AssetRegistry& ar = AssetRegistry::Get();
-		ar.ForEachPathInDirectory(m_SelectedDirectory, [&](const std::string& path)
+		const auto& paths = AssetRegistry::Get().GetPathsInDirectory(m_SelectedDirectory);
+		if (paths.size() > 0)
 		{
-			bIsDirectoryEmpty = false;
-			DrawSelectablePath(path);
-		});
-
-		if (bIsDirectoryEmpty)
+			// Use clipper for unfiltered display
+			ImGuiListClipper clipper;
+			clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetThumbnailWidth());
+			auto it = paths.begin();
+			while (clipper.Step())
+			{
+				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
+				{
+					DrawSelectablePath(*(it + index));
+				}
+			}
+		}
+		else
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 			ImGui::TextCentered("This folder is empty");
 			ImGui::PopStyleColor();
 		}
+
+		if (!m_DirectoryToOpen.empty())
+		{
+			m_SelectedDirectory = m_DirectoryToOpen;
+			// Double-click to open directory in the right column
+			HandleRightColumnDirectoryDoubleClicked(m_DirectoryToOpen);
+			m_DirectoryToOpen.clear();
+		}
 	}
 
-	// TODO: Consider caching the result
+	// TODO: Consider caching the result and using clipper
 	void ContentBrowserPanel::DrawFilteredAssetsInDirectoryRecursively()
 	{
 		//BenchmarkTimer bt;
@@ -313,8 +352,21 @@ namespace ZeoEngine {
 
 			if (m_Filter.PassFilter(assetSpec->PathName.c_str()))
 			{
-				bIsFilteredEmpty = false;
-				DrawSelectablePath(path);
+				bool bShouldDrawPath = true;
+				if (m_bIsAnyTypeFilterActive)
+				{
+					auto typeId = assetSpec->TypeId;
+					auto it = std::find_if(m_AssetTypeFilters.begin(), m_AssetTypeFilters.end(), [typeId](const auto& filterSpec)
+					{
+						return filterSpec.TypeId == typeId;
+					});
+					bShouldDrawPath = it->bIsFilterActive;
+				}
+				if (bShouldDrawPath)
+				{
+					bIsFilteredEmpty = false;
+					DrawSelectablePath(path);
+				}
 			}
 		});
 		//std::cout << bt.ElapsedMillis() << std::endl;
@@ -332,7 +384,7 @@ namespace ZeoEngine {
 		{
 			// Actual directory or asset is created after renaming
 
-			const float thumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+			const float thumbnailWidth = Utils::GetThumbnailWidth();
 
 			bool bIsFolderCreationSelected = ImGui::Selectable("##FolderCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
 
@@ -426,7 +478,7 @@ namespace ZeoEngine {
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
 			auto assetSpec = std::dynamic_pointer_cast<AssetSpec>(spec);
 			const bool bPathNeedsRenaming = m_PathToRename == path;
-			static const float thumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+			static const float thumbnailWidth = Utils::GetThumbnailWidth();
 			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
 			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
 			// TODO: Display path tooltip
@@ -460,9 +512,8 @@ namespace ZeoEngine {
 				}
 				else
 				{
-					m_SelectedDirectory = path;
-					// Double-click to open directory in the right column
-					HandleRightColumnDirectoryDoubleClicked(path);
+					// Delay opening directory as clipper's iteration has not finished yet
+					m_DirectoryToOpen = path;
 				}
 			}
 

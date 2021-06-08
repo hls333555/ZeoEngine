@@ -19,10 +19,12 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
-		EditorManager::Get().CreateEditor(EditorType::MainEditor);
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
+
+		EditorManager::Get().CreateEditor(EditorType::MainEditor);
+		
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)

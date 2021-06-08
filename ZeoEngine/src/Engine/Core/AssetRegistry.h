@@ -67,6 +67,7 @@ namespace ZeoEngine {
 		}
 
 		bool ContainsPathInDirectory(const std::string& baseDirectory, const std::string& path);
+		const std::vector<std::string>& GetPathsInDirectory(const std::string& directory);
 
 		template<typename Func>
 		void ForEachPathInDirectory(const std::string& baseDirectory, Func func)
