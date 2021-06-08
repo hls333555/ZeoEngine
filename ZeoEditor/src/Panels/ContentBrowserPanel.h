@@ -46,6 +46,8 @@ namespace ZeoEngine {
 
 		void DrawSelectablePath(const std::string& path);
 
+		void DrawPathContextMenu(const std::string& path);
+
 		void HandleRightColumnDirectoryDoubleClicked(const std::string& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::string& path);
 

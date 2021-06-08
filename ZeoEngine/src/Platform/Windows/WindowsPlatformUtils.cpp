@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <windows.h>
+#include <shellapi.h> // NOTE: Include required windows.h before it
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/AssetManager.h"
@@ -71,6 +73,13 @@ namespace ZeoEngine {
 		std::stringstream ss;
 		ss << "All supported Files (*" << extensionStr << ")" << '\0' << "*" << extensionStr << '\0'; // NOTE: The \0 must be char instead of string!
 		return ss.str();
+	}
+
+	void PlatformUtils::ShowInExplorer(const std::string& path)
+	{
+		std::wstringstream params;
+		params << "/select," << path.c_str();
+		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 
 }

@@ -151,7 +151,10 @@ namespace ZeoEngine {
 				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), *filePath, destPath);
 			}
 		}
-		ImGui::SetTooltipWithPadding("Import to %s", m_SelectedDirectory.c_str());
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltipWithPadding("Import to %s", m_SelectedDirectory.c_str());
+		}
 
 		ImGui::SameLine();
 
@@ -505,6 +508,8 @@ namespace ZeoEngine {
 				ImGui::SetTooltipWithPadding("%s", path.c_str());
 			}
 
+			DrawPathContextMenu(path);
+
 			// Begin dragging asset
 			if (assetSpec && ImGui::BeginDragDropSource())
 			{
@@ -615,6 +620,21 @@ namespace ZeoEngine {
 			}
 		}
 		ImGui::PopID();
+	}
+
+	void ContentBrowserPanel::DrawPathContextMenu(const std::string& path)
+	{
+		if (ImGui::BeginPopupContextItemWithPadding(nullptr))
+		{
+			m_SelectedPath = path;
+
+			if (ImGui::MenuItem("Show In Explorer"))
+			{
+				PlatformUtils::ShowInExplorer(path);
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 
 	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::string& directory)

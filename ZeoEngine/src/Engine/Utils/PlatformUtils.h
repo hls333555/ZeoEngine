@@ -18,4 +18,11 @@ namespace ZeoEngine {
 		static std::string GetSupportedAssetFilter();
 	};
 
+	class PlatformUtils
+	{
+	public:
+		/** Open the file explorer and select the path. */
+		static void ShowInExplorer(const std::string& path);
+	};
+
 }
