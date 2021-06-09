@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		{
 			case Texture2DAsset::TypeId():
 			{
-				return Texture2DAsset::GetTexturePath(assetPath);
+				return PathUtils::GetResourcePathFromAssetPath(assetPath);
 			}
 			default:
 			{

@@ -80,10 +80,10 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void SceneViewportPanel::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverrideThumbnail)
+	void SceneViewportPanel::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverwriteThumbnail)
 	{
 		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});
-		if (!bOverrideThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
+		if (!bOverwriteThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
 
 		m_SnapshotSpec.AssetPath = assetPath;
 		m_SnapshotSpec.ThumbnailPath = thumbnailPath;
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		if (GetOwningEditor()->GetPendingClearColorTransparent())
 		{
 			GetOwningEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
-			AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail(m_SnapshotSpec.ThumbnailPath);
+			AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
 			GetOwningEditor()->SetPendingClearColorTransparent(false);
 		}
 	}

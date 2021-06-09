@@ -52,7 +52,7 @@ namespace ZeoEngine {
 	}
 
 	SceneAsset::SceneAsset(const std::string& path)
-		: AssetImpl(path)
+		: AssetBase(path)
 	{
 	}
 
@@ -67,6 +67,12 @@ namespace ZeoEngine {
 		};
 
 		return CreateRef<SceneAssetEnableShared>(path);
+	}
+
+	void SceneAsset::Reload()
+	{
+		Deserialize();
+		m_Scene->PostLoad();
 	}
 
 	void SceneAsset::Serialize(const std::string& path)

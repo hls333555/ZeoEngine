@@ -2,6 +2,7 @@
 
 #include <entt.hpp>
 
+#include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
@@ -17,13 +18,15 @@ namespace ZeoEngine {
 
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
+
+		virtual void Reload() = 0;
 	};
 
 	template<typename AssetClass>
-	class AssetImpl : public IAsset
+	class AssetBase : public IAsset
 	{
 	protected:
-		explicit AssetImpl(const std::string& path)
+		explicit AssetBase(const std::string& path)
 			: m_AssetPath(path) {}
 
 	public:

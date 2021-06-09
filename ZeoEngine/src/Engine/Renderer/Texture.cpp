@@ -41,11 +41,11 @@ namespace ZeoEngine {
 	}
 
 	Texture2DAsset::Texture2DAsset(const std::string& path)
-		: AssetImpl(path)
+		: AssetBase(path)
 	{
-		m_TexturePath = GetTexturePath(path);
-		ZE_CORE_ASSERT(PathUtils::DoesPathExist(m_TexturePath));
-		m_Texture = Texture2D::Create(m_TexturePath);
+		auto texturePath = PathUtils::GetResourcePathFromAssetPath(path);
+		ZE_CORE_ASSERT(PathUtils::DoesPathExist(texturePath));
+		m_Texture = Texture2D::Create(texturePath);
 		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
 	}
 
@@ -62,10 +62,19 @@ namespace ZeoEngine {
 		return CreateRef<Texture2DAssetEnableShared>(path);
 	}
 
-	std::string Texture2DAsset::GetTexturePath(const std::string& path)
+	void Texture2DAsset::Reload()
 	{
-		auto pos = path.rfind(".");
-		return path.substr(0, pos);
+
+	}
+
+	void Texture2DAsset::Serialize(const std::string& path)
+	{
+
+	}
+
+	void Texture2DAsset::Deserialize()
+	{
+
 	}
 
 }

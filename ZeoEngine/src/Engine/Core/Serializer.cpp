@@ -5,6 +5,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Core/AssetRegistry.h"
 
 namespace YAML {
 
@@ -125,6 +126,9 @@ namespace YAML {
 }
 
 namespace ZeoEngine {
+
+	const char* g_AssetTypeToken = "AssetType";
+	const char* g_ResourceSourceToken = "ResourceSourcePath";
 
 	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
 	{
@@ -551,7 +555,7 @@ namespace ZeoEngine {
 
 	void SceneSerializer::Serialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		Serialize_t<SceneAsset>(path, [&](YAML::Emitter& out)
+		WriteDataToAsset(path, SceneAsset::TypeId(), [&](YAML::Emitter& out)
 		{
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
@@ -575,7 +579,7 @@ namespace ZeoEngine {
 
 	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		auto data = PreDeserialize<SceneAsset>(path);
+		auto data = ReadDataFromAsset(path, SceneAsset::TypeId());
 		if (!data) return false;
 
 		auto entities = (*data)["Entities"];

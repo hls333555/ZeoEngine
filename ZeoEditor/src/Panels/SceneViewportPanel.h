@@ -22,9 +22,9 @@ namespace ZeoEngine {
 		 * 
 		 * @param assetPath - Path of asset
 		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
-		 * @param bOverrideThumbnail - If true, it will always do a capture no matter the existance of local cache
+		 * @param bOverwriteThumbnail - If true, it will always do a capture no matter the existance of local cache
 		 */
-		void Snapshot(const std::string& assetPath, uint32_t imageWidth = 0, bool bOverrideThumbnail = true);
+		void Snapshot(const std::string& assetPath, uint32_t imageWidth = 0, bool bOverwriteThumbnail = true);
 
 		const glm::vec2* GetViewportBounds() const { return m_ViewportBounds; }
 		glm::vec2 GetViewportSize() const;

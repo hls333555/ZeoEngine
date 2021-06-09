@@ -12,8 +12,8 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const = 0;
 		virtual bool ShouldShowInContextMenu() const = 0;
-		virtual void CreateAsset(const std::string& path) = 0;
-		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) = 0;
+		virtual void CreateAsset(const std::string& path) const = 0;
+		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const {}
 	};
 
 	class AssetFactoryBase : public IAssetFactory
@@ -21,11 +21,17 @@ namespace ZeoEngine {
 		friend class AssetManager;
 
 	public:
-		virtual void CreateAsset(const std::string& path) override;
-		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) override;
+		virtual void CreateAsset(const std::string& path) const override;
 
 	protected:
 		AssetTypeId m_TypeId;
+	};
+
+	class ImportableAssetFactoryBase : public AssetFactoryBase
+	{
+	public:
+		virtual bool ShouldShowInContextMenu() const override { return false; }
+		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
 	};
 
 	class SceneAssetFactory : public AssetFactoryBase
@@ -42,11 +48,10 @@ namespace ZeoEngine {
 		virtual bool ShouldShowInContextMenu() const override { return true; }
 	};
 
-	class Texture2DAssetFactory : public AssetFactoryBase
+	class Texture2DAssetFactory : public ImportableAssetFactoryBase
 	{
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Texture2D"; }
-		virtual bool ShouldShowInContextMenu() const override { return false; }
 	};
 
 }

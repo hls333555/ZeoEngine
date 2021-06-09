@@ -5,6 +5,8 @@
 #include "Editors/EditorBase.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
+#include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Core/ThumbnailManager.h"
 
 namespace ZeoEngine {
 
@@ -14,9 +16,55 @@ namespace ZeoEngine {
 		AssetRegistry::Get().OnPathRemoved(path);
 	}
 
+	void ImportableAssetActionsBase::DeleteAsset(const std::string& path) const
+	{
+		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		// Delete resource
+		PathUtils::DeletePath(resourcePath);
+		// Delete asset
+		AssetActionsBase::DeleteAsset(path);
+	}
+
+	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
+	{
+		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+		auto srcPath = assetSpec->ResourceSourcePath;
+		if (srcPath.empty())
+		{
+			auto filePath = FileDialogs::OpenFile();
+			if (!filePath) return;
+
+			srcPath = *filePath;
+		}
+
+		std::string canonicalSrcPath = PathUtils::GetCanonicalPath(srcPath);
+		const auto destPath = PathUtils::GetResourcePathFromAssetPath(path);
+		std::string canonicalDestPath = PathUtils::GetCanonicalPath(destPath);
+		if (canonicalDestPath != canonicalSrcPath)
+		{
+			// Copy and overwrite existing resource
+			bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
+			if (!bSuccess)
+			{
+				ZE_CORE_ERROR("Failed to reimport asset!");
+				return;
+			}
+		}
+		assetSpec->UpdateAll(canonicalSrcPath);
+		// TODO: Save asset
+		// Reload asset
+		ReloadAsset(path);
+		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, canonicalSrcPath);
+	}
+
 	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().GetEditor(EditorType::MainEditor)->LoadAsset(path);
+	}
+
+	void SceneAssetActions::ReloadAsset(const std::string& path) const
+	{
+		SceneAssetLibrary::Get().ReloadAsset(path);
 	}
 
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
@@ -24,13 +72,19 @@ namespace ZeoEngine {
 		EditorManager::Get().OpenEditor(EditorType::ParticleEditor)->LoadAsset(path);
 	}
 
-	void Texture2DAssetActions::DeleteAsset(const std::string& path) const
+	void ParticleAssetActions::ReloadAsset(const std::string& path) const
 	{
-		auto texturePath = Texture2DAsset::GetTexturePath(path);
-		// Delete actual texture
-		PathUtils::DeletePath(texturePath);
-		// Delete texture asset
-		AssetActionsBase::DeleteAsset(path);
+		ParticleTemplateAssetLibrary::Get().ReloadAsset(path);
+	}
+
+	void Texture2DAssetActions::OpenAsset(const std::string& path) const
+	{
+
+	}
+
+	void Texture2DAssetActions::ReloadAsset(const std::string& path) const
+	{
+		Texture2DAssetLibrary::Get().ReloadAsset(path);
 	}
 
 }

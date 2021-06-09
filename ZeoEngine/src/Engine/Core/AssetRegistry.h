@@ -31,13 +31,12 @@ namespace ZeoEngine {
 	{
 		using PathSpec::PathSpec;
 
-		void UpdateThumbnail(const std::string& path)
-		{
-			ThumbnailTexture = Texture2D::Create(path);
-		}
+		void UpdateAll(const std::string& srcPath);
+		void UpdateThumbnail();
 		
 		AssetTypeId TypeId;
 		Ref<Texture2D> ThumbnailTexture; // Can be null if no captured cache found
+		std::string ResourceSourcePath; // Can be empty if this is not an imported asset
 	};
 
 	class AssetRegistry
@@ -112,7 +111,8 @@ namespace ZeoEngine {
 			}
 		}
 
-		void OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
+		/** Returns the created directory/asset spec. */
+		Ref<PathSpec> OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
 		void OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset);
@@ -128,16 +128,18 @@ namespace ZeoEngine {
 		 * 
 		 * @param baseDirectory - Parent path
 		 * @param path - Path to add
+		 * @return - Created directory spec
 		 */
-		void AddPathToTree(const std::string& baseDirectory, const std::string& path);
+		Ref<DirectorySpec> AddPathToTree(const std::string& baseDirectory, const std::string& path);
 		/**
 		 * Add an asset to the path tree.
 		 * 
 		 * @param baseDirectory - Parent path
 		 * @param path - Path to add
 		 * @param optionalAssetTypeId - If not set, type id is retrieved from file
+		 * @return - Created asset spec
 		 */
-		void AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
+		Ref<AssetSpec> AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		/**
 		 * Remove a path from the path tree.
 		 * If path is a directory, it will recursively remove its child paths.

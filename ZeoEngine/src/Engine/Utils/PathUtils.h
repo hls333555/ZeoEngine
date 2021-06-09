@@ -1,8 +1,5 @@
 #pragma once
 
-#include <filesystem>
-#include <optional>
-
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
@@ -34,14 +31,12 @@ namespace ZeoEngine {
 		static bool CreateDirectory(const std::string& directory);
 		/** Create a directory recursively and returns true if succeeded. */
 		static bool CreateDirectories(const std::string& directory);
-		/** Create an empty asset of specified type. */
-		static void CreateEmptyAsset(AssetTypeId typeId, const std::string& path);
 		/** Rename a path. */
 		static void RenamePath(const std::string& oldPath, const std::string& newPath);
 		/** Remove a path (and its sub-paths). Returns number of paths removed. */
 		static uintmax_t DeletePath(const std::string& path, bool bRecursively = true);
-		/** Copy an asset to another place. Returns false if failed. */
-		static bool CopyAsset(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite);
+		/** Copy a file to another place. Returns false if failed. */
+		static bool CopyFile(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite);
 
 		/**
 		 * Iterate through the path's parent path.
@@ -62,8 +57,9 @@ namespace ZeoEngine {
 			}
 		}
 
-		/** Parse file and retrieve its type. */
-		static std::optional<AssetTypeId> ParseAssetTypeIdFromFile(const std::string& path);
+		/** Get resource path by erasing asset extension. */
+		static std::string GetResourcePathFromAssetPath(const std::string& assetPath);
+
 	};
 
 }

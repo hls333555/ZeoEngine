@@ -59,18 +59,13 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetImpl<ParticleTemplateAsset>
+	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetBase<ParticleTemplateAsset>
 	{
 	private:
 		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
 		static Ref<ParticleTemplateAsset> Create(const std::string& path);
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		void Reload();
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -89,6 +84,11 @@ namespace ZeoEngine {
 		}
 
 		void ResimulateAllParticleSystemInstances();
+
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+
+		virtual void Reload() override;
 
 	public:
 		bool bIsLocalSpace = false;
@@ -276,17 +276,6 @@ namespace ZeoEngine {
 		}
 	};
 	
-	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>
-	{
-	public:
-		AssetHandle<ParticleTemplateAsset> ReloadAsset(AssetPath path)
-		{
-			if (path.IsEmpty()) return {};
-
-			auto pTemplate = GetAsset(path);
-			pTemplate->Reload();
-			return pTemplate;
-		}
-	};
+	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>{};
 
 }

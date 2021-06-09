@@ -32,6 +32,15 @@ namespace ZeoEngine {
 			return reload<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
 		}
 
+		AssetHandle<AssetClass> ReloadAsset(AssetPath path)
+		{
+			if (path.IsEmpty()) return {};
+
+			auto asset = GetAsset(path);
+			asset->Reload();
+			return asset;
+		}
+
 		void DiscardAsset(AssetPath path)
 		{
 			discard(path.ToId());

@@ -1,10 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Utils/PathUtils.h"
 
-#include <yaml-cpp/yaml.h>
 #include <filesystem>
-
-#include "Engine/Core/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -59,20 +56,6 @@ namespace ZeoEngine {
 		return std::filesystem::create_directories(directory);
 	}
 
-	void PathUtils::CreateEmptyAsset(AssetTypeId typeId, const std::string& path)
-	{
-		YAML::Emitter out;
-
-		out << YAML::BeginMap;
-		{
-			out << YAML::Key << g_AssetTypeToken << YAML::Value << typeId;
-		}
-		out << YAML::EndMap;
-
-		std::ofstream fout(path);
-		fout << out.c_str();
-	}
-
 	void PathUtils::RenamePath(const std::string& oldPath, const std::string& newPath)
 	{
 		std::filesystem::rename(oldPath, newPath);
@@ -90,22 +73,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool PathUtils::CopyAsset(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite)
+	bool PathUtils::CopyFile(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite)
 	{
 		return std::filesystem::copy_file(srcPath, destPath, bShouldOverwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none);
 	}
 
-	std::optional<AssetTypeId> PathUtils::ParseAssetTypeIdFromFile(const std::string& path)
+	std::string PathUtils::GetResourcePathFromAssetPath(const std::string& assetPath)
 	{
-		std::string extension = GetExtensionFromPath(path);
-		ZE_CORE_ASSERT(extension == AssetRegistry::GetEngineAssetExtension());
-
-		auto data = YAML::LoadFile(path);
-		auto assetTypeData = data[g_AssetTypeToken];
-		if (!assetTypeData) return {};
-
-		AssetTypeId typeId = assetTypeData.as<AssetTypeId>();
-		return typeId;
+		return assetPath.substr(0, assetPath.rfind("."));
 	}
 
 }

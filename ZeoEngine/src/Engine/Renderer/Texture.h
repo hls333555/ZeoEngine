@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		static Ref<Texture2D> s_DefaultBackgroundTexture;
 	};
 
-	class Texture2DAsset : public AssetImpl<Texture2DAsset>
+	class Texture2DAsset : public AssetBase<Texture2DAsset>
 	{
 	private:
 		explicit Texture2DAsset(const std::string& path);
@@ -47,16 +47,14 @@ namespace ZeoEngine {
 	public:
 		static Ref<Texture2DAsset> Create(const std::string& path);
 
-		static std::string GetTexturePath(const std::string& path);
-
 		const Ref<Texture2D>& GetTexture() const { return m_Texture; }
 
-		// TODO:
-		virtual void Serialize(const std::string& path) override {}
-		virtual void Deserialize() override {}
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+
+		virtual void Reload() override;
 
 	private:
-		std::string m_TexturePath;
 		Ref<Texture2D> m_Texture;
 	};
 

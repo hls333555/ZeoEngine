@@ -632,6 +632,38 @@ namespace ZeoEngine {
 			{
 				PlatformUtils::ShowInExplorer(path);
 			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Show in external file explorer");
+			}
+
+			ImGui::Separator();
+
+			auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+			if (assetSpec)
+			{
+				auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId);
+				if (ImGui::MenuItem("Reload Asset"))
+				{
+					assetActions->ReloadAsset(path);
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Discard changes and reload from disk");
+				}
+				bool bIsImportableAsset = static_cast<bool>(std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions));
+				if (bIsImportableAsset)
+				{
+					if (ImGui::MenuItem("Reimport Asset"))
+					{
+						assetActions->ReimportAsset(path);
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltipWithPadding("Reimport from its original place");
+					}
+				}
+			}
 
 			ImGui::EndPopup();
 		}

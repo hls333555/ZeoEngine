@@ -8,8 +8,12 @@
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
+
+	extern const char* g_AssetTypeToken;
+	extern const char* g_ResourceSourceToken;
 
 	class ComponentSerializer
 	{
@@ -78,18 +82,19 @@ namespace ZeoEngine {
 
 	class Serializer
 	{
-	protected:
-		template<typename AssetClass, typename Func>
-		static void Serialize_t(const std::string& path, Func func)
+	public:
+		/**  */
+		template<typename Func>
+		static void WriteDataToAsset(const std::string& path, AssetTypeId typeId, Func func)
 		{
 			YAML::Emitter out;
 
 			const std::string assetName = PathUtils::GetNameFromPath(path);
-			ZE_CORE_TRACE("Serializing {0} '{1}'", AssetClass::TypeName(), assetName);
+			ZE_CORE_TRACE("Serializing \"{0}\"", assetName);
 
 			out << YAML::BeginMap;
 			{
-				out << YAML::Key << g_AssetTypeToken << YAML::Value << AssetClass::TypeId();
+				out << YAML::Key << g_AssetTypeToken << YAML::Value << typeId;
 				func(out);
 			}
 			out << YAML::EndMap;
@@ -98,21 +103,19 @@ namespace ZeoEngine {
 			fout << out.c_str();
 		}
 
-		template<typename AssetClass>
-		static std::optional<YAML::Node> PreDeserialize(const std::string& path)
+		/**  */
+		static std::optional<YAML::Node> ReadDataFromAsset(const std::string& path, std::optional<AssetTypeId> optionalTypeId = {})
 		{
 			auto data = YAML::LoadFile(path);
 			auto assetTypeData = data[g_AssetTypeToken];
-			auto typeName = AssetClass::TypeName();
-			if (!assetTypeData || assetTypeData.as<AssetTypeId>() != AssetClass::TypeId())
+			const std::string assetName = PathUtils::GetNameFromPath(path);
+			if (!assetTypeData || (optionalTypeId && assetTypeData.as<AssetTypeId>() != *optionalTypeId))
 			{
-				const std::string assetFileName = PathUtils::GetFileNameFromPath(path);
-				ZE_CORE_ERROR("Failed to load {0}. Unknown {1} format!", assetFileName, typeName);
+				ZE_CORE_ERROR("Failed to load \"{0}\". Unknown format!", assetName);
 				return {};
 			}
-
-			const std::string assetName = PathUtils::GetNameFromPath(path);
-			ZE_CORE_TRACE("Deserializing {0} '{1}'", typeName, assetName);
+			
+			ZE_CORE_TRACE("Deserializing \"{0}\"", assetName);
 			return data;
 		}
 	};
@@ -123,7 +126,7 @@ namespace ZeoEngine {
 		template<typename AssetClass>
 		static void Serialize(const std::string& path, entt::meta_any instance)
 		{
-			Serialize_t<AssetClass>(path, [&](YAML::Emitter& out)
+			WriteDataToAsset(path, AssetClass::TypeId(), [&](YAML::Emitter& out)
 			{
 				ComponentSerializer cs;
 				cs.Serialize(out, instance);
@@ -133,7 +136,7 @@ namespace ZeoEngine {
 		template<typename AssetClass>
 		static bool Deserialize(const std::string& path, entt::meta_any instance)
 		{
-			auto data = PreDeserialize<AssetClass>(path);
+			auto data = ReadDataFromAsset(path, AssetClass::TypeId());
 			if (!data) return false;
 
 			ComponentSerializer cs;

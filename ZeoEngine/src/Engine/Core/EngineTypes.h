@@ -4,8 +4,6 @@
 
 namespace ZeoEngine {
 
-	extern const char* g_AssetTypeToken;
-
 	using AssetTypeId = uint32_t;
 
 	template<typename AssetClass>

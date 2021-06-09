@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		uint32_t m_EntityCount = 0;
 	};
 
-	class SceneAsset : public AssetImpl<SceneAsset>
+	class SceneAsset : public AssetBase<SceneAsset>
 	{
 	private:
 		explicit SceneAsset(const std::string& path);
@@ -61,6 +61,7 @@ namespace ZeoEngine {
 	public:
 		static Ref<SceneAsset> Create(const std::string& path);
 
+		const Ref<Scene>& GetScene() const { return m_Scene; }
 		/** Update scene reference and deserialize scene data. */
 		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
 		/** Clear scene referenece. */
@@ -68,6 +69,8 @@ namespace ZeoEngine {
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
+
+		virtual void Reload() override;
 
 	private:
 		Ref<Scene> m_Scene;

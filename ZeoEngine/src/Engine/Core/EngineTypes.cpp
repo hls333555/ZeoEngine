@@ -5,8 +5,6 @@
 
 namespace ZeoEngine {
 
-	const char* g_AssetTypeToken = "AssetType";
-
 	AssetPath::AssetPath(const char* path)
 		: m_RelativePath(PathUtils::GetRelativePath(path))
 	{

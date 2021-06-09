@@ -1,12 +1,11 @@
 #include "ZEpch.h"
 #include "Engine/Core/AssetRegistry.h"
 
-#include <filesystem>
-
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/ThumbnailManager.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
@@ -19,6 +18,35 @@ namespace ZeoEngine {
 			return outStr;
 		}
 
+		static bool ParseAssetFile(const std::string& path, Ref<AssetSpec>& assetSpec)
+		{
+			auto data = Serializer::ReadDataFromAsset(path);
+			if (!data) return false;
+
+			auto assetTypeData = (*data)[g_AssetTypeToken];
+			if (!assetTypeData) return false;
+
+			assetSpec->TypeId = assetTypeData.as<AssetTypeId>();
+			auto resourceSourceData = (*data)[g_ResourceSourceToken];
+			if (resourceSourceData)
+			{
+				assetSpec->ResourceSourcePath = resourceSourceData.as<std::string>();
+			}
+
+			return true;
+		}
+
+	}
+
+	void AssetSpec::UpdateAll(const std::string& srcPath)
+	{
+		UpdateThumbnail();
+		ResourceSourcePath = srcPath;
+	}
+
+	void AssetSpec::UpdateThumbnail()
+	{
+		ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(Path, TypeId);
 	}
 
 	void AssetRegistry::Init()
@@ -79,16 +107,16 @@ namespace ZeoEngine {
 		{
 			return pair.first == directory;
 		});
-		if (it == m_PathTree.end()) return {};
+		ZE_CORE_ASSERT(it != m_PathTree.end());
 
 		return it->second;
 	}
 
-	void AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path)
+	Ref<DirectorySpec> AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path)
 	{
 		m_PathTree.emplace_back(std::make_pair(path, std::vector<std::string>{}));
 		auto directorySpec = CreateRef<DirectorySpec>(path, PathUtils::GetNameFromPath(path));
-		m_PathSpecs[path] = std::move(directorySpec);
+		m_PathSpecs[path] = directorySpec;
 		GetPathSpec<DirectorySpec>(baseDirectory)->bHasAnySubDirectory = true;
 
 		auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
@@ -99,20 +127,21 @@ namespace ZeoEngine {
 		{
 			it->second.emplace_back(path);
 		}
+
+		return directorySpec;
 	}
 
-	void AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
+	Ref<AssetSpec> AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
 	{
 		auto assetSpec = CreateRef<AssetSpec>(path, PathUtils::GetNameFromPath(path));
 		if (!optionalAssetTypeId)
 		{
-			auto parsedTypeId = PathUtils::ParseAssetTypeIdFromFile(path);
-			if (!parsedTypeId)
+			bool bResult = Utils::ParseAssetFile(path, assetSpec);
+			if (!bResult)
 			{
 				ZE_CORE_WARN("Invalid asset detected! Asset path: {0}", path);
-				return;
+				return {};
 			}
-			assetSpec->TypeId = *parsedTypeId;
 		}
 		else
 		{
@@ -130,6 +159,8 @@ namespace ZeoEngine {
 		{
 			it->second.emplace_back(path);
 		}
+
+		return assetSpec;
 	}
 
 	std::vector<std::string>::iterator AssetRegistry::RemovePathFromTree(std::string path)
@@ -241,18 +272,20 @@ namespace ZeoEngine {
 		});
 	}
 
-	void AssetRegistry::OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
+	Ref<PathSpec> AssetRegistry::OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
 	{
 		std::string parentPath = PathUtils::GetParentPath(path);
+		Ref<PathSpec> spec;
 		if (optionalAssetTypeId)
 		{
-			AddPathToTree(parentPath, path, optionalAssetTypeId);
+			spec = AddPathToTree(parentPath, path, optionalAssetTypeId);
 		}
 		else
 		{
-			AddPathToTree(parentPath, path);
+			spec = AddPathToTree(parentPath, path);
 		}
 		SortPathTree();
+		return spec;
 	}
 
 	void AssetRegistry::OnPathRemoved(const std::string& path)

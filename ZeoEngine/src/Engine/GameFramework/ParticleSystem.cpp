@@ -126,7 +126,7 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec4>;
 
 	ParticleTemplateAsset::ParticleTemplateAsset(const std::string& path)
-		: AssetImpl(path)
+		: AssetBase(path)
 	{
 	}
 
