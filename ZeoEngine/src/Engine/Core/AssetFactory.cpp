@@ -15,9 +15,7 @@ namespace ZeoEngine {
 	void ImportableAssetFactoryBase::ImportAsset(const std::string& srcPath, const std::string& destPath) const
 	{
 		// No need to copy self
-		std::string canonicalSrcPath = PathUtils::GetCanonicalPath(srcPath);
-		std::string canonicalDestPath = PathUtils::GetCanonicalPath(destPath);
-		if (canonicalDestPath != canonicalSrcPath)
+		if (destPath != srcPath)
 		{
 			// Copy resource file
 			bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
@@ -31,15 +29,15 @@ namespace ZeoEngine {
 		if (!PathUtils::DoesPathExist(assetPath))
 		{
 			// Create zasset file if not exists
-			Serializer::WriteDataToAsset(assetPath, m_TypeId, [&canonicalSrcPath](YAML::Emitter& out)
+			Serializer::WriteDataToAsset(assetPath, m_TypeId, [&srcPath](YAML::Emitter& out)
 			{
-				out << YAML::Key << g_ResourceSourceToken << YAML::Value << canonicalSrcPath;
+				out << YAML::Key << g_ResourceSourceToken << YAML::Value << srcPath;
 			});
 			auto spec = AssetRegistry::Get().OnPathCreated(assetPath, m_TypeId);
 			// Record resource source path
-			std::dynamic_pointer_cast<AssetSpec>(spec)->ResourceSourcePath = canonicalSrcPath;
+			std::dynamic_pointer_cast<AssetSpec>(spec)->ResourceSourcePath = srcPath;
 		}
-		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, canonicalSrcPath);
+		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, srcPath);
 	}
 
 }

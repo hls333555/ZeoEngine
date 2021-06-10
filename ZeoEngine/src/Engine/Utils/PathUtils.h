@@ -7,12 +7,18 @@ namespace ZeoEngine {
 	class PathUtils
 	{
 	public:
-		/** Returns absolute path. */
+		/** Returns canonical absolute path. */
 		static std::string GetCanonicalPath(const std::string& path);
 		/** Returns relative path. */
 		static std::string GetRelativePath(const std::string& path);
 		/** Returns parent path. */
 		static std::string GetParentPath(const std::string& path);
+
+		/**
+		 * Compares two paths. Returns true if they are the same.
+		 * NOTE: This comparison reuqires two path to exist.
+		 */
+		static bool ArePathsEquivalent(const std::string& lPath, const std::string& rPath);
 
 		/** Returns file name including file extension. */
 		static std::string GetFileNameFromPath(const std::string& path);

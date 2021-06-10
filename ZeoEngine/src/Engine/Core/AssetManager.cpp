@@ -7,29 +7,8 @@
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
-#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
-
-	namespace Utils {
-
-		static const char* GetFolderIconPath()
-		{
-			return "assets/editor/textures/icons/Folder.png";
-		}
-
-		static const char* GetAssetTypeIconDirectory()
-		{
-			return "assets/editor/textures/icons";
-		}
-
-		static std::string GetAssetTypeIconPath(AssetTypeId typeId)
-		{
-			std::string pathName = std::to_string(typeId) + ".png";
-			return PathUtils::AppendPath(GetAssetTypeIconDirectory(), pathName);
-		}
-
-	}
 
 	void AssetManager::Init()
 	{
@@ -41,7 +20,6 @@ namespace ZeoEngine {
 		RegisterAssetActions(ParticleTemplateAsset::TypeId(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
 
-		LoadAssetTypeIcons();
 		InitSupportedFileExtensions();
 	}
 
@@ -106,16 +84,6 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	Ref<Texture2D> AssetManager::GetAssetTypeIcon(AssetTypeId typeId) const
-	{
-		if (auto it = m_AssetTypeIcons.find(typeId); it != m_AssetTypeIcons.cend())
-		{
-			return it->second;
-		}
-
-		return {};
-	}
-
 	std::optional<AssetTypeId> AssetManager::GetTypdIdFromFileExtension(const std::string& extension)
 	{
 		if (auto it = m_SupportedFileExtensions.find(extension); it != m_SupportedFileExtensions.cend())
@@ -124,19 +92,6 @@ namespace ZeoEngine {
 		}
 
 		return {};
-	}
-
-	void AssetManager::LoadAssetTypeIcons()
-	{
-		for (const auto& [typeId, factory] : m_AssetFactories)
-		{
-			std::string thumbnailPath = Utils::GetAssetTypeIconPath(typeId);
-			ZE_CORE_ASSERT(PathUtils::DoesPathExist(thumbnailPath));
-
-			m_AssetTypeIcons[typeId] = Texture2D::Create(thumbnailPath, true);
-		}
-
-		m_FolderIcon = Texture2D::Create(Utils::GetFolderIconPath(), true);
 	}
 
 	void AssetManager::InitSupportedFileExtensions()

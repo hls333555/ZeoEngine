@@ -3,10 +3,27 @@
 
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Core/AssetManager.h"
 
 namespace ZeoEngine {
 
 	namespace Utils {
+
+		static const char* GetDirectoryIconPath()
+		{
+			return "assets/editor/textures/icons/Folder.png";
+		}
+
+		static const char* GetAssetTypeIconDirectory()
+		{
+			return "assets/editor/textures/icons";
+		}
+
+		static std::string GetAssetTypeIconPath(AssetTypeId typeId)
+		{
+			std::string pathName = std::to_string(typeId) + ".png";
+			return PathUtils::AppendPath(GetAssetTypeIconDirectory(), pathName);
+		}
 
 		static const char* GetThumbnailCacheDirectory()
 		{
@@ -27,12 +44,27 @@ namespace ZeoEngine {
 	void ThumbnailManager::Init()
 	{
 		Utils::CreateCacheDirectoryIfNeeded();
+
+		LoadAssetTypeIcons();
+	}
+
+	void ThumbnailManager::LoadAssetTypeIcons()
+	{
+		AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId)
+		{
+			std::string thumbnailPath = Utils::GetAssetTypeIconPath(typeId);
+			ZE_CORE_ASSERT(PathUtils::DoesPathExist(thumbnailPath));
+
+			m_AssetTypeIcons[typeId] = Texture2D::Create(thumbnailPath, true);
+		});
+
+		m_DirectoryIcon = Texture2D::Create(Utils::GetDirectoryIconPath(), true);
 	}
 
 	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const std::string& path, AssetTypeId typeId)
 	{
 		std::string thumbnailPath = GetAssetThumbnailPath(path, typeId);
-		return PathUtils::DoesPathExist(thumbnailPath) ? Texture2D::Create(thumbnailPath, true) : Ref<Texture2D>{};
+		return PathUtils::DoesPathExist(thumbnailPath) ? Texture2D::Create(thumbnailPath, true) : m_AssetTypeIcons[typeId];
 	}
 
 	std::string ThumbnailManager::GetAssetThumbnailPath(const std::string& assetPath, AssetTypeId typeId)
@@ -49,6 +81,16 @@ namespace ZeoEngine {
 				return PathUtils::AppendPath(Utils::GetThumbnailCacheDirectory(), std::to_string(pathId));
 			}
 		}
+	}
+
+	Ref<Texture2D> ThumbnailManager::GetAssetTypeIcon(AssetTypeId typeId) const
+	{
+		if (auto it = m_AssetTypeIcons.find(typeId); it != m_AssetTypeIcons.cend())
+		{
+			return it->second;
+		}
+
+		return {};
 	}
 
 }

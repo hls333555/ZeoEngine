@@ -26,14 +26,13 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps)
 	{
-		const auto canonicalPath = PathUtils::GetRelativePath(path);
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None:
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(canonicalPath, bAutoGenerateMipmaps);
+				return CreateRef<OpenGLTexture2D>(path, bAutoGenerateMipmaps);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
@@ -43,10 +42,7 @@ namespace ZeoEngine {
 	Texture2DAsset::Texture2DAsset(const std::string& path)
 		: AssetBase(path)
 	{
-		auto texturePath = PathUtils::GetResourcePathFromAssetPath(path);
-		ZE_CORE_ASSERT(PathUtils::DoesPathExist(texturePath));
-		m_Texture = Texture2D::Create(texturePath);
-		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
+		Reload();
 	}
 
 	Ref<Texture2DAsset> Texture2DAsset::Create(const std::string& path)
@@ -64,7 +60,10 @@ namespace ZeoEngine {
 
 	void Texture2DAsset::Reload()
 	{
-
+		auto texturePath = PathUtils::GetResourcePathFromAssetPath(GetPath());
+		ZE_CORE_ASSERT(PathUtils::DoesPathExist(texturePath));
+		m_Texture = Texture2D::Create(texturePath);
+		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
 	}
 
 	void Texture2DAsset::Serialize(const std::string& path)

@@ -10,6 +10,7 @@
 #include "Engine/Core/AssetFactory.h"
 #include "Engine/Core/AssetActions.h"
 #include "Engine/Core/AssetRegistry.h"
+#include "Engine/Core/ThumbnailManager.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Utils/PlatformUtils.h"
@@ -148,7 +149,7 @@ namespace ZeoEngine {
 				std::string assetName = PathUtils::GetFileNameFromPath(*filePath);
 				std::string destPath = PathUtils::AppendPath(m_SelectedDirectory, assetName);
 				auto& am = AssetManager::Get();
-				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), *filePath, destPath);
+				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(*filePath), destPath);
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -368,15 +369,15 @@ namespace ZeoEngine {
 		bool bIsFilteredEmpty = true;
 		AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty](const std::string& path)
 		{
-			auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-			if (!assetSpec) return;
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			if (!spec->IsAsset()) return;
 
-			if (m_Filter.PassFilter(assetSpec->PathName.c_str()))
+			if (m_Filter.PassFilter(spec->PathName.c_str()))
 			{
 				bool bShouldDrawPath = true;
 				if (m_bIsAnyTypeFilterActive)
 				{
-					auto typeId = assetSpec->TypeId;
+					auto typeId = spec->GetAssetTypeId();
 					auto it = std::find_if(m_AssetTypeFilters.begin(), m_AssetTypeFilters.end(), [typeId](const auto& filterSpec)
 					{
 						return filterSpec.TypeId == typeId;
@@ -412,7 +413,7 @@ namespace ZeoEngine {
 			ImGui::SameLine();
 
 			// Draw folder icon
-			ImGui::Image(AssetManager::Get().GetFolderIcon()->GetTextureID(),
+			ImGui::Image(ThumbnailManager::Get().GetDirectoryIcon()->GetTextureID(),
 				{ thumbnailWidth, thumbnailWidth },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
@@ -441,7 +442,7 @@ namespace ZeoEngine {
 					ImGui::SameLine();
 
 					// Draw asset type icon
-					ImGui::Image(AssetManager::Get().GetAssetTypeIcon(typeId)->GetTextureID(),
+					ImGui::Image(ThumbnailManager::Get().GetAssetTypeIcon(typeId)->GetTextureID(),
 						{ thumbnailWidth, thumbnailWidth },
 						{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
@@ -497,9 +498,11 @@ namespace ZeoEngine {
 		{
 			static constexpr float indentWidth = 5.0f;
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
-			auto assetSpec = std::dynamic_pointer_cast<AssetSpec>(spec);
+			bool bIsAsset = spec->IsAsset();
+			auto assetTypeId = spec->GetAssetTypeId();
 			const bool bPathNeedsRenaming = m_PathToRename == path;
 			static const float thumbnailWidth = Utils::GetThumbnailWidth();
+			static const float thumbnailRounding = 4.0f;
 			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
 			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
 			// TODO: Display path tooltip
@@ -511,24 +514,25 @@ namespace ZeoEngine {
 			DrawPathContextMenu(path);
 
 			// Begin dragging asset
-			if (assetSpec && ImGui::BeginDragDropSource())
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+			if (bIsAsset && ImGui::BeginDragDropSource())
 			{
 				char typeStr[32];
-				_itoa_s(assetSpec->TypeId, typeStr, 10);
+				_itoa_s(assetTypeId, typeStr, 10);
 				ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
 				
-				auto thumbnailTexture = assetSpec->ThumbnailTexture ? assetSpec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(assetSpec->TypeId);
-				// Draw thumbnail or default icon
-				ImGui::Image(thumbnailTexture->GetTextureID(),
-					{ thumbnailWidth, thumbnailWidth },
-					{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+				// Draw tooltip thumbnail
+				ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+					spec->ThumbnailTexture->HasAlpha(), thumbnailWidth, thumbnailRounding,
+					true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
 				ImGui::EndDragDropSource();
 			}
+			ImGui::PopStyleColor();
 
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
-				if (assetSpec)
+				if (bIsAsset)
 				{
 					// Double-click to open asset editor
 					HandleRightColumnAssetDoubleClicked(path);
@@ -542,21 +546,9 @@ namespace ZeoEngine {
 
 			ImGui::SameLine();
 
-			if (assetSpec && assetSpec->ThumbnailTexture)
-			{
-				// Draw background first if thumbnail exists
-				ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-					{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
-					{ ImGui::GetCursorScreenPos().x + thumbnailWidth, ImGui::GetCursorScreenPos().y + thumbnailWidth },
-					{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-			}
-
-			auto& am = AssetManager::Get();
-			auto thumbnailTexture = assetSpec ? (assetSpec->ThumbnailTexture ? assetSpec->ThumbnailTexture : am.GetAssetTypeIcon(assetSpec->TypeId)) : am.GetFolderIcon();
-			// Draw thumbnail or default icon
-			ImGui::Image(thumbnailTexture->GetTextureID(),
-				{ thumbnailWidth, thumbnailWidth },
-				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+			ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+				spec->ThumbnailTexture->HasAlpha(), thumbnailWidth, thumbnailRounding,
+				bIsAsset, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
 			ImGui::SameLine();
 
@@ -570,7 +562,7 @@ namespace ZeoEngine {
 					// Display directory/asset name
 					ImGui::Text(pathName);
 					// Display type name
-					ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, assetSpec ? am.GetAssetFactoryByAssetType(assetSpec->TypeId)->GetAssetTypeName() : "Folder");
+					ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, bIsAsset ? AssetManager::Get().GetAssetFactoryByAssetType(assetTypeId)->GetAssetTypeName() : "Folder");
 					ImGui::PopStyleVar();
 				}
 				else
@@ -596,7 +588,7 @@ namespace ZeoEngine {
 					// TODO: The following will not get called on right-click
 					if (ImGui::IsItemDeactivated())
 					{
-						if (assetSpec)
+						if (bIsAsset)
 						{
 							// Add engine file extension automatically
 							strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
@@ -607,7 +599,7 @@ namespace ZeoEngine {
 							ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
 							newPath = path;
 						}
-						ProcessPathRenaming(path, newPath, assetSpec);
+						ProcessPathRenaming(path, newPath, assetTypeId);
 						bHasKeyboardFocused = false;
 					}
 				}
@@ -639,10 +631,10 @@ namespace ZeoEngine {
 
 			ImGui::Separator();
 
-			auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-			if (assetSpec)
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			if (spec->IsAsset())
 			{
-				auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId);
+				auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(spec->GetAssetTypeId());
 				if (ImGui::MenuItem("Reload Asset"))
 				{
 					assetActions->ReloadAsset(path);
@@ -688,11 +680,11 @@ namespace ZeoEngine {
 		AssetManager::Get().OpenAsset(path);
 	}
 
-	void ContentBrowserPanel::RequestPathCreation(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
+	void ContentBrowserPanel::RequestPathCreation(const std::string& path, AssetTypeId typeId)
 	{
 		m_PathToRename = path;
 		m_PathToCreate = path;
-		AssetRegistry::Get().OnPathCreated(path, optionalAssetTypeId);
+		AssetRegistry::Get().OnPathCreated(path, typeId);
 	}
 
 	void ContentBrowserPanel::ProcessPathDeletion(const std::string& path)
@@ -706,8 +698,8 @@ namespace ZeoEngine {
 
 			if (ImGui::Button("OK", buttonSize))
 			{
-				auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-				if (!assetSpec)
+				auto spec = AssetRegistry::Get().GetPathSpec(path);
+				if (!spec->IsAsset())
 				{
 					// Delete a directory
 					PathUtils::DeletePath(path);
@@ -716,7 +708,7 @@ namespace ZeoEngine {
 				else
 				{
 					// Delete an asset
-					AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId)->DeleteAsset(path);
+					AssetManager::Get().GetAssetActionsByAssetType(spec->GetAssetTypeId())->DeleteAsset(path);
 				}
 				// Clear current selection
 				m_SelectedPath.clear();
@@ -740,7 +732,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, const Ref<AssetSpec>& assetSpec)
+	void ContentBrowserPanel::ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeId typeId)
 	{
 		if (m_PathToCreate.empty())
 		{
@@ -753,9 +745,9 @@ namespace ZeoEngine {
 		else
 		{
 			// Triggered by path creation
-			if (assetSpec)
+			if (typeId)
 			{
-				AssetManager::Get().CreateAsset(assetSpec->TypeId, newPath);
+				AssetManager::Get().CreateAsset(typeId, newPath);
 			}
 			else
 			{
@@ -766,7 +758,7 @@ namespace ZeoEngine {
 		m_SelectedPath = newPath;
 		if (newPath != oldPath)
 		{
-			AssetRegistry::Get().OnPathRenamed(oldPath, newPath, static_cast<bool>(assetSpec));
+			AssetRegistry::Get().OnPathRenamed(oldPath, newPath, typeId);
 		}
 		m_PathToRename.clear();
 	}

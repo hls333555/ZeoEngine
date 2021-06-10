@@ -35,6 +35,7 @@ namespace ZeoEngine {
 		AssetHandle<AssetClass> ReloadAsset(AssetPath path)
 		{
 			if (path.IsEmpty()) return {};
+			if (!HasAsset(path)) return {};
 
 			auto asset = GetAsset(path);
 			asset->Reload();

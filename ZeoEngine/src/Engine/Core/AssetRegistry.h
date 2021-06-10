@@ -14,13 +14,20 @@ namespace ZeoEngine {
 			: Path(path), PathName(pathName) {}
 		virtual ~PathSpec() = default;
 
+		virtual bool IsAsset() const = 0;
+		virtual AssetTypeId GetAssetTypeId() const = 0;
+
 		std::string Path;
 		std::string PathName;
+		Ref<Texture2D> ThumbnailTexture;
 	};
 
 	struct DirectorySpec : public PathSpec
 	{
 		using PathSpec::PathSpec;
+
+		virtual bool IsAsset() const override { return false; }
+		virtual AssetTypeId GetAssetTypeId() const override { return {}; }
 
 		bool bIsTreeExpanded = false;
 		uint32_t TreeNodeId = 0;
@@ -31,11 +38,13 @@ namespace ZeoEngine {
 	{
 		using PathSpec::PathSpec;
 
+		virtual bool IsAsset() const override { return true; }
+		virtual AssetTypeId GetAssetTypeId() const override { return TypeId; }
+
 		void UpdateAll(const std::string& srcPath);
 		void UpdateThumbnail();
 		
 		AssetTypeId TypeId;
-		Ref<Texture2D> ThumbnailTexture; // Can be null if no captured cache found
 		std::string ResourceSourcePath; // Can be empty if this is not an imported asset
 	};
 
@@ -54,12 +63,20 @@ namespace ZeoEngine {
 		static constexpr const char* GetAssetRootDirectory() { return "assets"; }
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
 
+		/** Get directory/asset spec of the specific path. The path should be relative. */
 		template<typename T = PathSpec>
 		Ref<T> GetPathSpec(const std::string& path) const
 		{
 			if (auto it = m_PathSpecs.find(path); it != m_PathSpecs.cend())
 			{
-				return std::dynamic_pointer_cast<T>(it->second);
+				if constexpr (std::is_same<T, PathSpec>::value)
+				{
+					return it->second;
+				}
+				else
+				{
+					return std::dynamic_pointer_cast<T>(it->second);
+				}
 			}
 
 			return {};
@@ -112,7 +129,7 @@ namespace ZeoEngine {
 		}
 
 		/** Returns the created directory/asset spec. */
-		Ref<PathSpec> OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
+		Ref<PathSpec> OnPathCreated(const std::string& path, AssetTypeId typeId);
 		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
 		void OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset);
@@ -130,7 +147,7 @@ namespace ZeoEngine {
 		 * @param path - Path to add
 		 * @return - Created directory spec
 		 */
-		Ref<DirectorySpec> AddPathToTree(const std::string& baseDirectory, const std::string& path);
+		Ref<DirectorySpec> AddDirectoryToTree(const std::string& baseDirectory, const std::string& path);
 		/**
 		 * Add an asset to the path tree.
 		 * 
@@ -139,7 +156,7 @@ namespace ZeoEngine {
 		 * @param optionalAssetTypeId - If not set, type id is retrieved from file
 		 * @return - Created asset spec
 		 */
-		Ref<AssetSpec> AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
+		Ref<AssetSpec> AddAssetToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
 		/**
 		 * Remove a path from the path tree.
 		 * If path is a directory, it will recursively remove its child paths.

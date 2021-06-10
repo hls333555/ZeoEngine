@@ -26,6 +26,7 @@ namespace ZeoEngine {
 	class AssetPath
 	{
 	public:
+		AssetPath() = default;
 		AssetPath(const char* path);
 		AssetPath(const std::string& path);
 

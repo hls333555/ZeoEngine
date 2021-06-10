@@ -28,9 +28,6 @@ namespace ZeoEngine {
 		}
 
 	private:
-		/** Intended for hot-reloading */
-		std::string m_Path;
-		std::string m_FileName;
 		uint32_t m_Width, m_Height;
 		uint32_t m_MipmapLevels = 1;
 		uint32_t m_RendererID;

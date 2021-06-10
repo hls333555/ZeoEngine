@@ -10,7 +10,6 @@ namespace ZeoEngine {
 
 	class IAssetFactory;
 	class IAssetActions;
-	class Texture2D;
 
 	class AssetManager
 	{
@@ -31,7 +30,7 @@ namespace ZeoEngine {
 
 		/** Construct a new asset. */
 		void CreateAsset(AssetTypeId typeId, const std::string& path) const;
-		/** Import a new asset from file dialog by copying it from srcPath to destPath. */
+		/** Import a new asset from file dialog by copying it from srcPath to destPath. The paths should be relative. */
 		void ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path);
@@ -64,14 +63,10 @@ namespace ZeoEngine {
 			}
 		}
 
-		Ref<Texture2D> GetAssetTypeIcon(AssetTypeId typeId) const;
-		Ref<Texture2D> GetFolderIcon() const { return m_FolderIcon; }
-
 		std::optional<AssetTypeId> GetTypdIdFromFileExtension(const std::string& extension);
 
 	private:
 		void Init();
-		void LoadAssetTypeIcons();
 		void InitSupportedFileExtensions();
 
 	protected:
@@ -84,10 +79,6 @@ namespace ZeoEngine {
 		std::unordered_map<AssetTypeId, Ref<IAssetFactory>> m_AssetFactories;
 		/** Map from asset type id to asset actions */
 		std::unordered_map<AssetTypeId, Ref<IAssetActions>> m_AssetActions;
-
-		/** Map from asset type id to its type icon texture */
-		std::unordered_map<AssetTypeId, Ref<Texture2D>> m_AssetTypeIcons;
-		Ref<Texture2D> m_FolderIcon;
 
 		/** Map from supported file extension to asset type Id */
 		std::unordered_map<std::string, AssetTypeId> m_SupportedFileExtensions;

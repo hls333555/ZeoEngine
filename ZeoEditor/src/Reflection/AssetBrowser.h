@@ -35,21 +35,14 @@ namespace ZeoEngine {
 				// Asset preview
 				{
 					static const float assetPreviewWidth = ImGui::GetStyle().Alpha * 64.0f;
+					static const float previewRounding = 5.0f;
 
 					// If asset is set...
 					if (retSpec)
 					{
-						// Draw background first
-						ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-							{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
-							{ ImGui::GetCursorScreenPos().x + assetPreviewWidth, ImGui::GetCursorScreenPos().y + assetPreviewWidth },
-							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-
-						auto thumbnailTexture = retSpec->ThumbnailTexture ? retSpec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(TypeId);
-						// Draw asset thumbnail or default icon
-						ImGui::Image(thumbnailTexture->GetTextureID(),
-							{ assetPreviewWidth, assetPreviewWidth },
-							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+						ImGui::DrawAssetThumbnail(retSpec->ThumbnailTexture->GetTextureID(),
+							retSpec->ThumbnailTexture->HasAlpha(), assetPreviewWidth, previewRounding,
+							true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
 						if (ImGui::IsItemHovered())
 						{
@@ -125,6 +118,8 @@ namespace ZeoEngine {
 							ImGui::PushID(spec->Path.c_str());
 							{
 								static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+								static const float thumbnailRounding = 4.0f;
+
 								bool bIsSelected = ImGui::Selectable("##AssetSelectable", false, 0, ImVec2(0.0f, assetThumbnailWidth));
 								// Display asset path tooltip for drop-down asset
 								if (ImGui::IsItemHovered())
@@ -134,21 +129,9 @@ namespace ZeoEngine {
 
 								ImGui::SameLine();
 
-								bool bThumbnailExists = static_cast<bool>(spec->ThumbnailTexture);
-								if (bThumbnailExists)
-								{
-									// Draw background first if thumbnail exists
-									ImGui::GetWindowDrawList()->AddImage(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-										{ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y },
-										{ ImGui::GetCursorScreenPos().x + assetThumbnailWidth, ImGui::GetCursorScreenPos().y + assetThumbnailWidth },
-										{ 0.0f, 1.0f }, { 1.0f, 0.0f });
-								}
-
-								auto thumbnailTexture = bThumbnailExists ? spec->ThumbnailTexture : AssetManager::Get().GetAssetTypeIcon(TypeId);
-								// Draw asset thumbnail or default icon
-								ImGui::Image(thumbnailTexture->GetTextureID(),
-									{ assetThumbnailWidth, assetThumbnailWidth },
-									{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+								ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+									spec->ThumbnailTexture->HasAlpha(), assetThumbnailWidth, thumbnailRounding,
+									true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
 								ImGui::SameLine();
 

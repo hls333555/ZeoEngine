@@ -7,7 +7,7 @@ namespace ZeoEngine {
 
 	std::string PathUtils::GetCanonicalPath(const std::string& path)
 	{
-		return std::filesystem::canonical(path).string();
+		return std::filesystem::weakly_canonical(path).string(); // This version will not throw if path does not exist
 	}
 
 	std::string PathUtils::GetRelativePath(const std::string& path)
@@ -18,6 +18,11 @@ namespace ZeoEngine {
 	std::string PathUtils::GetParentPath(const std::string& path)
 	{
 		return std::filesystem::path{ path }.parent_path().string();
+	}
+
+	bool PathUtils::ArePathsEquivalent(const std::string& lPath, const std::string& rPath)
+	{
+		return std::filesystem::equivalent(lPath, rPath);
 	}
 
 	std::string PathUtils::GetFileNameFromPath(const std::string& path)

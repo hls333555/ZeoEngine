@@ -28,19 +28,17 @@ namespace ZeoEngine {
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-		auto srcPath = assetSpec->ResourceSourcePath;
+		auto& srcPath = assetSpec->ResourceSourcePath;
 		if (srcPath.empty())
 		{
 			auto filePath = FileDialogs::OpenFile();
 			if (!filePath) return;
 
-			srcPath = *filePath;
+			srcPath = PathUtils::GetRelativePath(*filePath);
 		}
 
-		std::string canonicalSrcPath = PathUtils::GetCanonicalPath(srcPath);
 		const auto destPath = PathUtils::GetResourcePathFromAssetPath(path);
-		std::string canonicalDestPath = PathUtils::GetCanonicalPath(destPath);
-		if (canonicalDestPath != canonicalSrcPath)
+		if (destPath != srcPath)
 		{
 			// Copy and overwrite existing resource
 			bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
@@ -50,11 +48,12 @@ namespace ZeoEngine {
 				return;
 			}
 		}
-		assetSpec->UpdateAll(canonicalSrcPath);
-		// TODO: Save asset
+		assetSpec->UpdateAll(srcPath);
+		// Save asset
+		
 		// Reload asset
 		ReloadAsset(path);
-		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, canonicalSrcPath);
+		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, srcPath);
 	}
 
 	void SceneAssetActions::OpenAsset(const std::string& path) const

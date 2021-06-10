@@ -2,8 +2,6 @@
 
 #include "Panels/PanelBase.h"
 
-#include <optional>
-
 #include "Engine/Core/Core.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
@@ -51,9 +49,9 @@ namespace ZeoEngine {
 		void HandleRightColumnDirectoryDoubleClicked(const std::string& directory);
 		void HandleRightColumnAssetDoubleClicked(const std::string& path);
 
-		void RequestPathCreation(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId);
+		void RequestPathCreation(const std::string& path, AssetTypeId typeId);
 		void ProcessPathDeletion(const std::string& path);
-		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, const Ref<AssetSpec>& assetSpec);
+		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeId typeId);
 
 	private:
 		float m_LeftColumnWidth = 200.0f;

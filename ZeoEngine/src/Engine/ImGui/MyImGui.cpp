@@ -248,4 +248,47 @@ namespace ImGui {
 		}
 	}
 
+	void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	{
+		ImGuiWindow* window = GetCurrentWindow();
+		if (window->SkipItems)
+			return;
+
+		ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
+		if (border_col.w > 0.0f)
+			bb.Max += ImVec2(2, 2);
+		ItemSize(bb);
+		if (!ItemAdd(bb, 0))
+			return;
+
+		if (border_col.w > 0.0f)
+		{
+			window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), rounding);
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col), rounding);
+		}
+		else
+		{
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col), rounding);
+		}
+	}
+
+	void DrawAssetThumbnail(ImTextureID thumbnailTextureID, bool bHasAlhpa, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID)
+	{
+		if (bShouldDrawBackground && bHasAlhpa)
+		{
+			// Draw background first if translucent
+			ImGui::GetWindowDrawList()->AddImageRounded(backgroundTextureID,
+				{ ImGui::GetCursorScreenPos().x + 1.0f, ImGui::GetCursorScreenPos().y + 1.0f },
+				{ ImGui::GetCursorScreenPos().x + thumbnailSize + 1.0f, ImGui::GetCursorScreenPos().y + thumbnailSize + 1.0f },
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+				ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 1.0f }), rounding);
+		}
+
+		// Draw asset thumbnail or default icon
+		ImGui::ImageRounded(thumbnailTextureID,
+			{ thumbnailSize, thumbnailSize }, rounding,
+			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
+			{ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.2039f, 0.2039f, 0.2039f, bShouldDrawBackground ? 1.0f : 0.0f});
+	}
+
 }

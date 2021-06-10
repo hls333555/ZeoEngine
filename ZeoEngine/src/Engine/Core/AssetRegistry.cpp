@@ -76,14 +76,14 @@ namespace ZeoEngine {
 			switch (it.status().type())
 			{
 				case std::filesystem::file_type::directory:
-					AddPathToTree(baseDirectory, it.path().string());
+					AddDirectoryToTree(baseDirectory, it.path().string());
 
 					ConstructPathTreeRecursively(it.path().string());
 					break;
 				case std::filesystem::file_type::regular:
 					if (it.path().extension().string() == GetEngineAssetExtension())
 					{
-						AddPathToTree(baseDirectory, it.path().string(), {});
+						AddAssetToTree(baseDirectory, it.path().string(), {});
 					}
 					break;
 			}
@@ -112,10 +112,11 @@ namespace ZeoEngine {
 		return it->second;
 	}
 
-	Ref<DirectorySpec> AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path)
+	Ref<DirectorySpec> AssetRegistry::AddDirectoryToTree(const std::string& baseDirectory, const std::string& path)
 	{
 		m_PathTree.emplace_back(std::make_pair(path, std::vector<std::string>{}));
 		auto directorySpec = CreateRef<DirectorySpec>(path, PathUtils::GetNameFromPath(path));
+		directorySpec->ThumbnailTexture = ThumbnailManager::Get().GetDirectoryIcon();
 		m_PathSpecs[path] = directorySpec;
 		GetPathSpec<DirectorySpec>(baseDirectory)->bHasAnySubDirectory = true;
 
@@ -131,7 +132,7 @@ namespace ZeoEngine {
 		return directorySpec;
 	}
 
-	Ref<AssetSpec> AssetRegistry::AddPathToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
+	Ref<AssetSpec> AssetRegistry::AddAssetToTree(const std::string& baseDirectory, const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
 	{
 		auto assetSpec = CreateRef<AssetSpec>(path, PathUtils::GetNameFromPath(path));
 		if (!optionalAssetTypeId)
@@ -149,7 +150,7 @@ namespace ZeoEngine {
 		}
 		assetSpec->ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(path, assetSpec->TypeId);
 		m_AssetSpecsById[assetSpec->TypeId].emplace_back(assetSpec);
-		m_PathSpecs[path] = std::move(assetSpec);
+		m_PathSpecs[path] = assetSpec;
 
 		auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 		{
@@ -165,10 +166,10 @@ namespace ZeoEngine {
 
 	std::vector<std::string>::iterator AssetRegistry::RemovePathFromTree(std::string path)
 	{
-		if (auto assetSpec = GetPathSpec<AssetSpec>(path))
+		if (auto spec = GetPathSpec(path); spec->IsAsset())
 		{
-			auto& assetSpecs = m_AssetSpecsById[assetSpec->TypeId];
-			auto specIt = std::find(assetSpecs.begin(), assetSpecs.end(), assetSpec);
+			auto& assetSpecs = m_AssetSpecsById[spec->GetAssetTypeId()];
+			auto specIt = std::find(assetSpecs.begin(), assetSpecs.end(), spec);
 			ZE_CORE_ASSERT(specIt != assetSpecs.end());
 			assetSpecs.erase(specIt);
 		}
@@ -272,17 +273,17 @@ namespace ZeoEngine {
 		});
 	}
 
-	Ref<PathSpec> AssetRegistry::OnPathCreated(const std::string& path, std::optional<AssetTypeId> optionalAssetTypeId)
+	Ref<PathSpec> AssetRegistry::OnPathCreated(const std::string& path, AssetTypeId typeId)
 	{
 		std::string parentPath = PathUtils::GetParentPath(path);
 		Ref<PathSpec> spec;
-		if (optionalAssetTypeId)
+		if (typeId)
 		{
-			spec = AddPathToTree(parentPath, path, optionalAssetTypeId);
+			spec = AddAssetToTree(parentPath, path, typeId);
 		}
 		else
 		{
-			spec = AddPathToTree(parentPath, path);
+			spec = AddDirectoryToTree(parentPath, path);
 		}
 		SortPathTree();
 		return spec;

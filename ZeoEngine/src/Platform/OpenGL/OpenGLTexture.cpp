@@ -25,8 +25,6 @@ namespace ZeoEngine {
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool bAutoGenerateMipmaps)
-		: m_Path(PathUtils::GetRelativePath(path))
-		, m_FileName(PathUtils::GetFileNameFromPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
