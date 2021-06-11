@@ -6,7 +6,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include "Engine/Core/ReflectionHelper.h"
-#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Utils/PathUtils.h"
 
@@ -123,26 +122,15 @@ namespace ZeoEngine {
 	class AssetSerializer : public Serializer
 	{
 	public:
-		template<typename AssetClass>
-		static void Serialize(const std::string& path, entt::meta_any instance)
-		{
-			WriteDataToAsset(path, AssetClass::TypeId(), [&](YAML::Emitter& out)
-			{
-				ComponentSerializer cs;
-				cs.Serialize(out, instance);
-			});
-		}
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+	};
 
-		template<typename AssetClass>
-		static bool Deserialize(const std::string& path, entt::meta_any instance)
-		{
-			auto data = ReadDataFromAsset(path, AssetClass::TypeId());
-			if (!data) return false;
-
-			ComponentSerializer cs;
-			cs.Deserialize(*data, instance);
-			return true;
-		}
+	class ImportableAssetSerializer : public AssetSerializer
+	{
+	public:
+		static void Serialize(const std::string& path, AssetTypeId typeId, const std::string& srcPath, entt::meta_any instance);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
 	};
 
 	class SceneSerializer : public Serializer

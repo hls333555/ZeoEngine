@@ -175,6 +175,8 @@ namespace ZeoEngine {
 
 	void ComponentSerializer::Serialize(YAML::Emitter& out, entt::meta_any& instance)
 	{
+		if (!instance) return;
+
 		for (const auto data : instance.type().data())
 		{
 			// Do not serialize transient data
@@ -326,6 +328,8 @@ namespace ZeoEngine {
 
 	void ComponentSerializer::Deserialize(const YAML::Node& value, entt::meta_any& instance)
 	{
+		if (!instance) return;
+
 		for (const auto data : instance.type().data())
 		{
 			auto dataName = GetMetaObjectDisplayName(data);
@@ -491,6 +495,63 @@ namespace ZeoEngine {
 				}
 			}
 		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// AssetSerializer ///////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+	
+	void AssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	{
+		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
+		{
+			ComponentSerializer cs;
+			cs.Serialize(out, instance);
+		});
+	}
+
+	bool AssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	{
+		auto data = ReadDataFromAsset(path, typeId);
+		if (!data) return false;
+
+		ComponentSerializer cs;
+		cs.Deserialize(*data, instance);
+		return true;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// ImportableAssetSerializer /////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, const std::string& srcPath, entt::meta_any instance)
+	{
+		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
+		{
+			out << YAML::Key << g_ResourceSourceToken << YAML::Value << srcPath;
+
+			ComponentSerializer cs;
+			cs.Serialize(out, instance);
+		});
+	}
+
+	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	{
+		auto data = ReadDataFromAsset(path, typeId);
+		if (!data) return false;
+
+		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+		if (assetSpec)
+		{
+			auto resourceSourceData = (*data)[g_ResourceSourceToken];
+			if (resourceSourceData)
+			{
+				assetSpec->ResourceSourcePath = resourceSourceData.as<std::string>();
+			}
+		}
+		ComponentSerializer cs;
+		cs.Deserialize(*data, instance);
+		return true;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

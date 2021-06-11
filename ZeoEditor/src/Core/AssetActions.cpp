@@ -50,7 +50,7 @@ namespace ZeoEngine {
 		}
 		assetSpec->UpdateAll(srcPath);
 		// Save asset
-		
+		SaveAsset(path);
 		// Reload asset
 		ReloadAsset(path);
 		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, srcPath);
@@ -66,6 +66,11 @@ namespace ZeoEngine {
 		SceneAssetLibrary::Get().ReloadAsset(path);
 	}
 
+	void SceneAssetActions::SaveAsset(const std::string& path) const
+	{
+		SceneAssetLibrary::Get().LoadAsset(path)->Serialize(path);
+	}
+
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor(EditorType::ParticleEditor)->LoadAsset(path);
@@ -76,6 +81,11 @@ namespace ZeoEngine {
 		ParticleTemplateAssetLibrary::Get().ReloadAsset(path);
 	}
 
+	void ParticleAssetActions::SaveAsset(const std::string& path) const
+	{
+		ParticleTemplateAssetLibrary::Get().LoadAsset(path)->Serialize(path);
+	}
+
 	void Texture2DAssetActions::OpenAsset(const std::string& path) const
 	{
 
@@ -84,6 +94,11 @@ namespace ZeoEngine {
 	void Texture2DAssetActions::ReloadAsset(const std::string& path) const
 	{
 		Texture2DAssetLibrary::Get().ReloadAsset(path);
+	}
+
+	void Texture2DAssetActions::SaveAsset(const std::string& path) const
+	{
+		Texture2DAssetLibrary::Get().LoadAsset(path)->Serialize(path);
 	}
 
 }

@@ -9,7 +9,7 @@ namespace ZeoEngine {
 
 	void AssetFactoryBase::CreateAsset(const std::string& path) const
 	{
-		Serializer::WriteDataToAsset(path, m_TypeId, [](YAML::Emitter&){});
+		AssetSerializer::Serialize(path, m_TypeId, {});
 	}
 
 	void ImportableAssetFactoryBase::ImportAsset(const std::string& srcPath, const std::string& destPath) const
@@ -29,10 +29,7 @@ namespace ZeoEngine {
 		if (!PathUtils::DoesPathExist(assetPath))
 		{
 			// Create zasset file if not exists
-			Serializer::WriteDataToAsset(assetPath, m_TypeId, [&srcPath](YAML::Emitter& out)
-			{
-				out << YAML::Key << g_ResourceSourceToken << YAML::Value << srcPath;
-			});
+			ImportableAssetSerializer::Serialize(assetPath, m_TypeId, srcPath, {});
 			auto spec = AssetRegistry::Get().OnPathCreated(assetPath, m_TypeId);
 			// Record resource source path
 			std::dynamic_pointer_cast<AssetSpec>(spec)->ResourceSourcePath = srcPath;

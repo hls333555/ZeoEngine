@@ -10,6 +10,7 @@ namespace ZeoEngine {
 		virtual void OpenAsset(const std::string& path) const = 0;
 		virtual void DeleteAsset(const std::string& path) const = 0;
 		virtual void ReloadAsset(const std::string& path) const = 0;
+		virtual void SaveAsset(const std::string& path) const = 0;
 		virtual void ReimportAsset(const std::string& path) const {}
 	};
 
@@ -31,6 +32,7 @@ namespace ZeoEngine {
 	public:
 		virtual void OpenAsset(const std::string& path) const override;
 		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
 	};
 
 	class ParticleAssetActions : public AssetActionsBase
@@ -38,6 +40,7 @@ namespace ZeoEngine {
 	public:
 		virtual void OpenAsset(const std::string& path) const override;
 		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
 	};
 
 	class Texture2DAssetActions final : public ImportableAssetActionsBase
@@ -45,6 +48,7 @@ namespace ZeoEngine {
 	public:
 		virtual void OpenAsset(const std::string& path) const override;
 		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
 	};
 
 }
