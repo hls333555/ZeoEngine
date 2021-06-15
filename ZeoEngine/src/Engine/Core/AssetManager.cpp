@@ -52,7 +52,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::OpenAsset(const std::string& path)
 	{
-		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec<AssetSpec>(path)->TypeId;
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
 		auto result = m_AssetActions.find(typeId);
 		if (result != m_AssetActions.end())
 		{
@@ -61,6 +61,20 @@ namespace ZeoEngine {
 		}
 
 		ZE_CORE_WARN("Failed to open asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
+	bool AssetManager::SaveAsset(const std::string& path)
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto result = m_AssetActions.find(typeId);
+		if (result != m_AssetActions.end())
+		{
+			result->second->SaveAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to save asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
 		return false;
 	}
 

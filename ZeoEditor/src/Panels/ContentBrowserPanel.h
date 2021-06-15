@@ -46,10 +46,14 @@ namespace ZeoEngine {
 
 		void DrawPathContextMenu(const std::string& path);
 
-		void HandleRightColumnDirectoryDoubleClicked(const std::string& directory);
-		void HandleRightColumnAssetDoubleClicked(const std::string& path);
+		void HandleRightColumnDirectoryOpen(const std::string& directory);
+		void HandleRightColumnAssetOpen(const std::string& path);
 
 		void RequestPathCreation(const std::string& path, AssetTypeId typeId);
+		void RequestPathDeletion(const std::string& path);
+		void RequestPathRenaming(const std::string& path);
+		void RequestPathOpen(const std::string& path);
+
 		void ProcessPathDeletion(const std::string& path);
 		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeId typeId);
 

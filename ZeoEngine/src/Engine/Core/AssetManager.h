@@ -34,6 +34,8 @@ namespace ZeoEngine {
 		void ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path);
+		/** Save an existing asset. */
+		bool SaveAsset(const std::string& path);
 
 		Ref<IAssetFactory> GetAssetFactoryByAssetType(AssetTypeId typeId);
 		Ref<IAssetActions> GetAssetActionsByAssetType(AssetTypeId typeId);

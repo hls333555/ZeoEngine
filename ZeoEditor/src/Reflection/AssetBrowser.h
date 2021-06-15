@@ -37,13 +37,14 @@ namespace ZeoEngine {
 					static const float assetPreviewWidth = ImGui::GetStyle().Alpha * 64.0f;
 					static const float previewRounding = 5.0f;
 
+					// Draw asset thumbnail or default background
+					ImGui::DrawAssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+						retSpec ? retSpec->ThumbnailTexture->HasAlpha() : false, assetPreviewWidth, previewRounding,
+						true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+
 					// If asset is set...
 					if (retSpec)
 					{
-						ImGui::DrawAssetThumbnail(retSpec->ThumbnailTexture->GetTextureID(),
-							retSpec->ThumbnailTexture->HasAlpha(), assetPreviewWidth, previewRounding,
-							true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
-
 						if (ImGui::IsItemHovered())
 						{
 							// Double-click on the preview thumbnail to open the asset editor
@@ -56,7 +57,7 @@ namespace ZeoEngine {
 						// Right-click on the preview thumbnail to open the popup menu
 						if (ImGui::BeginPopupContextItemWithPadding("AssetOptions"))
 						{
-							if (ImGui::MenuItem(ICON_FA_EDIT "  Open"))
+							if (ImGui::MenuItem(ICON_FA_EDIT "  Edit"))
 							{
 								AssetManager::Get().OpenAsset(retSpec->Path);
 							}
@@ -65,12 +66,6 @@ namespace ZeoEngine {
 
 							ImGui::EndPopup();
 						}
-					}
-					else
-					{
-						ImGui::Image(Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
-							{ assetPreviewWidth, assetPreviewWidth },
-							{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 					}
 
 					// Accept asset dragging from the Content Browser

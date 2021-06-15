@@ -49,6 +49,7 @@ namespace ZeoEngine {
 			}
 		}
 		assetSpec->UpdateAll(srcPath);
+		// TODO: Should be marked modified
 		// Save asset
 		SaveAsset(path);
 		// Reload asset
@@ -66,9 +67,13 @@ namespace ZeoEngine {
 		SceneAssetLibrary::Get().ReloadAsset(path);
 	}
 
+	// TODO: Only to save those which are marked modified
 	void SceneAssetActions::SaveAsset(const std::string& path) const
 	{
-		SceneAssetLibrary::Get().LoadAsset(path)->Serialize(path);
+		if (SceneAssetLibrary::Get().HasAsset(path))
+		{
+			SceneAssetLibrary::Get().GetAsset(path)->Serialize(path);
+		}
 	}
 
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
@@ -83,7 +88,10 @@ namespace ZeoEngine {
 
 	void ParticleAssetActions::SaveAsset(const std::string& path) const
 	{
-		ParticleTemplateAssetLibrary::Get().LoadAsset(path)->Serialize(path);
+		if (ParticleTemplateAssetLibrary::Get().HasAsset(path))
+		{
+			ParticleTemplateAssetLibrary::Get().GetAsset(path)->Serialize(path);
+		}
 	}
 
 	void Texture2DAssetActions::OpenAsset(const std::string& path) const
@@ -98,7 +106,10 @@ namespace ZeoEngine {
 
 	void Texture2DAssetActions::SaveAsset(const std::string& path) const
 	{
-		Texture2DAssetLibrary::Get().LoadAsset(path)->Serialize(path);
+		if (Texture2DAssetLibrary::Get().HasAsset(path))
+		{
+			Texture2DAssetLibrary::Get().GetAsset(path)->Serialize(path);
+		}
 	}
 
 }

@@ -92,35 +92,14 @@ namespace ZeoEngine {
 
 		switch (e.GetKeyCode())
 		{
-			// Delete selected directory or asset
-			case Key::Delete:
-				if (!m_SelectedPath.empty())
-				{
-					m_PathToDelete = m_SelectedPath;
-				}
-				break;
-			// Rename selected directory or asset
-			case Key::F2:
-				if (!m_SelectedPath.empty())
-				{
-					m_PathToRename = m_SelectedPath;
-				}
-				break;
-			// Open selected directory or asset
 			case Key::Enter:
-				if (!m_SelectedPath.empty())
-				{
-					switch (std::filesystem::directory_entry{ m_SelectedPath }.status().type())
-					{
-						case std::filesystem::file_type::directory:
-							m_SelectedDirectory = m_SelectedPath;
-							HandleRightColumnDirectoryDoubleClicked(m_SelectedPath);
-							break;
-						case std::filesystem::file_type::regular:
-							HandleRightColumnAssetDoubleClicked(m_SelectedPath);
-							break;
-					}
-				}
+				RequestPathOpen(m_SelectedPath);
+				break;
+			case Key::F2:
+				RequestPathRenaming(m_SelectedPath);
+				break;
+			case Key::Delete:
+				RequestPathDeletion(m_SelectedPath);
 				break;
 			default:
 				break;
@@ -357,7 +336,7 @@ namespace ZeoEngine {
 		{
 			m_SelectedDirectory = m_DirectoryToOpen;
 			// Double-click to open directory in the right column
-			HandleRightColumnDirectoryDoubleClicked(m_DirectoryToOpen);
+			HandleRightColumnDirectoryOpen(m_DirectoryToOpen);
 			m_DirectoryToOpen.clear();
 		}
 	}
@@ -535,7 +514,7 @@ namespace ZeoEngine {
 				if (bIsAsset)
 				{
 					// Double-click to open asset editor
-					HandleRightColumnAssetDoubleClicked(path);
+					HandleRightColumnAssetOpen(path);
 				}
 				else
 				{
@@ -620,22 +599,73 @@ namespace ZeoEngine {
 		{
 			m_SelectedPath = path;
 
-			if (ImGui::MenuItem("Show In Explorer"))
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			bool bIsAsset = spec->IsAsset();
+
+			if (ImGui::MenuItem("Rename", "F2"))
 			{
-				PlatformUtils::ShowInExplorer(path);
+				RequestPathRenaming(path);
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding("Show in external file explorer");
+				ImGui::SetTooltipWithPadding("Rename this file");
+			}
+
+			if (bIsAsset)
+			{
+				if (ImGui::MenuItem("Save", "CTRL+S"))
+				{
+					AssetManager::Get().SaveAsset(path);
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Save this asset");
+				}
+			}
+			else
+			{
+				if (ImGui::MenuItem("Save All", "CTRL+S"))
+				{
+					AssetRegistry::Get().ForEachPathInDirectoryRecursively(path, [](const std::string& inPath)
+					{
+						auto spec = AssetRegistry::Get().GetPathSpec(inPath);
+						if (spec->IsAsset())
+						{
+							AssetManager::Get().SaveAsset(inPath);
+						}
+					});
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Save all assets in this folder");
+				}
+			}
+
+			if (ImGui::MenuItem("Delete", "Delete"))
+			{
+				RequestPathDeletion(path);
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Delete this file");
 			}
 
 			ImGui::Separator();
 
-			auto spec = AssetRegistry::Get().GetPathSpec(path);
-			if (spec->IsAsset())
+			if (bIsAsset)
 			{
 				auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(spec->GetAssetTypeId());
-				if (ImGui::MenuItem("Reload Asset"))
+
+				if (ImGui::MenuItem("Edit"))
+				{
+					assetActions->OpenAsset(path);
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Open asset editor");
+				}
+
+				if (ImGui::MenuItem("Reload"))
 				{
 					assetActions->ReloadAsset(path);
 				}
@@ -646,7 +676,7 @@ namespace ZeoEngine {
 				bool bIsImportableAsset = static_cast<bool>(std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions));
 				if (bIsImportableAsset)
 				{
-					if (ImGui::MenuItem("Reimport Asset"))
+					if (ImGui::MenuItem("Reimport"))
 					{
 						assetActions->ReimportAsset(path);
 					}
@@ -655,13 +685,24 @@ namespace ZeoEngine {
 						ImGui::SetTooltipWithPadding("Reimport from its original place");
 					}
 				}
+
+				ImGui::Separator();
+			}
+
+			if (ImGui::MenuItem("Show In Explorer"))
+			{
+				PlatformUtils::ShowInExplorer(path);
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Show in external file explorer");
 			}
 
 			ImGui::EndPopup();
 		}
 	}
 
-	void ContentBrowserPanel::HandleRightColumnDirectoryDoubleClicked(const std::string& directory)
+	void ContentBrowserPanel::HandleRightColumnDirectoryOpen(const std::string& directory)
 	{
 		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowId)->DC.StateStorage;
 		// Manually toggle upper-level tree node open iteratively
@@ -675,7 +716,7 @@ namespace ZeoEngine {
 		storage->SetInt(ar.GetPathSpec<DirectorySpec>(currentDirectory)->TreeNodeId, true);
 	}
 
-	void ContentBrowserPanel::HandleRightColumnAssetDoubleClicked(const std::string& path)
+	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
 		AssetManager::Get().OpenAsset(path);
 	}
@@ -685,6 +726,39 @@ namespace ZeoEngine {
 		m_PathToRename = path;
 		m_PathToCreate = path;
 		AssetRegistry::Get().OnPathCreated(path, typeId);
+	}
+
+	void ContentBrowserPanel::RequestPathDeletion(const std::string& path)
+	{
+		if (!path.empty())
+		{
+			m_PathToDelete = path;
+		}
+	}
+
+	void ContentBrowserPanel::RequestPathRenaming(const std::string& path)
+	{
+		if (!path.empty())
+		{
+			m_PathToRename = path;
+		}
+	}
+
+	void ContentBrowserPanel::RequestPathOpen(const std::string& path)
+	{
+		if (!path.empty())
+		{
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			if (spec->IsAsset())
+			{
+				HandleRightColumnAssetOpen(path);
+			}
+			else
+			{
+				m_SelectedDirectory = path;
+				HandleRightColumnDirectoryOpen(path);
+			}
+		}
 	}
 
 	void ContentBrowserPanel::ProcessPathDeletion(const std::string& path)
