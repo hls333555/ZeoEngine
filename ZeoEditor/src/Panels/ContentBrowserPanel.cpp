@@ -50,6 +50,11 @@ namespace ZeoEngine {
 			return ImGui::GetStyle().Alpha * 32.0f;
 		}
 
+		static float GetTileThumbnailWidth()
+		{
+			return ImGui::GetStyle().Alpha * 64.0f;
+		}
+
 	}
 
 	void ContentBrowserPanel::OnAttach()
@@ -160,6 +165,27 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
+		// ViewType menu
+		if (ImGui::BeginPopupWithPadding("View Type"))
+		{
+			if (ImGui::RadioButton("Tiles", m_ViewType == ContentBrowserViewType::Tiles))
+			{
+				m_ViewType = ContentBrowserViewType::Tiles;
+			}
+			if (ImGui::RadioButton("List", m_ViewType == ContentBrowserViewType::List))
+			{
+				m_ViewType = ContentBrowserViewType::List;
+			}
+
+			ImGui::EndPopup();
+		}
+		if (ImGui::Button(ICON_FA_EYE " View Type"))
+		{
+			ImGui::OpenPopup("View Type");
+		}
+
+		ImGui::SameLine();
+
 		m_Filter.Draw("##ContentBrowserFilter", "Search assets", -1.0f);
 	}
 
@@ -182,7 +208,7 @@ namespace ZeoEngine {
 		auto directorySpec = AssetRegistry::Get().GetPathSpec<DirectorySpec>(AssetRegistry::GetAssetRootDirectory());
 		const char* rootDirectoryName = directorySpec->bIsTreeExpanded ? ICON_FA_FOLDER_OPEN " Assets###Assets" : ICON_FA_FOLDER " Assets###Assets";
 		directorySpec->bIsTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
-		AssetRegistry::Get().GetPathSpec<DirectorySpec>(AssetRegistry::GetAssetRootDirectory())->TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
+		directorySpec->TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectedDirectory = AssetRegistry::GetAssetRootDirectory();
@@ -313,15 +339,41 @@ namespace ZeoEngine {
 		const auto& paths = AssetRegistry::Get().GetPathsInDirectory(m_SelectedDirectory);
 		if (paths.size() > 0)
 		{
-			// Use clipper for unfiltered display
-			ImGuiListClipper clipper;
-			clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetThumbnailWidth());
-			auto it = paths.begin();
-			while (clipper.Step())
+			if (m_ViewType == ContentBrowserViewType::Tiles)
 			{
-				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
+				float padding = 16.0f;
+				float thumbnailWidth = Utils::GetTileThumbnailWidth();
+				float cellSize = thumbnailWidth + padding;
+				float panelWidth = ImGui::GetContentRegionAvail().x;
+				int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
+				if (columnCount < 1)
 				{
-					DrawSelectablePath(*(it + index));
+					columnCount = 1;
+				}
+				if (ImGui::BeginTable("", columnCount))
+				{
+					for (auto it = paths.begin(); it != paths.end(); ++it)
+					{
+						ImGui::TableNextColumn();
+
+						DrawTilePath(*it);
+					}
+
+					ImGui::EndTable();
+				}
+			}
+			else
+			{
+				// Use clipper for unfiltered display
+				ImGuiListClipper clipper;
+				clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetThumbnailWidth());
+				auto it = paths.begin();
+				while (clipper.Step())
+				{
+					for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
+					{
+						DrawSelectablePath(*(it + index));
+					}
 				}
 			}
 		}
@@ -346,7 +398,8 @@ namespace ZeoEngine {
 	{
 		//BenchmarkTimer bt;
 		bool bIsFilteredEmpty = true;
-		AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty](const std::string& path)
+		std::vector<std::string> filteredPaths;
+		AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty, &filteredPaths](const std::string& path)
 		{
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
 			if (!spec->IsAsset()) return;
@@ -366,10 +419,49 @@ namespace ZeoEngine {
 				if (bShouldDrawPath)
 				{
 					bIsFilteredEmpty = false;
-					DrawSelectablePath(path);
+					
+					filteredPaths.emplace_back(path);
 				}
 			}
 		});
+
+		if (m_ViewType == ContentBrowserViewType::Tiles)
+		{
+			float padding = 16.0f;
+			float thumbnailWidth = Utils::GetTileThumbnailWidth();
+			float cellSize = thumbnailWidth + padding;
+			float panelWidth = ImGui::GetContentRegionAvail().x;
+			int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
+			if (columnCount < 1)
+			{
+				columnCount = 1;
+			}
+			if (ImGui::BeginTable("", columnCount))
+			{
+				for (auto it = filteredPaths.begin(); it != filteredPaths.end(); ++it)
+				{
+					ImGui::TableNextColumn();
+
+					DrawTilePath(*it);
+				}
+
+				ImGui::EndTable();
+			}
+		}
+		else
+		{
+			ImGuiListClipper clipper;
+			clipper.Begin(static_cast<int32_t>(filteredPaths.size()), Utils::GetThumbnailWidth());
+			auto it = filteredPaths.begin();
+			while (clipper.Step())
+			{
+				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
+				{
+					DrawSelectablePath(*(it + index));
+				}
+			}
+		}
+
 		//std::cout << bt.ElapsedMillis() << std::endl;
 
 		if (bIsFilteredEmpty)
@@ -502,7 +594,7 @@ namespace ZeoEngine {
 				
 				// Draw tooltip thumbnail
 				ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
-					spec->ThumbnailTexture->HasAlpha(), thumbnailWidth, thumbnailRounding,
+					thumbnailWidth, thumbnailRounding,
 					true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
 				ImGui::EndDragDropSource();
@@ -526,8 +618,7 @@ namespace ZeoEngine {
 			ImGui::SameLine();
 
 			ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
-				spec->ThumbnailTexture->HasAlpha(), thumbnailWidth, thumbnailRounding,
-				bIsAsset, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+				thumbnailWidth, thumbnailRounding, false);
 
 			ImGui::SameLine();
 
@@ -588,6 +679,135 @@ namespace ZeoEngine {
 			if (bIsSelected)
 			{
 				m_SelectedPath = path;
+			}
+		}
+		ImGui::PopID();
+	}
+
+	void ContentBrowserPanel::DrawTilePath(const std::string& path)
+	{
+		// Push path as id
+		ImGui::PushID(path.c_str());
+		{
+			auto spec = AssetRegistry::Get().GetPathSpec(path);
+			bool bIsAsset = spec->IsAsset();
+			auto assetTypeId = spec->GetAssetTypeId();
+			const bool bPathNeedsRenaming = m_PathToRename == path;
+			static const float thumbnailWidth = Utils::GetTileThumbnailWidth();
+			static const float thumbnailRounding = 4.0f;
+
+			ImGui::TileImageButton(spec->ThumbnailTexture->GetTextureID(), bPathNeedsRenaming, // Disable button during renaming so that text can be selected
+				{ thumbnailWidth, thumbnailWidth }, thumbnailRounding, m_SelectedPath == path,
+				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
+
+			// TODO: Display path tooltip
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("%s", path.c_str());
+			}
+
+			DrawPathContextMenu(path);
+
+			// Begin dragging asset
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+			if (bIsAsset && ImGui::BeginDragDropSource())
+			{
+				char typeStr[32];
+				_itoa_s(assetTypeId, typeStr, 10);
+				ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
+
+				// Draw tooltip thumbnail
+				ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+					thumbnailWidth, thumbnailRounding,
+					true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+
+				ImGui::EndDragDropSource();
+			}
+			ImGui::PopStyleColor();
+
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+			{
+				if (bIsAsset)
+				{
+					// Double-click to open asset editor
+					HandleRightColumnAssetOpen(path);
+				}
+				else
+				{
+					// Delay opening directory as clipper's iteration has not finished yet
+					m_DirectoryToOpen = path;
+				}
+			}
+			else if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+			{
+				m_SelectedPath = path;
+			}
+
+			auto pathName = spec->PathName.c_str();
+			if (!bPathNeedsRenaming)
+			{
+				// Display directory/asset name
+				auto textSize = ImGui::CalcTextSize(pathName);
+				float indent = (thumbnailWidth - textSize.x) * 0.5f + ImGui::GetFramePadding().x;
+				if (indent > 0.0f)
+				{
+					ImGui::Indent(indent);
+				}
+				// Limit the lines of wrapped text
+				ImGui::PushClipRect(ImGui::GetItemRectMin(), ImVec2{ ImGui::GetItemRectMax().x, ImGui::GetItemRectMax().y - ImGui::GetFramePadding().y }, true);
+				ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + thumbnailWidth);
+				ImGui::TextUnformatted(pathName);
+				ImGui::PopTextWrapPos();
+				ImGui::PopClipRect();
+				if (indent > 0.0f)
+				{
+					ImGui::Unindent(indent);
+				}
+			}
+			else
+			{
+				// Clear selection as long as renaming is in process
+				m_SelectedPath.clear();
+
+				static bool bHasKeyboardFocused = false;
+				if (!bHasKeyboardFocused)
+				{
+					// Focus input once
+					ImGui::SetKeyboardFocusHere();
+					bHasKeyboardFocused = true;
+				}
+				
+				char renameBuffer[MAX_PATH_SIZE];
+				strcpy_s(renameBuffer, pathName);
+				auto textSize = ImGui::CalcTextSize(pathName).x;
+				float indent = (thumbnailWidth - textSize) * 0.5f;
+				if (indent > 0.0f)
+				{
+					ImGui::Indent(indent);
+				}
+				ImGui::SetNextItemWidth(textSize < thumbnailWidth ? textSize + ImGui::GetFramePadding().x * 2 : thumbnailWidth);
+				ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
+				if (indent > 0.0f)
+				{
+					ImGui::Unindent(indent);
+				}
+				// TODO: The following will not get called on right-click
+				if (ImGui::IsItemDeactivated())
+				{
+					if (bIsAsset)
+					{
+						// Add engine file extension automatically
+						strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
+					}
+					std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
+					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+					{
+						ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
+						newPath = path;
+					}
+					ProcessPathRenaming(path, newPath, assetTypeId);
+					bHasKeyboardFocused = false;
+				}
 			}
 		}
 		ImGui::PopID();

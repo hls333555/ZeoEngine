@@ -56,9 +56,6 @@ namespace ZeoEngine {
 		void SaveAsset(const std::string& path);
 		void SaveAssetAs();
 
-		bool GetPendingClearColorTransparent() const { return m_bPendingClearColorTransparent; }
-		void SetPendingClearColorTransparent(bool bValue) { m_bPendingClearColorTransparent  = bValue; }
-
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
 
 		virtual std::string GetAssetPath() const = 0;
@@ -108,8 +105,6 @@ namespace ZeoEngine {
 		DockspaceBase* m_Dockspace = nullptr;
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;
-
-		bool m_bPendingClearColorTransparent = false;
 
 		bool m_bBlockSceneEvents = true;
 

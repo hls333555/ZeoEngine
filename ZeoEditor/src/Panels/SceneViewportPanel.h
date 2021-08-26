@@ -18,7 +18,6 @@ namespace ZeoEngine {
 		
 		/**
 		 * Snapshot current viewport and save as thumbnail cache.
-		 * The snapshot is captured without the clear color so this operation is processed the next tick.
 		 * 
 		 * @param assetPath - Path of asset
 		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
@@ -39,8 +38,6 @@ namespace ZeoEngine {
 		virtual void ProcessUpdate(DeltaTime dt) override;
 
 		virtual void RenderToolbar() {};
-
-		void OnProcessSnapshot();
 
 		bool OnMouseScroll(MouseScrolledEvent& e);
 		bool OnKeyPressed(KeyPressedEvent& e);

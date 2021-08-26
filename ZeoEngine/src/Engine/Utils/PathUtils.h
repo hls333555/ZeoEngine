@@ -46,7 +46,7 @@ namespace ZeoEngine {
 
 		/**
 		 * Iterate through the path's parent path.
-		 * The signature of the func must be equivalent to one of the following form:
+		 * The signature of the func must be equivalent to the following form:
 		 * 
 		 * @code:
 		 * bool(const std::string& name); // Returns true to break the loop

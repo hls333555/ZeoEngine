@@ -9,6 +9,7 @@ namespace ImGui {
 	static ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 	static ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 	static ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs) { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
+	static ImVec2 operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
 
 	void TextCentered(const char* fmt, ...)
 	{
@@ -148,56 +149,71 @@ namespace ImGui {
 		ImGuiContext& g = *GImGui;
 		float backup_padding_y = g.Style.FramePadding.y;
 		g.Style.FramePadding.y = 0.0f;
-		bool pressed = TransparentButtonEx(label, ImVec2(0, 0), ImGuiButtonFlags_AlignTextBaseLine);
+		PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		bool pressed = ButtonEx(label, ImVec2(0, 0), ImGuiButtonFlags_AlignTextBaseLine);
+		PopStyleColor();
 		g.Style.FramePadding.y = backup_padding_y;
 		return pressed;
 	}
 
 	bool TransparentButton(const char* label, const ImVec2& size_arg)
 	{
-		return TransparentButtonEx(label, size_arg, ImGuiButtonFlags_None);
+		PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		bool pressed = ButtonEx(label, size_arg, ImGuiButtonFlags_None);
+		PopStyleColor();
+		return pressed;
 	}
 
-	bool TransparentButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags)
+	bool TileImageButton(ImTextureID user_texture_id, bool bIsDisabled, const ImVec2& size, float rounding, bool bIsSelected, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 	{
+		ImGuiContext& g = *GImGui;
+		ImGuiWindow* window = g.CurrentWindow;
+		if (window->SkipItems)
+			return false;
+
+		// Default to using texture ID as ID. User can still push string/integer prefixes.
+		PushID((void*)(intptr_t)user_texture_id);
+		const ImGuiID id = window->GetID("#image");
+		PopID();
+
+		const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : g.Style.FramePadding;
+		if (!bIsSelected)
+		{
+			PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		}
+		bool pressed = TileImageButtonEx(id, user_texture_id, bIsDisabled, size, rounding, uv0, uv1, padding, bg_col, tint_col);
+		if (!bIsSelected)
+		{
+			PopStyleColor();
+		}
+		return pressed;
+	}
+
+	bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bIsDisabled, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	{
+		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = GetCurrentWindow();
 		if (window->SkipItems)
 			return false;
 
-		ImGuiContext& g = *GImGui;
-		const ImGuiStyle& style = g.Style;
-		const ImGuiID id = window->GetID(label);
-		const ImVec2 label_size = CalcTextSize(label, NULL, true);
-
-		ImVec2 pos = window->DC.CursorPos;
-		if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
-			pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
-		ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
-
-		const ImRect bb(pos, pos + size);
-		ItemSize(size, style.FramePadding.y);
+		const int32_t maxTextLine = 2;
+		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (3 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
+		ItemSize(bb);
 		if (!ItemAdd(bb, id))
 			return false;
 
-		if (g.CurrentItemFlags & ImGuiItemFlags_ButtonRepeat)
-			flags |= ImGuiButtonFlags_Repeat;
 		bool hovered, held;
-		bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
+		bool pressed = ButtonBehavior(bb, id, &hovered, &held, bIsDisabled ? ImGuiButtonFlags_Disabled : 0);
 
 		// Render
-		const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button, held || hovered ? 1.0f : 0.0f);
+		const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
 		RenderNavHighlight(bb, id);
-		RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+		RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+		if (bg_col.w > 0.0f)
+			window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, GetColorU32(bg_col));
+		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
+		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y });
 
-		if (g.LogEnabled)
-			LogSetNextTextDecoration("[", "]");
-		RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
-
-		// Automatically close popups
-		//if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
-		//    CloseCurrentPopup();
-
-		IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
 		return pressed;
 	}
 
@@ -272,14 +288,14 @@ namespace ImGui {
 		}
 	}
 
-	void DrawAssetThumbnail(ImTextureID thumbnailTextureID, bool bHasAlhpa, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID)
+	void DrawAssetThumbnail(ImTextureID thumbnailTextureID, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID)
 	{
-		if (bShouldDrawBackground && bHasAlhpa)
+		if (bShouldDrawBackground)
 		{
-			// Draw background first if translucent
+			// Draw background first if needed
 			ImGui::GetWindowDrawList()->AddImageRounded(backgroundTextureID,
 				{ ImGui::GetCursorScreenPos().x + 1.0f, ImGui::GetCursorScreenPos().y + 1.0f },
-				{ ImGui::GetCursorScreenPos().x + thumbnailSize + 1.0f, ImGui::GetCursorScreenPos().y + thumbnailSize + 1.0f },
+				{ ImGui::GetCursorScreenPos().x + 1.0f + thumbnailSize, ImGui::GetCursorScreenPos().y + 1.0f + thumbnailSize },
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 				ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 1.0f }), rounding);
 		}

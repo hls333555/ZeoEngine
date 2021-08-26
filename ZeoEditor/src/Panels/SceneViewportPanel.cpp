@@ -15,7 +15,6 @@ namespace ZeoEngine {
 	{
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		GetOwningEditor()->SetEditorCamera(&m_EditorCamera);
-		GetOwningEditor()->m_PostSceneRender.connect<&SceneViewportPanel::OnProcessSnapshot>(this);
 	}
 
 	void SceneViewportPanel::ProcessUpdate(DeltaTime dt)
@@ -88,17 +87,8 @@ namespace ZeoEngine {
 		m_SnapshotSpec.AssetPath = assetPath;
 		m_SnapshotSpec.ThumbnailPath = thumbnailPath;
 		m_SnapshotSpec.ImageWidth = imageWidth;
-		GetOwningEditor()->SetPendingClearColorTransparent(true);
-	}
-
-	void SceneViewportPanel::OnProcessSnapshot()
-	{
-		if (GetOwningEditor()->GetPendingClearColorTransparent())
-		{
-			GetOwningEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
-			AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
-			GetOwningEditor()->SetPendingClearColorTransparent(false);
-		}
+		GetOwningEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
+		AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
 	}
 
 	void SceneViewportPanel::SetViewportBounds(float x, float y, float width, float height)

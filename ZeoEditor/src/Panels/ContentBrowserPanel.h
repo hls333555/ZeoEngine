@@ -11,6 +11,12 @@ namespace ZeoEngine {
 
 	struct AssetSpec;
 
+	enum class ContentBrowserViewType
+	{
+		Tiles,
+		List,
+	};
+
 	class ContentBrowserPanel : public PanelBase
 	{
 	public:
@@ -43,6 +49,7 @@ namespace ZeoEngine {
 		std::string GetAvailableNewPathName(const char* baseName, bool bIsAsset);
 
 		void DrawSelectablePath(const std::string& path);
+		void DrawTilePath(const std::string& path);
 
 		void DrawPathContextMenu(const std::string& path);
 
@@ -60,6 +67,8 @@ namespace ZeoEngine {
 	private:
 		float m_LeftColumnWidth = 200.0f;
 		uint32_t m_LeftColumnWindowId;
+
+		ContentBrowserViewType m_ViewType = ContentBrowserViewType::Tiles;
 
 		/** Selected directory in the left column */
 		std::string m_SelectedDirectory;

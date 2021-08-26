@@ -82,7 +82,15 @@ namespace ZeoEngine {
 	class Serializer
 	{
 	public:
-		/**  */
+		/**
+		 * Serialize data to asset.
+		 * The signature of the func must be equivalent to the following form:
+		 * 
+		 * @code:
+		 * void(YAML::Emitter& out);
+		 * @endcode
+		 *
+		 */
 		template<typename Func>
 		static void WriteDataToAsset(const std::string& path, AssetTypeId typeId, Func func)
 		{
@@ -102,7 +110,10 @@ namespace ZeoEngine {
 			fout << out.c_str();
 		}
 
-		/**  */
+		/**
+		 * Deserialize data from asset.
+		 * If optionalTypeId is specified, it will verify it against the one from the asset.
+		 */
 		static std::optional<YAML::Node> ReadDataFromAsset(const std::string& path, std::optional<AssetTypeId> optionalTypeId = {})
 		{
 			auto data = YAML::LoadFile(path);
