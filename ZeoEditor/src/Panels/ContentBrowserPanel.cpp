@@ -665,8 +665,9 @@ namespace ZeoEngine {
 							// Add engine file extension automatically
 							strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
 						}
-						std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
-						if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+						std::string parentPath = PathUtils::GetParentPath(path);
+						std::string newPath = PathUtils::AppendPath(parentPath, renameBuffer);
+						if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
 						{
 							ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
 							newPath = path;
@@ -804,8 +805,9 @@ namespace ZeoEngine {
 						// Add engine file extension automatically
 						strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
 					}
-					std::string newPath = PathUtils::AppendPath(m_SelectedDirectory, renameBuffer);
-					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
+					std::string parentPath = PathUtils::GetParentPath(path);
+					std::string newPath = PathUtils::AppendPath(parentPath, renameBuffer);
+					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
 					{
 						ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
 						newPath = path;
