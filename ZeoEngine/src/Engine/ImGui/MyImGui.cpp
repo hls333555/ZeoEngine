@@ -199,11 +199,30 @@ namespace ImGui {
 		const int32_t maxTextLine = 2;
 		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (3 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
 		ItemSize(bb);
-		if (!ItemAdd(bb, id))
+
+		// Some of the "disabled" code are copied from ImGui::Selectable
+		bool item_add;
+		if (bIsDisabled)
+		{
+			ImGuiItemFlags backup_item_flags = g.CurrentItemFlags;
+			g.CurrentItemFlags |= ImGuiItemFlags_Disabled;
+			item_add = ItemAdd(bb, id);
+			g.CurrentItemFlags = backup_item_flags;
+		}
+		else
+		{
+			item_add = ItemAdd(bb, id);
+		}
+
+		if (!item_add)
 			return false;
 
+		const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+		if (bIsDisabled && !disabled_global) // Only testing this as an optimization
+			BeginDisabled(true);
+
 		bool hovered, held;
-		bool pressed = ButtonBehavior(bb, id, &hovered, &held, bIsDisabled ? ImGuiButtonFlags_Disabled : 0);
+		bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
 		// Render
 		const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
@@ -213,6 +232,9 @@ namespace ImGui {
 			window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, GetColorU32(bg_col));
 		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
 		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y });
+
+		if (bIsDisabled && !disabled_global)
+			EndDisabled();
 
 		return pressed;
 	}

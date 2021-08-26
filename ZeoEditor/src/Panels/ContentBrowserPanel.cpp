@@ -574,7 +574,9 @@ namespace ZeoEngine {
 			const bool bPathNeedsRenaming = m_PathToRename == path;
 			static const float thumbnailWidth = Utils::GetThumbnailWidth();
 			static const float thumbnailRounding = 4.0f;
+
 			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
+			flags |= ImGuiSelectableFlags_AllowItemOverlap;
 			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
 			// TODO: Display path tooltip
 			if (ImGui::IsItemHovered())
@@ -766,6 +768,9 @@ namespace ZeoEngine {
 			}
 			else
 			{
+				// Used to allow the following input text to receive hovered event
+				ImGui::SetItemAllowOverlap();
+
 				// Clear selection as long as renaming is in process
 				m_SelectedPath.clear();
 
