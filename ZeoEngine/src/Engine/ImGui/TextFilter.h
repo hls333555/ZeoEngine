@@ -30,6 +30,7 @@ namespace ZeoEngine {
 		};
 
 		char                InputBuf[256];
+		bool				bIsInputBufferChanged;
 		ImVector<TextRange> Filters;
 		int                 NegativeFilterCount;
 

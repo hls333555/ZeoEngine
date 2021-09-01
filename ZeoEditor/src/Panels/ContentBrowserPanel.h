@@ -92,8 +92,11 @@ namespace ZeoEngine {
 		};
 		std::vector<AssetTypeFilterSpec> m_AssetTypeFilters;
 		bool m_bIsAnyTypeFilterActive = false;
+		bool m_bIsTypeFilterChanged = false;
 
 		TextFilter m_Filter;
+		/** Search filter input cache */
+		std::vector<std::string> m_FilteredPaths;
 	};
 
 }

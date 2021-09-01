@@ -147,12 +147,17 @@ namespace ZeoEngine {
 		if (ImGui::BeginPopupWithPadding("Filters"))
 		{
 			m_bIsAnyTypeFilterActive = false;
+			m_bIsTypeFilterChanged = false;
 			for (auto& filterSpec : m_AssetTypeFilters)
 			{
-				ImGui::Checkbox(filterSpec.TypeName, &filterSpec.bIsFilterActive);
+				bool bIsCheckChanged = ImGui::Checkbox(filterSpec.TypeName, &filterSpec.bIsFilterActive);
 				if (filterSpec.bIsFilterActive)
 				{
 					m_bIsAnyTypeFilterActive = true;
+				}
+				if (bIsCheckChanged)
+				{
+					m_bIsTypeFilterChanged = true;
 				}
 			}
 			
@@ -364,7 +369,6 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				// Use clipper for unfiltered display
 				ImGuiListClipper clipper;
 				clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetThumbnailWidth());
 				auto it = paths.begin();
@@ -393,37 +397,42 @@ namespace ZeoEngine {
 		}
 	}
 
-	// TODO: Consider caching the result and using clipper
 	void ContentBrowserPanel::DrawFilteredAssetsInDirectoryRecursively()
 	{
 		//BenchmarkTimer bt;
-		bool bIsFilteredEmpty = true;
-		std::vector<std::string> filteredPaths;
-		AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty, &filteredPaths](const std::string& path)
+		bool bIsFilteredEmpty = false;
+		// Only update cache when search filter or type filter changes
+		if (m_Filter.bIsInputBufferChanged || m_bIsTypeFilterChanged)
 		{
-			auto spec = AssetRegistry::Get().GetPathSpec(path);
-			if (!spec->IsAsset()) return;
+			bIsFilteredEmpty = true;
+			m_FilteredPaths.clear();
 
-			if (m_Filter.PassFilter(spec->PathName.c_str()))
+			AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty](const std::string& path)
 			{
-				bool bShouldDrawPath = true;
-				if (m_bIsAnyTypeFilterActive)
+				auto spec = AssetRegistry::Get().GetPathSpec(path);
+				if (!spec->IsAsset()) return;
+
+				if (m_Filter.PassFilter(spec->PathName.c_str()))
 				{
-					auto typeId = spec->GetAssetTypeId();
-					auto it = std::find_if(m_AssetTypeFilters.begin(), m_AssetTypeFilters.end(), [typeId](const auto& filterSpec)
+					bool bShouldDrawPath = true;
+					if (m_bIsAnyTypeFilterActive)
 					{
-						return filterSpec.TypeId == typeId;
-					});
-					bShouldDrawPath = it->bIsFilterActive;
+						auto typeId = spec->GetAssetTypeId();
+						auto it = std::find_if(m_AssetTypeFilters.begin(), m_AssetTypeFilters.end(), [typeId](const auto& filterSpec)
+						{
+							return filterSpec.TypeId == typeId;
+						});
+						bShouldDrawPath = it->bIsFilterActive;
+					}
+					if (bShouldDrawPath)
+					{
+						bIsFilteredEmpty = false;
+
+						m_FilteredPaths.emplace_back(path);
+					}
 				}
-				if (bShouldDrawPath)
-				{
-					bIsFilteredEmpty = false;
-					
-					filteredPaths.emplace_back(path);
-				}
-			}
-		});
+			});
+		}
 
 		if (m_ViewType == ContentBrowserViewType::Tiles)
 		{
@@ -438,7 +447,7 @@ namespace ZeoEngine {
 			}
 			if (ImGui::BeginTable("", columnCount))
 			{
-				for (auto it = filteredPaths.begin(); it != filteredPaths.end(); ++it)
+				for (auto it = m_FilteredPaths.begin(); it != m_FilteredPaths.end(); ++it)
 				{
 					ImGui::TableNextColumn();
 
@@ -451,8 +460,8 @@ namespace ZeoEngine {
 		else
 		{
 			ImGuiListClipper clipper;
-			clipper.Begin(static_cast<int32_t>(filteredPaths.size()), Utils::GetThumbnailWidth());
-			auto it = filteredPaths.begin();
+			clipper.Begin(static_cast<int32_t>(m_FilteredPaths.size()), Utils::GetThumbnailWidth());
+			auto it = m_FilteredPaths.begin();
 			while (clipper.Step())
 			{
 				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)

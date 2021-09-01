@@ -40,7 +40,7 @@ namespace ZeoEngine {
 		{
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() - ImGui::GetFramePadding().x);
 		}
-		bool value_changed = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf));
+		bIsInputBufferChanged = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf));
 		ImGui::SameLine();
 		ImGui::HelpMarker(
 			R"(Filter usage:
@@ -49,11 +49,11 @@ namespace ZeoEngine {
 	"-xxx"		hide lines containing "xxx"
 	"xxx yyy"	display lines containing "xxx" and "yyy"
 	"xxx -yyy"	display lines containing "xxx" but not "yyy")");
-		if (value_changed)
+		if (bIsInputBufferChanged)
 		{
 			Build();
 		}
-		return value_changed;
+		return bIsInputBufferChanged;
 	}
 
 	void TextFilter::DrawEmptyText()
