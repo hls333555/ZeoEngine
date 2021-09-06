@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	struct AssetSpec;
+	struct PathSpec;
 
 	enum class ContentBrowserViewType
 	{
@@ -51,7 +51,10 @@ namespace ZeoEngine {
 		void DrawSelectablePath(const std::string& path);
 		void DrawTilePath(const std::string& path);
 
+		void DrawPathTooltip(const Ref<PathSpec>& spec);
 		void DrawPathContextMenu(const std::string& path);
+		void ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding);
+		void SubmitPathRenaming(char* renameBuffer, int32_t maxPathSize, const Ref<PathSpec>& spec, bool& bHasKeyboardFocused);
 
 		void HandleRightColumnDirectoryOpen(const std::string& directory);
 		void HandleRightColumnAssetOpen(const std::string& path);

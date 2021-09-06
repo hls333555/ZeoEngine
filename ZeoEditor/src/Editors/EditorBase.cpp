@@ -116,7 +116,7 @@ namespace ZeoEngine {
 		m_Scene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
-		ZE_CORE_WARN("Loading \"{0}\" took{1} ms", path, timer.ElapsedMillis());
+		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
 	void EditorBase::SaveAsset()

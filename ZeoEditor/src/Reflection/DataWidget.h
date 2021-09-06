@@ -17,7 +17,7 @@
 #include "Engine/GameFramework/Components.h"
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
-#include "Reflection/AssetBrowser.h"
+#include "Engine/ImGui/AssetBrowser.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {

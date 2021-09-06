@@ -3,8 +3,11 @@
 #include <chrono>
 #include <iostream>
 
-namespace ZeoEngine
-{
+namespace ZeoEngine {
+
+	#define BEGIN_BENCHMARK() BenchmarkTimer bt;
+	#define END_BENCHMARK() std::cout << bt.ElapsedMillis() << std::endl;
+
 	class BenchmarkTimer
 	{
 	public:

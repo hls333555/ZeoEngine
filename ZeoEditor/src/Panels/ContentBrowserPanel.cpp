@@ -45,7 +45,7 @@ namespace ZeoEngine {
 			return newName;
 		}
 
-		static float GetThumbnailWidth()
+		static float GetSelectableThumbnailWidth()
 		{
 			return ImGui::GetStyle().Alpha * 32.0f;
 		}
@@ -220,9 +220,11 @@ namespace ZeoEngine {
 		}
 		if (directorySpec->bIsTreeExpanded)
 		{
-			//BenchmarkTimer bt;
+			//BEGIN_BENCHMARK()
+
 			DrawDirectoryTreeRecursively(AssetRegistry::GetAssetRootDirectory());
-			//std::cout << bt.ElapsedMillis() << std::endl;
+
+			//END_BENCHMARK()
 
 			ImGui::TreePop();
 		}
@@ -346,10 +348,10 @@ namespace ZeoEngine {
 		{
 			if (m_ViewType == ContentBrowserViewType::Tiles)
 			{
-				float padding = 16.0f;
-				float thumbnailWidth = Utils::GetTileThumbnailWidth();
-				float cellSize = thumbnailWidth + padding;
-				float panelWidth = ImGui::GetContentRegionAvail().x;
+				static constexpr float padding = 16.0f;
+				static const float thumbnailWidth = Utils::GetTileThumbnailWidth();
+				const float cellSize = thumbnailWidth + padding;
+				const float panelWidth = ImGui::GetContentRegionAvail().x;
 				int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
 				if (columnCount < 1)
 				{
@@ -370,7 +372,7 @@ namespace ZeoEngine {
 			else
 			{
 				ImGuiListClipper clipper;
-				clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetThumbnailWidth());
+				clipper.Begin(static_cast<int32_t>(paths.size()), Utils::GetSelectableThumbnailWidth());
 				auto it = paths.begin();
 				while (clipper.Step())
 				{
@@ -399,7 +401,8 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawFilteredAssetsInDirectoryRecursively()
 	{
-		//BenchmarkTimer bt;
+		//BEGIN_BENCHMARK()
+
 		bool bIsFilteredEmpty = false;
 		// Only update cache when search filter or type filter changes
 		if (m_Filter.bIsInputBufferChanged || m_bIsTypeFilterChanged)
@@ -436,10 +439,10 @@ namespace ZeoEngine {
 
 		if (m_ViewType == ContentBrowserViewType::Tiles)
 		{
-			float padding = 16.0f;
-			float thumbnailWidth = Utils::GetTileThumbnailWidth();
-			float cellSize = thumbnailWidth + padding;
-			float panelWidth = ImGui::GetContentRegionAvail().x;
+			static constexpr float padding = 16.0f;
+			static const float thumbnailWidth = Utils::GetTileThumbnailWidth();
+			const float cellSize = thumbnailWidth + padding;
+			const float panelWidth = ImGui::GetContentRegionAvail().x;
 			int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
 			if (columnCount < 1)
 			{
@@ -460,7 +463,7 @@ namespace ZeoEngine {
 		else
 		{
 			ImGuiListClipper clipper;
-			clipper.Begin(static_cast<int32_t>(m_FilteredPaths.size()), Utils::GetThumbnailWidth());
+			clipper.Begin(static_cast<int32_t>(m_FilteredPaths.size()), Utils::GetSelectableThumbnailWidth());
 			auto it = m_FilteredPaths.begin();
 			while (clipper.Step())
 			{
@@ -471,7 +474,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		//std::cout << bt.ElapsedMillis() << std::endl;
+		//END_BENCHMARK()
 
 		if (bIsFilteredEmpty)
 		{
@@ -486,7 +489,7 @@ namespace ZeoEngine {
 		{
 			// Actual directory or asset is created after renaming
 
-			const float thumbnailWidth = Utils::GetThumbnailWidth();
+			const float thumbnailWidth = Utils::GetSelectableThumbnailWidth();
 
 			bool bIsFolderCreationSelected = ImGui::Selectable("##FolderCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
 
@@ -576,41 +579,25 @@ namespace ZeoEngine {
 		// Push path as id
 		ImGui::PushID(path.c_str());
 		{
-			static constexpr float indentWidth = 5.0f;
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
 			bool bIsAsset = spec->IsAsset();
-			auto assetTypeId = spec->GetAssetTypeId();
 			const bool bPathNeedsRenaming = m_PathToRename == path;
-			static const float thumbnailWidth = Utils::GetThumbnailWidth();
-			static const float thumbnailRounding = 4.0f;
+			static const float thumbnailWidth = Utils::GetSelectableThumbnailWidth();
+			static constexpr float thumbnailRounding = 4.0f;
+			const auto pathName = spec->PathName.c_str();
 
 			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
 			flags |= ImGuiSelectableFlags_AllowItemOverlap;
 			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
-			// TODO: Display path tooltip
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltipWithPadding("%s", path.c_str());
-			}
 
+			// Draw path tooltip on hover
+			DrawPathTooltip(spec);
+
+			// Draw path context menu on right click
 			DrawPathContextMenu(path);
 
-			// Begin dragging asset
-			ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-			if (bIsAsset && ImGui::BeginDragDropSource())
-			{
-				char typeStr[32];
-				_itoa_s(assetTypeId, typeStr, 10);
-				ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
-				
-				// Draw tooltip thumbnail
-				ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
-					thumbnailWidth, thumbnailRounding,
-					true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
-
-				ImGui::EndDragDropSource();
-			}
-			ImGui::PopStyleColor();
+			// Process asset dragging
+			ProcessAssetDragging(spec, thumbnailRounding);
 
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
@@ -628,14 +615,15 @@ namespace ZeoEngine {
 
 			ImGui::SameLine();
 
-			ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+			// Draw seletable thumbnail
+			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
 				thumbnailWidth, thumbnailRounding, false);
 
 			ImGui::SameLine();
 
+			// Draw path name or rename box
 			ImGui::BeginGroup();
 			{
-				auto pathName = spec->PathName.c_str();
 				if (!bPathNeedsRenaming)
 				{
 					// Make two lines of text more compact
@@ -643,15 +631,13 @@ namespace ZeoEngine {
 					// Display directory/asset name
 					ImGui::Text(pathName);
 					// Display type name
-					ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, bIsAsset ? AssetManager::Get().GetAssetFactoryByAssetType(assetTypeId)->GetAssetTypeName() : "Folder");
+					ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, bIsAsset ? AssetManager::Get().GetAssetFactoryByAssetType(spec->GetAssetTypeId())->GetAssetTypeName() : "Folder");
 					ImGui::PopStyleVar();
 				}
 				else
 				{
 					// Clear selection as long as renaming is in process
 					m_SelectedPath.clear();
-
-					ImGui::SameLine(0.0f, 0.0f);
 
 					static bool bHasKeyboardFocused = false;
 					if (!bHasKeyboardFocused)
@@ -663,27 +649,8 @@ namespace ZeoEngine {
 					ImGui::SetNextItemWidth(ImGui::CalcTextSize(pathName).x + ImGui::GetFramePadding().x * 2.0f);
 					char renameBuffer[MAX_PATH_SIZE];
 					strcpy_s(renameBuffer, pathName);
-					ImGui::Indent(1.0f);
 					ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
-					ImGui::Unindent();
-					// TODO: The following will not get called on right-click
-					if (ImGui::IsItemDeactivated())
-					{
-						if (bIsAsset)
-						{
-							// Add engine file extension automatically
-							strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
-						}
-						std::string parentPath = PathUtils::GetParentPath(path);
-						std::string newPath = PathUtils::AppendPath(parentPath, renameBuffer);
-						if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
-						{
-							ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
-							newPath = path;
-						}
-						ProcessPathRenaming(path, newPath, assetTypeId);
-						bHasKeyboardFocused = false;
-					}
+					SubmitPathRenaming(renameBuffer, MAX_PATH_SIZE, spec, bHasKeyboardFocused);
 				}
 			}
 			ImGui::EndGroup();
@@ -703,39 +670,23 @@ namespace ZeoEngine {
 		{
 			auto spec = AssetRegistry::Get().GetPathSpec(path);
 			bool bIsAsset = spec->IsAsset();
-			auto assetTypeId = spec->GetAssetTypeId();
 			const bool bPathNeedsRenaming = m_PathToRename == path;
 			static const float thumbnailWidth = Utils::GetTileThumbnailWidth();
-			static const float thumbnailRounding = 4.0f;
+			static constexpr float thumbnailRounding = 4.0f;
+			const auto pathName = spec->PathName.c_str();
 
 			ImGui::TileImageButton(spec->ThumbnailTexture->GetTextureID(), bPathNeedsRenaming, // Disable button during renaming so that text can be selected
 				{ thumbnailWidth, thumbnailWidth }, thumbnailRounding, m_SelectedPath == path,
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
-			// TODO: Display path tooltip
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltipWithPadding("%s", path.c_str());
-			}
+			// Draw path tooltip on hover
+			DrawPathTooltip(spec);
 
+			// Draw path context menu on right click
 			DrawPathContextMenu(path);
 
-			// Begin dragging asset
-			ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-			if (bIsAsset && ImGui::BeginDragDropSource())
-			{
-				char typeStr[32];
-				_itoa_s(assetTypeId, typeStr, 10);
-				ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
-
-				// Draw tooltip thumbnail
-				ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
-					thumbnailWidth, thumbnailRounding,
-					true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
-
-				ImGui::EndDragDropSource();
-			}
-			ImGui::PopStyleColor();
+			// Process asset dragging
+			ProcessAssetDragging(spec, thumbnailRounding);
 
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
@@ -755,17 +706,16 @@ namespace ZeoEngine {
 				m_SelectedPath = path;
 			}
 
-			auto pathName = spec->PathName.c_str();
+			const float textSize = ImGui::CalcTextSize(pathName).x;
 			if (!bPathNeedsRenaming)
 			{
 				// Display directory/asset name
-				auto textSize = ImGui::CalcTextSize(pathName);
-				float indent = (thumbnailWidth - textSize.x) * 0.5f + ImGui::GetFramePadding().x;
+				float indent = (thumbnailWidth - textSize) * 0.5f + ImGui::GetFramePadding().x;
 				if (indent > 0.0f)
 				{
+					// Center the wrapped text
 					ImGui::Indent(indent);
 				}
-				// Limit the lines of wrapped text
 				ImGui::PushClipRect(ImGui::GetItemRectMin(), ImVec2{ ImGui::GetItemRectMax().x, ImGui::GetItemRectMax().y - ImGui::GetFramePadding().y }, true);
 				ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + thumbnailWidth);
 				ImGui::TextUnformatted(pathName);
@@ -794,7 +744,6 @@ namespace ZeoEngine {
 				
 				char renameBuffer[MAX_PATH_SIZE];
 				strcpy_s(renameBuffer, pathName);
-				auto textSize = ImGui::CalcTextSize(pathName).x;
 				float indent = (thumbnailWidth - textSize) * 0.5f;
 				if (indent > 0.0f)
 				{
@@ -806,27 +755,24 @@ namespace ZeoEngine {
 				{
 					ImGui::Unindent(indent);
 				}
-				// TODO: The following will not get called on right-click
-				if (ImGui::IsItemDeactivated())
-				{
-					if (bIsAsset)
-					{
-						// Add engine file extension automatically
-						strcat_s(renameBuffer, AssetRegistry::GetEngineAssetExtension());
-					}
-					std::string parentPath = PathUtils::GetParentPath(path);
-					std::string newPath = PathUtils::AppendPath(parentPath, renameBuffer);
-					if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
-					{
-						ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
-						newPath = path;
-					}
-					ProcessPathRenaming(path, newPath, assetTypeId);
-					bHasKeyboardFocused = false;
-				}
+				SubmitPathRenaming(renameBuffer, MAX_PATH_SIZE, spec, bHasKeyboardFocused);
 			}
 		}
 		ImGui::PopID();
+	}
+
+	// TODO: Draw path tooltip
+	void ContentBrowserPanel::DrawPathTooltip(const Ref<PathSpec>& spec)
+	{
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltipWithPadding();
+			ImGui::Text(spec->PathName.c_str());
+			ImGui::Separator();
+			ImGui::Text("Type: %s", spec->IsAsset() ? AssetManager::Get().GetAssetFactoryByAssetType(spec->GetAssetTypeId())->GetAssetTypeName() : "Folder");
+			ImGui::Text("Path: %s", spec->Path.c_str());
+			ImGui::EndTooltipWithPadding();
+		}
 	}
 
 	void ContentBrowserPanel::DrawPathContextMenu(const std::string& path)
@@ -935,6 +881,48 @@ namespace ZeoEngine {
 			}
 
 			ImGui::EndPopup();
+		}
+	}
+
+	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding)
+	{
+		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+		if (spec->IsAsset() && ImGui::BeginDragDropSource())
+		{
+			char typeStr[32];
+			_itoa_s(spec->GetAssetTypeId(), typeStr, 10);
+			ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
+
+			// Draw tooltip thumbnail
+			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+				Utils::GetTileThumbnailWidth(), thumbnailRounding,
+				true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+
+			ImGui::EndDragDropSource();
+		}
+		ImGui::PopStyleColor();
+	}
+
+	void ContentBrowserPanel::SubmitPathRenaming(char* renameBuffer, int32_t maxPathSize, const Ref<PathSpec>& spec, bool& bHasKeyboardFocused)
+	{
+		// ImGui::IsItemDeactivated() will not get called for right-click, so we add these specific check
+		if (ImGui::IsItemDeactivated() || (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !ImGui::IsItemHovered()))
+		{
+			if (spec->IsAsset())
+			{
+				// Add engine file extension automatically
+				strcat_s(renameBuffer, maxPathSize, AssetRegistry::GetEngineAssetExtension());
+			}
+			const std::string& path = spec->Path;
+			std::string parentPath = PathUtils::GetParentPath(path);
+			std::string newPath = PathUtils::AppendPath(parentPath, renameBuffer);
+			if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
+			{
+				ZE_CORE_WARN("Failed to rename \"{0}\" to \"{1}\"! Path already exist.", path, newPath);
+				newPath = path;
+			}
+			ProcessPathRenaming(path, newPath, spec->GetAssetTypeId());
+			bHasKeyboardFocused = false;
 		}
 	}
 

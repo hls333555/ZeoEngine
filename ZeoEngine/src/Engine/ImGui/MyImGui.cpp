@@ -33,9 +33,21 @@ namespace ImGui {
 		va_end(args);
 	}
 
+	void BeginTooltipWithPadding()
+	{
+		PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+		BeginTooltip();
+	}
+
+	void EndTooltipWithPadding()
+	{
+		EndTooltip();
+		PopStyleVar();
+	}
+
 	bool BeginPopupWithPadding(const char* str_id, ImGuiWindowFlags flags)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
 		bool is_open = BeginPopup(str_id, flags);
 		ImGui::PopStyleVar();
 		return is_open;
@@ -43,7 +55,7 @@ namespace ImGui {
 
 	bool BeginPopupContextWindowWithPadding(const char* str_id, ImGuiPopupFlags popup_flags)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
 		bool is_open = BeginPopupContextWindow(str_id, popup_flags);
 		ImGui::PopStyleVar();
 		return is_open;
@@ -51,7 +63,7 @@ namespace ImGui {
 
 	bool BeginPopupContextItemWithPadding(const char* str_id, ImGuiPopupFlags popup_flags)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
 		bool is_open = BeginPopupContextItem(str_id, popup_flags);
 		ImGui::PopStyleVar();
 		return is_open;
@@ -196,6 +208,7 @@ namespace ImGui {
 		if (window->SkipItems)
 			return false;
 
+		// Limit the wrapped text up to 2 lines
 		const int32_t maxTextLine = 2;
 		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (3 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
 		ItemSize(bb);
@@ -310,7 +323,7 @@ namespace ImGui {
 		}
 	}
 
-	void DrawAssetThumbnail(ImTextureID thumbnailTextureID, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID)
+	void AssetThumbnail(ImTextureID thumbnailTextureID, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID)
 	{
 		if (bShouldDrawBackground)
 		{

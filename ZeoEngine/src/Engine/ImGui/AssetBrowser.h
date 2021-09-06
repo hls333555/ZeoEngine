@@ -38,7 +38,7 @@ namespace ZeoEngine {
 					static const float previewRounding = 5.0f;
 
 					// Draw asset thumbnail or default background
-					ImGui::DrawAssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
 						assetPreviewWidth, previewRounding,
 						true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
 
@@ -124,7 +124,7 @@ namespace ZeoEngine {
 
 								ImGui::SameLine();
 
-								ImGui::DrawAssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+								ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
 									assetThumbnailWidth, thumbnailRounding, false);
 
 								ImGui::SameLine();
