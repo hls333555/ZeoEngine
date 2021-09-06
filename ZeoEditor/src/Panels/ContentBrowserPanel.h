@@ -45,6 +45,9 @@ namespace ZeoEngine {
 		void DrawFilteredAssetsInDirectoryRecursively();
 		void DrawWindowContextMenu();
 
+		/** Clear type filter and search filter. */
+		void ClearAllFilters();
+
 		/** Try to find an available path name in current directory by appending suffix to it. */
 		std::string GetAvailableNewPathName(const char* baseName, bool bIsAsset);
 
@@ -100,6 +103,7 @@ namespace ZeoEngine {
 		TextFilter m_Filter;
 		/** Search filter input cache */
 		std::vector<std::string> m_FilteredPaths;
+		bool m_bShouldUpdateFilterCache = false;
 	};
 
 }

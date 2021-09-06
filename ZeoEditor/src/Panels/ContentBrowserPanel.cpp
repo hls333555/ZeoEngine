@@ -134,6 +134,7 @@ namespace ZeoEngine {
 				std::string destPath = PathUtils::AppendPath(m_SelectedDirectory, assetName);
 				auto& am = AssetManager::Get();
 				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(*filePath), destPath);
+				m_bShouldUpdateFilterCache = true;
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -143,11 +144,11 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
+		m_bIsTypeFilterChanged = false;
 		// Filters menu
 		if (ImGui::BeginPopupWithPadding("Filters"))
 		{
 			m_bIsAnyTypeFilterActive = false;
-			m_bIsTypeFilterChanged = false;
 			for (auto& filterSpec : m_AssetTypeFilters)
 			{
 				bool bIsCheckChanged = ImGui::Checkbox(filterSpec.TypeName, &filterSpec.bIsFilterActive);
@@ -403,14 +404,12 @@ namespace ZeoEngine {
 	{
 		//BEGIN_BENCHMARK()
 
-		bool bIsFilteredEmpty = false;
 		// Only update cache when search filter or type filter changes
-		if (m_Filter.bIsInputBufferChanged || m_bIsTypeFilterChanged)
+		if (m_Filter.bIsInputBufferChanged || m_bIsTypeFilterChanged || m_bShouldUpdateFilterCache)
 		{
-			bIsFilteredEmpty = true;
 			m_FilteredPaths.clear();
 
-			AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this, &bIsFilteredEmpty](const std::string& path)
+			AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this](const std::string& path)
 			{
 				auto spec = AssetRegistry::Get().GetPathSpec(path);
 				if (!spec->IsAsset()) return;
@@ -429,12 +428,12 @@ namespace ZeoEngine {
 					}
 					if (bShouldDrawPath)
 					{
-						bIsFilteredEmpty = false;
-
 						m_FilteredPaths.emplace_back(path);
 					}
 				}
 			});
+
+			m_bShouldUpdateFilterCache = false;
 		}
 
 		if (m_ViewType == ContentBrowserViewType::Tiles)
@@ -476,7 +475,7 @@ namespace ZeoEngine {
 
 		//END_BENCHMARK()
 
-		if (bIsFilteredEmpty)
+		if (m_FilteredPaths.empty())
 		{
 			m_Filter.DrawEmptyText();
 		}
@@ -547,6 +546,17 @@ namespace ZeoEngine {
 
 			ImGui::EndPopup();
 		}
+	}
+
+	void ContentBrowserPanel::ClearAllFilters()
+	{
+		m_Filter.Clear();
+		for (auto& typeFilter : m_AssetTypeFilters)
+		{
+			typeFilter.bIsFilterActive = false;
+		}
+		m_bIsAnyTypeFilterActive = false;
+		m_bIsTypeFilterChanged = true;
 	}
 
 	std::string ContentBrowserPanel::GetAvailableNewPathName(const char* baseName, bool bIsAsset)
@@ -923,6 +933,7 @@ namespace ZeoEngine {
 			}
 			ProcessPathRenaming(path, newPath, spec->GetAssetTypeId());
 			bHasKeyboardFocused = false;
+			m_bShouldUpdateFilterCache = true;
 		}
 	}
 
@@ -949,6 +960,7 @@ namespace ZeoEngine {
 	{
 		m_PathToRename = path;
 		m_PathToCreate = path;
+		ClearAllFilters(); // Keep filters active during path creation is meaningless
 		AssetRegistry::Get().OnPathCreated(path, typeId);
 	}
 
@@ -1011,6 +1023,7 @@ namespace ZeoEngine {
 				// Clear current selection
 				m_SelectedPath.clear();
 				m_PathToDelete.clear();
+				m_bShouldUpdateFilterCache = true;
 
 				ImGui::CloseCurrentPopup();
 			}
