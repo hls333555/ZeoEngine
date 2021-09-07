@@ -21,28 +21,28 @@ namespace ZeoEngine {
 
 	namespace Utils {
 	
-		static const char* GetFormatedAssetTypeName(const char* typeName)
+		static std::string GetFormatedAssetTypeName(const char* typeName)
 		{
-			if (!typeName) return nullptr;
+			if (strlen(typeName) == 0) return {};
 
-			char* newName = new char[strlen(typeName) + 1];
-			strcpy_s(newName, strlen(typeName) + 1, typeName);
-			int32_t i = 0, j = 0;
-			for (; newName[i] != '\0'; ++i)
+			std::string typeNameStr = typeName;
+
+			// Format certain letters to be upper case
+			typeNameStr[0] = std::toupper(typeNameStr[0]);
+			for (size_t i = 0; i < typeNameStr.size(); ++i)
 			{
-				if (newName[i] != ' ')
+				if (typeNameStr[i] == ' ' && i + 1 < typeNameStr.size())
 				{
-					newName[j++] = newName[i];
-				}
-				else if (newName[i] != '\0')
-				{
-					newName[i + 1] = std::toupper(newName[i + 1]);
+					typeNameStr[i + 1] = std::toupper(typeNameStr[i + 1]);
 				}
 			}
 
-			newName[j] = '\0';
+			// Remove all spaces
+			typeNameStr.erase(std::remove_if(typeNameStr.begin(), typeNameStr.end(),
+				[](unsigned char c) { return std::isspace(c); }), // std::isspace cannot be used directly here, see "Notes" part in https://en.cppreference.com/w/cpp/string/byte/isspace
+				typeNameStr.end());
 
-			return newName;
+			return typeNameStr;
 		}
 
 		static float GetSelectableThumbnailWidth()
@@ -536,7 +536,8 @@ namespace ZeoEngine {
 					if (bIsAssetCreationSelected)
 					{
 						char baseName[MAX_PATH_SIZE] = "New";
-						strcat_s(baseName, Utils::GetFormatedAssetTypeName(factory->GetAssetTypeName()));
+						std::string formattedName = Utils::GetFormatedAssetTypeName(factory->GetAssetTypeName());
+						strcat_s(baseName, formattedName.c_str());
 						std::string newPath = GetAvailableNewPathName(baseName, true);
 						RequestPathCreation(newPath, typeId);
 					}
