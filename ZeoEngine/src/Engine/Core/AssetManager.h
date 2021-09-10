@@ -29,13 +29,19 @@ namespace ZeoEngine {
 		bool RegisterAssetActions(AssetTypeId typeId, Ref<IAssetActions> actions);
 
 		/** Construct a new asset. */
-		void CreateAsset(AssetTypeId typeId, const std::string& path) const;
+		bool CreateAsset(AssetTypeId typeId, const std::string& path) const;
 		/** Import a new asset from file dialog by copying it from srcPath to destPath. The paths should be relative. */
-		void ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
+		bool ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
 		/** Open an existing asset. */
-		bool OpenAsset(const std::string& path);
+		bool OpenAsset(const std::string& path) const;
+		/** Delete an existing asset. */
+		bool DeleteAsset(const std::string& path) const;
+		/** Reload an existing asset from disk, any unsaved changes are discarded. */
+		bool ReloadAsset(const std::string& path) const;
 		/** Save an existing asset. */
-		bool SaveAsset(const std::string& path);
+		bool SaveAsset(const std::string& path) const;
+		/** Reimport an existing asset from its source place. */
+		bool ReimportAsset(const std::string& path) const;
 
 		Ref<IAssetFactory> GetAssetFactoryByAssetType(AssetTypeId typeId);
 		Ref<IAssetActions> GetAssetActionsByAssetType(AssetTypeId typeId);

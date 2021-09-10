@@ -140,7 +140,7 @@ namespace ZeoEngine {
 	class ImportableAssetSerializer : public AssetSerializer
 	{
 	public:
-		static void Serialize(const std::string& path, AssetTypeId typeId, const std::string& srcPath, entt::meta_any instance);
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& srcPath = {});
 		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
 	};
 

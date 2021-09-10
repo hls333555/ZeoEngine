@@ -782,6 +782,10 @@ namespace ZeoEngine {
 			ImGui::Separator();
 			ImGui::Text("Type: %s", spec->IsAsset() ? AssetManager::Get().GetAssetFactoryByAssetType(spec->GetAssetTypeId())->GetAssetTypeName() : "Folder");
 			ImGui::Text("Path: %s", spec->Path.c_str());
+			if (spec->IsImportableAsset())
+			{
+				ImGui::Text("Resource Path: %s", spec->GetResourcePath().c_str());
+			}
 			ImGui::EndTooltipWithPadding();
 		}
 	}
@@ -847,11 +851,11 @@ namespace ZeoEngine {
 
 			if (bIsAsset)
 			{
-				auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(spec->GetAssetTypeId());
+				AssetManager& AM = AssetManager::Get();
 
 				if (ImGui::MenuItem("Edit"))
 				{
-					assetActions->OpenAsset(path);
+					AM.OpenAsset(path);
 				}
 				if (ImGui::IsItemHovered())
 				{
@@ -860,18 +864,17 @@ namespace ZeoEngine {
 
 				if (ImGui::MenuItem("Reload"))
 				{
-					assetActions->ReloadAsset(path);
+					AM.ReloadAsset(path);
 				}
 				if (ImGui::IsItemHovered())
 				{
 					ImGui::SetTooltipWithPadding("Discard changes and reload from disk");
 				}
-				bool bIsImportableAsset = static_cast<bool>(std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions));
-				if (bIsImportableAsset)
+				if (spec->IsImportableAsset())
 				{
 					if (ImGui::MenuItem("Reimport"))
 					{
-						assetActions->ReimportAsset(path);
+						AM.ReimportAsset(path);
 					}
 					if (ImGui::IsItemHovered())
 					{
@@ -1019,7 +1022,7 @@ namespace ZeoEngine {
 				else
 				{
 					// Delete an asset
-					AssetManager::Get().GetAssetActionsByAssetType(spec->GetAssetTypeId())->DeleteAsset(path);
+					AssetManager::Get().DeleteAsset(path);
 				}
 				// Clear current selection
 				m_SelectedPath.clear();

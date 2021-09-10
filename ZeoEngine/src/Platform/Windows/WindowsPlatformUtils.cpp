@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedAssetFilter();
+		std::string filterStr = GetSupportedFileFilter();
 		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedAssetFilter();
+		std::string filterStr = GetSupportedFileFilter();
 		ofn.lpstrFilter = filterStr.c_str();
 		ofn.nFilterIndex = 1;
 		// Sets the default extension by extracting it from the filter
@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	std::string FileDialogs::GetSupportedAssetFilter()
+	std::string FileDialogs::GetSupportedFileFilter()
 	{
 		std::string extensionStr;
 		for (auto it = AssetManager::Get().m_SupportedFileExtensions.begin();;)

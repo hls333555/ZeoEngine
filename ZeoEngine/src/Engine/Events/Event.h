@@ -27,7 +27,7 @@ namespace ZeoEngine {
 
 	enum EventCategory
 	{
-		None = 0,
+		EventCategoryNone = 0,
 		EventCategoryApplication	= ZE_BIT(0),
 		EventCategoryInput			= ZE_BIT(1),
 		EventCategoryKeyboard		= ZE_BIT(2),

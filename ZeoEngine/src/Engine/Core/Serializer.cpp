@@ -524,11 +524,12 @@ namespace ZeoEngine {
 	// ImportableAssetSerializer /////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, const std::string& srcPath, entt::meta_any instance)
+	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& srcPath)
 	{
 		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
 		{
-			out << YAML::Key << g_ResourceSourceToken << YAML::Value << srcPath;
+			out << YAML::Key << g_ResourceSourceToken << YAML::Value <<
+				(srcPath.empty() ? AssetRegistry::Get().GetPathSpec(path)->GetResourcePath() : srcPath);
 
 			ComponentSerializer cs;
 			cs.Serialize(out, instance);
@@ -546,7 +547,7 @@ namespace ZeoEngine {
 			auto resourceSourceData = (*data)[g_ResourceSourceToken];
 			if (resourceSourceData)
 			{
-				assetSpec->ResourceSourcePath = resourceSourceData.as<std::string>();
+				assetSpec->UpdateResourcePath(resourceSourceData.as<std::string>());
 			}
 		}
 		ComponentSerializer cs;

@@ -29,10 +29,11 @@ namespace ZeoEngine {
 		if (!PathUtils::DoesPathExist(assetPath))
 		{
 			// Create zasset file if not exists
-			ImportableAssetSerializer::Serialize(assetPath, m_TypeId, srcPath, {});
+			ImportableAssetSerializer::Serialize(assetPath, m_TypeId, {}, srcPath);
 			auto spec = AssetRegistry::Get().OnPathCreated(assetPath, m_TypeId);
-			// Record resource source path
-			std::dynamic_pointer_cast<AssetSpec>(spec)->ResourceSourcePath = srcPath;
+			spec->Flags |= PathFlag_Importable;
+			// Record resource path
+			std::dynamic_pointer_cast<AssetSpec>(spec)->UpdateResourcePath(srcPath);
 		}
 		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, srcPath);
 	}

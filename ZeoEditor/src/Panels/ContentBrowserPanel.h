@@ -101,7 +101,8 @@ namespace ZeoEngine {
 		bool m_bIsTypeFilterChanged = false;
 
 		TextFilter m_Filter;
-		/** Search filter input cache */
+
+		/** Filter cache */
 		std::vector<std::string> m_FilteredPaths;
 		bool m_bShouldUpdateFilterCache = false;
 	};

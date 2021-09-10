@@ -4,6 +4,7 @@
 
 namespace ZeoEngine {
 
+	/** Defines a series of actions available for an existing asset. */
 	class IAssetActions
 	{
 	public:

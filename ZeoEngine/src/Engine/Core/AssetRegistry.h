@@ -8,6 +8,12 @@
 
 namespace ZeoEngine {
 
+	enum EPathFlag : uint8_t
+	{
+		PathFlag_None = 0,
+		PathFlag_Importable = ZE_BIT(0),
+	};
+
 	struct PathSpec
 	{
 		PathSpec(const std::string& path, const std::string& pathName)
@@ -15,10 +21,13 @@ namespace ZeoEngine {
 		virtual ~PathSpec() = default;
 
 		virtual bool IsAsset() const = 0;
+		virtual bool IsImportableAsset() const = 0;
 		virtual AssetTypeId GetAssetTypeId() const = 0;
+		virtual std::string GetResourcePath() const = 0;
 
 		std::string Path;
 		std::string PathName;
+		uint8_t Flags = 0;
 		Ref<Texture2D> ThumbnailTexture;
 	};
 
@@ -27,7 +36,9 @@ namespace ZeoEngine {
 		using PathSpec::PathSpec;
 
 		virtual bool IsAsset() const override { return false; }
+		virtual bool IsImportableAsset() const override { return false; }
 		virtual AssetTypeId GetAssetTypeId() const override { return {}; }
+		virtual std::string GetResourcePath() const override { return {}; }
 
 		bool bIsTreeExpanded = false;
 		uint32_t TreeNodeId = 0;
@@ -39,13 +50,16 @@ namespace ZeoEngine {
 		using PathSpec::PathSpec;
 
 		virtual bool IsAsset() const override { return true; }
+		virtual bool IsImportableAsset() const override { return Flags & PathFlag_Importable; }
 		virtual AssetTypeId GetAssetTypeId() const override { return TypeId; }
+		virtual std::string GetResourcePath() const override { return ResourcePath; }
 
 		void UpdateAll(const std::string& srcPath);
 		void UpdateThumbnail();
+		void UpdateResourcePath(const std::string& srcPath);
 		
 		AssetTypeId TypeId;
-		std::string ResourceSourcePath; // Can be empty if this is not an imported asset
+		std::string ResourcePath; // Can be empty if this is not an imported asset
 	};
 
 	class AssetRegistry

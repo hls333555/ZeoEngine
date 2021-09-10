@@ -4,8 +4,10 @@
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Utils/PathUtils.h"
-#include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/Core/ThumbnailManager.h"
+#include "Engine/Core/AssetActions.h"
+#include "Engine/Core/AssetManager.h"
 
 namespace ZeoEngine {
 
@@ -18,7 +20,7 @@ namespace ZeoEngine {
 			return outStr;
 		}
 
-		static bool ParseAssetFile(const std::string& path, Ref<AssetSpec>& assetSpec)
+		static bool ParseAssetFile(const std::string& path, const Ref<AssetSpec>& assetSpec)
 		{
 			auto data = Serializer::ReadDataFromAsset(path);
 			if (!data) return false;
@@ -26,11 +28,21 @@ namespace ZeoEngine {
 			auto assetTypeData = (*data)[g_AssetTypeToken];
 			if (!assetTypeData) return false;
 
+			// Record asset type id
 			assetSpec->TypeId = assetTypeData.as<AssetTypeId>();
+
+			// Possibly mark importable flag
+			auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId);
+			if (std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions))
+			{
+				assetSpec->Flags |= PathFlag_Importable;
+			}
+
+			// Possibly record resource path
 			auto resourceSourceData = (*data)[g_ResourceSourceToken];
 			if (resourceSourceData)
 			{
-				assetSpec->ResourceSourcePath = resourceSourceData.as<std::string>();
+				assetSpec->UpdateResourcePath(resourceSourceData.as<std::string>());
 			}
 
 			return true;
@@ -41,12 +53,17 @@ namespace ZeoEngine {
 	void AssetSpec::UpdateAll(const std::string& srcPath)
 	{
 		UpdateThumbnail();
-		ResourceSourcePath = srcPath;
+		UpdateResourcePath(srcPath);
 	}
 
 	void AssetSpec::UpdateThumbnail()
 	{
 		ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(Path, TypeId);
+	}
+
+	void AssetSpec::UpdateResourcePath(const std::string& srcPath)
+	{
+		ResourcePath = srcPath;
 	}
 
 	void AssetRegistry::Init()

@@ -7,6 +7,7 @@
 
 namespace ZeoEngine {
 
+	/** Asset factories contain functions used to construct an asset by creating or importing. */
 	class IAssetFactory
 	{
 	public:

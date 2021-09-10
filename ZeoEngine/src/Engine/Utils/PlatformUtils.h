@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		static std::optional<std::string> SaveFile();
 
 	private:
-		static std::string GetSupportedAssetFilter();
+		static std::string GetSupportedFileFilter();
 	};
 
 	class PlatformUtils

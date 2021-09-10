@@ -6,7 +6,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
-#include "Engine/Core/ThumbnailManager.h"
 
 namespace ZeoEngine {
 
@@ -28,8 +27,8 @@ namespace ZeoEngine {
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-		auto& srcPath = assetSpec->ResourceSourcePath;
-		if (srcPath.empty())
+		auto& srcPath = assetSpec->ResourcePath;
+		if (srcPath.empty() || !PathUtils::DoesPathExist(srcPath))
 		{
 			auto filePath = FileDialogs::OpenFile();
 			if (!filePath) return;
@@ -49,7 +48,7 @@ namespace ZeoEngine {
 			}
 		}
 		assetSpec->UpdateAll(srcPath);
-		// TODO: Should be marked modified
+		// TODO: Should be marked modified instead of saving directly
 		// Save asset
 		SaveAsset(path);
 		// Reload asset

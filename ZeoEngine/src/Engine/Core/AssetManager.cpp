@@ -34,47 +34,99 @@ namespace ZeoEngine {
 		return m_AssetActions.insert(std::make_pair(typeId, actions)).second;
 	}
 
-	void AssetManager::CreateAsset(AssetTypeId typeId, const std::string& path) const
+	bool AssetManager::CreateAsset(AssetTypeId typeId, const std::string& path) const
 	{
 		auto it = m_AssetFactories.find(typeId);
-		if (it == m_AssetFactories.end()) return;
-
-		it->second->CreateAsset(path);
-	}
-
-	void AssetManager::ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const
-	{
-		auto it = m_AssetFactories.find(typeId);
-		if (it == m_AssetFactories.end()) return;
-
-		it->second->ImportAsset(srcPath, destPath);
-	}
-
-	bool AssetManager::OpenAsset(const std::string& path)
-	{
-		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
-		auto result = m_AssetActions.find(typeId);
-		if (result != m_AssetActions.end())
+		if (it != m_AssetFactories.end())
 		{
-			result->second->OpenAsset(path);
+			it->second->CreateAsset(path);
 			return true;
 		}
 
-		ZE_CORE_WARN("Failed to open asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
+		ZE_CORE_WARN("Failed to create asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(path));
 		return false;
 	}
 
-	bool AssetManager::SaveAsset(const std::string& path)
+	bool AssetManager::ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const
+	{
+		auto it = m_AssetFactories.find(typeId);
+		if (it != m_AssetFactories.end())
+		{
+			it->second->ImportAsset(srcPath, destPath);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to import asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(srcPath));
+		return false;
+	}
+
+	bool AssetManager::OpenAsset(const std::string& path) const
 	{
 		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
-		auto result = m_AssetActions.find(typeId);
-		if (result != m_AssetActions.end())
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
 		{
-			result->second->SaveAsset(path);
+			it->second->OpenAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to open asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
+	bool AssetManager::DeleteAsset(const std::string& path) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->DeleteAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to delete asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
+	bool AssetManager::ReloadAsset(const std::string& path) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->ReloadAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to reload asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
+	bool AssetManager::SaveAsset(const std::string& path) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->SaveAsset(path);
 			return true;
 		}
 
 		ZE_CORE_WARN("Failed to save asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
+	bool AssetManager::ReimportAsset(const std::string& path) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->ReimportAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to reimport asset: {0}. Unknown file format!", PathUtils::GetFileNameFromPath(path));
 		return false;
 	}
 

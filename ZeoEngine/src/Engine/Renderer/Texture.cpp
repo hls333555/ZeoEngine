@@ -5,7 +5,6 @@
 #include "Platform/OpenGL/OpenGLTexture.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/Serializer.h"
-#include "Engine/Core/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -76,8 +75,7 @@ namespace ZeoEngine {
 		{
 			SetPath(path);
 		}
-		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), assetSpec->ResourceSourcePath, {}); // TODO: Update component instance here
+		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), {}); // TODO: Update component instance here
 	}
 
 	void Texture2DAsset::Deserialize()
