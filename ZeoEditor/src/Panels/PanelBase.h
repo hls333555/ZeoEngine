@@ -27,7 +27,17 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		template<typename T = EditorBase>
-		T* GetOwningEditor() { return dynamic_cast<T*>(m_OwningEditor); }
+		T* GetOwningEditor()
+		{
+			if constexpr (std::is_same<T, EditorBase>::value)
+			{
+				return m_OwningEditor;
+			}
+			else
+			{
+				return dynamic_cast<T*>(m_OwningEditor);
+			}
+		}
 
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }

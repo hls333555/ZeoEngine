@@ -63,6 +63,7 @@ namespace ZeoEngine {
 		if (comp->ComponentHelper)
 		{
 			comp->ComponentHelper->SetOwnerEntity(*this);
+			comp->ComponentHelper->OnComponentAdded();
 			Reflection::BindOnDestroy(compType, m_Scene->m_Registry);
 		}
 		AddComponentId(compId);

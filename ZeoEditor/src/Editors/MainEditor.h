@@ -6,8 +6,16 @@ namespace ZeoEngine {
 
 	class SceneAsset;
 
+	enum class SceneState
+	{
+		Edit = 0,
+		Play = 1, Pause = 2,
+	};
+
 	class MainEditor : public EditorBase
 	{
+		friend class GameViewportPanel;
+
 	public:
 		using EditorBase::EditorBase;
 
@@ -15,8 +23,15 @@ namespace ZeoEngine {
 
 		virtual std::string GetAssetPath() const override;
 
+		SceneState GetSceneState() const { return m_SceneState; }
+
 	private:
 		virtual void PostSceneCreate(bool bIsFromLoad) override;
+
+		void OnScenePlay();
+		void OnSceneStop();
+		void OnScenePause();
+		void OnSceneResume();
 
 		virtual AssetTypeId GetAssetTypeId() const override;
 		virtual void LoadAssetImpl(const std::string& path) override;
@@ -26,6 +41,7 @@ namespace ZeoEngine {
 
 	private:
 		AssetHandle<SceneAsset> m_SceneAsset;
+		SceneState m_SceneState = SceneState::Edit;
 	};
 
 }

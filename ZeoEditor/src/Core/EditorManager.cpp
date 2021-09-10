@@ -52,8 +52,8 @@ namespace ZeoEngine {
 			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return nullptr;
 		}
 
-		editor->OnAttach();
 		m_Editors.emplace(type, editor);
+		editor->OnAttach(); // Call this after emplacement as scene class should be able to get editor instance on construction
 		return editor;
 	}
 

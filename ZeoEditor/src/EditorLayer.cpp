@@ -49,48 +49,4 @@ namespace ZeoEngine {
 		EditorManager::Get().OnEvent(event);
 	}
 
-	// TODO:
-	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
-	{
-		//// Start PIE by pressing Alt+P
-		//if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
-		//{
-		//	if (pieState == PIEState::None)
-		//	{
-		//		StartPIE();
-		//	}
-		//}
-		//// Exit PIE by pressing Esc
-		//if (Input::IsKeyPressed(Key::Escape))
-		//{
-		//	if (pieState != PIEState::None)
-		//	{
-		//		StopPIE();
-		//	}
-		//}
-		return false;
-	}
-
-	constexpr const char* PIETempFile = "temp/PIE.tmp";
-
-	void EditorLayer::StartPIE()
-	{
-		ZE_CORE_TRACE("PIE started");
-	}
-
-	void EditorLayer::StopPIE()
-	{
-		ZE_CORE_TRACE("PIE stopped");
-	}
-
-	void EditorLayer::PausePIE()
-	{
-		ZE_CORE_TRACE("PIE paused");
-	}
-
-	void EditorLayer::ResumePIE()
-	{
-		ZE_CORE_TRACE("PIE resumed");
-	}
-
 }

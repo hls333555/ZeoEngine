@@ -11,6 +11,7 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Editors/EditorBase.h"
+#include "Editors/MainEditor.h"
 
 namespace ZeoEngine {
 
@@ -42,30 +43,45 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::RenderToolbar()
 	{
-		// TODO: Is in PIE
-		bool bIsInPIE = false;
-		float indent = bIsInPIE ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
-			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
+		auto* mainEditor = GetOwningEditor<MainEditor>();
 		// Place buttons at window center
+		float indent = mainEditor->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
+			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
 		ImGui::Indent(indent);
 
 		// Toggle play / stop
-		if (ImGui::TransparentButton(ICON_FA_PLAY))
+		if (ImGui::TransparentButton(mainEditor->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
 		{
-
-		}
-
-		if (bIsInPIE)
-		{
-			ImGui::SameLine();
-
-			// Toggle pause / resume
-			if (ImGui::TransparentButton(ICON_FA_PAUSE))
+			switch (mainEditor->GetSceneState())
 			{
-
+				case SceneState::Edit:
+					mainEditor->OnScenePlay();
+					break;
+				case SceneState::Play:
+				case SceneState::Pause:
+					mainEditor->OnSceneStop();
+					break;
 			}
 		}
 
+		// Toggle pause / resume
+		switch (mainEditor->GetSceneState())
+		{
+			case SceneState::Play:
+				ImGui::SameLine();
+				if (ImGui::TransparentButton(ICON_FA_PAUSE))
+				{
+					mainEditor->OnScenePause();
+				}
+				break;
+			case SceneState::Pause:
+				ImGui::SameLine();
+				if (ImGui::TransparentButton(ICON_FA_PLAY))
+				{
+					mainEditor->OnSceneResume();
+				}
+				break;
+		}
 	}
 
 	void GameViewportPanel::RenderGizmo()
@@ -133,6 +149,42 @@ namespace ZeoEngine {
 
 	bool GameViewportPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
+		// Global shotcuts
+		{
+			auto* mainEditor = GetOwningEditor<MainEditor>();
+			// Toggle play
+			if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
+			{
+				if (mainEditor->GetSceneState() == SceneState::Edit)
+				{
+					mainEditor->OnScenePlay();
+				}
+			}
+
+			// Toggle pause / resume
+			if (Input::IsKeyPressed(Key::Pause))
+			{
+				switch (mainEditor->GetSceneState())
+				{
+				case SceneState::Play:
+					mainEditor->OnScenePause();
+					break;
+				case SceneState::Pause:
+					mainEditor->OnSceneResume();
+					break;
+				}
+			}
+
+			// Toggle stop
+			if (Input::IsKeyPressed(Key::Escape))
+			{
+				if (mainEditor->GetSceneState() > SceneState::Edit)
+				{
+					mainEditor->OnSceneStop();
+				}
+			}
+		}
+
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
 
 		bool bCanSwitchGizmo = !ImGuizmo::IsUsing();

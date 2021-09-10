@@ -15,6 +15,7 @@ namespace ZeoEngine {
 	{
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		GetOwningEditor()->SetEditorCamera(&m_EditorCamera);
+		GetOwningEditor()->m_PostSceneCreate.connect<&SceneViewportPanel::PostSceneCreate>(this);
 	}
 
 	void SceneViewportPanel::ProcessUpdate(DeltaTime dt)
@@ -120,6 +121,17 @@ namespace ZeoEngine {
 		// Resize editor camera
 		m_EditorCamera.SetViewportSize(size.x, size.y);
 
+		UpdateViewportSizeOnSceneCameras();
+	}
+
+	void SceneViewportPanel::PostSceneCreate()
+	{
+		// This binding must be called after scene creation!
+		GetOwningEditor()->GetScene()->m_Registry.on_construct<CameraComponent>().template connect<&SceneViewportPanel::UpdateViewportSizeOnSceneCameras>(this);
+	}
+
+	void SceneViewportPanel::UpdateViewportSizeOnSceneCameras()
+	{
 		// Resize non-FixedAspectRatio cameras
 		auto view = GetOwningEditor()->GetScene()->m_Registry.view<CameraComponent>();
 		for (auto entity : view)
@@ -127,7 +139,7 @@ namespace ZeoEngine {
 			auto& cameraComp = view.get<CameraComponent>(entity);
 			if (!cameraComp.bFixedAspectRatio)
 			{
-				cameraComp.Camera.SetViewportSize(size);
+				cameraComp.Camera.SetViewportSize(m_LastViewportSize);
 			}
 		}
 	}

@@ -24,6 +24,7 @@ namespace ZeoEngine {
 			if (comp.ComponentHelper)
 			{
 				comp.ComponentHelper->SetOwnerEntity(*this);
+				comp.ComponentHelper->OnComponentAdded();
 				m_Scene->m_Registry.on_destroy<T>().template connect<&IComponentHelper::OnComponentDestroy>(comp.ComponentHelper);
 			}
 			AddComponentId(entt::type_hash<T>::value());

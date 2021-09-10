@@ -2,7 +2,7 @@
 
 #include "Engine/GameFramework/EngineLayer.h"
 
-#include "Engine/Events/KeyEvent.h"
+#include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
@@ -15,15 +15,6 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
-
-	private:
-		bool OnKeyPressed(KeyPressedEvent& e);
-
-		void StartPIE();
-		void StopPIE();
-		void PausePIE();
-		void ResumePIE();
-
 	};
 
 }

@@ -6,6 +6,7 @@ namespace ZeoEngine {
 
 	class RenderSystem;
 	class NativeScriptSystem;
+	class MainEditor;
 
 	class MainEditorScene : public Scene
 	{
@@ -28,6 +29,8 @@ namespace ZeoEngine {
 	private:
 		Ref<RenderSystem> m_RenderSystem;
 		Ref<NativeScriptSystem> m_NativeScriptSystem;
+
+		MainEditor* m_MainEditor = nullptr;
 	};
 
 }

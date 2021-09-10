@@ -46,6 +46,10 @@ namespace ZeoEngine {
 
 		void OnViewportResize(const glm::vec2& size);
 
+		void PostSceneCreate();
+
+		void UpdateViewportSizeOnSceneCameras();
+
 	protected:
 		EditorCamera m_EditorCamera;
 		glm::vec2 m_ViewportBounds[2];

@@ -13,7 +13,9 @@ namespace ZeoEngine {
 		IComponentHelper(const IComponentHelper&) = default;
 
 	public:
-		/** Called before component has been removed from the owner entity. */
+		/**  Called after component being added to the owner entity. */
+		virtual void OnComponentAdded() {}
+		/** Called before component being removed from the owner entity. */
 		virtual void OnComponentDestroy() {}
 
 		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */

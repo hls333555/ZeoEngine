@@ -38,7 +38,6 @@ namespace ZeoEngine {
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			// TODO: Textured entities will not render properly when tweaking camera's z position in perspective mode
 			m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
 		}
 		else

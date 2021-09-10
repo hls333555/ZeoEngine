@@ -2,6 +2,8 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
+#include "Core/EditorManager.h"
+#include "Editors/MainEditor.h"
 
 namespace ZeoEngine {
 
@@ -11,6 +13,9 @@ namespace ZeoEngine {
 		m_RenderSystem->OnCreate();
 		m_NativeScriptSystem = CreateRef<NativeScriptSystem>(this);
 		m_NativeScriptSystem->OnCreate();
+
+		m_MainEditor = dynamic_cast<MainEditor*>(EditorManager::Get().GetEditor(EditorType::MainEditor));
+		ZE_CORE_ASSERT(m_MainEditor);
 	}
 
 	MainEditorScene::~MainEditorScene()
@@ -21,14 +26,29 @@ namespace ZeoEngine {
 
 	void MainEditorScene::OnUpdate(DeltaTime dt)
 	{
-		// TODO:
-		OnUpdateEditor(dt);
+		switch (m_MainEditor->GetSceneState())
+		{
+			case SceneState::Edit:
+				OnUpdateEditor(dt);
+				break;
+			case SceneState::Play:
+				OnUpdateRuntime(dt);
+				break;
+		}
 	}
 
 	void MainEditorScene::OnRender(const EditorCamera& camera)
 	{
-		// TODO:
-		OnRenderEditor(camera);
+		switch (m_MainEditor->GetSceneState())
+		{
+			case SceneState::Edit:
+				OnRenderEditor(camera);
+				break;
+			case SceneState::Play:
+			case SceneState::Pause:
+				OnRenderRuntime();
+				break;
+		}
 	}
 
 	void MainEditorScene::OnEvent(Event& e)

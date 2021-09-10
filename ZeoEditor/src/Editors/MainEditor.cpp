@@ -25,6 +25,26 @@ namespace ZeoEngine {
 		}
 	}
 
+	void MainEditor::OnScenePlay()
+	{
+		m_SceneState = SceneState::Play;
+	}
+
+	void MainEditor::OnSceneStop()
+	{
+		m_SceneState = SceneState::Edit;
+	}
+
+	void MainEditor::OnScenePause()
+	{
+		m_SceneState = SceneState::Pause;
+	}
+
+	void MainEditor::OnSceneResume()
+	{
+		m_SceneState = SceneState::Play;
+	}
+
 	AssetTypeId MainEditor::GetAssetTypeId() const
 	{
 		return SceneAsset::TypeId();
