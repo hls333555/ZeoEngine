@@ -11,11 +11,18 @@ namespace ZeoEngine {
 	{
 	public:
 		// These return empty strings if cancelled
-		static std::optional<std::string> OpenFile(AssetType type);
-		static std::optional<std::string> SaveFile(AssetType type);
+		static std::optional<std::string> OpenFile();
+		static std::optional<std::string> SaveFile();
 
 	private:
-		static const char* GetAssetFilterFromAssetType(AssetType type);
+		static std::string GetSupportedFileFilter();
+	};
+
+	class PlatformUtils
+	{
+	public:
+		/** Open the file explorer and select the path. */
+		static void ShowInExplorer(const std::string& path);
 	};
 
 }

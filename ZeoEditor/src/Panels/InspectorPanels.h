@@ -12,6 +12,8 @@ namespace ZeoEngine {
 	public:
 		using PanelBase::PanelBase;
 
+		virtual void OnAttach() override;
+
 	protected:
 		template<typename... IgnoredComponents>
 		void DrawComponents(Entity entity)

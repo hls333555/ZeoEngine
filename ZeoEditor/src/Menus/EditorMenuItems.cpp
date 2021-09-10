@@ -2,16 +2,18 @@
 
 #include <imgui.h>
 
-#include "Dockspaces/DockspaceBase.h"
+#include "Editors/EditorBase.h"
 #include "Engine/GameFramework/Scene.h"
-#include "Core/WindowManager.h"
+#include "Core/EditorManager.h"
 #include "Engine/Core/Input.h"
 #include "Panels/SceneViewportPanel.h"
+#include "Utils/EditorUtils.h"
+#include "Dockspaces/DockspaceBase.h"
 
 namespace ZeoEngine {
 
-	MenuItemBase::MenuItemBase(DockspaceBase* context, const std::string& menuItemName, const std::string& shortcutName)
-		: m_Context(context)
+	MenuItemBase::MenuItemBase(EditorBase* owningEditor, const std::string& menuItemName, const std::string& shortcutName)
+		: m_OwningEditor(owningEditor)
 		, m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
 	{
 	}
@@ -30,6 +32,11 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(MenuItemBase::OnKeyPressed));
 	}
 
+	DockspaceBase* MenuItemBase::GetOwningDockspace() const
+	{
+		return m_OwningEditor->GetDockspace();
+	}
+
 	bool MenuItemBase::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (m_ShortcutName.empty() || e.GetRepeatCount() > 0) return false;
@@ -37,8 +44,8 @@ namespace ZeoEngine {
 		return OnKeyPressedImpl(e);
 	}
 
-	MenuItem_Seperator::MenuItem_Seperator(DockspaceBase* context, const std::string& menuItemName)
-		: MenuItemBase(context, menuItemName)
+	MenuItem_Seperator::MenuItem_Seperator(EditorBase* owningEditor, const std::string& menuItemName)
+		: MenuItemBase(owningEditor, menuItemName)
 	{
 	}
 
@@ -47,9 +54,9 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	MenuItem_ToggleEditor::MenuItem_ToggleEditor(DockspaceBase* context, DockspaceType dockspaceType, const std::string& shortcutName)
-		: MenuItemBase(context, GetDockspaceName(dockspaceType), shortcutName)
-		, m_DockspaceType(dockspaceType)
+	MenuItem_ToggleEditor::MenuItem_ToggleEditor(EditorBase* owningEditor, EditorType editorType, const std::string& shortcutName)
+		: MenuItemBase(owningEditor, EditorUtils::GetEditorName(editorType), shortcutName)
+		, m_EditorType(editorType)
 	{
 	}
 
@@ -57,10 +64,9 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			auto* dockspace = DockspaceManager::Get().GetDockspace(m_DockspaceType);
-			if (dockspace)
+			if (auto editor = EditorManager::Get().GetEditor(m_EditorType))
 			{
-				m_bSelected = dockspace->GetShowPtr();
+				m_bSelected = editor->GetShowPtr();
 			}
 		}
 
@@ -71,12 +77,12 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			DockspaceManager::Get().ToggleDockspace(m_DockspaceType, true);
+			EditorManager::Get().OpenEditor(m_EditorType);
 		}
 	}
 
-	MenuItem_TogglePanel::MenuItem_TogglePanel(DockspaceBase* context, PanelType panelType, const std::string& shortcutName)
-		: MenuItemBase(context, GetPanelName(panelType), shortcutName)
+	MenuItem_TogglePanel::MenuItem_TogglePanel(EditorBase* owningEditor, PanelType panelType, const std::string& shortcutName)
+		: MenuItemBase(owningEditor, EditorUtils::GetPanelName(panelType), shortcutName)
 		, m_PanelType(panelType)
 	{
 	}
@@ -85,8 +91,7 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			auto* panel = m_Context->GetPanel(m_PanelType);
-			if (panel)
+			if (auto panel = GetOwningDockspace()->GetPanel(m_PanelType))
 			{
 				m_bSelected = panel->GetShowPtr();
 			}
@@ -99,13 +104,13 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			m_Context->TogglePanel(m_PanelType, true);
+			GetOwningDockspace()->OpenPanel(m_PanelType);
 		}
 	}
 
-	bool MenuItem_NewScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_NewAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+N" || !m_Context->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+N" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -114,7 +119,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_Context->CreateNewScene();
+					m_OwningEditor->NewAsset();
 				}
 				break;
 			}
@@ -123,14 +128,14 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_NewScene::OnMenuItemActivated()
+	void MenuItem_NewAsset::OnMenuItemActivated()
 	{
-		m_Context->CreateNewScene();
+		m_OwningEditor->NewAsset();
 	}
 
-	bool MenuItem_OpenScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_LoadAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+O" || !m_Context->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+O" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -139,7 +144,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_Context->OpenScene();
+					m_OwningEditor->LoadAsset();
 				}
 				break;
 			}
@@ -148,14 +153,14 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_OpenScene::OnMenuItemActivated()
+	void MenuItem_LoadAsset::OnMenuItemActivated()
 	{
-		m_Context->OpenScene();
+		m_OwningEditor->LoadAsset();
 	}
 
-	bool MenuItem_SaveScene::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_SaveAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+S" || !m_Context->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+S" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		switch (e.GetKeyCode())
@@ -164,7 +169,7 @@ namespace ZeoEngine {
 			{
 				if (bIsCtrlPressed)
 				{
-					m_Context->SaveScene();
+					m_OwningEditor->SaveAsset();
 				}
 				break;
 			}
@@ -173,14 +178,14 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_SaveScene::OnMenuItemActivated()
+	void MenuItem_SaveAsset::OnMenuItemActivated()
 	{
-		m_Context->SaveScene();
+		m_OwningEditor->SaveAsset();
 	}
 
-	bool MenuItem_SaveSceneAs::OnKeyPressedImpl(KeyPressedEvent& e)
+	bool MenuItem_SaveAssetAs::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+ALT+S" || !m_Context->IsDockspaceFocused()) return false;
+		if (m_ShortcutName != "CTRL+ALT+S" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
@@ -192,7 +197,7 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed)
 					{
-						m_Context->SaveSceneAs();
+						m_OwningEditor->SaveAssetAs();
 					}
 				}
 				break;
@@ -202,9 +207,9 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MenuItem_SaveSceneAs::OnMenuItemActivated()
+	void MenuItem_SaveAssetAs::OnMenuItemActivated()
 	{
-		m_Context->SaveSceneAs();
+		m_OwningEditor->SaveAssetAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -234,18 +239,17 @@ namespace ZeoEngine {
 
 	void MenuItem_ResetLayout::OnMenuItemActivated()
 	{
-		DockspaceManager::Get().RebuildDockLayout();
+		EditorManager::Get().RebuildLayoutForAllEditors();
 	}
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string filePath = m_Context->GetScene()->GetPath();
+		const std::string assetPath = m_OwningEditor->GetAssetPath();
 		// This may be null e.g. default particle system
-		if (filePath.empty()) return;
+		if (assetPath.empty()) return;
 
-		SceneViewportPanel* viewportPanel = m_Context->GetPanel<SceneViewportPanel>(m_Context->GetViewportPanelType());
-		std::string snapshotName = filePath + ".png";
-		viewportPanel->Snapshot(snapshotName, 256);
+		SceneViewportPanel* viewportPanel = GetOwningDockspace()->GetPanel<SceneViewportPanel>(GetOwningDockspace()->GetViewportPanelType());
+		viewportPanel->Snapshot(assetPath, 256);
 	}
 
 }

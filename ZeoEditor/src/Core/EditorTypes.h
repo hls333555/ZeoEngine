@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	enum class DockspaceType
+	enum class EditorType
 	{
 		NONE,
 
@@ -20,6 +20,7 @@ namespace ZeoEngine {
 		GameView,
 		SceneOutline,
 		EntityInspector,
+		ContentBrowser,
 		Console,
 		Stats,
 		Preferences,
@@ -32,14 +33,12 @@ namespace ZeoEngine {
 
 	struct DockspaceSpec
 	{
-		DockspaceType Type;
 		ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_MenuBar;
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};
 
 	struct PanelSpec
 	{
-		PanelType Type;
 		ImGuiWindowFlags WindowFlags = 0;
 		ImVec2 Padding = ImVec2(3.0f, 3.0f);
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };

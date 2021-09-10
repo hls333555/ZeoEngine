@@ -1,0 +1,54 @@
+AssetType: 4099385791
+Entities:
+  - Entity: 0
+    Components:
+      - Component: 3590015414
+        bIsInternal: false
+        Name: Test Camera
+      - Component: 4079556375
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [0, 0, 0]
+      - Component: 2487124838
+        OrthographicFar: 1
+        OrthographicNear: -1
+        Size: 6
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        VerticalFOV: 45
+        ProjectionType: Orthographic
+        bFixedAspectRatio: false
+        bIsPrimary: true
+      - Component: 1828530527
+  - Entity: 1
+    Components:
+      - Component: 3590015414
+        bIsInternal: false
+        Name: Player Ship
+      - Component: 4079556375
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [-1, 0, 0]
+      - Component: 2229143245
+        TextureTiling: [1, 1]
+        Texture: assets\textures\Ship.png.zasset
+        TintColor: [1, 1, 1, 1]
+      - Component: 91661578
+        PositionOffset: [0, 0, 0]
+        Template: assets\particles\Test.zasset
+  - Entity: 2
+    Components:
+      - Component: 3590015414
+        bIsInternal: false
+        Name: Enemy Ship
+      - Component: 4079556375
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [1, 0, 0]
+      - Component: 2229143245
+        TextureTiling: [1, 1]
+        Texture: assets\textures\Ship2.png.zasset
+        TintColor: [1, 1, 1, 1]
+      - Component: 91661578
+        PositionOffset: [0, 0, 0]
+        Template: assets\particles\Test.zasset

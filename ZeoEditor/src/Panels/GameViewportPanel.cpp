@@ -5,12 +5,12 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/DockspaceBase.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Editors/EditorBase.h"
 
 namespace ZeoEngine {
 
@@ -18,7 +18,7 @@ namespace ZeoEngine {
 	{
 		SceneViewportPanel::OnAttach();
 
-		GetContext()->m_PostSceneRender.connect<&GameViewportPanel::ReadPixelDataFromIDBuffer>(this);
+		GetOwningEditor()->m_PostSceneRender.connect<&GameViewportPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
 	void GameViewportPanel::ProcessRender()
@@ -72,7 +72,7 @@ namespace ZeoEngine {
 	{
 		ImGuizmo::Enable(!m_EditorCamera.IsUsing());
 
-		Entity selectedEntity = GetContext()->GetContextEntity();
+		Entity selectedEntity = GetOwningEditor()->GetContextEntity();
 		m_bGizmoVisible = selectedEntity && m_GizmoType != -1;
 		if (m_bGizmoVisible)
 		{
@@ -122,12 +122,12 @@ namespace ZeoEngine {
 
 	void GameViewportPanel::ProcessEntityDeletion()
 	{
-		DockspaceBase* context = GetContext();
-		Entity selectedEntity = context->GetContextEntity();
+		EditorBase* owningEditor = GetOwningEditor();
+		Entity selectedEntity = owningEditor->GetContextEntity();
 		if (IsPanelFocused() && selectedEntity && ImGui::IsKeyReleased(Key::Delete))
 		{
-			context->GetScene()->DestroyEntity(selectedEntity);
-			context->SetContextEntity({});
+			owningEditor->GetScene()->DestroyEntity(selectedEntity);
+			owningEditor->SetContextEntity({});
 		}
 	}
 
@@ -174,7 +174,7 @@ namespace ZeoEngine {
 			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
 			(!m_bGizmoVisible || (m_bGizmoVisible && !ImGuizmo::IsOver())))
 		{
-			GetContext()->SetContextEntity(m_HoveredEntity);
+			GetOwningEditor()->SetContextEntity(m_HoveredEntity);
 		}
 
 		return false;
@@ -189,7 +189,7 @@ namespace ZeoEngine {
 		if (mx >= 0.0f && my >= 0.0f && mx < viewportSize.x && my < viewportSize.y)
 		{
 			int32_t pixel = frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my));
-			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetContext()->GetScene().get());
+			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetOwningEditor()->GetScene().get());
 
 			auto& Stats = Renderer2D::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;

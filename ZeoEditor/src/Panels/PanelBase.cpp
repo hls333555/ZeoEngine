@@ -1,12 +1,12 @@
 #include "Panels/PanelBase.h"
 
-#include "Dockspaces/DockspaceBase.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
-	PanelBase::PanelBase(const PanelSpec& spec, DockspaceBase* context)
-		: m_PanelSpec(spec)
-		, m_Context(context)
+	PanelBase::PanelBase(PanelType type, EditorBase* owningEditor)
+		: m_PanelType(type)
+		, m_OwningEditor(owningEditor)
 	{
 	}
 
@@ -27,10 +27,10 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
-		if (ImGui::Begin(GetPanelName(m_PanelSpec.Type), &m_bShow, m_PanelSpec.WindowFlags))
+		if (ImGui::Begin(EditorUtils::GetPanelName(m_PanelType), &m_bShow, m_PanelSpec.WindowFlags))
 		{
-			m_bIsPanelFocused = ImGui::IsWindowFocused();
-			m_bIsPanelHovered = ImGui::IsWindowHovered();
+			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 			ProcessRender();
 		}
@@ -44,6 +44,11 @@ namespace ZeoEngine {
 		if (!m_bShow) return;
 
 		ProcessEvent(e);
+	}
+
+	void PanelBase::Open()
+	{
+		m_bShow = true;
 	}
 
 }

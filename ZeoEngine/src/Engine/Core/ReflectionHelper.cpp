@@ -6,6 +6,7 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -36,44 +37,44 @@ namespace ZeoEngine {
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type)
 	{
-		if (DoesPropExist(PropertyType::Struct, type))
+		if (type.is_enum())
 		{
-			return BasicMetaType::STRUCT;
+			return BasicMetaType::ENUM;
 		}
 		else if (type.is_sequence_container())
 		{
 			return BasicMetaType::SEQCON;
 		}
+		if (DoesPropExist(PropertyType::Struct, type))
+		{
+			return BasicMetaType::STRUCT;
+		}
 		else if (type.is_associative_container())
 		{
 			return BasicMetaType::ASSCON;
-		}
-		else if (type.is_enum())
-		{
-			return BasicMetaType::ENUM;
 		}
 		else
 		{
 			switch (type.info().hash())
 			{
 				// Integral
-				case entt::type_hash<bool>::value():					return BasicMetaType::BOOL;
-				case entt::type_hash<int8_t>::value():					return BasicMetaType::I8;
-				case entt::type_hash<int32_t>::value():					return BasicMetaType::I32;
-				case entt::type_hash<int64_t>::value():					return BasicMetaType::I64;
-				case entt::type_hash<uint8_t>::value():					return BasicMetaType::UI8;
-				case entt::type_hash<uint32_t>::value():				return BasicMetaType::UI32;
-				case entt::type_hash<uint64_t>::value():				return BasicMetaType::UI64;
+				case entt::type_hash<bool>::value():								return BasicMetaType::BOOL;
+				case entt::type_hash<int8_t>::value():								return BasicMetaType::I8;
+				case entt::type_hash<int32_t>::value():								return BasicMetaType::I32;
+				case entt::type_hash<int64_t>::value():								return BasicMetaType::I64;
+				case entt::type_hash<uint8_t>::value():								return BasicMetaType::UI8;
+				case entt::type_hash<uint32_t>::value():							return BasicMetaType::UI32;
+				case entt::type_hash<uint64_t>::value():							return BasicMetaType::UI64;
 				// Floating point
-				case entt::type_hash<float>::value():					return BasicMetaType::FLOAT;
-				case entt::type_hash<double>::value():					return BasicMetaType::DOUBLE;
+				case entt::type_hash<float>::value():								return BasicMetaType::FLOAT;
+				case entt::type_hash<double>::value():								return BasicMetaType::DOUBLE;
 				// Class
-				case entt::type_hash<std::string>::value():				return BasicMetaType::STRING;
-				case entt::type_hash<glm::vec2>::value():				return BasicMetaType::VEC2;
-				case entt::type_hash<glm::vec3>::value():				return BasicMetaType::VEC3;
-				case entt::type_hash<glm::vec4>::value():				return BasicMetaType::VEC4;
-				case entt::type_hash<Ref<Texture2D>>::value():			return BasicMetaType::TEXTURE;
-				case entt::type_hash<Ref<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
+				case entt::type_hash<std::string>::value():							return BasicMetaType::STRING;
+				case entt::type_hash<glm::vec2>::value():							return BasicMetaType::VEC2;
+				case entt::type_hash<glm::vec3>::value():							return BasicMetaType::VEC3;
+				case entt::type_hash<glm::vec4>::value():							return BasicMetaType::VEC4;
+				case entt::type_hash<AssetHandle<Texture2DAsset>>::value():			return BasicMetaType::TEXTURE;
+				case entt::type_hash<AssetHandle<ParticleTemplateAsset>>::value():	return BasicMetaType::PARTICLE;
 			}
 		}
 

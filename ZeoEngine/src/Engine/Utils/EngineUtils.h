@@ -1,14 +1,18 @@
 #pragma once
 
+#include <magic_enum.hpp>
+
 namespace ZeoEngine {
 
-	/** Returns absolute path. */
-	std::string GetCanonicalPath(const std::string& path);
-	/** Returns relative path. */
-	std::string GetRelativePath(const std::string& path);
-	/** Returns file name including file extension. */
-	std::string GetFileNameFromPath(const std::string& path);
-	/** Returns file name excluding file extension. */
-	std::string GetNameFromPath(const std::string& path);
+	class EngineUtils
+	{
+	public:
+		template<typename T>
+		static const char* GetNameFromEnumType(T type)
+		{
+			return magic_enum::enum_name(type).data();
+		}
+
+	};
 
 }

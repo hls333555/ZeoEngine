@@ -2,11 +2,13 @@
 
 #include <string>
 
+#include "Engine/Core/Core.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Core/EditorTypes.h"
 
 namespace ZeoEngine {
 
+	class EditorBase;
 	class DockspaceBase;
 
 	class MenuItemBase
@@ -15,7 +17,7 @@ namespace ZeoEngine {
 
 	protected:
 		MenuItemBase() = delete;
-		MenuItemBase(DockspaceBase* context, const std::string& menuItemName, const std::string& shortcutName = "");
+		MenuItemBase(EditorBase* owningEditor, const std::string& menuItemName, const std::string& shortcutName = "");
 		virtual ~MenuItemBase() = default;
 	
 	public:
@@ -23,6 +25,9 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
+
+	protected:
+		DockspaceBase* GetOwningDockspace() const;
 
 	private:
 		virtual void OnMenuItemActivated() {}
@@ -32,7 +37,7 @@ namespace ZeoEngine {
 		virtual bool OnKeyPressedImpl(KeyPressedEvent& e) { return false; }
 
 	protected:
-		DockspaceBase* m_Context = nullptr;
+		EditorBase* m_OwningEditor = nullptr;
 		std::string m_MenuItemName;
 		std::string m_ShortcutName;
 		bool* m_bSelected = nullptr;
@@ -44,7 +49,7 @@ namespace ZeoEngine {
 		friend class EditorMenu;
 
 	private:
-		explicit MenuItem_Seperator(DockspaceBase* context, const std::string& menuItemName = "Seperator");
+		explicit MenuItem_Seperator(EditorBase* context, const std::string& menuItemName = "Seperator");
 
 	public:
 		virtual void OnImGuiRender() override;
@@ -55,7 +60,7 @@ namespace ZeoEngine {
 		friend class EditorMenu;
 
 	private:
-		MenuItem_ToggleEditor(DockspaceBase* context, DockspaceType dockspaceType, const std::string& shortcutName = "");
+		MenuItem_ToggleEditor(EditorBase* owningEditor, EditorType editorType, const std::string& shortcutName = "");
 
 	public:
 		virtual void OnImGuiRender() override;
@@ -64,7 +69,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 
 	private:
-		DockspaceType m_DockspaceType;
+		EditorType m_EditorType;
 	};
 
 	class MenuItem_TogglePanel : public MenuItemBase
@@ -72,7 +77,7 @@ namespace ZeoEngine {
 		friend class EditorMenu;
 
 	private:
-		MenuItem_TogglePanel(DockspaceBase* context, PanelType panelType, const std::string& shortcutName = "");
+		MenuItem_TogglePanel(EditorBase* owningEditor, PanelType panelType, const std::string& shortcutName = "");
 
 	public:
 		virtual void OnImGuiRender() override;
@@ -84,7 +89,7 @@ namespace ZeoEngine {
 		PanelType m_PanelType;
 	};
 
-	class MenuItem_NewScene : public MenuItemBase
+	class MenuItem_NewAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -94,7 +99,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_OpenScene : public MenuItemBase
+	class MenuItem_LoadAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -104,7 +109,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveScene : public MenuItemBase
+	class MenuItem_SaveAsset : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -114,7 +119,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveSceneAs : public MenuItemBase
+	class MenuItem_SaveAssetAs : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;

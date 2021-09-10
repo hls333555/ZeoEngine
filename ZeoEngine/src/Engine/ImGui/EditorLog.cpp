@@ -116,6 +116,7 @@ namespace ZeoEngine {
 		Filter.Draw("##LogTextFilter", "Search log", -1.0f);
 
 		ImGui::Separator();
+
 		ImGui::BeginChild("LogScrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
 		if (bWillClear)

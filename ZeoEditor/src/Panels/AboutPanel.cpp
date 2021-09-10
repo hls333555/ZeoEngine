@@ -6,7 +6,12 @@ namespace ZeoEngine {
 
 	void AboutPanel::OnAttach()
 	{
-		m_LogoTexture = Texture2D::Create("assets/textures/Logo.png");
+		PanelBase::OnAttach();
+
+		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize;
+		m_PanelSpec.InitialSize = { { 300.0f, 200.0f } };
+
+		m_LogoTexture = Texture2D::Create("assets/editor/textures/Logo_96x.png");
 	}
 
 	void AboutPanel::ProcessRender()
@@ -14,10 +19,10 @@ namespace ZeoEngine {
 		ImGui::TextCentered("ZeoEngine 0.1");
 		ImGui::TextCentered("Created by SanSan");
 		ImGui::TextCentered("https://github.com/hls333555/");
-		const float logoSize = 100.0f;
+		const float logoSize = ImGui::GetStyle().Alpha * 96.0f;
 		// Center the logo
 		ImGui::Indent((ImGui::GetContentRegionAvail().x - logoSize) * 0.5f);
-		ImGui::Image(m_LogoTexture->GetTexture(),
+		ImGui::Image(m_LogoTexture->GetTextureID(),
 			{ logoSize, logoSize },
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 	}

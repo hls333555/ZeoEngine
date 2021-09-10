@@ -2,44 +2,23 @@
 
 #include "Engine/GameFramework/Entity.h"
 
+#include <fstream>
 #include <yaml-cpp/yaml.h>
-#include <magic_enum.hpp>
 
 #include "Engine/Core/ReflectionHelper.h"
-#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
-	class TypeSerializer
+	extern const char* g_AssetTypeToken;
+	extern const char* g_ResourceSourceToken;
+
+	class ComponentSerializer
 	{
 	public:
-		TypeSerializer(const std::string& filePath);
-
-		void Serialize(entt::meta_any instance, AssetType assetType);
-
-	protected:
-		template<typename Func>
-		void Serialize_t(AssetType assetType, Func fn)
-		{
-			YAML::Emitter out;
-
-			auto assetTypeName = magic_enum::enum_name(assetType).data();
-			const std::string assetName = GetNameFromPath(m_Path);
-			ZE_CORE_TRACE("Serializing {0} '{1}'", assetTypeName, assetName);
-
-			out << YAML::BeginMap;
-			{
-				out << YAML::Key << assetTypeName << YAML::Value << assetName;
-				fn(out);
-			}
-			out << YAML::EndMap;
-
-			std::ofstream fout(m_Path);
-			fout << out.c_str();
-		}
-
-		void SerializeType(YAML::Emitter& out, entt::meta_any& instance);
+		void Serialize(YAML::Emitter& out, entt::meta_any& instance);
+		void Deserialize(const YAML::Node& value, entt::meta_any& instance);
 
 	private:
 		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
@@ -79,14 +58,6 @@ namespace ZeoEngine {
 		}
 		void SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 
-	public:
-		bool Deserialize(entt::meta_any instance, AssetType assetType);
-
-	protected:
-		std::optional<YAML::Node> PreDeserialize(AssetType assetType);
-		void DeserializeType(entt::meta_any& instance, const YAML::Node& value);
-
-	private:
 		void EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
 		void EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
 		void EvaluateDeserializeAssociativeContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value);
@@ -106,31 +77,80 @@ namespace ZeoEngine {
 			}
 		}
 		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
-
-	private:
-		std::string m_Path;
 	};
 
-	class SceneSerializer : public TypeSerializer
+	class Serializer
 	{
 	public:
-		SceneSerializer(const std::string& filePath, const Ref<Scene>& scene);
+		/**
+		 * Serialize data to asset.
+		 * The signature of the func must be equivalent to the following form:
+		 * 
+		 * @code:
+		 * void(YAML::Emitter& out);
+		 * @endcode
+		 *
+		 */
+		template<typename Func>
+		static void WriteDataToAsset(const std::string& path, AssetTypeId typeId, Func func)
+		{
+			YAML::Emitter out;
 
-		void Serialize();
-		void SerializeRuntime();
+			const std::string assetName = PathUtils::GetNameFromPath(path);
+			ZE_CORE_TRACE("Serializing \"{0}\"", assetName);
 
-	private:
-		void SerializeEntity(YAML::Emitter& out, const Entity entity);
+			out << YAML::BeginMap;
+			{
+				out << YAML::Key << g_AssetTypeToken << YAML::Value << typeId;
+				func(out);
+			}
+			out << YAML::EndMap;
 
+			std::ofstream fout(path);
+			fout << out.c_str();
+		}
+
+		/**
+		 * Deserialize data from asset.
+		 * If optionalTypeId is specified, it will verify it against the one from the asset.
+		 */
+		static std::optional<YAML::Node> ReadDataFromAsset(const std::string& path, std::optional<AssetTypeId> optionalTypeId = {})
+		{
+			auto data = YAML::LoadFile(path);
+			auto assetTypeData = data[g_AssetTypeToken];
+			const std::string assetName = PathUtils::GetNameFromPath(path);
+			if (!assetTypeData || (optionalTypeId && assetTypeData.as<AssetTypeId>() != *optionalTypeId))
+			{
+				ZE_CORE_ERROR("Failed to load \"{0}\". Unknown format!", assetName);
+				return {};
+			}
+			
+			ZE_CORE_TRACE("Deserializing \"{0}\"", assetName);
+			return data;
+		}
+	};
+
+	class AssetSerializer : public Serializer
+	{
 	public:
-		bool Deserialize();
-		bool DeserializeRuntime();
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+	};
 
-	private:
-		void DeserializeEntity(const YAML::Node& entity);
+	class ImportableAssetSerializer : public AssetSerializer
+	{
+	public:
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& srcPath = {});
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+	};
 
-	private:
-		Ref<Scene> m_Scene;
+	class SceneSerializer : public Serializer
+	{
+	public:
+		static void Serialize(const std::string& path, const Ref<Scene>& scene);
+		static void SerializeRuntime();
+		static bool Deserialize(const std::string& path, const Ref<Scene>& scene);
+		static bool DeserializeRuntime();
 	};
 
 }

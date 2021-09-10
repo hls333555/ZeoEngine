@@ -1,10 +1,11 @@
 #include "ZEpch.h"
 #include "WindowsWindow.h"
 
+#include <stb_image.h>
+
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Events/MouseEvent.h"
-
 #include "Platform/OpenGL/OpenGLContext.h"
 
 namespace ZeoEngine {
@@ -60,7 +61,23 @@ namespace ZeoEngine {
 		{
 			ZE_PROFILE_SCOPE("glfwCreateWindow");
 
+			// Create window
 			m_Window = glfwCreateWindow(static_cast<int>(props.Width), static_cast<int>(props.Height), props.Title.c_str(), nullptr, nullptr);
+			
+			// Set window icon
+			{
+				GLFWimage images[4];
+				images[0].pixels = stbi_load("assets/editor/textures/Logo_16x.png", &images[0].width, &images[0].height, 0, 4); // rgba channels
+				images[1].pixels = stbi_load("assets/editor/textures/Logo_24x.png", &images[1].width, &images[1].height, 0, 4);
+				images[2].pixels = stbi_load("assets/editor/textures/Logo_32x.png", &images[2].width, &images[2].height, 0, 4);
+				images[3].pixels = stbi_load("assets/editor/textures/Logo_48x.png", &images[3].width, &images[3].height, 0, 4);
+				glfwSetWindowIcon(m_Window, 4, images);
+				stbi_image_free(images[0].pixels);
+				stbi_image_free(images[1].pixels);
+				stbi_image_free(images[2].pixels);
+				stbi_image_free(images[3].pixels);
+			}
+
 			// Maximize window by default
 			glfwMaximizeWindow(m_Window);
 		}
@@ -72,7 +89,7 @@ namespace ZeoEngine {
 		// Pass in the window data which will be used in the following callbacks
 		// This way, we do not need to capture the m_Data for lambda functions
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
+		SetVSync(false);
 
 		// ---Set GLFW callbacks------------------------------------------------------------------------------------
 

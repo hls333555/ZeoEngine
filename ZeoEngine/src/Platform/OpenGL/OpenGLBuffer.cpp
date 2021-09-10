@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <stb_image_write.h>
+#include <glm/glm.hpp>
 
 namespace ZeoEngine {
 
@@ -327,28 +328,30 @@ namespace ZeoEngine {
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::ToGLTextureFormat(spec.TextureFormat), GL_INT, &clearValue);
 	}
 
-	void OpenGLFrameBuffer::Snapshot(const std::string& imageName, uint32_t width, uint32_t height, uint32_t imageWidth)
+	void OpenGLFrameBuffer::Snapshot(const std::string& imagePath, uint32_t captureWidth)
 	{
-		constexpr int numOfComponents = 4; // RGBA
-		uint32_t snapshotWidth = width, snapshotHeight = height;
-		if (imageWidth != 0)
+		if (captureWidth <= 0)
 		{
-			snapshotWidth = snapshotHeight = imageWidth;
+			ZE_CORE_ERROR("Capture width cannot be <= 0!");
+			return;
 		}
 
+		uint32_t width = glm::min(m_Spec.Width, m_Spec.Height);
+		width = glm::min(width, captureWidth);
+
+		constexpr int numOfComponents = 4; // RGBA
+
 		// Read from the framebuffer into the data array
-		const uint32_t dataSize = numOfComponents * snapshotWidth * snapshotHeight;
+		const uint32_t dataSize = numOfComponents * width * width;
 		GLubyte* data = new GLubyte[dataSize];
 		memset(data, 0, dataSize);
-		// Resize viewport to center-squared if imageWidth is non-zero
-		glViewport((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-		glReadPixels((width - snapshotWidth) / 2, (height - snapshotHeight) / 2, snapshotWidth, snapshotHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glReadPixels((m_Spec.Width - width) / 2, (m_Spec.Height - width) / 2, width, width, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 		// Write the PNG image
-		int strideInBytes = snapshotWidth * numOfComponents;
+		int strideInBytes = width * numOfComponents;
 		stbi_flip_vertically_on_write(1);
-		stbi_write_png(imageName.c_str(), snapshotWidth, snapshotHeight, numOfComponents, data, strideInBytes);
+		stbi_write_png(imagePath.c_str(), width, width, numOfComponents, data, strideInBytes);
 		delete[] data;
 	}
 

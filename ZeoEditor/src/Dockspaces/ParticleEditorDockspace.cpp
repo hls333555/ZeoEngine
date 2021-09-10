@@ -5,9 +5,7 @@
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Engine/Core/Serializer.h"
-#include "Engine/GameFramework/Components.h"
-#include "Panels/ParticleViewportPanel.h"
+#include "Utils/EditorUtils.h"
 
 namespace ZeoEngine {
 
@@ -19,10 +17,10 @@ namespace ZeoEngine {
 		CreatePanel(PanelType::ParticleInspector);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewScene>(ICON_FA_FILE "  New particle template", "CTRL+N")
-			.MenuItem<MenuItem_OpenScene>(ICON_FA_FILE_IMPORT "  Open particle template", "CTRL+O")
-			.MenuItem<MenuItem_SaveScene>(ICON_FA_SAVE "  Save particle template", "CTRL+S")
-			.MenuItem<MenuItem_SaveSceneAs>(ICON_FA_SAVE "  Save particle template As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New particle template", "CTRL+N")
+			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load particle template", "CTRL+O")
+			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save particle template", "CTRL+S")
+			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save particle template As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
@@ -32,41 +30,7 @@ namespace ZeoEngine {
 		CreateMenu("Window")
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleView)
 			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleInspector);
-
-		// When a new scene is created, all previous particle's changes should be discarded
-		m_PreSceneCreate.connect<&ParticleEditorDockspace::ReloadParticleTemplateData>(this);
-	}
-
-	void ParticleEditorDockspace::ReloadParticleTemplateData()
-	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
-		{
-			ParticleLibrary::Get().ReloadAsset(particlePreviewComp.Template);
-		});
-	}
-
-	void ParticleEditorDockspace::Serialize(const std::string& filePath)
-	{
-		TypeSerializer serializer(filePath);
-		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
-		// Only snapshot on save when thumbnail texture is null
-		if (!particlePreviewComp.Template->PreviewThumbnail)
-		{
-			ParticleViewportPanel* particleViewportPanel = GetPanel<ParticleViewportPanel>(PanelType::ParticleView);
-			std::string snapshotName = filePath + ".png";
-			particleViewportPanel->Snapshot(snapshotName, 256);
-		}
-		serializer.Serialize(particlePreviewComp, GetAssetType());
-	}
-
-	void ParticleEditorDockspace::Deserialize(const std::string& filePath)
-	{
-		// Deserialize particle template data and create particle system instance
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&filePath](auto& particlePreviewComp)
-		{
-			const auto pTemplate = ParticleLibrary::Get().GetOrLoadAsset(filePath);
-			ParticleSystemInstance::Create(particlePreviewComp, pTemplate);
-		});
+		
 	}
 
 	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
@@ -74,8 +38,8 @@ namespace ZeoEngine {
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::ParticleView), dockLeft);
-		ImGui::DockBuilderDockWindow(GetPanelName(PanelType::ParticleInspector), dockRight);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ParticleView), dockLeft);
+		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ParticleInspector), dockRight);
 	}
 
 }

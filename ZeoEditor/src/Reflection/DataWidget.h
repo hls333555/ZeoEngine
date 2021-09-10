@@ -17,7 +17,8 @@
 #include "Engine/GameFramework/Components.h"
 #include "Reflection/DataParser.h"
 #include "Test/TestComponent.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Engine/ImGui/AssetBrowser.h"
+#include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
@@ -38,7 +39,7 @@ namespace ZeoEngine {
 
 	Ref<class DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, bool bIsTest = false);
 
-	static const ImGuiTreeNodeFlags DefaultDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+	static const ImGuiTreeNodeFlags DefaultDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_SpanAvailWidth;
 	static const ImGuiTreeNodeFlags EmptyContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
 	static const ImGuiTreeNodeFlags DefaultContainerDataTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen;
 	static const ImGuiTreeNodeFlags DefaultStructDataTreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -298,7 +299,7 @@ namespace ZeoEngine {
 #endif
 	};
 
-	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
+	class Texture2DDataWidget : public BasicDataWidgetT<AssetHandle<Texture2DAsset>>
 	{
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -311,10 +312,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		TextFilter m_Filter;
+		AssetBrowser m_Browser{ Texture2DAsset::TypeId() };
 	};
 
-	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
+	class ParticleTemplateDataWidget : public BasicDataWidgetT<AssetHandle<ParticleTemplateAsset>>
 	{
 	public:
 		ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -327,7 +328,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		TextFilter m_Filter;
+		AssetBrowser m_Browser{ ParticleTemplateAsset::TypeId() };
 	};
 
 	class ContainerWidget : public DataWidget

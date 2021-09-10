@@ -26,4 +26,12 @@ namespace ZeoEngine {
 		m_ParticlePreviewRenderSystem->OnRender(camera);
 	}
 
+	void ParticleEditorScene::PostLoad()
+	{
+		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& particlePreviewComp)
+		{
+			ParticleSystemInstance::Create(particlePreviewComp);
+		});
+	}
+
 }

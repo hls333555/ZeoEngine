@@ -1,12 +1,12 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <entt.hpp>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
@@ -59,20 +59,14 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	struct ParticleTemplate
+	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetBase<ParticleTemplateAsset>
 	{
-	public:
-		ParticleTemplate() = default;
-		ParticleTemplate(const std::string& path)
-			: Path(GetRelativePath(path))
-			, Name(GetNameFromPath(path))
-		{
-		}
-
-		const std::string& GetPath() const { return Path; }
-		const std::string& GetName() const { return Name; }
+	private:
+		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
+		static Ref<ParticleTemplateAsset> Create(const std::string& path);
+
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
 		void AddParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
@@ -91,10 +85,10 @@ namespace ZeoEngine {
 
 		void ResimulateAllParticleSystemInstances();
 
-		void UpdatePreviewThumbnail(const std::string& imageName)
-		{
-			PreviewThumbnail = Texture2D::Create(imageName);
-		}
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+
+		virtual void Reload() override;
 
 	public:
 		bool bIsLocalSpace = false;
@@ -126,7 +120,7 @@ namespace ZeoEngine {
 
 		ParticleFloat Lifetime;
 
-		Ref<Texture2D> Texture;
+		AssetHandle<Texture2DAsset> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
@@ -137,12 +131,7 @@ namespace ZeoEngine {
 
 		uint32_t MaxParticles = 500;
 
-		Ref<Texture2D> PreviewThumbnail;
-
 	private:
-		std::string Path;
-		std::string Name;
-
 		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
 		std::vector<Ref<ParticleSystemInstance>> ParticleSystemInstances;
 
@@ -153,22 +142,21 @@ namespace ZeoEngine {
 	class ParticleSystemInstance
 	{
 		friend class ParticleViewportPanel;
-		friend struct ParticleTemplate;
+		friend class ParticleTemplateAsset;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
 		/**
 		 * Create a particle system instance.
 		 * It will first remove old particle system instance from reference list and create a new one and add that to reference list.
 		 * @param particleComp - Component to retrieve template and instance
-		 * @param pTemplateToOverride - If set, will override old template and create instance from this one
 		 */
-		static void Create(ParticleSystemComponent& particleComp, const Ref<ParticleTemplate>& pTemplateToOverride = {});
+		static void Create(ParticleSystemComponent& particleComp);
 
-		const Ref<ParticleTemplate>& GetParticleTemplate() const { return m_ParticleTemplate; }
+		AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -194,7 +182,7 @@ namespace ZeoEngine {
 			float LoopDuration;
 			float SpawnRate;
 			std::vector<BurstDataSpec> BurstList;
-			Ref<Texture2D> Texture;
+			AssetHandle<Texture2DAsset> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
 			glm::vec3 InheritVelocityRatio{ 0.0f };
@@ -246,7 +234,7 @@ namespace ZeoEngine {
 		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
-		Ref<ParticleTemplate> m_ParticleTemplate;
+		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
@@ -280,23 +268,14 @@ namespace ZeoEngine {
 
 	};
 
-	class ParticleLibrary : public AssetLibrary<Ref<ParticleTemplate>>
+	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
 	{
-	public:
-		static ParticleLibrary& Get()
+		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
 		{
-			static ParticleLibrary instance;
-			return instance;
+			return ParticleTemplateAsset::Create(path);
 		}
-
-		virtual Ref<ParticleTemplate> LoadAsset(const std::string& path) override;
-		Ref<ParticleTemplate> ReloadAsset(const Ref<ParticleTemplate>& pTemplate);
-
-	private:
-		virtual const char* GetDisplayAssetName() const override { return "Particle template"; }
-
-		void DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate);
-
 	};
+	
+	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>{};
 
 }

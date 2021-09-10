@@ -1,14 +1,12 @@
 #include "Menus/EditorMenu.h"
 
-#include <imgui.h>
-
 #include "Menus/EditorMenuItems.h"
 
 namespace ZeoEngine {
 
-	EditorMenu::EditorMenu(const std::string& menuName, DockspaceBase* context)
+	EditorMenu::EditorMenu(const std::string& menuName, EditorBase* owningEditor)
 		: m_MenuName(menuName)
-		, m_Context(context)
+		, m_OwningEditor(owningEditor)
 	{
 	}
 

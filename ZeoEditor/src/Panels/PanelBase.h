@@ -6,7 +6,8 @@
 
 namespace ZeoEngine {
 
-	class DockspaceBase;
+	class EditorBase;
+	class PanelBase;
 
 	class PanelBase
 	{
@@ -14,7 +15,7 @@ namespace ZeoEngine {
 
 	private:
 		PanelBase() = delete;
-		PanelBase(const PanelSpec& spec, DockspaceBase* context);
+		PanelBase(PanelType type, EditorBase* owningEditor);
 	protected:
 		virtual ~PanelBase() = default;
 
@@ -25,21 +26,26 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		template<typename T = DockspaceBase>
-		T* GetContext() { return dynamic_cast<T*>(m_Context); }
+		template<typename T = EditorBase>
+		T* GetOwningEditor() { return dynamic_cast<T*>(m_OwningEditor); }
 
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
+
+		void Open();
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
 
-	private:
+	protected:
 		PanelSpec m_PanelSpec;
-		DockspaceBase* m_Context = nullptr;
+
+	private:
+		PanelType m_PanelType;
+		EditorBase* m_OwningEditor = nullptr;
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;

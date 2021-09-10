@@ -3,7 +3,7 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/DockspaceBase.h"
+#include "Editors/EditorBase.h"
 
 namespace ZeoEngine {
 
@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		SceneViewportPanel::OnAttach();
 
 		CreatePreviewParticle();
-		GetContext()->m_PostSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
+		GetOwningEditor()->m_PostSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
 	}
 
 	void ParticleViewportPanel::ProcessRender()
@@ -43,19 +43,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleViewportPanel::Snapshot(const std::string& imageName, uint32_t imageWidth)
+	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpen)
 	{
-		SceneViewportPanel::Snapshot(imageName, imageWidth);
-
-		m_PreviewParticleEntity.GetComponent<ParticleSystemPreviewComponent>().Template->UpdatePreviewThumbnail(imageName);
-	}
-
-	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpenScene)
-	{
-		m_PreviewParticleEntity = GetContext()->GetScene()->CreateEntity("Preview Particle", true);
+		m_PreviewParticleEntity = GetOwningEditor()->GetScene()->CreateEntity("Preview Particle", true);
 		m_PreviewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
-		GetContext()->SetContextEntity(m_PreviewParticleEntity);
-		if (!bIsFromOpenScene)
+		GetOwningEditor()->SetContextEntity(m_PreviewParticleEntity);
+		if (!bIsFromOpen)
 		{
 			CreateDefaultParticleSystem();
 		}

@@ -7,7 +7,7 @@
 
 namespace ZeoEngine {
 
-	class DockspaceBase;
+	class EditorBase;
 	class MenuItemBase;
 
 	class EditorMenu
@@ -16,22 +16,19 @@ namespace ZeoEngine {
 
 	private:
 		EditorMenu() = delete;
-		EditorMenu(const std::string& menuName, DockspaceBase* context);
+		EditorMenu(const std::string& menuName, EditorBase* owningEditor);
 		~EditorMenu();
 
 	public:
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		template<typename T = DockspaceBase>
-		T* GetContext() { return dynamic_cast<T*>(m_Context); }
-
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
 		template<typename T, typename ... Args>
 		EditorMenu& MenuItem(Args&& ... args)
 		{
-			T* menuItem = new T(m_Context, std::forward<Args>(args)...);
+			T* menuItem = new T(m_OwningEditor, std::forward<Args>(args)...);
 			m_MenuItems.emplace_back(menuItem);
 			return *this;
 		}
@@ -41,7 +38,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_MenuName;
-		DockspaceBase* m_Context = nullptr;
+		EditorBase* m_OwningEditor = nullptr;
 		bool m_bEnabled = true;
 		std::vector<MenuItemBase*> m_MenuItems;
 	};

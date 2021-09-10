@@ -125,7 +125,52 @@ namespace ZeoEngine {
 	template struct ParticleVariation<glm::vec3>;
 	template struct ParticleVariation<glm::vec4>;
 
-	void ParticleTemplate::ResimulateAllParticleSystemInstances()
+	ParticleTemplateAsset::ParticleTemplateAsset(const std::string& path)
+		: AssetBase(path)
+	{
+	}
+
+	Ref<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
+	{
+		// A way to allow std::make_shared() to access ParticleTemplateAsset's private constructor
+		class ParticleTemplateAssetEnableShared : public ParticleTemplateAsset
+		{
+		public:
+			explicit ParticleTemplateAssetEnableShared(const std::string& path)
+				: ParticleTemplateAsset(path) {}
+		};
+
+		auto asset = CreateRef<ParticleTemplateAssetEnableShared>(path);
+		asset->Deserialize(); // NOTE: Do not call it in constructor as it contains shared_from_this()!
+		return asset;
+	}
+
+	void ParticleTemplateAsset::Reload()
+	{
+		Deserialize();
+		ResimulateAllParticleSystemInstances();
+	}
+
+	void ParticleTemplateAsset::Serialize(const std::string& path)
+	{
+		if (path.empty()) return;
+
+		if (path != GetPath())
+		{
+			SetPath(path);
+		}
+
+		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+	}
+
+	void ParticleTemplateAsset::Deserialize()
+	{
+		if (GetPath().empty()) return;
+
+		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+	}
+
+	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()
 	{
 		for (const auto& psInstance : ParticleSystemInstances)
 		{
@@ -133,7 +178,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	ParticleSystemInstance::ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
+	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
 		: m_ParticleTemplate(particleTemplate)
 		, m_OwnerEntity(ownerEntity)
 		, m_PositionOffset(positionOffset)
@@ -142,28 +187,24 @@ namespace ZeoEngine {
 		Reevaluate();
 	}
 
-	void ParticleSystemInstance::Create(ParticleSystemComponent& particleComp, const Ref<ParticleTemplate>& pTemplateToOverride)
+	void ParticleSystemInstance::Create(ParticleSystemComponent& particleComp)
 	{
 		// A way to allow std::make_shared() to access ParticleSystem's private constructor
 		class ParticleSystemEnableShared : public ParticleSystemInstance
 		{
 		public:
-			ParticleSystemEnableShared(const Ref<ParticleTemplate>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
+			ParticleSystemEnableShared(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
 				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 
 		if (particleComp.Template)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
-		}
-		if (pTemplateToOverride)
-		{
-			particleComp.Template = pTemplateToOverride;
-		}
-
-		if (particleComp.Template)
-		{
 			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
+			if (particleComp.Instance)
+			{
+				// Get old template from instance as template in component may have been updated
+				particleComp.Instance->m_ParticleTemplate->RemoveParticleSystemInstance(particleComp.Instance);
+			}
 			particleComp.Instance = psInstance;
 			particleComp.Template->AddParticleSystemInstance(psInstance);
 		}
@@ -510,30 +551,6 @@ namespace ZeoEngine {
 	void ParticleSystemInstance::Deactivate()
 	{
 		m_bActive = false;
-	}
-
-	Ref<ParticleTemplate> ParticleLibrary::LoadAsset(const std::string& path)
-	{
-		auto pTemplate = CreateRef<ParticleTemplate>(path);
-		DeserializeParticleTemplate(path, pTemplate);
-		AddAsset(pTemplate);
-		return pTemplate;
-	}
-
-	Ref<ParticleTemplate> ParticleLibrary::ReloadAsset(const Ref<ParticleTemplate>& pTemplate)
-	{
-		// As default particle template does not have file path
-		if (pTemplate->GetPath().empty()) return {};
-
-		DeserializeParticleTemplate(pTemplate->GetPath(), pTemplate);
-		pTemplate->ResimulateAllParticleSystemInstances();
-		return pTemplate;
-	}
-
-	void ParticleLibrary::DeserializeParticleTemplate(const std::string& path, const Ref<ParticleTemplate>& pTemplate)
-	{
-		TypeSerializer serializer(path);
-		serializer.Deserialize(ParticleSystemPreviewComponent{ pTemplate }, AssetType::ParticleTemplate);
 	}
 
 }

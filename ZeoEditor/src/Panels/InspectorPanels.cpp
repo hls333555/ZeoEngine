@@ -2,11 +2,18 @@
 
 #include <IconsFontAwesome5.h>
 
-#include "Dockspaces/MainDockspace.h"
+#include "Editors/EditorBase.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionHelper.h"
 
 namespace ZeoEngine {
+
+	void InspectorPanel::OnAttach()
+	{
+		PanelBase::OnAttach();
+
+		GetOwningEditor()->m_PreSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
+	}
 
 	void InspectorPanel::DrawAddComponentButton(Entity entity)
 	{
@@ -73,7 +80,7 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::ProcessRender()
 	{
-		Entity selectedEntity = GetContext()->GetContextEntity();
+		Entity selectedEntity = GetOwningEditor()->GetContextEntity();
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
 			// For last frame
@@ -102,7 +109,7 @@ namespace ZeoEngine {
 
 	void ParticleInspectorPanel::ProcessRender()
 	{
-		Entity contextEntity = GetContext()->GetContextEntity();
+		Entity contextEntity = GetOwningEditor()->GetContextEntity();
 		if (contextEntity)
 		{
 			DrawComponents<CoreComponent, TransformComponent>(contextEntity);

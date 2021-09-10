@@ -9,7 +9,7 @@
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 
-#include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/PathUtils.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
@@ -66,9 +66,9 @@ namespace ZeoEngine {
 		static void CreateCacheDirectoryIfNeeded()
 		{
 			std::string cacheDirectory = GetCacheDirectory();
-			if (!std::filesystem::exists(cacheDirectory))
+			if (!PathUtils::DoesPathExist(cacheDirectory))
 			{
-				std::filesystem::create_directories(cacheDirectory);
+				PathUtils::CreateDirectories(cacheDirectory);
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace ZeoEngine {
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 		: m_FilePath(filePath)
-		, m_Name(GetNameFromPath(filePath))
+		, m_Name(PathUtils::GetNameFromPath(filePath))
 	{
 		ZE_PROFILE_FUNCTION();
 

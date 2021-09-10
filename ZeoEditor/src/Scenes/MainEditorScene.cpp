@@ -57,7 +57,7 @@ namespace ZeoEngine {
 		m_RenderSystem->OnRenderRuntime();
 	}
 
-	void MainEditorScene::OnDeserialized()
+	void MainEditorScene::PostLoad()
 	{
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& particleComp)
 		{

@@ -6,6 +6,15 @@
 
 namespace ZeoEngine {
 
+	void StatsPanel::OnAttach()
+	{
+		PanelBase::OnAttach();
+
+		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+		m_PanelSpec.InitialSize = { { 300.0f, 300.0f } };
+	}
+
 	void StatsPanel::ProcessRender()
 	{
 		auto& Stats = Renderer2D::GetStats();
@@ -29,13 +38,13 @@ namespace ZeoEngine {
 		
 		if (ImGui::TreeNodeEx("Particle Template", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			for (const auto& [path, pTemplate] : ParticleLibrary::Get().GetAssetsMap())
+			ParticleTemplateAssetLibrary::Get().ForEach([&](const entt::id_type id, const AssetHandle<ParticleTemplateAsset>& pTemplate)
 			{
 				std::ostringstream stringStream;
-				stringStream << path << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";
+				stringStream << pTemplate->GetPath() << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";
 				std::string pTemplateInfo = stringStream.str();
 				ImGui::Text(pTemplateInfo.c_str());
-			}
+			});
 
 			ImGui::TreePop();
 		}

@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) override;
 		virtual void OnEvent(Event& e) override;
 
-		virtual void OnDeserialized() override;
+		virtual void PostLoad() override;
 
 	private:
 		void OnUpdateEditor(DeltaTime dt);

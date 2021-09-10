@@ -17,11 +17,13 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 		
 		/**
-		 * Snapshot current viewport and save it to a PNG file.
-		 * If imageWidth is non-zero, it will snapshot a centered square area using this provided imageWidth, otherwise it will snapshot the full viewport.
-		 * NOTE: Child classes should override this and update preview thumbnail if required.
+		 * Snapshot current viewport and save as thumbnail cache.
+		 * 
+		 * @param assetPath - Path of asset
+		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
+		 * @param bOverwriteThumbnail - If true, it will always do a capture no matter the existance of local cache
 		 */
-		virtual void Snapshot(const std::string& imageName, uint32_t imageWidth = 0);
+		void Snapshot(const std::string& assetPath, uint32_t imageWidth = 0, bool bOverwriteThumbnail = true);
 
 		const glm::vec2* GetViewportBounds() const { return m_ViewportBounds; }
 		glm::vec2 GetViewportSize() const;
@@ -38,7 +40,7 @@ namespace ZeoEngine {
 		virtual void RenderToolbar() {};
 
 		bool OnMouseScroll(MouseScrolledEvent& e);
-		bool OnFocusEntity(KeyPressedEvent& e);
+		bool OnKeyPressed(KeyPressedEvent& e);
 
 		void SetViewportBounds(float x, float y, float width, float height);
 
@@ -50,6 +52,13 @@ namespace ZeoEngine {
 
 	private:
 		glm::vec2 m_LastViewportSize{ 0.0f };
+
+		struct SnapshotSpec
+		{
+			std::string AssetPath;
+			std::string ThumbnailPath;
+			uint32_t ImageWidth;
+		} m_SnapshotSpec;
 
 	};
 

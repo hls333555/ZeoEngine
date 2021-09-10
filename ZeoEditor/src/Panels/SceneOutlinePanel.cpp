@@ -4,7 +4,7 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Dockspaces/DockspaceBase.h"
+#include "Editors/EditorBase.h"
 #include "Engine/Core/KeyCodes.h"
 
 namespace ZeoEngine {
@@ -15,10 +15,12 @@ namespace ZeoEngine {
 		
 		ImGui::Separator();
 
+		EditorBase* owningEditor = GetOwningEditor();
+
 		// Display entities in creation order, the order is updated when a new entity is created or destroyed
-		GetContext()->GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
+		owningEditor->GetScene()->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
 		{
-			Entity entity{ entityId, GetContext()->GetScene().get() };
+			Entity entity{ entityId, GetOwningEditor()->GetScene().get() };
 			DrawEntityNode(entity);
 		});
 
@@ -26,7 +28,7 @@ namespace ZeoEngine {
 		// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 		{
-			GetContext()->SetContextEntity({});
+			owningEditor->SetContextEntity({});
 		}
 
 		// Right-click on blank space
@@ -34,8 +36,8 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
 			{
-				auto selectedEntity = GetContext()->GetScene()->CreateEntity("New Entity");
-				GetContext()->SetContextEntity(selectedEntity);
+				auto selectedEntity = owningEditor->GetScene()->CreateEntity("New Entity");
+				owningEditor->SetContextEntity(selectedEntity);
 			}
 
 			ImGui::EndPopup();
@@ -50,17 +52,18 @@ namespace ZeoEngine {
 		const char* entityName = coreComp.Name.c_str();
 		if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(entityName))
 		{
-			auto selectedEntity = GetContext()->GetContextEntity();
+			EditorBase* owningEditor = GetOwningEditor();
+			auto selectedEntity = owningEditor->GetContextEntity();
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, entityName);
 			if (ImGui::IsItemClicked())
 			{
-				GetContext()->SetContextEntity(entity);
+				owningEditor->SetContextEntity(entity);
 			}
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
-				GetContext()->FocusContextEntity();
+				owningEditor->FocusContextEntity();
 			}
 
 			bool bIsCurrentEntitySelected = selectedEntity == entity;
@@ -81,10 +84,10 @@ namespace ZeoEngine {
 			// Defer entity destruction
 			if (bWillDestroyEntity)
 			{
-				GetContext()->GetScene()->DestroyEntity(entity);
+				owningEditor->GetScene()->DestroyEntity(entity);
 				if (bIsCurrentEntitySelected)
 				{
-					GetContext()->SetContextEntity({});
+					owningEditor->SetContextEntity({});
 				}
 			}
 		}
