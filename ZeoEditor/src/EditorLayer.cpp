@@ -8,8 +8,6 @@
 
 namespace ZeoEngine {
 
-	PIEState pieState;
-
 	EditorLayer::EditorLayer()
 		: EngineLayer("Editor")
 	{

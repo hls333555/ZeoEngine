@@ -67,10 +67,10 @@ namespace ZeoEngine {
 			// Set window icon
 			{
 				GLFWimage images[4];
-				images[0].pixels = stbi_load("assets/editor/textures/Logo_16x.png", &images[0].width, &images[0].height, 0, 4); // rgba channels
-				images[1].pixels = stbi_load("assets/editor/textures/Logo_24x.png", &images[1].width, &images[1].height, 0, 4);
-				images[2].pixels = stbi_load("assets/editor/textures/Logo_32x.png", &images[2].width, &images[2].height, 0, 4);
-				images[3].pixels = stbi_load("assets/editor/textures/Logo_48x.png", &images[3].width, &images[3].height, 0, 4);
+				images[0].pixels = stbi_load("resources/textures/Logo_16x.png", &images[0].width, &images[0].height, 0, 4); // rgba channels
+				images[1].pixels = stbi_load("resources/textures/Logo_24x.png", &images[1].width, &images[1].height, 0, 4);
+				images[2].pixels = stbi_load("resources/textures/Logo_32x.png", &images[2].width, &images[2].height, 0, 4);
+				images[3].pixels = stbi_load("resources/textures/Logo_48x.png", &images[3].width, &images[3].height, 0, 4);
 				glfwSetWindowIcon(m_Window, 4, images);
 				stbi_image_free(images[0].pixels);
 				stbi_image_free(images[1].pixels);

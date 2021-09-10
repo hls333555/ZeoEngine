@@ -6,16 +6,6 @@
 
 namespace ZeoEngine {
 
-	// TODO: PIEState
-	enum class PIEState
-	{
-		None,
-		Running,
-		Paused
-	};
-
-	extern PIEState pieState;
-
 	class EditorLayer : public EngineLayer
 	{
 	public:

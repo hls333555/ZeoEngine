@@ -11,12 +11,12 @@ namespace ZeoEngine {
 
 		static const char* GetDirectoryIconPath()
 		{
-			return "assets/editor/textures/icons/Folder.png";
+			return "resources/textures/icons/Folder.png";
 		}
 
 		static const char* GetAssetTypeIconDirectory()
 		{
-			return "assets/editor/textures/icons";
+			return "resources/textures/icons";
 		}
 
 		static std::string GetAssetTypeIconPath(AssetTypeId typeId)
