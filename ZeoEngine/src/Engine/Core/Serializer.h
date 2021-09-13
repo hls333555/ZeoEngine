@@ -97,7 +97,7 @@ namespace ZeoEngine {
 			YAML::Emitter out;
 
 			const std::string assetName = PathUtils::GetNameFromPath(path);
-			ZE_CORE_TRACE("Serializing \"{0}\"", assetName);
+			//ZE_CORE_TRACE("Serializing \"{0}\"", assetName);
 
 			out << YAML::BeginMap;
 			{
@@ -125,7 +125,7 @@ namespace ZeoEngine {
 				return {};
 			}
 			
-			ZE_CORE_TRACE("Deserializing \"{0}\"", assetName);
+			//ZE_CORE_TRACE("Deserializing \"{0}\"", assetName);
 			return data;
 		}
 	};

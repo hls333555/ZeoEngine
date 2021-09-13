@@ -258,7 +258,7 @@ namespace ZeoEngine {
 
 		ImGui::InputText("##String", &m_Buffer, ImGuiInputTextFlags_AutoSelectAll);
 		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-		if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+		if (Input::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
 		{
 			SetValueToData();
 		}
@@ -302,7 +302,7 @@ namespace ZeoEngine {
 			SetValueToData(false);
 		}
 		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-		if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+		if (Input::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
 		{
 			if (IsBufferChanged())
 			{

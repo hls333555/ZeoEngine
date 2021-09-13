@@ -97,17 +97,9 @@ namespace ZeoEngine {
 
 		switch (e.GetKeyCode())
 		{
-			case Key::Enter:
-				RequestPathOpen(m_SelectedPath);
-				break;
-			case Key::F2:
-				RequestPathRenaming(m_SelectedPath);
-				break;
-			case Key::Delete:
-				RequestPathDeletion(m_SelectedPath);
-				break;
-			default:
-				break;
+			case Key::Enter:	RequestPathOpen(m_SelectedPath);		return true;
+			case Key::F2:		RequestPathRenaming(m_SelectedPath);	return true;
+			case Key::Delete:	RequestPathDeletion(m_SelectedPath);	return true;
 		}
 
 		return false;

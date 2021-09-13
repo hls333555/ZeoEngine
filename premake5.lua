@@ -11,6 +11,11 @@ workspace "ZeoEngine"
 		"Dist"
 	}
 
+	defines
+	{
+		"DOCTEST_CONFIG_DISABLE"
+	}
+
 	flags
 	{
 		"MultiProcessorCompile"

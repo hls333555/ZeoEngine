@@ -113,19 +113,13 @@ namespace ZeoEngine {
 		if (m_ShortcutName != "CTRL+N" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		switch (e.GetKeyCode())
+		if (e.GetKeyCode() == Key::N && bIsCtrlPressed)
 		{
-			case Key::N:
-			{
-				if (bIsCtrlPressed)
-				{
-					m_OwningEditor->NewAsset();
-				}
-				break;
-			}
+			m_OwningEditor->NewAsset();
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	void MenuItem_NewAsset::OnMenuItemActivated()
@@ -138,19 +132,13 @@ namespace ZeoEngine {
 		if (m_ShortcutName != "CTRL+O" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		switch (e.GetKeyCode())
+		if (e.GetKeyCode() == Key::O && bIsCtrlPressed)
 		{
-			case Key::O:
-			{
-				if (bIsCtrlPressed)
-				{
-					m_OwningEditor->LoadAsset();
-				}
-				break;
-			}
+			m_OwningEditor->LoadAsset();
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	void MenuItem_LoadAsset::OnMenuItemActivated()
@@ -163,19 +151,13 @@ namespace ZeoEngine {
 		if (m_ShortcutName != "CTRL+S" || !GetOwningDockspace()->IsDockspaceFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		switch (e.GetKeyCode())
+		if (e.GetKeyCode() == Key::S && bIsCtrlPressed)
 		{
-			case Key::S:
-			{
-				if (bIsCtrlPressed)
-				{
-					m_OwningEditor->SaveAsset();
-				}
-				break;
-			}
+			m_OwningEditor->SaveAsset();
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	void MenuItem_SaveAsset::OnMenuItemActivated()
@@ -189,22 +171,13 @@ namespace ZeoEngine {
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
-		switch (e.GetKeyCode())
+		if (e.GetKeyCode() == Key::S && bIsCtrlPressed && bIsAltPressed)
 		{
-			case Key::S:
-			{
-				if (bIsCtrlPressed)
-				{
-					if (bIsAltPressed)
-					{
-						m_OwningEditor->SaveAssetAs();
-					}
-				}
-				break;
-			}
+			m_OwningEditor->SaveAssetAs();
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	void MenuItem_SaveAssetAs::OnMenuItemActivated()

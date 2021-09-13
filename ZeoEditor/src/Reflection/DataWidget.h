@@ -19,6 +19,7 @@
 #include "Test/TestComponent.h"
 #include "Engine/ImGui/AssetBrowser.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Core/Input.h"
 
 namespace ZeoEngine {
 
@@ -212,7 +213,7 @@ namespace ZeoEngine {
 				SetValueToData(false);
 			}
 			// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-			if (ImGui::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
+			if (Input::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
 			{
 				if (IsBufferChanged())
 				{

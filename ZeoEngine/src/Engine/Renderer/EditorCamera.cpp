@@ -39,9 +39,7 @@ namespace ZeoEngine {
 			UpdateView();
 		}
 
-		if (!bIsViewportFocused) return;
-
-		if (ImGuizmo::IsUsing()) return;
+		if (!bIsViewportFocused || ImGuizmo::IsUsing()) return;
 
 		// We should forbid operations that modify focal point during focusing
 		if (!m_bStartLerpToFocus && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))

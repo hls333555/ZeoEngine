@@ -28,8 +28,6 @@ namespace ZeoEngine {
 
 		void RenderGizmo();
 
-		void ProcessEntityDeletion();
-
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 

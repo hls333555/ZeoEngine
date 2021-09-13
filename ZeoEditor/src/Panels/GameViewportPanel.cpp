@@ -28,8 +28,6 @@ namespace ZeoEngine {
 
 		RenderGizmo();
 
-		ProcessEntityDeletion();
-
 	}
 
 	void GameViewportPanel::ProcessEvent(Event& e)
@@ -136,84 +134,93 @@ namespace ZeoEngine {
 		}
 	}
 
-	void GameViewportPanel::ProcessEntityDeletion()
-	{
-		EditorBase* owningEditor = GetOwningEditor();
-		Entity selectedEntity = owningEditor->GetContextEntity();
-		if (IsPanelFocused() && selectedEntity && ImGui::IsKeyReleased(Key::Delete))
-		{
-			owningEditor->GetScene()->DestroyEntity(selectedEntity);
-			owningEditor->SetContextEntity({});
-		}
-	}
-
 	bool GameViewportPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
-		// Global shotcuts
+		// Global responsing shotcuts
 		{
 			auto* mainEditor = GetOwningEditor<MainEditor>();
-			// Toggle play
-			if ((Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt)) && Input::IsKeyPressed(Key::P))
+			bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+			switch (e.GetKeyCode())
 			{
-				if (mainEditor->GetSceneState() == SceneState::Edit)
+				// Toggle play
+				case Key::P:
 				{
-					mainEditor->OnScenePlay();
-				}
-			}
-
-			// Toggle pause / resume
-			if (Input::IsKeyPressed(Key::Pause))
-			{
-				switch (mainEditor->GetSceneState())
-				{
-				case SceneState::Play:
-					mainEditor->OnScenePause();
-					break;
-				case SceneState::Pause:
-					mainEditor->OnSceneResume();
+					if (bIsAltPressed)
+					{
+						if (mainEditor->GetSceneState() == SceneState::Edit)
+						{
+							mainEditor->OnScenePlay();
+							return true;
+						}
+					}
 					break;
 				}
-			}
-
-			// Toggle stop
-			if (Input::IsKeyPressed(Key::Escape))
-			{
-				if (mainEditor->GetSceneState() > SceneState::Edit)
+				// Toggle pause / resume
+				case Key::Pause:
 				{
-					mainEditor->OnSceneStop();
+					switch (mainEditor->GetSceneState())
+					{
+						case SceneState::Play:	mainEditor->OnScenePause();		return true;
+						case SceneState::Pause:	mainEditor->OnSceneResume();	return true;
+					}
+				}
+				// Toggle stop
+				case Key::Escape:
+				{
+					if (mainEditor->GetSceneState() > SceneState::Edit)
+					{
+						mainEditor->OnSceneStop();
+						return true;
+					}
+					break;
 				}
 			}
 		}
 
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
 
-		bool bCanSwitchGizmo = !ImGuizmo::IsUsing();
-		switch (e.GetKeyCode())
+		// Panel responsing shotcuts
 		{
-			case Key::W:
+			bool bCanSwitchGizmo = !ImGuizmo::IsUsing();
+			switch (e.GetKeyCode())
 			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE; return true;
-			}
-			case Key::E:
-			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE; return true;
-			}
-			case Key::R:
-			{
-				if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE; return true;
-			}
-			case Key::Space:
-			{
-				if (bCanSwitchGizmo)
+				case Key::W:
 				{
-					switch (m_GizmoType)
-					{
-						case ImGuizmo::TRANSLATE:	m_GizmoType = ImGuizmo::ROTATE; break;
-						case ImGuizmo::ROTATE:		m_GizmoType = ImGuizmo::SCALE; break;
-						case ImGuizmo::SCALE:		m_GizmoType = ImGuizmo::TRANSLATE; break;
-					}
+					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE; return true;
 				}
-				return true;
+				case Key::E:
+				{
+					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE; return true;
+				}
+				case Key::R:
+				{
+					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE; return true;
+				}
+				case Key::Space:
+				{
+					if (bCanSwitchGizmo)
+					{
+						switch (m_GizmoType)
+						{
+							case ImGuizmo::TRANSLATE:	m_GizmoType = ImGuizmo::ROTATE;		break;
+							case ImGuizmo::ROTATE:		m_GizmoType = ImGuizmo::SCALE;		break;
+							case ImGuizmo::SCALE:		m_GizmoType = ImGuizmo::TRANSLATE;	break;
+						}
+					}
+					return true;
+				}
+				case Key::Delete:
+				{
+					EditorBase* owningEditor = GetOwningEditor();
+					Entity selectedEntity = owningEditor->GetContextEntity();
+					if (selectedEntity)
+					{
+						owningEditor->GetScene()->DestroyEntity(selectedEntity);
+						owningEditor->SetContextEntity({});
+						return true;
+					}
+					break;
+				}
 			}
 		}
 
