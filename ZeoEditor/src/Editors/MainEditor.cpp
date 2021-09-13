@@ -52,6 +52,8 @@ namespace ZeoEngine {
 
 	void MainEditor::LoadAssetImpl(const std::string& path)
 	{
+		// Stop current playing scene
+		OnSceneStop();
 		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
 		m_SceneAsset->UpdateScene(GetScene());
 	}
