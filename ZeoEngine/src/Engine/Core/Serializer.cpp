@@ -128,7 +128,7 @@ namespace YAML {
 namespace ZeoEngine {
 
 	const char* g_AssetTypeToken = "AssetType";
-	const char* g_ResourceSourceToken = "ResourceSourcePath";
+	const char* g_ResourceSourceToken = "ResourcePath";
 
 	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
 	{

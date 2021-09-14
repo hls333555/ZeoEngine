@@ -1046,7 +1046,14 @@ namespace ZeoEngine {
 			if (newPath != oldPath)
 			{
 				// Regular renaming process
-				PathUtils::RenamePath(oldPath, newPath);
+				if (typeId)
+				{
+					AssetManager::Get().RenameAsset(oldPath, newPath);
+				}
+				else
+				{
+					PathUtils::RenamePath(oldPath, newPath);
+				}
 			}
 		}
 		else

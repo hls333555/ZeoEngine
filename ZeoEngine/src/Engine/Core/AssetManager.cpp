@@ -74,6 +74,20 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	bool AssetManager::RenameAsset(const std::string& oldPath, const std::string& newPath) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(oldPath)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->RenameAsset(oldPath, newPath);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to rename asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(oldPath));
+		return false;
+	}
+
 	bool AssetManager::DeleteAsset(const std::string& path) const
 	{
 		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();

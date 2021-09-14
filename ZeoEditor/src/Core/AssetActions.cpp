@@ -9,10 +9,25 @@
 
 namespace ZeoEngine {
 
+	void AssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
+	{
+		PathUtils::RenamePath(oldPath, newPath);
+	}
+
 	void AssetActionsBase::DeleteAsset(const std::string& path) const
 	{
 		PathUtils::DeletePath(path);
 		AssetRegistry::Get().OnPathRemoved(path);
+	}
+
+	void ImportableAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
+	{
+		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(oldPath);
+		auto newResourcePath = PathUtils::GetResourcePathFromAssetPath(newPath);
+		// Rename resource
+		PathUtils::RenamePath(resourcePath, newResourcePath);
+		// Rename asset
+		AssetActionsBase::RenameAsset(oldPath, newPath);
 	}
 
 	void ImportableAssetActionsBase::DeleteAsset(const std::string& path) const
