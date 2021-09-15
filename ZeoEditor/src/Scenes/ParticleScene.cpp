@@ -1,32 +1,32 @@
-#include "Scenes/ParticleEditorScene.h"
+#include "Scenes/ParticleScene.h"
 
 #include "Engine/GameFramework/Systems.h"
 #include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
 
-	ParticleEditorScene::ParticleEditorScene()
+	ParticleScene::ParticleScene()
 	{
 		m_ParticlePreviewRenderSystem = CreateRef<ParticlePreviewRenderSystem>(this);
 		m_ParticlePreviewRenderSystem->OnCreate();
 	}
 
-	ParticleEditorScene::~ParticleEditorScene()
+	ParticleScene::~ParticleScene()
 	{
 		m_ParticlePreviewRenderSystem->OnDestroy();
 	}
 
-	void ParticleEditorScene::OnUpdate(DeltaTime dt)
+	void ParticleScene::OnUpdate(DeltaTime dt)
 	{
 		m_ParticlePreviewRenderSystem->OnUpdate(dt);
 	}
 
-	void ParticleEditorScene::OnRender(const EditorCamera& camera)
+	void ParticleScene::OnRender(const EditorCamera& camera)
 	{
 		m_ParticlePreviewRenderSystem->OnRender(camera);
 	}
 
-	void ParticleEditorScene::PostLoad()
+	void ParticleScene::PostLoad()
 	{
 		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& particlePreviewComp)
 		{

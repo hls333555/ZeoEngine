@@ -10,7 +10,7 @@ namespace ZeoEngine {
 	{
 		switch (editorType)
 		{
-			case EditorType::MainEditor:		return "Main Editor";
+			case EditorType::SceneEditor:		return "Scene Editor";
 			case EditorType::ParticleEditor:	return ICON_FA_FIRE "  Particle Editor";
 		}
 

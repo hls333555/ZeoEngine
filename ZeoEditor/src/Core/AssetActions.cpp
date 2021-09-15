@@ -58,7 +58,7 @@ namespace ZeoEngine {
 
 	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().GetEditor(EditorType::MainEditor)->LoadAsset(path);
+		EditorManager::Get().GetEditor(EditorType::SceneEditor)->LoadAsset(path);
 	}
 
 	void SceneAssetActions::ReloadAsset(const std::string& path) const

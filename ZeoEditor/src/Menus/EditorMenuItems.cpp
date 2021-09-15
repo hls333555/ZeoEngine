@@ -6,7 +6,7 @@
 #include "Engine/GameFramework/Scene.h"
 #include "Core/EditorManager.h"
 #include "Engine/Core/Input.h"
-#include "Panels/SceneViewportPanel.h"
+#include "Panels/ViewPanelBase.h"
 #include "Utils/EditorUtils.h"
 #include "Dockspaces/DockspaceBase.h"
 
@@ -221,8 +221,8 @@ namespace ZeoEngine {
 		// This may be null e.g. default particle system
 		if (assetPath.empty()) return;
 
-		SceneViewportPanel* viewportPanel = GetOwningDockspace()->GetPanel<SceneViewportPanel>(GetOwningDockspace()->GetViewportPanelType());
-		viewportPanel->Snapshot(assetPath, 256);
+		ViewPanelBase* viewPanel = GetOwningDockspace()->GetPanel<ViewPanelBase>(GetOwningDockspace()->GetViewPanelType());
+		viewPanel->Snapshot(assetPath, 256);
 	}
 
 }

@@ -4,14 +4,14 @@
 
 namespace ZeoEngine {
 
-	class MainEditorDockspace : public DockspaceBase
+	class MainDockspace : public DockspaceBase
 	{
 	public:
 		using DockspaceBase::DockspaceBase;
 
 		virtual void OnAttach() override;
 
-		virtual PanelType GetViewportPanelType() const override { return PanelType::GameView; }
+		virtual PanelType GetViewPanelType() const override { return PanelType::GameView; }
 
 	private:
 		virtual void PreRenderDockspace() override;

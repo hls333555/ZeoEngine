@@ -141,7 +141,7 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance
 	{
-		friend class ParticleViewportPanel;
+		friend class ParticleViewPanel;
 		friend class ParticleTemplateAsset;
 		friend class ParticleTemplateDataWidget;
 

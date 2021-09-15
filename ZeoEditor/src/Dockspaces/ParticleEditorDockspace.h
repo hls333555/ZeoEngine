@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual PanelType GetViewportPanelType() const override { return PanelType::ParticleView; }
+		virtual PanelType GetViewPanelType() const override { return PanelType::ParticleView; }
 
 	private:
 		virtual void BuildDockWindows(ImGuiID dockspaceID) override;

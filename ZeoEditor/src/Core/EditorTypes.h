@@ -8,7 +8,7 @@ namespace ZeoEngine {
 	{
 		NONE,
 
-		MainEditor,
+		SceneEditor,
 		ParticleEditor,
 	};
 

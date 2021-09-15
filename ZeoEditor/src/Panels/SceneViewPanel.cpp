@@ -1,4 +1,4 @@
-#include "Panels/GameViewportPanel.h"
+#include "Panels/SceneViewPanel.h"
 
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,37 +11,36 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Editors/EditorBase.h"
-#include "Editors/MainEditor.h"
+#include "Editors/SceneEditor.h"
 
 namespace ZeoEngine {
 
-	void GameViewportPanel::OnAttach()
+	void SceneViewPanel::OnAttach()
 	{
-		SceneViewportPanel::OnAttach();
+		ViewPanelBase::OnAttach();
 
-		GetOwningEditor()->m_PostSceneRender.connect<&GameViewportPanel::ReadPixelDataFromIDBuffer>(this);
+		GetOwningEditor()->m_PostSceneRender.connect<&SceneViewPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
-	void GameViewportPanel::ProcessRender()
+	void SceneViewPanel::ProcessRender()
 	{
-		SceneViewportPanel::ProcessRender();
+		ViewPanelBase::ProcessRender();
 
 		RenderGizmo();
-
 	}
 
-	void GameViewportPanel::ProcessEvent(Event& e)
+	void SceneViewPanel::ProcessEvent(Event& e)
 	{
-		SceneViewportPanel::ProcessEvent(e);
+		ViewPanelBase::ProcessEvent(e);
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnKeyPressed));
-		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(GameViewportPanel::OnMouseButtonPressed));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewPanel::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewPanel::OnMouseButtonPressed));
 	}
 
-	void GameViewportPanel::RenderToolbar()
+	void SceneViewPanel::RenderToolbar()
 	{
-		auto* mainEditor = GetOwningEditor<MainEditor>();
+		auto* mainEditor = GetOwningEditor<SceneEditor>();
 		// Place buttons at window center
 		float indent = mainEditor->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
 			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
@@ -82,7 +81,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void GameViewportPanel::RenderGizmo()
+	void SceneViewPanel::RenderGizmo()
 	{
 		ImGuizmo::Enable(!m_EditorCamera.IsUsing());
 
@@ -134,11 +133,11 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool GameViewportPanel::OnKeyPressed(KeyPressedEvent& e)
+	bool SceneViewPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
 		// Global responsing shotcuts
 		{
-			auto* mainEditor = GetOwningEditor<MainEditor>();
+			auto* mainEditor = GetOwningEditor<SceneEditor>();
 			bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 			switch (e.GetKeyCode())
 			{
@@ -227,7 +226,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool GameViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	bool SceneViewPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		if (IsPanelHovered() &&
 			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
@@ -239,7 +238,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void GameViewportPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
+	void SceneViewPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
 	{
 		auto [mx, my] = GetMouseViewportPosition();
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];

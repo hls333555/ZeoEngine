@@ -1,4 +1,4 @@
-#include "Panels/ParticleViewportPanel.h"
+#include "Panels/ParticleViewPanel.h"
 
 #include <IconsFontAwesome5.h>
 
@@ -7,20 +7,20 @@
 
 namespace ZeoEngine {
 
-	void ParticleViewportPanel::OnAttach()
+	void ParticleViewPanel::OnAttach()
 	{
-		SceneViewportPanel::OnAttach();
+		ViewPanelBase::OnAttach();
 
 		CreatePreviewParticle();
-		GetOwningEditor()->m_PostSceneCreate.connect<&ParticleViewportPanel::CreatePreviewParticle>(this);
+		GetOwningEditor()->m_PostSceneCreate.connect<&ParticleViewPanel::CreatePreviewParticle>(this);
 	}
 
-	void ParticleViewportPanel::ProcessRender()
+	void ParticleViewPanel::ProcessRender()
 	{
 		// Get default available region before drawing any widgets
 		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		SceneViewportPanel::ProcessRender();
+		ViewPanelBase::ProcessRender();
 
 		const auto& psInstance = m_PreviewParticleEntity.GetComponent<ParticleSystemPreviewComponent>().Instance;
 
@@ -43,7 +43,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleViewportPanel::CreatePreviewParticle(bool bIsFromOpen)
+	void ParticleViewPanel::CreatePreviewParticle(bool bIsFromOpen)
 	{
 		m_PreviewParticleEntity = GetOwningEditor()->GetScene()->CreateEntity("Preview Particle", true);
 		m_PreviewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
@@ -54,7 +54,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleViewportPanel::CreateDefaultParticleSystem()
+	void ParticleViewPanel::CreateDefaultParticleSystem()
 	{
 		auto& particlePreviewComp = m_PreviewParticleEntity.GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->Lifetime.SetRandom(0.75f, 1.5f);
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 		ParticleSystemInstance::Create(particlePreviewComp);
 	}
 	
-	void ParticleViewportPanel::RenderToolbar()
+	void ParticleViewPanel::RenderToolbar()
 	{
 		const auto& psInstance = m_PreviewParticleEntity.GetComponent<ParticleSystemPreviewComponent>().Instance;
 

@@ -1,6 +1,6 @@
 #include "Core/EditorManager.h"
 
-#include "Editors/MainEditor.h"
+#include "Editors/SceneEditor.h"
 #include "Editors/ParticleEditor.h"
 #include "Utils/EditorUtils.h"
 #include "Dockspaces/DockspaceBase.h"
@@ -47,7 +47,7 @@ namespace ZeoEngine {
 		EditorBase* editor = nullptr;
 		switch (type)
 		{
-			case EditorType::MainEditor:		editor = new MainEditor(type); break;
+			case EditorType::SceneEditor:		editor = new SceneEditor(type); break;
 			case EditorType::ParticleEditor:	editor = new ParticleEditor(type); break;
 			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return nullptr;
 		}

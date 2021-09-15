@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Panels/SceneViewportPanel.h"
+#include "Panels/ViewPanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
-	class ParticleViewportPanel : public SceneViewportPanel
+	class ParticleViewPanel : public ViewPanelBase
 	{
 	public:
-		using SceneViewportPanel::SceneViewportPanel;
+		using ViewPanelBase::ViewPanelBase;
 
 		virtual void OnAttach() override;
 

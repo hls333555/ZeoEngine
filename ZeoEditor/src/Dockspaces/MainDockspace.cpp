@@ -1,4 +1,4 @@
-#include "Dockspaces/MainEditorDockspace.h"
+#include "Dockspaces/MainDockspace.h"
 
 #include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	void MainEditorDockspace::OnAttach()
+	void MainDockspace::OnAttach()
 	{
 		DockspaceBase::OnAttach();
 
@@ -51,7 +51,7 @@ namespace ZeoEngine {
 		
 	}
 
-	void MainEditorDockspace::PreRenderDockspace()
+	void MainDockspace::PreRenderDockspace()
 	{
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(mainViewport->WorkPos);
@@ -59,7 +59,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowViewport(mainViewport->ID);
 	}
 
-	void MainEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
+	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.2f, nullptr, &dockLeft);

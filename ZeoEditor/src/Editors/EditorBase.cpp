@@ -1,9 +1,9 @@
 #include "Editors/EditorBase.h"
 
-#include "Dockspaces/MainEditorDockspace.h"
+#include "Dockspaces/MainDockspace.h"
 #include "Dockspaces/ParticleEditorDockspace.h"
-#include "Scenes/MainEditorScene.h"
-#include "Scenes/ParticleEditorScene.h"
+#include "Scenes/EditorScene.h"
+#include "Scenes/ParticleScene.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "Engine/Renderer/RenderCommand.h"
@@ -153,7 +153,7 @@ namespace ZeoEngine {
 	{
 		switch (m_EditorType)
 		{
-			case EditorType::MainEditor:		m_Dockspace = new MainEditorDockspace(this); break;
+			case EditorType::SceneEditor:		m_Dockspace = new MainDockspace(this); break;
 			case EditorType::ParticleEditor:	m_Dockspace = new ParticleEditorDockspace(this); break;
 			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return;
 		}
@@ -165,8 +165,8 @@ namespace ZeoEngine {
 	{
 		switch (m_EditorType)
 		{
-			case EditorType::MainEditor:		m_Scene = CreateRef<MainEditorScene>(); return;
-			case EditorType::ParticleEditor:	m_Scene = CreateRef<ParticleEditorScene>(); return;
+			case EditorType::SceneEditor:		m_Scene = CreateRef<EditorScene>(); return;
+			case EditorType::ParticleEditor:	m_Scene = CreateRef<ParticleScene>(); return;
 			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return;
 		}
 	}

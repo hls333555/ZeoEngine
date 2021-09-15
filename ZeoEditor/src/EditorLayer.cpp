@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		EditorManager::Get().CreateEditor(EditorType::MainEditor);
+		EditorManager::Get().CreateEditor(EditorType::SceneEditor);
 		
 	}
 

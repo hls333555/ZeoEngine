@@ -1,7 +1,7 @@
 #include "Core/PanelManager.h"
 
 #include "Utils/EditorUtils.h"
-#include "Panels/GameViewportPanel.h"
+#include "Panels/SceneViewPanel.h"
 #include "Panels/SceneOutlinePanel.h"
 #include "Panels/InspectorPanels.h"
 #include "Panels/ContentBrowserPanel.h"
@@ -9,7 +9,7 @@
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
-#include "Panels/ParticleViewportPanel.h"
+#include "Panels/ParticleViewPanel.h"
 
 namespace ZeoEngine {
 
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		PanelBase* panel = nullptr;
 		switch (type)
 		{
-			case PanelType::GameView:			panel = new GameViewportPanel(type, owningEditor); break;
+			case PanelType::GameView:			panel = new SceneViewPanel(type, owningEditor); break;
 			case PanelType::SceneOutline:		panel = new SceneOutlinePanel(type, owningEditor); break;
 			case PanelType::EntityInspector:	panel = new EntityInspectorPanel(type, owningEditor); break;
 			case PanelType::ContentBrowser:		panel = new ContentBrowserPanel(type, owningEditor); break;
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 			case PanelType::Stats:				panel = new StatsPanel(type, owningEditor); break;
 			case PanelType::Preferences:		panel = new PreferencesPanel(type, owningEditor); break;
 			case PanelType::About:				panel = new AboutPanel(type, owningEditor); break;
-			case PanelType::ParticleView:		panel = new ParticleViewportPanel(type, owningEditor); break;
+			case PanelType::ParticleView:		panel = new ParticleViewPanel(type, owningEditor); break;
 			case PanelType::ParticleInspector:	panel = new ParticleInspectorPanel(type, owningEditor); break;
 			default:							ZE_CORE_ASSERT("Failed to create panel with unknown panel type: {0}!", panelName); return nullptr;
 		}

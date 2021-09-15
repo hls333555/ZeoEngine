@@ -12,9 +12,9 @@ namespace ZeoEngine {
 		Play = 1, Pause = 2,
 	};
 
-	class MainEditor : public EditorBase
+	class SceneEditor : public EditorBase
 	{
-		friend class GameViewportPanel;
+		friend class SceneViewPanel;
 
 	public:
 		using EditorBase::EditorBase;

@@ -1,22 +1,22 @@
-#include "Editors/MainEditor.h"
+#include "Editors/SceneEditor.h"
 
 #include "Engine/GameFramework/Scene.h"
 
 namespace ZeoEngine {
 
-	void MainEditor::OnAttach()
+	void SceneEditor::OnAttach()
 	{
 		EditorBase::OnAttach();
 
-		m_PreSceneCreate.connect<&MainEditor::ClearSelectedEntity>(this);
+		m_PreSceneCreate.connect<&SceneEditor::ClearSelectedEntity>(this);
 	}
 
-	std::string MainEditor::GetAssetPath() const
+	std::string SceneEditor::GetAssetPath() const
 	{
 		return m_SceneAsset ? m_SceneAsset->GetPath() : "";
 	}
 
-	void MainEditor::PostSceneCreate(bool bIsFromLoad)
+	void SceneEditor::PostSceneCreate(bool bIsFromLoad)
 	{
 		if (m_SceneAsset)
 		{
@@ -25,32 +25,32 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MainEditor::OnScenePlay()
+	void SceneEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
 	}
 
-	void MainEditor::OnSceneStop()
+	void SceneEditor::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
 	}
 
-	void MainEditor::OnScenePause()
+	void SceneEditor::OnScenePause()
 	{
 		m_SceneState = SceneState::Pause;
 	}
 
-	void MainEditor::OnSceneResume()
+	void SceneEditor::OnSceneResume()
 	{
 		m_SceneState = SceneState::Play;
 	}
 
-	AssetTypeId MainEditor::GetAssetTypeId() const
+	AssetTypeId SceneEditor::GetAssetTypeId() const
 	{
 		return SceneAsset::TypeId();
 	}
 
-	void MainEditor::LoadAssetImpl(const std::string& path)
+	void SceneEditor::LoadAssetImpl(const std::string& path)
 	{
 		// Stop current playing scene
 		OnSceneStop();
@@ -58,12 +58,12 @@ namespace ZeoEngine {
 		m_SceneAsset->UpdateScene(GetScene());
 	}
 
-	void MainEditor::SaveAssetImpl(const std::string& path)
+	void SceneEditor::SaveAssetImpl(const std::string& path)
 	{
 		m_SceneAsset->Serialize(path);
 	}
 
-	void MainEditor::ClearSelectedEntity()
+	void SceneEditor::ClearSelectedEntity()
 	{
 		SetContextEntity({});
 	}

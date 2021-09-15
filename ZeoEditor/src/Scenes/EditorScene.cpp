@@ -1,32 +1,32 @@
-#include "Scenes/MainEditorScene.h"
+#include "Scenes/EditorScene.h"
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Core/EditorManager.h"
-#include "Editors/MainEditor.h"
+#include "Editors/SceneEditor.h"
 
 namespace ZeoEngine {
 
-	MainEditorScene::MainEditorScene()
+	EditorScene::EditorScene()
 	{
 		m_RenderSystem = CreateRef<RenderSystem>(this);
 		m_RenderSystem->OnCreate();
 		m_NativeScriptSystem = CreateRef<NativeScriptSystem>(this);
 		m_NativeScriptSystem->OnCreate();
 
-		m_MainEditor = dynamic_cast<MainEditor*>(EditorManager::Get().GetEditor(EditorType::MainEditor));
-		ZE_CORE_ASSERT(m_MainEditor);
+		m_SceneEditor = dynamic_cast<SceneEditor*>(EditorManager::Get().GetEditor(EditorType::SceneEditor));
+		ZE_CORE_ASSERT(m_SceneEditor);
 	}
 
-	MainEditorScene::~MainEditorScene()
+	EditorScene::~EditorScene()
 	{
 		m_RenderSystem->OnDestroy();
 		m_NativeScriptSystem->OnDestroy();
 	}
 
-	void MainEditorScene::OnUpdate(DeltaTime dt)
+	void EditorScene::OnUpdate(DeltaTime dt)
 	{
-		switch (m_MainEditor->GetSceneState())
+		switch (m_SceneEditor->GetSceneState())
 		{
 			case SceneState::Edit:
 				OnUpdateEditor(dt);
@@ -37,9 +37,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MainEditorScene::OnRender(const EditorCamera& camera)
+	void EditorScene::OnRender(const EditorCamera& camera)
 	{
-		switch (m_MainEditor->GetSceneState())
+		switch (m_SceneEditor->GetSceneState())
 		{
 			case SceneState::Edit:
 				OnRenderEditor(camera);
@@ -51,33 +51,33 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MainEditorScene::OnEvent(Event& e)
+	void EditorScene::OnEvent(Event& e)
 	{
 		m_NativeScriptSystem->OnEvent(e);
 	}
 
-	void MainEditorScene::OnUpdateEditor(DeltaTime dt)
+	void EditorScene::OnUpdateEditor(DeltaTime dt)
 	{
 		m_RenderSystem->OnUpdate(dt);
 	}
 
-	void MainEditorScene::OnUpdateRuntime(DeltaTime dt)
+	void EditorScene::OnUpdateRuntime(DeltaTime dt)
 	{
 		m_NativeScriptSystem->OnUpdate(dt);
 		m_RenderSystem->OnUpdate(dt);
 	}
 
-	void MainEditorScene::OnRenderEditor(const EditorCamera& camera)
+	void EditorScene::OnRenderEditor(const EditorCamera& camera)
 	{
 		m_RenderSystem->OnRenderEditor(camera);
 	}
 
-	void MainEditorScene::OnRenderRuntime()
+	void EditorScene::OnRenderRuntime()
 	{
 		m_RenderSystem->OnRenderRuntime();
 	}
 
-	void MainEditorScene::PostLoad()
+	void EditorScene::PostLoad()
 	{
 		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& particleComp)
 		{

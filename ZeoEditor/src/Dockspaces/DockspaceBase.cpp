@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		m_bIsDockspaceHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 
 		// Render menus (non-main-menus must be rendered winthin window context)
-		m_MenuManager.OnImGuiRender(editorType == EditorType::MainEditor);
+		m_MenuManager.OnImGuiRender(editorType == EditorType::SceneEditor);
 
 		ImGuiID dockspaceID = ImGui::GetID(editorName);
 		if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr || m_bShouldRebuildDockLayout)

@@ -6,13 +6,13 @@ namespace ZeoEngine {
 
 	class RenderSystem;
 	class NativeScriptSystem;
-	class MainEditor;
+	class SceneEditor;
 
-	class MainEditorScene : public Scene
+	class EditorScene : public Scene
 	{
 	public:
-		MainEditorScene();
-		virtual ~MainEditorScene();
+		EditorScene();
+		virtual ~EditorScene();
 
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnRender(const EditorCamera& camera) override;
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		Ref<RenderSystem> m_RenderSystem;
 		Ref<NativeScriptSystem> m_NativeScriptSystem;
 
-		MainEditor* m_MainEditor = nullptr;
+		SceneEditor* m_SceneEditor = nullptr;
 	};
 
 }

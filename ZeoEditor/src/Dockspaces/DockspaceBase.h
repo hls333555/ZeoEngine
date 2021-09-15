@@ -28,7 +28,7 @@ namespace ZeoEngine {
 		bool IsDockspaceFocused() const { return m_bIsDockspaceFocused; }
 		bool IsDockspaceHovered() const { return m_bIsDockspaceHovered; }
 
-		virtual PanelType GetViewportPanelType() const = 0;
+		virtual PanelType GetViewPanelType() const = 0;
 
 	protected:
 		EditorMenu& CreateMenu(const std::string& menuName);
