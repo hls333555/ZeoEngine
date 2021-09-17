@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		GetOwningEditor()->m_PreSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
+		GetContextEditor()->m_PreSceneCreate.connect<&InspectorPanel::MarkComponentInspectorsDirty>(this);
 	}
 
 	void InspectorPanel::DrawAddComponentButton(Entity entity)
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 
 	void EntityInspectorPanel::ProcessRender()
 	{
-		Entity selectedEntity = GetOwningEditor()->GetContextEntity();
+		Entity selectedEntity = GetContextEditor()->GetContextEntity();
 		if (selectedEntity != m_LastSelectedEntity && m_LastSelectedEntity)
 		{
 			// For last frame
@@ -109,7 +109,7 @@ namespace ZeoEngine {
 
 	void ParticleInspectorPanel::ProcessRender()
 	{
-		Entity contextEntity = GetOwningEditor()->GetContextEntity();
+		Entity contextEntity = GetContextEditor()->GetContextEntity();
 		if (contextEntity)
 		{
 			DrawComponents<CoreComponent, TransformComponent>(contextEntity);

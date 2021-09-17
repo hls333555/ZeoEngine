@@ -1,12 +1,10 @@
 #include "Panels/PanelBase.h"
 
-#include "Utils/EditorUtils.h"
-
 namespace ZeoEngine {
 
-	PanelBase::PanelBase(PanelType type, EditorBase* owningEditor)
-		: m_PanelType(type)
-		, m_OwningEditor(owningEditor)
+	PanelBase::PanelBase(const char* panelName, const Ref<EditorBase>& contextEditor)
+		: m_PanelName(panelName)
+		, m_ContextEditor(contextEditor)
 	{
 	}
 
@@ -27,7 +25,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
-		if (ImGui::Begin(EditorUtils::GetPanelName(m_PanelType), &m_bShow, m_PanelSpec.WindowFlags))
+		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow, m_PanelSpec.WindowFlags))
 		{
 			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);

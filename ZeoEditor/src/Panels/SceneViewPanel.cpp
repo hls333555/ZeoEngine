@@ -19,7 +19,7 @@ namespace ZeoEngine {
 	{
 		ViewPanelBase::OnAttach();
 
-		GetOwningEditor()->m_PostSceneRender.connect<&SceneViewPanel::ReadPixelDataFromIDBuffer>(this);
+		GetContextEditor()->m_PostSceneRender.connect<&SceneViewPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
 	void SceneViewPanel::ProcessRender()
@@ -40,42 +40,42 @@ namespace ZeoEngine {
 
 	void SceneViewPanel::RenderToolbar()
 	{
-		auto* mainEditor = GetOwningEditor<SceneEditor>();
+		auto sceneEditor = GetContextEditor<SceneEditor>();
 		// Place buttons at window center
-		float indent = mainEditor->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
+		float indent = sceneEditor->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
 			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
 		ImGui::Indent(indent);
 
 		// Toggle play / stop
-		if (ImGui::TransparentButton(mainEditor->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
+		if (ImGui::TransparentButton(sceneEditor->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
 		{
-			switch (mainEditor->GetSceneState())
+			switch (sceneEditor->GetSceneState())
 			{
 				case SceneState::Edit:
-					mainEditor->OnScenePlay();
+					sceneEditor->OnScenePlay();
 					break;
 				case SceneState::Play:
 				case SceneState::Pause:
-					mainEditor->OnSceneStop();
+					sceneEditor->OnSceneStop();
 					break;
 			}
 		}
 
 		// Toggle pause / resume
-		switch (mainEditor->GetSceneState())
+		switch (sceneEditor->GetSceneState())
 		{
 			case SceneState::Play:
 				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PAUSE))
 				{
-					mainEditor->OnScenePause();
+					sceneEditor->OnScenePause();
 				}
 				break;
 			case SceneState::Pause:
 				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
-					mainEditor->OnSceneResume();
+					sceneEditor->OnSceneResume();
 				}
 				break;
 		}
@@ -85,7 +85,7 @@ namespace ZeoEngine {
 	{
 		ImGuizmo::Enable(!m_EditorCamera.IsUsing());
 
-		Entity selectedEntity = GetOwningEditor()->GetContextEntity();
+		Entity selectedEntity = GetContextEditor()->GetContextEntity();
 		m_bGizmoVisible = selectedEntity && m_GizmoType != -1;
 		if (m_bGizmoVisible)
 		{
@@ -137,7 +137,7 @@ namespace ZeoEngine {
 	{
 		// Global responsing shotcuts
 		{
-			auto* mainEditor = GetOwningEditor<SceneEditor>();
+			auto sceneEditor = GetContextEditor<SceneEditor>();
 			bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 			switch (e.GetKeyCode())
 			{
@@ -146,9 +146,9 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed)
 					{
-						if (mainEditor->GetSceneState() == SceneState::Edit)
+						if (sceneEditor->GetSceneState() == SceneState::Edit)
 						{
-							mainEditor->OnScenePlay();
+							sceneEditor->OnScenePlay();
 							return true;
 						}
 					}
@@ -157,18 +157,18 @@ namespace ZeoEngine {
 				// Toggle pause / resume
 				case Key::Pause:
 				{
-					switch (mainEditor->GetSceneState())
+					switch (sceneEditor->GetSceneState())
 					{
-						case SceneState::Play:	mainEditor->OnScenePause();		return true;
-						case SceneState::Pause:	mainEditor->OnSceneResume();	return true;
+						case SceneState::Play:	sceneEditor->OnScenePause();	return true;
+						case SceneState::Pause:	sceneEditor->OnSceneResume();	return true;
 					}
 				}
 				// Toggle stop
 				case Key::Escape:
 				{
-					if (mainEditor->GetSceneState() > SceneState::Edit)
+					if (sceneEditor->GetSceneState() > SceneState::Edit)
 					{
-						mainEditor->OnSceneStop();
+						sceneEditor->OnSceneStop();
 						return true;
 					}
 					break;
@@ -210,12 +210,12 @@ namespace ZeoEngine {
 				}
 				case Key::Delete:
 				{
-					EditorBase* owningEditor = GetOwningEditor();
-					Entity selectedEntity = owningEditor->GetContextEntity();
+					auto sceneEditor = GetContextEditor();
+					Entity selectedEntity = sceneEditor->GetContextEntity();
 					if (selectedEntity)
 					{
-						owningEditor->GetScene()->DestroyEntity(selectedEntity);
-						owningEditor->SetContextEntity({});
+						sceneEditor->GetScene()->DestroyEntity(selectedEntity);
+						sceneEditor->SetContextEntity({});
 						return true;
 					}
 					break;
@@ -232,7 +232,7 @@ namespace ZeoEngine {
 			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
 			(!m_bGizmoVisible || (m_bGizmoVisible && !ImGuizmo::IsOver())))
 		{
-			GetOwningEditor()->SetContextEntity(m_HoveredEntity);
+			GetContextEditor()->SetContextEntity(m_HoveredEntity);
 		}
 
 		return false;
@@ -247,7 +247,7 @@ namespace ZeoEngine {
 		if (mx >= 0.0f && my >= 0.0f && mx < viewportSize.x && my < viewportSize.y)
 		{
 			int32_t pixel = frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my));
-			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetOwningEditor()->GetScene().get());
+			m_HoveredEntity = pixel == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel), GetContextEditor()->GetScene().get());
 
 			auto& Stats = Renderer2D::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;

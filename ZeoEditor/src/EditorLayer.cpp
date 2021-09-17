@@ -1,6 +1,8 @@
 #include "EditorLayer.h"
 
 #include "Core/EditorManager.h"
+#include "Editors/SceneEditor.h"
+#include "Core/EditorTypes.h"
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
@@ -21,7 +23,7 @@ namespace ZeoEngine {
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		EditorManager::Get().CreateEditor(EditorType::SceneEditor);
+		EditorManager::Get().CreateEditor<SceneEditor>(SCENE_EDITOR);
 		
 	}
 

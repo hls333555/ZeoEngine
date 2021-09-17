@@ -1,26 +1,32 @@
-#include "Dockspaces/MainDockspace.h"
+#include "EditorUIRenderers/SceneEditorUIRenderer.h"
 
 #include <imgui_internal.h>
-#include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Utils/EditorUtils.h"
+#include "Panels/SceneViewPanel.h"
+#include "Panels/SceneOutlinePanel.h"
+#include "Panels/InspectorPanels.h"
+#include "Panels/ContentBrowserPanel.h"
+#include "Panels/ConsolePanel.h"
+#include "Panels/StatsPanel.h"
+#include "Panels/PreferencesPanel.h"
+#include "Panels/AboutPanel.h"
 
 namespace ZeoEngine {
 
-	void MainDockspace::OnAttach()
+	void SceneEditorUIRenderer::OnAttach()
 	{
-		DockspaceBase::OnAttach();
+		EditorUIRendererBase::OnAttach();
 
 		m_DockspaceSpec.WindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
 		m_DockspaceSpec.WindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-		CreatePanel(PanelType::GameView);
-		CreatePanel(PanelType::SceneOutline);
-		CreatePanel(PanelType::EntityInspector);
-		CreatePanel(PanelType::ContentBrowser);
-		CreatePanel(PanelType::Console);
+		CreatePanel<SceneViewPanel>(SCENE_VIEW);
+		CreatePanel<SceneOutlinePanel>(SCENE_OUTLINE);
+		CreatePanel<EntityInspectorPanel>(ENTITY_INSPECTOR);
+		CreatePanel<ContentBrowserPanel>(CONTENT_BROWSER);
+		CreatePanel<ConsolePanel>(CONSOLE);
 
 		CreateMenu("File")
 			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New Scene", "CTRL+N")
@@ -36,30 +42,22 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_Cut>(ICON_FA_CUT "  Cut", "CTRL+X");
 
 		CreateMenu("Window")
-			.MenuItem<MenuItem_TogglePanel>(PanelType::GameView)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::SceneOutline)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::EntityInspector)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::ContentBrowser)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::Console)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::Stats)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::Preferences)
+			.MenuItem<MenuItem_TogglePanel<SceneViewPanel>>(SCENE_VIEW)
+			.MenuItem<MenuItem_TogglePanel<SceneOutlinePanel>>(SCENE_OUTLINE)
+			.MenuItem<MenuItem_TogglePanel<EntityInspectorPanel>>(ENTITY_INSPECTOR)
+			.MenuItem<MenuItem_TogglePanel<ContentBrowserPanel>>(CONTENT_BROWSER)
+			.MenuItem<MenuItem_TogglePanel<ConsolePanel>>(CONSOLE)
+			.MenuItem<MenuItem_TogglePanel<StatsPanel>>(STATS)
+			.MenuItem<MenuItem_TogglePanel<PreferencesPanel>>(PREFERENCES)
 			.MenuItem<MenuItem_Seperator>()
 			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");
 
 		CreateMenu("Help")
-			.MenuItem<MenuItem_TogglePanel>(PanelType::About);
+			.MenuItem<MenuItem_TogglePanel<AboutPanel>>(ABOUT);
 		
 	}
 
-	void MainDockspace::PreRenderDockspace()
-	{
-		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(mainViewport->WorkPos);
-		ImGui::SetNextWindowSize(mainViewport->WorkSize);
-		ImGui::SetNextWindowViewport(mainViewport->ID);
-	}
-
-	void MainDockspace::BuildDockWindows(ImGuiID dockspaceID)
+	void SceneEditorUIRenderer::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.2f, nullptr, &dockLeft);
@@ -72,11 +70,11 @@ namespace ZeoEngine {
 		ImGuiID dockLeftDownRight;
 		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.3f, nullptr, &dockLeftDownRight);
 
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::GameView), dockLeftUpRight);
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::SceneOutline), dockRightUp);
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::EntityInspector), dockRightDown);
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ContentBrowser), dockLeftDownLeft);
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::Console), dockLeftDownRight);
+		ImGui::DockBuilderDockWindow(SCENE_VIEW, dockLeftUpRight);
+		ImGui::DockBuilderDockWindow(SCENE_OUTLINE, dockRightUp);
+		ImGui::DockBuilderDockWindow(ENTITY_INSPECTOR, dockRightDown);
+		ImGui::DockBuilderDockWindow(CONTENT_BROWSER, dockLeftDownLeft);
+		ImGui::DockBuilderDockWindow(CONSOLE, dockLeftDownRight);
 	}
 
 }

@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		ViewPanelBase::OnAttach();
 
 		CreatePreviewParticle();
-		GetOwningEditor()->m_PostSceneCreate.connect<&ParticleViewPanel::CreatePreviewParticle>(this);
+		GetContextEditor()->m_PostSceneCreate.connect<&ParticleViewPanel::CreatePreviewParticle>(this);
 	}
 
 	void ParticleViewPanel::ProcessRender()
@@ -45,9 +45,9 @@ namespace ZeoEngine {
 
 	void ParticleViewPanel::CreatePreviewParticle(bool bIsFromOpen)
 	{
-		m_PreviewParticleEntity = GetOwningEditor()->GetScene()->CreateEntity("Preview Particle", true);
+		m_PreviewParticleEntity = GetContextEditor()->GetScene()->CreateEntity("Preview Particle", true);
 		m_PreviewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
-		GetOwningEditor()->SetContextEntity(m_PreviewParticleEntity);
+		GetContextEditor()->SetContextEntity(m_PreviewParticleEntity);
 		if (!bIsFromOpen)
 		{
 			CreateDefaultParticleSystem();

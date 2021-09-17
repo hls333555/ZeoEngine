@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	class EditorScene : public Scene
 	{
 	public:
-		EditorScene();
+		explicit EditorScene(const Ref<SceneEditor>& sceneEditor);
 		virtual ~EditorScene();
 
 		virtual void OnUpdate(DeltaTime dt) override;
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		Ref<RenderSystem> m_RenderSystem;
 		Ref<NativeScriptSystem> m_NativeScriptSystem;
 
-		SceneEditor* m_SceneEditor = nullptr;
+		Ref<SceneEditor> m_SceneEditor;
 	};
 
 }

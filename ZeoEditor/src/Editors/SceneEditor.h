@@ -26,6 +26,8 @@ namespace ZeoEngine {
 		SceneState GetSceneState() const { return m_SceneState; }
 
 	private:
+		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual void PostSceneCreate(bool bIsFromLoad) override;
 
 		void OnScenePlay();

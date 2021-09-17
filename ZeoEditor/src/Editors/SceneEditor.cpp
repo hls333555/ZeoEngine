@@ -1,6 +1,7 @@
 #include "Editors/SceneEditor.h"
 
-#include "Engine/GameFramework/Scene.h"
+#include "EditorUIRenderers/SceneEditorUIRenderer.h"
+#include "Scenes/EditorScene.h"
 
 namespace ZeoEngine {
 
@@ -14,6 +15,16 @@ namespace ZeoEngine {
 	std::string SceneEditor::GetAssetPath() const
 	{
 		return m_SceneAsset ? m_SceneAsset->GetPath() : "";
+	}
+
+	Ref<EditorUIRendererBase> SceneEditor::CreateEditorUIRenderer()
+	{
+		return CreateRef<SceneEditorUIRenderer>(SharedFromBase<SceneEditor>());
+	}
+
+	Ref<Scene> SceneEditor::CreateScene()
+	{
+		return CreateRef<EditorScene>(SharedFromBase<SceneEditor>());
 	}
 
 	void SceneEditor::PostSceneCreate(bool bIsFromLoad)

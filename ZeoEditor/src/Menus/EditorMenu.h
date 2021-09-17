@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "Engine/Core/Core.h"
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
@@ -12,14 +13,10 @@ namespace ZeoEngine {
 
 	class EditorMenu
 	{
-		friend class MenuManager;
-
-	private:
-		EditorMenu() = delete;
-		EditorMenu(const std::string& menuName, EditorBase* owningEditor);
-		~EditorMenu();
-
 	public:
+		EditorMenu() = delete;
+		EditorMenu(const std::string& menuName, const Ref<EditorBase>& contextEditor);
+
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
@@ -28,7 +25,7 @@ namespace ZeoEngine {
 		template<typename T, typename ... Args>
 		EditorMenu& MenuItem(Args&& ... args)
 		{
-			T* menuItem = new T(m_OwningEditor, std::forward<Args>(args)...);
+			Ref<T> menuItem = CreateRef<T>(m_ContextEditor, std::forward<Args>(args)...);
 			m_MenuItems.emplace_back(menuItem);
 			return *this;
 		}
@@ -38,9 +35,9 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_MenuName;
-		EditorBase* m_OwningEditor = nullptr;
+		Ref<EditorBase> m_ContextEditor;
 		bool m_bEnabled = true;
-		std::vector<MenuItemBase*> m_MenuItems;
+		std::vector<Ref<MenuItemBase>> m_MenuItems;
 	};
 
 }

@@ -3,19 +3,18 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Core/EditorManager.h"
+#include "Core/EditorTypes.h"
 #include "Editors/SceneEditor.h"
 
 namespace ZeoEngine {
 
-	EditorScene::EditorScene()
+	EditorScene::EditorScene(const Ref<SceneEditor>& sceneEditor)
+		: m_SceneEditor(sceneEditor)
 	{
 		m_RenderSystem = CreateRef<RenderSystem>(this);
 		m_RenderSystem->OnCreate();
 		m_NativeScriptSystem = CreateRef<NativeScriptSystem>(this);
 		m_NativeScriptSystem->OnCreate();
-
-		m_SceneEditor = dynamic_cast<SceneEditor*>(EditorManager::Get().GetEditor(EditorType::SceneEditor));
-		ZE_CORE_ASSERT(m_SceneEditor);
 	}
 
 	EditorScene::~EditorScene()

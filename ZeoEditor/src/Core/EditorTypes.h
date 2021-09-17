@@ -1,35 +1,24 @@
 #pragma once
 
+#include <IconsFontAwesome5.h>
+
 #include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {
 
-	enum class EditorType
-	{
-		NONE,
+#define SCENE_EDITOR			"Scene Editor"
+#define PARTICLE_EDITOR			ICON_FA_FIRE "  Particle Editor"
 
-		SceneEditor,
-		ParticleEditor,
-	};
-
-	enum class PanelType
-	{
-		NONE,
-
-		// Main editor windows
-		GameView,
-		SceneOutline,
-		EntityInspector,
-		ContentBrowser,
-		Console,
-		Stats,
-		Preferences,
-		About,
-
-		// Particle editor windows
-		ParticleView,
-		ParticleInspector,
-	};
+#define SCENE_VIEW				ICON_FA_PLAY_CIRCLE "  Scene View"
+#define SCENE_OUTLINE			ICON_FA_SITEMAP "  Scene Outline"
+#define ENTITY_INSPECTOR		ICON_FA_INFO_CIRCLE "  Entity Inspector"
+#define CONTENT_BROWSER			ICON_FA_FOLDER "  Content Browser"
+#define CONSOLE					ICON_FA_TERMINAL "  Console"
+#define STATS					ICON_FA_CHART_PIE "  Stats"
+#define PREFERENCES				ICON_FA_COGS "  Preferences"
+#define ABOUT					ICON_FA_QUESTION_CIRCLE "  About"
+#define PARTICLE_VIEW			ICON_FA_PLAY_CIRCLE "  Particle View"
+#define PARTICLE_INSPECTOR		ICON_FA_INFO_CIRCLE "  Particle Inspector"
 
 	struct DockspaceSpec
 	{

@@ -2,7 +2,8 @@
 
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Core/EditorManager.h"
-#include "Editors/EditorBase.h"
+#include "Core/EditorTypes.h"
+#include "Editors/ParticleEditor.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
@@ -58,7 +59,7 @@ namespace ZeoEngine {
 
 	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().GetEditor(EditorType::SceneEditor)->LoadAsset(path);
+		EditorManager::Get().GetEditor(SCENE_EDITOR)->LoadAsset(path);
 	}
 
 	void SceneAssetActions::ReloadAsset(const std::string& path) const
@@ -77,7 +78,7 @@ namespace ZeoEngine {
 
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().OpenEditor(EditorType::ParticleEditor)->LoadAsset(path);
+		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR)->LoadAsset(path);
 	}
 
 	void ParticleAssetActions::ReloadAsset(const std::string& path) const

@@ -1,21 +1,19 @@
 #pragma once
 
 #include "Core/EditorTypes.h"
+#include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
 	class EditorBase;
-	class PanelBase;
 
 	class PanelBase
 	{
-		friend class PanelManager;
-
-	private:
+	public:
 		PanelBase() = delete;
-		PanelBase(PanelType type, EditorBase* owningEditor);
+		PanelBase(const char* panelName, const Ref<EditorBase>& contextEditor);
 	protected:
 		virtual ~PanelBase() = default;
 
@@ -27,15 +25,15 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		template<typename T = EditorBase>
-		T* GetOwningEditor()
+		Ref<T> GetContextEditor()
 		{
 			if constexpr (std::is_same<T, EditorBase>::value)
 			{
-				return m_OwningEditor;
+				return m_ContextEditor;
 			}
 			else
 			{
-				return dynamic_cast<T*>(m_OwningEditor);
+				return std::dynamic_pointer_cast<T>(m_ContextEditor);
 			}
 		}
 
@@ -54,8 +52,8 @@ namespace ZeoEngine {
 		PanelSpec m_PanelSpec;
 
 	private:
-		PanelType m_PanelType;
-		EditorBase* m_OwningEditor = nullptr;
+		std::string m_PanelName;
+		Ref<EditorBase> m_ContextEditor;
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;

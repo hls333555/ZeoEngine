@@ -1,21 +1,15 @@
 #include "Menus/EditorMenu.h"
 
+#include <imgui.h>
+
 #include "Menus/EditorMenuItems.h"
 
 namespace ZeoEngine {
 
-	EditorMenu::EditorMenu(const std::string& menuName, EditorBase* owningEditor)
+	EditorMenu::EditorMenu(const std::string& menuName, const Ref<EditorBase>& contextEditor)
 		: m_MenuName(menuName)
-		, m_OwningEditor(owningEditor)
+		, m_ContextEditor(contextEditor)
 	{
-	}
-
-	EditorMenu::~EditorMenu()
-	{
-		for (auto* menuItem : m_MenuItems)
-		{
-			delete menuItem;
-		}
 	}
 
 	void EditorMenu::OnImGuiRender()
@@ -30,7 +24,7 @@ namespace ZeoEngine {
 
 	void EditorMenu::OnEvent(Event& e)
 	{
-		for (auto* menuItem : m_MenuItems)
+		for (const auto& menuItem : m_MenuItems)
 		{
 			menuItem->OnEvent(e);
 		}
@@ -38,7 +32,7 @@ namespace ZeoEngine {
 
 	void EditorMenu::RenderMenuItems()
 	{
-		for (auto* menuItem : m_MenuItems)
+		for (const auto& menuItem : m_MenuItems)
 		{
 			menuItem->OnImGuiRender();
 		}
