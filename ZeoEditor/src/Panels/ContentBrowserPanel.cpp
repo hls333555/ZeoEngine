@@ -5,7 +5,6 @@
 #include "Engine/Debug/BenchmarkTimer.h"
 #include "Engine/Core/Assert.h"
 #include "Engine/Utils/PathUtils.h"
-#include "Utils/EditorUtils.h"
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/AssetFactory.h"
 #include "Engine/Core/AssetActions.h"

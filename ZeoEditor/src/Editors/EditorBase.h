@@ -2,27 +2,32 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Core/EditorTypes.h"
-#include "Engine/Core/EngineTypes.h"
 #include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
 	class EditorCamera;
-	class DockspaceBase;
-	class IAsset;
+	class EditorUIRendererBase;
 	class Scene;
 	class FrameBuffer;
 
-	class EditorBase
+	class EditorBase : public std::enable_shared_from_this<EditorBase>
 	{
-		friend class EditorManager;
-
-	private:
+	public:
 		EditorBase() = delete;
-		explicit EditorBase(EditorType type);
+		explicit EditorBase(const char* editorName);
+
 	protected:
-		virtual ~EditorBase();
+		template<typename Derived>
+		Ref<Derived> SharedFromBase()
+		{
+			return std::static_pointer_cast<Derived>(shared_from_this());
+		}
+		template<typename Derived>
+		Ref<const Derived> SharedFromBase() const
+		{
+			return std::static_pointer_cast<const Derived>(shared_from_this());
+		}
 
 	public:
 		virtual void OnAttach();
@@ -31,7 +36,7 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		EditorType GetEditorType() const { return m_EditorType; }
+		const std::string& GetEditorName() const { return m_EditorName; }
 
 		bool* GetShowPtr() { return &m_bShow; }
 
@@ -41,7 +46,7 @@ namespace ZeoEngine {
 
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
-		DockspaceBase* GetDockspace() const { return m_Dockspace; }
+		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
@@ -61,15 +66,13 @@ namespace ZeoEngine {
 		virtual std::string GetAssetPath() const = 0;
 
 	private:
+		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
+		virtual Ref<Scene> CreateScene() = 0;
 		virtual void PostSceneCreate(bool bIsFromLoad) {}
 
 		virtual AssetTypeId GetAssetTypeId() const = 0;
 		virtual void LoadAssetImpl(const std::string& path) = 0;
 		virtual void SaveAssetImpl(const std::string& path) = 0;
-
-		void CreateDockspace();
-
-		void CreateScene();
 
 		void CreateFrameBuffer();
 		void BeginFrameBuffer();
@@ -95,14 +98,14 @@ namespace ZeoEngine {
 		entt::sink<void(const Ref<FrameBuffer>&)> m_PostSceneRender{ m_PostSceneRenderDel };
 
 	private:
-		EditorType m_EditorType;
+		std::string m_EditorName;
 
 		bool m_bShow = true;
 
 		Entity m_ContextEntity;
 		EditorCamera* m_EditorCamera = nullptr;
 
-		DockspaceBase* m_Dockspace = nullptr;
+		Ref<EditorUIRendererBase> m_EditorUIRenderer;
 		Ref<Scene> m_Scene;
 		Ref<FrameBuffer> m_FBO;
 

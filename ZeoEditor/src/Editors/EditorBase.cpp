@@ -1,9 +1,6 @@
 #include "Editors/EditorBase.h"
 
-#include "Dockspaces/MainEditorDockspace.h"
-#include "Dockspaces/ParticleEditorDockspace.h"
-#include "Scenes/MainEditorScene.h"
-#include "Scenes/ParticleEditorScene.h"
+#include "EditorUIRenderers/EditorUIRendererBase.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "Engine/Renderer/RenderCommand.h"
@@ -16,28 +13,24 @@
 
 namespace ZeoEngine {
 
-	EditorBase::EditorBase(EditorType type)
-		: m_EditorType(type)
+	EditorBase::EditorBase(const char* editorName)
+		: m_EditorName(editorName)
 	{
-	}
-
-	EditorBase::~EditorBase()
-	{
-		delete m_Dockspace;
 	}
 
 	void EditorBase::OnAttach()
 	{
-		CreateScene();
 		CreateFrameBuffer();
-		CreateDockspace();
+		m_Scene = CreateScene();
+		m_EditorUIRenderer = CreateEditorUIRenderer();
+		m_EditorUIRenderer->OnAttach();
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)
 	{
 		if (!m_bShow) return;
 
-		m_Dockspace->OnUpdate(dt);
+		m_EditorUIRenderer->OnUpdate(dt);
 
 		m_Scene->OnUpdate(dt);
 
@@ -66,14 +59,14 @@ namespace ZeoEngine {
 	{
 		if (!m_bShow) return;
 
-		m_Dockspace->OnImGuiRender();
+		m_EditorUIRenderer->OnImGuiRender();
 	}
 
 	void EditorBase::OnEvent(Event& e)
 	{
 		if (!m_bShow) return;
 
-		m_Dockspace->OnEvent(e);
+		m_EditorUIRenderer->OnEvent(e);
 
 		if (!m_bBlockSceneEvents)
 		{
@@ -94,7 +87,7 @@ namespace ZeoEngine {
 	void EditorBase::NewAsset(bool bIsFromLoad)
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
-		CreateScene();
+		m_Scene = CreateScene();
 		PostSceneCreate(bIsFromLoad);
 		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
@@ -147,28 +140,6 @@ namespace ZeoEngine {
 		if (!filePath) return;
 
 		SaveAsset(*filePath);
-	}
-
-	void EditorBase::CreateDockspace()
-	{
-		switch (m_EditorType)
-		{
-			case EditorType::MainEditor:		m_Dockspace = new MainEditorDockspace(this); break;
-			case EditorType::ParticleEditor:	m_Dockspace = new ParticleEditorDockspace(this); break;
-			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return;
-		}
-
-		m_Dockspace->OnAttach();
-	}
-
-	void EditorBase::CreateScene()
-	{
-		switch (m_EditorType)
-		{
-			case EditorType::MainEditor:		m_Scene = CreateRef<MainEditorScene>(); return;
-			case EditorType::ParticleEditor:	m_Scene = CreateRef<ParticleEditorScene>(); return;
-			default:							ZE_CORE_ASSERT(false, "Unknown EditorType!"); return;
-		}
 	}
 
 	void EditorBase::CreateFrameBuffer()

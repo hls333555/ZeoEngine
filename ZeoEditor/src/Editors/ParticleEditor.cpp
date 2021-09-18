@@ -1,6 +1,8 @@
 #include "Editors/ParticleEditor.h"
 
 #include "Engine/GameFramework/Components.h"
+#include "EditorUIRenderers/ParticleEditorUIRenderer.h"
+#include "Scenes/ParticleScene.h"
 
 namespace ZeoEngine {
 
@@ -21,6 +23,16 @@ namespace ZeoEngine {
 	std::string ParticleEditor::GetAssetPath() const
 	{
 		return GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Template->GetPath();
+	}
+
+	Ref<EditorUIRendererBase> ParticleEditor::CreateEditorUIRenderer()
+	{
+		return CreateRef<ParticleEditorUIRenderer>(shared_from_this());
+	}
+
+	Ref<Scene> ParticleEditor::CreateScene()
+	{
+		return CreateRef<ParticleScene>();
 	}
 
 	void ParticleEditor::LoadAssetImpl(const std::string& filePath)

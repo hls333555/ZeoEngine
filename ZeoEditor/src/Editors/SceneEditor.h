@@ -12,9 +12,9 @@ namespace ZeoEngine {
 		Play = 1, Pause = 2,
 	};
 
-	class MainEditor : public EditorBase
+	class SceneEditor : public EditorBase
 	{
-		friend class GameViewportPanel;
+		friend class SceneViewPanel;
 
 	public:
 		using EditorBase::EditorBase;
@@ -26,6 +26,8 @@ namespace ZeoEngine {
 		SceneState GetSceneState() const { return m_SceneState; }
 
 	private:
+		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual void PostSceneCreate(bool bIsFromLoad) override;
 
 		void OnScenePlay();

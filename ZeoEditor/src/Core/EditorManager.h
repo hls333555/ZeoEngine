@@ -3,7 +3,6 @@
 #include <unordered_map>
 
 #include "Engine/Core/Core.h"
-#include "Core/EditorTypes.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 
@@ -30,14 +29,57 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		EditorBase* CreateEditor(EditorType type);
-		EditorBase* OpenEditor(EditorType type);
-		EditorBase* GetEditor(EditorType type);
+		template<typename T>
+		Ref<T> CreateEditor(const char* editorName)
+		{
+			if (GetEditor(editorName))
+			{
+				ZE_CORE_ERROR("Failed to create {0}! Editor already exists!", editorName);
+				return {};
+			}
+
+			ZE_CORE_INFO("Creating editor: {0}", editorName);
+
+			Ref<T> editor = CreateRef<T>(editorName);
+			m_Editors.emplace(editorName, editor);
+			editor->OnAttach(); // Call this after emplacement as scene class should be able to get editor instance on construction
+			return editor;
+		}
+
+		template<typename T>
+		Ref<EditorBase> OpenEditor(const char* editorName)
+		{
+			auto editor = GetEditor(editorName);
+			if (!editor)
+			{
+				editor = CreateEditor<T>(editorName);
+			}
+
+			editor->Open();
+			return editor;
+		}
+
+		template<typename T = EditorBase>
+		Ref<T> GetEditor(const char* editorName) const
+		{
+			auto it = m_Editors.find(editorName);
+			if (it == m_Editors.end()) return {};
+
+			Ref<EditorBase> editor = it->second;
+			if constexpr (std::is_same<T, EditorBase>::value)
+			{
+				return editor;
+			}
+			else
+			{
+				return std::dynamic_pointer_cast<T>(editor);
+			}
+		}
 
 		void RebuildLayoutForAllEditors();
 
 	private:
-		std::unordered_map<EditorType, EditorBase*> m_Editors;
+		std::unordered_map<std::string, Ref<EditorBase>> m_Editors;
 	};
 
 }

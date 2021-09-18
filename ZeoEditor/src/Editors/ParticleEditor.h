@@ -4,8 +4,6 @@
 
 namespace ZeoEngine {
 
-	class ParticleTemplateAsset;
-
 	class ParticleEditor : public EditorBase
 	{
 	public:
@@ -16,6 +14,9 @@ namespace ZeoEngine {
 		virtual std::string GetAssetPath() const override;
 
 	private:
+		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
+		virtual Ref<Scene> CreateScene() override;
+
 		virtual AssetTypeId GetAssetTypeId() const override;
 		virtual void LoadAssetImpl(const std::string& path) override;
 		virtual void SaveAssetImpl(const std::string& path) override;

@@ -1,20 +1,20 @@
-#include "Dockspaces/ParticleEditorDockspace.h"
+#include "EditorUIRenderers/ParticleEditorUIRenderer.h"
 
 #include <imgui_internal.h>
-#include <IconsFontAwesome5.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Utils/EditorUtils.h"
+#include "Panels/ParticleViewPanel.h"
+#include "Panels/InspectorPanels.h"
 
 namespace ZeoEngine {
 
-	void ParticleEditorDockspace::OnAttach()
+	void ParticleEditorUIRenderer::OnAttach()
 	{
-		DockspaceBase::OnAttach();
+		EditorUIRendererBase::OnAttach();
 
-		CreatePanel(PanelType::ParticleView);
-		CreatePanel(PanelType::ParticleInspector);
+		CreatePanel<ParticleViewPanel>(PARTICLE_VIEW);
+		CreatePanel<ParticleInspectorPanel>(PARTICLE_INSPECTOR);
 
 		CreateMenu("File")
 			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New particle template", "CTRL+N")
@@ -28,18 +28,18 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_Snapshot>(ICON_FA_CAMERA "  Snapshot");
 
 		CreateMenu("Window")
-			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleView)
-			.MenuItem<MenuItem_TogglePanel>(PanelType::ParticleInspector);
+			.MenuItem<MenuItem_TogglePanel<ParticleViewPanel>>(PARTICLE_VIEW)
+			.MenuItem<MenuItem_TogglePanel<ParticleInspectorPanel>>(PARTICLE_INSPECTOR);
 		
 	}
 
-	void ParticleEditorDockspace::BuildDockWindows(ImGuiID dockspaceID)
+	void ParticleEditorUIRenderer::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ParticleView), dockLeft);
-		ImGui::DockBuilderDockWindow(EditorUtils::GetPanelName(PanelType::ParticleInspector), dockRight);
+		ImGui::DockBuilderDockWindow(PARTICLE_VIEW, dockLeft);
+		ImGui::DockBuilderDockWindow(PARTICLE_INSPECTOR, dockRight);
 	}
 
 }
