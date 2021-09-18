@@ -7,7 +7,7 @@ namespace ZeoEngine {
 
 	ParticleScene::ParticleScene()
 	{
-		m_ParticlePreviewRenderSystem = CreateRef<ParticlePreviewRenderSystem>(this);
+		m_ParticlePreviewRenderSystem = CreateScope<ParticlePreviewRenderSystem>(this);
 		m_ParticlePreviewRenderSystem->OnCreate();
 	}
 

@@ -18,7 +18,7 @@ namespace ZeoEngine {
 		virtual void PostLoad() override;
 
 	private:
-		Ref<ParticlePreviewRenderSystem> m_ParticlePreviewRenderSystem;
+		Scope<ParticlePreviewRenderSystem> m_ParticlePreviewRenderSystem;
 	};
 
 }

@@ -6,6 +6,7 @@ namespace ZeoEngine {
 
 	class RenderSystem;
 	class NativeScriptSystem;
+	class PhysicsSystem;
 	class SceneEditor;
 
 	class EditorScene : public Scene
@@ -18,6 +19,9 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) override;
 		virtual void OnEvent(Event& e) override;
 
+		void OnRuntimeStart();
+		void OnRuntimeStop();
+
 		virtual void PostLoad() override;
 
 	private:
@@ -27,8 +31,9 @@ namespace ZeoEngine {
 		void OnRenderRuntime();
 
 	private:
-		Ref<RenderSystem> m_RenderSystem;
-		Ref<NativeScriptSystem> m_NativeScriptSystem;
+		Scope<RenderSystem> m_RenderSystem;
+		Scope<NativeScriptSystem> m_NativeScriptSystem;
+		Scope<PhysicsSystem> m_PhysicsSystem;
 
 		Ref<SceneEditor> m_SceneEditor;
 	};

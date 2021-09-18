@@ -3,6 +3,8 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/GameFramework/Scene.h"
 
+class b2World;
+
 namespace ZeoEngine {
 
 	template<typename... Component>
@@ -59,6 +61,20 @@ namespace ZeoEngine {
 
 		virtual void OnUpdate(DeltaTime dt) override;
 		void OnEvent(Event& e);
+	};
+
+	class PhysicsSystem : public ISystem
+	{
+	public:
+		using ISystem::ISystem;
+
+		virtual void OnUpdate(DeltaTime dt) override;
+
+		void OnRuntimeStart();
+		void OnRuntimeStop();
+
+	private:
+		b2World* m_PhysicsWorld = nullptr;
 	};
 
 }

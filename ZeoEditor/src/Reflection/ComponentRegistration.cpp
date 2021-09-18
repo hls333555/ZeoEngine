@@ -81,6 +81,23 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(ParticleSystemPreviewComponent, Texture, SetTexture, GetTexture, ZPROP(Category, ZTEXT("Renderer")), ZPROP(Tooltip, ZTEXT("粒子的材质贴图")))
 			ZDATA_SETTER_GETTER(ParticleSystemPreviewComponent, SubImageSize, SetSubImageSize, GetSubImageSize, ZPROP(Category, ZTEXT("Renderer")), ZPROP(Tooltip, ZTEXT("决定如何分割贴图来用于UV动画。x为列数，y为行数")), ZPROP(ClampMin, 0.0f))
 			ZDATA_SETTER_GETTER(ParticleSystemPreviewComponent, MaxParticles, SetMaxParticles, GetMaxParticles, ZPROP(Category, ZTEXT("Emitter")), ZPROP(Tooltip, ZTEXT("最多生成的粒子数")), ZPROP(ClampMin, 0));
+
+		ZENUM(Rigidbody2DComponent::BodyType)
+			ZENUM_DATA(Rigidbody2DComponent::BodyType, Static, ZPROP(Tooltip, ZTEXT("静态")))
+			ZENUM_DATA(Rigidbody2DComponent::BodyType, Dynamic, ZPROP(Tooltip, ZTEXT("动态")))
+			ZENUM_DATA(Rigidbody2DComponent::BodyType, Kinematic, ZPROP(Tooltip, ZTEXT("运动学")));
+
+		ZCOMPONENT(Rigidbody2DComponent, ZPROP(DisplayName, ZTEXT("Rigidbody 2D")), ZPROP(Tooltip, ZTEXT("2D刚体组件")), ZPROP(Category, ZTEXT("Physics")))
+			ZDATA(Rigidbody2DComponent, Type, ZPROP(Tooltip, ZTEXT("刚体类型")))
+			ZDATA(Rigidbody2DComponent, bFixedRotation);
+
+		ZCOMPONENT(BoxCollider2DComponent, ZPROP(DisplayName, ZTEXT("Box Collider 2D")), ZPROP(Tooltip, ZTEXT("2D碰撞组件")), ZPROP(Category, ZTEXT("Physics")))
+			ZDATA(BoxCollider2DComponent, Offset)
+			ZDATA(BoxCollider2DComponent, Size, ZPROP(Tooltip, ZTEXT("碰撞大小，该值为缩放倍数")))
+			ZDATA(BoxCollider2DComponent, Density, ZPROP(Tooltip, ZTEXT("密度")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(BoxCollider2DComponent, Friction, ZPROP(Tooltip, ZTEXT("摩擦力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(BoxCollider2DComponent, Restitution, ZPROP(Tooltip, ZTEXT("弹力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(BoxCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 	}
 
 }

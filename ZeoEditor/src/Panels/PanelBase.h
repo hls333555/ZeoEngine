@@ -24,17 +24,11 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		template<typename T = EditorBase>
+		const Ref<EditorBase>& GetContextEditor() const { return m_ContextEditor; }
+		template<typename T>
 		Ref<T> GetContextEditor()
 		{
-			if constexpr (std::is_same<T, EditorBase>::value)
-			{
-				return m_ContextEditor;
-			}
-			else
-			{
-				return std::dynamic_pointer_cast<T>(m_ContextEditor);
-			}
+			return std::dynamic_pointer_cast<T>(m_ContextEditor);
 		}
 
 		bool* GetShowPtr() { return &m_bShow; }

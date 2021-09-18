@@ -39,11 +39,13 @@ namespace ZeoEngine {
 	void SceneEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		GetScene<EditorScene>()->OnRuntimeStart();
 	}
 
 	void SceneEditor::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		GetScene<EditorScene>()->OnRuntimeStop();
 	}
 
 	void SceneEditor::OnScenePause()

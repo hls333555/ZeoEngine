@@ -48,6 +48,11 @@ namespace ZeoEngine {
 
 		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
 		const Ref<Scene>& GetScene() const { return m_Scene; }
+		template<typename T>
+		Ref<T> GetScene()
+		{
+			return std::dynamic_pointer_cast<T>(m_Scene);
+		}
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
 		void Open();
