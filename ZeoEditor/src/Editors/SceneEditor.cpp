@@ -7,9 +7,12 @@ namespace ZeoEngine {
 
 	void SceneEditor::OnAttach()
 	{
-		EditorBase::OnAttach();
-
+		m_SceneAsset = SceneAsset::Create("");
+		// Bind delegates before scene creation
 		m_PreSceneCreate.connect<&SceneEditor::ClearSelectedEntity>(this);
+		m_PostSceneCreate.connect<&SceneEditor::UpdateSceneRef>(this);
+
+		EditorBase::OnAttach();
 	}
 
 	std::string SceneEditor::GetAssetPath() const
@@ -27,12 +30,11 @@ namespace ZeoEngine {
 		return CreateRef<EditorScene>(SharedFromBase<SceneEditor>());
 	}
 
-	void SceneEditor::PostSceneCreate(bool bIsFromLoad)
+	void SceneEditor::UpdateSceneRef(bool bIsFromLoad)
 	{
-		if (m_SceneAsset)
+		if (!bIsFromLoad)
 		{
-			m_SceneAsset->ClearScene();
-			m_SceneAsset = {};
+			m_SceneAsset->UpdateScene(GetScene());
 		}
 	}
 
@@ -67,6 +69,7 @@ namespace ZeoEngine {
 		OnSceneStop();
 		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
 		m_SceneAsset->UpdateScene(GetScene());
+		m_SceneAsset->Deserialize();
 	}
 
 	void SceneEditor::SaveAssetImpl(const std::string& path)

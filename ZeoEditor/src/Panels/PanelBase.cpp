@@ -47,6 +47,12 @@ namespace ZeoEngine {
 	void PanelBase::Open()
 	{
 		m_bShow = true;
+		OnPanelOpen();
+	}
+
+	void PanelBase::Close()
+	{
+		m_bShow = false;
 	}
 
 }

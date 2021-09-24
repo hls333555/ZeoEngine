@@ -282,7 +282,7 @@ namespace ImGui {
 	void VSplitter(const char* str_id, ImVec2* size)
 	{
 		ImVec2 screen_pos = GetCursorScreenPos();
-		InvisibleButton(str_id, ImVec2(3, -1));
+		InvisibleButton(str_id, ImVec2(3, size->y == 0 ? -1 : size->y));
 		ImVec2 end_pos = screen_pos + GetItemRectSize();
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;

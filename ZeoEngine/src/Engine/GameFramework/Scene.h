@@ -62,8 +62,8 @@ namespace ZeoEngine {
 		static Ref<SceneAsset> Create(const std::string& path);
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
-		/** Update scene reference and deserialize scene data. */
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
+		/** Update scene referenece. */
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
 		/** Clear scene referenece. */
 		void ClearScene() { m_Scene.reset(); }
 

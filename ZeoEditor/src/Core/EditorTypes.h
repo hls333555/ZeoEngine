@@ -12,6 +12,8 @@ namespace ZeoEngine {
 #define SCENE_VIEW				ICON_FA_PLAY_CIRCLE "  Scene View"
 #define SCENE_OUTLINE			ICON_FA_SITEMAP "  Scene Outline"
 #define ENTITY_INSPECTOR		ICON_FA_INFO_CIRCLE "  Entity Inspector"
+#define OPEN_ASSET				ICON_FA_FOLDER "  Open Asset"
+#define SAVE_ASSET				ICON_FA_FOLDER "  Save Asset"
 #define CONTENT_BROWSER			ICON_FA_FOLDER "  Content Browser"
 #define CONSOLE					ICON_FA_TERMINAL "  Console"
 #define STATS					ICON_FA_CHART_PIE "  Stats"

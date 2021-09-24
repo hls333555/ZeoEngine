@@ -28,7 +28,7 @@ namespace ZeoEngine {
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
-		virtual void PostSceneCreate(bool bIsFromLoad) override;
+		void UpdateSceneRef(bool bIsFromLoad);
 
 		void OnScenePlay();
 		void OnSceneStop();

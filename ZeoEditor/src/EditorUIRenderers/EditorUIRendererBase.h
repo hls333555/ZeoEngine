@@ -16,6 +16,8 @@ namespace ZeoEngine {
 
 	class EditorUIRendererBase
 	{
+		friend EditorBase;
+
 	public:
 		EditorUIRendererBase() = delete;
 		explicit EditorUIRendererBase(const Ref<EditorBase>& contextEditor);
@@ -47,8 +49,8 @@ namespace ZeoEngine {
 	protected:
 		EditorMenu& CreateMenu(const char* menuName);
 
-		template<typename T>
-		Ref<T> CreatePanel(const char* panelName)
+		template<typename T, typename ... Args>
+		Ref<T> CreatePanel(const char* panelName, Args&& ... args)
 		{
 			if (GetPanel(panelName))
 			{
@@ -56,9 +58,10 @@ namespace ZeoEngine {
 				return {};
 			}
 
-			Ref<T> panel = CreateRef<T>(panelName, m_ContextEditor);
-			panel->OnAttach();
+			Ref<T> panel = CreateRef<T>(panelName, m_ContextEditor, std::forward<Args>(args)...);
 			m_Panels.emplace(panelName, panel);
+			panel->OnAttach();
+			panel->Open();
 			return panel;
 		}
 

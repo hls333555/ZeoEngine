@@ -68,7 +68,6 @@ namespace ZeoEngine {
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
 		virtual Ref<Scene> CreateScene() = 0;
-		virtual void PostSceneCreate(bool bIsFromLoad) {}
 
 		virtual AssetTypeId GetAssetTypeId() const = 0;
 		virtual void LoadAssetImpl(const std::string& path) = 0;

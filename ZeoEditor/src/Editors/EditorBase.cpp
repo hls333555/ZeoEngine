@@ -1,11 +1,12 @@
 #include "Editors/EditorBase.h"
 
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Panels/OpenAssetPanel.h"
+#include "Panels/SaveAssetPanel.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/EditorCamera.h"
-#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 
 #define FRAMEBUFFER_WIDTH 1280
@@ -21,7 +22,7 @@ namespace ZeoEngine {
 	void EditorBase::OnAttach()
 	{
 		CreateFrameBuffer();
-		m_Scene = CreateScene();
+		NewAsset(false);
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
 	}
@@ -88,16 +89,20 @@ namespace ZeoEngine {
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
 		m_Scene = CreateScene();
-		PostSceneCreate(bIsFromLoad);
 		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
 
 	void EditorBase::LoadAsset()
 	{
-		auto filePath = FileDialogs::OpenFile();
-		if (!filePath) return;
-
-		LoadAsset(*filePath);
+		auto openAssetPanel = m_EditorUIRenderer->GetPanel<OpenAssetPanel>(OPEN_ASSET);
+		if (!openAssetPanel)
+		{
+			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, SceneAsset::TypeId());
+		}
+		else
+		{
+			openAssetPanel->Open();
+		}
 	}
 
 	void EditorBase::LoadAsset(const std::string& path)
@@ -136,10 +141,15 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveAssetAs()
 	{
-		auto filePath = FileDialogs::SaveFile();
-		if (!filePath) return;
-
-		SaveAsset(*filePath);
+		auto saveAssetPanel = m_EditorUIRenderer->GetPanel<SaveAssetPanel>(SAVE_ASSET);
+		if (!saveAssetPanel)
+		{
+			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, SceneAsset::TypeId());
+		}
+		else
+		{
+			saveAssetPanel->Open();
+		}
 	}
 
 	void EditorBase::CreateFrameBuffer()
