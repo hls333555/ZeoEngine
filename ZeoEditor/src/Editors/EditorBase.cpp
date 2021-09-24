@@ -22,9 +22,9 @@ namespace ZeoEngine {
 	void EditorBase::OnAttach()
 	{
 		CreateFrameBuffer();
-		NewAsset(false);
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
+		NewAsset(false); // Create scene at last so that delegates bound beforehand will be called here
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)

@@ -11,7 +11,6 @@ namespace ZeoEngine {
 	{
 		ViewPanelBase::OnAttach();
 
-		CreatePreviewParticle();
 		GetContextEditor()->m_PostSceneCreate.connect<&ParticleViewPanel::CreatePreviewParticle>(this);
 	}
 
