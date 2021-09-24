@@ -68,7 +68,7 @@ namespace ZeoEngine {
 		ImGuiID dockLeftUpRight;
 		ImGuiID dockLeftUpLeft = ImGui::DockBuilderSplitNode(dockLeftUp, ImGuiDir_Left, 0.2f, nullptr, &dockLeftUpRight);
 		ImGuiID dockLeftDownRight;
-		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.3f, nullptr, &dockLeftDownRight);
+		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.5f, nullptr, &dockLeftDownRight);
 
 		ImGui::DockBuilderDockWindow(SCENE_VIEW, dockLeftUpRight);
 		ImGui::DockBuilderDockWindow(SCENE_OUTLINE, dockRightUp);

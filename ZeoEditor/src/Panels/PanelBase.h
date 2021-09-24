@@ -36,11 +36,14 @@ namespace ZeoEngine {
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
 
 		void Open();
+		void Close();
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
+
+		virtual void OnPanelOpen() {}
 
 	protected:
 		PanelSpec m_PanelSpec;

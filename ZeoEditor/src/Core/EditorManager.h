@@ -42,7 +42,8 @@ namespace ZeoEngine {
 
 			Ref<T> editor = CreateRef<T>(editorName);
 			m_Editors.emplace(editorName, editor);
-			editor->OnAttach(); // Call this after emplacement as scene class should be able to get editor instance on construction
+			editor->OnAttach();
+			editor->Open();
 			return editor;
 		}
 
