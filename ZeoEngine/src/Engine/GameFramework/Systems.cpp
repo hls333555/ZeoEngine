@@ -8,6 +8,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/GameFramework/ScriptableEntity.h"
 
 namespace ZeoEngine {
 

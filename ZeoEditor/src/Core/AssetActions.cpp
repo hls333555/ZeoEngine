@@ -74,7 +74,7 @@ namespace ZeoEngine {
 
 	void SceneAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().GetEditor(SCENE_EDITOR)->LoadAsset(path);
+		EditorManager::Get().GetEditor(SCENE_EDITOR)->LoadScene(path);
 	}
 
 	void SceneAssetActions::ReloadAsset(const std::string& path) const
@@ -93,7 +93,7 @@ namespace ZeoEngine {
 
 	void ParticleAssetActions::OpenAsset(const std::string& path) const
 	{
-		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR)->LoadAsset(path);
+		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR)->LoadScene(path);
 	}
 
 	void ParticleAssetActions::ReloadAsset(const std::string& path) const

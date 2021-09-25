@@ -24,9 +24,11 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
+		const std::string& GetPanelName() const { return m_PanelName; }
+
 		const Ref<EditorBase>& GetContextEditor() const { return m_ContextEditor; }
 		template<typename T>
-		Ref<T> GetContextEditor()
+		Ref<T> GetContextEditor() const
 		{
 			return std::dynamic_pointer_cast<T>(m_ContextEditor);
 		}
@@ -42,6 +44,8 @@ namespace ZeoEngine {
 		virtual void ProcessUpdate(DeltaTime dt) {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
+
+		virtual std::string GetPanelTitle() const { return m_PanelName; }
 
 		virtual void OnPanelOpen() {}
 

@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(PARTICLE_VIEW, dockLeft);
+		ImGui::DockBuilderDockWindow("###" PARTICLE_VIEW, dockLeft);
 		ImGui::DockBuilderDockWindow(PARTICLE_INSPECTOR, dockRight);
 	}
 

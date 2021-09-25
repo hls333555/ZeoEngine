@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		CreateFrameBuffer();
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
-		NewAsset(false); // Create scene at last so that delegates bound beforehand will be called here
+		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)
@@ -85,19 +85,19 @@ namespace ZeoEngine {
 		m_bShow = true;
 	}
 
-	void EditorBase::NewAsset(bool bIsFromLoad)
+	void EditorBase::NewScene(bool bIsFromLoad)
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
 		m_Scene = CreateScene();
 		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
 
-	void EditorBase::LoadAsset()
+	void EditorBase::LoadScene()
 	{
 		auto openAssetPanel = m_EditorUIRenderer->GetPanel<OpenAssetPanel>(OPEN_ASSET);
 		if (!openAssetPanel)
 		{
-			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, SceneAsset::TypeId());
+			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, GetAssetTypeId());
 		}
 		else
 		{
@@ -105,46 +105,46 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::LoadAsset(const std::string& path)
+	void EditorBase::LoadScene(const std::string& path)
 	{
 		BenchmarkTimer timer;
 
-		NewAsset(true);
-		LoadAssetImpl(path);
+		NewScene(true);
+		LoadAsset(path);
 		m_Scene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveAsset()
+	void EditorBase::SaveScene()
 	{
-		const std::string assetPath = GetAssetPath();
+		const std::string assetPath = GetAsset()->GetPath();
 		if (assetPath.empty())
 		{
-			SaveAssetAs();
+			SaveSceneAs();
 		}
 		else
 		{
-			SaveAsset(assetPath);
+			SaveScene(assetPath);
 		}
 	}
 
-	void EditorBase::SaveAsset(const std::string& path)
+	void EditorBase::SaveScene(const std::string& path)
 	{
 		BenchmarkTimer timer;
 
-		SaveAssetImpl(path);
+		SaveAsset(path);
 
 		ZE_CORE_WARN("Saving {0} took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveAssetAs()
+	void EditorBase::SaveSceneAs()
 	{
 		auto saveAssetPanel = m_EditorUIRenderer->GetPanel<SaveAssetPanel>(SAVE_ASSET);
 		if (!saveAssetPanel)
 		{
-			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, SceneAsset::TypeId());
+			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAssetTypeId());
 		}
 		else
 		{

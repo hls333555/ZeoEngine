@@ -39,6 +39,8 @@ namespace ZeoEngine {
 
 		virtual void RenderToolbar() {};
 
+		virtual std::string GetPanelTitle() const override;
+
 		bool OnMouseScroll(MouseScrolledEvent& e);
 		bool OnKeyPressed(KeyPressedEvent& e);
 

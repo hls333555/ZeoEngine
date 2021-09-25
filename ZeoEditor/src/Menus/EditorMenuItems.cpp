@@ -58,7 +58,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::N && bIsCtrlPressed)
 		{
-			m_ContextEditor->NewAsset();
+			m_ContextEditor->NewScene();
 			return true;
 		}
 
@@ -67,7 +67,7 @@ namespace ZeoEngine {
 
 	void MenuItem_NewAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->NewAsset();
+		m_ContextEditor->NewScene();
 	}
 
 	bool MenuItem_LoadAsset::OnKeyPressedImpl(KeyPressedEvent& e)
@@ -77,7 +77,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::O && bIsCtrlPressed)
 		{
-			m_ContextEditor->LoadAsset();
+			m_ContextEditor->LoadScene();
 			return true;
 		}
 
@@ -86,7 +86,7 @@ namespace ZeoEngine {
 
 	void MenuItem_LoadAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->LoadAsset();
+		m_ContextEditor->LoadScene();
 	}
 
 	bool MenuItem_SaveAsset::OnKeyPressedImpl(KeyPressedEvent& e)
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::S && bIsCtrlPressed)
 		{
-			m_ContextEditor->SaveAsset();
+			m_ContextEditor->SaveScene();
 			return true;
 		}
 
@@ -105,7 +105,7 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->SaveAsset();
+		m_ContextEditor->SaveScene();
 	}
 
 	bool MenuItem_SaveAssetAs::OnKeyPressedImpl(KeyPressedEvent& e)
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 		if (e.GetKeyCode() == Key::S && bIsCtrlPressed && bIsAltPressed)
 		{
-			m_ContextEditor->SaveAssetAs();
+			m_ContextEditor->SaveSceneAs();
 			return true;
 		}
 
@@ -125,7 +125,7 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveAssetAs::OnMenuItemActivated()
 	{
-		m_ContextEditor->SaveAssetAs();
+		m_ContextEditor->SaveSceneAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -160,7 +160,7 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string assetPath = m_ContextEditor->GetAssetPath();
+		const std::string assetPath = m_ContextEditor->GetAsset()->GetPath();
 		// This may be null e.g. default particle system
 		if (assetPath.empty()) return;
 

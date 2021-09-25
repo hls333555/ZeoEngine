@@ -21,7 +21,6 @@ namespace ZeoEngine {
 
 	private:
 		virtual void ProcessRender() override;
-
 		virtual void ProcessEvent(Event& e) override;
 
 		virtual void RenderToolbar() override;

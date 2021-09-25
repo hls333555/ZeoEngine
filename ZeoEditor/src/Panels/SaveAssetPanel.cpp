@@ -64,7 +64,7 @@ namespace ZeoEngine {
 					// Create an empty asset
 					RequestPathCreation(newPath, GetAssetTypeId(), false);
 					// Serialize data
-					GetContextEditor()->SaveAsset(newPath);
+					GetContextEditor()->SaveScene(newPath);
 					Close();
 				}
 			}
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 
 			if (ImGui::Button("OK", buttonSize))
 			{
-				GetContextEditor()->SaveAsset(path);
+				GetContextEditor()->SaveScene(path);
 				Close();
 
 				m_ToReplacePath.clear();

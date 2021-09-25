@@ -128,9 +128,19 @@ namespace ZeoEngine {
 	ParticleTemplateAsset::ParticleTemplateAsset(const std::string& path)
 		: AssetBase(path)
 	{
+		// Default data
+		Lifetime.SetRandom(0.75f, 1.5f);
+		SpawnRate.SetConstant(30.0f);
+		InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
+		RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3{ 0.0f, 0.0f, 50.0f });
+		InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
+		SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
+		SizeEnd.SetConstant(glm::vec3{ 0.0f });
+		ColorBegin.SetConstant(glm::vec4{ 1.0f });
+		ColorEnd.SetConstant(glm::vec4{ 0.0f });
 	}
 
-	Ref<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
+	AssetHandle<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
 	{
 		// A way to allow std::make_shared() to access ParticleTemplateAsset's private constructor
 		class ParticleTemplateAssetEnableShared : public ParticleTemplateAsset
@@ -160,14 +170,14 @@ namespace ZeoEngine {
 			SetPath(path);
 		}
 
-		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
 	}
 
 	void ParticleTemplateAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
 	}
 
 	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()

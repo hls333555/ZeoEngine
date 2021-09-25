@@ -59,13 +59,13 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetBase<ParticleTemplateAsset>
+	class ParticleTemplateAsset : public AssetBase<ParticleTemplateAsset>
 	{
 	private:
 		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
-		static Ref<ParticleTemplateAsset> Create(const std::string& path);
+		static AssetHandle<ParticleTemplateAsset> Create(const std::string& path = "");
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 

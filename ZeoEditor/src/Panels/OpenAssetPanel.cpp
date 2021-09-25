@@ -47,7 +47,7 @@ namespace ZeoEngine {
 
 	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
-		GetContextEditor()->LoadAsset(path);
+		GetContextEditor()->LoadScene(path);
 		Close();
 	}
 

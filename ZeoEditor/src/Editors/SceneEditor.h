@@ -21,13 +21,12 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual std::string GetAssetPath() const override;
-
 		SceneState GetSceneState() const { return m_SceneState; }
 
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
+
 		void UpdateSceneRef(bool bIsFromLoad);
 
 		void OnScenePlay();
@@ -36,14 +35,16 @@ namespace ZeoEngine {
 		void OnSceneResume();
 
 		virtual AssetTypeId GetAssetTypeId() const override;
-		virtual void LoadAssetImpl(const std::string& path) override;
-		virtual void SaveAssetImpl(const std::string& path) override;
+		virtual AssetHandle<IAsset> GetAsset() const override { return m_SceneAsset; }
+		virtual void LoadAsset(const std::string& path) override;
+		virtual void SaveAsset(const std::string& path) override;
 
 		void ClearSelectedEntity();
 
 	private:
-		AssetHandle<SceneAsset> m_SceneAsset;
 		SceneState m_SceneState = SceneState::Edit;
+
+		AssetHandle<SceneAsset> m_SceneAsset;
 	};
 
 }

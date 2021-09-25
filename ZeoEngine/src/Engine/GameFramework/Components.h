@@ -7,13 +7,13 @@
 
 #include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/GameFramework/SceneCamera.h"
-#include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
 namespace ZeoEngine {
 
 	class IComponentHelper;
 	class Texture2DAsset;
+	class ScriptableEntity;
 
 	struct IComponent
 	{
@@ -150,7 +150,7 @@ namespace ZeoEngine {
 		ParticleSystemPreviewComponent()
 		{
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
-			Template = ParticleTemplateAsset::Create({});
+			Template = ParticleTemplateAsset::Create();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		explicit ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)

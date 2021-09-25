@@ -56,7 +56,7 @@ namespace ZeoEngine {
 	{
 	}
 
-	Ref<SceneAsset> SceneAsset::Create(const std::string& path)
+	AssetHandle<SceneAsset> SceneAsset::Create(const std::string& path)
 	{
 		// A way to allow std::make_shared() to access SceneAsset's private constructor
 		class SceneAssetEnableShared : public SceneAsset

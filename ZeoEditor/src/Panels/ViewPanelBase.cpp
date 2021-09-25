@@ -80,6 +80,16 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	std::string ViewPanelBase::GetPanelTitle() const
+	{
+		std::string assetName = GetContextEditor()->GetAsset()->GetName();
+		if (assetName.empty())
+		{
+			assetName = "Untitled";
+		}
+		return assetName + "###" + GetPanelName();
+	}
+
 	void ViewPanelBase::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverwriteThumbnail)
 	{
 		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});

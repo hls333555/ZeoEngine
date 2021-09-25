@@ -59,7 +59,7 @@ namespace ZeoEngine {
 		explicit SceneAsset(const std::string& path);
 
 	public:
-		static Ref<SceneAsset> Create(const std::string& path);
+		static AssetHandle<SceneAsset> Create(const std::string& path = "");
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		/** Update scene referenece. */
