@@ -4,6 +4,7 @@
 
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/Core.h"
+#include "Engine/Core/UUID.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/AssetLibrary.h"
@@ -29,21 +30,16 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) {}
 		virtual void OnEvent(Event& e) {}
 
-		/**
-		 * Create an entity with default components.
-		 * 
-		 * @param bIsInternal - If true, this entity will not show in SceneOutlinePanel.
-		 */
-		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
+		Entity CreateEntity(const std::string& name = "Entity");
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity");
 		void DestroyEntity(Entity entity);
+
+		uint32_t GetEntityCount() const { return m_EntityCount; }
 
 		/** Called after all data have been loaded. */
 		virtual void PostLoad() {}
 
 	private:
-		/** Create an entity with no default components. */
-		Entity CreateEmptyEntity();
-
 		void SortEntities();
 
 	protected:
@@ -51,6 +47,7 @@ namespace ZeoEngine {
 
 	private:
 		uint32_t m_EntityCount = 0;
+		uint32_t m_CurrentEntityIndex = 0;
 	};
 
 	class SceneAsset : public AssetBase<SceneAsset>

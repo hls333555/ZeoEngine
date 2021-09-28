@@ -6,8 +6,9 @@ namespace ZeoEngine {
 	ZE_REGISTRATION
 	{
 		ZCOMPONENT(CoreComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
-			ZDATA(CoreComponent, Name)
-			ZDATA(CoreComponent, bIsInternal, ZPROP(HiddenInEditor));
+			ZDATA(CoreComponent, Name);
+
+		ZCOMPONENT(IDComponent, ZPROP(Inherent), ZPROP(Transient), ZPROP(HideComponentHeader));
 
 		ZCOMPONENT(TransformComponent, ZPROP(DisplayName, ZTEXT("Transform")), ZPROP(Tooltip, ZTEXT("变换组件")), ZPROP(Inherent))
 			ZDATA(TransformComponent, Translation, ZPROP(Tooltip, ZTEXT("平移")), ZPROP(DragSensitivity, 0.1f))

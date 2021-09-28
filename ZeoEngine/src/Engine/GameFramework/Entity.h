@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Scene.h"
+#include "Engine/Core/UUID.h"
 
 namespace ZeoEngine {
 
@@ -59,11 +60,12 @@ namespace ZeoEngine {
 			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 
-		std::string GetEntityName() const;
-		glm::mat4 GetEntityTransform() const;
-		glm::vec3 GetEntityTranslation() const;
-		glm::vec3 GetEntityRotation() const;
-		glm::vec3 GetEntityScale() const;
+		UUID GetUUID() const;
+		std::string GetName() const;
+		glm::mat4 GetTransform() const;
+		glm::vec3 GetTranslation() const;
+		glm::vec3 GetRotation() const;
+		glm::vec3 GetScale() const;
 
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }

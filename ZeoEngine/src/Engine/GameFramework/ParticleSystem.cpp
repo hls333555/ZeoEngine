@@ -269,7 +269,7 @@ namespace ZeoEngine {
 
 		m_EmitterSpec.MaxParticles = m_ParticleTemplate->MaxParticles;
 
-		m_OwnerLastPosition = m_OwnerEntity.GetEntityTranslation();
+		m_OwnerLastPosition = m_OwnerEntity.GetTranslation();
 	}
 
 	void ParticleSystemInstance::ReevaluateBurstList()
@@ -423,7 +423,7 @@ namespace ZeoEngine {
 
 		m_bSystemComplete = true;
 
-		glm::vec3 ownerPosition = m_OwnerEntity.GetEntityTranslation();
+		glm::vec3 ownerPosition = m_OwnerEntity.GetTranslation();
 		glm::vec3 ownerVelocity = (ownerPosition - m_OwnerLastPosition) / static_cast<float>(dt);
 		glm::vec3 inheritVelocity = m_EmitterSpec.bIsLocalSpace ? ownerVelocity : ownerVelocity * m_EmitterSpec.InheritVelocityRatio;
 		for (auto& particle : m_ParticlePool)

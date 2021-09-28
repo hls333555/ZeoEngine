@@ -4,8 +4,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/ComponentHelpers.h"
+#include "Engine/Core/UUID.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 
@@ -22,18 +24,29 @@ namespace ZeoEngine {
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_CIRCLE_NOTCH; }
 	};
 
 	struct CoreComponent : public IComponent
 	{
 		std::string Name;
-		size_t CreationId;
-		bool bIsInternal = false;
+
+		uint32_t EntityIndex;
 		std::vector<uint32_t> OrderedComponents;
 
 		CoreComponent() = default;
 		CoreComponent(const CoreComponent&) = default;
+	};
 
+	struct IDComponent : public IComponent
+	{
+		UUID ID;
+
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+		IDComponent(UUID uuid)
+			: ID(uuid) {}
 	};
 
 	struct TransformComponent : public IComponent
@@ -46,6 +59,8 @@ namespace ZeoEngine {
 		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(const glm::vec3& translation)
 			: Translation(translation) {}
+
+		static const char* GetIcon() { return ICON_FA_MAP_MARKER_ALT; }
 
 		glm::vec3 GetRotationAsDegrees() const
 		{
@@ -73,7 +88,6 @@ namespace ZeoEngine {
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 		AssetHandle<Texture2DAsset> Texture;
 		glm::vec2 TextureTiling{ 1.0f };
-
 		int32_t SortingOrder = 0;
 
 		SpriteRendererComponent() = default;
@@ -82,6 +96,8 @@ namespace ZeoEngine {
 			: TintColor(color) {}
 		SpriteRendererComponent(const AssetHandle<Texture2DAsset>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
 			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
+
+		static const char* GetIcon() { return ICON_FA_GHOST; }
 
 	};
 
@@ -93,6 +109,8 @@ namespace ZeoEngine {
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_CAMERA; }
 
 		SceneCamera::ProjectionType GetProjectionType() const { return Camera.GetProjectionType(); }
 		void SetProjectionType(SceneCamera::ProjectionType type) { Camera.SetProjectionType(type); }
@@ -134,14 +152,17 @@ namespace ZeoEngine {
 	struct ParticleSystemComponent : public IComponent
 	{
 		AssetHandle<ParticleTemplateAsset> Template;
-		Ref<ParticleSystemInstance> Instance;
 		glm::vec3 PositionOffset{ 0.0f };
+
+		Ref<ParticleSystemInstance> Instance;
 
 		ParticleSystemComponent()
 		{
 			ComponentHelper = CreateRef<ParticleSystemComponentHelper>();
 		}
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
 
 	};
 

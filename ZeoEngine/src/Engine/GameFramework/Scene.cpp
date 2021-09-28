@@ -7,19 +7,25 @@
 
 namespace ZeoEngine {
 
-	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
+	Entity Scene::CreateEntity(const std::string& name)
 	{
-		Entity entity = CreateEmptyEntity();
+		return CreateEntityWithUUID(UUID(), name);
+	}
+
+	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+	{
+		Entity entity{ m_Registry.create(), this };
+		++m_EntityCount;
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
 			coreComp.Name = name;
-			coreComp.CreationId = m_EntityCount - 1;
-			coreComp.bIsInternal = bIsInternal;
+			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
+		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 
-		// No need to sort on first entity
+		// No need to sort if there is only one entity
 		if (m_EntityCount > 1)
 		{
 			SortEntities();
@@ -28,26 +34,20 @@ namespace ZeoEngine {
 		return entity;
 	}
 
-	Entity Scene::CreateEmptyEntity()
-	{
-		Entity entity{ m_Registry.create(), this };
-		++m_EntityCount;
-		return entity;
-	}
-
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		--m_EntityCount;
 		SortEntities();
 	}
 
 	void Scene::SortEntities()
 	{
-		// Sort entities by creation order
+		// Sort entities by creation index
 		// We assume that every entity has the CoreComponent which will never get removed
 		m_Registry.sort<CoreComponent>([](const auto& lhs, const auto& rhs)
 		{
-			return lhs.CreationId < rhs.CreationId;
+			return lhs.EntityIndex < rhs.EntityIndex;
 		});
 	}
 

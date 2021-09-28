@@ -81,7 +81,7 @@ enum class PropertyType
 	Category,					// [value_type: const char*] Category of component or data.
 	HiddenInEditor,				// [key_only] Should hide this data in editor?
 	HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
-	Transient,					// [key_only] If set, this data will not get serialized.
+	Transient,					// [key_only] If set, this component or data will not get serialized.
 
 	DragSensitivity,			// [value_type: float] Speed of dragging.
 	ClampMin,					// [value_type: type_dependent] Min value.
@@ -143,6 +143,7 @@ entt::meta<_comp>()																					\
 		.func<&ZeoEngine::Reflection::get<_comp>, entt::as_ref_t>("get"_hs)							\
 		.func<&ZeoEngine::Reflection::has<_comp>>("has"_hs)											\
 		.func<&ZeoEngine::Reflection::bind_on_destroy<_comp>, entt::as_ref_t>("bind_on_destroy"_hs)	\
+		.func<&_comp::GetIcon, entt::as_ref_t>("get_icon"_hs)										\
 		.base<IComponent>()
 
 //////////////////////////////////////////////////////////////////////////

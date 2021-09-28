@@ -1,0 +1,66 @@
+AssetType: 4099385791
+Entities:
+  - Entity: 13585209406647114456
+    Components:
+      - Component: 3590015414
+        Name: Camera
+      - Component: 4079556375
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [0, 0, 0]
+      - Component: 2487124838
+        OrthographicFar: 1
+        OrthographicNear: -1
+        Size: 6
+        PerspectiveFar: 1000
+        PerspectiveNear: 0.00999999978
+        VerticalFOV: 45
+        ProjectionType: Orthographic
+        bFixedAspectRatio: false
+        bIsPrimary: true
+  - Entity: 11507657342965410190
+    Components:
+      - Component: 3590015414
+        Name: Floor
+      - Component: 4079556375
+        Scale: [10, 0.300000012, 1]
+        Rotation: [0, 0, 0]
+        Translation: [0, -1.5, 0]
+      - Component: 2229143245
+        SortingOrder: 0
+        TextureTiling: [1, 1]
+        Texture: ""
+        TintColor: [0, 0.761062145, 1, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Static
+      - Component: 4073979302
+        RestitutionThreshold: 0.5
+        Restitution: 0
+        Friction: 0.5
+        Density: 1
+        Size: [0.5, 0.5]
+        Offset: [0, 0]
+  - Entity: 7863991719176163715
+    Components:
+      - Component: 3590015414
+        Name: Box
+      - Component: 4079556375
+        Scale: [0.5, 0.5, 1]
+        Rotation: [0, 0, 60.0000038]
+        Translation: [0, 1.5, 0]
+      - Component: 2229143245
+        SortingOrder: 0
+        TextureTiling: [1, 1]
+        Texture: ""
+        TintColor: [1, 0.584070802, 0, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Dynamic
+      - Component: 4073979302
+        RestitutionThreshold: 0.5
+        Restitution: 0.5
+        Friction: 0.5
+        Density: 1
+        Size: [0.5, 0.5]
+        Offset: [0, 0]

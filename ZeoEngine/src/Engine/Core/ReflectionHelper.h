@@ -38,7 +38,6 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	static const char* GetComponentIcon(uint32_t compId);
 	const char* GetComponentDisplayNameFull(uint32_t compId);
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type);

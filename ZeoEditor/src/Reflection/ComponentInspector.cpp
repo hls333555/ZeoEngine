@@ -61,7 +61,7 @@ namespace ZeoEngine {
 			// Preprocess datas if needed
 			if (m_bIsPreprocessedDatasDirty)
 			{
-				ZE_CORE_TRACE("Sorting datas on '{0}' of '{1}'", compDisplayName, m_OwnerEntity.GetEntityName());
+				ZE_CORE_TRACE("Sorting datas on '{0}' of '{1}'", compDisplayName, m_OwnerEntity.GetName());
 				PreprocessComponent();
 
 				m_bIsPreprocessedDatasDirty = false;

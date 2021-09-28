@@ -16,27 +16,32 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
-	std::string Entity::GetEntityName() const
+	UUID Entity::GetUUID() const
+	{
+		return GetComponent<IDComponent>().ID;
+	}
+
+	std::string Entity::GetName() const
 	{
 		return GetComponent<CoreComponent>().Name;
 	}
 
-	glm::mat4 Entity::GetEntityTransform() const
+	glm::mat4 Entity::GetTransform() const
 	{
 		return GetComponent<TransformComponent>().GetTransform();
 	}
 
-	glm::vec3 Entity::GetEntityTranslation() const
+	glm::vec3 Entity::GetTranslation() const
 	{
 		return GetComponent<TransformComponent>().Translation;
 	}
 
-	glm::vec3 Entity::GetEntityRotation() const
+	glm::vec3 Entity::GetRotation() const
 	{
 		return GetComponent<TransformComponent>().Rotation;
 	}
 
-	glm::vec3 Entity::GetEntityScale() const
+	glm::vec3 Entity::GetScale() const
 	{
 		return GetComponent<TransformComponent>().Scale;
 	}

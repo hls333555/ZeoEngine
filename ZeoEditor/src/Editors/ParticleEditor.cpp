@@ -63,7 +63,7 @@ namespace ZeoEngine {
 
 	void ParticleEditor::CreatePreviewParticle(bool bIsFromLoad)
 	{
-		auto previewParticleEntity = GetScene()->CreateEntity("Preview Particle", true);
+		auto previewParticleEntity = GetScene()->CreateEntity("Preview Particle");
 		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
 		SetContextEntity(previewParticleEntity);
 		if (!bIsFromLoad)
