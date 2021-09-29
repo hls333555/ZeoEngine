@@ -143,7 +143,7 @@ namespace ZeoEngine {
 			auto directorySpec = ar.GetPathSpec<DirectorySpec>(path);
 			if (!directorySpec) return;
 
-			char directoryName[GetMaxPathSize()] = ICON_FA_FOLDER " ";
+			char directoryName[MAX_PATH_SIZE] = ICON_FA_FOLDER " ";
 			if (directorySpec->bIsTreeExpanded)
 			{
 				strcpy_s(directoryName, ICON_FA_FOLDER_OPEN " ");
@@ -442,7 +442,7 @@ namespace ZeoEngine {
 	{
 		int32_t i = 0;
 		char suffix[10];
-		char newName[GetMaxPathSize()];
+		char newName[MAX_PATH_SIZE];
 		strcpy_s(newName, baseName);
 		if (bIsAsset)
 		{
@@ -538,7 +538,7 @@ namespace ZeoEngine {
 						bHasKeyboardFocused = true;
 					}
 					ImGui::SetNextItemWidth(ImGui::CalcTextSize(pathName).x + ImGui::GetFramePadding().x * 2.0f);
-					char renameBuffer[GetMaxPathSize()];
+					char renameBuffer[MAX_PATH_SIZE];
 					strcpy_s(renameBuffer, pathName);
 					ImGui::InputText("##RenamePath", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_AutoSelectAll);
 					SubmitPathRenaming(renameBuffer, spec, bHasKeyboardFocused);
@@ -637,7 +637,7 @@ namespace ZeoEngine {
 					bHasKeyboardFocused = true;
 				}
 
-				char renameBuffer[GetMaxPathSize()];
+				char renameBuffer[MAX_PATH_SIZE];
 				strcpy_s(renameBuffer, pathName);
 				float indent = (thumbnailWidth - textSize) * 0.5f;
 				if (indent > 0.0f)
@@ -731,7 +731,7 @@ namespace ZeoEngine {
 			if (spec->IsAsset())
 			{
 				// Add engine file extension automatically
-				strcat_s(renameBuffer, GetMaxPathSize(), AssetRegistry::GetEngineAssetExtension());
+				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetEngineAssetExtension());
 			}
 			const std::string& path = spec->Path;
 			std::string parentPath = PathUtils::GetParentPath(path);

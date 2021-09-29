@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		void DrawReplaceDialog(const std::string& path);
 
 	private:
-		char m_NameBuffer[GetMaxPathSize()] = "New";
+		char m_NameBuffer[MAX_PATH_SIZE] = "New";
 		bool m_bHasKeyboardFocused = false;
 		std::string m_ToReplacePath;
 	};

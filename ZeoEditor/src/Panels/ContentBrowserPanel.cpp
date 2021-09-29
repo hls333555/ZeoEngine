@@ -135,7 +135,7 @@ namespace ZeoEngine {
 
 				if (bIsAssetCreationSelected)
 				{
-					char baseName[GetMaxPathSize()] = "New";
+					char baseName[MAX_PATH_SIZE] = "New";
 					std::string formattedName = GetFormatedAssetTypeName(assetTypeName);
 					strcat_s(baseName, formattedName.c_str());
 					std::string newPath = GetAvailableNewPathName(baseName, true);
@@ -220,7 +220,7 @@ namespace ZeoEngine {
 		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
 		if (spec->IsAsset() && ImGui::BeginDragDropSource())
 		{
-			char typeStr[32];
+			char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
 			_itoa_s(spec->GetAssetTypeId(), typeStr, 10);
 			ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
 

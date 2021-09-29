@@ -9,8 +9,6 @@ namespace ZeoEngine {
 
 	struct PathSpec;
 
-	constexpr uint32_t GetMaxPathSize() { return 128; }
-
 	class AssetBrowserPanelBase : public PanelBase
 	{
 	public:

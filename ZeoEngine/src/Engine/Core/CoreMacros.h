@@ -8,3 +8,6 @@
 #define ZE_BIT(x) (1 << x)
 
 #define ZE_BIND_EVENT_FUNC(func) [this](auto&&... args) -> decltype(auto) { return this->func(std::forward<decltype(args)>(args)...); }
+
+#define MAX_PATH_SIZE 128
+#define DRAG_DROP_PAYLOAD_TYPE_SIZE 32
