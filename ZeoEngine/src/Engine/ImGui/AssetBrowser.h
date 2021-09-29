@@ -73,7 +73,7 @@ namespace ZeoEngine {
 					{
 						char typeStr[32];
 						_itoa_s(TypeId, typeStr, 10);
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(typeStr))
+						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr, previewRounding))
 						{
 							auto spec = *(const Ref<AssetSpec>*)payload->Data;
 							bIsValueChanged = spec != retSpec;

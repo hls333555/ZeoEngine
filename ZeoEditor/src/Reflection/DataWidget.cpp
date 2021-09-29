@@ -486,7 +486,7 @@ namespace ZeoEngine {
 
 				if (ImGui::BeginDragDropTarget())
 				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(dragTypeBuffer))
+					if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(dragTypeBuffer))
 					{
 						ZE_CORE_ASSERT(payload->DataSize == sizeof(uint32_t));
 

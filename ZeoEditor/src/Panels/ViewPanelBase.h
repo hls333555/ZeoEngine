@@ -44,8 +44,6 @@ namespace ZeoEngine {
 		bool OnMouseScroll(MouseScrolledEvent& e);
 		bool OnKeyPressed(KeyPressedEvent& e);
 
-		void SetViewportBounds(float x, float y, float width, float height);
-
 		void OnViewportResize(const glm::vec2& size);
 
 		void PostSceneCreate();

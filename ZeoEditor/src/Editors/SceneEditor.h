@@ -34,8 +34,10 @@ namespace ZeoEngine {
 		void OnScenePause();
 		void OnSceneResume();
 
-		virtual AssetTypeId GetAssetTypeId() const override;
+	public:
 		virtual AssetHandle<IAsset> GetAsset() const override { return m_SceneAsset; }
+		virtual AssetTypeId GetAssetTypeId() const override;
+	private:
 		virtual void LoadAsset(const std::string& path) override;
 		virtual void SaveAsset(const std::string& path) override;
 

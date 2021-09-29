@@ -35,25 +35,37 @@ namespace ZeoEngine {
 
 	void ViewPanelBase::ProcessRender()
 	{
-		const auto workRect = ImGui::GetWindowWorkRect();
-		m_LastViewportSize = workRect.GetSize();
-		SetViewportBounds(workRect.Min.x, workRect.Min.y, workRect.GetSize().x, workRect.GetSize().y);
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+		m_LastViewportSize = ImGui::GetContentRegionAvail();
 
 		// TODO: BlockSceneEvents
 		GetContextEditor()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
-		ImGui::GetWindowDrawList()->AddImageRounded(
-			GetContextEditor()->GetFrameBuffer()->GetColorAttachment(),
-			// Upper left corner for the UVs to be applied at
-			workRect.Min,
-			// Lower right corner for the UVs to be applied at
-			workRect.Max,
-			// The UVs have to be flipped
-			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
-			IM_COL32_WHITE,
-			ImGui::IsWindowDocked() ? 0.0f : 8.0f, ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+		ImGui::ImageRounded(GetContextEditor()->GetFrameBuffer()->GetColorAttachment(), m_LastViewportSize,
+			ImGui::IsWindowDocked() ? 0.0f : 8.0f,
+			{ 0, 1 }, { 1, 0 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 },
+			ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 
+		// Drag asset to open
+		if (ImGui::BeginDragDropTarget())
+		{
+			char typeStr[32];
+			_itoa_s(GetContextEditor()->GetAssetTypeId(), typeStr, 10);
+			if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr))
+			{
+				auto spec = *(const Ref<AssetSpec>*)payload->Data;
+				GetContextEditor()->LoadScene(spec->Path);
+			}
+			ImGui::EndDragDropTarget();
+		}
+
+		// Move cursor back to top
+		ImGui::SetCursorPosY(viewportMinRegion.y);
 		RenderToolbar();
 	}
 
@@ -100,14 +112,6 @@ namespace ZeoEngine {
 		m_SnapshotSpec.ImageWidth = imageWidth;
 		GetContextEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
 		AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
-	}
-
-	void ViewPanelBase::SetViewportBounds(float x, float y, float width, float height)
-	{
-		m_ViewportBounds[0].x = x;
-		m_ViewportBounds[0].y = y;
-		m_ViewportBounds[1].x = x + width;
-		m_ViewportBounds[1].y = y + height;
 	}
 
 	glm::vec2 ViewPanelBase::GetViewportSize() const

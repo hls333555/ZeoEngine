@@ -15,8 +15,10 @@ namespace ZeoEngine {
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
 
-		virtual AssetTypeId GetAssetTypeId() const override;
+	public:
 		virtual AssetHandle<IAsset> GetAsset() const override;
+		virtual AssetTypeId GetAssetTypeId() const override;
+	private:
 		virtual void LoadAsset(const std::string& path) override;
 		virtual void SaveAsset(const std::string& path) override;
 

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <imgui.h>
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include <imgui_internal.h>
 
 namespace ImGui {
@@ -27,15 +30,16 @@ namespace ImGui {
 
 	IMGUI_API void HelpMarker(const char* desc);
 
-	IMGUI_API ImRect GetWindowWorkRect();
-
 	IMGUI_API ImVec2 GetFramePadding();
 
 	IMGUI_API void VSplitter(const char* str_id, ImVec2* size);
 
-	IMGUI_API void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4 & border_col = ImVec4(0, 0, 0, 0));
+	IMGUI_API void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4 & border_col = ImVec4(0, 0, 0, 0), ImDrawFlags flags = 0);
 
 	IMGUI_API void AssetThumbnail(ImTextureID thumbnailTextureID, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID = nullptr);
+
+	/** Version that modifies the hightlight style for drop target. */
+	IMGUI_API const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding = 0.0f, ImGuiDragDropFlags flags = 0);
 }
 
 namespace ZeoEngine {
