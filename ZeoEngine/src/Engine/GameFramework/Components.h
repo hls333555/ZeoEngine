@@ -13,17 +13,17 @@
 
 namespace ZeoEngine {
 
-	class IComponentHelper;
 	class Texture2DAsset;
 	class ScriptableEntity;
 
 	struct IComponent
 	{
-		Entity OwnerEntity;
 		Ref<IComponentHelper> ComponentHelper;
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
+
+		virtual void CreateHelper() {}
 
 		static const char* GetIcon() { return ICON_FA_CIRCLE_NOTCH; }
 	};
@@ -156,27 +156,32 @@ namespace ZeoEngine {
 
 		Ref<ParticleSystemInstance> Instance;
 
-		ParticleSystemComponent()
+		ParticleSystemComponent() = default;
+		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+
+		virtual void CreateHelper() override
 		{
 			ComponentHelper = CreateRef<ParticleSystemComponentHelper>();
 		}
-		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
-
 	};
 
 	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
 	{
 		ParticleSystemPreviewComponent()
 		{
-			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
-			Template = ParticleTemplateAsset::Create();
+			Template = ParticleTemplateAsset::Create(); // Create default particle asset
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		explicit ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
 		{
 			Template = pTemplate;
+		}
+
+		virtual void CreateHelper() override
+		{
+			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }

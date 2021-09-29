@@ -135,10 +135,12 @@ namespace ZeoEngine {
 
 	bool SceneViewPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
+		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+
 		// Global responsing shotcuts
 		{
 			auto sceneEditor = GetContextEditor<SceneEditor>();
-			bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 			switch (e.GetKeyCode())
 			{
 				// Toggle play
@@ -210,12 +212,14 @@ namespace ZeoEngine {
 				}
 				case Key::Delete:
 				{
-					auto sceneEditor = GetContextEditor();
-					Entity selectedEntity = sceneEditor->GetContextEntity();
-					if (selectedEntity)
+					GetContextEditor<SceneEditor>()->OnDeleteEntity();
+					return true;
+				}
+				case Key::D:
+				{
+					if (bIsCtrlPressed)
 					{
-						sceneEditor->GetScene()->DestroyEntity(selectedEntity);
-						sceneEditor->SetContextEntity({});
+						GetContextEditor<SceneEditor>()->OnDuplicateEntity();
 						return true;
 					}
 					break;

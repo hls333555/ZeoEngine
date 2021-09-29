@@ -5,6 +5,7 @@
 namespace ZeoEngine {
 
 	class SceneAsset;
+	class EditorScene;
 
 	enum class SceneState
 	{
@@ -33,6 +34,8 @@ namespace ZeoEngine {
 		void OnSceneStop();
 		void OnScenePause();
 		void OnSceneResume();
+		void OnDuplicateEntity();
+		void OnDeleteEntity();
 
 	public:
 		virtual AssetHandle<IAsset> GetAsset() const override { return m_SceneAsset; }
@@ -45,6 +48,8 @@ namespace ZeoEngine {
 
 	private:
 		SceneState m_SceneState = SceneState::Edit;
+
+		Ref<EditorScene> m_SceneForEdit;
 
 		AssetHandle<SceneAsset> m_SceneAsset;
 	};

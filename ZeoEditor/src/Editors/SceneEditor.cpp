@@ -23,7 +23,8 @@ namespace ZeoEngine {
 
 	Ref<Scene> SceneEditor::CreateScene()
 	{
-		return CreateRef<EditorScene>(SharedFromBase<SceneEditor>());
+		m_SceneForEdit = CreateRef<EditorScene>(SharedFromBase<SceneEditor>());
+		return m_SceneForEdit;
 	}
 
 	void SceneEditor::UpdateSceneRef(bool bIsFromLoad)
@@ -37,6 +38,9 @@ namespace ZeoEngine {
 	void SceneEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		auto sceneForPlay = m_SceneForEdit->Copy<EditorScene>(SharedFromBase<SceneEditor>());
+		SetActiveScene(sceneForPlay);
+		SetContextEntity({});
 		GetScene<EditorScene>()->OnRuntimeStart();
 	}
 
@@ -44,6 +48,7 @@ namespace ZeoEngine {
 	{
 		m_SceneState = SceneState::Edit;
 		GetScene<EditorScene>()->OnRuntimeStop();
+		SetActiveScene(m_SceneForEdit);
 	}
 
 	void SceneEditor::OnScenePause()
@@ -56,6 +61,30 @@ namespace ZeoEngine {
 		m_SceneState = SceneState::Play;
 	}
 
+	void SceneEditor::OnDuplicateEntity()
+	{
+		if (m_SceneState != SceneState::Edit) return;
+
+		Entity selectedEntity = GetContextEntity();
+		if (selectedEntity)
+		{
+			Entity newEntity = GetScene()->DuplicateEntity(selectedEntity);
+			SetContextEntity(newEntity);
+		}
+	}
+
+	void SceneEditor::OnDeleteEntity()
+	{
+		if (m_SceneState != SceneState::Edit) return;
+
+		Entity selectedEntity = GetContextEntity();
+		if (selectedEntity)
+		{
+			GetScene()->DestroyEntity(selectedEntity);
+			SetContextEntity({});
+		}
+	}
+
 	AssetTypeId SceneEditor::GetAssetTypeId() const
 	{
 		return SceneAsset::TypeId();
@@ -64,7 +93,10 @@ namespace ZeoEngine {
 	void SceneEditor::LoadAsset(const std::string& path)
 	{
 		// Stop current playing scene
-		OnSceneStop();
+		if (m_SceneState != SceneState::Edit)
+		{
+			OnSceneStop();
+		}
 		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
 		m_SceneAsset->UpdateScene(GetScene());
 		m_SceneAsset->Deserialize();

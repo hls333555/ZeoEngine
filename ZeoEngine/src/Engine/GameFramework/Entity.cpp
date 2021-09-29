@@ -16,36 +16,6 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
-	UUID Entity::GetUUID() const
-	{
-		return GetComponent<IDComponent>().ID;
-	}
-
-	std::string Entity::GetName() const
-	{
-		return GetComponent<CoreComponent>().Name;
-	}
-
-	glm::mat4 Entity::GetTransform() const
-	{
-		return GetComponent<TransformComponent>().GetTransform();
-	}
-
-	glm::vec3 Entity::GetTranslation() const
-	{
-		return GetComponent<TransformComponent>().Translation;
-	}
-
-	glm::vec3 Entity::GetRotation() const
-	{
-		return GetComponent<TransformComponent>().Rotation;
-	}
-
-	glm::vec3 Entity::GetScale() const
-	{
-		return GetComponent<TransformComponent>().Scale;
-	}
-
 	entt::meta_any Entity::AddComponentById(entt::id_type compId)
 	{
 		auto compType = entt::resolve(compId);
@@ -61,15 +31,15 @@ namespace ZeoEngine {
 			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *compName);
 			return {};
 		}
-		auto compInstance = compType.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
+		auto compInstance = Reflection::ConstructComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->OwnerEntity = *this;
+		comp->CreateHelper();
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->SetOwnerEntity(*this);
+			comp->ComponentHelper->SetOwnerEntity(this);
 			comp->ComponentHelper->OnComponentAdded();
-			Reflection::BindOnDestroy(compType, m_Scene->m_Registry);
+			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}
 		AddComponentId(compId);
 		
@@ -119,6 +89,38 @@ namespace ZeoEngine {
 		else
 		{
 			return AddComponentById(compId);
+		}
+	}
+
+	void Entity::CopyAllComponents(Entity srcEntity, const std::vector<uint32_t>& ignoredCompIds)
+	{
+		for (const auto compId : srcEntity.GetOrderedComponentIds())
+		{
+			if (std::find(ignoredCompIds.cbegin(), ignoredCompIds.cend(), compId) == ignoredCompIds.cend())
+			{
+				CopyComponentById(compId, srcEntity);
+			}
+		}
+	}
+
+	void Entity::CopyComponentById(entt::id_type compId, Entity srcEntity)
+	{
+		auto compType = entt::resolve(compId);
+		if (!compType)
+		{
+			ZE_CORE_WARN("Failed to copy component with invalid component ID = {0}!", compId);
+			return;
+		}
+
+		auto compInstance = Reflection::CopyComponent(compType, m_Scene->m_Registry, m_EntityHandle, srcEntity.GetComponentById(compId));
+		IComponent* comp = compInstance.try_cast<IComponent>();
+		ZE_CORE_ASSERT(comp);
+		comp->CreateHelper();
+		if (comp->ComponentHelper)
+		{
+			comp->ComponentHelper->SetOwnerEntity(this);
+			comp->ComponentHelper->OnComponentCopied();
+			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}
 	}
 

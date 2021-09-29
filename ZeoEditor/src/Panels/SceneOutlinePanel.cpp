@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		const auto& scene = sceneEditor->GetScene();
 
 		// Display entities in creation order, the order is updated when a new entity is created or destroyed
-		scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
+		scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& coreComp)
 		{
 			Entity entity{ entityId, GetContextEditor()->GetScene().get() };
 			DrawEntityNode(entity);

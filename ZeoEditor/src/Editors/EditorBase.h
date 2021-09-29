@@ -51,12 +51,15 @@ namespace ZeoEngine {
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
 		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
-		const Ref<Scene>& GetScene() const { return m_Scene; }
+
+		const Ref<Scene>& GetScene() const { return m_ActiveScene; }
 		template<typename T>
 		Ref<T> GetScene() const
 		{
-			return std::dynamic_pointer_cast<T>(m_Scene);
+			return std::dynamic_pointer_cast<T>(m_ActiveScene);
 		}
+		void SetActiveScene(const Ref<Scene>& newScene) { m_ActiveScene = newScene; }
+
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
 		void Open();
@@ -115,7 +118,7 @@ namespace ZeoEngine {
 		EditorCamera* m_EditorCamera = nullptr;
 
 		Ref<EditorUIRendererBase> m_EditorUIRenderer;
-		Ref<Scene> m_Scene;
+		Ref<Scene> m_ActiveScene;
 		Ref<FrameBuffer> m_FBO;
 
 		bool m_bBlockSceneEvents = true;

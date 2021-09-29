@@ -33,7 +33,7 @@ namespace ZeoEngine {
 
 		m_EditorUIRenderer->OnUpdate(dt);
 
-		m_Scene->OnUpdate(dt);
+		m_ActiveScene->OnUpdate(dt);
 
 		BeginFrameBuffer();
 		{
@@ -49,7 +49,7 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
-				m_Scene->OnRender(*m_EditorCamera);
+				m_ActiveScene->OnRender(*m_EditorCamera);
 				m_PostSceneRenderDel.publish(m_FBO);
 			}
 		}
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 
 		if (!m_bBlockSceneEvents)
 		{
-			m_Scene->OnEvent(e);
+			m_ActiveScene->OnEvent(e);
 		}
 	}
 
@@ -88,7 +88,7 @@ namespace ZeoEngine {
 	void EditorBase::NewScene(bool bIsFromLoad)
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
-		m_Scene = CreateScene();
+		m_ActiveScene = CreateScene();
 		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
 
@@ -111,7 +111,7 @@ namespace ZeoEngine {
 
 		NewScene(true);
 		LoadAsset(path);
-		m_Scene->PostLoad();
+		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());

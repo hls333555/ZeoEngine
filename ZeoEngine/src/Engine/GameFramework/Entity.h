@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Scene.h"
-#include "Engine/Core/UUID.h"
 
 namespace ZeoEngine {
 
@@ -21,10 +20,10 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
-			comp.OwnerEntity = *this;
+			comp.CreateHelper();
 			if (comp.ComponentHelper)
 			{
-				comp.ComponentHelper->SetOwnerEntity(*this);
+				comp.ComponentHelper->SetOwnerEntity(this);
 				comp.ComponentHelper->OnComponentAdded();
 				m_Scene->m_Registry.on_destroy<T>().template connect<&IComponentHelper::OnComponentDestroy>(comp.ComponentHelper);
 			}
@@ -60,12 +59,12 @@ namespace ZeoEngine {
 			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 
-		UUID GetUUID() const;
-		std::string GetName() const;
-		glm::mat4 GetTransform() const;
-		glm::vec3 GetTranslation() const;
-		glm::vec3 GetRotation() const;
-		glm::vec3 GetScale() const;
+		UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
+		const std::string& GetName() const { return GetComponent<CoreComponent>().Name; }
+		const glm::mat4& GetTransform() const { return GetComponent<TransformComponent>().GetTransform(); }
+		const glm::vec3& GetTranslation() const { return GetComponent<TransformComponent>().Translation; }
+		const glm::vec3& GetRotation() const { return GetComponent<TransformComponent>().Rotation; }
+		const glm::vec3& GetScale() const { return GetComponent<TransformComponent>().Scale; }
 
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
@@ -84,6 +83,8 @@ namespace ZeoEngine {
 		entt::meta_any GetComponentById(entt::id_type compId) const;
 		bool HasComponentById(entt::id_type compId) const;
 		entt::meta_any GetOrAddComponentById(entt::id_type compId);
+		void CopyAllComponents(Entity srcEntity, const std::vector<uint32_t>& ignoredCompIds = {});
+		void CopyComponentById(entt::id_type compId, Entity srcEntity);
 
 		const std::vector<uint32_t>& GetOrderedComponentIds() const;
 		void AddComponentId(uint32_t Id);

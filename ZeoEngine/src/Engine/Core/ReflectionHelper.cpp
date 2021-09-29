@@ -69,6 +69,11 @@ namespace ZeoEngine {
 
 	namespace Reflection {
 
+		entt::meta_any ConstructComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+		{
+			return compType.construct(std::ref(registry), entity);
+		}
+
 		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
 			compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
@@ -84,7 +89,12 @@ namespace ZeoEngine {
 			return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
 		}
 
-		void BindOnDestroy(entt::meta_type compType, entt::registry& registry)
+		entt::meta_any CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance)
+		{
+			return compType.func("copy"_hs).invoke({}, std::ref(dstRegistry), dstEntity, std::ref(compInstance));
+		}
+
+		void BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry)
 		{
 			compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
 		}

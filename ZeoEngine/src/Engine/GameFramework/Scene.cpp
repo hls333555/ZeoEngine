@@ -15,7 +15,6 @@ namespace ZeoEngine {
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 	{
 		Entity entity{ m_Registry.create(), this };
-		++m_EntityCount;
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
@@ -26,7 +25,7 @@ namespace ZeoEngine {
 		entity.AddComponent<TransformComponent>();
 
 		// No need to sort if there is only one entity
-		if (m_EntityCount > 1)
+		if (GetEntityCount() > 1)
 		{
 			SortEntities();
 		}
@@ -34,10 +33,17 @@ namespace ZeoEngine {
 		return entity;
 	}
 
+	Entity Scene::DuplicateEntity(Entity entity)
+	{
+		Entity newEntity = CreateEntity(entity.GetName());
+		// Copy all components but IDComponent(UUID)
+		newEntity.CopyAllComponents(entity, { entt::type_hash<IDComponent>::value() });
+		return newEntity;
+	}
+
 	void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
-		--m_EntityCount;
 		SortEntities();
 	}
 

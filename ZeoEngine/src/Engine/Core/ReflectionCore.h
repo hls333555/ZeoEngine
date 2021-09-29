@@ -51,6 +51,12 @@ namespace ZeoEngine::Reflection {
 	}
 
 	template<typename T>
+	T& copy(entt::registry& dstRegistry, entt::entity dstEntity, const entt::meta_any& comp)
+	{
+		return dstRegistry.template emplace_or_replace<T>(dstEntity, comp.cast<T>());
+	}
+
+	template<typename T>
 	void on_destroy(entt::registry& registry, entt::entity entity)
 	{
 		registry.get<T>(entity).ComponentHelper->OnComponentDestroy();
@@ -142,6 +148,7 @@ entt::meta<_comp>()																					\
 		.func<&ZeoEngine::Reflection::remove<_comp>, entt::as_ref_t>("remove"_hs)					\
 		.func<&ZeoEngine::Reflection::get<_comp>, entt::as_ref_t>("get"_hs)							\
 		.func<&ZeoEngine::Reflection::has<_comp>>("has"_hs)											\
+		.func<&ZeoEngine::Reflection::copy<_comp>, entt::as_ref_t>("copy"_hs)						\
 		.func<&ZeoEngine::Reflection::bind_on_destroy<_comp>, entt::as_ref_t>("bind_on_destroy"_hs)	\
 		.func<&_comp::GetIcon, entt::as_ref_t>("get_icon"_hs)										\
 		.base<IComponent>()

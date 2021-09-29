@@ -4,10 +4,10 @@
 
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/Core.h"
-#include "Engine/Core/UUID.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/AssetLibrary.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -30,11 +30,27 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) {}
 		virtual void OnEvent(Event& e) {}
 
+		template<typename T, typename ... Args>
+		Ref<T> Copy(Args&& ... args)
+		{
+			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
+			m_Registry.view<CoreComponent>().each([this, &newScene](auto entityId, auto& coreComp)
+			{
+				Entity entity{ entityId, this };
+				// Clone a new "empty" entity
+				auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+				// Copy components to that entity
+				newEntity.CopyAllComponents(entity);
+			});
+			return newScene;
+		}
+
 		Entity CreateEntity(const std::string& name = "Entity");
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity");
+		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 
-		uint32_t GetEntityCount() const { return m_EntityCount; }
+		size_t GetEntityCount() const { return m_Registry.alive(); }
 
 		/** Called after all data have been loaded. */
 		virtual void PostLoad() {}
@@ -46,7 +62,6 @@ namespace ZeoEngine {
 		entt::registry m_Registry;
 
 	private:
-		uint32_t m_EntityCount = 0;
 		uint32_t m_CurrentEntityIndex = 0;
 	};
 

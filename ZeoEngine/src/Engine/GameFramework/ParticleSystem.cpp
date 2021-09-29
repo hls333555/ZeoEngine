@@ -8,6 +8,7 @@
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -188,12 +189,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
-		: m_ParticleTemplate(particleTemplate)
-		, m_OwnerEntity(ownerEntity)
+	struct ParticleSystemInstance::Impl
+	{
+		/** Entity that contains the particle component */
+		Entity OwnerEntity;
+
+		ParticleSystemInstance::Impl(Entity ownerEntity)
+			: OwnerEntity(ownerEntity) {}
+	};
+
+	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset)
+		: m_Impl(CreateScope<Impl>(*ownerEntity))
+		, m_ParticleTemplate(particleTemplate)
 		, m_PositionOffset(positionOffset)
 	{
-		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
+		m_bIsPreview = ownerEntity->HasComponent<ParticleSystemPreviewComponent>();
 		Reevaluate();
 	}
 
@@ -203,13 +213,13 @@ namespace ZeoEngine {
 		class ParticleSystemEnableShared : public ParticleSystemInstance
 		{
 		public:
-			ParticleSystemEnableShared(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
+			ParticleSystemEnableShared(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset)
 				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 
 		if (particleComp.Template)
 		{
-			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
+			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.ComponentHelper->GetOwnerEntity(), particleComp.PositionOffset);
 			if (particleComp.Instance)
 			{
 				// Get old template from instance as template in component may have been updated
@@ -269,7 +279,7 @@ namespace ZeoEngine {
 
 		m_EmitterSpec.MaxParticles = m_ParticleTemplate->MaxParticles;
 
-		m_OwnerLastPosition = m_OwnerEntity.GetTranslation();
+		m_OwnerLastPosition = GetOwnerEntity()->GetTranslation();
 	}
 
 	void ParticleSystemInstance::ReevaluateBurstList()
@@ -423,7 +433,7 @@ namespace ZeoEngine {
 
 		m_bSystemComplete = true;
 
-		glm::vec3 ownerPosition = m_OwnerEntity.GetTranslation();
+		glm::vec3 ownerPosition = GetOwnerEntity()->GetTranslation();
 		glm::vec3 ownerVelocity = (ownerPosition - m_OwnerLastPosition) / static_cast<float>(dt);
 		glm::vec3 inheritVelocity = m_EmitterSpec.bIsLocalSpace ? ownerVelocity : ownerVelocity * m_EmitterSpec.InheritVelocityRatio;
 		for (auto& particle : m_ParticlePool)
@@ -511,13 +521,18 @@ namespace ZeoEngine {
 				glm::scale(glm::mat4(1.0f), particle.Size);
 			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
+				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color, *GetOwnerEntity());
 			}
 			else
 			{
-				Renderer2D::DrawQuad(transform, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
+				Renderer2D::DrawQuad(transform, particle.Color, *GetOwnerEntity());
 			}
 		}
+	}
+
+	Entity* ParticleSystemInstance::GetOwnerEntity() const
+	{
+		return &m_Impl->OwnerEntity;
 	}
 
 	void ParticleSystemInstance::ResetParticlePool()
