@@ -1,5 +1,7 @@
 #include "Panels/PanelBase.h"
 
+#include "Engine/Core/Input.h"
+
 namespace ZeoEngine {
 
 	PanelBase::PanelBase(const char* panelName, const Ref<EditorBase>& contextEditor)
@@ -33,6 +35,12 @@ namespace ZeoEngine {
 			ProcessRender();
 		}
 		ImGui::PopStyleVar();
+
+		// Press middle mouse button or right mouse button to focus panel
+		if (m_bIsPanelHovered && (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) || Input::IsMouseButtonPressed(Mouse::ButtonRight)))
+		{
+			ImGui::FocusWindow(ImGui::GetCurrentWindow());
+		}
 
 		ImGui::End();
 	}
