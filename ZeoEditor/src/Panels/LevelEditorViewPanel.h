@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Panels/ViewPanelBase.h"
+#include "Panels/EditorViewPanelBase.h"
 
 #include <ImGuizmo.h>
 
@@ -12,10 +12,10 @@ namespace ZeoEngine {
 
 	class FrameBuffer;
 
-	class SceneViewPanel : public ViewPanelBase
+	class LevelEditorViewPanel : public EditorViewPanelBase
 	{
 	public:
-		using ViewPanelBase::ViewPanelBase;
+		using EditorViewPanelBase::EditorViewPanelBase;
 
 		virtual void OnAttach() override;
 

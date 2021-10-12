@@ -17,7 +17,7 @@ namespace ZeoEngine {
 	{
 		friend class Entity;
 		friend class SceneSerializer;
-		friend class ViewPanelBase;
+		friend class EditorViewPanelBase;
 		friend class SceneOutlinePanel;
 		friend class ISystem;
 		friend class RenderSystem;

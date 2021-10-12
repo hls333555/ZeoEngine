@@ -4,7 +4,7 @@
 
 #include "Editors/EditorBase.h"
 #include "Engine/Core/Input.h"
-#include "Panels/ViewPanelBase.h"
+#include "Panels/EditorViewPanelBase.h"
 #include "EditorUIRenderers/EditorUIRendererBase.h"
 
 namespace ZeoEngine {

@@ -1,33 +1,33 @@
-#include "Editors/SceneEditor.h"
+#include "Editors/LevelEditor.h"
 
-#include "EditorUIRenderers/SceneEditorUIRenderer.h"
-#include "Scenes/EditorScene.h"
+#include "EditorUIRenderers/LevelEditorUIRenderer.h"
+#include "Scenes/LevelEditorScene.h"
 
 namespace ZeoEngine {
 
-	void SceneEditor::OnAttach()
+	void LevelEditor::OnAttach()
 	{
 		m_SceneAsset = SceneAsset::Create();
 
 		// Bind delegates before scene creation
-		m_PreSceneCreate.connect<&SceneEditor::ClearSelectedEntity>(this);
-		m_PostSceneCreate.connect<&SceneEditor::UpdateSceneRef>(this);
+		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
+		m_PostSceneCreate.connect<&LevelEditor::UpdateSceneRef>(this);
 
 		EditorBase::OnAttach();
 	}
 
-	Ref<EditorUIRendererBase> SceneEditor::CreateEditorUIRenderer()
+	Ref<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<SceneEditorUIRenderer>(SharedFromBase<SceneEditor>());
+		return CreateRef<LevelEditorUIRenderer>(SharedFromBase<LevelEditor>());
 	}
 
-	Ref<Scene> SceneEditor::CreateScene()
+	Ref<Scene> LevelEditor::CreateScene()
 	{
-		m_SceneForEdit = CreateRef<EditorScene>(SharedFromBase<SceneEditor>());
+		m_SceneForEdit = CreateRef<LevelEditorScene>(SharedFromBase<LevelEditor>());
 		return m_SceneForEdit;
 	}
 
-	void SceneEditor::UpdateSceneRef(bool bIsFromLoad)
+	void LevelEditor::UpdateSceneRef(bool bIsFromLoad)
 	{
 		if (!bIsFromLoad)
 		{
@@ -35,33 +35,33 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneEditor::OnScenePlay()
+	void LevelEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<EditorScene>(SharedFromBase<SceneEditor>());
+		auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
 		SetActiveScene(sceneForPlay);
 		SetContextEntity({});
-		GetScene<EditorScene>()->OnRuntimeStart();
+		GetScene<LevelEditorScene>()->OnRuntimeStart();
 	}
 
-	void SceneEditor::OnSceneStop()
+	void LevelEditor::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
-		GetScene<EditorScene>()->OnRuntimeStop();
+		GetScene<LevelEditorScene>()->OnRuntimeStop();
 		SetActiveScene(m_SceneForEdit);
 	}
 
-	void SceneEditor::OnScenePause()
+	void LevelEditor::OnScenePause()
 	{
 		m_SceneState = SceneState::Pause;
 	}
 
-	void SceneEditor::OnSceneResume()
+	void LevelEditor::OnSceneResume()
 	{
 		m_SceneState = SceneState::Play;
 	}
 
-	void SceneEditor::OnDuplicateEntity()
+	void LevelEditor::OnDuplicateEntity()
 	{
 		if (m_SceneState != SceneState::Edit) return;
 
@@ -73,7 +73,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneEditor::OnDeleteEntity()
+	void LevelEditor::OnDeleteEntity()
 	{
 		if (m_SceneState != SceneState::Edit) return;
 
@@ -85,12 +85,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	AssetTypeId SceneEditor::GetAssetTypeId() const
+	AssetTypeId LevelEditor::GetAssetTypeId() const
 	{
 		return SceneAsset::TypeId();
 	}
 
-	void SceneEditor::LoadAsset(const std::string& path)
+	void LevelEditor::LoadAsset(const std::string& path)
 	{
 		// Stop current playing scene
 		if (m_SceneState != SceneState::Edit)
@@ -102,12 +102,12 @@ namespace ZeoEngine {
 		m_SceneAsset->Deserialize();
 	}
 
-	void SceneEditor::SaveAsset(const std::string& path)
+	void LevelEditor::SaveAsset(const std::string& path)
 	{
 		m_SceneAsset->Serialize(path);
 	}
 
-	void SceneEditor::ClearSelectedEntity()
+	void LevelEditor::ClearSelectedEntity()
 	{
 		SetContextEntity({});
 	}

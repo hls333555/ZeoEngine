@@ -3,7 +3,7 @@
 #include <imgui_internal.h>
 
 #include "Editors/EditorBase.h"
-#include "Panels/ViewPanelBase.h"
+#include "Panels/EditorViewPanelBase.h"
 #include "Menus/EditorMenu.h"
 
 namespace ZeoEngine {
@@ -36,7 +36,7 @@ namespace ZeoEngine {
 	{
 		const std::string& editorName = m_ContextEditor->GetEditorName();
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		bool bIsSceneEditor = editorName == SCENE_EDITOR;
+		bool bIsSceneEditor = editorName == LEVEL_EDITOR;
 		if (!bIsSceneEditor)
 		{
 			ImVec2 centerPos{ mainViewport->Pos.x + mainViewport->Size.x / 2.0f, mainViewport->Pos.y + mainViewport->Size.y / 2.0f };
@@ -166,11 +166,11 @@ namespace ZeoEngine {
 		return *menu;
 	}
 
-	Ref<ViewPanelBase> EditorUIRendererBase::GetViewPanel()
+	Ref<EditorViewPanelBase> EditorUIRendererBase::GetViewPanel()
 	{
 		for (auto& [type, panel] : m_Panels)
 		{
-			auto viewPanel = std::dynamic_pointer_cast<ViewPanelBase>(panel);
+			auto viewPanel = std::dynamic_pointer_cast<EditorViewPanelBase>(panel);
 			if (viewPanel)
 			{
 				// There should be only one view panel for each editor

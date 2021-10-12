@@ -1,4 +1,4 @@
-#include "Panels/SceneViewPanel.h"
+#include "Panels/LevelEditorViewPanel.h"
 
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,36 +11,36 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Editors/EditorBase.h"
-#include "Editors/SceneEditor.h"
+#include "Editors/LevelEditor.h"
 
 namespace ZeoEngine {
 
-	void SceneViewPanel::OnAttach()
+	void LevelEditorViewPanel::OnAttach()
 	{
-		ViewPanelBase::OnAttach();
+		EditorViewPanelBase::OnAttach();
 
-		GetContextEditor()->m_PostSceneRender.connect<&SceneViewPanel::ReadPixelDataFromIDBuffer>(this);
+		GetContextEditor()->m_PostSceneRender.connect<&LevelEditorViewPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
-	void SceneViewPanel::ProcessRender()
+	void LevelEditorViewPanel::ProcessRender()
 	{
-		ViewPanelBase::ProcessRender();
+		EditorViewPanelBase::ProcessRender();
 
 		RenderGizmo();
 	}
 
-	void SceneViewPanel::ProcessEvent(Event& e)
+	void LevelEditorViewPanel::ProcessEvent(Event& e)
 	{
-		ViewPanelBase::ProcessEvent(e);
+		EditorViewPanelBase::ProcessEvent(e);
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewPanel::OnKeyPressed));
-		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(SceneViewPanel::OnMouseButtonPressed));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(LevelEditorViewPanel::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelEditorViewPanel::OnMouseButtonPressed));
 	}
 
-	void SceneViewPanel::RenderToolbar()
+	void LevelEditorViewPanel::RenderToolbar()
 	{
-		auto sceneEditor = GetContextEditor<SceneEditor>();
+		auto sceneEditor = GetContextEditor<LevelEditor>();
 		// Place buttons at window center
 		float indent = sceneEditor->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
 			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
@@ -81,7 +81,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneViewPanel::RenderGizmo()
+	void LevelEditorViewPanel::RenderGizmo()
 	{
 		ImGuizmo::Enable(!m_EditorCamera.IsUsing());
 
@@ -133,14 +133,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool SceneViewPanel::OnKeyPressed(KeyPressedEvent& e)
+	bool LevelEditorViewPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 
 		// Global responsing shotcuts
 		{
-			auto sceneEditor = GetContextEditor<SceneEditor>();
+			auto sceneEditor = GetContextEditor<LevelEditor>();
 			switch (e.GetKeyCode())
 			{
 				// Toggle play
@@ -212,14 +212,14 @@ namespace ZeoEngine {
 				}
 				case Key::Delete:
 				{
-					GetContextEditor<SceneEditor>()->OnDeleteEntity();
+					GetContextEditor<LevelEditor>()->OnDeleteEntity();
 					return true;
 				}
 				case Key::D:
 				{
 					if (bIsCtrlPressed)
 					{
-						GetContextEditor<SceneEditor>()->OnDuplicateEntity();
+						GetContextEditor<LevelEditor>()->OnDuplicateEntity();
 						return true;
 					}
 					break;
@@ -230,7 +230,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool SceneViewPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	bool LevelEditorViewPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		if (IsPanelHovered() &&
 			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
@@ -242,7 +242,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void SceneViewPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
+	void LevelEditorViewPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
 	{
 		auto [mx, my] = GetMouseViewportPosition();
 		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];

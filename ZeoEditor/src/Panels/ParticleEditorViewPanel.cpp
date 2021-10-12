@@ -1,4 +1,4 @@
-#include "Panels/ParticleViewPanel.h"
+#include "Panels/ParticleEditorViewPanel.h"
 
 #include <IconsFontAwesome5.h>
 
@@ -7,12 +7,12 @@
 
 namespace ZeoEngine {
 
-	void ParticleViewPanel::ProcessRender()
+	void ParticleEditorViewPanel::ProcessRender()
 	{
 		// Get default available region before drawing any widgets
 		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		ViewPanelBase::ProcessRender();
+		EditorViewPanelBase::ProcessRender();
 
 		const auto& psInstance = GetContextEditor()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
 
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		}
 	}
 	
-	void ParticleViewPanel::RenderToolbar()
+	void ParticleEditorViewPanel::RenderToolbar()
 	{
 		const auto& psInstance = GetContextEditor()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
 

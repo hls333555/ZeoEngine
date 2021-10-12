@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	class ViewPanelBase : public PanelBase
+	class EditorViewPanelBase : public PanelBase
 	{
 	public:
 		using PanelBase::PanelBase;

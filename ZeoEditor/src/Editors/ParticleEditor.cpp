@@ -2,7 +2,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/ParticleEditorUIRenderer.h"
-#include "Scenes/ParticleScene.h"
+#include "Scenes/ParticleEditorScene.h"
 
 namespace ZeoEngine {
 
@@ -23,7 +23,7 @@ namespace ZeoEngine {
 
 	Ref<Scene> ParticleEditor::CreateScene()
 	{
-		return CreateRef<ParticleScene>();
+		return CreateRef<ParticleEditorScene>();
 	}
 
 	AssetTypeId ParticleEditor::GetAssetTypeId() const

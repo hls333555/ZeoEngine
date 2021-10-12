@@ -5,7 +5,7 @@
 namespace ZeoEngine {
 
 	class SceneAsset;
-	class EditorScene;
+	class LevelEditorScene;
 
 	enum class SceneState
 	{
@@ -13,9 +13,9 @@ namespace ZeoEngine {
 		Play = 1, Pause = 2,
 	};
 
-	class SceneEditor : public EditorBase
+	class LevelEditor : public EditorBase
 	{
-		friend class SceneViewPanel;
+		friend class LevelEditorViewPanel;
 
 	public:
 		using EditorBase::EditorBase;
@@ -49,7 +49,7 @@ namespace ZeoEngine {
 	private:
 		SceneState m_SceneState = SceneState::Edit;
 
-		Ref<EditorScene> m_SceneForEdit;
+		Ref<LevelEditorScene> m_SceneForEdit;
 
 		AssetHandle<SceneAsset> m_SceneAsset;
 	};

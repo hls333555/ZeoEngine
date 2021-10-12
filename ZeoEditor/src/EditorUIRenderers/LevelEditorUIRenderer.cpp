@@ -1,10 +1,10 @@
-#include "EditorUIRenderers/SceneEditorUIRenderer.h"
+#include "EditorUIRenderers/LevelEditorUIRenderer.h"
 
 #include <imgui_internal.h>
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Panels/SceneViewPanel.h"
+#include "Panels/LevelEditorViewPanel.h"
 #include "Panels/SceneOutlinePanel.h"
 #include "Panels/InspectorPanels.h"
 #include "Panels/ContentBrowserPanel.h"
@@ -15,14 +15,14 @@
 
 namespace ZeoEngine {
 
-	void SceneEditorUIRenderer::OnAttach()
+	void LevelEditorUIRenderer::OnAttach()
 	{
 		EditorUIRendererBase::OnAttach();
 
 		m_DockspaceSpec.WindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
 		m_DockspaceSpec.WindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-		CreatePanel<SceneViewPanel>(SCENE_VIEW);
+		CreatePanel<LevelEditorViewPanel>(LEVEL_EDITOR_VIEW);
 		CreatePanel<SceneOutlinePanel>(SCENE_OUTLINE);
 		CreatePanel<EntityInspectorPanel>(ENTITY_INSPECTOR);
 		CreatePanel<ContentBrowserPanel>(CONTENT_BROWSER);
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_Cut>(ICON_FA_CUT "  Cut", "CTRL+X");
 
 		CreateMenu("Window")
-			.MenuItem<MenuItem_TogglePanel<SceneViewPanel>>(SCENE_VIEW)
+			.MenuItem<MenuItem_TogglePanel<LevelEditorViewPanel>>(LEVEL_EDITOR_VIEW)
 			.MenuItem<MenuItem_TogglePanel<SceneOutlinePanel>>(SCENE_OUTLINE)
 			.MenuItem<MenuItem_TogglePanel<EntityInspectorPanel>>(ENTITY_INSPECTOR)
 			.MenuItem<MenuItem_TogglePanel<ContentBrowserPanel>>(CONTENT_BROWSER)
@@ -57,7 +57,7 @@ namespace ZeoEngine {
 		
 	}
 
-	void SceneEditorUIRenderer::BuildDockWindows(ImGuiID dockspaceID)
+	void LevelEditorUIRenderer::BuildDockWindows(ImGuiID dockspaceID)
 	{
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.2f, nullptr, &dockLeft);
@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		ImGuiID dockLeftDownRight;
 		ImGuiID dockLeftDownLeft = ImGui::DockBuilderSplitNode(dockLeftDown, ImGuiDir_Left, 0.5f, nullptr, &dockLeftDownRight);
 
-		ImGui::DockBuilderDockWindow("###" SCENE_VIEW, dockLeftUpRight);
+		ImGui::DockBuilderDockWindow("###" LEVEL_EDITOR_VIEW, dockLeftUpRight);
 		ImGui::DockBuilderDockWindow(SCENE_OUTLINE, dockRightUp);
 		ImGui::DockBuilderDockWindow(ENTITY_INSPECTOR, dockRightDown);
 		ImGui::DockBuilderDockWindow(CONTENT_BROWSER, dockLeftDownLeft);

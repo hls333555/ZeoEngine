@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	class EditorBase;
 	class EditorMenu;
 	class PanelBase;
-	class ViewPanelBase;
+	class EditorViewPanelBase;
 
 	class EditorUIRendererBase
 	{
@@ -90,7 +90,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		Ref<ViewPanelBase> GetViewPanel();
+		Ref<EditorViewPanelBase> GetViewPanel();
 
 		void RebuildDockLayout() { m_bShouldRebuildDockLayout = true; }
 

@@ -1,4 +1,4 @@
-#include "Panels/ViewPanelBase.h"
+#include "Panels/EditorViewPanelBase.h"
 
 #include <imgui.h>
 
@@ -11,14 +11,14 @@
 
 namespace ZeoEngine {
 
-	void ViewPanelBase::OnAttach()
+	void EditorViewPanelBase::OnAttach()
 	{
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 		GetContextEditor()->SetEditorCamera(&m_EditorCamera);
-		GetContextEditor()->m_PostSceneCreate.connect<&ViewPanelBase::PostSceneCreate>(this);
+		GetContextEditor()->m_PostSceneCreate.connect<&EditorViewPanelBase::PostSceneCreate>(this);
 	}
 
-	void ViewPanelBase::ProcessUpdate(DeltaTime dt)
+	void EditorViewPanelBase::ProcessUpdate(DeltaTime dt)
 	{
 		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
 		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		m_EditorCamera.OnUpdate(dt, IsPanelFocused());
 	}
 
-	void ViewPanelBase::ProcessRender()
+	void EditorViewPanelBase::ProcessRender()
 	{
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
 		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -69,21 +69,21 @@ namespace ZeoEngine {
 		RenderToolbar();
 	}
 
-	void ViewPanelBase::ProcessEvent(Event& e)
+	void EditorViewPanelBase::ProcessEvent(Event& e)
 	{
 		if (!IsPanelHovered()) return;
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(ViewPanelBase::OnMouseScroll));
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(ViewPanelBase::OnKeyPressed));
+		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(EditorViewPanelBase::OnMouseScroll));
+		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(EditorViewPanelBase::OnKeyPressed));
 	}
 
-	bool ViewPanelBase::OnMouseScroll(MouseScrolledEvent& e)
+	bool EditorViewPanelBase::OnMouseScroll(MouseScrolledEvent& e)
 	{
 		return m_EditorCamera.OnMouseScroll(e);
 	}
 
-	bool ViewPanelBase::OnKeyPressed(KeyPressedEvent& e)
+	bool EditorViewPanelBase::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (e.GetKeyCode() == Key::F)
 		{
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	std::string ViewPanelBase::GetPanelTitle() const
+	std::string EditorViewPanelBase::GetPanelTitle() const
 	{
 		std::string assetName = GetContextEditor()->GetAsset()->GetName();
 		if (assetName.empty())
@@ -102,7 +102,7 @@ namespace ZeoEngine {
 		return assetName + "###" + GetPanelName();
 	}
 
-	void ViewPanelBase::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverwriteThumbnail)
+	void EditorViewPanelBase::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverwriteThumbnail)
 	{
 		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});
 		if (!bOverwriteThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
@@ -114,12 +114,12 @@ namespace ZeoEngine {
 		AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
 	}
 
-	glm::vec2 ViewPanelBase::GetViewportSize() const
+	glm::vec2 EditorViewPanelBase::GetViewportSize() const
 	{
 		return { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
 	}
 
-	std::pair<float, float> ViewPanelBase::GetMouseViewportPosition()
+	std::pair<float, float> EditorViewPanelBase::GetMouseViewportPosition()
 	{
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
@@ -127,7 +127,7 @@ namespace ZeoEngine {
 		return { mx, my };
 	}
 
-	void ViewPanelBase::OnViewportResize(const glm::vec2& size)
+	void EditorViewPanelBase::OnViewportResize(const glm::vec2& size)
 	{
 		// Resize FrameBuffer
 		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
@@ -138,13 +138,13 @@ namespace ZeoEngine {
 		UpdateViewportSizeOnSceneCameras();
 	}
 
-	void ViewPanelBase::PostSceneCreate()
+	void EditorViewPanelBase::PostSceneCreate()
 	{
 		// This binding must be called after scene creation!
-		GetContextEditor()->GetScene()->m_Registry.on_construct<CameraComponent>().template connect<&ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
+		GetContextEditor()->GetScene()->m_Registry.on_construct<CameraComponent>().template connect<&EditorViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
 	}
 
-	void ViewPanelBase::UpdateViewportSizeOnSceneCameras()
+	void EditorViewPanelBase::UpdateViewportSizeOnSceneCameras()
 	{
 		// Resize non-FixedAspectRatio cameras
 		auto view = GetContextEditor()->GetScene()->m_Registry.view<CameraComponent>();
