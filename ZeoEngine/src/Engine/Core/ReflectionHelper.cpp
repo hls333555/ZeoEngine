@@ -71,37 +71,37 @@ namespace ZeoEngine {
 
 		entt::meta_any ConstructComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			return compType.construct(std::ref(registry), entity);
+			return compType.construct(entt::forward_as_meta(registry), entity);
 		}
 
 		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
+			compType.func("remove"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
 		entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			return compType.func("get"_hs).invoke({}, std::ref(registry), entity);
+			return compType.func("get"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
 		entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
+			return compType.func("has"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
 		entt::meta_any CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance)
 		{
-			return compType.func("copy"_hs).invoke({}, std::ref(dstRegistry), dstEntity, std::ref(compInstance));
+			return compType.func("copy"_hs).invoke({}, entt::forward_as_meta(dstRegistry), dstEntity, entt::forward_as_meta(compInstance));
 		}
 
 		void BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry)
 		{
-			compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
+			compType.func("bind_on_destroy"_hs).invoke({}, entt::forward_as_meta(registry));
 		}
 
 		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
 		{
-			instance.type().func("set_enum_value_for_seq"_hs).invoke({}, std::ref(instance), std::ref(newValue));
+			instance.type().func("set_enum_value_for_seq"_hs).invoke({}, entt::forward_as_meta(instance), entt::forward_as_meta(newValue));
 		}
 
 	}
