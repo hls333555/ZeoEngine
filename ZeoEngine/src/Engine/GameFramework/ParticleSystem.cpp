@@ -8,6 +8,7 @@
 #include "Engine/Core/RandomEngine.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -128,9 +129,19 @@ namespace ZeoEngine {
 	ParticleTemplateAsset::ParticleTemplateAsset(const std::string& path)
 		: AssetBase(path)
 	{
+		// Default data
+		Lifetime.SetRandom(0.75f, 1.5f);
+		SpawnRate.SetConstant(30.0f);
+		InitialRotation.SetRandom(glm::vec3{ 0.0f }, { 0.0f, 0.0f, 360.0f });
+		RotationRate.SetRandom(glm::vec3{ 0.0f, 0.0f, 10.0f }, glm::vec3{ 0.0f, 0.0f, 50.0f });
+		InitialVelocity.SetRandom({ -0.5f, 0.5f, 0.0f }, { 0.5f, 2.0f, 0.0f });
+		SizeBegin.SetRandom({ 0.1f, 0.1f, 0.0f }, { 0.2f, 0.2f, 0.0f });
+		SizeEnd.SetConstant(glm::vec3{ 0.0f });
+		ColorBegin.SetConstant(glm::vec4{ 1.0f });
+		ColorEnd.SetConstant(glm::vec4{ 0.0f });
 	}
 
-	Ref<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
+	AssetHandle<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
 	{
 		// A way to allow std::make_shared() to access ParticleTemplateAsset's private constructor
 		class ParticleTemplateAssetEnableShared : public ParticleTemplateAsset
@@ -160,14 +171,14 @@ namespace ZeoEngine {
 			SetPath(path);
 		}
 
-		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
 	}
 
 	void ParticleTemplateAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ shared_from_this() });
+		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
 	}
 
 	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()
@@ -178,12 +189,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
-		: m_ParticleTemplate(particleTemplate)
-		, m_OwnerEntity(ownerEntity)
+	struct ParticleSystemInstance::Impl
+	{
+		/** Entity that contains the particle component */
+		Entity OwnerEntity;
+
+		ParticleSystemInstance::Impl(Entity ownerEntity)
+			: OwnerEntity(ownerEntity) {}
+	};
+
+	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset)
+		: m_Impl(CreateScope<Impl>(*ownerEntity))
+		, m_ParticleTemplate(particleTemplate)
 		, m_PositionOffset(positionOffset)
 	{
-		m_bIsPreview = ownerEntity.HasComponent<ParticleSystemPreviewComponent>();
+		m_bIsPreview = ownerEntity->HasComponent<ParticleSystemPreviewComponent>();
 		Reevaluate();
 	}
 
@@ -193,13 +213,13 @@ namespace ZeoEngine {
 		class ParticleSystemEnableShared : public ParticleSystemInstance
 		{
 		public:
-			ParticleSystemEnableShared(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset)
+			ParticleSystemEnableShared(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset)
 				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 
 		if (particleComp.Template)
 		{
-			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.OwnerEntity, particleComp.PositionOffset);
+			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.ComponentHelper->GetOwnerEntity(), particleComp.PositionOffset);
 			if (particleComp.Instance)
 			{
 				// Get old template from instance as template in component may have been updated
@@ -259,7 +279,7 @@ namespace ZeoEngine {
 
 		m_EmitterSpec.MaxParticles = m_ParticleTemplate->MaxParticles;
 
-		m_OwnerLastPosition = m_OwnerEntity.GetEntityTranslation();
+		m_OwnerLastPosition = GetOwnerEntity()->GetTranslation();
 	}
 
 	void ParticleSystemInstance::ReevaluateBurstList()
@@ -413,7 +433,7 @@ namespace ZeoEngine {
 
 		m_bSystemComplete = true;
 
-		glm::vec3 ownerPosition = m_OwnerEntity.GetEntityTranslation();
+		glm::vec3 ownerPosition = GetOwnerEntity()->GetTranslation();
 		glm::vec3 ownerVelocity = (ownerPosition - m_OwnerLastPosition) / static_cast<float>(dt);
 		glm::vec3 inheritVelocity = m_EmitterSpec.bIsLocalSpace ? ownerVelocity : ownerVelocity * m_EmitterSpec.InheritVelocityRatio;
 		for (auto& particle : m_ParticlePool)
@@ -501,13 +521,18 @@ namespace ZeoEngine {
 				glm::scale(glm::mat4(1.0f), particle.Size);
 			if (m_EmitterSpec.Texture)
 			{
-				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
+				Renderer2D::DrawQuad(transform, m_EmitterSpec.Texture, m_EmitterSpec.TilingFactor, particle.UvOffset, particle.Color, *GetOwnerEntity());
 			}
 			else
 			{
-				Renderer2D::DrawQuad(transform, particle.Color, static_cast<uint32_t>(m_OwnerEntity));
+				Renderer2D::DrawQuad(transform, particle.Color, *GetOwnerEntity());
 			}
 		}
+	}
+
+	Entity* ParticleSystemInstance::GetOwnerEntity() const
+	{
+		return &m_Impl->OwnerEntity;
 	}
 
 	void ParticleSystemInstance::ResetParticlePool()

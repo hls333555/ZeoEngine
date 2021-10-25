@@ -71,9 +71,9 @@ namespace ZeoEngine {
 					// Accept asset dragging from the Content Browser
 					if (ImGui::BeginDragDropTarget())
 					{
-						char typeStr[32];
+						char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
 						_itoa_s(TypeId, typeStr, 10);
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(typeStr))
+						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr, previewRounding))
 						{
 							auto spec = *(const Ref<AssetSpec>*)payload->Data;
 							bIsValueChanged = spec != retSpec;

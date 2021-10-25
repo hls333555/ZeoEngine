@@ -5,11 +5,13 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Utils/PathUtils.h"
-#include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
+
+	struct ParticleSystemComponent;
+	class Entity;
 
 	enum class ParticleVariationType
 	{
@@ -59,13 +61,13 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetBase<ParticleTemplateAsset>
+	class ParticleTemplateAsset : public AssetBase<ParticleTemplateAsset>
 	{
 	private:
 		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
-		static Ref<ParticleTemplateAsset> Create(const std::string& path);
+		static AssetHandle<ParticleTemplateAsset> Create(const std::string& path = "");
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -137,16 +139,14 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleSystemComponent;
-
 	class ParticleSystemInstance
 	{
-		friend class ParticleViewPanel;
+		friend class ParticleEditorViewPanel;
 		friend class ParticleTemplateAsset;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
 		/**
@@ -156,13 +156,37 @@ namespace ZeoEngine {
 		 */
 		static void Create(ParticleSystemComponent& particleComp);
 
-		AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
+		const AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
 
 		void Activate();
 		void Deactivate();
+
+		Entity* GetOwnerEntity() const;
+
+	private:
+		void TogglePause();
+		bool IsPause() const { return m_bPauseUpdate; }
+		void Resimulate();
+		void ResetParticlePool();
+		void Reset();
+
+		void Reevaluate();
+		void EvaluateEmitterProperties();
+		void ReevaluateBurstList();
+		struct Particle;
+		void EvaluateParticleProperties(Particle& particle);
+
+		bool Emit();
+		void CalculateNextPoolIndex();
+
+	private:
+		entt::sigh<void()> m_OnSystemFinishedDel;
+	public:
+		/** Called when this particle system is about to be destroyed */
+		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
 		// Burst data specification
@@ -213,27 +237,9 @@ namespace ZeoEngine {
 			bool bActive = false;
 		};
 
-		void TogglePause();
-		bool IsPause() const { return m_bPauseUpdate; }
-		void Resimulate();
-		void ResetParticlePool();
-		void Reset();
+		struct Impl;
+		Scope<Impl> m_Impl;
 
-		void Reevaluate();
-		void EvaluateEmitterProperties();
-		void ReevaluateBurstList();
-		void EvaluateParticleProperties(Particle& particle);
-
-		bool Emit();
-		void CalculateNextPoolIndex();
-
-	private:
-		entt::sigh<void()> m_OnSystemFinishedDel;
-	public:
-		/** Called when this particle system is about to be destroyed */
-		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
-
-	private:
 		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
@@ -244,8 +250,7 @@ namespace ZeoEngine {
 
 		/** Particle's spawn offset from owner entity's translation */
 		glm::vec3 m_PositionOffset{ 0.0f };
-		/** Entity that contains the ParticleSystemComponent or ParticleSystemPreviewComponent */
-		Entity m_OwnerEntity;
+		
 		glm::vec3 m_OwnerLastPosition{ 0.0f };
 
 		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */

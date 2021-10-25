@@ -2,19 +2,23 @@
 
 #include <any>
 
-#include "Engine/GameFramework/Entity.h"
+#include "Engine/Core/Core.h"
 
 namespace ZeoEngine {
+
+	class Entity;
 
 	class IComponentHelper
 	{
 	protected:
-		IComponentHelper() = default;
-		IComponentHelper(const IComponentHelper&) = default;
+		IComponentHelper();
+		virtual ~IComponentHelper();
 
 	public:
 		/**  Called after component being added to the owner entity. */
 		virtual void OnComponentAdded() {}
+		/**  Called after component being copied to the owner entity. */
+		virtual void OnComponentCopied() {}
 		/** Called before component being removed from the owner entity. */
 		virtual void OnComponentDestroy() {}
 
@@ -23,15 +27,18 @@ namespace ZeoEngine {
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 
-		void SetOwnerEntity(Entity entity) { m_OwnerEntity = entity; }
+		Entity* GetOwnerEntity() const;
+		void SetOwnerEntity(Entity* entity);
 
-	protected:
-		Entity m_OwnerEntity;
+	private:
+		struct Impl;
+		Scope<Impl> m_Impl;
 	};
 
 	class ParticleSystemComponentHelper : public IComponentHelper
 	{
 	public:
+		virtual void OnComponentCopied() override;
 		virtual void OnComponentDestroy() override;
 
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;

@@ -7,20 +7,25 @@
 
 namespace ZeoEngine {
 
-	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
+	Entity Scene::CreateEntity(const std::string& name)
 	{
-		Entity entity = CreateEmptyEntity();
+		return CreateEntityWithUUID(UUID(), name);
+	}
+
+	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+	{
+		Entity entity{ m_Registry.create(), this };
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
 			coreComp.Name = name;
-			coreComp.CreationId = m_EntityCount - 1;
-			coreComp.bIsInternal = bIsInternal;
+			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
+		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 
-		// No need to sort on first entity
-		if (m_EntityCount > 1)
+		// No need to sort if there is only one entity
+		if (GetEntityCount() > 1)
 		{
 			SortEntities();
 		}
@@ -28,11 +33,12 @@ namespace ZeoEngine {
 		return entity;
 	}
 
-	Entity Scene::CreateEmptyEntity()
+	Entity Scene::DuplicateEntity(Entity entity)
 	{
-		Entity entity{ m_Registry.create(), this };
-		++m_EntityCount;
-		return entity;
+		Entity newEntity = CreateEntity(entity.GetName());
+		// Copy all components but IDComponent(UUID)
+		newEntity.CopyAllComponents(entity, { entt::type_hash<IDComponent>::value() });
+		return newEntity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
@@ -43,11 +49,11 @@ namespace ZeoEngine {
 
 	void Scene::SortEntities()
 	{
-		// Sort entities by creation order
+		// Sort entities by creation index
 		// We assume that every entity has the CoreComponent which will never get removed
 		m_Registry.sort<CoreComponent>([](const auto& lhs, const auto& rhs)
 		{
-			return lhs.CreationId < rhs.CreationId;
+			return lhs.EntityIndex < rhs.EntityIndex;
 		});
 	}
 
@@ -56,7 +62,7 @@ namespace ZeoEngine {
 	{
 	}
 
-	Ref<SceneAsset> SceneAsset::Create(const std::string& path)
+	AssetHandle<SceneAsset> SceneAsset::Create(const std::string& path)
 	{
 		// A way to allow std::make_shared() to access SceneAsset's private constructor
 		class SceneAssetEnableShared : public SceneAsset

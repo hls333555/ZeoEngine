@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		const auto& scene = sceneEditor->GetScene();
 
 		// Display entities in creation order, the order is updated when a new entity is created or destroyed
-		scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& cc)
+		scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& coreComp)
 		{
 			Entity entity{ entityId, GetContextEditor()->GetScene().get() };
 			DrawEntityNode(entity);
@@ -43,14 +43,15 @@ namespace ZeoEngine {
 
 			ImGui::EndPopup();
 		}
+
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing());
+		ImGui::Text(" %d entitie(s)", scene->GetEntityCount());
 	}
 
 	void SceneOutlinePanel::DrawEntityNode(Entity entity)
 	{
-		auto& coreComp = entity.GetComponent<CoreComponent>();
-		if (coreComp.bIsInternal) return;
-
-		const char* entityName = coreComp.Name.c_str();
+		std::string entityNameStr = entity.GetName();
+		const char* entityName = entityNameStr.c_str();
 		if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(entityName))
 		{
 			auto sceneEditor = GetContextEditor();
@@ -58,6 +59,11 @@ namespace ZeoEngine {
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, entityName);
+			// Display UUID when hovered
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("UUID: %llu", entity.GetUUID());
+			}
 			if (ImGui::IsItemClicked())
 			{
 				sceneEditor->SetContextEntity(entity);

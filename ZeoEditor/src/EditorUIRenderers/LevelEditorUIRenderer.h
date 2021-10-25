@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	class SceneEditorUIRenderer : public EditorUIRendererBase
+	class LevelEditorUIRenderer : public EditorUIRendererBase
 	{
 	public:
 		using EditorUIRendererBase::EditorUIRendererBase;

@@ -1,15 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/ImGui/MyImGui.h"
 
-#include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
 
 namespace ImGui {
-
-	static ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
-	static ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
-	static ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs) { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
-	static ImVec2 operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
 
 	void TextCentered(const char* fmt, ...)
 	{
@@ -267,13 +261,6 @@ namespace ImGui {
 		}
 	}
 
-	ImRect GetWindowWorkRect()
-	{
-		ImGuiContext& g = *GImGui;
-		ImGuiWindow* window = g.CurrentWindow;
-		return window->WorkRect;
-	}
-
 	ImVec2 GetFramePadding()
 	{
 		return GImGui->Style.FramePadding;
@@ -282,7 +269,7 @@ namespace ImGui {
 	void VSplitter(const char* str_id, ImVec2* size)
 	{
 		ImVec2 screen_pos = GetCursorScreenPos();
-		InvisibleButton(str_id, ImVec2(3, -1));
+		InvisibleButton(str_id, ImVec2(3, size->y == 0 ? -1 : size->y));
 		ImVec2 end_pos = screen_pos + GetItemRectSize();
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;
@@ -299,7 +286,7 @@ namespace ImGui {
 		}
 	}
 
-	void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col, ImDrawFlags flags)
 	{
 		ImGuiWindow* window = GetCurrentWindow();
 		if (window->SkipItems)
@@ -314,12 +301,12 @@ namespace ImGui {
 
 		if (border_col.w > 0.0f)
 		{
-			window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), rounding);
-			window->DrawList->AddImageRounded(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col), rounding);
+			window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), rounding, flags);
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col), rounding, flags);
 		}
 		else
 		{
-			window->DrawList->AddImageRounded(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col), rounding);
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col), rounding, flags);
 		}
 	}
 
@@ -340,6 +327,43 @@ namespace ImGui {
 			{ thumbnailSize, thumbnailSize }, rounding,
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 			{ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.2039f, 0.2039f, 0.2039f, bShouldDrawBackground ? 1.0f : 0.0f});
+	}
+
+	const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding, ImGuiDragDropFlags flags)
+	{
+		ImGuiContext& g = *GImGui;
+		ImGuiWindow* window = g.CurrentWindow;
+		ImGuiPayload& payload = g.DragDropPayload;
+		IM_ASSERT(g.DragDropActive);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
+		IM_ASSERT(payload.DataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?
+		if (type != NULL && !payload.IsDataType(type))
+			return NULL;
+
+		// Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
+		// NB: We currently accept NULL id as target. However, overlapping targets requires a unique ID to function!
+		const bool was_accepted_previously = (g.DragDropAcceptIdPrev == g.DragDropTargetId);
+		ImRect r = g.DragDropTargetRect;
+		float r_surface = r.GetWidth() * r.GetHeight();
+		if (r_surface <= g.DragDropAcceptIdCurrRectSurface)
+		{
+			g.DragDropAcceptFlags = flags;
+			g.DragDropAcceptIdCurr = g.DragDropTargetId;
+			g.DragDropAcceptIdCurrRectSurface = r_surface;
+		}
+
+		// Render default drop visuals
+		// FIXME-DRAGDROP: Settle on a proper default visuals for drop target.
+		payload.Preview = was_accepted_previously;
+		flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
+		if (!(flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
+			window->DrawList->AddRect(r.Min - ImVec2(2.f, 2.f), r.Max + ImVec2(2.f, 2.f), GetColorU32(ImGuiCol_DragDropTarget), highlightRounding, 0, 1.0f);
+
+		g.DragDropAcceptFrameCount = g.FrameCount;
+		payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
+		if (!payload.Delivery && !(flags & ImGuiDragDropFlags_AcceptBeforeDelivery))
+			return NULL;
+
+		return &payload;
 	}
 
 }

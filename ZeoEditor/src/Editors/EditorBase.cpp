@@ -1,11 +1,12 @@
 #include "Editors/EditorBase.h"
 
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Panels/OpenAssetPanel.h"
+#include "Panels/SaveAssetPanel.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Debug/Instrumentor.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/EditorCamera.h"
-#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Debug/BenchmarkTimer.h"
 
 #define FRAMEBUFFER_WIDTH 1280
@@ -21,9 +22,9 @@ namespace ZeoEngine {
 	void EditorBase::OnAttach()
 	{
 		CreateFrameBuffer();
-		m_Scene = CreateScene();
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
+		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)
@@ -32,7 +33,7 @@ namespace ZeoEngine {
 
 		m_EditorUIRenderer->OnUpdate(dt);
 
-		m_Scene->OnUpdate(dt);
+		m_ActiveScene->OnUpdate(dt);
 
 		BeginFrameBuffer();
 		{
@@ -48,7 +49,7 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
-				m_Scene->OnRender(*m_EditorCamera);
+				m_ActiveScene->OnRender(*m_EditorCamera);
 				m_PostSceneRenderDel.publish(m_FBO);
 			}
 		}
@@ -70,7 +71,7 @@ namespace ZeoEngine {
 
 		if (!m_bBlockSceneEvents)
 		{
-			m_Scene->OnEvent(e);
+			m_ActiveScene->OnEvent(e);
 		}
 	}
 
@@ -84,62 +85,71 @@ namespace ZeoEngine {
 		m_bShow = true;
 	}
 
-	void EditorBase::NewAsset(bool bIsFromLoad)
+	void EditorBase::NewScene(bool bIsFromLoad)
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
-		m_Scene = CreateScene();
-		PostSceneCreate(bIsFromLoad);
+		m_ActiveScene = CreateScene();
 		m_PostSceneCreateDel.publish(bIsFromLoad);
 	}
 
-	void EditorBase::LoadAsset()
+	void EditorBase::LoadScene()
 	{
-		auto filePath = FileDialogs::OpenFile();
-		if (!filePath) return;
-
-		LoadAsset(*filePath);
+		auto openAssetPanel = m_EditorUIRenderer->GetPanel<OpenAssetPanel>(OPEN_ASSET);
+		if (!openAssetPanel)
+		{
+			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, GetAssetTypeId());
+		}
+		else
+		{
+			openAssetPanel->Open();
+		}
 	}
 
-	void EditorBase::LoadAsset(const std::string& path)
+	void EditorBase::LoadScene(const std::string& path)
 	{
 		BenchmarkTimer timer;
 
-		NewAsset(true);
-		LoadAssetImpl(path);
-		m_Scene->PostLoad();
+		NewScene(true);
+		LoadAsset(path);
+		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveAsset()
+	void EditorBase::SaveScene()
 	{
-		const std::string assetPath = GetAssetPath();
+		const std::string assetPath = GetAsset()->GetPath();
 		if (assetPath.empty())
 		{
-			SaveAssetAs();
+			SaveSceneAs();
 		}
 		else
 		{
-			SaveAsset(assetPath);
+			SaveScene(assetPath);
 		}
 	}
 
-	void EditorBase::SaveAsset(const std::string& path)
+	void EditorBase::SaveScene(const std::string& path)
 	{
 		BenchmarkTimer timer;
 
-		SaveAssetImpl(path);
+		SaveAsset(path);
 
 		ZE_CORE_WARN("Saving {0} took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveAssetAs()
+	void EditorBase::SaveSceneAs()
 	{
-		auto filePath = FileDialogs::SaveFile();
-		if (!filePath) return;
-
-		SaveAsset(*filePath);
+		auto saveAssetPanel = m_EditorUIRenderer->GetPanel<SaveAssetPanel>(SAVE_ASSET);
+		if (!saveAssetPanel)
+		{
+			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAssetTypeId());
+		}
+		else
+		{
+			saveAssetPanel->Open();
+		}
 	}
 
 	void EditorBase::CreateFrameBuffer()

@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		if (m_bStartLerpToFocus && m_FocusedEntity)
 		{
 			m_bIsUsing = true;
-			const auto targetPos = m_FocusedEntity.GetEntityTranslation();
+			const auto targetPos = m_FocusedEntity.GetTranslation();
 			m_FocalPoint = Math::InterpTo(m_FocalPoint, targetPos, dt, 13.0f);
 			if (m_FocalPoint == targetPos)
 			{

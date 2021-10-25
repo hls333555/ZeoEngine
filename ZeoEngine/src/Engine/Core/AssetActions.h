@@ -9,6 +9,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual void OpenAsset(const std::string& path) const = 0;
+		virtual void RenameAsset(const std::string& oldPath, const std::string& newPath) const = 0;
 		virtual void DeleteAsset(const std::string& path) const = 0;
 		virtual void ReloadAsset(const std::string& path) const = 0;
 		virtual void SaveAsset(const std::string& path) const = 0;
@@ -18,12 +19,14 @@ namespace ZeoEngine {
 	class AssetActionsBase : public IAssetActions
 	{
 	public:
+		virtual void RenameAsset(const std::string& oldPath, const std::string& newPath) const override;
 		virtual void DeleteAsset(const std::string& path) const override;
 	};
 
 	class ImportableAssetActionsBase : public AssetActionsBase
 	{
 	public:
+		virtual void RenameAsset(const std::string& oldPath, const std::string& newPath) const override;
 		virtual void DeleteAsset(const std::string& path) const override;
 		virtual void ReimportAsset(const std::string& path) const override;
 	};

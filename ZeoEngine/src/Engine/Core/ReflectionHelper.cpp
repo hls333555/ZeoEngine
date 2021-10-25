@@ -2,7 +2,6 @@
 #include "Engine/Core/ReflectionHelper.h"
 
 #include <glm/glm.hpp>
-#include <IconsFontAwesome5.h>
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
@@ -10,23 +9,10 @@
 
 namespace ZeoEngine {
 
-	const char* GetComponentIcon(uint32_t compId)
-	{
-		switch (compId)
-		{
-			case entt::type_hash<TransformComponent>::value():		return ICON_FA_MAP_MARKER_ALT;
-			case entt::type_hash<SpriteRendererComponent>::value():	return ICON_FA_GHOST;
-			case entt::type_hash<CameraComponent>::value():			return ICON_FA_CAMERA;
-			case entt::type_hash<ParticleSystemComponent>::value():	return ICON_FA_FIRE_ALT;
-		}
-
-		return ICON_FA_CIRCLE_NOTCH;
-	}
-
 	const char* GetComponentDisplayNameFull(uint32_t compId)
 	{
-		const char* compIcon = GetComponentIcon(compId);
 		const auto compType = entt::resolve(compId);
+		const char* compIcon = compType.func("get_icon"_hs).invoke({}).cast<const char*>();
 		const auto compName = GetMetaObjectDisplayName(compType);
 		static char fullCompName[128];
 		strcpy_s(fullCompName, compIcon);
@@ -83,29 +69,39 @@ namespace ZeoEngine {
 
 	namespace Reflection {
 
+		entt::meta_any ConstructComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+		{
+			return compType.construct(entt::forward_as_meta(registry), entity);
+		}
+
 		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			compType.func("remove"_hs).invoke({}, std::ref(registry), entity);
+			compType.func("remove"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
 		entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			return compType.func("get"_hs).invoke({}, std::ref(registry), entity);
+			return compType.func("get"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
 		entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
 		{
-			return compType.func("has"_hs).invoke({}, std::ref(registry), entity);
+			return compType.func("has"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 		}
 
-		void BindOnDestroy(entt::meta_type compType, entt::registry& registry)
+		entt::meta_any CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance)
 		{
-			compType.func("bind_on_destroy"_hs).invoke({}, std::ref(registry));
+			return compType.func("copy"_hs).invoke({}, entt::forward_as_meta(dstRegistry), dstEntity, entt::forward_as_meta(compInstance));
+		}
+
+		void BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry)
+		{
+			compType.func("bind_on_destroy"_hs).invoke({}, entt::forward_as_meta(registry));
 		}
 
 		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
 		{
-			instance.type().func("set_enum_value_for_seq"_hs).invoke({}, std::ref(instance), std::ref(newValue));
+			instance.type().func("set_enum_value_for_seq"_hs).invoke({}, entt::forward_as_meta(instance), entt::forward_as_meta(newValue));
 		}
 
 	}

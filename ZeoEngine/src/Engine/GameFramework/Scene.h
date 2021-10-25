@@ -7,6 +7,7 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Core/AssetLibrary.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -16,7 +17,7 @@ namespace ZeoEngine {
 	{
 		friend class Entity;
 		friend class SceneSerializer;
-		friend class ViewPanelBase;
+		friend class EditorViewPanelBase;
 		friend class SceneOutlinePanel;
 		friend class ISystem;
 		friend class RenderSystem;
@@ -29,28 +30,39 @@ namespace ZeoEngine {
 		virtual void OnRender(const EditorCamera& camera) {}
 		virtual void OnEvent(Event& e) {}
 
-		/**
-		 * Create an entity with default components.
-		 * 
-		 * @param bIsInternal - If true, this entity will not show in SceneOutlinePanel.
-		 */
-		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
+		template<typename T, typename ... Args>
+		Ref<T> Copy(Args&& ... args)
+		{
+			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
+			m_Registry.view<CoreComponent>().each([this, &newScene](auto entityId, auto& coreComp)
+			{
+				Entity entity{ entityId, this };
+				// Clone a new "empty" entity
+				auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+				// Copy components to that entity
+				newEntity.CopyAllComponents(entity);
+			});
+			return newScene;
+		}
+
+		Entity CreateEntity(const std::string& name = "Entity");
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity");
+		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
+
+		size_t GetEntityCount() const { return m_Registry.alive(); }
 
 		/** Called after all data have been loaded. */
 		virtual void PostLoad() {}
 
 	private:
-		/** Create an entity with no default components. */
-		Entity CreateEmptyEntity();
-
 		void SortEntities();
 
 	protected:
 		entt::registry m_Registry;
 
 	private:
-		uint32_t m_EntityCount = 0;
+		uint32_t m_CurrentEntityIndex = 0;
 	};
 
 	class SceneAsset : public AssetBase<SceneAsset>
@@ -59,11 +71,11 @@ namespace ZeoEngine {
 		explicit SceneAsset(const std::string& path);
 
 	public:
-		static Ref<SceneAsset> Create(const std::string& path);
+		static AssetHandle<SceneAsset> Create(const std::string& path = "");
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
-		/** Update scene reference and deserialize scene data. */
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
+		/** Update scene referenece. */
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
 		/** Clear scene referenece. */
 		void ClearScene() { m_Scene.reset(); }
 

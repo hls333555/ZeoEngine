@@ -2,7 +2,7 @@
 
 namespace ZeoEngine {
 
-	class SceneEditorUIRendererExtender
+	class LevelEditorUIRendererExtender
 	{
 		// TODO: SceneEditorUIRendererExtender
 	};

@@ -38,7 +38,6 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	static const char* GetComponentIcon(uint32_t compId);
 	const char* GetComponentDisplayNameFull(uint32_t compId);
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type);
@@ -155,11 +154,13 @@ namespace ZeoEngine {
 
 	namespace Reflection {
 
+		entt::meta_any ConstructComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
+		entt::meta_any CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance);
 
-		void BindOnDestroy(entt::meta_type compType, entt::registry& registry);
+		void BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry);
 
 		void SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue);
 

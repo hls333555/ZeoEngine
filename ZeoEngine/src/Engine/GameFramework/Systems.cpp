@@ -1,8 +1,14 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Systems.h"
 
+#include <box2d/b2_world.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_fixture.h>
+#include <box2d/b2_polygon_shape.h>
+
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/GameFramework/ScriptableEntity.h"
 
 namespace ZeoEngine {
 
@@ -155,6 +161,81 @@ namespace ZeoEngine {
 				nativeScriptComp.Instance->OnEvent(e);
 			}
 		});
+	}
+
+	void PhysicsSystem::OnUpdate(DeltaTime dt)
+	{
+		const int32_t velocityIterations = 6;
+		const int32_t positionIterations = 2;
+		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
+
+		ForEachView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		{
+			Entity entity = { e, m_Scene };
+			auto& transformComp = entity.GetComponent<TransformComponent>();
+
+			// Retrieve transfrom from Box2D
+			b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
+			const auto& position = body->GetPosition();
+			transformComp.Translation.x = position.x;
+			transformComp.Translation.y = position.y;
+			transformComp.Rotation.z = body->GetAngle();
+		});
+	}
+
+	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
+	{
+		switch (bodyType)
+		{
+			case Rigidbody2DComponent::BodyType::Static:	return b2_staticBody;
+			case Rigidbody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
+			case Rigidbody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
+		}
+
+		ZE_CORE_ASSERT(false, "Unknown body type!");
+		return b2_staticBody;
+	}
+
+	void PhysicsSystem::OnRuntimeStart()
+	{
+		const b2Vec2 gravity = { 0.0f, -9.8f };
+		m_PhysicsWorld = new b2World(gravity);
+		ForEachView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		{
+			Entity entity = { e, m_Scene };
+			auto& transformComp = entity.GetComponent<TransformComponent>();
+
+			b2BodyDef bodyDef;
+			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
+			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
+			bodyDef.angle = transformComp.Rotation.z;
+
+			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+			body->SetFixedRotation(rb2dComp.bFixedRotation);
+			rb2dComp.RuntimeBody = body;
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
+			{
+				auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
+
+				b2PolygonShape boxShape;
+				boxShape.SetAsBox(bc2dComp.Size.x * transformComp.Scale.x, bc2dComp.Size.y * transformComp.Scale.y);
+
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &boxShape;
+				fixtureDef.density = bc2dComp.Density;
+				fixtureDef.friction = bc2dComp.Friction;
+				fixtureDef.restitution = bc2dComp.Restitution;
+				fixtureDef.restitutionThreshold = bc2dComp.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
+		});
+	}
+
+	void PhysicsSystem::OnRuntimeStop()
+	{
+		delete m_PhysicsWorld;
+		m_PhysicsWorld = nullptr;
 	}
 
 }

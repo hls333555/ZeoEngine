@@ -4,7 +4,7 @@
 
 #include "Menus/EditorMenu.h"
 #include "Menus/EditorMenuItems.h"
-#include "Panels/ParticleViewPanel.h"
+#include "Panels/ParticleEditorViewPanel.h"
 #include "Panels/InspectorPanels.h"
 
 namespace ZeoEngine {
@@ -13,7 +13,7 @@ namespace ZeoEngine {
 	{
 		EditorUIRendererBase::OnAttach();
 
-		CreatePanel<ParticleViewPanel>(PARTICLE_VIEW);
+		CreatePanel<ParticleEditorViewPanel>(PARTICLE_EDITOR_VIEW);
 		CreatePanel<ParticleInspectorPanel>(PARTICLE_INSPECTOR);
 
 		CreateMenu("File")
@@ -28,7 +28,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_Snapshot>(ICON_FA_CAMERA "  Snapshot");
 
 		CreateMenu("Window")
-			.MenuItem<MenuItem_TogglePanel<ParticleViewPanel>>(PARTICLE_VIEW)
+			.MenuItem<MenuItem_TogglePanel<ParticleEditorViewPanel>>(PARTICLE_EDITOR_VIEW)
 			.MenuItem<MenuItem_TogglePanel<ParticleInspectorPanel>>(PARTICLE_INSPECTOR);
 		
 	}
@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		ImGuiID dockLeft;
 		ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.5f, nullptr, &dockLeft);
 
-		ImGui::DockBuilderDockWindow(PARTICLE_VIEW, dockLeft);
+		ImGui::DockBuilderDockWindow("###" PARTICLE_EDITOR_VIEW, dockLeft);
 		ImGui::DockBuilderDockWindow(PARTICLE_INSPECTOR, dockRight);
 	}
 

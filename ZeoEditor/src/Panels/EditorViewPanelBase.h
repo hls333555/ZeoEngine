@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	class ViewPanelBase : public PanelBase
+	class EditorViewPanelBase : public PanelBase
 	{
 	public:
 		using PanelBase::PanelBase;
@@ -39,10 +39,10 @@ namespace ZeoEngine {
 
 		virtual void RenderToolbar() {};
 
+		virtual std::string GetPanelTitle() const override;
+
 		bool OnMouseScroll(MouseScrolledEvent& e);
 		bool OnKeyPressed(KeyPressedEvent& e);
-
-		void SetViewportBounds(float x, float y, float width, float height);
 
 		void OnViewportResize(const glm::vec2& size);
 

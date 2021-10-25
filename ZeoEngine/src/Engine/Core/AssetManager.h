@@ -34,6 +34,8 @@ namespace ZeoEngine {
 		bool ImportAsset(AssetTypeId typeId, const std::string& srcPath, const std::string& destPath) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path) const;
+		/** Rename an existing asset. */
+		bool RenameAsset(const std::string& oldPath, const std::string& newPath) const;
 		/** Delete an existing asset. */
 		bool DeleteAsset(const std::string& path) const;
 		/** Reload an existing asset from disk, any unsaved changes are discarded. */

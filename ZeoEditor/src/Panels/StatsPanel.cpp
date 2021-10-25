@@ -30,7 +30,7 @@ namespace ZeoEngine {
 
 		if (ImGui::TreeNodeEx("Entity", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			std::string HoveredEntityName = Stats.HoveredEntity ? Stats.HoveredEntity.GetEntityName() : "NA";
+			std::string HoveredEntityName = Stats.HoveredEntity ? Stats.HoveredEntity.GetName() : "NA";
 			ImGui::Text("Hovered Entity: %s", HoveredEntityName.c_str());
 
 			ImGui::TreePop();

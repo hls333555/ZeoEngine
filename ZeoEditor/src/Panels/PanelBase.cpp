@@ -1,5 +1,7 @@
 #include "Panels/PanelBase.h"
 
+#include "Engine/Core/Input.h"
+
 namespace ZeoEngine {
 
 	PanelBase::PanelBase(const char* panelName, const Ref<EditorBase>& contextEditor)
@@ -25,7 +27,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
-		if (ImGui::Begin(m_PanelName.c_str(), &m_bShow, m_PanelSpec.WindowFlags))
+		if (ImGui::Begin(GetPanelTitle().c_str(), &m_bShow, m_PanelSpec.WindowFlags))
 		{
 			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
@@ -33,6 +35,12 @@ namespace ZeoEngine {
 			ProcessRender();
 		}
 		ImGui::PopStyleVar();
+
+		// Press middle mouse button or right mouse button to focus panel
+		if (m_bIsPanelHovered && (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) || Input::IsMouseButtonPressed(Mouse::ButtonRight)))
+		{
+			ImGui::FocusWindow(ImGui::GetCurrentWindow());
+		}
 
 		ImGui::End();
 	}
@@ -47,6 +55,12 @@ namespace ZeoEngine {
 	void PanelBase::Open()
 	{
 		m_bShow = true;
+		OnPanelOpen();
+	}
+
+	void PanelBase::Close()
+	{
+		m_bShow = false;
 	}
 
 }

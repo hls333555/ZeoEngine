@@ -10,6 +10,7 @@ namespace ZeoEngine {
 	class EditorUIRendererBase;
 	class Scene;
 	class FrameBuffer;
+	class IAsset;
 
 	class EditorBase : public std::enable_shared_from_this<EditorBase>
 	{
@@ -29,6 +30,9 @@ namespace ZeoEngine {
 			return std::static_pointer_cast<const Derived>(shared_from_this());
 		}
 
+	private:
+		using std::enable_shared_from_this<EditorBase>::shared_from_this;
+
 	public:
 		virtual void OnAttach();
 		virtual void OnDetach() {}
@@ -47,32 +51,40 @@ namespace ZeoEngine {
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
 		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
-		const Ref<Scene>& GetScene() const { return m_Scene; }
+
+		const Ref<Scene>& GetScene() const { return m_ActiveScene; }
+		template<typename T>
+		Ref<T> GetScene() const
+		{
+			return std::dynamic_pointer_cast<T>(m_ActiveScene);
+		}
+		void SetActiveScene(const Ref<Scene>& newScene) { m_ActiveScene = newScene; }
+
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 
 		void Open();
 
-		/** Create an empty scene and initialize camera. */
-		void NewAsset(bool bIsFromLoad = false);
-		void LoadAsset();
+		/** Create an empty scene. */
+		void NewScene(bool bIsFromLoad = false);
+		void LoadScene();
 		/** Create an empty scene and load asset from disk. */
-		void LoadAsset(const std::string& path);
-		void SaveAsset();
-		void SaveAsset(const std::string& path);
-		void SaveAssetAs();
+		void LoadScene(const std::string& path);
+		void SaveScene();
+		void SaveScene(const std::string& path);
+		void SaveSceneAs();
 
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
-
-		virtual std::string GetAssetPath() const = 0;
 
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
 		virtual Ref<Scene> CreateScene() = 0;
-		virtual void PostSceneCreate(bool bIsFromLoad) {}
 
+	public:
+		virtual AssetHandle<IAsset> GetAsset() const = 0;
 		virtual AssetTypeId GetAssetTypeId() const = 0;
-		virtual void LoadAssetImpl(const std::string& path) = 0;
-		virtual void SaveAssetImpl(const std::string& path) = 0;
+	private:
+		virtual void LoadAsset(const std::string& path) = 0;
+		virtual void SaveAsset(const std::string& path) = 0;
 
 		void CreateFrameBuffer();
 		void BeginFrameBuffer();
@@ -96,7 +108,7 @@ namespace ZeoEngine {
 		entt::sink<void()> m_PostSceneLoad{ m_PostSceneLoadDel };
 		/** Called after scene being rendered. */
 		entt::sink<void(const Ref<FrameBuffer>&)> m_PostSceneRender{ m_PostSceneRenderDel };
-
+		
 	private:
 		std::string m_EditorName;
 
@@ -106,7 +118,7 @@ namespace ZeoEngine {
 		EditorCamera* m_EditorCamera = nullptr;
 
 		Ref<EditorUIRendererBase> m_EditorUIRenderer;
-		Ref<Scene> m_Scene;
+		Ref<Scene> m_ActiveScene;
 		Ref<FrameBuffer> m_FBO;
 
 		bool m_bBlockSceneEvents = true;

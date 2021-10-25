@@ -128,7 +128,7 @@ namespace YAML {
 namespace ZeoEngine {
 
 	const char* g_AssetTypeToken = "AssetType";
-	const char* g_ResourceSourceToken = "ResourceSourcePath";
+	const char* g_ResourceSourceToken = "ResourcePath";
 
 	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
 	{
@@ -563,16 +563,20 @@ namespace ZeoEngine {
 	{
 		out << YAML::BeginMap;
 		{
-			out << YAML::Key << "Entity" << YAML::Value << entity; // TODO: Entity ID goes here
+			out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
 			{
 				// Do not call entt::registry::visit() as the order is reversed
 				for (const auto compId : entity.GetOrderedComponentIds())
 				{
+					auto compInstance = entity.GetComponentById(compId);
+					// Do not serialize transient component
+					auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, compInstance.type());
+					if (bDiscardSerialize) continue;
+
 					out << YAML::BeginMap;
 					{
 						out << YAML::Key << "Component" << YAML::Value << compId; // TODO: Component ID goes here
-						auto compInstance = entity.GetComponentById(compId);
 						ComponentSerializer cs;
 						cs.Serialize(out, compInstance);
 					}
@@ -586,14 +590,8 @@ namespace ZeoEngine {
 
 	static void DeserializeEntity(const YAML::Node& entity, const Ref<Scene>& scene)
 	{
-		uint64_t uuid = entity["Entity"].as<uint64_t>(); // TODO: UUID
-		// Some entities including preview camera are created by default on scene creation
-		Entity deserializedEntity{ static_cast<entt::entity>(uuid), scene.get() };
-		if (!deserializedEntity.IsValid())
-		{
-			// Create a default entity if not exists
-			deserializedEntity = scene->CreateEntity();
-		}
+		uint64_t uuid = entity["Entity"].as<uint64_t>();
+		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
 
 		auto components = entity["Components"];
 		if (components)

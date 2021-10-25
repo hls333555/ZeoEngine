@@ -5,6 +5,7 @@
 namespace ZeoEngine {
 
 	class SceneAsset;
+	class LevelEditorScene;
 
 	enum class SceneState
 	{
@@ -12,38 +13,45 @@ namespace ZeoEngine {
 		Play = 1, Pause = 2,
 	};
 
-	class SceneEditor : public EditorBase
+	class LevelEditor : public EditorBase
 	{
-		friend class SceneViewPanel;
+		friend class LevelEditorViewPanel;
 
 	public:
 		using EditorBase::EditorBase;
 
 		virtual void OnAttach() override;
 
-		virtual std::string GetAssetPath() const override;
-
 		SceneState GetSceneState() const { return m_SceneState; }
 
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
-		virtual void PostSceneCreate(bool bIsFromLoad) override;
+
+		void UpdateSceneRef(bool bIsFromLoad);
 
 		void OnScenePlay();
 		void OnSceneStop();
 		void OnScenePause();
 		void OnSceneResume();
+		void OnDuplicateEntity();
+		void OnDeleteEntity();
 
+	public:
+		virtual AssetHandle<IAsset> GetAsset() const override { return m_SceneAsset; }
 		virtual AssetTypeId GetAssetTypeId() const override;
-		virtual void LoadAssetImpl(const std::string& path) override;
-		virtual void SaveAssetImpl(const std::string& path) override;
+	private:
+		virtual void LoadAsset(const std::string& path) override;
+		virtual void SaveAsset(const std::string& path) override;
 
 		void ClearSelectedEntity();
 
 	private:
-		AssetHandle<SceneAsset> m_SceneAsset;
 		SceneState m_SceneState = SceneState::Edit;
+
+		Ref<LevelEditorScene> m_SceneForEdit;
+
+		AssetHandle<SceneAsset> m_SceneAsset;
 	};
 
 }
