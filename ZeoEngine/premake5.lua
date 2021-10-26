@@ -34,6 +34,7 @@ project "ZeoEngine"
 	{
 		"src",
 		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.assimp}",
 		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
@@ -52,6 +53,7 @@ project "ZeoEngine"
 	links 
 	{
 		"opengl32.lib",
+		"assimp",
 		"Box2D",
 		"GLFW",
 		"Glad",

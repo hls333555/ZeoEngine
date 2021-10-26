@@ -6,6 +6,7 @@ IncludeDir = {}
 IncludeDir["spdlog"] = "%{wks.location}/ZeoEngine/vendor/spdlog/include"
 IncludeDir["stb_image"] = "%{wks.location}/ZeoEngine/vendor/stb_image"
 IncludeDir["yaml_cpp"] = "%{wks.location}/ZeoEngine/vendor/yaml-cpp/include"
+IncludeDir["assimp"] = "%{wks.location}/ZeoEngine/vendor/assimp/include"
 IncludeDir["Box2D"] = "%{wks.location}/ZeoEngine/vendor/Box2D/include"
 IncludeDir["GLFW"] = "%{wks.location}/ZeoEngine/vendor/GLFW/include"
 IncludeDir["Glad"] = "%{wks.location}/ZeoEngine/vendor/Glad/include"

@@ -26,6 +26,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include premake files
 group "Dependencies"
+	include "ZeoEngine/vendor/assimp"
 	include "ZeoEngine/vendor/Box2D"
 	include "ZeoEngine/vendor/GLFW"
 	include "ZeoEngine/vendor/Glad"
