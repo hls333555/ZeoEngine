@@ -264,12 +264,15 @@ namespace ZeoEngine {
 				}
 				if (ImGui::BeginTable("", columnCount))
 				{
+					float tableOffset = 4.0f;
+					ImGui::Indent(tableOffset);
 					for (auto it = paths.begin(); it != paths.end(); ++it)
 					{
 						ImGui::TableNextColumn();
 
 						DrawTilePath(*it);
 					}
+					ImGui::Unindent(tableOffset);
 
 					ImGui::EndTable();
 				}
@@ -569,8 +572,9 @@ namespace ZeoEngine {
 			static constexpr float thumbnailRounding = 4.0f;
 			const auto pathName = spec->PathName.c_str();
 
-			ImGui::TileImageButton(spec->ThumbnailTexture->GetTextureID(), bPathNeedsRenaming, // Disable button during renaming so that text can be selected
-				{ thumbnailWidth, thumbnailWidth }, thumbnailRounding, m_SelectedPath == path,
+			ImGui::TileImageButton(spec->ThumbnailTexture->GetTextureID(), bIsAsset, bPathNeedsRenaming, // Disable button during renaming so that text can be selected
+				m_SelectedPath == path,
+				{ thumbnailWidth, thumbnailWidth }, thumbnailRounding,
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 			// Draw path tooltip on hover

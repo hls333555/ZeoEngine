@@ -170,7 +170,7 @@ namespace ImGui {
 		return pressed;
 	}
 
-	bool TileImageButton(ImTextureID user_texture_id, bool bIsDisabled, const ImVec2& size, float rounding, bool bIsSelected, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	bool TileImageButton(ImTextureID user_texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& tint_col)
 	{
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = g.CurrentWindow;
@@ -187,7 +187,7 @@ namespace ImGui {
 		{
 			PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		}
-		bool pressed = TileImageButtonEx(id, user_texture_id, bIsDisabled, size, rounding, uv0, uv1, padding, bg_col, tint_col);
+		bool pressed = TileImageButtonEx(id, user_texture_id, bDrawImageBackground, bIsDisabled, bIsSelected, size, rounding, uv0, uv1, padding, tint_col);
 		if (!bIsSelected)
 		{
 			PopStyleColor();
@@ -195,7 +195,7 @@ namespace ImGui {
 		return pressed;
 	}
 
-	bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bIsDisabled, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& tint_col)
 	{
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = GetCurrentWindow();
@@ -204,7 +204,7 @@ namespace ImGui {
 
 		// Limit the wrapped text up to 2 lines
 		const int32_t maxTextLine = 2;
-		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (3 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
+		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (4 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
 		ItemSize(bb);
 
 		// Some of the "disabled" code are copied from ImGui::Selectable
@@ -232,13 +232,30 @@ namespace ImGui {
 		bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
 		// Render
-		const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
 		RenderNavHighlight(bb, id);
-		RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
-		if (bg_col.w > 0.0f)
-			window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, GetColorU32(bg_col));
-		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
-		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y });
+		ImU32 col;
+		if (bDrawImageBackground)
+		{
+			col = GetColorU32(bIsSelected || held ? ImVec4{ 0.0f, 0.6f, 1.0f, 1.0f } : hovered ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+			float shadowSize = 2.0f;
+			float borderSize = bIsSelected ? 2.5f : 1.5f;
+			// Draw shadow
+			window->DrawList->AddRect(bb.Min + ImVec2(1, 1), bb.Max + ImVec2(1, 1), GetColorU32({ 0.05f, 0.05f, 0.05f, 1.0f }), rounding, 0, shadowSize);
+			// Draw outline (hovered/selected)
+			window->DrawList->AddRect(bb.Min, bb.Max, col, rounding, 0, borderSize);
+			// Draw up black background
+			window->DrawList->AddRectFilled(bb.Min, bb.Min + padding * 2 + size, GetColorU32({ 0.1f, 0.1f, 0.1f, 1.0f }), rounding, ImDrawFlags_RoundCornersTop);
+			// Draw down grey background
+			window->DrawList->AddRectFilled(bb.Min + ImVec2{ 0, size.y + padding.y * 2 }, bb.Max, GetColorU32({ 0.19f, 0.19f, 0.19f, 1.0f }), rounding, ImDrawFlags_RoundCornersBottom);
+		}
+		else
+		{
+			col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+			RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+		}
+		// Draw icon image
+		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (3 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
+		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y * 2 });
 
 		if (bIsDisabled && !disabled_global)
 			EndDisabled();
