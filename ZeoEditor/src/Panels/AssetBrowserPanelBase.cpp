@@ -249,6 +249,7 @@ namespace ZeoEngine {
 	void AssetBrowserPanelBase::DrawPathsInDirectory()
 	{
 		const auto& paths = AssetRegistry::Get().GetPathsInDirectory(m_SelectedDirectory);
+		bool bHasDrawnAnyPath = false;
 		if (paths.size() > 0)
 		{
 			if (m_ViewType == ContentBrowserViewType::Tiles)
@@ -264,13 +265,16 @@ namespace ZeoEngine {
 				}
 				if (ImGui::BeginTable("", columnCount))
 				{
-					float tableOffset = 4.0f;
+					const float tableOffset = GetTableOffset();
 					ImGui::Indent(tableOffset);
 					for (auto it = paths.begin(); it != paths.end(); ++it)
 					{
 						ImGui::TableNextColumn();
 
-						DrawTilePath(*it);
+						if (DrawTilePath(*it))
+						{
+							bHasDrawnAnyPath = true;
+						}
 					}
 					ImGui::Unindent(tableOffset);
 
@@ -286,16 +290,17 @@ namespace ZeoEngine {
 				{
 					for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
 					{
-						DrawSelectablePath(*(it + index));
+						if (DrawSelectablePath(*(it + index)))
+						{
+							bHasDrawnAnyPath = true;
+						}
 					}
 				}
 			}
 		}
-		else
+		if (!bHasDrawnAnyPath)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-			ImGui::TextCentered("This folder is empty");
-			ImGui::PopStyleColor();
+			m_Filter.DrawEmptyText();
 		}
 
 		if (!m_DirectoryToOpen.empty())
@@ -345,12 +350,15 @@ namespace ZeoEngine {
 			}
 			if (ImGui::BeginTable("", columnCount))
 			{
+				const float tableOffset = GetTableOffset();
+				ImGui::Indent(tableOffset);
 				for (auto it = m_FilteredPaths.begin(); it != m_FilteredPaths.end(); ++it)
 				{
 					ImGui::TableNextColumn();
 
 					DrawTilePath(*it);
 				}
+				ImGui::Unindent(tableOffset);
 
 				ImGui::EndTable();
 			}
@@ -466,10 +474,10 @@ namespace ZeoEngine {
 		return newPath;
 	}
 
-	void AssetBrowserPanelBase::DrawSelectablePath(const std::string& path)
+	bool AssetBrowserPanelBase::DrawSelectablePath(const std::string& path)
 	{
 		auto spec = AssetRegistry::Get().GetPathSpec(path);
-		if (!ShouldDrawPath(spec)) return;
+		if (!ShouldDrawPath(spec)) return false;
 
 		// Push path as id
 		ImGui::PushID(path.c_str());
@@ -556,12 +564,14 @@ namespace ZeoEngine {
 			}
 		}
 		ImGui::PopID();
+
+		return true;
 	}
 
-	void AssetBrowserPanelBase::DrawTilePath(const std::string& path)
+	bool AssetBrowserPanelBase::DrawTilePath(const std::string& path)
 	{
 		auto spec = AssetRegistry::Get().GetPathSpec(path);
-		if (!ShouldDrawPath(spec)) return;
+		if (!ShouldDrawPath(spec)) return false;
 
 		// Push path as id
 		ImGui::PushID(path.c_str());
@@ -658,6 +668,8 @@ namespace ZeoEngine {
 			}
 		}
 		ImGui::PopID();
+
+		return true;
 	}
 
 	// TODO: Draw path tooltip

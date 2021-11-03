@@ -20,8 +20,9 @@ namespace ZeoEngine {
 		const std::string& GetSelectedPath() const { return m_SelectedPath; }
 
 	protected:
-		float GetSelectableThumbnailWidth() const { return 32.0f; }
-		float GetTileThumbnailWidth() const { return 64.0f; }
+		constexpr float GetSelectableThumbnailWidth() const { return 32.0f; }
+		constexpr float GetTileThumbnailWidth() const { return 64.0f; }
+		constexpr float GetTableOffset() const { return 4.0f; }
 
 		void SetForceUpdateFilterCache(bool bValue) { m_bForceUpdateFilterCache = bValue; }
 		virtual bool IsAnyFilterActive() const { return m_Filter.IsActive(); }
@@ -65,8 +66,8 @@ namespace ZeoEngine {
 		virtual void DrawWindowContextMenuImpl(float thumbnailWidth) {}
 
 		virtual bool ShouldDrawPath(const Ref<PathSpec>& spec) { return true; }
-		void DrawSelectablePath(const std::string& path);
-		void DrawTilePath(const std::string& path);
+		bool DrawSelectablePath(const std::string& path);
+		bool DrawTilePath(const std::string& path);
 		virtual void OnPathSelected(const std::string& path) {}
 
 		void DrawPathTooltip(const Ref<PathSpec>& spec);
