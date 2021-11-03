@@ -54,8 +54,8 @@ namespace ZeoEngine {
 		ImGui::Begin(m_ContextEditor->GetEditorName().c_str(), m_ContextEditor->GetShowPtr(), m_DockspaceSpec.WindowFlags);
 		ImGui::PopStyleVar();
 
-		m_bIsEditorFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
-		m_bIsEditorHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+		m_bIsEditorFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_DockHierarchy);
+		m_bIsEditorHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiFocusedFlags_DockHierarchy);
 
 		// Render menus
 		if (bIsSceneEditor)
