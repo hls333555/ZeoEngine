@@ -15,27 +15,28 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		s_Data.QuadVAO = VertexArray::Create();
-
-		s_Data.QuadVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
-
-		BufferLayout squareLayout = {
-			{ ShaderDataType::Float3, "a_Position"     },
-			{ ShaderDataType::Float4, "a_Color"        },
-			{ ShaderDataType::Float2, "a_TexCoord"     },
-			{ ShaderDataType::Float,  "a_TexIndex"     },
-			{ ShaderDataType::Float2, "a_TilingFactor" },
-			{ ShaderDataType::Float2, "a_UvOffset"     },
-			{ ShaderDataType::Int,    "a_EntityID"     },
-		};
-		s_Data.QuadVBO->SetLayout(squareLayout);
-		s_Data.QuadVAO->AddVertexBuffer(s_Data.QuadVBO);
-
-		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 		s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+
+		// Quad
+		s_Data.QuadVAO = VertexArray::Create();
+
+		s_Data.QuadVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
+		BufferLayout quadLayout = {
+			{ ShaderDataType::Float3, "a_Position"     },
+			{ ShaderDataType::Float4, "a_Color"        },
+			{ ShaderDataType::Float2, "a_TexCoord"     },
+			{ ShaderDataType::Float2, "a_TilingFactor" },
+			{ ShaderDataType::Float2, "a_UvOffset"     },
+			{ ShaderDataType::Float,  "a_TexIndex"     },
+			{ ShaderDataType::Int,    "a_EntityID"     },
+		};
+		s_Data.QuadVBO->SetLayout(quadLayout);
+		s_Data.QuadVAO->AddVertexBuffer(s_Data.QuadVBO);
+
+		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 
 		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
 		uint32_t offset = 0;
@@ -51,9 +52,26 @@ namespace ZeoEngine {
 
 			offset += 4;
 		}
-		Ref<IndexBuffer> squareIBO = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
-		s_Data.QuadVAO->SetIndexBuffer(squareIBO);
+		Ref<IndexBuffer> quadIBO = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
+		s_Data.QuadVAO->SetIndexBuffer(quadIBO);
 		delete[] quadIndices;
+
+		// Circle
+		s_Data.CircleVAO = VertexArray::Create();
+
+		s_Data.CircleVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
+		BufferLayout circleLayout = {
+			{ ShaderDataType::Float3, "a_WorldPosition" },
+			{ ShaderDataType::Float3, "a_LocalPosition" },
+			{ ShaderDataType::Float4, "a_Color"			},
+			{ ShaderDataType::Float,  "a_Thickness"		},
+			{ ShaderDataType::Float,  "a_Fade"			},
+			{ ShaderDataType::Int,    "a_EntityID"		},
+		};
+		s_Data.CircleVBO->SetLayout(circleLayout);
+		s_Data.CircleVAO->AddVertexBuffer(s_Data.CircleVBO);
+		s_Data.CircleVAO->SetIndexBuffer(quadIBO); // Use quad IBO
+		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
 		// Generate a 1x1 white texture to be used by flat color
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
@@ -65,7 +83,8 @@ namespace ZeoEngine {
 		{
 			samplers[i] = i;
 		}
-		s_Data.TextureShader = Shader::Create("assets/editor/shaders/Texture.glsl");
+		s_Data.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
+		s_Data.CircleShader = Shader::Create("assets/editor/shaders/Renderer2D_Circle.glsl");
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
@@ -103,7 +122,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
 		StartBatch();
 	}
@@ -117,27 +136,40 @@ namespace ZeoEngine {
 
 	void Renderer2D::Flush()
 	{
-		if (s_Data.QuadIndexCount == 0)
-			return; // Nothing to draw
-
-		auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
-		s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
-
-		// Bind textures
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		if (s_Data.QuadIndexCount)
 		{
-			s_Data.TextureSlots[i]->Bind(i);
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
+			s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+			// Bind textures
+			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+			{
+				s_Data.TextureSlots[i]->Bind(i);
+			}
+
+			s_Data.QuadShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.QuadVAO, s_Data.QuadIndexCount);
+			++s_Data.Stats.DrawCalls;
 		}
 
-		s_Data.TextureShader->Bind();
-		RenderCommand::DrawIndexed(s_Data.QuadVAO, s_Data.QuadIndexCount);
-		++s_Data.Stats.DrawCalls;
+		if (s_Data.CircleIndexCount)
+		{
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferBase);
+			s_Data.CircleVBO->SetData(s_Data.CircleVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+			s_Data.CircleShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.CircleVAO, s_Data.CircleIndexCount);
+			++s_Data.Stats.DrawCalls;
+		}
 	}
 
 	void Renderer2D::StartBatch()
 	{
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
 	}
@@ -320,6 +352,31 @@ namespace ZeoEngine {
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		++s_Data.Stats.QuadCount;
+	}
+
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade, int32_t entityID)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		//if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+		//{
+		//	NextBatch();
+		//}
+
+		for (size_t i = 0; i < 4; ++i)
+		{
+			s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
+			s_Data.CircleVertexBufferPtr->LocalPosition = s_Data.QuadVertexPositions[i] * 2.0f;
+			s_Data.CircleVertexBufferPtr->Color = color;
+			s_Data.CircleVertexBufferPtr->Thickness = thickness;
+			s_Data.CircleVertexBufferPtr->Fade = fade;
+			s_Data.CircleVertexBufferPtr->EntityID = entityID;
+			++s_Data.CircleVertexBufferPtr;
+		}
+
+		s_Data.CircleIndexCount += 6;
 
 		++s_Data.Stats.QuadCount;
 	}

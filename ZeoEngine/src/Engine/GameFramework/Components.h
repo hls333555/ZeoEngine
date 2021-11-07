@@ -101,6 +101,20 @@ namespace ZeoEngine {
 
 	};
 
+	struct CircleRendererComponent : public IComponent
+	{
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float Thickness = 1.0f;
+		float Fade = 0.005f;
+		int32_t SortingOrder = 0;
+
+		CircleRendererComponent() = default;
+		CircleRendererComponent(const CircleRendererComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_CIRCLE; }
+
+	};
+
 	struct CameraComponent : public IComponent
 	{
 		SceneCamera Camera;

@@ -64,3 +64,16 @@ Entities:
         Density: 1
         Size: [0.5, 0.5]
         Offset: [0, 0]
+  - Entity: 11784668933984896591
+    Components:
+      - Component: 3590015414
+        Name: Circle
+      - Component: 4079556375
+        Scale: [1, 1, 1]
+        Rotation: [0, 0, 0]
+        Translation: [0.624659896, 0.0504385233, 0]
+      - Component: 873532946
+        SortingOrder: 0
+        Fade: 0.00499999989
+        Thickness: 0.174999997
+        Color: [0.964601517, 0, 1, 1]

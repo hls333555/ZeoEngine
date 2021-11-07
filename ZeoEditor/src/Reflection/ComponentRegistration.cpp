@@ -15,11 +15,17 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(TransformComponent, Rotation, SetRotationToRadians, GetRotationAsDegrees, ZPROP(ClampMin, -360.0f), ZPROP(ClampMax, 360.0f), ZPROP(ClampOnlyDuringDragging), ZPROP(Tooltip, ZTEXT("旋转")))
 			ZDATA(TransformComponent, Scale, ZPROP(Tooltip, ZTEXT("缩放")), ZPROP(DragSensitivity, 0.1f));
 
-		ZCOMPONENT(SpriteRendererComponent, ZPROP(DisplayName, ZTEXT("Sprite Renderer")), ZPROP(Tooltip, ZTEXT("2D渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
+		ZCOMPONENT(SpriteRendererComponent, ZPROP(DisplayName, ZTEXT("Sprite Renderer")), ZPROP(Tooltip, ZTEXT("精灵渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(SpriteRendererComponent, TintColor)
 			ZDATA(SpriteRendererComponent, Texture)
 			ZDATA(SpriteRendererComponent, TextureTiling)
 			ZDATA(SpriteRendererComponent, SortingOrder);
+
+		ZCOMPONENT(CircleRendererComponent, ZPROP(DisplayName, ZTEXT("Circle Renderer")), ZPROP(Tooltip, ZTEXT("圆形渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
+			ZDATA(CircleRendererComponent, Color)
+			ZDATA(CircleRendererComponent, Thickness, ZPROP(DragSensitivity, 0.025f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(CircleRendererComponent, Fade, ZPROP(DragSensitivity, 0.00025f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(CircleRendererComponent, SortingOrder);
 
 		ZENUM(SceneCamera::ProjectionType)
 			ZENUM_DATA(SceneCamera::ProjectionType, Perspective, ZPROP(Tooltip, ZTEXT("透视相机")))

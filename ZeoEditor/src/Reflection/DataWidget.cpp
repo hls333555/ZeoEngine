@@ -52,17 +52,17 @@ namespace ZeoEngine {
 			case BasicMetaType::UI64:
 				return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, bIsTest, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 			case BasicMetaType::FLOAT:
-				return CreateRef<ScalarNDataWidget<float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::DOUBLE:
-				return CreateRef<ScalarNDataWidget<double>>(dataSpec, bIsTest, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.3lf");
+				return CreateRef<ScalarNDataWidget<double>>(dataSpec, bIsTest, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.4lf");
 			case BasicMetaType::ENUM:
 				return CreateRef<EnumDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::STRING:
 				return CreateRef<StringDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::VEC2:
-				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::VEC3:
-				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.2f");
+				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::VEC4:
 				return CreateRef<ColorDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::TEXTURE:
