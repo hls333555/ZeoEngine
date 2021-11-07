@@ -66,22 +66,30 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnRender()
 	{
-		auto spriteGroup = m_Scene->m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-
-		// Sort sprite entities
-		spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
-		{
-			const auto& lSpriteComp = spriteGroup.get<SpriteRendererComponent>(lhs);
-			const auto& rSpriteComp = spriteGroup.get<SpriteRendererComponent>(rhs);
-			return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
-		});
-
 		// Render sprites
-		for (auto entity : spriteGroup)
 		{
-			auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
+			auto spriteGroup = m_Scene->m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+
+			// Sort sprite entities
+			spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
+			{
+				const auto& lSpriteComp = spriteGroup.get<SpriteRendererComponent>(lhs);
+				const auto& rSpriteComp = spriteGroup.get<SpriteRendererComponent>(rhs);
+				return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
+			});
+
+			for (auto entity : spriteGroup)
+			{
+				auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
+				Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
+			}
 		}
+
+		// Render Circles
+		ForEachView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
+		{
+			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
+		});
 
 		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
 		{
