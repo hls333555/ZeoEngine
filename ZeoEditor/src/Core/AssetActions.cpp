@@ -7,6 +7,7 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 
@@ -124,6 +125,24 @@ namespace ZeoEngine {
 		if (Texture2DAssetLibrary::Get().HasAsset(path))
 		{
 			Texture2DAssetLibrary::Get().GetAsset(path)->Serialize(path);
+		}
+	}
+
+	void MeshAssetActions::OpenAsset(const std::string& path) const
+	{
+		
+	}
+
+	void MeshAssetActions::ReloadAsset(const std::string& path) const
+	{
+		MeshAssetLibrary::Get().ReloadAsset(path);
+	}
+
+	void MeshAssetActions::SaveAsset(const std::string& path) const
+	{
+		if (MeshAssetLibrary::Get().HasAsset(path))
+		{
+			MeshAssetLibrary::Get().GetAsset(path)->Serialize(path);
 		}
 	}
 

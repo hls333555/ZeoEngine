@@ -55,4 +55,12 @@ namespace ZeoEngine {
 		virtual void SaveAsset(const std::string& path) const override;
 	};
 
+	class MeshAssetActions final : public ImportableAssetActionsBase
+	{
+	public:
+		virtual void OpenAsset(const std::string& path) const override;
+		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
+	};
+
 }

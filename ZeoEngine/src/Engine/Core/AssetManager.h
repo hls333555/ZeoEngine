@@ -90,8 +90,9 @@ namespace ZeoEngine {
 		/** Map from asset type id to asset actions */
 		std::unordered_map<AssetTypeId, Ref<IAssetActions>> m_AssetActions;
 
+
 		/** Map from supported file extension to asset type Id */
-		std::unordered_map<std::string, AssetTypeId> m_SupportedFileExtensions;
+		std::unordered_map<std::string, AssetTypeId, CaseInsensitiveUnorderedMap::Hash, CaseInsensitiveUnorderedMap::Comp> m_SupportedFileExtensions;
 	};
 
 }

@@ -69,6 +69,8 @@ namespace ZeoEngine {
 				return CreateRef<Texture2DDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::PARTICLE:
 				return CreateRef<ParticleTemplateDataWidget>(dataSpec, bIsTest);
+			case BasicMetaType::MESH:
+				return CreateRef<MeshDataWidget>(dataSpec, bIsTest);
 		}
 
 		return {};
@@ -402,6 +404,37 @@ namespace ZeoEngine {
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
 		m_Buffer = ParticleTemplateAssetLibrary::Get().LoadAsset("assets/particles/Test.zasset");
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	MeshDataWidget::MeshDataWidget(DataSpec& dataSpec, bool bIsTest)
+	{
+		Init(dataSpec, bIsTest);
+	}
+
+	void MeshDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	{
+		if (!PreDraw(compInstance, instance)) return;
+
+		// Make sure browser widget + dropdown button can reach desired size
+		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
+		// Mesh asset browser
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, []() {});
+		if (bIsBufferChanged)
+		{
+			m_Buffer = retSpec ? MeshAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MeshAsset>{};
+			SetValueToData();
+		}
+
+		PostDraw();
+	}
+
+#ifndef DOCTEST_CONFIG_DISABLE
+	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		m_Buffer = MeshAssetLibrary::Get().LoadAsset("assets/meshes/Test.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

@@ -457,7 +457,6 @@ namespace ZeoEngine {
 		DrawLine(lineVertices[1], lineVertices[2], color);
 		DrawLine(lineVertices[2], lineVertices[3], color);
 		DrawLine(lineVertices[3], lineVertices[0], color);
-		
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -508,15 +507,15 @@ namespace ZeoEngine {
 		DrawQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int32_t entityID)
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& spriteComp, int32_t entityID)
 	{
-		if (src.Texture)
+		if (spriteComp.Texture)
 		{
-			DrawQuad(transform, src.Texture, src.TextureTiling, { 0.0f, 0.0f }, src.TintColor, entityID);
+			DrawQuad(transform, spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor, entityID);
 		}
 		else
 		{
-			DrawQuad(transform, src.TintColor, entityID);
+			DrawQuad(transform, spriteComp.TintColor, entityID);
 		}
 		
 	}

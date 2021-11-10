@@ -20,7 +20,6 @@ namespace ZeoEngine {
 		friend class EditorViewPanelBase;
 		friend class SceneOutlinePanel;
 		friend class ISystem;
-		friend class RenderSystem;
 
 	public:
 		Scene() = default;

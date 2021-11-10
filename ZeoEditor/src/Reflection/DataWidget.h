@@ -12,6 +12,7 @@
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Mesh.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/GameFramework/Components.h"
@@ -330,6 +331,22 @@ namespace ZeoEngine {
 
 	private:
 		AssetBrowser m_Browser{ ParticleTemplateAsset::TypeId() };
+	};
+
+	class MeshDataWidget : public BasicDataWidgetT<AssetHandle<MeshAsset>>
+	{
+	public:
+		MeshDataWidget(DataSpec& dataSpec, bool bIsTest);
+
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
+
+	private:
+#ifndef DOCTEST_CONFIG_DISABLE
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+#endif
+
+	private:
+		AssetBrowser m_Browser{ MeshAsset::TypeId() };
 	};
 
 	class ContainerWidget : public DataWidget

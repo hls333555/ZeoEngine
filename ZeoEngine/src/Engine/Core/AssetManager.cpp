@@ -7,6 +7,7 @@
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 
@@ -15,10 +16,12 @@ namespace ZeoEngine {
 		RegisterAssetFactory(SceneAsset::TypeId(), CreateRef<SceneAssetFactory>());
 		RegisterAssetFactory(ParticleTemplateAsset::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetFactory>());
+		RegisterAssetFactory(MeshAsset::TypeId(), CreateRef<MeshAssetFactory>());
 
 		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
 		RegisterAssetActions(ParticleTemplateAsset::TypeId(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
+		RegisterAssetActions(MeshAsset::TypeId(), CreateRef<MeshAssetActions>());
 
 		InitSupportedFileExtensions();
 	}
@@ -178,6 +181,8 @@ namespace ZeoEngine {
 	{
 		m_SupportedFileExtensions.insert(std::make_pair(".png", Texture2DAsset::TypeId()));
 		m_SupportedFileExtensions.insert(std::make_pair(".tga", Texture2DAsset::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".fbx", MeshAsset::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".obj", MeshAsset::TypeId()));
 	}
 
 }

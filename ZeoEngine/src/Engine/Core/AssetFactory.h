@@ -55,4 +55,10 @@ namespace ZeoEngine {
 		virtual const char* GetAssetTypeName() const override { return "Texture2D"; }
 	};
 
+	class MeshAssetFactory : public ImportableAssetFactoryBase
+	{
+	public:
+		virtual const char* GetAssetTypeName() const override { return "Mesh"; }
+	};
+
 }

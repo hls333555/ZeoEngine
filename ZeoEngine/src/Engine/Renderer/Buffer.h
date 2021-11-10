@@ -122,7 +122,7 @@ namespace ZeoEngine {
 		// Instead of constructor, passing variables to static create fucntion can prevent from casting to different types on class instantiation
 
 		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
 
 	};
 

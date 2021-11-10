@@ -15,6 +15,7 @@ namespace ZeoEngine {
 
 	class Texture2DAsset;
 	class ScriptableEntity;
+	class MeshAsset;
 
 	struct IComponent
 	{
@@ -130,7 +131,7 @@ namespace ZeoEngine {
 		void SetProjectionType(SceneCamera::ProjectionType type) { Camera.SetProjectionType(type); }
 
 		float GetPerspectiveVerticalFOV() const { return glm::degrees(Camera.GetPerspectiveVerticalFOV()); }
-		void SetPerspectiveVerticalFOV(float verticalFOV) { Camera.SetPerspectiveVerticalFOV(glm::radians(verticalFOV)); }
+		void SetPerspectiveVerticalFOV(float horizontalFOV) { Camera.SetPerspectiveVerticalFOV(glm::radians(horizontalFOV)); }
 		float GetPerspectiveNearClip() const { return Camera.GetPerspectiveNearClip(); }
 		void SetPerspectiveNearClip(float nearClip) { Camera.SetPerspectiveNearClip(nearClip); }
 		float GetPerspectiveFarClip() const { return Camera.GetPerspectiveFarClip(); }
@@ -257,6 +258,16 @@ namespace ZeoEngine {
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	struct MeshRendererComponent : public IComponent
+	{
+		AssetHandle<MeshAsset> Mesh;
+
+		MeshRendererComponent() = default;
+		MeshRendererComponent(const MeshRendererComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
 
 }

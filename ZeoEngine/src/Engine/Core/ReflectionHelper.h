@@ -16,7 +16,8 @@ namespace ZeoEngine {
 		BOOL, I8, I32, I64, UI8, UI32, UI64,
 		FLOAT, DOUBLE,
 		ENUM,
-		STRING, VEC2, VEC3, VEC4, TEXTURE, PARTICLE
+		STRING, VEC2, VEC3, VEC4,
+		TEXTURE, PARTICLE, MESH,
 	};
 
 	template<typename T>

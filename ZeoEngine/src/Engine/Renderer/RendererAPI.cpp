@@ -6,6 +6,7 @@
 namespace ZeoEngine {
 
 	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+	bool RendererAPI::s_bIs2D = false;
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{

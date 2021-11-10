@@ -5,18 +5,28 @@
 #include "Core/EditorManager.h"
 #include "Core/EditorTypes.h"
 #include "Editors/LevelEditor.h"
+#include "Engine/Renderer/RendererAPI.h"
 
 namespace ZeoEngine {
 
 	LevelEditorScene::LevelEditorScene(const Ref<LevelEditor>& sceneEditor)
 		: m_SceneEditor(sceneEditor)
 	{
-		m_RenderSystem = CreateScope<RenderSystem>(this);
-		m_RenderSystem->OnCreate();
+		if (RendererAPI::Is2D())
+		{
+			m_RenderSystem = CreateScope<RenderSystem2D>(this);
+			m_PhysicsSystem = CreateScope<PhysicsSystem2D>(this);
+		}
+		else
+		{
+			m_RenderSystem = CreateScope<RenderSystem>(this);
+			m_PhysicsSystem = CreateScope<PhysicsSystem>(this);
+		}
 		m_NativeScriptSystem = CreateScope<NativeScriptSystem>(this);
-		m_NativeScriptSystem->OnCreate();
-		m_PhysicsSystem = CreateScope<PhysicsSystem>(this);
+
+		m_RenderSystem->OnCreate();
 		m_PhysicsSystem->OnCreate();
+		m_NativeScriptSystem->OnCreate();
 	}
 
 	LevelEditorScene::~LevelEditorScene()

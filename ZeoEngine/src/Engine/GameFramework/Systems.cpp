@@ -8,6 +8,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 
 namespace ZeoEngine {
@@ -30,73 +31,42 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnRenderEditor(const EditorCamera& camera)
 	{
-		Renderer2D::BeginScene(camera);
+		Renderer::BeginScene(camera);
 		{
 			OnRender();
 		}
-		Renderer2D::EndScene();
+		Renderer::EndScene();
 	}
 
 	void RenderSystem::OnRenderRuntime()
 	{
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
+		ForEachView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
 		{
-			auto cameraView = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
-			for (auto entity : cameraView)
+			if (cameraComp.bIsPrimary)
 			{
-				auto [transformComp, cameraComp] = cameraView.get<TransformComponent, CameraComponent>(entity);
-				if (cameraComp.bIsPrimary)
-				{
-					mainCamera = &cameraComp.Camera;
-					cameraTransform = transformComp.GetTransform();
-					break;
-				}
+				mainCamera = &cameraComp.Camera;
+				cameraTransform = transformComp.GetTransform();
+				return;
 			}
-		}
+		});
 		if (mainCamera)
 		{
-			Renderer2D::BeginScene(*mainCamera, cameraTransform);
+			Renderer::BeginScene(*mainCamera, cameraTransform);
 			{
 				OnRender();
 			}
-			Renderer2D::EndScene();
+			Renderer::EndScene();
 		}
 	}
 
 	void RenderSystem::OnRender()
-	{
-		// Render sprites
+	{		
+		// Render meshes
+		ForEachGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
 		{
-			auto spriteGroup = m_Scene->m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-
-			// Sort sprite entities
-			spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
-			{
-				const auto& lSpriteComp = spriteGroup.get<SpriteRendererComponent>(lhs);
-				const auto& rSpriteComp = spriteGroup.get<SpriteRendererComponent>(rhs);
-				return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
-			});
-
-			for (auto entity : spriteGroup)
-			{
-				auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
-			}
-		}
-
-		// Render circles
-		ForEachView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
-		{
-			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
-		});
-
-		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
-		{
-			if (particleComp.Instance)
-			{
-				particleComp.Instance->OnRender();
-			}
+			Renderer::DrawMesh(transformComp.GetTransform(), meshComp, static_cast<int32_t>(entity));
 		});
 	}
 
@@ -113,6 +83,68 @@ namespace ZeoEngine {
 		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
 		{
 			RemoveParticleSystemInstance(particleComp);
+		});
+	}
+
+	void RenderSystem2D::OnRenderEditor(const EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+		{
+			OnRender();
+		}
+		Renderer2D::EndScene();
+	}
+
+	void RenderSystem2D::OnRenderRuntime()
+	{
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
+		ForEachView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
+		{
+			if (cameraComp.bIsPrimary)
+			{
+				mainCamera = &cameraComp.Camera;
+				cameraTransform = transformComp.GetTransform();
+				return;
+			}
+		});
+		if (mainCamera)
+		{
+			Renderer2D::BeginScene(*mainCamera, cameraTransform);
+			{
+				OnRender();
+			}
+			Renderer2D::EndScene();
+		}
+	}
+
+	void RenderSystem2D::OnRender()
+	{
+		// Render sprites
+		ForEachGroup<TransformComponent>(entt::get<SpriteRendererComponent>, [](auto entity, auto& transformComp, auto& spriteComp)
+		{
+			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
+		},
+		[](std::tuple<TransformComponent&, SpriteRendererComponent&> lhs, std::tuple<TransformComponent&, SpriteRendererComponent&> rhs)
+		{
+			const auto& lSpriteComp = std::get<1>(lhs);
+			const auto& rSpriteComp = std::get<1>(rhs);
+			return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
+		});
+
+		// Render circles
+		ForEachView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
+		{
+			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
+		});
+
+		// Render particle systems
+		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		{
+			if (particleComp.Instance)
+			{
+				particleComp.Instance->OnRender();
+			}
 		});
 	}
 
@@ -173,6 +205,23 @@ namespace ZeoEngine {
 
 	void PhysicsSystem::OnUpdate(DeltaTime dt)
 	{
+
+	}
+
+
+	void PhysicsSystem::OnRuntimeStart()
+	{
+
+	}
+
+
+	void PhysicsSystem::OnRuntimeStop()
+	{
+
+	}
+
+	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
+	{
 		const int32_t velocityIterations = 6;
 		const int32_t positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
@@ -204,7 +253,7 @@ namespace ZeoEngine {
 		return b2_staticBody;
 	}
 
-	void PhysicsSystem::OnRuntimeStart()
+	void PhysicsSystem2D::OnRuntimeStart()
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
@@ -240,7 +289,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void PhysicsSystem::OnRuntimeStop()
+	void PhysicsSystem2D::OnRuntimeStop()
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;

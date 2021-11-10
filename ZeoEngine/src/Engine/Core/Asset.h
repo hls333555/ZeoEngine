@@ -5,6 +5,15 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 
+template<typename Type, typename Other>
+entt::resource_handle<Type> dynamic_resource_handle_cast(const entt::resource_handle<Other>& other) {
+	if (other->TypeId() == entt::type_hash<Type>()) {
+		return entt::resource_handle<Type>{other, static_cast<Type&>(other.get())};
+	}
+
+	return {};
+}
+
 namespace ZeoEngine {
 
 	class IAsset

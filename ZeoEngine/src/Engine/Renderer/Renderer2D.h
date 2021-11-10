@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Renderer/Camera.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Renderer/OrthographicCamera.h"
 #include "Engine/Renderer/Texture.h"
@@ -45,24 +45,6 @@ namespace ZeoEngine {
 
 		// Editor-only
 		int32_t EntityID;
-	};
-
-	struct Statistics
-	{
-		uint32_t DrawCalls = 0;
-		uint32_t QuadCount = 0;
-
-		Entity HoveredEntity;
-
-		uint32_t GetTotalVertexCount() const { return QuadCount * 4; }
-		uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
-
-		void Reset()
-		{
-			DrawCalls = 0;
-			QuadCount = 0;
-			HoveredEntity = {};
-		}
 	};
 
 	struct Renderer2DData
@@ -158,7 +140,7 @@ namespace ZeoEngine {
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
 	
-		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int32_t entityID);
+		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& spriteComp, int32_t entityID);
 
 		static const Renderer2DData& GetRenderer2DData() { return s_Data; }
 

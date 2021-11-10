@@ -1,5 +1,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 
@@ -105,6 +106,9 @@ namespace ZeoEngine {
 			ZDATA(BoxCollider2DComponent, Friction, ZPROP(Tooltip, ZTEXT("摩擦力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
 			ZDATA(BoxCollider2DComponent, Restitution, ZPROP(Tooltip, ZTEXT("弹力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
 			ZDATA(BoxCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
+
+		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
+			ZDATA(MeshRendererComponent, Mesh);
 	}
 
 }

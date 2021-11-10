@@ -26,6 +26,26 @@ namespace ZeoEngine {
 			m_Scene->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
 		}
 
+		struct DefaultCompare
+		{
+			template<typename... Component>
+			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const
+			{
+				return true;
+			}
+		};
+
+		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
+		void ForEachGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
+		{
+			auto group = m_Scene->m_Registry.group<Owned..., Get...>(exclude);
+			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
+			{
+				group.sort<Owned..., Get...>(std::move(compareFunc));
+			}
+			group.each(std::forward<Func>(func));
+		}
+
 	protected:
 		Scene* m_Scene = nullptr;
 	};
@@ -36,9 +56,21 @@ namespace ZeoEngine {
 		using ISystem::ISystem;
 		
 		virtual void OnUpdate(DeltaTime dt) override;
-		void OnRenderEditor(const EditorCamera& camera);
-		void OnRenderRuntime();
+		virtual void OnRenderEditor(const EditorCamera& camera);
+		virtual void OnRenderRuntime();
 		virtual void OnDestroy() override;
+
+	private:
+		void OnRender();
+	};
+
+	class RenderSystem2D : public RenderSystem
+	{
+	public:
+		using RenderSystem::RenderSystem;
+
+		virtual void OnRenderEditor(const EditorCamera& camera) override;
+		virtual void OnRenderRuntime() override;
 
 	private:
 		void OnRender();
@@ -70,8 +102,19 @@ namespace ZeoEngine {
 
 		virtual void OnUpdate(DeltaTime dt) override;
 
-		void OnRuntimeStart();
-		void OnRuntimeStop();
+		virtual void OnRuntimeStart();
+		virtual void OnRuntimeStop();
+	};
+
+	class PhysicsSystem2D : public PhysicsSystem
+	{
+	public:
+		using PhysicsSystem::PhysicsSystem;
+
+		virtual void OnUpdate(DeltaTime dt) override;
+
+		virtual void OnRuntimeStart() override;
+		virtual void OnRuntimeStop() override;
 
 	private:
 		b2World* m_PhysicsWorld = nullptr;

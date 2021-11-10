@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Mesh.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 
@@ -119,6 +120,26 @@ namespace YAML {
 			if (path.empty()) return true;
 
 			rhs = ParticleTemplateAssetLibrary::Get().LoadAsset(path);
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<AssetHandle<MeshAsset>>
+	{
+		static Node encode(const AssetHandle<MeshAsset>& rhs)
+		{
+			Node node;
+			node.push_back(rhs ? rhs->GetPath() : "");
+			return node;
+		}
+
+		static bool decode(const Node& node, AssetHandle<MeshAsset>& rhs)
+		{
+			const auto& path = node.as<std::string>();
+			if (path.empty()) return true;
+
+			rhs = MeshAssetLibrary::Get().LoadAsset(path);
 			return true;
 		}
 	};

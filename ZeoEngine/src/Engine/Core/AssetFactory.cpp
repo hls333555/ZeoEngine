@@ -4,6 +4,7 @@
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 
