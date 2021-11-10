@@ -14,13 +14,13 @@ project "ZeoEngine"
 	{
 		"src/**.h",
 		"src/**.cpp",
-		"vendor/stb_image/**.h",
-		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.ini",
+		"vendor/IconFontCppHeaders/**.h",
 		"vendor/ImGuizmo/ImGuizmo.h",
 		"vendor/ImGuizmo/ImGuizmo.cpp",
-		"vendor/IconFontCppHeaders/**.h"
+		"vendor/stb_image/**.h",
+		"vendor/stb_image/**.cpp",
 	}
 
 	defines
@@ -33,31 +33,31 @@ project "ZeoEngine"
 	includedirs
 	{
 		"src",
-		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.Box2D}",
-		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.magic_enum}",
-		"%{IncludeDir.IconFontCppHeaders}",
 		"%{IncludeDir.doctest}",
-		"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.IconFontCppHeaders}",
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.VulkanSDK}",
+		"%{IncludeDir.yaml_cpp}",
 	}
 
 	links 
 	{
 		"opengl32.lib",
 		"Box2D",
-		"GLFW",
+		"doctest",
 		"Glad",
+		"GLFW",
 		"ImGui",
 		"yaml-cpp",
-		"doctest",
 	}
 
 	filter "files:vendor/ImGuizmo/**.cpp"

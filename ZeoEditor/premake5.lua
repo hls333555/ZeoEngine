@@ -22,15 +22,15 @@ project "ZeoEditor"
 	{
 		"src",
 		"%{wks.location}/ZeoEngine/src",
-		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.doctest}",
+		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.magic_enum}",
 		"%{IncludeDir.IconFontCppHeaders}",
-		"%{IncludeDir.doctest}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.yaml_cpp}",
 	}
 
 	links
