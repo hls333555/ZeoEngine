@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
 
-		// Quad
+		// Quads
 		s_Data.QuadVAO = VertexArray::Create();
 
 		s_Data.QuadVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
@@ -56,7 +56,7 @@ namespace ZeoEngine {
 		s_Data.QuadVAO->SetIndexBuffer(quadIBO);
 		delete[] quadIndices;
 
-		// Circle
+		// Circles
 		s_Data.CircleVAO = VertexArray::Create();
 
 		s_Data.CircleVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(CircleVertex));
@@ -73,6 +73,19 @@ namespace ZeoEngine {
 		s_Data.CircleVAO->SetIndexBuffer(quadIBO); // Use quad IBO
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
+		// Lines
+		s_Data.LineVAO = VertexArray::Create();
+
+		s_Data.LineVBO = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
+		BufferLayout lineLayout = {
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color"	   },
+			{ ShaderDataType::Int,    "a_EntityID" },
+		};
+		s_Data.LineVBO->SetLayout(lineLayout);
+		s_Data.LineVAO->AddVertexBuffer(s_Data.LineVBO);
+		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
+
 		// Generate a 1x1 white texture to be used by flat color
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
@@ -85,6 +98,7 @@ namespace ZeoEngine {
 		}
 		s_Data.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
 		s_Data.CircleShader = Shader::Create("assets/editor/shaders/Renderer2D_Circle.glsl");
+		s_Data.LineShader = Shader::Create("assets/editor/shaders/Renderer2D_Line.glsl");
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
@@ -161,6 +175,17 @@ namespace ZeoEngine {
 			RenderCommand::DrawIndexed(s_Data.CircleVAO, s_Data.CircleIndexCount);
 			++s_Data.Stats.DrawCalls;
 		}
+
+		if (s_Data.LineVertexCount)
+		{
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferBase);
+			s_Data.LineVBO->SetData(s_Data.LineVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+			s_Data.LineShader->Bind();
+			RenderCommand::SetLineThickness(s_Data.LineThickness);
+			RenderCommand::DrawLines(s_Data.LineVAO, s_Data.LineVertexCount);
+			++s_Data.Stats.DrawCalls;
+		}
 	}
 
 	void Renderer2D::StartBatch()
@@ -170,6 +195,9 @@ namespace ZeoEngine {
 
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
 	}
@@ -379,6 +407,57 @@ namespace ZeoEngine {
 		s_Data.CircleIndexCount += 6;
 
 		++s_Data.Stats.QuadCount;
+	}
+
+	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID)
+	{
+		s_Data.LineVertexBufferPtr->Position = p0;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr->EntityID = entityID;
+		++s_Data.LineVertexBufferPtr;
+
+		s_Data.LineVertexBufferPtr->Position = p1;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr->EntityID = entityID;
+		++s_Data.LineVertexBufferPtr;
+
+		s_Data.LineVertexCount += 2;
+	}
+
+	float Renderer2D::GetLineThickness()
+	{
+		return s_Data.LineThickness;
+	}
+
+	void Renderer2D::SetLineThickness(float thickness)
+	{
+		s_Data.LineThickness = thickness;
+	}
+
+	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityID)
+	{
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		DrawLine(p0, p1, color);
+		DrawLine(p1, p2, color);
+		DrawLine(p2, p3, color);
+		DrawLine(p3, p0, color);
+	}
+
+	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
+	{
+		glm::vec3 lineVertices[4];
+		for (uint32_t i = 0; i < 4; ++i)
+		{
+			lineVertices[i] = transform * s_Data.QuadVertexPositions[i];
+		}
+		DrawLine(lineVertices[0], lineVertices[1], color);
+		DrawLine(lineVertices[1], lineVertices[2], color);
+		DrawLine(lineVertices[2], lineVertices[3], color);
+		DrawLine(lineVertices[3], lineVertices[0], color);
+		
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)

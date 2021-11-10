@@ -34,6 +34,17 @@ namespace ZeoEngine {
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);
 		}
 
+		/** Issue a draw call. */
+		static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+		{
+			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+		}
+
+		static void SetLineThickness(float thickness)
+		{
+			s_RendererAPI->SetLineThickness(thickness);
+		}
+
 		/** Should be called before and after drawing translucent objects. */
 		static void EnableDepthWriting(bool bEnable)
 		{
