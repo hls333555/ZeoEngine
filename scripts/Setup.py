@@ -24,4 +24,4 @@ print("Updating submodules...")
 subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
 
 print("Running premake...")
-subprocess.call(["vendor/premake/premake5.exe", "vs2019"])
+subprocess.call(["vendor/premake/premake5.exe", "vs2022"])

@@ -17,8 +17,8 @@ project "TestBox"
 	{
 		"src",
 		"%{wks.location}/ZeoEngine/src",
+		"%{IncludeDir.doctest}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.doctest}"
 	}
 
 	links
