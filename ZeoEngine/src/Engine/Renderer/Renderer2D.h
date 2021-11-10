@@ -38,6 +38,15 @@ namespace ZeoEngine {
 		int32_t EntityID;
 	};
 
+	struct LineVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+
+		// Editor-only
+		int32_t EntityID;
+	};
+
 	struct Statistics
 	{
 		uint32_t DrawCalls = 0;
@@ -72,6 +81,10 @@ namespace ZeoEngine {
 		Ref<VertexBuffer> CircleVBO;
 		Ref<Shader> CircleShader;
 
+		Ref<VertexArray> LineVAO;
+		Ref<VertexBuffer> LineVBO;
+		Ref<Shader> LineShader;
+
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
@@ -79,6 +92,11 @@ namespace ZeoEngine {
 		uint32_t CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
+
+		uint32_t LineVertexCount = 0;
+		LineVertex* LineVertexBufferBase = nullptr;
+		LineVertex* LineVertexBufferPtr = nullptr;
+		float LineThickness = 2.0f;
 
 		glm::vec4 QuadVertexPositions[4];
 
@@ -124,6 +142,13 @@ namespace ZeoEngine {
 		static void DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f, int32_t entityID = -1);
+
+		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID = -1);
+		static float GetLineThickness();
+		static void SetLineThickness(float thickness);
+
+		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityID = -1);
+		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
 
 		/** Rotation should be in radians. */
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);

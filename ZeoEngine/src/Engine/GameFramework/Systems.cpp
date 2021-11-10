@@ -85,7 +85,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		// Render Circles
+		// Render circles
 		ForEachView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
 		{
 			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
