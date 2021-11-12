@@ -5,6 +5,7 @@
 #include <box2d/b2_body.h>
 #include <box2d/b2_fixture.h>
 #include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_circle_shape.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
@@ -284,6 +285,23 @@ namespace ZeoEngine {
 				fixtureDef.friction = bc2dComp.Friction;
 				fixtureDef.restitution = bc2dComp.Restitution;
 				fixtureDef.restitutionThreshold = bc2dComp.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
+
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
+
+				b2CircleShape circleShape;
+				circleShape.m_p.Set(cc2dComp.Offset.x, cc2dComp.Offset.y);
+				circleShape.m_radius = cc2dComp.Radius;
+
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &circleShape;
+				fixtureDef.density = cc2dComp.Density;
+				fixtureDef.friction = cc2dComp.Friction;
+				fixtureDef.restitution = cc2dComp.Restitution;
+				fixtureDef.restitutionThreshold = cc2dComp.RestitutionThreshold;
 				body->CreateFixture(&fixtureDef);
 			}
 		});

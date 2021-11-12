@@ -41,6 +41,52 @@ Entities:
         Density: 1
         Size: [0.5, 0.5]
         Offset: [0, 0]
+  - Entity: 6150021584834791254
+    Components:
+      - Component: 3590015414
+        Name: Floor
+      - Component: 4079556375
+        Scale: [2.99915075, 0.299845248, 1]
+        Rotation: [0, 0, 90.0000763]
+        Translation: [5.14913797, -0.148104236, -6.10355128e-05]
+      - Component: 2229143245
+        SortingOrder: 0
+        TextureTiling: [1, 1]
+        Texture: ""
+        TintColor: [0, 0.761062145, 1, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Static
+      - Component: 4073979302
+        RestitutionThreshold: 0.5
+        Restitution: 0
+        Friction: 0.5
+        Density: 1
+        Size: [0.5, 0.5]
+        Offset: [0, 0]
+  - Entity: 5981991289099745618
+    Components:
+      - Component: 3590015414
+        Name: Floor
+      - Component: 4079556375
+        Scale: [2.99811864, 0.299716234, 1]
+        Rotation: [0, 0, 90.0000763]
+        Translation: [-5.14859152, -0.151423693, -6.10355128e-05]
+      - Component: 2229143245
+        SortingOrder: 0
+        TextureTiling: [1, 1]
+        Texture: ""
+        TintColor: [0, 0.761062145, 1, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Static
+      - Component: 4073979302
+        RestitutionThreshold: 0.5
+        Restitution: 0
+        Friction: 0.5
+        Density: 1
+        Size: [0.5, 0.5]
+        Offset: [0, 0]
   - Entity: 7863991719176163715
     Components:
       - Component: 3590015414
@@ -48,7 +94,7 @@ Entities:
       - Component: 4079556375
         Scale: [0.5, 0.5, 1]
         Rotation: [0, 0, 60.0000038]
-        Translation: [0, 1.5, 0]
+        Translation: [-0.103207894, 2.07954407, 0]
       - Component: 2229143245
         SortingOrder: 0
         TextureTiling: [1, 1]
@@ -71,9 +117,42 @@ Entities:
       - Component: 4079556375
         Scale: [1, 1, 1]
         Rotation: [0, 0, 0]
-        Translation: [0.624659896, 0.0504385233, 0]
+        Translation: [0.705600262, 0.447090864, 0]
       - Component: 873532946
         SortingOrder: 0
         Fade: 0.00499999989
         Thickness: 0.174999997
         Color: [0.964601517, 0, 1, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Dynamic
+      - Component: 887343153
+        RestitutionThreshold: 0.349999994
+        Restitution: 0.860000014
+        Friction: 0.209999993
+        Density: 1
+        Radius: 0.5
+        Offset: [0, 0]
+  - Entity: 17469610284988113108
+    Components:
+      - Component: 3590015414
+        Name: Circle
+      - Component: 4079556375
+        Scale: [0.600000024, 0.600000024, 0.600000024]
+        Rotation: [0, 0, 0]
+        Translation: [-0.929848135, 1.05840373, 0]
+      - Component: 873532946
+        SortingOrder: 0
+        Fade: 0.00499999989
+        Thickness: 0.5
+        Color: [0.85840714, 1, 0, 1]
+      - Component: 259465780
+        bFixedRotation: false
+        Type: Dynamic
+      - Component: 887343153
+        RestitutionThreshold: 0.159999996
+        Restitution: 0.550000012
+        Friction: 0.0900000036
+        Density: 0.589999974
+        Radius: 0.300000012
+        Offset: [0, 0]
