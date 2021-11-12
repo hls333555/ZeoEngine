@@ -98,13 +98,21 @@ namespace ZeoEngine {
 			ZDATA(Rigidbody2DComponent, Type, ZPROP(Tooltip, ZTEXT("刚体类型")))
 			ZDATA(Rigidbody2DComponent, bFixedRotation);
 
-		ZCOMPONENT(BoxCollider2DComponent, ZPROP(DisplayName, ZTEXT("Box Collider 2D")), ZPROP(Tooltip, ZTEXT("2D碰撞组件")), ZPROP(Category, ZTEXT("Physics")))
+		ZCOMPONENT(BoxCollider2DComponent, ZPROP(DisplayName, ZTEXT("Box Collider 2D")), ZPROP(Tooltip, ZTEXT("2D碰撞盒组件")), ZPROP(Category, ZTEXT("Physics")))
 			ZDATA(BoxCollider2DComponent, Offset)
 			ZDATA(BoxCollider2DComponent, Size, ZPROP(Tooltip, ZTEXT("碰撞大小，该值为缩放倍数")))
 			ZDATA(BoxCollider2DComponent, Density, ZPROP(Tooltip, ZTEXT("密度")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
 			ZDATA(BoxCollider2DComponent, Friction, ZPROP(Tooltip, ZTEXT("摩擦力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
 			ZDATA(BoxCollider2DComponent, Restitution, ZPROP(Tooltip, ZTEXT("弹力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
 			ZDATA(BoxCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
+
+		ZCOMPONENT(CircleCollider2DComponent, ZPROP(DisplayName, ZTEXT("Circle Collider 2D")), ZPROP(Tooltip, ZTEXT("2D碰撞圆组件")), ZPROP(Category, ZTEXT("Physics")))
+			ZDATA(CircleCollider2DComponent, Offset)
+			ZDATA(CircleCollider2DComponent, Radius, ZPROP(Tooltip, ZTEXT("碰撞半径")))
+			ZDATA(CircleCollider2DComponent, Density, ZPROP(Tooltip, ZTEXT("密度")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(CircleCollider2DComponent, Friction, ZPROP(Tooltip, ZTEXT("摩擦力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(CircleCollider2DComponent, Restitution, ZPROP(Tooltip, ZTEXT("弹力")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f))
+			ZDATA(CircleCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 	}
 
 }
