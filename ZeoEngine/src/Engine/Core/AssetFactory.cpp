@@ -39,4 +39,12 @@ namespace ZeoEngine {
 		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, srcPath);
 	}
 
+	// TODO:
+	void MeshAssetFactory::ImportAsset(const std::string& srcPath, const std::string& destPath) const
+	{
+		ImportableAssetFactoryBase::ImportAsset(srcPath, destPath);
+
+		//MeshAssetLibrary::Get().LoadAsset(destPath);
+	}
+
 }

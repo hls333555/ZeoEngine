@@ -10,6 +10,7 @@
 #include "Engine/Core/UUID.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Renderer/Light.h"
 
 namespace ZeoEngine {
 
@@ -25,6 +26,11 @@ namespace ZeoEngine {
 		IComponent(const IComponent&) = default;
 
 		virtual void CreateHelper() {}
+		template<typename T>
+		Ref<T> GetHelper()
+		{
+			return std::dynamic_pointer_cast<T>(ComponentHelper);
+		}
 
 		static const char* GetIcon() { return ICON_FA_CIRCLE_NOTCH; }
 	};
@@ -176,7 +182,7 @@ namespace ZeoEngine {
 
 		virtual void CreateHelper() override
 		{
-			ComponentHelper = CreateRef<ParticleSystemComponentHelper>();
+			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(this);
 		}
 
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
@@ -196,7 +202,7 @@ namespace ZeoEngine {
 
 		virtual void CreateHelper() override
 		{
-			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>();
+			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(this);
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
@@ -285,6 +291,39 @@ namespace ZeoEngine {
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
+	};
+
+	struct LightComponent : public IComponent
+	{
+		Ref<Light> Light;
+
+		enum class LightType
+		{
+			DirectionalLight = 0, PointLight, SpotLight,
+		};
+
+		LightType Type = LightType::PointLight;
+
+		LightComponent() = default;
+		LightComponent(const LightComponent&) = default;
+
+		virtual void CreateHelper() override
+		{
+			ComponentHelper = CreateRef<LightComponentHelper>(this);
+		}
+
+		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+
+		template<typename T>
+		Ref<T> GetLight()
+		{
+			return std::dynamic_pointer_cast<T>(Light);
+		}
+
+		const glm::vec4& GetColor() const { return Light->GetColor(); }
+		void SetColor(const glm::vec4& color) { Light->SetColor(color); }
+		float GetIntensity() const { return Light->GetIntensity(); }
+		void SetIntensity(float intensity) { return Light->SetIntensity(intensity); }
 	};
 
 }

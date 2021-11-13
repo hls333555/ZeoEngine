@@ -7,14 +7,14 @@
 namespace ZeoEngine {
 
 	class Entity;
+	struct IComponent;
 
 	class IComponentHelper
 	{
-	protected:
-		IComponentHelper();
+	public:
+		explicit IComponentHelper(IComponent* comp);
 		virtual ~IComponentHelper();
 
-	public:
 		/**  Called after component being added to the owner entity. */
 		virtual void OnComponentAdded() {}
 		/**  Called after component being copied to the owner entity. */
@@ -38,6 +38,8 @@ namespace ZeoEngine {
 	class ParticleSystemComponentHelper : public IComponentHelper
 	{
 	public:
+		using IComponentHelper::IComponentHelper;
+
 		virtual void OnComponentCopied() override;
 		virtual void OnComponentDestroy() override;
 
@@ -48,8 +50,19 @@ namespace ZeoEngine {
 	class ParticleSystemPreviewComponentHelper : public IComponentHelper
 	{
 	public:
+		using IComponentHelper::IComponentHelper;
+
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+	};
+
+	class LightComponentHelper : public IComponentHelper
+	{
+	public:
+		LightComponentHelper(IComponent* comp);
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+
+		void InitLight(IComponent* comp);
 	};
 
 }

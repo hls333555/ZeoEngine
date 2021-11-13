@@ -21,7 +21,7 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnUpdate(DeltaTime dt)
 	{
-		ForEachView<ParticleSystemComponent>([dt](auto entity, auto& particleComp)
+		ForEachComponentView<ParticleSystemComponent>([dt](auto entity, auto& particleComp)
 		{
 			if (particleComp.Instance)
 			{
@@ -43,7 +43,7 @@ namespace ZeoEngine {
 	{
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
-		ForEachView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
+		ForEachComponentView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
 		{
 			if (cameraComp.bIsPrimary)
 			{
@@ -63,9 +63,26 @@ namespace ZeoEngine {
 	}
 
 	void RenderSystem::OnRender()
-	{		
+	{
+		// Setup lights
+		ForEachComponentView<TransformComponent, LightComponent>([](auto entity, auto& transformComp, auto& lightComp)
+		{
+			switch (lightComp.Type)
+			{
+			case LightComponent::LightType::DirectionalLight:
+				Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+				break;
+			case LightComponent::LightType::PointLight:
+				break;
+			case LightComponent::LightType::SpotLight:
+				break;
+			default:
+				break;
+			}
+		});
+
 		// Render meshes
-		ForEachGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
 		{
 			Renderer::DrawMesh(transformComp.GetTransform(), meshComp, static_cast<int32_t>(entity));
 		});
@@ -81,7 +98,7 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnDestroy()
 	{
-		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
 		{
 			RemoveParticleSystemInstance(particleComp);
 		});
@@ -100,7 +117,7 @@ namespace ZeoEngine {
 	{
 		Camera* mainCamera = nullptr;
 		glm::mat4 cameraTransform;
-		ForEachView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
+		ForEachComponentView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
 		{
 			if (cameraComp.bIsPrimary)
 			{
@@ -122,7 +139,7 @@ namespace ZeoEngine {
 	void RenderSystem2D::OnRender()
 	{
 		// Render sprites
-		ForEachGroup<TransformComponent>(entt::get<SpriteRendererComponent>, [](auto entity, auto& transformComp, auto& spriteComp)
+		ForEachComponentGroup<TransformComponent>(entt::get<SpriteRendererComponent>, [](auto entity, auto& transformComp, auto& spriteComp)
 		{
 			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
 		},
@@ -134,13 +151,13 @@ namespace ZeoEngine {
 		});
 
 		// Render circles
-		ForEachView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
+		ForEachComponentView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
 		{
 			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
 		});
 
 		// Render particle systems
-		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
 		{
 			if (particleComp.Instance)
 			{
@@ -151,7 +168,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewRenderSystem::OnUpdate(DeltaTime dt)
 	{
-		ForEachView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
+		ForEachComponentView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
 		{
 			particlePreviewComp.Instance->OnUpdate(dt);
 		});
@@ -161,7 +178,7 @@ namespace ZeoEngine {
 	{
 		Renderer2D::BeginScene(camera);
 		{
-			ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+			ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 			{
 				particlePreviewComp.Instance->OnRender();
 			});
@@ -171,7 +188,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewRenderSystem::OnDestroy()
 	{
-		ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 		{
 			RemoveParticleSystemInstance(particlePreviewComp);
 		});
@@ -179,7 +196,7 @@ namespace ZeoEngine {
 
 	void NativeScriptSystem::OnUpdate(DeltaTime dt)
 	{
-		ForEachView<NativeScriptComponent>([=](auto entity, auto& nativeScriptComp)
+		ForEachComponentView<NativeScriptComponent>([=](auto entity, auto& nativeScriptComp)
 		{
 			// TODO: Move to OnBeginPlay
 			if (!nativeScriptComp.Instance)
@@ -195,7 +212,7 @@ namespace ZeoEngine {
 
 	void NativeScriptSystem::OnEvent(Event& e)
 	{
-		ForEachView<NativeScriptComponent>([&e](auto entity, auto& nativeScriptComp)
+		ForEachComponentView<NativeScriptComponent>([&e](auto entity, auto& nativeScriptComp)
 		{
 			if (nativeScriptComp.Instance)
 			{
@@ -227,7 +244,7 @@ namespace ZeoEngine {
 		const int32_t positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
 
-		ForEachView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
 			Entity entity = { e, m_Scene };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
@@ -258,7 +275,7 @@ namespace ZeoEngine {
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
-		ForEachView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
 			Entity entity = { e, m_Scene };
 			auto& transformComp = entity.GetComponent<TransformComponent>();

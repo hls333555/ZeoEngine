@@ -98,6 +98,11 @@ namespace ZeoEngine {
 		{
 			ParticleSystemInstance::Create(particleComp);
 		});
+
+		m_Registry.view<LightComponent>().each([](auto entity, auto& lightComp)
+		{
+			lightComp.GetHelper<LightComponentHelper>()->InitLight(&lightComp);
+		});
 	}
 
 }

@@ -8,30 +8,33 @@ layout (location = 1) in vec3 a_Normal;
 layout (location = 2) in vec2 a_TexCoord;
 layout (location = 3) in float a_TexIndex;
 
-layout (std140, binding = 0) uniform Camera
+layout (std140, binding = 0) uniform CameraBlock
 {
 	mat4 u_ViewProjection;
 };
 
-layout (std140, binding = 1) uniform Model
+layout (std140, binding = 1) uniform ModelBlock
 {
 	mat4 u_Transform;
+	mat4 u_NormalMatrix;
 	int u_EntityID;
 };
 
 struct VertexOutput
 {
+	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
 };
 
 layout (location = 0) out VertexOutput Output;
-layout (location = 2) out flat float v_TexIndex; // flat variables cannot be in a struct
-layout (location = 3) out flat int v_EntityID;
+layout (location = 3) out flat float v_TexIndex; // flat variables cannot be in a struct
+layout (location = 4) out flat int v_EntityID;
 
 void main()
 {
-	Output.Normal = a_Normal;
+	Output.WorldPosition = vec3(u_Transform * vec4(a_Position, 1.0f));
+	Output.Normal = mat3(u_NormalMatrix) * a_Normal;
 	Output.TexCoord = a_TexCoord;
 	v_TexIndex = a_TexIndex;
 	v_EntityID = u_EntityID;
@@ -42,20 +45,49 @@ void main()
 #type fragment
 #version 450 core
 
-layout(location = 0) out vec4 color;
-layout(location = 1) out int color2;
+layout(location = 0) out vec4 o_Color;
+layout(location = 1) out int o_EntityID;
+
+struct DirectionalLight
+{
+	vec4 Color;
+	vec3 Direction;
+	float Intensity;
+};
+
+layout (std140, binding = 2) uniform DirectionalLightBlock // Uniform block name should not conflict with struct name
+{
+	DirectionalLight u_DirectionalLight;
+};
+
+struct Material
+{
+	vec4 AmbientColor;
+};
+
+layout (std140, binding = 3) uniform MaterialBlock
+{
+	Material u_Material;
+};
 
 struct VertexOutput
 {
+	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
 };
 
 layout (location = 0) in VertexOutput Input;
-layout (location = 2) in flat float v_TexIndex;
-layout (location = 3) in flat int v_EntityID;
+layout (location = 3) in flat float v_TexIndex;
+layout (location = 4) in flat int v_EntityID;
 
 layout (binding = 0) uniform sampler2D u_Textures[32];
+
+vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal, DirectionalLight light)
+{
+	float intensity = light.Intensity * max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
+	return light.Color * intensity;
+}
 
 void main()
 {
@@ -95,6 +127,8 @@ void main()
 		case 30: texColor *= texture(u_Textures[30], Input.TexCoord); break;
 		case 31: texColor *= texture(u_Textures[31], Input.TexCoord); break;
 	}
-	color = vec4(1.0f);
-	color2 = v_EntityID;
+	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal), u_DirectionalLight);
+	o_Color = vec4(1.0f) * directionalLight;
+
+	o_EntityID = v_EntityID;
 }

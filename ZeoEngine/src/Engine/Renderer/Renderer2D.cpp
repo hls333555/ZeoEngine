@@ -507,7 +507,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, subTexture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& spriteComp, int32_t entityID)
+	void Renderer2D::DrawSprite(const glm::mat4& transform, const SpriteRendererComponent& spriteComp, int32_t entityID)
 	{
 		if (spriteComp.Texture)
 		{

@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		struct ModelData
 		{
 			glm::mat4 Transform;
+			glm::mat4 NormalMatrix;
 
 			// Editor-only
 			int32_t EntityID;
@@ -27,6 +28,7 @@ namespace ZeoEngine {
 			: VAO(vao), MeshEntries(meshEntries)
 		{
 			ModelBuffer.Transform = transform;
+			ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
 			ModelBuffer.EntityID = entityID;
 		}
 
@@ -68,6 +70,23 @@ namespace ZeoEngine {
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
 
+		// Data alignment is required for uniform buffers!
+		struct LightData
+		{
+			glm::vec4 DirectionalLightColor;
+			glm::vec3 DirectionalLightDirection;
+			float DirectionalLightIntensity;
+
+			void Reset()
+			{
+				DirectionalLightColor = glm::vec4{ 0.0f };
+				DirectionalLightDirection = glm::vec3{ 0.0f };
+				DirectionalLightIntensity = 0.0f;
+			}
+		};
+		LightData LightBuffer;
+		Ref<UniformBuffer> LightUniformBuffer;
+
 		Statistics Stats;
 	};
 
@@ -88,7 +107,9 @@ namespace ZeoEngine {
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
-		static void DrawMesh(const glm::mat4& transform, MeshRendererComponent& meshComp, int32_t entityID);
+		static void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
+
+		static void DrawMesh(const glm::mat4& transform, const MeshRendererComponent& meshComp, int32_t entityID);
 
 		// TODO:
 		static Statistics& GetStats();

@@ -22,6 +22,7 @@ namespace ZeoEngine {
 		{
 			s_Data.DefaultShader = Shader::Create("assets/editor/shaders/Default.glsl");
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
+			s_Data.LightUniformBuffer = UniformBuffer::Create(sizeof(RendererData::LightData), 2);
 		}
 	}
 
@@ -62,6 +63,8 @@ namespace ZeoEngine {
 	void Renderer::Prepare()
 	{
 		s_Data.RenderQueue.clear();
+		s_Data.LightBuffer.Reset();
+		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer, sizeof(RendererData::LightData));
 	}
 
 	void Renderer::Submit()
@@ -78,7 +81,15 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Renderer::DrawMesh(const glm::mat4& transform, MeshRendererComponent& meshComp, int32_t entityID)
+	void Renderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
+	{
+		s_Data.LightBuffer.DirectionalLightDirection = directionalLight->CalculateDirection(rotation);
+		s_Data.LightBuffer.DirectionalLightColor = directionalLight->GetColor();
+		s_Data.LightBuffer.DirectionalLightIntensity = directionalLight->GetIntensity();
+		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer, sizeof(RendererData::LightData));
+	}
+
+	void Renderer::DrawMesh(const glm::mat4& transform, const MeshRendererComponent& meshComp, int32_t entityID)
 	{
 		if (!meshComp.Mesh) return;
 

@@ -190,6 +190,12 @@ namespace ZeoEngine {
 		return out;
 	}
 
+	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<MeshAsset>& mesh)
+	{
+		out << (mesh ? mesh->GetPath() : "");
+		return out;
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 	// ComponentSerializer ///////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -279,6 +285,9 @@ namespace ZeoEngine {
 				break;
 			case BasicMetaType::PARTICLE:
 				SerializeData<AssetHandle<ParticleTemplateAsset>>(out, data, instance, bIsSeqElement);
+				break;
+			case BasicMetaType::MESH:
+				SerializeData<AssetHandle<MeshAsset>>(out, data, instance, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -434,6 +443,9 @@ namespace ZeoEngine {
 				break;
 			case BasicMetaType::PARTICLE:
 				DeserializeData<AssetHandle<ParticleTemplateAsset>>(data, instance, value, bIsSeqElement);
+				break;
+			case BasicMetaType::MESH:
+				DeserializeData<AssetHandle<MeshAsset>>(data, instance, value, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);

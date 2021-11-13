@@ -1,5 +1,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 
@@ -116,6 +117,16 @@ namespace ZeoEngine {
 
 		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(MeshRendererComponent, Mesh);
+
+		ZENUM(LightComponent::LightType)
+			ZENUM_DATA(LightComponent::LightType, DirectionalLight, ZPROP(Tooltip, ZTEXT("平行光")))
+			ZENUM_DATA(LightComponent::LightType, PointLight, ZPROP(Tooltip, ZTEXT("点光源")))
+			ZENUM_DATA(LightComponent::LightType, SpotLight, ZPROP(Tooltip, ZTEXT("聚光灯")));
+
+		ZCOMPONENT(LightComponent, ZPROP(DisplayName, ZTEXT("Light")), ZPROP(Tooltip, ZTEXT("灯光组件")), ZPROP(Category, ZTEXT("Rendering")))
+			ZDATA(LightComponent, Type)
+			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
+			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 	}
 
 }

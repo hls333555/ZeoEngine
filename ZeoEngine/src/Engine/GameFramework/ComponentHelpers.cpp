@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		Entity OwnerEntity;
 	};
 
-	IComponentHelper::IComponentHelper()
+	IComponentHelper::IComponentHelper(IComponent* comp)
 		: m_Impl(CreateScope<Impl>())
 	{
 	}
@@ -82,6 +82,33 @@ namespace ZeoEngine {
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+	}
+
+	LightComponentHelper::LightComponentHelper(IComponent* comp)
+		: IComponentHelper(comp)
+	{
+		InitLight(comp);
+	}
+
+	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
+		if (dataId == ZDATA_ID(Type))
+		{
+			InitLight(&lightComp);
+		}
+	}
+
+	void LightComponentHelper::InitLight(IComponent* comp)
+	{
+		auto* lightComp = dynamic_cast<LightComponent*>(comp);
+		switch (lightComp->Type)
+		{
+			case LightComponent::LightType::DirectionalLight:	lightComp->Light = CreateRef<DirectionalLight>(); break;
+			case LightComponent::LightType::PointLight:			lightComp->Light = CreateRef<PointLight>(); break;
+			case LightComponent::LightType::SpotLight:			lightComp->Light = CreateRef<SpotLight>(); break;
+			default: break;
+		}
 	}
 
 }

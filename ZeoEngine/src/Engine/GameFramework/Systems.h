@@ -21,7 +21,7 @@ namespace ZeoEngine {
 
 	protected:
 		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
+		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
 		{
 			m_Scene->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
 		}
@@ -36,7 +36,7 @@ namespace ZeoEngine {
 		};
 
 		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
+		void ForEachComponentGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
 		{
 			auto group = m_Scene->m_Registry.group<Owned..., Get...>(exclude);
 			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
