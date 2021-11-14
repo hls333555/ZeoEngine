@@ -70,18 +70,20 @@ namespace ZeoEngine {
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
 
-		// Data alignment is required for uniform buffers!
+		// Data alignment is required for uniform buffers so that the order is very important!
 		struct LightData
 		{
 			glm::vec4 DirectionalLightColor;
-			glm::vec3 DirectionalLightDirection;
+			glm::vec3 DirectionalLightPosition;
 			float DirectionalLightIntensity;
+			glm::vec3 DirectionalLightDirection;
 
 			void Reset()
 			{
 				DirectionalLightColor = glm::vec4{ 0.0f };
-				DirectionalLightDirection = glm::vec3{ 0.0f };
+				DirectionalLightPosition = glm::vec3{ 0.0f };
 				DirectionalLightIntensity = 0.0f;
+				DirectionalLightDirection = glm::vec3{ 0.0f };
 			}
 		};
 		LightData LightBuffer;
@@ -107,7 +109,7 @@ namespace ZeoEngine {
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
-		static void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
+		static void SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 
 		static void DrawMesh(const glm::mat4& transform, const MeshRendererComponent& meshComp, int32_t entityID);
 

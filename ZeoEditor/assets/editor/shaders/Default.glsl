@@ -51,8 +51,9 @@ layout(location = 1) out int o_EntityID;
 struct DirectionalLight
 {
 	vec4 Color;
-	vec3 Direction;
+	vec3 Position;
 	float Intensity;
+	vec3 Direction;
 };
 
 layout (std140, binding = 2) uniform DirectionalLightBlock // Uniform block name should not conflict with struct name
@@ -85,8 +86,15 @@ layout (binding = 0) uniform sampler2D u_Textures[32];
 
 vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal, DirectionalLight light)
 {
-	float intensity = light.Intensity * max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
-	return light.Color * intensity;
+	float diffuse = light.Intensity * max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
+
+	float specularStrength = 0.5f;
+	int shininess = 32;
+	vec3 viewDirection = normalize(light.Position - vertexPosition);
+	vec3 reflectDirection = reflect(light.Direction, vertexNormal);
+	float specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0.0f), shininess);
+
+	return (diffuse + specular) * light.Color;
 }
 
 void main()

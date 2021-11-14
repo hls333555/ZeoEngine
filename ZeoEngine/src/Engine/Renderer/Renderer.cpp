@@ -81,8 +81,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Renderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
+	void Renderer::SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
 	{
+		s_Data.LightBuffer.DirectionalLightPosition = position;
 		s_Data.LightBuffer.DirectionalLightDirection = directionalLight->CalculateDirection(rotation);
 		s_Data.LightBuffer.DirectionalLightColor = directionalLight->GetColor();
 		s_Data.LightBuffer.DirectionalLightIntensity = directionalLight->GetIntensity();

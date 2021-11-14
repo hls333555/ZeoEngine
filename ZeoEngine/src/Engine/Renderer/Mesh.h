@@ -46,7 +46,6 @@ namespace ZeoEngine {
 		void LoadDatas(const aiScene* meshScene);
 		void LoadVertexData(const aiMesh* mesh, uint32_t baseIndex);
 		void LoadIndexData(const aiMesh* mesh, uint32_t baseIndex);
-		bool LoadMaterials(const aiScene* meshScene, const std::string& path);
 
 	private:
 		Ref<VertexArray> m_VAO;
@@ -55,7 +54,6 @@ namespace ZeoEngine {
 		Vertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
-		std::vector<Ref<Texture2D>> m_Textures;
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>

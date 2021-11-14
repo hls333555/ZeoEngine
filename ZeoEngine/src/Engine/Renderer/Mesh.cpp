@@ -62,11 +62,6 @@ namespace ZeoEngine {
 
 		delete[] m_VertexBuffer;
 		delete[] m_IndexBuffer;
-
-		if (!LoadMaterials(meshScene, path))
-		{
-			ZE_CORE_ERROR("Failed to load texture!");
-		}
 	}
 
 	void Mesh::LoadMeshEntries(const aiScene* meshScene)
@@ -120,25 +115,6 @@ namespace ZeoEngine {
 			m_IndexBuffer[baseIndex + i * 3 + 1] = face.mIndices[1];
 			m_IndexBuffer[baseIndex + i * 3 + 2] = face.mIndices[2];
 		}
-	}
-
-	bool Mesh::LoadMaterials(const aiScene* meshScene, const std::string& path)
-	{
-		// TODO:
-		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
-		{
-			const aiMaterial* material = meshScene->mMaterials[i];
-			if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
-			{
-				aiString outPath;
-				if (material->GetTexture(aiTextureType_DIFFUSE, 0, &outPath) == aiReturn_SUCCESS)
-				{
-					std::string texturePath(outPath.data);
-				}
-			}
-		}
-
-		return true;
 	}
 
 	MeshAsset::MeshAsset(const std::string& path)

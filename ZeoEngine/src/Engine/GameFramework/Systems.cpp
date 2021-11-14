@@ -70,7 +70,7 @@ namespace ZeoEngine {
 			switch (lightComp.Type)
 			{
 			case LightComponent::LightType::DirectionalLight:
-				Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+				Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 				break;
 			case LightComponent::LightType::PointLight:
 				break;
