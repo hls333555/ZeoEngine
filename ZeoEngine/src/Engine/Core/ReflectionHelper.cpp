@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Renderer/Shader.h"
 
 namespace ZeoEngine {
 
@@ -62,6 +63,8 @@ namespace ZeoEngine {
 				case entt::type_hash<AssetHandle<Texture2DAsset>>::value():			return BasicMetaType::TEXTURE;
 				case entt::type_hash<AssetHandle<ParticleTemplateAsset>>::value():	return BasicMetaType::PARTICLE;
 				case entt::type_hash<AssetHandle<MeshAsset>>::value():				return BasicMetaType::MESH;
+				case entt::type_hash<AssetHandle<MaterialAsset>>::value():			return BasicMetaType::MATERIAL;
+				case entt::type_hash<AssetHandle<ShaderAsset>>::value():			return BasicMetaType::SHADER;
 			}
 		}
 

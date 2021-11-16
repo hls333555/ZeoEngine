@@ -111,4 +111,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void MaterialPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		auto& materialPreviewComp = GetOwnerEntity()->GetComponent<MaterialPreviewComponent>();
+		if (dataId == ZDATA_ID(Template))
+		{
+			//
+		}
+	}
+
 }

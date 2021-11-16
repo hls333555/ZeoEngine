@@ -5,6 +5,8 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 
@@ -144,12 +146,52 @@ namespace YAML {
 		}
 	};
 
+	template<>
+	struct convert<AssetHandle<MaterialAsset>>
+	{
+		static Node encode(const AssetHandle<MaterialAsset>& rhs)
+		{
+			Node node;
+			node.push_back(rhs ? rhs->GetPath() : "");
+			return node;
+		}
+
+		static bool decode(const Node& node, AssetHandle<MaterialAsset>& rhs)
+		{
+			const auto& path = node.as<std::string>();
+			if (path.empty()) return true;
+
+			rhs = MaterialAssetLibrary::Get().LoadAsset(path);
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<AssetHandle<ShaderAsset>>
+	{
+		static Node encode(const AssetHandle<ShaderAsset>& rhs)
+		{
+			Node node;
+			node.push_back(rhs ? rhs->GetPath() : "");
+			return node;
+		}
+
+		static bool decode(const Node& node, AssetHandle<ShaderAsset>& rhs)
+		{
+			const auto& path = node.as<std::string>();
+			if (path.empty()) return true;
+
+			rhs = ShaderAssetLibrary::Get().LoadAsset(path);
+			return true;
+		}
+	};
+
 }
 
 namespace ZeoEngine {
 
 	const char* g_AssetTypeToken = "AssetType";
-	const char* g_ResourceSourceToken = "ResourcePath";
+	const char* g_SourceToken = "SourcePath";
 
 	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
 	{
@@ -193,6 +235,18 @@ namespace ZeoEngine {
 	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<MeshAsset>& mesh)
 	{
 		out << (mesh ? mesh->GetPath() : "");
+		return out;
+	}
+
+	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<MaterialAsset>& material)
+	{
+		out << (material ? material->GetPath() : "");
+		return out;
+	}
+
+	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<ShaderAsset>& shader)
+	{
+		out << (shader ? shader->GetPath() : "");
 		return out;
 	}
 
@@ -288,6 +342,12 @@ namespace ZeoEngine {
 				break;
 			case BasicMetaType::MESH:
 				SerializeData<AssetHandle<MeshAsset>>(out, data, instance, bIsSeqElement);
+				break;
+			case BasicMetaType::MATERIAL:
+				SerializeData<AssetHandle<MaterialAsset>>(out, data, instance, bIsSeqElement);
+				break;
+			case BasicMetaType::SHADER:
+				SerializeData<AssetHandle<ShaderAsset>>(out, data, instance, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -447,6 +507,12 @@ namespace ZeoEngine {
 			case BasicMetaType::MESH:
 				DeserializeData<AssetHandle<MeshAsset>>(data, instance, value, bIsSeqElement);
 				break;
+			case BasicMetaType::MATERIAL:
+				DeserializeData<AssetHandle<MaterialAsset>>(data, instance, value, bIsSeqElement);
+				break;
+			case BasicMetaType::SHADER:
+				DeserializeData<AssetHandle<ShaderAsset>>(data, instance, value, bIsSeqElement);
+				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
 				ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", *dataName);
@@ -557,12 +623,12 @@ namespace ZeoEngine {
 	// ImportableAssetSerializer /////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& srcPath)
+	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath)
 	{
 		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
 		{
-			out << YAML::Key << g_ResourceSourceToken << YAML::Value <<
-				(srcPath.empty() ? AssetRegistry::Get().GetPathSpec(path)->GetResourcePath() : srcPath);
+			out << YAML::Key << g_SourceToken << YAML::Value <<
+				(resourcePath.empty() ? AssetRegistry::Get().GetPathSpec(path)->GetSourcePath() : resourcePath);
 
 			ComponentSerializer cs;
 			cs.Serialize(out, instance);
@@ -577,10 +643,10 @@ namespace ZeoEngine {
 		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
 		if (assetSpec)
 		{
-			auto resourceSourceData = (*data)[g_ResourceSourceToken];
-			if (resourceSourceData)
+			auto sourceData = (*data)[g_SourceToken];
+			if (sourceData)
 			{
-				assetSpec->UpdateResourcePath(resourceSourceData.as<std::string>());
+				assetSpec->SourcePath = sourceData.as<std::string>();
 			}
 		}
 		ComponentSerializer cs;

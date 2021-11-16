@@ -12,6 +12,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual const char* GetAssetTypeName() const = 0;
+		virtual const char* GetAssetExtension() const { return ""; }
 		virtual bool ShouldShowInContextMenu() const = 0;
 		virtual void CreateAsset(const std::string& path) const = 0;
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const {}
@@ -59,7 +60,29 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Mesh"; }
-		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
+	};
+
+	class MaterialAssetFactory : public AssetFactoryBase
+	{
+	public:
+		virtual const char* GetAssetTypeName() const override { return "Material"; }
+		virtual bool ShouldShowInContextMenu() const override { return true; }
+	};
+
+	class ResourceAssetFactoryBase : public AssetFactoryBase
+	{
+	public:
+		virtual const char* GetResourceTemplatePath() const = 0;
+		virtual bool ShouldShowInContextMenu() const override { return true; }
+		virtual void CreateAsset(const std::string& path) const override;
+	};
+
+	class ShaderAssetFactory : public ResourceAssetFactoryBase
+	{
+	public:
+		virtual const char* GetAssetTypeName() const override { return "Shader"; }
+		virtual const char* GetAssetExtension() const override { return ".glsl"; }
+		virtual const char* GetResourceTemplatePath() const override { return "assets/editor/shaders/Template.glsl"; }
 	};
 
 }

@@ -4,6 +4,7 @@
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
 
 namespace ZeoEngine {
 
@@ -12,7 +13,10 @@ namespace ZeoEngine {
 	struct RenderData
 	{
 		Ref<VertexArray> VAO;
-		std::vector<MeshEntry>* MeshEntries;
+		const MeshEntry* MeshEntries;
+		uint32_t MeshCount = 0;
+		const AssetHandle<MaterialAsset>* Materials;
+		uint32_t MaterialCount = 0;
 		struct ModelData
 		{
 			glm::mat4 Transform;
@@ -24,8 +28,8 @@ namespace ZeoEngine {
 		ModelData ModelBuffer;
 		Ref<UniformBuffer> ModelUniformBuffer;
 
-		RenderData(const Ref<VertexArray>& vao, std::vector<MeshEntry>* meshEntries, const glm::mat4& transform, int32_t entityID)
-			: VAO(vao), MeshEntries(meshEntries)
+		RenderData(const Ref<VertexArray>& vao, const MeshEntry* meshEntries, uint32_t meshCount, const AssetHandle<MaterialAsset>* materials, uint32_t materialCount, const glm::mat4& transform, int32_t entityID)
+			: VAO(vao), MeshEntries(meshEntries), MeshCount(meshCount), Materials(materials), MaterialCount(materialCount)
 		{
 			ModelBuffer.Transform = transform;
 			ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
@@ -111,7 +115,7 @@ namespace ZeoEngine {
 
 		static void SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 
-		static void DrawMesh(const glm::mat4& transform, const MeshRendererComponent& meshComp, int32_t entityID);
+		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 
 		// TODO:
 		static Statistics& GetStats();

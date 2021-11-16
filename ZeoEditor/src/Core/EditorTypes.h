@@ -8,6 +8,7 @@ namespace ZeoEngine {
 
 #define LEVEL_EDITOR			"Level Editor"
 #define PARTICLE_EDITOR			ICON_FA_FIRE "  Particle Editor"
+#define MATERIAL_EDITOR			ICON_FA_CIRCLE "  Material Editor"
 
 #define LEVEL_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Level Editor View"
 #define SCENE_OUTLINE			ICON_FA_SITEMAP "  Scene Outline"
@@ -21,6 +22,8 @@ namespace ZeoEngine {
 #define ABOUT					ICON_FA_QUESTION_CIRCLE "  About"
 #define PARTICLE_EDITOR_VIEW	ICON_FA_PLAY_CIRCLE "  Particle Editor View"
 #define PARTICLE_INSPECTOR		ICON_FA_INFO_CIRCLE "  Particle Inspector"
+#define MATERIAL_EDITOR_VIEW	ICON_FA_PLAY_CIRCLE "  Material Editor View"
+#define MATERIAL_INSPECTOR		ICON_FA_INFO_CIRCLE "  Material Inspector"
 
 	struct DockspaceSpec
 	{

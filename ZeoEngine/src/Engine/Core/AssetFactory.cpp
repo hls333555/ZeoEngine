@@ -32,19 +32,20 @@ namespace ZeoEngine {
 			// Create zasset file if not exists
 			ImportableAssetSerializer::Serialize(assetPath, m_TypeId, {}, srcPath);
 			auto spec = AssetRegistry::Get().OnPathCreated(assetPath, m_TypeId);
-			spec->Flags |= PathFlag_Importable;
-			// Record resource path
-			std::dynamic_pointer_cast<AssetSpec>(spec)->UpdateResourcePath(srcPath);
+			spec->Flags |= PathFlag_Importable | PathFlag_HasResource;
+			// Record source path
+			std::dynamic_pointer_cast<AssetSpec>(spec)->SourcePath = srcPath;
 		}
 		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, srcPath);
 	}
 
-	// TODO:
-	void MeshAssetFactory::ImportAsset(const std::string& srcPath, const std::string& destPath) const
+	void ResourceAssetFactoryBase::CreateAsset(const std::string& path) const
 	{
-		ImportableAssetFactoryBase::ImportAsset(srcPath, destPath);
-
-		//MeshAssetLibrary::Get().LoadAsset(destPath);
+		// Copy resource template file
+		std::string resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		PathUtils::CopyFile(GetResourceTemplatePath(), resourcePath, true);
+		// Create zasset file
+		AssetFactoryBase::CreateAsset(path);
 	}
 
 }

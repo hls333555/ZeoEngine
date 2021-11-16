@@ -2,6 +2,9 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Core/Asset.h"
+#include "Engine/Core/AssetLibrary.h"
+
 namespace ZeoEngine {
 
 	class Shader
@@ -27,22 +30,40 @@ namespace ZeoEngine {
 
 	};
 
-	// TODO: Refactor like Texture2DLibrary
-	class ShaderLibrary
+	class ShaderAsset : public AssetBase<ShaderAsset>
 	{
+	private:
+		explicit ShaderAsset(const std::string& path);
+
 	public:
-		void Add(const std::string& name, const Ref<Shader>& shader);
-		void Add(const Ref<Shader>& shader);
-		Ref<Shader> Load(const std::string& filePath);
-		Ref<Shader> Load(const std::string& name, const std::string& filePath);
+		static Ref<ShaderAsset> Create(const std::string& path);
 
-		Ref<Shader> Get(const std::string& name);
+		const Ref<Shader>& GetShader() const { return m_Shader; }
 
-		bool Exists(const std::string& name) const;
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+
+		virtual void Reload() override;
 
 	private:
-		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
+		Ref<Shader> m_Shader;
+	};
 
+	struct ShaderAssetLoader final : AssetLoader<ShaderAssetLoader, ShaderAsset>
+	{
+		AssetHandle<ShaderAsset> load(const std::string& path) const
+		{
+			return ShaderAsset::Create(path);
+		}
+	};
+
+	class ShaderAssetLibrary : public AssetLibrary<ShaderAssetLibrary, ShaderAsset, ShaderAssetLoader>
+	{
+	public:
+		static AssetHandle<ShaderAsset> GetDefaultShaderAsset()
+		{
+			return ShaderAssetLibrary::Get().LoadAsset("assets/editor/shaders/Default.glsl.zasset");
+		}
 	};
 
 }

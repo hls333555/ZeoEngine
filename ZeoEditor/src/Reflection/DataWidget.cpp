@@ -71,6 +71,10 @@ namespace ZeoEngine {
 				return CreateRef<ParticleTemplateDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::MESH:
 				return CreateRef<MeshDataWidget>(dataSpec, bIsTest);
+			case BasicMetaType::MATERIAL:
+				return CreateRef<MaterialDataWidget>(dataSpec, bIsTest);
+			case BasicMetaType::SHADER:
+				return CreateRef<ShaderDataWidget>(dataSpec, bIsTest);
 		}
 
 		return {};
@@ -351,9 +355,9 @@ namespace ZeoEngine {
 		if (!PreDraw(compInstance, instance)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
-		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
+		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, [](){});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, [](){});
 		if (bIsBufferChanged)
 		{
 			m_Buffer = retSpec ? Texture2DAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2DAsset>{};
@@ -382,9 +386,9 @@ namespace ZeoEngine {
 		if (!PreDraw(compInstance, instance)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
-		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
+		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Particle template asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, [this]()
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, [this]()
 		{
 			if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 			{
@@ -419,9 +423,9 @@ namespace ZeoEngine {
 		if (!PreDraw(compInstance, instance)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
-		float comboBoxWidth = m_DataSpec.bIsSeqElement ? ImGui::GetContentRegionAvail().x - GetDropdownWidth() : -1.0f;
+		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Mesh asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, comboBoxWidth, []() {});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
 			m_Buffer = retSpec ? MeshAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MeshAsset>{};
@@ -434,7 +438,69 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 	{
-		m_Buffer = MeshAssetLibrary::Get().LoadAsset("assets/meshes/Test.zasset");
+		m_Buffer = MeshAssetLibrary::GetDefaultSphereMesh();
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	MaterialDataWidget::MaterialDataWidget(DataSpec& dataSpec, bool bIsTest)
+	{
+		Init(dataSpec, bIsTest);
+	}
+
+	void MaterialDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	{
+		if (!PreDraw(compInstance, instance)) return;
+
+		// Make sure browser widget + dropdown button can reach desired size
+		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
+		// Material asset browser
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
+		if (bIsBufferChanged)
+		{
+			m_Buffer = retSpec ? MaterialAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MaterialAsset>{};
+			SetValueToData();
+		}
+
+		PostDraw();
+	}
+
+#ifndef DOCTEST_CONFIG_DISABLE
+	void MaterialDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		m_Buffer = MaterialAssetLibrary::GetDefaultMaterialAsset();
+		SetValueToData();
+		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
+	}
+#endif
+
+	ShaderDataWidget::ShaderDataWidget(DataSpec& dataSpec, bool bIsTest)
+	{
+		Init(dataSpec, bIsTest);
+	}
+
+	void ShaderDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	{
+		if (!PreDraw(compInstance, instance)) return;
+
+		// Make sure browser widget + dropdown button can reach desired size
+		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
+		// Shader asset browser
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
+		if (bIsBufferChanged)
+		{
+			m_Buffer = retSpec ? ShaderAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ShaderAsset>{};
+			SetValueToData();
+		}
+
+		PostDraw();
+	}
+
+#ifndef DOCTEST_CONFIG_DISABLE
+	void ShaderDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	{
+		m_Buffer = ShaderAssetLibrary::GetDefaultShaderAsset();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -473,6 +539,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 		if (!bIsTest)
 		{
+			m_bIsFixedSize = DoesPropExist(PropertyType::FixedSizeContainer, m_DataSpec.Data);
 			DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
 			auto seqView = m_DataSpec.GetValue().as_sequence_container();
 			m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type());
@@ -498,13 +565,14 @@ namespace ZeoEngine {
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
 			// Data index
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(indexNameBuffer, flags);
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltipWithPadding("Drag to re-arrange elements");
-			}
-
 			// Drag to re-arrange sequence container elements
+			if (!m_bIsFixedSize)
 			{
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Drag to re-arrange elements");
+				}
+
 				uint32_t id = GetAggregatedDataID(m_DataSpec.Data);
 				char dragTypeBuffer[DRAG_DROP_PAYLOAD_TYPE_SIZE];
 				_itoa_s(id, dragTypeBuffer, 10);
@@ -632,32 +700,46 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		if (ImGui::TransparentSmallButton(ICON_FA_PLUS))
+		if (m_bIsFixedSize)
 		{
-			InsertValue(seqView, seqView.end());
+			ImGui::BeginDisabled();
 		}
-		if (ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltipWithPadding("Add a element to the last");
-		}
-
-		ImGui::SameLine();
-
-		if (ImGui::TransparentSmallButton(ICON_FA_TRASH))
-		{
-			if (seqSize > 0 && seqView.clear())
+			if (ImGui::TransparentSmallButton(ICON_FA_PLUS))
 			{
-				InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+				InsertValue(seqView, seqView.end());
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Add a element to the last");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::TransparentSmallButton(ICON_FA_TRASH))
+			{
+				if (seqSize > 0 && seqView.clear())
+				{
+					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+				}
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Remove all elements");
 			}
 		}
-		if (ImGui::IsItemHovered())
+		if (m_bIsFixedSize)
 		{
-			ImGui::SetTooltipWithPadding("Remove all elements");
+			ImGui::EndDisabled();
 		}
 	}
 
 	void SequenceContainerWidget::DrawContainerElementOperationWidget(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator& it)
 	{
+		if (m_bIsFixedSize)
+		{
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::BeginCombo("##SequenceContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
 		{
 			if (ImGui::Selectable("Insert"))
@@ -670,6 +752,10 @@ namespace ZeoEngine {
 			}
 
 			ImGui::EndCombo();
+		}
+		if (m_bIsFixedSize)
+		{
+			ImGui::EndDisabled();
 		}
 	}
 
@@ -711,6 +797,10 @@ namespace ZeoEngine {
 	AssociativeContainerWidget::AssociativeContainerWidget(DataSpec& dataSpec, bool bIsTest)
 	{
 		Init(dataSpec, bIsTest);
+		if (!bIsTest)
+		{
+			m_bIsFixedSize = DoesPropExist(PropertyType::FixedSizeContainer, m_DataSpec.Data);
+		}
 	}
 
 	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
@@ -724,12 +814,32 @@ namespace ZeoEngine {
 
 	void AssociativeContainerWidget::DrawContainerOperationWidget()
 	{
-		
+		if (m_bIsFixedSize)
+		{
+			ImGui::BeginDisabled();
+		}
+		{
+
+		}
+		if (m_bIsFixedSize)
+		{
+			ImGui::EndDisabled();
+		}
 	}
 
 	void AssociativeContainerWidget::DrawContainerElementOperationWidget(entt::meta_associative_container& assView, entt::meta_associative_container::iterator& it)
 	{
+		if (m_bIsFixedSize)
+		{
+			ImGui::BeginDisabled();
+		}
+		{
 
+		}
+		if (m_bIsFixedSize)
+		{
+			ImGui::EndDisabled();
+		}
 	}
 
 	entt::meta_associative_container::iterator AssociativeContainerWidget::InsertValue(entt::meta_associative_container& assView, entt::meta_associative_container::iterator it)

@@ -1,6 +1,8 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/Renderer/Shader.h"
 
 namespace ZeoEngine {
 
@@ -116,7 +118,8 @@ namespace ZeoEngine {
 			ZDATA(CircleCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 
 		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
-			ZDATA(MeshRendererComponent, Mesh);
+			ZDATA(MeshRendererComponent, Mesh)
+			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer));
 
 		ZENUM(LightComponent::LightType)
 			ZENUM_DATA(LightComponent::LightType, DirectionalLight, ZPROP(Tooltip, ZTEXT("平行光")))
@@ -127,6 +130,9 @@ namespace ZeoEngine {
 			ZDATA(LightComponent, Type)
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
 			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
+
+		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
+			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);
 	}
 
 }

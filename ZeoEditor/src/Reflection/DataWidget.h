@@ -13,6 +13,8 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/GameFramework/Components.h"
@@ -349,6 +351,38 @@ namespace ZeoEngine {
 		AssetBrowser m_Browser{ MeshAsset::TypeId() };
 	};
 
+	class MaterialDataWidget : public BasicDataWidgetT<AssetHandle<MaterialAsset>>
+	{
+	public:
+		MaterialDataWidget(DataSpec& dataSpec, bool bIsTest);
+
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
+
+	private:
+#ifndef DOCTEST_CONFIG_DISABLE
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+#endif
+
+	private:
+		AssetBrowser m_Browser{ MaterialAsset::TypeId() };
+	};
+
+	class ShaderDataWidget : public BasicDataWidgetT<AssetHandle<ShaderAsset>>
+	{
+	public:
+		ShaderDataWidget(DataSpec& dataSpec, bool bIsTest);
+
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance) override;
+
+	private:
+#ifndef DOCTEST_CONFIG_DISABLE
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+#endif
+
+	private:
+		AssetBrowser m_Browser{ ShaderAsset::TypeId() };
+	};
+
 	class ContainerWidget : public DataWidget
 	{
 	protected:
@@ -357,6 +391,10 @@ namespace ZeoEngine {
 
 	private:
 		virtual void DrawContainerOperationWidget() = 0;
+
+	protected:
+		/** Set when PropertyType::FixedSizeContainer is specified */
+		bool m_bIsFixedSize = false;
 	};
 
 	class SequenceContainerWidget : public ContainerWidget

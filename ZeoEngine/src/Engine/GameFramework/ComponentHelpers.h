@@ -65,4 +65,12 @@ namespace ZeoEngine {
 		void InitLight(IComponent* comp);
 	};
 
+	class MaterialPreviewComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+	};
+
 }

@@ -14,6 +14,7 @@ namespace ZeoEngine {
 	class VertexArray;
 	class VertexBuffer;
 	class Texture2D;
+	class MaterialAsset;
 
 	struct Vertex
 	{
@@ -38,7 +39,18 @@ namespace ZeoEngine {
 		static Ref<Mesh> Create(const std::string& path);
 
 		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
-		std::vector<MeshEntry>* GetMeshEntries() { return &m_Entries; }
+
+		const MeshEntry* GetMeshEntries() const { return m_Entries.data(); }
+		uint32_t GetMeshCount() const { return static_cast<uint32_t>(m_Entries.size()); }
+
+		std::vector<AssetHandle<MaterialAsset>>& GetMaterials() { return m_MaterialSlots; }
+		void Mesh::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
+		{
+			if (index < 0 || index >= m_MaterialSlots.size()) return;
+
+			m_MaterialSlots[index] = material;
+		}
+		uint32_t GetMaterialCount() const { return static_cast<uint32_t>(m_MaterialSlots.size()); }
 
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
@@ -54,6 +66,8 @@ namespace ZeoEngine {
 		Vertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
+
+		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>
@@ -83,5 +97,12 @@ namespace ZeoEngine {
 		}
 	};
 
-	class MeshAssetLibrary : public AssetLibrary<MeshAssetLibrary, MeshAsset, MeshAssetLoader> {};
+	class MeshAssetLibrary : public AssetLibrary<MeshAssetLibrary, MeshAsset, MeshAssetLoader>
+	{
+	public:
+		static AssetHandle<MeshAsset> GetDefaultSphereMesh()
+		{
+			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
+		}
+	};
 }

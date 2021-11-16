@@ -11,7 +11,8 @@ namespace ZeoEngine {
 	enum EPathFlag : uint8_t
 	{
 		PathFlag_None = 0,
-		PathFlag_Importable = ZE_BIT(0),
+		PathFlag_HasResource = ZE_BIT(0),
+		PathFlag_Importable = ZE_BIT(1),
 	};
 
 	struct PathSpec
@@ -21,9 +22,10 @@ namespace ZeoEngine {
 		virtual ~PathSpec() = default;
 
 		virtual bool IsAsset() const = 0;
+		virtual bool IsResourceAsset() const = 0;
 		virtual bool IsImportableAsset() const = 0;
 		virtual AssetTypeId GetAssetTypeId() const = 0;
-		virtual std::string GetResourcePath() const = 0;
+		virtual std::string GetSourcePath() const = 0;
 
 		std::string Path;
 		std::string PathName;
@@ -36,9 +38,10 @@ namespace ZeoEngine {
 		using PathSpec::PathSpec;
 
 		virtual bool IsAsset() const override { return false; }
+		virtual bool IsResourceAsset() const override { return false; }
 		virtual bool IsImportableAsset() const override { return false; }
 		virtual AssetTypeId GetAssetTypeId() const override { return {}; }
-		virtual std::string GetResourcePath() const override { return {}; }
+		virtual std::string GetSourcePath() const override { return {}; }
 
 		bool bIsTreeExpanded = false;
 		uint32_t TreeNodeId = 0;
@@ -50,16 +53,16 @@ namespace ZeoEngine {
 		using PathSpec::PathSpec;
 
 		virtual bool IsAsset() const override { return true; }
+		virtual bool IsResourceAsset() const override { return Flags & PathFlag_HasResource; }
 		virtual bool IsImportableAsset() const override { return Flags & PathFlag_Importable; }
 		virtual AssetTypeId GetAssetTypeId() const override { return TypeId; }
-		virtual std::string GetResourcePath() const override { return ResourcePath; }
+		virtual std::string GetSourcePath() const override { return SourcePath; }
 
-		void UpdateAll(const std::string& srcPath);
+		void UpdateAll(const std::string& sourcePath);
 		void UpdateThumbnail();
-		void UpdateResourcePath(const std::string& srcPath);
 		
 		AssetTypeId TypeId;
-		std::string ResourcePath; // Can be empty if this is not an imported asset
+		std::string SourcePath; // Can be empty if this is not an imported asset
 	};
 
 	class AssetRegistry

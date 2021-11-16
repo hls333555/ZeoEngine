@@ -86,6 +86,15 @@ namespace ZeoEngine {
 		virtual void OnDestroy() override;
 	};
 
+	class MaterialPreviewRenderSystem : public ISystem
+	{
+	public:
+		using ISystem::ISystem;
+
+		virtual void OnUpdate(DeltaTime dt) override {}
+		void OnRender(const EditorCamera& camera);
+	};
+
 	class NativeScriptSystem : public ISystem
 	{
 	public:

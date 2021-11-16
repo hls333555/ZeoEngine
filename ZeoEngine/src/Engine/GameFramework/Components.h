@@ -11,12 +11,14 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Renderer/Light.h"
+#include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
 
 namespace ZeoEngine {
 
 	class Texture2DAsset;
 	class ScriptableEntity;
-	class MeshAsset;
+	class ShaderAsset;
 
 	struct IComponent
 	{
@@ -286,9 +288,12 @@ namespace ZeoEngine {
 	struct MeshRendererComponent : public IComponent
 	{
 		AssetHandle<MeshAsset> Mesh;
+		std::vector<AssetHandle<MaterialAsset>> TempMaterials; // TODO: Remove this when pointer reflection is implemented
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
+
+		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : TempMaterials; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
@@ -305,6 +310,8 @@ namespace ZeoEngine {
 		LightType Type = LightType::PointLight;
 
 		LightComponent() = default;
+		explicit LightComponent(LightType type)
+			: Type(type) {}
 		LightComponent(const LightComponent&) = default;
 
 		virtual void CreateHelper() override
@@ -324,6 +331,24 @@ namespace ZeoEngine {
 		void SetColor(const glm::vec4& color) { Light->SetColor(color); }
 		float GetIntensity() const { return Light->GetIntensity(); }
 		void SetIntensity(float intensity) { return Light->SetIntensity(intensity); }
+	};
+
+	struct MaterialPreviewComponent : public IComponent
+	{
+		AssetHandle<MaterialAsset> Template;
+
+		MaterialPreviewComponent() = default;
+		explicit MaterialPreviewComponent(const AssetHandle<MaterialAsset>& material)
+			: Template(material) {}
+		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
+
+		virtual void CreateHelper() override
+		{
+			ComponentHelper = CreateRef<MaterialPreviewComponentHelper>(this);
+		}
+
+		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
+		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); }
 	};
 
 }

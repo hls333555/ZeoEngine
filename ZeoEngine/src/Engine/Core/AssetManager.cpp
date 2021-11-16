@@ -8,6 +8,8 @@
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/Renderer/Shader.h"
 
 namespace ZeoEngine {
 
@@ -17,11 +19,15 @@ namespace ZeoEngine {
 		RegisterAssetFactory(ParticleTemplateAsset::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetFactory>());
 		RegisterAssetFactory(MeshAsset::TypeId(), CreateRef<MeshAssetFactory>());
+		RegisterAssetFactory(MaterialAsset::TypeId(), CreateRef<MaterialAssetFactory>());
+		RegisterAssetFactory(ShaderAsset::TypeId(), CreateRef<ShaderAssetFactory>());
 
 		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
 		RegisterAssetActions(ParticleTemplateAsset::TypeId(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
 		RegisterAssetActions(MeshAsset::TypeId(), CreateRef<MeshAssetActions>());
+		RegisterAssetActions(MaterialAsset::TypeId(), CreateRef<MaterialAssetActions>());
+		RegisterAssetActions(ShaderAsset::TypeId(), CreateRef<ShaderAssetActions>());
 
 		InitSupportedFileExtensions();
 	}

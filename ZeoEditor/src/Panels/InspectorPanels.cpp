@@ -116,4 +116,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void MaterialInspectorPanel::ProcessRender()
+	{
+		Entity contextEntity = GetContextEditor()->GetContextEntity();
+		if (contextEntity)
+		{
+			DrawComponents<CoreComponent, TransformComponent, MeshRendererComponent, LightComponent>(contextEntity);
+		}
+	}
+
 }

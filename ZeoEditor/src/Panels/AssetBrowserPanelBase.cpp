@@ -78,13 +78,13 @@ namespace ZeoEngine {
 		// ViewType menu
 		if (ImGui::BeginPopupWithPadding("View Type"))
 		{
-			if (ImGui::RadioButton("Tiles", m_ViewType == ContentBrowserViewType::Tiles))
+			if (ImGui::RadioButton("Tiles", m_ViewType == AssetBrowserViewType::Tiles))
 			{
-				m_ViewType = ContentBrowserViewType::Tiles;
+				m_ViewType = AssetBrowserViewType::Tiles;
 			}
-			if (ImGui::RadioButton("List", m_ViewType == ContentBrowserViewType::List))
+			if (ImGui::RadioButton("List", m_ViewType == AssetBrowserViewType::List))
 			{
-				m_ViewType = ContentBrowserViewType::List;
+				m_ViewType = AssetBrowserViewType::List;
 			}
 
 			ImGui::EndPopup();
@@ -252,7 +252,7 @@ namespace ZeoEngine {
 		bool bHasDrawnAnyPath = false;
 		if (paths.size() > 0)
 		{
-			if (m_ViewType == ContentBrowserViewType::Tiles)
+			if (m_ViewType == AssetBrowserViewType::Tiles)
 			{
 				static constexpr float padding = 16.0f;
 				static const float thumbnailWidth = GetTileThumbnailWidth();
@@ -337,7 +337,7 @@ namespace ZeoEngine {
 			m_bForceUpdateFilterCache = false;
 		}
 
-		if (m_ViewType == ContentBrowserViewType::Tiles)
+		if (m_ViewType == AssetBrowserViewType::Tiles)
 		{
 			static constexpr float padding = 16.0f;
 			static const float thumbnailWidth = GetTileThumbnailWidth();
@@ -684,7 +684,7 @@ namespace ZeoEngine {
 			ImGui::Text("Path: %s", spec->Path.c_str());
 			if (spec->IsImportableAsset())
 			{
-				ImGui::Text("Resource Path: %s", spec->GetResourcePath().c_str());
+				ImGui::Text("Source Path: %s", spec->GetSourcePath().c_str());
 			}
 			ImGui::EndTooltipWithPadding();
 		}

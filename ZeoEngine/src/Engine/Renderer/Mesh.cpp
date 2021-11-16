@@ -79,6 +79,13 @@ namespace ZeoEngine {
 			m_VertexCount += mesh->mNumVertices;
 			m_IndexCount += m_Entries[i].IndexCount;
 		}
+
+		// Init material slots with default materials
+		m_MaterialSlots.reserve(meshScene->mNumMaterials);
+		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
+		{
+			m_MaterialSlots.emplace_back(MaterialAssetLibrary::GetDefaultMaterialAsset());
+		}
 	}
 
 	void Mesh::LoadDatas(const aiScene* meshScene)

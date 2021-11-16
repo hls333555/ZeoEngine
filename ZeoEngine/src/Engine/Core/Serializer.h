@@ -12,7 +12,7 @@
 namespace ZeoEngine {
 
 	extern const char* g_AssetTypeToken;
-	extern const char* g_ResourceSourceToken;
+	extern const char* g_SourceToken;
 
 	class ComponentSerializer
 	{
@@ -140,7 +140,7 @@ namespace ZeoEngine {
 	class ImportableAssetSerializer : public AssetSerializer
 	{
 	public:
-		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& srcPath = {});
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath = {});
 		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
 	};
 

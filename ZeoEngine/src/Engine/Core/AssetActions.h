@@ -23,11 +23,16 @@ namespace ZeoEngine {
 		virtual void DeleteAsset(const std::string& path) const override;
 	};
 
-	class ImportableAssetActionsBase : public AssetActionsBase
+	class ResourceAssetActionsBase : public AssetActionsBase
 	{
 	public:
 		virtual void RenameAsset(const std::string& oldPath, const std::string& newPath) const override;
 		virtual void DeleteAsset(const std::string& path) const override;
+	};
+
+	class ImportableAssetActionsBase : public ResourceAssetActionsBase
+	{
+	public:
 		virtual void ReimportAsset(const std::string& path) const override;
 	};
 
@@ -56,6 +61,22 @@ namespace ZeoEngine {
 	};
 
 	class MeshAssetActions final : public ImportableAssetActionsBase
+	{
+	public:
+		virtual void OpenAsset(const std::string& path) const override;
+		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
+	};
+
+	class MaterialAssetActions final : public AssetActionsBase
+	{
+	public:
+		virtual void OpenAsset(const std::string& path) const override;
+		virtual void ReloadAsset(const std::string& path) const override;
+		virtual void SaveAsset(const std::string& path) const override;
+	};
+
+	class ShaderAssetActions final : public ResourceAssetActionsBase
 	{
 	public:
 		virtual void OpenAsset(const std::string& path) const override;

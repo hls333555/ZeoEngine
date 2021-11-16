@@ -114,4 +114,14 @@ namespace ZeoEngine {
 
 	};
 
+	class MaterialInspectorPanel : public InspectorPanel
+	{
+	public:
+		using InspectorPanel::InspectorPanel;
+
+	private:
+		virtual void ProcessRender() override;
+
+	};
+
 }

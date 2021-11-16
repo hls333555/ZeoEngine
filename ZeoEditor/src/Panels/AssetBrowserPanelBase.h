@@ -88,12 +88,12 @@ namespace ZeoEngine {
 		float m_LeftColumnWidth = 200.0f;
 		uint32_t m_LeftColumnWindowId;
 
-		enum class ContentBrowserViewType
+		enum class AssetBrowserViewType
 		{
 			Tiles,
 			List,
 		};
-		ContentBrowserViewType m_ViewType = ContentBrowserViewType::Tiles;
+		AssetBrowserViewType m_ViewType = AssetBrowserViewType::Tiles;
 
 		/** Selected directory in the left column */
 		std::string m_SelectedDirectory;

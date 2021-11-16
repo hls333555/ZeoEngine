@@ -20,12 +20,12 @@ namespace ZeoEngine {
 		 * Draw the complete asset browing widget.
 		 *
 		 * @param assetPath - Path of the selected asset
-		 * @param comboBoxWidth - Width of combo box, may vary in different context
+		 * @param rightPadding - How much space to remain after drawing the combobox widget
 		 * @param rightClickFunc - Function to execute when right clicking on the asset preview (should be a series of ImGui::MenuItem() calls)
 		 * @return A pair, the key indicates if the selection changed, the value is the specification of the selected asset
 		 */
 		template<typename AssetRightClickFunc>
-		std::pair<bool, Ref<AssetSpec>> Draw(const std::string& assetPath, float comboBoxWidth, AssetRightClickFunc rightClickFunc)
+		std::pair<bool, Ref<AssetSpec>> Draw(const std::string& assetPath, float rightPadding, AssetRightClickFunc rightClickFunc)
 		{
 			bool bIsValueChanged = false;
 			auto retSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(assetPath);
@@ -84,7 +84,7 @@ namespace ZeoEngine {
 
 				ImGui::SameLine();
 
-				ImGui::SetNextItemWidth(comboBoxWidth);
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
 				if (ImGui::BeginCombo("##AssetBrowser", retSpec ? retSpec->PathName.c_str() : nullptr))
 				{

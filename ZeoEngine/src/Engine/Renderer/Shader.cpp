@@ -3,6 +3,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 	
@@ -36,41 +37,50 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
+	ShaderAsset::ShaderAsset(const std::string& path)
+		: AssetBase(path)
 	{
-		ZE_CORE_ASSERT(!Exists(name), "Trying to add the shader which already exists!");
-		m_Shaders[name] = shader;
+		Reload();
 	}
 
-	void ShaderLibrary::Add(const Ref<Shader>& shader)
+	Ref<ShaderAsset> ShaderAsset::Create(const std::string& path)
 	{
-		const std::string& name = shader->GetName();
-		Add(name, shader);
+		class ShaderAssetEnableShared : public ShaderAsset
+		{
+		public:
+			explicit ShaderAssetEnableShared(const std::string& path)
+				: ShaderAsset(path) {}
+		};
+
+		return CreateRef<ShaderAssetEnableShared>(path);
 	}
 
-	Ref<Shader> ShaderLibrary::Load(const std::string& filePath)
+	void ShaderAsset::Reload()
 	{
-		auto shader = Shader::Create(filePath);
-		Add(shader);
-		return shader;
+		auto shaderPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
+		ZE_CORE_ASSERT(PathUtils::DoesPathExist(shaderPath));
+		m_Shader = Shader::Create(shaderPath);
+		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
 	}
 
-	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filePath)
+	void ShaderAsset::Serialize(const std::string& path)
 	{
-		auto shader = Shader::Create(filePath);
-		Add(name, shader);
-		return shader;
+		if (path.empty()) return;
+
+		if (path != GetPath())
+		{
+			SetPath(path);
+		}
+		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), {}); // TODO: Update component instance here
 	}
 
-	Ref<Shader> ShaderLibrary::Get(const std::string& name)
+	void ShaderAsset::Deserialize()
 	{
-		ZE_CORE_ASSERT(Exists(name), "Shader not found!");
-		return m_Shaders[name];
+		if (GetPath().empty()) return;
+
+		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {});  // TODO: Update component instance here
 	}
 
-	bool ShaderLibrary::Exists(const std::string& name) const
-	{
-		return m_Shaders.find(name) != m_Shaders.end();
-	}
+
 
 }

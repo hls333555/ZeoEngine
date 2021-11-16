@@ -84,7 +84,10 @@ namespace ZeoEngine {
 		// Render meshes
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
 		{
-			Renderer::DrawMesh(transformComp.GetTransform(), meshComp, static_cast<int32_t>(entity));
+			if (meshComp.Mesh)
+			{
+				Renderer::DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
+			}
 		});
 	}
 
@@ -192,6 +195,24 @@ namespace ZeoEngine {
 		{
 			RemoveParticleSystemInstance(particlePreviewComp);
 		});
+	}
+
+	void MaterialPreviewRenderSystem::OnRender(const EditorCamera& camera)
+	{
+		Renderer::BeginScene(camera);
+		{
+			ForEachComponentView<TransformComponent, LightComponent>([](auto entity, auto& transformComp, auto& lightComp)
+			{
+				Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+			});
+			ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
+			{
+				const auto& mesh = meshComp.Mesh->GetMesh();
+				mesh->SetMaterial(0, materialPreviewComp.Template);
+				Renderer::DrawMesh(transformComp.GetTransform(), mesh);
+			});
+		}
+		Renderer::EndScene();
 	}
 
 	void NativeScriptSystem::OnUpdate(DeltaTime dt)

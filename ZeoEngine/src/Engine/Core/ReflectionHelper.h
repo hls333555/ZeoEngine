@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		FLOAT, DOUBLE,
 		ENUM,
 		STRING, VEC2, VEC3, VEC4,
-		TEXTURE, PARTICLE, MESH,
+		TEXTURE, PARTICLE, MESH, MATERIAL, SHADER,
 	};
 
 	template<typename T>

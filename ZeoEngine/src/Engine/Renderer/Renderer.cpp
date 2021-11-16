@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			s_Data.DefaultShader = Shader::Create("assets/editor/shaders/Default.glsl");
+			s_Data.DefaultShader = ShaderAssetLibrary::GetDefaultShaderAsset()->GetShader();
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
 			s_Data.LightUniformBuffer = UniformBuffer::Create(sizeof(RendererData::LightData), 2);
 		}
@@ -69,13 +69,22 @@ namespace ZeoEngine {
 
 	void Renderer::Submit()
 	{
-		s_Data.DefaultShader->Bind();
-
 		for (auto& renderData : s_Data.RenderQueue)
 		{
 			renderData.Bind();
-			for (const auto& meshEntry : *renderData.MeshEntries)
+			for (uint32_t i = 0; i < renderData.MeshCount; ++i)
 			{
+				const auto& meshEntry = renderData.MeshEntries[i];
+				const auto& material = renderData.Materials[meshEntry.MaterialIndex];
+				if (material && material->GetShader())
+				{
+					material->GetShader()->Bind();
+				}
+				else
+				{
+					s_Data.DefaultShader->Bind();
+				}
+				
 				RenderCommand::DrawIndexed(renderData.VAO, meshEntry.VertexBufferPtr, meshEntry.IndexCount, meshEntry.IndexBufferPtr);
 			}
 		}
@@ -90,12 +99,11 @@ namespace ZeoEngine {
 		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer, sizeof(RendererData::LightData));
 	}
 
-	void Renderer::DrawMesh(const glm::mat4& transform, const MeshRendererComponent& meshComp, int32_t entityID)
+	void Renderer::DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID)
 	{
-		if (!meshComp.Mesh) return;
+		if (!mesh) return;
 
-		const auto& mesh = meshComp.Mesh->GetMesh();
-		s_Data.RenderQueue.emplace_back(mesh->GetVAO(), mesh->GetMeshEntries(), transform, entityID);
+		s_Data.RenderQueue.emplace_back(mesh->GetVAO(), mesh->GetMeshEntries(), mesh->GetMeshCount(), mesh->GetMaterials().data(), mesh->GetMaterialCount(), transform, entityID);
 	}
 
 	Statistics& Renderer::GetStats()

@@ -51,8 +51,7 @@ layout(location = 1) out int o_EntityID;
 struct DirectionalLight
 {
 	vec4 Color;
-	vec3 Position;
-	float Intensity;
+	vec3 Position; float Intensity;
 	vec3 Direction;
 };
 
@@ -63,7 +62,7 @@ layout (std140, binding = 2) uniform DirectionalLightBlock // Uniform block name
 
 struct Material
 {
-	vec4 AmbientColor;
+	float Shininess;
 };
 
 layout (std140, binding = 3) uniform MaterialBlock
@@ -82,61 +81,31 @@ layout (location = 0) in VertexOutput Input;
 layout (location = 3) in flat float v_TexIndex;
 layout (location = 4) in flat int v_EntityID;
 
-layout (binding = 0) uniform sampler2D u_Textures[32];
+layout (binding = 0) uniform sampler2D u_DiffuseTexture;
+layout (binding = 1) uniform sampler2D u_SpecularTexture;
 
-vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal, DirectionalLight light)
+vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal, DirectionalLight light, Material material)
 {
-	float diffuse = light.Intensity * max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
+	// Ambient
+	vec4 ambientColor = texture(u_DiffuseTexture, Input.TexCoord);
 
-	float specularStrength = 0.5f;
-	int shininess = 32;
+	// Diffuse
+	float diffuse = max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
+	vec4 diffuseColor = diffuse * texture(u_DiffuseTexture, Input.TexCoord);
+
+	// Specular
 	vec3 viewDirection = normalize(light.Position - vertexPosition);
 	vec3 reflectDirection = reflect(light.Direction, vertexNormal);
-	float specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0.0f), shininess);
+	float specular = pow(max(dot(viewDirection, reflectDirection), 0.0f), material.Shininess);
+	vec4 specularColor = specular * texture(u_SpecularTexture, Input.TexCoord);
 
-	return (diffuse + specular) * light.Color;
+	return (ambientColor + diffuseColor + specularColor) * light.Color * light.Intensity;
 }
 
 void main()
 {
-	vec4 texColor = vec4(1.0f);
-	switch(int(v_TexIndex))
-	{
-		case  0: texColor *= texture(u_Textures[ 0], Input.TexCoord); break;
-		case  1: texColor *= texture(u_Textures[ 1], Input.TexCoord); break;
-		case  2: texColor *= texture(u_Textures[ 2], Input.TexCoord); break;
-		case  3: texColor *= texture(u_Textures[ 3], Input.TexCoord); break;
-		case  4: texColor *= texture(u_Textures[ 4], Input.TexCoord); break;
-		case  5: texColor *= texture(u_Textures[ 5], Input.TexCoord); break;
-		case  6: texColor *= texture(u_Textures[ 6], Input.TexCoord); break;
-		case  7: texColor *= texture(u_Textures[ 7], Input.TexCoord); break;
-		case  8: texColor *= texture(u_Textures[ 8], Input.TexCoord); break;
-		case  9: texColor *= texture(u_Textures[ 9], Input.TexCoord); break;
-		case 10: texColor *= texture(u_Textures[10], Input.TexCoord); break;
-		case 11: texColor *= texture(u_Textures[11], Input.TexCoord); break;
-		case 12: texColor *= texture(u_Textures[12], Input.TexCoord); break;
-		case 13: texColor *= texture(u_Textures[13], Input.TexCoord); break;
-		case 14: texColor *= texture(u_Textures[14], Input.TexCoord); break;
-		case 15: texColor *= texture(u_Textures[15], Input.TexCoord); break;
-		case 16: texColor *= texture(u_Textures[16], Input.TexCoord); break;
-		case 17: texColor *= texture(u_Textures[17], Input.TexCoord); break;
-		case 18: texColor *= texture(u_Textures[18], Input.TexCoord); break;
-		case 19: texColor *= texture(u_Textures[19], Input.TexCoord); break;
-		case 20: texColor *= texture(u_Textures[20], Input.TexCoord); break;
-		case 21: texColor *= texture(u_Textures[21], Input.TexCoord); break;
-		case 22: texColor *= texture(u_Textures[22], Input.TexCoord); break;
-		case 23: texColor *= texture(u_Textures[23], Input.TexCoord); break;
-		case 24: texColor *= texture(u_Textures[24], Input.TexCoord); break;
-		case 25: texColor *= texture(u_Textures[25], Input.TexCoord); break;
-		case 26: texColor *= texture(u_Textures[26], Input.TexCoord); break;
-		case 27: texColor *= texture(u_Textures[27], Input.TexCoord); break;
-		case 28: texColor *= texture(u_Textures[28], Input.TexCoord); break;
-		case 29: texColor *= texture(u_Textures[29], Input.TexCoord); break;
-		case 30: texColor *= texture(u_Textures[30], Input.TexCoord); break;
-		case 31: texColor *= texture(u_Textures[31], Input.TexCoord); break;
-	}
-	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal), u_DirectionalLight);
-	o_Color = vec4(1.0f) * directionalLight;
+	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal), u_DirectionalLight, u_Material);
+	o_Color = directionalLight;
 
 	o_EntityID = v_EntityID;
 }

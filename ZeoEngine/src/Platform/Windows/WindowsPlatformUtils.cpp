@@ -82,4 +82,11 @@ namespace ZeoEngine {
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 
+	void PlatformUtils::OpenFile(const std::string& path)
+	{
+		std::wstring wPath = std::wstring(path.begin(), path.end());
+		LPCWSTR wPathStr = wPath.c_str();
+		ShellExecute(0, 0, wPathStr, 0, 0, SW_SHOW);
+	}
+
 }

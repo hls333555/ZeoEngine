@@ -31,18 +31,22 @@ namespace ZeoEngine {
 			// Record asset type id
 			assetSpec->TypeId = assetTypeData.as<AssetTypeId>();
 
-			// Possibly mark importable flag
+			// Possibly mark certain flags
 			auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(assetSpec->TypeId);
+			if (std::dynamic_pointer_cast<ResourceAssetActionsBase>(assetActions))
+			{
+				assetSpec->Flags |= PathFlag_HasResource;
+			}
 			if (std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions))
 			{
 				assetSpec->Flags |= PathFlag_Importable;
 			}
 
-			// Possibly record resource path
-			auto resourceSourceData = (*data)[g_ResourceSourceToken];
-			if (resourceSourceData)
+			// Possibly record source path
+			auto sourceData = (*data)[g_SourceToken];
+			if (sourceData)
 			{
-				assetSpec->UpdateResourcePath(resourceSourceData.as<std::string>());
+				assetSpec->SourcePath = sourceData.as<std::string>();
 			}
 
 			return true;
@@ -50,20 +54,15 @@ namespace ZeoEngine {
 
 	}
 
-	void AssetSpec::UpdateAll(const std::string& srcPath)
+	void AssetSpec::UpdateAll(const std::string& sourcePath)
 	{
 		UpdateThumbnail();
-		UpdateResourcePath(srcPath);
+		SourcePath = sourcePath;
 	}
 
 	void AssetSpec::UpdateThumbnail()
 	{
 		ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(Path, TypeId);
-	}
-
-	void AssetSpec::UpdateResourcePath(const std::string& srcPath)
-	{
-		ResourcePath = srcPath;
 	}
 
 	void AssetRegistry::Init()
