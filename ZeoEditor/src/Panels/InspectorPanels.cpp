@@ -5,6 +5,7 @@
 #include "Editors/EditorBase.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionHelper.h"
+#include "Reflection/MaterialInspector.h"
 
 namespace ZeoEngine {
 
@@ -112,7 +113,7 @@ namespace ZeoEngine {
 		Entity contextEntity = GetContextEditor()->GetContextEntity();
 		if (contextEntity)
 		{
-			DrawComponents<CoreComponent, TransformComponent>(contextEntity);
+			DrawComponent<ParticleSystemPreviewComponent>(contextEntity);
 		}
 	}
 
@@ -121,7 +122,7 @@ namespace ZeoEngine {
 		Entity contextEntity = GetContextEditor()->GetContextEntity();
 		if (contextEntity)
 		{
-			DrawComponents<CoreComponent, TransformComponent, MeshRendererComponent, LightComponent>(contextEntity);
+			DrawComponent<MaterialPreviewComponent, MaterialInspector>(contextEntity);
 		}
 	}
 

@@ -2,6 +2,8 @@
 
 #include "Engine/Renderer/Shader.h"
 
+#include <spirv_cross/spirv_cross.hpp>
+
 // TODO: REMOVE!
 typedef unsigned int GLenum;
 
@@ -26,6 +28,8 @@ namespace ZeoEngine {
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 
 		virtual const std::string& GetName() const override { return m_Name; }
+		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
+		virtual const std::unordered_map<uint32_t, size_t>& GetUniformBlockSizes() const override { return m_UniformBlockSizes; }
 
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values , uint32_t count);
@@ -46,6 +50,8 @@ namespace ZeoEngine {
 		void CompileOrGetOpenGLBinaries();
 		void CreateProgram();
 		void Reflect(GLenum stage, const std::vector<uint32_t>& shaderData);
+		void ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, uint32_t binding);
+		void ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, uint32_t binding, uint32_t offset, size_t size);
 
 	private:
 		uint32_t m_RendererID;
@@ -56,6 +62,10 @@ namespace ZeoEngine {
 		std::unordered_map<GLenum, std::vector<uint32_t>> m_OpenGLSPIRV;
 
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
+
+		std::vector<Scope<ShaderReflectionDataBase>> m_ShaderReflectionData;
+		/** Map from uniform block binding to uniform buffer size */
+		std::unordered_map<uint32_t, size_t > m_UniformBlockSizes;
 
 	};
 

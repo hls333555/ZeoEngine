@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <shaderc/shaderc.hpp>
-#include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 
 #include "Engine/Utils/PathUtils.h"
@@ -208,6 +207,8 @@ namespace ZeoEngine {
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+		// This is required in order for the names being retrieved correctly during reflection
+		options.SetGenerateDebugInfo();
 		const bool optimize = true;
 		if (optimize)
 		{
@@ -256,7 +257,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		for (auto&& [stage, data] : shaderData)
+		for (auto&& [stage, data] : m_VulkanSPIRV)
 		{
 			Reflect(stage, data);
 		}
@@ -375,6 +376,13 @@ namespace ZeoEngine {
 		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferSize);
 		ZE_CORE_TRACE("    {0} resources", resources.sampled_images.size());
 
+		for (const auto& resource : resources.sampled_images)
+		{
+			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			const auto& name = resource.name;
+			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
+		}
+
 		if (uniformBufferSize <= 0) return;
 
 		ZE_CORE_TRACE("Uniform buffers:");
@@ -389,6 +397,62 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Size = {0}", bufferSize);
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
+
+			if (binding < 3) continue;
+
+			const auto dataCount = m_ShaderReflectionData.size();
+			// We assume all members are added to the vector
+			m_UniformBlockSizes[binding] = bufferSize;
+			ReflectStructType(compiler, bufferType, binding);
+		}
+	}
+
+	void OpenGLShader::ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, uint32_t binding)
+	{
+		for (size_t i = 0; i < type.member_types.size(); ++i)
+		{
+			const auto& memberType = compiler.get_type(type.member_types[i]);
+			const std::string& memberName = compiler.get_member_name(type.self, static_cast<uint32_t>(i));
+			const auto memberOffset = compiler.type_struct_member_offset(type, static_cast<uint32_t>(i));
+			const auto memberSize = compiler.get_declared_struct_member_size(type, static_cast<uint32_t>(i));
+			ReflectType(compiler, memberType, memberName, binding, memberOffset, memberSize);
+		}
+	}
+
+	void OpenGLShader::ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, uint32_t binding, uint32_t offset, size_t size)
+	{
+		switch (type.basetype)
+		{
+		case spirv_cross::SPIRType::Int:
+			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionIntData>(name, binding, offset, size));
+			break;
+		case spirv_cross::SPIRType::Float:
+			switch (type.vecsize)
+			{
+			case 1:
+				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionFloatData>(name, binding, offset, size));
+				break;
+			case 2:
+				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec2Data>(name, binding, offset, size));
+				break;
+			case 3:
+				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec3Data>(name, binding, offset, size));
+				break;
+			case 4:
+				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec4Data>(name, binding, offset, size));
+				break;
+			default:
+				ZE_CORE_ASSERT(false);
+				break;
+			}
+			break;
+		case spirv_cross::SPIRType::Struct:
+			ReflectStructType(compiler, type, binding);
+			break;
+		default:
+			// All supported types must be handled
+			ZE_CORE_ASSERT(false);
+			break;
 		}
 	}
 

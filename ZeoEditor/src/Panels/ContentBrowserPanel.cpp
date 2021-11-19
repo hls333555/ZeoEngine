@@ -228,7 +228,7 @@ namespace ZeoEngine {
 			// Draw tooltip thumbnail
 			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
 				GetTileThumbnailWidth(), thumbnailRounding,
-				true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+				true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
 
 			ImGui::EndDragDropSource();
 		}

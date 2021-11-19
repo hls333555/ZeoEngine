@@ -16,6 +16,9 @@ namespace ZeoEngine {
 		AssetTypeId TypeId;
 		TextFilter Filter;
 
+		explicit AssetBrowser(AssetTypeId typeId)
+			: TypeId(typeId) {}
+
 		/**
 		 * Draw the complete asset browing widget.
 		 *
@@ -38,9 +41,9 @@ namespace ZeoEngine {
 					static const float previewRounding = 5.0f;
 
 					// Draw asset thumbnail or default background
-					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::s_DefaultBackgroundTexture->GetTextureID(),
+					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::GetAssetBackgroundTexture()->GetTextureID(),
 						assetPreviewWidth, previewRounding,
-						true, Texture2D::s_DefaultBackgroundTexture->GetTextureID());
+						true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
 
 					// If asset is set...
 					if (retSpec)

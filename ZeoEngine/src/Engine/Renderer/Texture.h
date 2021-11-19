@@ -36,7 +36,8 @@ namespace ZeoEngine {
 		/** Used for loading a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false);
 
-		static Ref<Texture2D> s_DefaultBackgroundTexture;
+		static Ref<Texture2D> GetDefaultTexture();
+		static Ref<Texture2D> GetAssetBackgroundTexture();
 	};
 
 	class Texture2DAsset : public AssetBase<Texture2DAsset>
@@ -48,6 +49,8 @@ namespace ZeoEngine {
 		static Ref<Texture2DAsset> Create(const std::string& path);
 
 		const Ref<Texture2D>& GetTexture() const { return m_Texture; }
+
+		void Bind(uint32_t slot = 0) const { m_Texture->Bind(slot); }
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;

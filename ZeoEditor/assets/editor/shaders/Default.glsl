@@ -84,27 +84,27 @@ layout (location = 4) in flat int v_EntityID;
 layout (binding = 0) uniform sampler2D u_DiffuseTexture;
 layout (binding = 1) uniform sampler2D u_SpecularTexture;
 
-vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal, DirectionalLight light, Material material)
+vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal)
 {
 	// Ambient
-	vec4 ambientColor = texture(u_DiffuseTexture, Input.TexCoord);
+	vec4 ambientColor = texture(u_DiffuseTexture, Input.TexCoord) * 0.3f;
 
 	// Diffuse
-	float diffuse = max(dot(vertexNormal, normalize(-light.Direction)), 0.0f);
+	float diffuse = max(dot(vertexNormal, normalize(-u_DirectionalLight.Direction)), 0.0f);
 	vec4 diffuseColor = diffuse * texture(u_DiffuseTexture, Input.TexCoord);
 
 	// Specular
-	vec3 viewDirection = normalize(light.Position - vertexPosition);
-	vec3 reflectDirection = reflect(light.Direction, vertexNormal);
-	float specular = pow(max(dot(viewDirection, reflectDirection), 0.0f), material.Shininess);
+	vec3 viewDirection = normalize(u_DirectionalLight.Position - vertexPosition);
+	vec3 reflectDirection = reflect(u_DirectionalLight.Direction, vertexNormal);
+	float specular = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_Material.Shininess >= 1.0f ? u_Material.Shininess : 1.0f);
 	vec4 specularColor = specular * texture(u_SpecularTexture, Input.TexCoord);
 
-	return (ambientColor + diffuseColor + specularColor) * light.Color * light.Intensity;
+	return (ambientColor + diffuseColor + specularColor) * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
 }
 
 void main()
 {
-	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal), u_DirectionalLight, u_Material);
+	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal));
 	o_Color = directionalLight;
 
 	o_EntityID = v_EntityID;

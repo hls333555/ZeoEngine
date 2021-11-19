@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	Mesh::Mesh(const std::string& path)
 	{
 		Assimp::Importer Importer;
-		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
 		if (!meshScene)
 		{
 			ZE_CORE_ERROR("Failed to load mesh! {0}", Importer.GetErrorString());
@@ -71,6 +71,7 @@ namespace ZeoEngine {
 		for (uint32_t i = 0; i < meshCount; ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
+			m_Entries[i].Name = mesh->mName.C_Str();
 			m_Entries[i].VertexBufferPtr = m_VertexCount;
 			m_Entries[i].IndexBufferPtr = m_IndexCount;
 			m_Entries[i].IndexCount = mesh->mNumFaces * 3;
@@ -107,7 +108,7 @@ namespace ZeoEngine {
 			const aiVector3D& texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D();
 			m_VertexBuffer[baseIndex + i].Position = { position.x, position.y, position.z };
 			m_VertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
-			m_VertexBuffer[baseIndex + i].TexCoord = { normal.x, normal.y };
+			m_VertexBuffer[baseIndex + i].TexCoord = { texCoord.x, texCoord.y };
 		}
 	}
 

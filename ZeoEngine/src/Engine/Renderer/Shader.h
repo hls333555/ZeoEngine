@@ -7,6 +7,85 @@
 
 namespace ZeoEngine {
 
+	enum class ShaderReflectionType
+	{
+		None, Bool, Float, Int, Vec2, Vec3, Vec4, Texture2D,
+	};
+
+	struct ShaderReflectionDataBase
+	{
+		std::string Name;
+		uint32_t Binding = 0;
+		uint32_t Offset = 0;
+		size_t Size = 0;
+
+		ShaderReflectionDataBase(const std::string& name, uint32_t binding, uint32_t offset = 0, size_t size = 0)
+			: Name(name), Binding(binding), Offset(offset), Size(size) {}
+
+		virtual ShaderReflectionType GetType() const = 0 { return ShaderReflectionType::None; }
+	};
+
+	struct ShaderReflectionBoolData : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		bool Value = false;
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Bool; }
+	};
+
+	struct ShaderReflectionIntData : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		int32_t Value = 0;
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Int; }
+	};
+
+	struct ShaderReflectionFloatData : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		float Value = 0.0f;
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Float; }
+	};
+
+	struct ShaderReflectionVec2Data : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		glm::vec2 Value{ 0.0f };
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec2; }
+	};
+
+	struct ShaderReflectionVec3Data : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		glm::vec3 Value{ 0.0f };
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec3; }
+	};
+
+	struct ShaderReflectionVec4Data : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		glm::vec4 Value{ 0.0f };
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec4; }
+	};
+
+	struct ShaderReflectionTexture2DData : public ShaderReflectionDataBase
+	{
+		using ShaderReflectionDataBase::ShaderReflectionDataBase;
+
+		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Texture2D; }
+	};
+
 	class Shader
 	{
 	public:
@@ -24,6 +103,8 @@ namespace ZeoEngine {
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 
 		virtual const std::string& GetName() const = 0;
+		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const = 0;
+		virtual const std::unordered_map<uint32_t, size_t>& GetUniformBlockSizes() const = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
@@ -39,6 +120,8 @@ namespace ZeoEngine {
 		static Ref<ShaderAsset> Create(const std::string& path);
 
 		const Ref<Shader>& GetShader() const { return m_Shader; }
+
+		void Bind() const { m_Shader->Bind(); }
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;

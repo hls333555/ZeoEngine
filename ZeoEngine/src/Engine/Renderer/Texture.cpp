@@ -8,8 +8,6 @@
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::s_DefaultBackgroundTexture;
-
 	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
 	{
 		switch (Renderer::GetAPI())
@@ -38,6 +36,18 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
+	}
+
+	Ref<Texture2D> Texture2D::GetDefaultTexture()
+	{
+		static Ref<Texture2D> texture = Texture2D::Create("assets/editor/textures/DefaultGrey.png");
+		return texture;
+	}
+
+	Ref<Texture2D> Texture2D::GetAssetBackgroundTexture()
+	{
+		static Ref<Texture2D> texture = Texture2D::Create("resources/textures/AssetBackground.png", true);
+		return texture;
 	}
 
 	Texture2DAsset::Texture2DAsset(const std::string& path)

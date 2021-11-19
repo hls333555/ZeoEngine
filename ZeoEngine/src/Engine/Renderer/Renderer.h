@@ -31,15 +31,16 @@ namespace ZeoEngine {
 		RenderData(const Ref<VertexArray>& vao, const MeshEntry* meshEntries, uint32_t meshCount, const AssetHandle<MaterialAsset>* materials, uint32_t materialCount, const glm::mat4& transform, int32_t entityID)
 			: VAO(vao), MeshEntries(meshEntries), MeshCount(meshCount), Materials(materials), MaterialCount(materialCount)
 		{
+			ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
 			ModelBuffer.Transform = transform;
 			ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
 			ModelBuffer.EntityID = entityID;
+			ModelUniformBuffer->SetData(&ModelBuffer);
 		}
 
 		void Bind()
 		{
-			ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
-			ModelUniformBuffer->SetData(&ModelBuffer, sizeof(ModelData));
+			ModelUniformBuffer->Bind();
 		}
 
 	};
@@ -64,7 +65,7 @@ namespace ZeoEngine {
 
 	struct RendererData
 	{
-		Ref<Shader> DefaultShader;
+		Ref<Material> DefaultMaterial;
 		std::vector<RenderData> RenderQueue;
 
 		struct CameraData
@@ -74,7 +75,7 @@ namespace ZeoEngine {
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
 
-		// Data alignment is required for uniform buffers so that the order is very important!
+		// Data alignment is required for std140 layout!
 		struct LightData
 		{
 			glm::vec4 DirectionalLightColor;

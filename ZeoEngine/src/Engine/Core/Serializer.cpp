@@ -258,13 +258,24 @@ namespace ZeoEngine {
 	{
 		if (!instance) return;
 
-		for (const auto data : instance.type().data())
+		PreprocessDatas(instance);
+
+		for (const auto data : m_PreprocessedDatas)
 		{
 			// Do not serialize transient data
 			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
 			if (bDiscardSerialize) continue;
 
 			EvaluateSerializeData(out, data, instance, false);
+		}
+	}
+
+	void ComponentSerializer::PreprocessDatas(entt::meta_any& instance)
+	{
+		m_PreprocessedDatas.clear();
+		for (const auto data : instance.type().data())
+		{
+			m_PreprocessedDatas.push_front(data);
 		}
 	}
 
@@ -420,7 +431,9 @@ namespace ZeoEngine {
 	{
 		if (!instance) return;
 
-		for (const auto data : instance.type().data())
+		PreprocessDatas(instance);
+
+		for (const auto data : m_PreprocessedDatas)
 		{
 			auto dataName = GetMetaObjectDisplayName(data);
 			const auto& dataValue = value[*dataName];
@@ -538,9 +551,11 @@ namespace ZeoEngine {
 
 	void ComponentSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
 	{
+		auto seqView = data.get(instance).as_sequence_container();
+		// Clear elements first
+		seqView.clear();
 		for (const auto& elementValue : value)
 		{
-			auto seqView = data.get(instance).as_sequence_container();
 			auto it = InsertDefaultValueForSeq(data, seqView);
 			auto elementInstance = *it;
 			EvaluateDeserializeData(data, elementInstance, elementValue, true);

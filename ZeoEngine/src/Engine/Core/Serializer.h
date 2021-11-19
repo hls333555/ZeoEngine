@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <yaml-cpp/yaml.h>
+#include <deque>
 
 #include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Core/EngineTypes.h"
@@ -21,6 +22,9 @@ namespace ZeoEngine {
 		void Deserialize(const YAML::Node& value, entt::meta_any& instance);
 
 	private:
+		/** Reverse data order so that serialized and deserialized datas are in correct order. */
+		void PreprocessDatas(entt::meta_any& instance);
+
 		void EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
 		void EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
 		void EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance);
@@ -77,6 +81,9 @@ namespace ZeoEngine {
 			}
 		}
 		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement);
+
+	private:
+		std::deque<entt::meta_data> m_PreprocessedDatas;
 	};
 
 	class Serializer

@@ -360,6 +360,7 @@ namespace ZeoEngine {
 	//////////////////////////////////////////////////////////////////////////
 
 	OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding)
+		: m_Size(size), m_Binding(binding)
 	{
 		glCreateBuffers(1, &m_RendererID);
 		glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
@@ -373,7 +374,13 @@ namespace ZeoEngine {
 
 	void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
-		glNamedBufferSubData(m_RendererID, offset, size, data);
+		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
+		glNamedBufferSubData(m_RendererID, offset, size == 0 ? m_Size : size, data);
+	}
+
+	void OpenGLUniformBuffer::Bind() const
+	{
+		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
 	}
 
 }

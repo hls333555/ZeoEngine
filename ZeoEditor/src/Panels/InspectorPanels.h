@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	protected:
-		template<typename... IgnoredComponents>
+		template<typename InspectorClass = ComponentInspector, typename... IgnoredComponents>
 		void DrawComponents(Entity entity)
 		{
 			// Push entity id
@@ -31,7 +31,7 @@ namespace ZeoEngine {
 						// NOTE: This pair of brackets inside if statement are required for template argument expansion!
 						if ((ShouldIgnoreComponent<IgnoredComponents>(compId) || ...)) continue;
 
-						m_ComponentInspectors.emplace_back(compId, entity);
+						m_ComponentInspectors.emplace_back(CreateScope<InspectorClass>(compId, entity));
 					}
 
 					m_bIsComponentInspectorsDirty = false;
@@ -39,7 +39,7 @@ namespace ZeoEngine {
 
 				for (auto it = m_ComponentInspectors.begin(); it != m_ComponentInspectors.end();)
 				{
-					auto compId = it->ProcessComponent();
+					auto compId = (*it)->ProcessComponent();
 					if (compId != -1)
 					{
 						entity.RemoveComponentById(compId);
@@ -63,6 +63,27 @@ namespace ZeoEngine {
 			}
 		}
 
+		template<typename Component, typename InspectorClass = ComponentInspector>
+		void DrawComponent(Entity entity)
+		{
+			// Push entity id
+			ImGui::PushID(static_cast<uint32_t>(entity));
+			{
+				if (m_bIsComponentInspectorsDirty)
+				{
+					m_ComponentInspectors.clear();
+
+					auto compId = entt::type_hash<Component>::value();
+					m_ComponentInspectors.emplace_back(CreateScope<InspectorClass>(compId, entity));
+
+					m_bIsComponentInspectorsDirty = false;
+				}
+
+				m_ComponentInspectors[0]->ProcessComponent();
+			}
+			ImGui::PopID();
+		}
+
 		void MarkComponentInspectorsDirty() { m_bIsComponentInspectorsDirty = true; }
 
 	private:
@@ -78,7 +99,7 @@ namespace ZeoEngine {
 		bool m_bAllowAddingComponents = false;
 
 	private:
-		std::vector<ComponentInspector> m_ComponentInspectors;
+		std::vector<Scope<ComponentInspector>> m_ComponentInspectors;
 		bool m_bIsComponentInspectorsDirty = true;
 
 		/** Map from category to list of component ids, used to draw categorized components in AddComponent popup */

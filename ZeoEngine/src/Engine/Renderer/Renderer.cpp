@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			s_Data.DefaultShader = ShaderAssetLibrary::GetDefaultShaderAsset()->GetShader();
+			s_Data.DefaultMaterial = MaterialAssetLibrary::GetDefaultMaterialAsset()->GetMaterial();
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
 			s_Data.LightUniformBuffer = UniformBuffer::Create(sizeof(RendererData::LightData), 2);
 		}
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 	void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetProjection() * glm::inverse(transform);
-		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(RendererData::CameraData));
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer);
 		
 		Prepare();
 	}
@@ -50,7 +50,7 @@ namespace ZeoEngine {
 	void Renderer::BeginScene(const EditorCamera& camera)
 	{
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
-		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(RendererData::CameraData));
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer);
 
 		Prepare();
 	}
@@ -64,7 +64,7 @@ namespace ZeoEngine {
 	{
 		s_Data.RenderQueue.clear();
 		s_Data.LightBuffer.Reset();
-		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer, sizeof(RendererData::LightData));
+		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer);
 	}
 
 	void Renderer::Submit()
@@ -76,13 +76,13 @@ namespace ZeoEngine {
 			{
 				const auto& meshEntry = renderData.MeshEntries[i];
 				const auto& material = renderData.Materials[meshEntry.MaterialIndex];
-				if (material && material->GetShader())
+				if (material)
 				{
-					material->GetShader()->Bind();
+					material->Bind();
 				}
 				else
 				{
-					s_Data.DefaultShader->Bind();
+					s_Data.DefaultMaterial->Bind();
 				}
 				
 				RenderCommand::DrawIndexed(renderData.VAO, meshEntry.VertexBufferPtr, meshEntry.IndexCount, meshEntry.IndexBufferPtr);
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		s_Data.LightBuffer.DirectionalLightDirection = directionalLight->CalculateDirection(rotation);
 		s_Data.LightBuffer.DirectionalLightColor = directionalLight->GetColor();
 		s_Data.LightBuffer.DirectionalLightIntensity = directionalLight->GetIntensity();
-		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer, sizeof(RendererData::LightData));
+		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer);
 	}
 
 	void Renderer::DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID)

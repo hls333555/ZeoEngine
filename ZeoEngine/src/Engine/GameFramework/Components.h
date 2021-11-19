@@ -288,12 +288,12 @@ namespace ZeoEngine {
 	struct MeshRendererComponent : public IComponent
 	{
 		AssetHandle<MeshAsset> Mesh;
-		std::vector<AssetHandle<MaterialAsset>> TempMaterials; // TODO: Remove this when pointer reflection is implemented
+		std::vector<AssetHandle<MaterialAsset>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
-		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : TempMaterials; }
+		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : MaterialsPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};

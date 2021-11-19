@@ -252,7 +252,7 @@ namespace ZeoEngine {
 	private:
 		ImGuiDataType m_ScalarType;
 		CT m_DefaultMin, m_DefaultMax;
-		const char* m_Format;
+		const char* m_Format = nullptr;
 	};
 
 	class EnumDataWidget : public BasicDataWidgetT<entt::meta_any>

@@ -99,6 +99,7 @@ namespace ZeoEngine {
 						ImGui::PopID();
 						if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 						{
+							m_TableID = ImGui::GetItemID();
 							ImGui::TableNextColumn();
 							// Re-push entity id
 							ImGui::PushID(static_cast<uint32_t>(m_OwnerEntity));

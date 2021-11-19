@@ -25,6 +25,7 @@ namespace ZeoEngine {
 
 	struct MeshEntry
 	{
+		const char* Name = nullptr;
 		uint32_t VertexBufferPtr = 0;
 		uint32_t IndexBufferPtr = 0;
 		uint32_t IndexCount = 0;
@@ -43,7 +44,7 @@ namespace ZeoEngine {
 		const MeshEntry* GetMeshEntries() const { return m_Entries.data(); }
 		uint32_t GetMeshCount() const { return static_cast<uint32_t>(m_Entries.size()); }
 
-		std::vector<AssetHandle<MaterialAsset>>& GetMaterials() { return m_MaterialSlots; }
+		auto& GetMaterials() { return m_MaterialSlots; }
 		void Mesh::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
 		{
 			if (index < 0 || index >= m_MaterialSlots.size()) return;
