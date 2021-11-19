@@ -27,8 +27,9 @@ namespace ZeoEngine {
 		Ref<Shader> GetShader() const;
 
 		void InitMaterialData();
-
+		/** Bind shader and textures. Called before every draw call. */
 		void Bind();
+		void ApplyUniformDatas();
 
 	private:
 		void ParseReflectionData(); // Should not be called within ctor due to shared_from_this()!
@@ -57,8 +58,9 @@ namespace ZeoEngine {
 			: Name(reflectionData.Name), Binding(reflectionData.Binding), Offset(reflectionData.Offset), Size(reflectionData.Size)
 			, OwnerMaterial(material) {}
 
+		virtual ShaderReflectionType GetDataType() const = 0 { return ShaderReflectionType::None; }
 		virtual void Draw() = 0;
-		virtual void* GetValuePtr() { return nullptr; }
+		virtual void* GetValuePtr() = 0;
 		/** Called when owner material is bound. */
 		virtual void Bind() {}
 		/** Called in material initialization or when value changes. */
@@ -71,6 +73,7 @@ namespace ZeoEngine {
 
 		bool Value = false;
 
+		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Bool; }
 		virtual void Draw() override;
 		virtual void* GetValuePtr() override { return &Value; }
 	};
@@ -92,6 +95,28 @@ namespace ZeoEngine {
 			, Format(format)
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
+		}
+
+		virtual ShaderReflectionType GetDataType() const override
+		{
+			if constexpr (std::is_same<T, int32_t>::value)
+			{
+				return ShaderReflectionType::Int;
+			}
+			else if constexpr (std::is_same<T, float>::value)
+			{
+				return ShaderReflectionType::Float;
+			}
+			else if constexpr (std::is_same<T, glm::vec2>::value)
+			{
+				return ShaderReflectionType::Vec2;
+			}
+			else if constexpr (std::is_same<T, glm::vec3>::value)
+			{
+				return ShaderReflectionType::Vec3;
+			}
+
+			return ShaderReflectionType::None;
 		}
 
 		virtual void Draw() override
@@ -149,6 +174,7 @@ namespace ZeoEngine {
 		glm::vec4 Value{ 0.0f };
 		glm::vec4 LastValue{ 0.0f };
 
+		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Vec4; }
 		virtual void Draw() override;
 		virtual void* GetValuePtr() override { return glm::value_ptr(Value); }
 	};
@@ -161,7 +187,9 @@ namespace ZeoEngine {
 		DynamicUniformTexture2DData(const ShaderReflectionDataBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformDataBase(reflectionData, material) {}
 
+		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Texture2D; }
 		virtual void Draw() override;
+		virtual void* GetValuePtr() override { return &Value; }
 		virtual void Bind() override;
 		virtual void Apply() override;
 	};

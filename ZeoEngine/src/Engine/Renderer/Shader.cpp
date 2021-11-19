@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		auto shaderPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(shaderPath));
 		m_Shader = Shader::Create(shaderPath);
-		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
+		Deserialize();
 	}
 
 	void ShaderAsset::Serialize(const std::string& path)
@@ -71,14 +71,14 @@ namespace ZeoEngine {
 		{
 			SetPath(path);
 		}
-		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), {}); // TODO: Update component instance here
+		AssetSerializer::Serialize(GetPath(), TypeId(), {});
 	}
 
 	void ShaderAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {});  // TODO: Update component instance here
+		AssetSerializer::Deserialize(GetPath(), TypeId(), {});
 	}
 
 

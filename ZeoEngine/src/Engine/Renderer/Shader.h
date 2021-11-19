@@ -86,6 +86,16 @@ namespace ZeoEngine {
 		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Texture2D; }
 	};
 
+	struct UniformBlockData
+	{
+		/** Name of the buffer */
+		std::string Name;
+		/** Size of the buffer */
+		size_t Size;
+		/** Map to begin and end index of Material::m_DynamicUniforms */
+		size_t BeginIndex, EndIndex;
+	};
+
 	class Shader
 	{
 	public:
@@ -104,7 +114,8 @@ namespace ZeoEngine {
 
 		virtual const std::string& GetName() const = 0;
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const = 0;
-		virtual const std::unordered_map<uint32_t, size_t>& GetUniformBlockSizes() const = 0;
+		virtual size_t GetResourceCount() const = 0;
+		virtual const std::unordered_map <uint32_t, UniformBlockData>& GetUniformBlockDatas() const = 0;
 
 		static Ref<Shader> Create(const std::string& filePath);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);

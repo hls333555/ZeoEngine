@@ -86,6 +86,33 @@ namespace ZeoEngine {
 		std::deque<entt::meta_data> m_PreprocessedDatas;
 	};
 
+	class MaterialSerializer
+	{
+	public:
+		void Serialize(YAML::Emitter& out, const Ref<Material>& material);
+		void Deserialize(const YAML::Node& value, const Ref<Material>& material);
+
+	private:
+		void EvaluateSerializeData(YAML::Emitter& out, const Scope<DynamicUniformDataBase>& uniform);
+
+		template<typename T>
+		void SerializeData(YAML::Emitter& out, const Scope<DynamicUniformDataBase>& uniform)
+		{
+			const auto& dataName = uniform->Name;
+			const auto& dataValue = *static_cast<T*>(uniform->GetValuePtr());
+			out << YAML::Key << dataName << YAML::Value << dataValue;
+		}
+
+		void EvaluateDeserializeData(const YAML::Node& value, const Scope<DynamicUniformDataBase>& uniform);
+
+		template<typename T>
+		void DeserializeData(const YAML::Node& value, const Scope<DynamicUniformDataBase>& uniform)
+		{
+			const auto& dataValue = value.as<T>();
+			*static_cast<T*>(uniform->GetValuePtr()) = dataValue;
+		}
+	};
+
 	class Serializer
 	{
 	public:
@@ -149,6 +176,13 @@ namespace ZeoEngine {
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath = {});
 		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+	};
+
+	class MaterialAssetSerializer : public AssetSerializer
+	{
+	public:
+		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material);
 	};
 
 	class SceneSerializer : public Serializer

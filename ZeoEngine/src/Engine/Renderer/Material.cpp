@@ -121,6 +121,14 @@ namespace ZeoEngine {
 		}
 	}
 
+	void Material::ApplyUniformDatas()
+	{
+		for (const auto& uniformData : m_DynamicUniforms)
+		{
+			uniformData->Apply();
+		}
+	}
+
 	void Material::BindUniformDatas()
 	{
 		for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
@@ -152,7 +160,7 @@ namespace ZeoEngine {
 				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec2, 3, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec4:
 				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformColorData>(*reflectionData, shared_from_this()));
@@ -168,8 +176,9 @@ namespace ZeoEngine {
 
 	void Material::InitUniformBuffers()
 	{
-		for (const auto& [binding, uniformBlockSize] : GetShader()->GetUniformBlockSizes())
+		for (const auto& [binding, uniformBlockData] : GetShader()->GetUniformBlockDatas())
 		{
+			auto uniformBlockSize = uniformBlockData.Size;
 			if (m_DynamicUniformBufferDatas.find(binding) != m_DynamicUniformBufferDatas.end())
 			{
 				delete[] m_DynamicUniformBufferDatas[binding];
@@ -219,14 +228,16 @@ namespace ZeoEngine {
 		{
 			SetPath(path);
 		}
-		AssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() });
+		MaterialAssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
 	}
 
 	void MaterialAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() });
+		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
+		// Apply uniform datas after loading
+		GetMaterial()->ApplyUniformDatas();
 	}
 
 }

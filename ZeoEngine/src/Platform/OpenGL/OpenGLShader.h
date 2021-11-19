@@ -29,7 +29,8 @@ namespace ZeoEngine {
 
 		virtual const std::string& GetName() const override { return m_Name; }
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
-		virtual const std::unordered_map<uint32_t, size_t>& GetUniformBlockSizes() const override { return m_UniformBlockSizes; }
+		virtual size_t GetResourceCount() const override { return m_ResourceCount; }
+		virtual const std::unordered_map<uint32_t, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
 
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values , uint32_t count);
@@ -64,8 +65,9 @@ namespace ZeoEngine {
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 
 		std::vector<Scope<ShaderReflectionDataBase>> m_ShaderReflectionData;
-		/** Map from uniform block binding to uniform buffer size */
-		std::unordered_map<uint32_t, size_t > m_UniformBlockSizes;
+		size_t m_ResourceCount = 0;
+		/** Map from uniform block binding to uniform buffer data */
+		std::unordered_map<uint32_t, UniformBlockData> m_UniformBlockDatas;
 
 	};
 

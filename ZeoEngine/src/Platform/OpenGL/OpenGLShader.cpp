@@ -370,12 +370,14 @@ namespace ZeoEngine {
 	{
 		spirv_cross::Compiler compiler(shaderData);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-		const auto uniformBufferSize = resources.uniform_buffers.size();
+		const auto uniformBufferCount = resources.uniform_buffers.size();
+		m_ResourceCount = resources.sampled_images.size();
 
 		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
-		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferSize);
-		ZE_CORE_TRACE("    {0} resources", resources.sampled_images.size());
+		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferCount);
+		ZE_CORE_TRACE("    {0} resources", m_ResourceCount);
 
+		// Reflect resources first (non-uniform block)
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
@@ -383,8 +385,9 @@ namespace ZeoEngine {
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
 		}
 
-		if (uniformBufferSize <= 0) return;
+		if (uniformBufferCount <= 0) return;
 
+		// Reflect uniform blocks
 		ZE_CORE_TRACE("Uniform buffers:");
 		for (const auto& resource : resources.uniform_buffers)
 		{
@@ -402,7 +405,7 @@ namespace ZeoEngine {
 
 			const auto dataCount = m_ShaderReflectionData.size();
 			// We assume all members are added to the vector
-			m_UniformBlockSizes[binding] = bufferSize;
+			m_UniformBlockDatas[binding] = { resource.name, bufferSize, dataCount, dataCount + memberCount };
 			ReflectStructType(compiler, bufferType, binding);
 		}
 	}

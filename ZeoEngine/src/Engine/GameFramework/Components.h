@@ -342,11 +342,6 @@ namespace ZeoEngine {
 			: Template(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		virtual void CreateHelper() override
-		{
-			ComponentHelper = CreateRef<MaterialPreviewComponentHelper>(this);
-		}
-
 		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
 		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); }
 	};
