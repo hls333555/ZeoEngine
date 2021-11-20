@@ -3,6 +3,9 @@
 
 #include <glad/glad.h>
 
+#include "Engine/Renderer/VertexArray.h"
+#include "Engine/Renderer/Shader.h"
+
 namespace ZeoEngine {
 
 	void OpenGLMessageCallback(
@@ -36,11 +39,10 @@ namespace ZeoEngine {
 
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
-		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if (RendererAPI::Is2D())
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_DEPTH_TEST);
 		}
 		else
@@ -82,6 +84,11 @@ namespace ZeoEngine {
 		glDrawElementsBaseVertex(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset, baseVertex);
 	}
 
+	void OpenGLRendererAPI::DrawInstanced(uint32_t instanceCount)
+	{
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
+	}
+
 	void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
 	{
 		vertexArray->Bind();
@@ -91,6 +98,18 @@ namespace ZeoEngine {
 	void OpenGLRendererAPI::SetLineThickness(float thickness)
 	{
 		glLineWidth(thickness);
+	}
+
+	void OpenGLRendererAPI::ToggleFaceCulling(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_CULL_FACE);
+		}
+		else
+		{
+			glDisable(GL_CULL_FACE);
+		}
 	}
 
 	void OpenGLRendererAPI::EnableDepthWriting(bool bEnable)

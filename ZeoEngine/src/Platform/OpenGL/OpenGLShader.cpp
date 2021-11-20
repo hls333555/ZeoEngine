@@ -263,6 +263,7 @@ namespace ZeoEngine {
 		}
 	}
 
+	// Built-in mappings see: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Cross/+/refs/heads/travis-windows/spirv_glsl.cpp
 	void OpenGLShader::CompileOrGetOpenGLBinaries()
 	{
 		auto& shaderData = m_OpenGLSPIRV;
@@ -302,7 +303,7 @@ namespace ZeoEngine {
 				m_OpenGLSourceCode[stage] = glslCompiler.compile();
 				auto& source = m_OpenGLSourceCode[stage];
 
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str());
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR(module.GetErrorMessage());

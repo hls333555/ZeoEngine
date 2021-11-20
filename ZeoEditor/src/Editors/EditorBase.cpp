@@ -40,15 +40,16 @@ namespace ZeoEngine {
 			{
 				ZE_PROFILE_SCOPE("Renderer Prep");
 
-				glm::vec4 clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+				glm::vec4 clearColor = { 0.2f, 0.2f, 0.2f, 1.0f };
 				RenderCommand::SetClearColor(clearColor);
 				RenderCommand::Clear();
-				// Clear entity ID attachment to -1
+				// Clear entity ID buffer to -1
 				m_FBO->ClearAttachment(1, -1);
 			}
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
+				RenderCommand::ToggleFaceCulling(true);
 				m_ActiveScene->OnRender(*m_EditorCamera);
 				m_PostSceneRenderDel.publish(m_FBO);
 			}

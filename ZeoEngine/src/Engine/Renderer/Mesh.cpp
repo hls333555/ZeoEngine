@@ -40,7 +40,7 @@ namespace ZeoEngine {
 	{
 		LoadMeshEntries(meshScene);
 
-		m_VertexBuffer = new Vertex[m_VertexCount];
+		m_VertexBuffer = new MeshVertex[m_VertexCount];
 		m_IndexBuffer = new uint32_t[m_IndexCount];
 
 		// Load datas before submitting buffers
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 
 		m_VAO = VertexArray::Create();
 
-		m_VBO = VertexBuffer::Create(m_VertexBuffer, m_VertexCount * sizeof(Vertex));
+		m_VBO = VertexBuffer::Create(m_VertexBuffer, m_VertexCount * sizeof(MeshVertex));
 		BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal"   },

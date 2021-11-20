@@ -19,7 +19,11 @@ namespace ZeoEngine {
 	{
 		EditorViewPanelBase::OnAttach();
 
-		GetContextEditor()->m_PostSceneRender.connect<&LevelEditorViewPanel::ReadPixelDataFromIDBuffer>(this);
+		m_GridShader = Shader::Create("assets/editor/shaders/Grid.glsl");
+		m_GridUniformBuffer = UniformBuffer::Create(sizeof(GridData), 1);
+		m_GridUniformBuffer->SetData(&m_GridBuffer);
+
+		GetContextEditor()->m_PostSceneRender.connect<&LevelEditorViewPanel::PostSceneRender>(this);
 	}
 
 	void LevelEditorViewPanel::ProcessRender()
@@ -27,6 +31,19 @@ namespace ZeoEngine {
 		EditorViewPanelBase::ProcessRender();
 
 		RenderGizmo();
+
+	#if GridSettings
+		ImGui::Begin("Grid Settings");
+		ImGui::ColorEdit4("ThinLinesColor", glm::value_ptr(m_GridBuffer.ThinLinesColor));
+		ImGui::ColorEdit4("ThickLinesColor", glm::value_ptr(m_GridBuffer.ThickLinesColor));
+		ImGui::ColorEdit4("OriginAxisXColor", glm::value_ptr(m_GridBuffer.OriginAxisXColor));
+		ImGui::ColorEdit4("OriginAxisZColor", glm::value_ptr(m_GridBuffer.OriginAxisZColor));
+		ImGui::DragFloat("Extent", &m_GridBuffer.Extent);
+		ImGui::DragFloat("CellSize", &m_GridBuffer.CellSize);
+		ImGui::DragInt("InstanceCount", &m_GridBuffer.InstanceCount);
+		m_GridUniformBuffer->SetData(&m_GridBuffer);
+		ImGui::End();
+	#endif
 	}
 
 	void LevelEditorViewPanel::ProcessEvent(Event& e)
@@ -36,6 +53,15 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(LevelEditorViewPanel::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelEditorViewPanel::OnMouseButtonPressed));
+	}
+
+	void LevelEditorViewPanel::PostSceneRender(const Ref<FrameBuffer>& frameBuffer)
+	{
+		ReadPixelDataFromIDBuffer(frameBuffer);
+
+		RenderCommand::ToggleFaceCulling(false);
+		// Draw transparent grid after opaque objects and after ID buffer reading
+		RenderGrid();
 	}
 
 	void LevelEditorViewPanel::RenderToolbar()
@@ -256,6 +282,13 @@ namespace ZeoEngine {
 			auto& Stats = Renderer2D::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;
 		}
+	}
+
+	void LevelEditorViewPanel::RenderGrid()
+	{
+		m_GridShader->Bind();
+		m_GridUniformBuffer->Bind();
+		RenderCommand::DrawInstanced(m_GridBuffer.InstanceCount);
 	}
 
 }

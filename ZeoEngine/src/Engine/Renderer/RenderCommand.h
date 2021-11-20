@@ -28,6 +28,11 @@ namespace ZeoEngine {
 			s_RendererAPI->Clear();
 		}
 
+		static void DrawInstanced(uint32_t instanceCount)
+		{
+			s_RendererAPI->DrawInstanced(instanceCount);
+		}
+
 		/** Issue a draw call. */
 		static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0)
 		{
@@ -51,7 +56,11 @@ namespace ZeoEngine {
 			s_RendererAPI->SetLineThickness(thickness);
 		}
 
-		/** Should be called before and after drawing translucent objects. */
+		static void ToggleFaceCulling(bool bEnable)
+		{
+			s_RendererAPI->ToggleFaceCulling(bEnable);
+		}
+
 		static void EnableDepthWriting(bool bEnable)
 		{
 			s_RendererAPI->EnableDepthWriting(bEnable);

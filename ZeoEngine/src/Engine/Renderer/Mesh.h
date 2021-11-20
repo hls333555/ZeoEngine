@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	class Texture2D;
 	class MaterialAsset;
 
-	struct Vertex
+	struct MeshVertex
 	{
 		glm::vec3 Position;
 		glm::vec3 Normal;
@@ -64,7 +64,7 @@ namespace ZeoEngine {
 		Ref<VertexArray> m_VAO;
 		Ref<VertexBuffer> m_VBO;
 		uint32_t m_VertexCount = 0, m_IndexCount = 0;
-		Vertex* m_VertexBuffer = nullptr;
+		MeshVertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
 

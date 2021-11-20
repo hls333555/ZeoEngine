@@ -9,6 +9,7 @@
 namespace ZeoEngine {
 
 	struct MeshRendererComponent;
+	struct QuadVertex;
 
 	struct RenderData
 	{
@@ -63,14 +64,40 @@ namespace ZeoEngine {
 		}
 	};
 
+	struct QuadData
+	{
+		const uint32_t MaxQuads = 10000;
+		const uint32_t MaxVertices = MaxQuads * 4;
+		const uint32_t MaxIndices = MaxQuads * 6;
+		static const uint32_t MaxTextureSlots = 32;
+
+		Ref<VertexArray> QuadVAO;
+		Ref<VertexBuffer> QuadVBO;
+		Ref<Shader> QuadShader;
+
+		uint32_t QuadIndexCount = 0;
+		QuadVertex* QuadVertexBufferBase = nullptr;
+		QuadVertex* QuadVertexBufferPtr = nullptr;
+
+		glm::vec4 QuadVertexPositions[4];
+
+		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
+		Ref<Texture2D> WhiteTexture;
+		uint32_t TextureSlotIndex = 1; // 0 = white texture
+	};
+
 	struct RendererData
 	{
+		QuadData QuadBuffer;
+
 		Ref<Material> DefaultMaterial;
 		std::vector<RenderData> RenderQueue;
 
 		struct CameraData
 		{
-			glm::mat4 ViewProjection;
+			glm::mat4 View;
+			glm::mat4 Projection;
+			glm::vec3 Position;
 		};
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
@@ -109,18 +136,26 @@ namespace ZeoEngine {
 		static void BeginScene(const EditorCamera& camera);
 		static void EndScene();
 
-		static void Prepare();
-		static void Submit();
-
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
 		static void SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 
 		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 
+		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
+		static void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+
 		// TODO:
 		static Statistics& GetStats();
 		static void ResetStats();
+
+	private:
+		static void Prepare();
+		static void Submit();
+
+		static void StartBatch();
+		static void NextBatch();
+		static void FlushBatch();
 
 	private:
 		static RendererData s_Data;

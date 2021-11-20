@@ -32,6 +32,8 @@ namespace ZeoEngine {
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
+		float GetNearClip() const { return m_NearClip; }
+		float GetFarClip() const { return m_FarClip; }
 
 		glm::vec3 GetForwardVector() const;
 		glm::vec3 GetRightVector() const;
@@ -62,7 +64,7 @@ namespace ZeoEngine {
 		bool m_bStartLerpToFocus = false;
 		Entity m_FocusedEntity;
 
-		float m_FOVy = 90.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 10000.0f;
+		float m_FOVy = 90.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
 		glm::mat4 m_ViewMatrix;
 		glm::vec3 m_Position{ 0.0f };
@@ -71,7 +73,7 @@ namespace ZeoEngine {
 		glm::vec2 m_InitialMousePosition{ 0.0f };
 
 		float m_Distance = 10.0f;
-		float m_Pitch = 0.0f, m_Yaw = 0.0f;
+		float m_Pitch = glm::radians(30.0f), m_Yaw = glm::radians(30.0f);
 
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
 	};

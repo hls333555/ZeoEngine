@@ -8,17 +8,19 @@ layout (location = 1) in vec3 a_Normal;
 layout (location = 2) in vec2 a_TexCoord;
 layout (location = 3) in float a_TexIndex;
 
-layout (std140, binding = 0) uniform CameraBlock
+layout (std140, binding = 0) uniform Camera
 {
-	mat4 u_ViewProjection;
-};
+    mat4 View;
+    mat4 Projection;
+    vec3 Position;
+}u_Camera;
 
-layout (std140, binding = 1) uniform ModelBlock
+layout (std140, binding = 1) uniform Model
 {
-	mat4 u_Transform;
-	mat4 u_NormalMatrix;
-	int u_EntityID;
-};
+	mat4 Transform;
+	mat4 NormalMatrix;
+	int EntityID;
+}u_Model;
 
 struct VertexOutput
 {
@@ -33,13 +35,13 @@ layout (location = 4) out flat int v_EntityID;
 
 void main()
 {
-	Output.WorldPosition = vec3(u_Transform * vec4(a_Position, 1.0f));
-	Output.Normal = mat3(u_NormalMatrix) * a_Normal;
+	Output.WorldPosition = vec3(u_Model.Transform * vec4(a_Position, 1.0f));
+	Output.Normal = mat3(u_Model.NormalMatrix) * a_Normal;
 	Output.TexCoord = a_TexCoord;
 	v_TexIndex = a_TexIndex;
-	v_EntityID = u_EntityID;
+	v_EntityID = u_Model.EntityID;
 
-	gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0f);
+	gl_Position = u_Camera.Projection * u_Camera.View * u_Model.Transform * vec4(a_Position, 1.0f);
 }
 
 #type fragment
@@ -48,27 +50,18 @@ void main()
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out int o_EntityID;
 
-struct DirectionalLight
+layout (std140, binding = 2) uniform DirectionalLight
 {
 	vec4 Color;
 	vec3 Position; float Intensity;
 	vec3 Direction;
-};
+}u_DirectionalLight;
 
-layout (std140, binding = 2) uniform DirectionalLightBlock // Uniform block name should not conflict with struct name
-{
-	DirectionalLight u_DirectionalLight;
-};
 
-struct Material
+layout (std140, binding = 3) uniform Material
 {
 	float Shininess;
-};
-
-layout (std140, binding = 3) uniform MaterialBlock
-{
-	Material u_Material;
-};
+}u_Material;
 
 struct VertexOutput
 {
@@ -106,6 +99,8 @@ void main()
 {
 	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal));
 	o_Color = directionalLight;
+	// Force set opaque mode due to rgb texture's alpha is 0
+	o_Color.a = 1.0f;
 
 	o_EntityID = v_EntityID;
 }
