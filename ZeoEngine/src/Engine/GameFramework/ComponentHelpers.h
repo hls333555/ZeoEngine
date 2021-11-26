@@ -7,12 +7,11 @@
 namespace ZeoEngine {
 
 	class Entity;
-	struct IComponent;
 
 	class IComponentHelper
 	{
 	public:
-		explicit IComponentHelper(IComponent* comp);
+		explicit IComponentHelper(Entity* entity);
 		virtual ~IComponentHelper();
 
 		/**  Called after component being added to the owner entity. */
@@ -28,7 +27,6 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 
 		Entity* GetOwnerEntity() const;
-		void SetOwnerEntity(Entity* entity);
 
 	private:
 		struct Impl;
@@ -59,10 +57,12 @@ namespace ZeoEngine {
 	class LightComponentHelper : public IComponentHelper
 	{
 	public:
-		LightComponentHelper(IComponent* comp);
+		using IComponentHelper::IComponentHelper;
+
+		virtual void OnComponentAdded() override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 
-		void InitLight(IComponent* comp);
+		void InitLight();
 	};
 
 }

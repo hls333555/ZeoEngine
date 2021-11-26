@@ -34,10 +34,9 @@ namespace ZeoEngine {
 		auto compInstance = Reflection::ConstructComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->CreateHelper();
+		comp->CreateHelper(this);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->SetOwnerEntity(this);
 			comp->ComponentHelper->OnComponentAdded();
 			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}
@@ -115,10 +114,9 @@ namespace ZeoEngine {
 		auto compInstance = Reflection::CopyComponent(compType, m_Scene->m_Registry, m_EntityHandle, srcEntity.GetComponentById(compId));
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
-		comp->CreateHelper();
+		comp->CreateHelper(this);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->SetOwnerEntity(this);
 			comp->ComponentHelper->OnComponentCopied();
 			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}

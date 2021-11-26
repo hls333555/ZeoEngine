@@ -112,7 +112,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::EnableDepthWriting(bool bEnable)
+	void OpenGLRendererAPI::ToggleDepthWriting(bool bEnable)
 	{
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
 	}

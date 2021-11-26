@@ -44,12 +44,12 @@ namespace ZeoEngine {
 				RenderCommand::SetClearColor(clearColor);
 				RenderCommand::Clear();
 				// Clear entity ID buffer to -1
-				m_FBO->ClearAttachment(1, -1);
+				glm::vec4 clearIDValue{ -1.0f, 0.0f, 0.0f, 0.0f };
+				m_FBO->ClearAttachment(1, clearIDValue);
 			}
 			{
 				ZE_PROFILE_SCOPE("Renderer Draw");
 
-				RenderCommand::ToggleFaceCulling(true);
 				m_ActiveScene->OnRender(*m_EditorCamera);
 				m_PostSceneRenderDel.publish(m_FBO);
 			}
@@ -156,7 +156,7 @@ namespace ZeoEngine {
 	void EditorBase::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
 		fbSpec.Width = FRAMEBUFFER_WIDTH;
 		fbSpec.Height = FRAMEBUFFER_HEIGHT;
 		m_FBO = FrameBuffer::Create(fbSpec);

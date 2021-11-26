@@ -102,6 +102,22 @@ namespace ZeoEngine {
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
 
+		struct GridData
+		{
+			glm::mat4 Transform = glm::mat4(1.0f);
+			glm::vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
+			glm::vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
+			glm::vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
+			glm::vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
+			float Extent = 101.0f;
+			float CellSize = 0.025f;
+			int32_t InstanceCount = 10;
+		};
+		GridData GridBuffer;
+		Ref<UniformBuffer> GridUniformBuffer;
+		Ref<Shader> GridShader;
+		bool bDrawGrid = false;
+
 		// Data alignment is required for std140 layout!
 		struct LightData
 		{
@@ -133,17 +149,21 @@ namespace ZeoEngine {
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void BeginScene(const EditorCamera& camera);
+		static void BeginScene(const EditorCamera& camera, bool bDrawGrid = false);
 		static void EndScene();
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+
+		static void RenderGrid();
 
 		static void SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 
 		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-		static void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+
+		static void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
 		// TODO:
 		static Statistics& GetStats();

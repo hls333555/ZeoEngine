@@ -82,6 +82,7 @@ void main()
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
+layout(location = 1) out vec4 o_EntityID;
 
 struct VertexOutput
 {
@@ -191,5 +192,10 @@ void main()
 
     // Blend between LOD level alphas and scale with opacity falloff
     c.a *= (alphaLod2 > 0 ? alphaLod2 : alphaLod1 > 0 ? alphaLod1 : (alphaLod0 * (1-lodFade))) * op;
+    if (c.a == 0.0f) discard;
+
     o_Color = LinearToSrgb(c);
+
+    // Setting alpha to 0 to ensure that current ID buffer value is not overridden by the grid
+    o_EntityID = vec4(-1.0f, 0.0f, 0.0f, 0.0f);
 }

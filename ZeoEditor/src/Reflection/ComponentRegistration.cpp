@@ -133,6 +133,8 @@ namespace ZeoEngine {
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);
+
+		ZCOMPONENT(BillboardComponent, ZPROP(Inherent), ZPROP(Transient), ZPROP(HideComponentHeader));
 	}
 
 }

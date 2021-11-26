@@ -101,7 +101,7 @@ namespace ZeoEngine {
 
 		m_Registry.view<LightComponent>().each([](auto entity, auto& lightComp)
 		{
-			lightComp.GetHelper<LightComponentHelper>()->InitLight(&lightComp);
+			lightComp.GetHelper<LightComponentHelper>()->InitLight();
 		});
 	}
 

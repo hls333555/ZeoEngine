@@ -63,9 +63,10 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual int32_t ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y) override;
+		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) override;
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
+		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) override;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) override;
 

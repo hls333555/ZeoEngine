@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		virtual void SetLineThickness(float thickness) override;
 
 		virtual void ToggleFaceCulling(bool bEnable) override;
-		virtual void EnableDepthWriting(bool bEnable) override;
+		virtual void ToggleDepthWriting(bool bEnable) override;
 
 	};
 

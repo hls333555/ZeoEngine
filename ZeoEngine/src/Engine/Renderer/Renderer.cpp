@@ -66,10 +66,15 @@ namespace ZeoEngine {
 			uint32_t whiteTextureData = 0xffffffff;
 			s_Data.QuadBuffer.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 			s_Data.QuadBuffer.TextureSlots[0] = s_Data.QuadBuffer.WhiteTexture;
-			s_Data.QuadBuffer.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
+			s_Data.QuadBuffer.QuadShader = Shader::Create("assets/editor/shaders/Quad.glsl");
 
 			s_Data.DefaultMaterial = MaterialAssetLibrary::GetDefaultMaterialAsset()->GetMaterial();
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
+
+			s_Data.GridShader = Shader::Create("assets/editor/shaders/Grid.glsl");
+			s_Data.GridUniformBuffer = UniformBuffer::Create(sizeof(RendererData::GridData), 1);
+			s_Data.GridUniformBuffer->SetData(&s_Data.GridBuffer);
+
 			s_Data.LightUniformBuffer = UniformBuffer::Create(sizeof(RendererData::LightData), 2);
 		}
 	}
@@ -100,20 +105,35 @@ namespace ZeoEngine {
 		Prepare();
 	}
 
-	void Renderer::BeginScene(const EditorCamera& camera)
+	void Renderer::BeginScene(const EditorCamera& camera, bool bDrawGrid)
 	{
 		s_Data.CameraBuffer.View = camera.GetViewMatrix();
 		s_Data.CameraBuffer.Projection = camera.GetProjection();
 		s_Data.CameraBuffer.Position = camera.GetPosition();
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer);
 
+		s_Data.bDrawGrid = bDrawGrid;
+
 		Prepare();
 	}
 
 	void Renderer::EndScene()
 	{
-		Submit();
-		FlushBatch();
+		{
+			Submit();
+		}
+		RenderCommand::ToggleFaceCulling(false);
+		RenderCommand::ToggleDepthWriting(false);
+		{
+			// Translucent grid
+			RenderGrid();
+		}
+		RenderCommand::ToggleDepthWriting(true);
+		{
+			// Quads are drawn at last
+			Renderer::FlushBatch();
+		}
+		RenderCommand::ToggleFaceCulling(true);
 	}
 
 	void Renderer::Prepare()
@@ -158,6 +178,7 @@ namespace ZeoEngine {
 
 	void Renderer::NextBatch()
 	{
+		// TODO: Transparency rendering order?
 		FlushBatch();
 		StartBatch();
 	}
@@ -177,6 +198,15 @@ namespace ZeoEngine {
 			RenderCommand::DrawIndexed(s_Data.QuadBuffer.QuadVAO, s_Data.QuadBuffer.QuadIndexCount);
 			++s_Data.Stats.DrawCalls;
 		}
+	}
+
+	void Renderer::RenderGrid()
+	{
+		if (!s_Data.bDrawGrid) return;
+
+		s_Data.GridShader->Bind();
+		s_Data.GridUniformBuffer->Bind();
+		RenderCommand::DrawInstanced(s_Data.GridBuffer.InstanceCount);
 	}
 
 	void Renderer::SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
@@ -228,7 +258,7 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	void Renderer::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void Renderer::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -240,7 +270,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.QuadBuffer.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.QuadBuffer.TextureSlots[i] == *texture->GetTexture())
+			if (*s_Data.QuadBuffer.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -254,7 +284,7 @@ namespace ZeoEngine {
 			}
 
 			textureIndex = static_cast<float>(s_Data.QuadBuffer.TextureSlotIndex);
-			s_Data.QuadBuffer.TextureSlots[s_Data.QuadBuffer.TextureSlotIndex++] = texture->GetTexture();
+			s_Data.QuadBuffer.TextureSlots[s_Data.QuadBuffer.TextureSlotIndex++] = texture;
 		}
 
 		constexpr size_t quadVertexCount = 4;
@@ -275,6 +305,15 @@ namespace ZeoEngine {
 		s_Data.QuadBuffer.QuadIndexCount += 6;
 
 		++s_Data.Stats.QuadCount;
+	}
+
+	void Renderer::DrawBillboard(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	{
+		glm::mat4 lookAtMatrix = glm::lookAt(position, s_Data.CameraBuffer.Position, { 0.0f, 1.0f, 0.0f });
+		glm::mat4 transform = glm::inverse(lookAtMatrix) *
+			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
 	}
 
 	Statistics& Renderer::GetStats()

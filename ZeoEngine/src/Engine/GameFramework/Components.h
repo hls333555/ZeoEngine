@@ -27,7 +27,7 @@ namespace ZeoEngine {
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
 
-		virtual void CreateHelper() {}
+		virtual void CreateHelper(Entity* entity) {}
 		template<typename T>
 		Ref<T> GetHelper()
 		{
@@ -182,9 +182,9 @@ namespace ZeoEngine {
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
-		virtual void CreateHelper() override
+		virtual void CreateHelper(Entity* entity) override
 		{
-			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(this);
+			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(entity);
 		}
 
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
@@ -202,9 +202,9 @@ namespace ZeoEngine {
 			Template = pTemplate;
 		}
 
-		virtual void CreateHelper() override
+		virtual void CreateHelper(Entity* entity) override
 		{
-			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(this);
+			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(entity);
 		}
 
 		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
@@ -314,9 +314,9 @@ namespace ZeoEngine {
 			: Type(type) {}
 		LightComponent(const LightComponent&) = default;
 
-		virtual void CreateHelper() override
+		virtual void CreateHelper(Entity* entity) override
 		{
-			ComponentHelper = CreateRef<LightComponentHelper>(this);
+			ComponentHelper = CreateRef<LightComponentHelper>(entity);
 		}
 
 		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
@@ -344,6 +344,15 @@ namespace ZeoEngine {
 
 		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
 		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); }
+	};
+
+	struct BillboardComponent : public IComponent
+	{
+		AssetHandle<Texture2DAsset> Texture;
+		glm::vec2 Size{ 0.25f, 0.25f };
+
+		BillboardComponent() = default;
+		BillboardComponent(const BillboardComponent&) = default;
 	};
 
 }

@@ -48,7 +48,7 @@ void main()
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID;
+layout(location = 1) out vec4 o_EntityID;
 
 layout (std140, binding = 2) uniform DirectionalLight
 {
@@ -102,5 +102,5 @@ void main()
 	// Force set opaque mode due to rgb texture's alpha is 0
 	o_Color.a = 1.0f;
 
-	o_EntityID = v_EntityID;
+	o_EntityID = vec4(v_EntityID, 0.0f, 0.0f, 1.0f);
 }

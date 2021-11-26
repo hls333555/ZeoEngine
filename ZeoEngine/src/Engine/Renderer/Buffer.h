@@ -2,6 +2,8 @@
 
 #include "Engine/Core/Assert.h"
 
+#include <glm/glm.hpp>
+
 namespace ZeoEngine {
 
 	enum class ShaderDataType
@@ -147,6 +149,7 @@ namespace ZeoEngine {
 
 		// Color
 		RGBA8,
+		RGBA16F, // This format can store negative values
 		RED_INTEGER,
 
 		// Depth/stencil
@@ -197,9 +200,10 @@ namespace ZeoEngine {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
-		virtual int32_t ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y) = 0;
+		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) = 0;
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
+		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
 

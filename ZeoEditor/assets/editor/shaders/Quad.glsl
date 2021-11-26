@@ -13,8 +13,9 @@ layout (location = 6) in int a_EntityID;
 
 layout (std140, binding = 0) uniform Camera
 {
-	mat4 u_ViewProjection;
-};
+	mat4 View;
+	mat4 Projection;
+}u_Camera;
 
 struct VertexOutput
 {
@@ -37,14 +38,14 @@ void main()
 	v_TexIndex = a_TexIndex;
 	v_EntityID = a_EntityID;
 
-	gl_Position = u_ViewProjection * vec4(a_Position, 1.0f);
+	gl_Position = u_Camera.Projection * u_Camera.View * vec4(a_Position, 1.0f);
 }
 
 #type fragment
 #version 450 core
 
 layout(location = 0) out vec4 o_Color;
-layout(location = 1) out int o_EntityID;
+layout(location = 1) out vec4 o_EntityID;
 
 struct VertexOutput
 {
@@ -98,7 +99,10 @@ void main()
 		case 30: texColor *= texture(u_Textures[30], vec2(Input.TexCoord.x + Input.UvOffset.x, Input.TexCoord.y + Input.UvOffset.y) * Input.TilingFactor); break;
 		case 31: texColor *= texture(u_Textures[31], vec2(Input.TexCoord.x + Input.UvOffset.x, Input.TexCoord.y + Input.UvOffset.y) * Input.TilingFactor); break;
 	}
+	if (texColor.a < 0.5f) discard; // Due to GL_LINEAR filtering, we should not discard 0 alpha pixels only
+
 	o_Color = texColor;
 
-	o_EntityID = v_EntityID;
+	// We do not want to override ID buffer value if current pixel is transparent
+	o_EntityID = vec4(v_EntityID, 0.0f, 0.0f, o_Color.a == 0.0f ? 0.0f : 1.0f);
 }

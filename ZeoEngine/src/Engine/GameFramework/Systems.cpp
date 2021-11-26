@@ -32,9 +32,9 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnRenderEditor(const EditorCamera& camera)
 	{
-		Renderer::BeginScene(camera);
+		Renderer::BeginScene(camera, true);
 		{
-			OnRender();
+			OnRender(camera.GetPosition());
 		}
 		Renderer::EndScene();
 	}
@@ -56,28 +56,29 @@ namespace ZeoEngine {
 		{
 			Renderer::BeginScene(*mainCamera, cameraTransform);
 			{
-				OnRender();
+				const glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);
+				OnRender(cameraPosition);
 			}
 			Renderer::EndScene();
 		}
 	}
 
-	void RenderSystem::OnRender()
+	void RenderSystem::OnRender(const glm::vec3& cameraPosition)
 	{
 		// Setup lights
-		ForEachComponentView<TransformComponent, LightComponent>([](auto entity, auto& transformComp, auto& lightComp)
+		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
 			switch (lightComp.Type)
 			{
-			case LightComponent::LightType::DirectionalLight:
-				Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
-				break;
-			case LightComponent::LightType::PointLight:
-				break;
-			case LightComponent::LightType::SpotLight:
-				break;
-			default:
-				break;
+				case LightComponent::LightType::DirectionalLight:
+					Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+					break;
+				case LightComponent::LightType::PointLight:
+					break;
+				case LightComponent::LightType::SpotLight:
+					break;
+				default:
+					break;
 			}
 		});
 
@@ -87,6 +88,15 @@ namespace ZeoEngine {
 			if (meshComp.Mesh)
 			{
 				Renderer::DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
+			}
+		});
+
+		// Render billboards
+		ForEachComponentView<TransformComponent, BillboardComponent>([](auto entity, auto& transformComp, auto& billboardComp)
+		{
+			if (billboardComp.Texture)
+			{
+				Renderer::DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), {1.0f, 1.0f}, {0.0f, 0.0f}, glm::vec4(1.0f), static_cast<int32_t>(entity));
 			}
 		});
 	}
