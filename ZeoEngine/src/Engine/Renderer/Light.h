@@ -12,8 +12,8 @@ namespace ZeoEngine {
 		float GetIntensity() const { return m_Intensity; }
 		void SetIntensity(float intensity) { m_Intensity = intensity; }
 
-		// TODO:
-		virtual void Setup() {}
+		virtual float GetRadius() const { return 0.0f; }
+		virtual void SetRadius(float radius) {}
 
 	private:
 		glm::vec4 m_Color{ 1.0f };
@@ -28,8 +28,12 @@ namespace ZeoEngine {
 
 	class PointLight : public Light
 	{
-	private:
+	public:
+		virtual float GetRadius() const override { return m_Radius; }
+		virtual void SetRadius(float radius) override { m_Radius = radius; }
 
+	private:
+		float m_Radius = 10.0f;
 	};
 
 	class SpotLight : public Light

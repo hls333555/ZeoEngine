@@ -108,9 +108,11 @@ namespace ZeoEngine {
 				break;
 			case LightComponent::LightType::PointLight:
 				lightComp.Light = CreateRef<PointLight>();
+				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
 				lightComp.Light = CreateRef<SpotLight>();
+				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

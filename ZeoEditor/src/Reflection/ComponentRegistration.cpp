@@ -129,7 +129,8 @@ namespace ZeoEngine {
 		ZCOMPONENT(LightComponent, ZPROP(DisplayName, ZTEXT("Light")), ZPROP(Tooltip, ZTEXT("µÆ¹â×é¼þ")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(LightComponent, Type)
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
-			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
+			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f))
+			ZDATA_SETTER_GETTER(LightComponent, Radius, SetRadius, GetRadius, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type != PointLight"));
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);

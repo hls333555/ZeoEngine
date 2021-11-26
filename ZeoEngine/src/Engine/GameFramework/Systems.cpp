@@ -71,9 +71,10 @@ namespace ZeoEngine {
 			switch (lightComp.Type)
 			{
 				case LightComponent::LightType::DirectionalLight:
-					Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+					Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 					break;
 				case LightComponent::LightType::PointLight:
+					Renderer::AddPointLight(transformComp.Translation, lightComp.GetLight<PointLight>());
 					break;
 				case LightComponent::LightType::SpotLight:
 					break;
@@ -81,6 +82,7 @@ namespace ZeoEngine {
 					break;
 			}
 		});
+		Renderer::UploadLightData();
 
 		// Render meshes
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
@@ -213,7 +215,7 @@ namespace ZeoEngine {
 		{
 			ForEachComponentView<TransformComponent, LightComponent>([](auto entity, auto& transformComp, auto& lightComp)
 			{
-				Renderer::SetupDirectionalLight(transformComp.Translation, transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+				Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 			});
 			ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
 			{

@@ -178,7 +178,6 @@ namespace ZeoEngine {
 
 	void Renderer::NextBatch()
 	{
-		// TODO: Transparency rendering order?
 		FlushBatch();
 		StartBatch();
 	}
@@ -209,12 +208,24 @@ namespace ZeoEngine {
 		RenderCommand::DrawInstanced(s_Data.GridBuffer.InstanceCount);
 	}
 
-	void Renderer::SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
+	void Renderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
 	{
-		s_Data.LightBuffer.DirectionalLightPosition = position;
-		s_Data.LightBuffer.DirectionalLightDirection = directionalLight->CalculateDirection(rotation);
-		s_Data.LightBuffer.DirectionalLightColor = directionalLight->GetColor();
-		s_Data.LightBuffer.DirectionalLightIntensity = directionalLight->GetIntensity();
+		s_Data.LightBuffer.DirectionalLightBuffer.Color = directionalLight->GetColor();
+		s_Data.LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
+		s_Data.LightBuffer.DirectionalLightBuffer.Direction = directionalLight->CalculateDirection(rotation);
+	}
+
+	void Renderer::AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight)
+	{
+		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Color = pointLight->GetColor();
+		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Intensity = pointLight->GetIntensity();
+		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Position = position;
+		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Radius = pointLight->GetRadius();
+		++s_Data.LightBuffer.NumPointLights;
+	}
+
+	void Renderer::UploadLightData()
+	{
 		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer);
 	}
 

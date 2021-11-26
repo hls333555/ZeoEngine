@@ -6,7 +6,6 @@
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
 layout (location = 2) in vec2 a_TexCoord;
-layout (location = 3) in float a_TexIndex;
 
 layout (std140, binding = 0) uniform Camera
 {
@@ -27,10 +26,10 @@ struct VertexOutput
 	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
+	vec3 CameraPosition;
 };
 
 layout (location = 0) out VertexOutput Output;
-layout (location = 3) out flat float v_TexIndex; // flat variables cannot be in a struct
 layout (location = 4) out flat int v_EntityID;
 
 void main()
@@ -38,7 +37,7 @@ void main()
 	Output.WorldPosition = vec3(u_Model.Transform * vec4(a_Position, 1.0f));
 	Output.Normal = mat3(u_Model.NormalMatrix) * a_Normal;
 	Output.TexCoord = a_TexCoord;
-	v_TexIndex = a_TexIndex;
+	Output.CameraPosition = u_Camera.Position;
 	v_EntityID = u_Model.EntityID;
 
 	gl_Position = u_Camera.Projection * u_Camera.View * u_Model.Transform * vec4(a_Position, 1.0f);
@@ -50,13 +49,33 @@ void main()
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
-layout (std140, binding = 2) uniform DirectionalLight
+const int MAX_POINT_LIGHTS = 32;
+
+struct LightBase
 {
 	vec4 Color;
-	vec3 Position; float Intensity;
-	vec3 Direction;
-}u_DirectionalLight;
+	float Intensity;
+};
 
+struct DirectionalLight
+{
+	LightBase Base;
+	vec3 Direction;
+};
+
+struct PointLight
+{
+	LightBase Base;
+	vec3 Position;
+	float Radius;
+};
+
+layout (std140, binding = 2) uniform Light
+{
+	DirectionalLight u_DirectionalLight;
+	PointLight u_PointLights[MAX_POINT_LIGHTS];
+	int u_NumPointLights;
+};
 
 layout (std140, binding = 3) uniform Material
 {
@@ -68,37 +87,61 @@ struct VertexOutput
 	vec3 WorldPosition;
 	vec3 Normal;
 	vec2 TexCoord;
+	vec3 CameraPosition;
 };
 
 layout (location = 0) in VertexOutput Input;
-layout (location = 3) in flat float v_TexIndex;
 layout (location = 4) in flat int v_EntityID;
 
 layout (binding = 0) uniform sampler2D u_DiffuseTexture;
 layout (binding = 1) uniform sampler2D u_SpecularTexture;
 
-vec4 CalculateDirectionalLight(vec3 vertexPosition, vec3 vertexNormal)
+vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 vertexNormal)
 {
 	// Ambient
 	vec4 ambientColor = texture(u_DiffuseTexture, Input.TexCoord) * 0.3f;
 
 	// Diffuse
-	float diffuse = max(dot(vertexNormal, normalize(-u_DirectionalLight.Direction)), 0.0f);
+	float diffuse = max(dot(vertexNormal, normalize(-lightDirection)), 0.0f);
 	vec4 diffuseColor = diffuse * texture(u_DiffuseTexture, Input.TexCoord);
 
 	// Specular
-	vec3 viewDirection = normalize(u_DirectionalLight.Position - vertexPosition);
-	vec3 reflectDirection = reflect(u_DirectionalLight.Direction, vertexNormal);
+	vec3 viewDirection = normalize(Input.CameraPosition - Input.WorldPosition);
+	vec3 reflectDirection = reflect(lightDirection, vertexNormal);
 	float specular = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_Material.Shininess >= 1.0f ? u_Material.Shininess : 1.0f);
 	vec4 specularColor = specular * texture(u_SpecularTexture, Input.TexCoord);
 
-	return (ambientColor + diffuseColor + specularColor) * u_DirectionalLight.Color * u_DirectionalLight.Intensity;
+	return (ambientColor + diffuseColor + specularColor) * base.Color * base.Intensity;
+}
+
+vec4 CalculateDirectionalLight(vec3 vertexNormal)
+{
+	return CalculateLightInternal(u_DirectionalLight.Base, u_DirectionalLight.Direction, vertexNormal);
+}
+
+vec4 CalculatePointLight(int index, vec3 vertexNormal)
+{
+	vec3 lightDirection = Input.WorldPosition - u_PointLights[index].Position;
+	float lightDistance = length(lightDirection);
+	lightDirection = normalize(lightDirection);
+
+	vec4 color = CalculateLightInternal(u_PointLights[index].Base, lightDirection, vertexNormal);
+	float normalizedDistance = lightDistance / u_PointLights[index].Radius;
+	float attenuation = clamp(1.0f / (1.0f + 25.0f * normalizedDistance * normalizedDistance) *
+								clamp((1.0f - normalizedDistance) * 5.0f, 0.0f, 1.0f)
+							, 0.0f, 1.0f);
+	return color * attenuation;
 }
 
 void main()
 {
-	vec4 directionalLight = CalculateDirectionalLight(Input.WorldPosition, normalize(Input.Normal));
-	o_Color = directionalLight;
+	vec3 normal = normalize(Input.Normal);
+	vec4 totalLight = CalculateDirectionalLight(normal);
+	for (int i = 0; i < u_NumPointLights; ++i)
+	{
+		totalLight += CalculatePointLight(i, normal);
+	}
+	o_Color = totalLight;
 	// Force set opaque mode due to rgb texture's alpha is 0
 	o_Color.a = 1.0f;
 

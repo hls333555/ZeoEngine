@@ -86,6 +86,7 @@ namespace ZeoEngine {
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 	};
 
+	// Data alignment is required for std140 layout!
 	struct RendererData
 	{
 		QuadData QuadBuffer;
@@ -118,20 +119,45 @@ namespace ZeoEngine {
 		Ref<Shader> GridShader;
 		bool bDrawGrid = false;
 
-		// Data alignment is required for std140 layout!
-		struct LightData
+		static const int MAX_POINT_LIGHTS = 32;
+		struct LightDataBase
 		{
-			glm::vec4 DirectionalLightColor;
-			glm::vec3 DirectionalLightPosition;
-			float DirectionalLightIntensity;
-			glm::vec3 DirectionalLightDirection;
+			glm::vec4 Color;
+			float Intensity, Padding, Padding1, Padding2; // NOTE: The paddings are only needed in code
 
 			void Reset()
 			{
-				DirectionalLightColor = glm::vec4{ 0.0f };
-				DirectionalLightPosition = glm::vec3{ 0.0f };
-				DirectionalLightIntensity = 0.0f;
-				DirectionalLightDirection = glm::vec3{ 0.0f };
+				Color = glm::vec4{ 0.0f };
+				Intensity = 0.0f;
+			}
+		};
+
+		struct DirectionalLightData : public LightDataBase
+		{
+			glm::vec3 Direction; float Padding;
+
+			void Reset()
+			{
+				LightDataBase::Reset();
+				Direction = glm::vec3{ 0.0f };
+			}
+		};
+
+		struct PointLightData : public LightDataBase
+		{
+			glm::vec3 Position;
+			float Radius;
+		};
+		struct LightData
+		{
+			DirectionalLightData DirectionalLightBuffer;
+			PointLightData PointLightBuffer[MAX_POINT_LIGHTS];
+			int32_t NumPointLights = 0;
+
+			void Reset()
+			{
+				DirectionalLightBuffer.Reset();
+				NumPointLights = 0;
 			}
 		};
 		LightData LightBuffer;
@@ -156,7 +182,9 @@ namespace ZeoEngine {
 
 		static void RenderGrid();
 
-		static void SetupDirectionalLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
+		static void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
+		static void AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight);
+		static void UploadLightData();
 
 		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 

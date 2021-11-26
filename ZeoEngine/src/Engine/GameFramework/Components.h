@@ -331,6 +331,8 @@ namespace ZeoEngine {
 		void SetColor(const glm::vec4& color) { Light->SetColor(color); }
 		float GetIntensity() const { return Light->GetIntensity(); }
 		void SetIntensity(float intensity) { return Light->SetIntensity(intensity); }
+		float GetRadius() const { return Light->GetRadius(); }
+		void SetRadius(float radius) { Light->SetRadius(radius); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent
