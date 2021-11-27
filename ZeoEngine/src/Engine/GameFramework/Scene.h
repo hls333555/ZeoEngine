@@ -51,6 +51,9 @@ namespace ZeoEngine {
 
 		size_t GetEntityCount() const { return m_Registry.alive(); }
 
+		/** Only implemented for the level editor. */
+		virtual Entity GetSelectedEntity() const;
+
 		/** Called after all data have been loaded. */
 		virtual void PostLoad() {}
 
@@ -80,6 +83,7 @@ namespace ZeoEngine {
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
+		virtual void PostDataDeserialize(entt::meta_any& compInstance, uint32_t dataId) override;
 
 		virtual void Reload() override;
 

@@ -19,7 +19,7 @@ namespace ZeoEngine {
 	{
 	public:
 		void Serialize(YAML::Emitter& out, entt::meta_any& instance);
-		void Deserialize(const YAML::Node& value, entt::meta_any& instance);
+		void Deserialize(const YAML::Node& value, entt::meta_any& instance, IAsset* asset);
 
 	private:
 		/** Reverse data order so that serialized and deserialized datas are in correct order. */
@@ -168,21 +168,21 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
-		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset);
 	};
 
 	class ImportableAssetSerializer : public AssetSerializer
 	{
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath = {});
-		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset);
 	};
 
 	class MaterialAssetSerializer : public AssetSerializer
 	{
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material);
-		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material, IAsset* asset);
 	};
 
 	class SceneSerializer : public Serializer
@@ -190,7 +190,7 @@ namespace ZeoEngine {
 	public:
 		static void Serialize(const std::string& path, const Ref<Scene>& scene);
 		static void SerializeRuntime();
-		static bool Deserialize(const std::string& path, const Ref<Scene>& scene);
+		static bool Deserialize(const std::string& path, const Ref<Scene>& scene, IAsset* asset);
 		static bool DeserializeRuntime();
 	};
 

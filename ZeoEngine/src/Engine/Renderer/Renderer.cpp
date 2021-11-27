@@ -20,53 +20,91 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			s_Data.QuadBuffer.QuadVertexPositions[0] = { -1.0f, -1.0f, 0.0f, 1.0f };
-			s_Data.QuadBuffer.QuadVertexPositions[1] = { 1.0f, -1.0f, 0.0f, 1.0f };
-			s_Data.QuadBuffer.QuadVertexPositions[2] = { 1.0f,  1.0f, 0.0f, 1.0f };
-			s_Data.QuadBuffer.QuadVertexPositions[3] = { -1.0f,  1.0f, 0.0f, 1.0f };
-
 			// Quads
-			s_Data.QuadBuffer.QuadVAO = VertexArray::Create();
-
-			s_Data.QuadBuffer.QuadVBO = VertexBuffer::Create(s_Data.QuadBuffer.MaxVertices * sizeof(QuadVertex));
-			BufferLayout quadLayout = {
-				{ ShaderDataType::Float3, "a_Position"     },
-				{ ShaderDataType::Float4, "a_Color"        },
-				{ ShaderDataType::Float2, "a_TexCoord"     },
-				{ ShaderDataType::Float2, "a_TilingFactor" },
-				{ ShaderDataType::Float2, "a_UvOffset"     },
-				{ ShaderDataType::Float,  "a_TexIndex"     },
-				{ ShaderDataType::Int,    "a_EntityID"     },
-			};
-			s_Data.QuadBuffer.QuadVBO->SetLayout(quadLayout);
-			s_Data.QuadBuffer.QuadVAO->AddVertexBuffer(s_Data.QuadBuffer.QuadVBO);
-
-			s_Data.QuadBuffer.QuadVertexBufferBase = new QuadVertex[s_Data.QuadBuffer.MaxVertices];
-
-			uint32_t* quadIndices = new uint32_t[s_Data.QuadBuffer.MaxIndices];
-			uint32_t offset = 0;
-			for (uint32_t i = 0; i < s_Data.QuadBuffer.MaxIndices; i += 6)
 			{
-				quadIndices[i + 0] = offset + 0;
-				quadIndices[i + 1] = offset + 1;
-				quadIndices[i + 2] = offset + 2;
+				s_Data.PrimitiveBuffer.QuadVAO = VertexArray::Create();
 
-				quadIndices[i + 3] = offset + 2;
-				quadIndices[i + 4] = offset + 3;
-				quadIndices[i + 5] = offset + 0;
+				s_Data.PrimitiveBuffer.QuadVBO = VertexBuffer::Create(s_Data.PrimitiveBuffer.MaxVertices * sizeof(QuadVertex));
+				BufferLayout quadLayout = {
+					{ ShaderDataType::Float3, "a_Position"     },
+					{ ShaderDataType::Float4, "a_Color"        },
+					{ ShaderDataType::Float2, "a_TexCoord"     },
+					{ ShaderDataType::Float2, "a_TilingFactor" },
+					{ ShaderDataType::Float2, "a_UvOffset"     },
+					{ ShaderDataType::Float,  "a_TexIndex"     },
+					{ ShaderDataType::Int,    "a_EntityID"     },
+				};
+				s_Data.PrimitiveBuffer.QuadVBO->SetLayout(quadLayout);
+				s_Data.PrimitiveBuffer.QuadVAO->AddVertexBuffer(s_Data.PrimitiveBuffer.QuadVBO);
 
-				offset += 4;
+				s_Data.PrimitiveBuffer.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexBufferBase = new QuadVertex[s_Data.PrimitiveBuffer.MaxVertices];
+
+				uint32_t* quadIndices = new uint32_t[s_Data.PrimitiveBuffer.MaxIndices];
+				uint32_t offset = 0;
+				for (uint32_t i = 0; i < s_Data.PrimitiveBuffer.MaxIndices; i += 6)
+				{
+					quadIndices[i + 0] = offset + 0;
+					quadIndices[i + 1] = offset + 1;
+					quadIndices[i + 2] = offset + 2;
+
+					quadIndices[i + 3] = offset + 2;
+					quadIndices[i + 4] = offset + 3;
+					quadIndices[i + 5] = offset + 0;
+
+					offset += 4;
+				}
+				Ref<IndexBuffer> quadIBO = IndexBuffer::Create(quadIndices, s_Data.PrimitiveBuffer.MaxIndices);
+				s_Data.PrimitiveBuffer.QuadVAO->SetIndexBuffer(quadIBO);
+				delete[] quadIndices;
+
+				s_Data.PrimitiveBuffer.QuadShader = Shader::Create("assets/editor/shaders/Quad.glsl");
 			}
-			Ref<IndexBuffer> quadIBO = IndexBuffer::Create(quadIndices, s_Data.QuadBuffer.MaxIndices);
-			s_Data.QuadBuffer.QuadVAO->SetIndexBuffer(quadIBO);
-			delete[] quadIndices;
+
+			// Lines
+			{
+				s_Data.PrimitiveBuffer.LineVAO = VertexArray::Create();
+
+				s_Data.PrimitiveBuffer.LineVBO = VertexBuffer::Create(s_Data.PrimitiveBuffer.MaxVertices * sizeof(LineVertex));
+				BufferLayout lineLayout = {
+					{ ShaderDataType::Float3, "a_Position" },
+					{ ShaderDataType::Float4, "a_Color"	   },
+					{ ShaderDataType::Int,    "a_EntityID" },
+				};
+				s_Data.PrimitiveBuffer.LineVBO->SetLayout(lineLayout);
+				s_Data.PrimitiveBuffer.LineVAO->AddVertexBuffer(s_Data.PrimitiveBuffer.LineVBO);
+				s_Data.PrimitiveBuffer.LineVertexBufferBase = new LineVertex[s_Data.PrimitiveBuffer.MaxVertices];
+
+				s_Data.PrimitiveBuffer.LineShader = Shader::Create("assets/editor/shaders/Line.glsl");
+			}
+
+			// Circles
+			{
+				s_Data.PrimitiveBuffer.CircleVAO = VertexArray::Create();
+
+				s_Data.PrimitiveBuffer.CircleVBO = VertexBuffer::Create(s_Data.PrimitiveBuffer.MaxVertices * sizeof(LineVertex));
+				BufferLayout circleLayout = {
+					{ ShaderDataType::Float3, "a_Position"	},
+					{ ShaderDataType::Float4, "a_Color"		},
+					{ ShaderDataType::Int,    "a_EntityID"	},
+				};
+				s_Data.PrimitiveBuffer.CircleVBO->SetLayout(circleLayout);
+				s_Data.PrimitiveBuffer.CircleVAO->AddVertexBuffer(s_Data.PrimitiveBuffer.CircleVBO);
+				s_Data.PrimitiveBuffer.CircleVertexBufferBase = new LineVertex[s_Data.PrimitiveBuffer.MaxVertices];
+
+				s_Data.PrimitiveBuffer.CircleIBO = IndexBuffer::Create(s_Data.PrimitiveBuffer.MaxIndices);
+				s_Data.PrimitiveBuffer.CircleVAO->SetIndexBuffer(s_Data.PrimitiveBuffer.CircleIBO);
+				s_Data.PrimitiveBuffer.CircleIndexBufferBase = new uint32_t[s_Data.PrimitiveBuffer.MaxIndices];
+			}
 
 			// Generate a 1x1 white texture to be used by flat color
-			s_Data.QuadBuffer.WhiteTexture = Texture2D::Create(1, 1);
+			s_Data.PrimitiveBuffer.WhiteTexture = Texture2D::Create(1, 1);
 			uint32_t whiteTextureData = 0xffffffff;
-			s_Data.QuadBuffer.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
-			s_Data.QuadBuffer.TextureSlots[0] = s_Data.QuadBuffer.WhiteTexture;
-			s_Data.QuadBuffer.QuadShader = Shader::Create("assets/editor/shaders/Quad.glsl");
+			s_Data.PrimitiveBuffer.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
+			s_Data.PrimitiveBuffer.TextureSlots[0] = s_Data.PrimitiveBuffer.WhiteTexture;
 
 			s_Data.DefaultMaterial = MaterialAssetLibrary::GetDefaultMaterialAsset()->GetMaterial();
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
@@ -87,7 +125,9 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			delete[] s_Data.QuadBuffer.QuadVertexBufferBase;
+			delete[] s_Data.PrimitiveBuffer.QuadVertexBufferBase;
+			delete[] s_Data.PrimitiveBuffer.CircleVertexBufferBase;
+			delete[] s_Data.PrimitiveBuffer.CircleIndexBufferBase;
 		}
 	}
 
@@ -170,10 +210,19 @@ namespace ZeoEngine {
 
 	void Renderer::StartBatch()
 	{
-		s_Data.QuadBuffer.QuadIndexCount = 0;
-		s_Data.QuadBuffer.QuadVertexBufferPtr = s_Data.QuadBuffer.QuadVertexBufferBase;
+		s_Data.PrimitiveBuffer.QuadIndexCount = 0;
+		s_Data.PrimitiveBuffer.QuadVertexBufferPtr = s_Data.PrimitiveBuffer.QuadVertexBufferBase;
 
-		s_Data.QuadBuffer.TextureSlotIndex = 1;
+		s_Data.PrimitiveBuffer.LineVertexCount = 0;
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr = s_Data.PrimitiveBuffer.LineVertexBufferBase;
+
+		s_Data.PrimitiveBuffer.CircleIndexCount = 0;
+		s_Data.PrimitiveBuffer.CircleVertexBufferPtr = s_Data.PrimitiveBuffer.CircleVertexBufferBase;
+		s_Data.PrimitiveBuffer.CircleIndexBufferPtr = s_Data.PrimitiveBuffer.CircleIndexBufferBase;
+
+		s_Data.PrimitiveBuffer.TextureSlotIndex = 1;
+
+		ResetStats();
 	}
 
 	void Renderer::NextBatch()
@@ -184,17 +233,42 @@ namespace ZeoEngine {
 
 	void Renderer::FlushBatch()
 	{
-		if (s_Data.QuadBuffer.QuadIndexCount)
+		if (s_Data.PrimitiveBuffer.QuadIndexCount)
 		{
-			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadBuffer.QuadVertexBufferBase);
-			s_Data.QuadBuffer.QuadVBO->SetData(s_Data.QuadBuffer.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.QuadVertexBufferBase);
+			s_Data.PrimitiveBuffer.QuadVBO->SetData(s_Data.PrimitiveBuffer.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 
-			for (uint32_t i = 0; i < s_Data.QuadBuffer.TextureSlotIndex; i++)
+			for (uint32_t i = 0; i < s_Data.PrimitiveBuffer.TextureSlotIndex; i++)
 			{
-				s_Data.QuadBuffer.TextureSlots[i]->Bind(i);
+				s_Data.PrimitiveBuffer.TextureSlots[i]->Bind(i);
 			}
-			s_Data.QuadBuffer.QuadShader->Bind();
-			RenderCommand::DrawIndexed(s_Data.QuadBuffer.QuadVAO, s_Data.QuadBuffer.QuadIndexCount);
+			s_Data.PrimitiveBuffer.QuadShader->Bind();
+			RenderCommand::DrawIndexed(s_Data.PrimitiveBuffer.QuadVAO, s_Data.PrimitiveBuffer.QuadIndexCount);
+			++s_Data.Stats.DrawCalls;
+		}
+
+		if (s_Data.PrimitiveBuffer.LineVertexCount)
+		{
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.LineVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.LineVertexBufferBase);
+			s_Data.PrimitiveBuffer.LineVBO->SetData(s_Data.PrimitiveBuffer.LineVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+			s_Data.PrimitiveBuffer.LineShader->Bind();
+			RenderCommand::SetLineThickness(s_Data.PrimitiveBuffer.LineThickness);
+			RenderCommand::DrawLine(s_Data.PrimitiveBuffer.LineVAO, s_Data.PrimitiveBuffer.LineVertexCount);
+			++s_Data.Stats.DrawCalls;
+		}
+
+		if (s_Data.PrimitiveBuffer.CircleIndexCount)
+		{
+			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.CircleVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.CircleVertexBufferBase);
+			s_Data.PrimitiveBuffer.CircleVBO->SetData(s_Data.PrimitiveBuffer.CircleVertexBufferBase, static_cast<uint32_t>(dataSize));
+
+			dataSize = reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.CircleIndexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.PrimitiveBuffer.CircleIndexBufferBase);
+			s_Data.PrimitiveBuffer.CircleVAO->SetIndexBufferData(s_Data.PrimitiveBuffer.CircleIndexBufferBase, static_cast<uint32_t>(dataSize));
+
+			s_Data.PrimitiveBuffer.LineShader->Bind();
+			RenderCommand::SetLineThickness(s_Data.PrimitiveBuffer.LineThickness);
+			RenderCommand::DrawLineIndexed(s_Data.PrimitiveBuffer.CircleVAO, s_Data.PrimitiveBuffer.CircleIndexCount);
 			++s_Data.Stats.DrawCalls;
 		}
 	}
@@ -206,6 +280,7 @@ namespace ZeoEngine {
 		s_Data.GridShader->Bind();
 		s_Data.GridUniformBuffer->Bind();
 		RenderCommand::DrawInstanced(s_Data.GridBuffer.InstanceCount);
+		++s_Data.Stats.DrawCalls;
 	}
 
 	void Renderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
@@ -240,7 +315,7 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadBuffer.QuadIndexCount >= s_Data.QuadBuffer.MaxIndices)
+		if (s_Data.PrimitiveBuffer.QuadIndexCount >= s_Data.PrimitiveBuffer.MaxIndices)
 		{
 			NextBatch();
 		}
@@ -254,17 +329,17 @@ namespace ZeoEngine {
 
 		for (size_t i = 0; i < quadVertexCount; ++i)
 		{
-			s_Data.QuadBuffer.QuadVertexBufferPtr->Position = transform * s_Data.QuadBuffer.QuadVertexPositions[i];
-			s_Data.QuadBuffer.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->UvOffset = uvOffset;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->EntityID = entityID;
-			++s_Data.QuadBuffer.QuadVertexBufferPtr;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->Position = transform * s_Data.PrimitiveBuffer.QuadVertexPositions[i];
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->Color = color;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->UvOffset = uvOffset;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->EntityID = entityID;
+			++s_Data.PrimitiveBuffer.QuadVertexBufferPtr;
 		}
 
-		s_Data.QuadBuffer.QuadIndexCount += 6;
+		s_Data.PrimitiveBuffer.QuadIndexCount += 6;
 
 		++s_Data.Stats.QuadCount;
 	}
@@ -273,15 +348,15 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		if (s_Data.QuadBuffer.QuadIndexCount >= s_Data.QuadBuffer.MaxIndices)
+		if (s_Data.PrimitiveBuffer.QuadIndexCount >= s_Data.PrimitiveBuffer.MaxIndices)
 		{
 			NextBatch();
 		}
 
 		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.QuadBuffer.TextureSlotIndex; ++i)
+		for (uint32_t i = 1; i < s_Data.PrimitiveBuffer.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.QuadBuffer.TextureSlots[i] == *texture)
+			if (*s_Data.PrimitiveBuffer.TextureSlots[i] == *texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -289,13 +364,13 @@ namespace ZeoEngine {
 		}
 		if (textureIndex == 0.0f)
 		{
-			if (s_Data.QuadBuffer.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			if (s_Data.PrimitiveBuffer.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
 			{
 				NextBatch();
 			}
 
-			textureIndex = static_cast<float>(s_Data.QuadBuffer.TextureSlotIndex);
-			s_Data.QuadBuffer.TextureSlots[s_Data.QuadBuffer.TextureSlotIndex++] = texture;
+			textureIndex = static_cast<float>(s_Data.PrimitiveBuffer.TextureSlotIndex);
+			s_Data.PrimitiveBuffer.TextureSlots[s_Data.PrimitiveBuffer.TextureSlotIndex++] = texture;
 		}
 
 		constexpr size_t quadVertexCount = 4;
@@ -303,17 +378,17 @@ namespace ZeoEngine {
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
-			s_Data.QuadBuffer.QuadVertexBufferPtr->Position = transform * s_Data.QuadBuffer.QuadVertexPositions[i];
-			s_Data.QuadBuffer.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->UvOffset = uvOffset;
-			s_Data.QuadBuffer.QuadVertexBufferPtr->EntityID = entityID;
-			++s_Data.QuadBuffer.QuadVertexBufferPtr;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->Position = transform * s_Data.PrimitiveBuffer.QuadVertexPositions[i];
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->Color = tintColor;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->UvOffset = uvOffset;
+			s_Data.PrimitiveBuffer.QuadVertexBufferPtr->EntityID = entityID;
+			++s_Data.PrimitiveBuffer.QuadVertexBufferPtr;
 		}
 
-		s_Data.QuadBuffer.QuadIndexCount += 6;
+		s_Data.PrimitiveBuffer.QuadIndexCount += 6;
 
 		++s_Data.Stats.QuadCount;
 	}
@@ -325,6 +400,96 @@ namespace ZeoEngine {
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
 		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
+	}
+
+	void Renderer::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID)
+	{
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->Position = p0;
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->Color = color;
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->EntityID = entityID;
+		++s_Data.PrimitiveBuffer.LineVertexBufferPtr;
+
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->Position = p1;
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->Color = color;
+		s_Data.PrimitiveBuffer.LineVertexBufferPtr->EntityID = entityID;
+		++s_Data.PrimitiveBuffer.LineVertexBufferPtr;
+
+		s_Data.PrimitiveBuffer.LineVertexCount += 2;
+	}
+
+	float Renderer::GetLineThickness()
+	{
+		return s_Data.PrimitiveBuffer.LineThickness;
+	}
+
+	void Renderer::SetLineThickness(float thickness)
+	{
+		s_Data.PrimitiveBuffer.LineThickness = thickness;
+	}
+
+	void Renderer::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityID)
+	{
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		DrawLine(p0, p1, color);
+		DrawLine(p1, p2, color);
+		DrawLine(p2, p3, color);
+		DrawLine(p3, p0, color);
+	}
+
+	void Renderer::DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
+	{
+		glm::vec3 lineVertices[4];
+		for (uint32_t i = 0; i < 4; ++i)
+		{
+			lineVertices[i] = transform * s_Data.PrimitiveBuffer.QuadVertexPositions[i];
+		}
+		DrawLine(lineVertices[0], lineVertices[1], color);
+		DrawLine(lineVertices[1], lineVertices[2], color);
+		DrawLine(lineVertices[2], lineVertices[3], color);
+		DrawLine(lineVertices[3], lineVertices[0], color);
+	}
+
+	void Renderer::DrawCircle(const glm::mat4& transform, const glm::vec4& color, uint32_t segaments, int32_t entityID)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		// TODO:
+		//if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
+		//{
+		//	NextBatch();
+		//}
+
+		float radius = 0.5f;
+		float angle = 0.0f;
+		const float doublePi = glm::pi<float>() * 2.0f;
+		for (uint32_t i = 0; i < segaments; ++i)
+		{
+			float x = radius * cos(angle);
+			float y = radius * sin(angle);
+			float z = 0.0f;
+			s_Data.PrimitiveBuffer.CircleVertexBufferPtr->Position = transform * glm::vec4(x, y, z, 1.0f);
+			s_Data.PrimitiveBuffer.CircleVertexBufferPtr->Color = color;
+			s_Data.PrimitiveBuffer.CircleVertexBufferPtr->EntityID = entityID;
+			++s_Data.PrimitiveBuffer.CircleVertexBufferPtr;
+
+			angle += doublePi / segaments;
+		}
+
+		uint32_t* base = s_Data.PrimitiveBuffer.CircleIndexBufferPtr;
+		uint32_t offset = s_Data.PrimitiveBuffer.CircleIndexCount / 2;
+		for (uint32_t i = 0; i < segaments; ++i)
+		{
+			*s_Data.PrimitiveBuffer.CircleIndexBufferPtr = offset + i;
+			++s_Data.PrimitiveBuffer.CircleIndexBufferPtr;
+
+			*s_Data.PrimitiveBuffer.CircleIndexBufferPtr = i == segaments - 1 ? *base : offset + i + 1;
+			++s_Data.PrimitiveBuffer.CircleIndexBufferPtr;
+		}
+
+		s_Data.PrimitiveBuffer.CircleIndexCount += segaments * 2;
 	}
 
 	Statistics& Renderer::GetStats()

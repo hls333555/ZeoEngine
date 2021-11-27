@@ -17,7 +17,8 @@ namespace ZeoEngine {
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0) override;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) override;
 		virtual void DrawInstanced(uint32_t instanceCount) override;
-		virtual void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) override;
+		virtual void DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) override;
+		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 		virtual void SetLineThickness(float thickness) override;
 
 		virtual void ToggleFaceCulling(bool bEnable) override;

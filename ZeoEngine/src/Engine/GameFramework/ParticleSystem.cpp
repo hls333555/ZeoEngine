@@ -178,7 +178,7 @@ namespace ZeoEngine {
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
+		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() }, this);
 	}
 
 	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()

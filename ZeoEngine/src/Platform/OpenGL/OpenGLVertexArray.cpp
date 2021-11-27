@@ -137,4 +137,13 @@ namespace ZeoEngine {
 		m_IBO = indexBuffer;
 	}
 
+	void OpenGLVertexArray::SetIndexBufferData(const void* data, uint32_t size) const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindVertexArray(m_RendererID);
+		// Do not need to bind index buffer as its binding state is saved in vao
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, data);
+	}
+
 }

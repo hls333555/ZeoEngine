@@ -235,7 +235,7 @@ namespace ZeoEngine {
 	{
 		if (GetPath().empty()) return;
 
-		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
+		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial(), this);
 		// Apply uniform datas after loading
 		GetMaterial()->ApplyUniformDatas();
 	}

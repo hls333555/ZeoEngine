@@ -6,6 +6,7 @@
 #include "Core/EditorTypes.h"
 #include "Editors/LevelEditor.h"
 #include "Engine/Renderer/RendererAPI.h"
+#include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
 
@@ -98,11 +99,11 @@ namespace ZeoEngine {
 		{
 			ParticleSystemInstance::Create(particleComp);
 		});
+	}
 
-		m_Registry.view<LightComponent>().each([](auto entity, auto& lightComp)
-		{
-			lightComp.GetHelper<LightComponentHelper>()->InitLight();
-		});
+	Entity LevelEditorScene::GetSelectedEntity() const
+	{
+		return m_SceneEditor->GetContextEntity();
 	}
 
 }

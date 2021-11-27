@@ -13,19 +13,6 @@
 
 namespace ZeoEngine {
 
-	struct QuadVertex
-	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-		glm::vec2 TexCoord;
-		glm::vec2 TilingFactor;
-		glm::vec2 UvOffset;
-		float TexIndex;
-
-		// Editor-only
-		int32_t EntityID;
-	};
-
 	struct CircleVertex
 	{
 		glm::vec3 WorldPosition;
@@ -33,15 +20,6 @@ namespace ZeoEngine {
 		glm::vec4 Color;
 		float Thickness;
 		float Fade;
-
-		// Editor-only
-		int32_t EntityID;
-	};
-
-	struct LineVertex
-	{
-		glm::vec3 Position;
-		glm::vec4 Color;
 
 		// Editor-only
 		int32_t EntityID;

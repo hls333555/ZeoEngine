@@ -427,7 +427,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::Deserialize(const YAML::Node& value, entt::meta_any& instance)
+	void ComponentSerializer::Deserialize(const YAML::Node& value, entt::meta_any& instance, IAsset* asset)
 	{
 		if (!instance) return;
 
@@ -441,6 +441,7 @@ namespace ZeoEngine {
 			if (dataValue)
 			{
 				EvaluateDeserializeData(data, instance, dataValue, false);
+				asset->PostDataDeserialize(instance, data.id());
 			}
 		}
 	}
@@ -714,13 +715,13 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool AssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	bool AssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset)
 	{
 		auto data = ReadDataFromAsset(path, typeId);
 		if (!data) return false;
 
 		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
+		cs.Deserialize(*data, instance, asset);
 		return true;
 	}
 
@@ -740,7 +741,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset)
 	{
 		auto data = ReadDataFromAsset(path, typeId);
 		if (!data) return false;
@@ -755,7 +756,7 @@ namespace ZeoEngine {
 			}
 		}
 		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
+		cs.Deserialize(*data, instance, asset);
 		return true;
 	}
 
@@ -777,14 +778,14 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material)
+	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material, IAsset* asset)
 	{
 		auto data = ReadDataFromAsset(path, typeId);
 		if (!data) return false;
 
 		// Derialize component data
 		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
+		cs.Deserialize(*data, instance, asset);
 
 		// Derialize shader uniform data
 		MaterialSerializer ms;
@@ -825,7 +826,7 @@ namespace ZeoEngine {
 		out << YAML::EndMap;
 	}
 
-	static void DeserializeEntity(const YAML::Node& entity, const Ref<Scene>& scene)
+	static void DeserializeEntity(const YAML::Node& entity, const Ref<Scene>& scene, IAsset* asset)
 	{
 		uint64_t uuid = entity["Entity"].as<uint64_t>();
 		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
@@ -844,7 +845,7 @@ namespace ZeoEngine {
 				if (compInstance)
 				{
 					ComponentSerializer cs;
-					cs.Deserialize(component, compInstance);
+					cs.Deserialize(component, compInstance, asset);
 				}
 			}
 		}
@@ -874,7 +875,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
+	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene, IAsset* asset)
 	{
 		auto data = ReadDataFromAsset(path, SceneAsset::TypeId());
 		if (!data) return false;
@@ -884,7 +885,7 @@ namespace ZeoEngine {
 		{
 			for (auto entity : entities)
 			{
-				DeserializeEntity(entity, scene);
+				DeserializeEntity(entity, scene, asset);
 			}
 		}
 		return true;

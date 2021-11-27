@@ -34,7 +34,7 @@ namespace ZeoEngine {
 	{
 		Renderer::BeginScene(camera, true);
 		{
-			OnRender(camera.GetPosition());
+			OnRender();
 		}
 		Renderer::EndScene();
 	}
@@ -56,28 +56,82 @@ namespace ZeoEngine {
 		{
 			Renderer::BeginScene(*mainCamera, cameraTransform);
 			{
-				const glm::vec3 cameraPosition = glm::vec3(cameraTransform[3]);
-				OnRender(cameraPosition);
+				OnRender();
 			}
 			Renderer::EndScene();
 		}
 	}
 
-	void RenderSystem::OnRender(const glm::vec3& cameraPosition)
+	void RenderSystem::OnRender()
 	{
 		// Setup lights
-		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
+		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
 			switch (lightComp.Type)
 			{
 				case LightComponent::LightType::DirectionalLight:
-					Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+				{
+					const auto& directionalLight = lightComp.GetLight<DirectionalLight>();
+					Renderer::SetupDirectionalLight(transformComp.Rotation, directionalLight);
+
+					// Draw arrow visualizer when selected
+					if (m_Scene->GetSelectedEntity() == entity)
+					{
+						const glm::vec3 forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
+						const glm::vec3 up = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 1.0f, 0.0f });
+						const glm::vec3 right = glm::rotate(glm::quat(transformComp.Rotation), { 1.0f, 0.0f, 0.0f });
+						const glm::vec3 endPosition = transformComp.Translation + glm::normalize(forward) * 1.0f;
+
+						const glm::mat4 rotationMatrixUp = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), up);
+						const glm::vec3 directionUp = rotationMatrixUp * glm::vec4(-forward, 1.0f);
+						const glm::vec3 endPositionUp = endPosition + glm::normalize(directionUp) * 0.2f;
+
+						const glm::mat4 rotationMatrixDown = glm::rotate(glm::mat4(1.0f), glm::radians(-45.0f), up);
+						const glm::vec3 directionDown = rotationMatrixDown * glm::vec4(-forward, 1.0f);
+						const glm::vec3 endPositionDown = endPosition + glm::normalize(directionDown) * 0.2f;
+
+						const glm::mat4 rotationMatrixRight = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), right);
+						const glm::vec3 directionRight = rotationMatrixRight * glm::vec4(-forward, 1.0f);
+						const glm::vec3 endPositionRight = endPosition + glm::normalize(directionRight) * 0.2f;
+
+						const glm::mat4 rotationMatrixLeft = glm::rotate(glm::mat4(1.0f), glm::radians(-45.0f), right);
+						const glm::vec3 directionLeft = rotationMatrixLeft * glm::vec4(-forward, 1.0f);
+						const glm::vec3 endPositionLeft = endPosition + glm::normalize(directionLeft) * 0.2f;
+
+						const glm::vec4 color = { 0.5f, 0.5f, 0.5f, 1.0f };
+						Renderer::DrawLine(transformComp.Translation, endPosition, color);
+						Renderer::DrawLine(endPosition, endPositionUp, color);
+						Renderer::DrawLine(endPosition, endPositionDown, color);
+						Renderer::DrawLine(endPosition, endPositionRight, color);
+						Renderer::DrawLine(endPosition, endPositionLeft, color);
+					}
 					break;
+				}
 				case LightComponent::LightType::PointLight:
-					Renderer::AddPointLight(transformComp.Translation, lightComp.GetLight<PointLight>());
+				{
+					const auto& pointLight = lightComp.GetLight<PointLight>();
+					Renderer::AddPointLight(transformComp.Translation, pointLight);
+
+					// Draw sphere visualizer when selected
+					if (m_Scene->GetSelectedEntity() == entity)
+					{
+						const glm::mat4 translation = glm::translate(glm::mat4(1.0f), transformComp.Translation);
+						float radius = pointLight->GetRadius() * 2.0f;
+						const glm::mat4 scale = glm::scale(glm::mat4(1.0f), { radius, radius, 1.0f });
+						const glm::mat4 transformXY = translation * scale;
+						const glm::mat4 transformXZ = translation * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }) * scale;
+						const glm::mat4 transformYZ = translation * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), { 0.0f, 1.0f, 0.0f }) * scale;
+						const glm::vec4 color = { 0.5f, 0.5f, 0.5f, 1.0f };
+						Renderer::DrawCircle(transformXY, color);
+						Renderer::DrawCircle(transformXZ, color);
+						Renderer::DrawCircle(transformYZ, color);
+					}
 					break;
+				}
 				case LightComponent::LightType::SpotLight:
+				{
 					break;
+				}
 				default:
 					break;
 			}
@@ -94,11 +148,13 @@ namespace ZeoEngine {
 		});
 
 		// Render billboards
-		ForEachComponentView<TransformComponent, BillboardComponent>([](auto entity, auto& transformComp, auto& billboardComp)
+		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
 		{
 			if (billboardComp.Texture)
 			{
-				Renderer::DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), {1.0f, 1.0f}, {0.0f, 0.0f}, glm::vec4(1.0f), static_cast<int32_t>(entity));
+				Entity entity = { e, m_Scene };
+				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
+				Renderer::DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
 		});
 	}

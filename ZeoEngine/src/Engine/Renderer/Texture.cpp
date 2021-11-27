@@ -92,7 +92,7 @@ namespace ZeoEngine {
 	{
 		if (GetPath().empty()) return;
 
-		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {});  // TODO: Update component instance here
+		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {}, this);  // TODO: Update component instance here
 	}
 
 }

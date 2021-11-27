@@ -5,15 +5,6 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 
-template<typename Type, typename Other>
-entt::resource_handle<Type> dynamic_resource_handle_cast(const entt::resource_handle<Other>& other) {
-	if (other->TypeId() == entt::type_hash<Type>()) {
-		return entt::resource_handle<Type>{other, static_cast<Type&>(other.get())};
-	}
-
-	return {};
-}
-
 namespace ZeoEngine {
 
 	class IAsset
@@ -27,6 +18,7 @@ namespace ZeoEngine {
 
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
+		virtual void PostDataDeserialize(entt::meta_any& compInstance, uint32_t dataId) {}
 
 		virtual void Reload() = 0;
 	};

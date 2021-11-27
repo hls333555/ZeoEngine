@@ -46,9 +46,15 @@ namespace ZeoEngine {
 		}
 
 		/** Issue a draw call. */
-		static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+		static void DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
 		{
-			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+			s_RendererAPI->DrawLine(vertexArray, vertexCount);
+		}
+
+		/** Issue a draw call. */
+		static void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
+		{
+			s_RendererAPI->DrawLineIndexed(vertexArray, indexCount);
 		}
 
 		static void SetLineThickness(float thickness)

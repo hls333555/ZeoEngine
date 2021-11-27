@@ -183,7 +183,7 @@ namespace ZeoEngine {
 
 			s_Data.LineShader->Bind();
 			RenderCommand::SetLineThickness(s_Data.LineThickness);
-			RenderCommand::DrawLines(s_Data.LineVAO, s_Data.LineVertexCount);
+			RenderCommand::DrawLine(s_Data.LineVAO, s_Data.LineVertexCount);
 			++s_Data.Stats.DrawCalls;
 		}
 	}
@@ -200,6 +200,8 @@ namespace ZeoEngine {
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
+
+		ResetStats();
 	}
 
 	void Renderer2D::NextBatch()

@@ -63,6 +63,17 @@ namespace ZeoEngine {
 	// IndexBuffer ///////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
+	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t count)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		// Call glCreateBuffers() instead of glGenBuffers() just for consistency
+		glCreateBuffers(1, &m_RendererID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
+		// Since index buffer state is managed by vao, index buffer data is manipulated in VertexArray::SetIndexBufferData
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+	}
+
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
 		: m_Count(count)
 	{

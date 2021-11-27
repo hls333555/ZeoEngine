@@ -61,7 +61,7 @@ namespace ZeoEngine {
 		virtual void OnDestroy() override;
 
 	private:
-		void OnRender(const glm::vec3& cameraPosition);
+		void OnRender();
 	};
 
 	class RenderSystem2D : public RenderSystem

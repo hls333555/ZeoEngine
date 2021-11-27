@@ -24,6 +24,8 @@ namespace ZeoEngine {
 
 		virtual void PostLoad() override;
 
+		virtual Entity GetSelectedEntity() const override;
+
 	private:
 		void OnUpdateEditor(DeltaTime dt);
 		void OnUpdateRuntime(DeltaTime dt);

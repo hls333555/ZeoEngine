@@ -47,6 +47,11 @@ namespace ZeoEngine {
 		SortEntities();
 	}
 
+	Entity Scene::GetSelectedEntity() const
+	{
+		return {};
+	}
+
 	void Scene::SortEntities()
 	{
 		// Sort entities by creation index
@@ -99,7 +104,17 @@ namespace ZeoEngine {
 		if (GetPath().empty()) return;
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetPath(), m_Scene);
+		SceneSerializer::Deserialize(GetPath(), m_Scene, this);
+	}
+
+	void SceneAsset::PostDataDeserialize(entt::meta_any& compInstance, uint32_t dataId)
+	{
+		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
+		auto* lightComp = compInstance.try_cast<LightComponent>();
+		if (lightComp && dataId == ZDATA_ID(Type))
+		{
+			lightComp->GetHelper<LightComponentHelper>()->InitLight();
+		}
 	}
 
 }

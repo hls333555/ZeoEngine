@@ -260,7 +260,7 @@ namespace ZeoEngine {
 			frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my), glm::value_ptr(pixel));
 			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel.x), GetContextEditor()->GetScene().get());
 
-			auto& Stats = Renderer2D::GetStats();
+			auto& Stats = Renderer::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;
 		}
 	}

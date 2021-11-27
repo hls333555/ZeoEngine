@@ -345,13 +345,13 @@ namespace ZeoEngine {
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
 		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
-		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); }
+		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); } 
 	};
 
 	struct BillboardComponent : public IComponent
 	{
 		AssetHandle<Texture2DAsset> Texture;
-		glm::vec2 Size{ 0.25f, 0.25f };
+		glm::vec2 Size{ 0.5f, 0.5f };
 
 		BillboardComponent() = default;
 		BillboardComponent(const BillboardComponent&) = default;

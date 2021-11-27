@@ -18,8 +18,8 @@ namespace ZeoEngine {
 	void StatsPanel::ProcessRender()
 	{
 		// TODO:
-		auto& Stats = Renderer2D::GetStats();
-		if (ImGui::TreeNodeEx("2D Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+		auto& Stats = Renderer::GetStats();
+		if (ImGui::TreeNodeEx("Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
 			ImGui::Text("Draw Calls: %d", Stats.DrawCalls);
 			ImGui::Text("Quads: %d", Stats.QuadCount);
@@ -37,18 +37,18 @@ namespace ZeoEngine {
 			ImGui::TreePop();
 		}
 		
-		if (ImGui::TreeNodeEx("Particle Template", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-		{
-			ParticleTemplateAssetLibrary::Get().ForEach([&](const entt::id_type id, const AssetHandle<ParticleTemplateAsset>& pTemplate)
-			{
-				std::ostringstream stringStream;
-				stringStream << pTemplate->GetPath() << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";
-				std::string pTemplateInfo = stringStream.str();
-				ImGui::Text(pTemplateInfo.c_str());
-			});
+		//if (ImGui::TreeNodeEx("Particle Template", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+		//{
+		//	ParticleTemplateAssetLibrary::Get().ForEach([&](const entt::id_type id, const AssetHandle<ParticleTemplateAsset>& pTemplate)
+		//	{
+		//		std::ostringstream stringStream;
+		//		stringStream << pTemplate->GetPath() << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";
+		//		std::string pTemplateInfo = stringStream.str();
+		//		ImGui::Text(pTemplateInfo.c_str());
+		//	});
 
-			ImGui::TreePop();
-		}
+		//	ImGui::TreePop();
+		//}
 	}
 
 }
