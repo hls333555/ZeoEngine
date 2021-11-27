@@ -111,13 +111,14 @@ namespace ZeoEngine {
 			return;
 		}
 
-		auto compInstance = Reflection::CopyComponent(compType, m_Scene->m_Registry, m_EntityHandle, srcEntity.GetComponentById(compId));
+		auto srcCompInstance = srcEntity.GetComponentById(compId);
+		auto compInstance = Reflection::CopyComponent(compType, m_Scene->m_Registry, m_EntityHandle, srcCompInstance);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->CreateHelper(this);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->OnComponentCopied();
+			comp->ComponentHelper->OnComponentCopied(comp);
 			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}
 	}

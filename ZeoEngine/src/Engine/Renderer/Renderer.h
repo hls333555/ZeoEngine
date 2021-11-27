@@ -49,16 +49,19 @@ namespace ZeoEngine {
 	{
 		uint32_t DrawCalls = 0;
 		uint32_t QuadCount = 0;
+		uint32_t LineVertexCount = 0;
+		uint32_t MeshVertexCount = 0;
 
 		Entity HoveredEntity;
 
-		uint32_t GetTotalVertexCount() const { return QuadCount * 4; }
-		uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
+		uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineVertexCount + MeshVertexCount; }
 
 		void Reset()
 		{
 			DrawCalls = 0;
 			QuadCount = 0;
+			LineVertexCount = 0;
+			MeshVertexCount = 0;
 			HoveredEntity = {};
 		}
 	};
@@ -155,7 +158,7 @@ namespace ZeoEngine {
 		Ref<Shader> GridShader;
 		bool bDrawGrid = false;
 
-		static const int MAX_POINT_LIGHTS = 32;
+		static const int32_t MAX_POINT_LIGHTS = 32;
 		struct LightDataBase
 		{
 			glm::vec4 Color;
@@ -237,7 +240,6 @@ namespace ZeoEngine {
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, uint32_t segaments = 32, int32_t entityID = -1);
 
-		// TODO:
 		static Statistics& GetStats();
 		static void ResetStats();
 

@@ -53,6 +53,9 @@ namespace ZeoEngine {
 		}
 		uint32_t GetMaterialCount() const { return static_cast<uint32_t>(m_MaterialSlots.size()); }
 
+		uint32_t GetVertexCount() const { return m_VertexCount; }
+		uint32_t GetIndexCount() const { return m_IndexCount; }
+
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
 		void LoadMeshEntries(const aiScene* meshScene);

@@ -309,6 +309,7 @@ namespace ZeoEngine {
 		if (!mesh) return;
 
 		s_Data.RenderQueue.emplace_back(mesh->GetVAO(), mesh->GetMeshEntries(), mesh->GetMeshCount(), mesh->GetMaterials().data(), mesh->GetMaterialCount(), transform, entityID);
+		s_Data.Stats.MeshVertexCount += mesh->GetVertexCount();
 	}
 
 	void Renderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
@@ -398,8 +399,9 @@ namespace ZeoEngine {
 		glm::mat4 lookAtMatrix = glm::lookAt(position, s_Data.CameraBuffer.Position, { 0.0f, 1.0f, 0.0f });
 		glm::mat4 transform = glm::inverse(lookAtMatrix) *
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
+		glm::vec4 color = tintColor;
+		color.a = 1.0f;
+		DrawQuad(transform, texture, tilingFactor, uvOffset, color, entityID);
 	}
 
 	void Renderer::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID)
@@ -415,6 +417,7 @@ namespace ZeoEngine {
 		++s_Data.PrimitiveBuffer.LineVertexBufferPtr;
 
 		s_Data.PrimitiveBuffer.LineVertexCount += 2;
+		s_Data.Stats.LineVertexCount += 2;
 	}
 
 	float Renderer::GetLineThickness()
@@ -490,6 +493,7 @@ namespace ZeoEngine {
 		}
 
 		s_Data.PrimitiveBuffer.CircleIndexCount += segaments * 2;
+		s_Data.Stats.LineVertexCount += segaments;
 	}
 
 	Statistics& Renderer::GetStats()

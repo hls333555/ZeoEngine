@@ -24,7 +24,6 @@ namespace ZeoEngine {
 			ImGui::Text("Draw Calls: %d", Stats.DrawCalls);
 			ImGui::Text("Quads: %d", Stats.QuadCount);
 			ImGui::Text("Vertices: %d", Stats.GetTotalVertexCount());
-			ImGui::Text("Indices: %d", Stats.GetTotalIndexCount());
 
 			ImGui::TreePop();
 		}

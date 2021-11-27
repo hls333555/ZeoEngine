@@ -27,7 +27,7 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
-	void ParticleSystemComponentHelper::OnComponentCopied()
+	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		ParticleSystemInstance::Create(particleComp);
@@ -88,6 +88,20 @@ namespace ZeoEngine {
 		InitLight();
 	}
 
+	void LightComponentHelper::OnComponentCopied(IComponent* otherComp)
+	{
+		// Perform the deep copy of smart pointer
+		auto* otherLightComp = static_cast<LightComponent*>(otherComp);
+		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
+		switch (lightComp.Type)
+		{
+			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::dynamic_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::dynamic_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::dynamic_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
+			default: break;
+		}
+	}
+
 	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
 		if (dataId == ZDATA_ID(Type))
@@ -103,15 +117,15 @@ namespace ZeoEngine {
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:
-				lightComp.Light = CreateRef<DirectionalLight>();
+				lightComp.LightSource = CreateRef<DirectionalLight>();
 				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
-				lightComp.Light = CreateRef<PointLight>();
+				lightComp.LightSource = CreateRef<PointLight>();
 				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
-				lightComp.Light = CreateRef<SpotLight>();
+				lightComp.LightSource = CreateRef<SpotLight>();
 				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/SpotLight.png.zasset");
 				break;
 			default:

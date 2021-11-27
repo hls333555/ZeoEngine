@@ -300,7 +300,7 @@ namespace ZeoEngine {
 
 	struct LightComponent : public IComponent
 	{
-		Ref<Light> Light;
+		Ref<Light> LightSource;
 
 		enum class LightType
 		{
@@ -312,7 +312,7 @@ namespace ZeoEngine {
 		LightComponent() = default;
 		explicit LightComponent(LightType type)
 			: Type(type) {}
-		LightComponent(const LightComponent&) = default;
+		LightComponent(const LightComponent& rhs) = default;
 
 		virtual void CreateHelper(Entity* entity) override
 		{
@@ -324,15 +324,15 @@ namespace ZeoEngine {
 		template<typename T>
 		Ref<T> GetLight()
 		{
-			return std::dynamic_pointer_cast<T>(Light);
+			return std::dynamic_pointer_cast<T>(LightSource);
 		}
 
-		const glm::vec4& GetColor() const { return Light->GetColor(); }
-		void SetColor(const glm::vec4& color) { Light->SetColor(color); }
-		float GetIntensity() const { return Light->GetIntensity(); }
-		void SetIntensity(float intensity) { return Light->SetIntensity(intensity); }
-		float GetRadius() const { return Light->GetRadius(); }
-		void SetRadius(float radius) { Light->SetRadius(radius); }
+		const glm::vec4& GetColor() const { return LightSource->GetColor(); }
+		void SetColor(const glm::vec4& color) { LightSource->SetColor(color); }
+		float GetIntensity() const { return LightSource->GetIntensity(); }
+		void SetIntensity(float intensity) { return LightSource->SetIntensity(intensity); }
+		float GetRadius() const { return LightSource->GetRadius(); }
+		void SetRadius(float radius) { LightSource->SetRadius(radius); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent
