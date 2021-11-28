@@ -13,4 +13,6 @@ namespace ZeoEngine::Math {
 	/** Interpolate vector from current to target. Scaled by distance to Target, so it has a strong start speed and ease out. */
 	glm::vec3 InterpTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed);
 
+	/** Interpolate vector from current to target with constant step */
+	glm::vec3 InterpConstantTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed);
 }

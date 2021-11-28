@@ -31,7 +31,7 @@ namespace ZeoEngine {
 			OnViewportResize(m_LastViewportSize);
 		}
 
-		m_EditorCamera.OnUpdate(dt, IsPanelFocused());
+		m_EditorCamera.OnUpdate(dt, IsPanelHovered());
 	}
 
 	void EditorViewPanelBase::ProcessRender()
@@ -68,6 +68,14 @@ namespace ZeoEngine {
 		// Move cursor back to top
 		ImGui::SetCursorPosY(viewportMinRegion.y);
 		RenderToolbar();
+
+	#if EditorCameraDebug
+		ImGui::Begin("Editor Camera Debug");
+		ImGui::Checkbox("IsLastViewportHovered", &m_EditorCamera.m_bLastIsViewportHovered);
+		ImGui::Checkbox("IsFirstPress", &m_EditorCamera.m_bIsFirstPress);
+		ImGui::Text("Mode: %d", m_EditorCamera.m_CameraControlModes);
+		ImGui::End();
+	#endif
 	}
 
 	void EditorViewPanelBase::ProcessEvent(Event& e)

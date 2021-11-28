@@ -37,6 +37,8 @@ namespace ZeoEngine {
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
 
+		void FocusPanel();
+
 		void Open();
 		void Close();
 
@@ -58,6 +60,7 @@ namespace ZeoEngine {
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;
+		bool m_bShouldFocusPanel = false;
 	};
 
 }

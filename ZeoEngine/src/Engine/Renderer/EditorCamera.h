@@ -12,14 +12,13 @@ namespace ZeoEngine {
 
 	class EditorCamera : public Camera
 	{
+		friend EditorViewPanelBase;
+
 	public:
 		EditorCamera() = default;
 		EditorCamera(float fovy, float aspectRatio, float nearClip, float farClip);
 
-		void OnUpdate(DeltaTime dt, bool bIsViewportFocused);
-
-		/** Returns true when being manipulated. */
-		bool IsUsing() const { return m_bIsUsing; }
+		void OnUpdate(DeltaTime dt, bool bIsViewportHovered);
 
 		void StartFocusEntity(Entity entity);
 
@@ -27,6 +26,10 @@ namespace ZeoEngine {
 
 		float GetDistance() const { return m_Distance; }
 		void SetDistance(float distance) { m_Distance = distance; }
+		float GetPitch() const { return m_Pitch; }
+		float GetYaw() const { return m_Yaw; }
+		float GetFpsMoveSpeed() const { return m_FpsMoveSpeed; }
+		void SetFpsMoveSpeed(float speed) { m_FpsMoveSpeed = speed; }
 
 		void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
 
@@ -41,12 +44,14 @@ namespace ZeoEngine {
 		const glm::vec3& GetPosition() const { return m_Position; }
 		glm::quat GetOrientation() const;
 
-		float GetPitch() const { return m_Pitch; }
-		float GetYaw() const { return m_Yaw; }
-
 	private:
 		void UpdateProjection();
 		void UpdateView();
+
+		void ProcessOrbitControl(bool bIsViewportHovered, const glm::vec2& delta);
+		void ProcessPanControl(bool bIsViewportHovered, const glm::vec2& delta);
+		void ProcessZoomControl(bool bIsViewportHovered, const glm::vec2& delta);
+		void ProcessFpsControl(bool bIsViewportHovered, const glm::vec2& delta, float dt);
 
 		void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
@@ -58,11 +63,16 @@ namespace ZeoEngine {
 		float CalculateRotationSpeed() const;
 		float CalculateZoomSpeed() const;
 
-	private:
-		bool m_bIsUsing = false;
+		bool IsControlModeReady(uint8_t mode);
+		void EnterControlMode(uint8_t mode);
+		void LeaveControlMode(uint8_t mode);
+		void SetOrbitMode();
+		void SetFpsMode();
+		void SetMouseLock(bool bLock);
 
+	private:
 		bool m_bStartLerpToFocus = false;
-		Entity m_FocusedEntity;
+		glm::vec3 m_FocusTargetPosition;
 
 		float m_FOVy = 90.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
@@ -70,12 +80,25 @@ namespace ZeoEngine {
 		glm::vec3 m_Position{ 0.0f };
 		glm::vec3 m_FocalPoint{ 0.0f };
 
-		glm::vec2 m_InitialMousePosition{ 0.0f };
-
-		float m_Distance = 10.0f;
+		float m_Distance = 10.0f, m_LastDistance = m_Distance;
 		float m_Pitch = glm::radians(30.0f), m_Yaw = glm::radians(30.0f);
+		float m_FpsMoveSpeed = 5.0f;
 
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
+
+		glm::vec2 m_InitialMousePosition{ 0.0f };
+		enum CameraControlMode : uint8_t
+		{
+			CameraControl_None = 0,
+			CameraControl_OrbitRotate = ZE_BIT(0),
+			CameraControl_Pan = ZE_BIT(1),
+			CameraControl_FPS = ZE_BIT(2),
+			CameraControl_Zoom = ZE_BIT(3),
+		};
+		uint8_t m_CameraControlModes = 0;
+		bool m_bIsFirstPress = true;
+		bool m_bIsRightMouseDragged = false;
+		bool m_bLastIsViewportHovered = false;
 	};
 
 }

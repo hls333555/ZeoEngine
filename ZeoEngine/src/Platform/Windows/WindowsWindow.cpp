@@ -2,6 +2,7 @@
 #include "WindowsWindow.h"
 
 #include <stb_image.h>
+#include <imgui.h>
 
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Events/KeyEvent.h"
@@ -90,6 +91,12 @@ namespace ZeoEngine {
 		// This way, we do not need to capture the m_Data for lambda functions
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(false);
+
+		// Enable raw mouse motion if supported
+		if (glfwRawMouseMotionSupported())
+		{
+			glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		}
 
 		// ---Set GLFW callbacks------------------------------------------------------------------------------------
 
@@ -211,6 +218,20 @@ namespace ZeoEngine {
 	bool WindowsWindow::IsVSync() const
 	{
 		return m_Data.bVSync;
+	}
+
+	void WindowsWindow::LockMouse(bool bLock)
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, bLock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		ImGuiIO& io = ImGui::GetIO();
+		if (bLock)
+		{
+			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		}
+		else
+		{
+			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		}
 	}
 
 }

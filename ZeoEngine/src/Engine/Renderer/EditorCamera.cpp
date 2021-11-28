@@ -9,6 +9,8 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Math/Math.h"
+#include "Engine/Core/Application.h"
+#include "Engine/debug/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
@@ -18,51 +20,36 @@ namespace ZeoEngine {
 		UpdateView();
 	}
 
-	void EditorCamera::OnUpdate(DeltaTime dt, bool bIsViewportFocused)
+	void EditorCamera::OnUpdate(DeltaTime dt, bool bIsViewportHovered)
 	{
-		m_bIsUsing = false;
-
 		const glm::vec2 mousePos = Input::GetMousePosition();
 		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;
 
-		if (m_bStartLerpToFocus && m_FocusedEntity)
+		if (m_bStartLerpToFocus)
 		{
-			m_bIsUsing = true;
-			const auto targetPos = m_FocusedEntity.GetTranslation();
-			m_FocalPoint = Math::InterpTo(m_FocalPoint, targetPos, dt, 13.0f);
-			if (m_FocalPoint == targetPos)
+			m_FocalPoint = Math::InterpTo(m_FocalPoint, m_FocusTargetPosition, dt, 13.0f);
+			if (m_FocalPoint == m_FocusTargetPosition)
 			{
 				m_bStartLerpToFocus = false;
-				m_bIsUsing = false;
 			}
 			UpdateView();
 		}
 
-		if (!bIsViewportFocused || ImGuizmo::IsUsing()) return;
+		if (ImGuizmo::IsUsing()) return;
 
-		// We should forbid operations that modify focal point during focusing
-		if (!m_bStartLerpToFocus && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
-		{
-			m_bIsUsing = true;
-			MousePan(delta);
-		}
-		
-		if (Input::IsKeyPressed(Key::CameraControl))
-		{
-			m_bIsUsing = true;
-
-			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-			{
-				MouseRotate(delta);
-			}
-			else if (ImGui::IsMouseDragging(ImGuiMouseButton_Right))
-			{
-				MouseZoom(delta.y);
-			}
-		}
+		//BEGIN_BENCHMARK()
+		ProcessOrbitControl(m_bLastIsViewportHovered, delta);
+		ProcessPanControl(m_bLastIsViewportHovered, delta);
+		ProcessZoomControl(m_bLastIsViewportHovered, delta);
+		ProcessFpsControl(m_bLastIsViewportHovered, delta, dt);
+		//END_BENCHMARK()
 
 		UpdateView();
+
+		// Record last hovering state
+		// Note that the hovering state will become inaccurate as soon as we set mouse to lock state
+		m_bLastIsViewportHovered = bIsViewportHovered;
 	}
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
@@ -76,7 +63,7 @@ namespace ZeoEngine {
 	void EditorCamera::StartFocusEntity(Entity entity)
 	{
 		// TODO: Consider entity's bounding box
-		m_FocusedEntity = entity;
+		m_FocusTargetPosition = entity.GetTranslation();
 		m_bStartLerpToFocus = true;
 	}
 
@@ -116,6 +103,153 @@ namespace ZeoEngine {
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
+	void EditorCamera::ProcessOrbitControl(bool bIsViewportHovered, const glm::vec2& delta)
+	{
+		// Only one control mode can take effect at a time
+		if (!IsControlModeReady(CameraControl_OrbitRotate)) return;
+
+		static bool bEnableControl = false;
+		if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+		{
+			if (Input::IsKeyPressed(Key::CameraControl))
+			{
+				// WORKAROUND: Disable alt toggle behavior
+				ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
+
+				// Set control mode once we are trying to manipulate
+				EnterControlMode(CameraControl_OrbitRotate);
+				// We detect first press hovering state so that the subsequent manipulation won't happen if we first press mouse in another panel
+				bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+				m_bIsFirstPress = false;
+				if (bEnableControl)
+				{
+					// The manipulation indeed take place, so mouse is locked
+					SetMouseLock(true);
+					MouseRotate(delta);
+				}
+			}
+		}
+		if (ImGui::IsMouseReleased(Mouse::ButtonLeft) && (m_CameraControlModes & CameraControl_OrbitRotate) > 0)
+		{
+			LeaveControlMode(CameraControl_OrbitRotate);
+		}
+	}
+
+	void EditorCamera::ProcessPanControl(bool bIsViewportHovered, const glm::vec2& delta)
+	{
+		if (!IsControlModeReady(CameraControl_Pan)) return;
+
+		static bool bEnableControl = false;
+		if (ImGui::IsMouseDragging(Mouse::ButtonMiddle))
+		{
+			EnterControlMode(CameraControl_Pan);
+			bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+			m_bIsFirstPress = false;
+			if (bEnableControl)
+			{
+				SetMouseLock(true);
+				MousePan(delta);
+			}
+		}
+		if (ImGui::IsMouseReleased(Mouse::ButtonMiddle) && (m_CameraControlModes & CameraControl_Pan) > 0)
+		{
+			LeaveControlMode(CameraControl_Pan);
+		}
+	}
+
+	void EditorCamera::ProcessZoomControl(bool bIsViewportHovered, const glm::vec2& delta)
+	{
+		if (!IsControlModeReady(CameraControl_Zoom)) return;
+
+		static bool bEnableControl = false;
+		if (ImGui::IsMouseDragging(Mouse::ButtonRight))
+		{
+			if (Input::IsKeyPressed(Key::CameraControl))
+			{
+				// WORKAROUND: Disable alt toggle behavior
+				ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
+
+				EnterControlMode(CameraControl_Zoom);
+				bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+				m_bIsFirstPress = false;
+				if (bEnableControl)
+				{
+					SetMouseLock(true);
+					MouseZoom(delta.y);
+				}
+			}
+		}
+		if (ImGui::IsMouseReleased(Mouse::ButtonRight) && (m_CameraControlModes & CameraControl_Zoom) > 0)
+		{
+			LeaveControlMode(CameraControl_Zoom);
+		}
+	}
+
+	void EditorCamera::ProcessFpsControl(bool bIsViewportHovered, const glm::vec2& delta, float dt)
+	{
+		if (!IsControlModeReady(CameraControl_FPS)) return;
+
+		static bool bEnableControl = false;
+		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+		{
+			// Due to IsDragging evaluation being later than IsPressed, we need to add a separate check here
+			bEnableControl = m_bIsFirstPress ? bIsViewportHovered && !Input::IsKeyPressed(Key::CameraControl) : bEnableControl;
+			// Clear first press only when Alt is not pressed, otherwise Alt-RightMouse control will fail
+			if (!Input::IsKeyPressed(Key::CameraControl))
+			{
+				m_bIsFirstPress = false;
+			}
+
+			if (ImGui::IsMouseDragging(Mouse::ButtonRight))
+			{
+				EnterControlMode(CameraControl_FPS);
+				if (bEnableControl)
+				{
+					SetMouseLock(true);
+					if (!m_bIsRightMouseDragged)
+					{
+						SetFpsMode();
+					}
+					m_bIsRightMouseDragged = true;
+					MouseRotate(delta);
+				}
+			}
+
+			if (bEnableControl)
+			{
+				EnterControlMode(CameraControl_FPS);
+				if (Input::IsKeyPressed(Key::W))
+				{
+					SetMouseLock(true);
+					m_FocalPoint += GetForwardVector() * m_FpsMoveSpeed * dt;
+				}
+				if (Input::IsKeyPressed(Key::S))
+				{
+					SetMouseLock(true);
+					m_FocalPoint -= GetForwardVector() * m_FpsMoveSpeed * dt;
+				}
+				if (Input::IsKeyPressed(Key::D))
+				{
+					SetMouseLock(true);
+					m_FocalPoint += GetRightVector() * m_FpsMoveSpeed * dt;
+				}
+				if (Input::IsKeyPressed(Key::A))
+				{
+					SetMouseLock(true);
+					m_FocalPoint -= GetRightVector() * m_FpsMoveSpeed * dt;
+				}
+			}			
+		}
+		if (ImGui::IsMouseReleased(Mouse::ButtonRight) && (m_CameraControlModes & CameraControl_FPS) > 0)
+		{
+			LeaveControlMode(CameraControl_FPS);
+			if (m_bIsRightMouseDragged)
+			{
+				SetOrbitMode();
+			}
+		}
+	}
+
 	void EditorCamera::MousePan(const glm::vec2& delta)
 	{
 		auto [xSpeed, ySpeed] = CalculatePanSpeed();
@@ -133,10 +267,9 @@ namespace ZeoEngine {
 	void EditorCamera::MouseZoom(float delta)
 	{
 		m_Distance -= delta * CalculateZoomSpeed();
-		if (m_Distance < 1.0f)
+		if (m_Distance < 0.5f)
 		{
-			m_FocalPoint += GetForwardVector();
-			m_Distance = 1.0f;
+			m_Distance = 0.5f;
 		}
 	}
 
@@ -168,6 +301,47 @@ namespace ZeoEngine {
 		float speed = distance * distance;
 		speed = glm::min(speed, 100.0f); // max speed = 100
 		return speed;
+	}
+
+	bool EditorCamera::IsControlModeReady(uint8_t mode)
+	{
+		return (m_CameraControlModes & ~mode) == 0;
+	}
+
+	void EditorCamera::EnterControlMode(uint8_t mode)
+	{
+		m_CameraControlModes |= mode;
+		// Disable focusing during camera manipulation
+		m_bStartLerpToFocus = false;
+	}
+
+	void EditorCamera::LeaveControlMode(uint8_t mode)
+	{
+		m_CameraControlModes &= ~mode;
+		SetMouseLock(false);
+		m_bIsFirstPress = true;
+	}
+
+	void EditorCamera::SetOrbitMode()
+	{
+		// Restore distance and recalculate focal point
+		m_Distance = m_LastDistance;
+		m_FocalPoint = m_Position + GetForwardVector() * m_Distance;
+		m_bIsRightMouseDragged = false;
+	}
+
+	void EditorCamera::SetFpsMode()
+	{
+		// Backup distance
+		m_LastDistance = m_Distance;
+		// Set focal point to camera itself
+		m_FocalPoint = m_Position;
+		m_Distance = 0.0f;
+	}
+
+	void EditorCamera::SetMouseLock(bool bLock)
+	{
+		Application::Get().GetWindow().LockMouse(bLock);
 	}
 
 }

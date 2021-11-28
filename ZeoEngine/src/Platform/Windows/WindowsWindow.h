@@ -24,6 +24,8 @@ namespace ZeoEngine {
 		virtual void SetVSync(bool bEnabled) override;
 		virtual bool IsVSync() const override;
 
+		virtual void LockMouse(bool bLock) override;
+
 		virtual void* GetNativeWindow() const override { return m_Window; }
 
 	private:

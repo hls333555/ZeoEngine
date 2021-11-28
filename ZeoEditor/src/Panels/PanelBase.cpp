@@ -36,10 +36,16 @@ namespace ZeoEngine {
 		}
 		ImGui::PopStyleVar();
 
-		// Press middle mouse button or right mouse button to focus panel
+		// WORKAROUND: Click middle mouse button or right mouse button to focus panel
 		if (m_bIsPanelHovered && (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) || Input::IsMouseButtonPressed(Mouse::ButtonRight)))
 		{
+			FocusPanel();
+		}
+
+		if (m_bShouldFocusPanel)
+		{
 			ImGui::FocusWindow(ImGui::GetCurrentWindow());
+			m_bShouldFocusPanel = false;
 		}
 
 		ImGui::End();
@@ -50,6 +56,11 @@ namespace ZeoEngine {
 		if (!m_bShow) return;
 
 		ProcessEvent(e);
+	}
+
+	void PanelBase::FocusPanel()
+	{
+		m_bShouldFocusPanel = true;
 	}
 
 	void PanelBase::Open()

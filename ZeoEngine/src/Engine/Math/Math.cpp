@@ -105,4 +105,26 @@ namespace ZeoEngine::Math {
 		return current + deltaMove;
 	}
 
+	glm::vec3 InterpConstantTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed)
+	{
+		const glm::vec3 delta = target - current;
+		const float deltaM = glm::length(delta);
+		const float maxStep = interpSpeed * dt;
+
+		if (deltaM > maxStep)
+		{
+			if (maxStep > 0.f)
+			{
+				const glm::vec3 deltaN = delta / deltaM;
+				return current + deltaN * maxStep;
+			}
+			else
+			{
+				return current;
+			}
+		}
+
+		return target;
+	}
+
 }
