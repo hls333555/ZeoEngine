@@ -840,7 +840,7 @@ namespace ZeoEngine {
 				// TODO: NativeScriptComponent deserialization
 				if (compId == entt::type_hash<NativeScriptComponent>::value()) continue;
 
-				entt::meta_any compInstance = deserializedEntity.GetOrAddComponentById(compId);
+				entt::meta_any compInstance = deserializedEntity.GetOrAddComponentById(compId, true);
 				// Instance may be null as compId is invalid
 				if (compInstance)
 				{

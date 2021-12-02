@@ -200,6 +200,9 @@ namespace ZeoEngine {
 	
 	const char* GetEnumDisplayName(const entt::meta_any& enumValue);
 
+	/** Returns true if the given type has any registered data. */
+	bool DoesTypeContainData(const entt::id_type compId);
+
 	template<typename T>
 	bool IsTypeEqual(entt::meta_type type)
 	{

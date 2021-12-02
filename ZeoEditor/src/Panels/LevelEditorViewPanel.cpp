@@ -119,7 +119,7 @@ namespace ZeoEngine {
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				m_GizmoType, ImGuizmo::WORLD,
+				m_GizmoType, ImGuizmo::LOCAL,
 				glm::value_ptr(entityTransform),
 				nullptr, bSnap ? snapValues : nullptr);
 
@@ -130,9 +130,7 @@ namespace ZeoEngine {
 
 				// This delta rotation prevents gimbal lock situation
 				glm::vec3 deltaRotation = outRotation - transformComp.Rotation;
-				transformComp.Translation = outTranslation;
-				transformComp.Rotation += deltaRotation;
-				transformComp.Scale = outScale;
+				selectedEntity.SetTransform(outTranslation, transformComp.Rotation + deltaRotation, outScale);
 			}
 		}
 	}

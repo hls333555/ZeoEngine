@@ -12,7 +12,8 @@ namespace ZeoEngine {
 		float GetIntensity() const { return m_Intensity; }
 		void SetIntensity(float intensity) { m_Intensity = intensity; }
 
-		virtual float GetRadius() const { return 0.0f; }
+		// TODO: Rename it to range
+		virtual float GetRadius() const { return 1.0f; }
 		virtual void SetRadius(float radius) {}
 
 	private:

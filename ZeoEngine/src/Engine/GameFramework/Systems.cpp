@@ -116,7 +116,7 @@ namespace ZeoEngine {
 					if (m_Scene->GetSelectedEntity() == entity)
 					{
 						const glm::mat4 translation = glm::translate(glm::mat4(1.0f), transformComp.Translation);
-						float radius = pointLight->GetRadius() * 2.0f;
+						float radius = pointLight->GetRadius();
 						const glm::mat4 scale = glm::scale(glm::mat4(1.0f), { radius, radius, 1.0f });
 						const glm::mat4 transformXY = translation * scale;
 						const glm::mat4 transformXZ = translation * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }) * scale;
@@ -146,8 +146,14 @@ namespace ZeoEngine {
 				Renderer::DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
 			}
 		});
+		
+		// Render bounds
+		ForEachComponentView<BoundsComponent>([this](auto entity, auto& boundsComp)
+		{
+			Renderer::DrawCircle(glm::translate(glm::mat4(1.0f), boundsComp.Bounds.Origin) * glm::scale(glm::mat4(1.0f), glm::vec3(boundsComp.Bounds.SphereRadius, boundsComp.Bounds.SphereRadius, 1.0f)), {1.0f, 1.0f, 1.0f, 1.0f});
+		});
 
-		// Render billboards
+		// Render billboards at last
 		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
 		{
 			if (billboardComp.Texture)

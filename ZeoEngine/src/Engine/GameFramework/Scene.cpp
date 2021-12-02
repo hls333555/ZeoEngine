@@ -22,6 +22,7 @@ namespace ZeoEngine {
 			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
 		entity.AddComponent<IDComponent>(uuid);
+		entity.AddComponent<BoundsComponent>();
 		entity.AddComponent<TransformComponent>();
 
 		// No need to sort if there is only one entity

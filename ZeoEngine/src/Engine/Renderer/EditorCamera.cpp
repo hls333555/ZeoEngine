@@ -26,10 +26,12 @@ namespace ZeoEngine {
 		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;
 
+		static const float lerpSpeed = 13.0f;
 		if (m_bStartLerpToFocus)
 		{
-			m_FocalPoint = Math::InterpTo(m_FocalPoint, m_FocusTargetPosition, dt, 13.0f);
-			if (m_FocalPoint == m_FocusTargetPosition)
+			m_FocalPoint = Math::VInterpTo(m_FocalPoint, m_FocusTargetFocalPoint, dt, lerpSpeed);
+			m_Distance = Math::FInterpTo(m_Distance, m_FocusTargetDistance, dt, lerpSpeed);
+			if (m_FocalPoint == m_FocusTargetFocalPoint && m_Distance == m_FocusTargetDistance)
 			{
 				m_bStartLerpToFocus = false;
 			}
@@ -62,8 +64,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::StartFocusEntity(Entity entity)
 	{
-		// TODO: Consider entity's bounding box
-		m_FocusTargetPosition = entity.GetTranslation();
+		m_FocusTargetFocalPoint = entity.GetBounds().Origin;
+		m_FocusTargetDistance = entity.GetBounds().SphereRadius * 1.2f / sin(glm::radians(m_FOVy / 2.0f));
 		m_bStartLerpToFocus = true;
 	}
 
@@ -252,6 +254,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::MousePan(const glm::vec2& delta)
 	{
+		// Disable focusing during camera manipulation
+		m_bStartLerpToFocus = false;
 		auto [xSpeed, ySpeed] = CalculatePanSpeed();
 		m_FocalPoint += -GetRightVector() * delta.x * xSpeed * m_Distance;
 		m_FocalPoint += GetUpVector() * delta.y * ySpeed * m_Distance;
@@ -259,6 +263,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::MouseRotate(const glm::vec2& delta)
 	{
+		// Disable focusing during camera manipulation
+		m_bStartLerpToFocus = false;
 		float yawSign = GetUpVector().y < 0.0f ? -1.0f : 1.0f;
 		m_Yaw += yawSign * delta.x * CalculateRotationSpeed();
 		m_Pitch += delta.y * CalculateRotationSpeed();
@@ -266,6 +272,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::MouseZoom(float delta)
 	{
+		// Disable focusing during camera manipulation
+		m_bStartLerpToFocus = false;
 		m_Distance -= delta * CalculateZoomSpeed();
 		if (m_Distance < 0.5f)
 		{
@@ -311,8 +319,6 @@ namespace ZeoEngine {
 	void EditorCamera::EnterControlMode(uint8_t mode)
 	{
 		m_CameraControlModes |= mode;
-		// Disable focusing during camera manipulation
-		m_bStartLerpToFocus = false;
 	}
 
 	void EditorCamera::LeaveControlMode(uint8_t mode)

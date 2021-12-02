@@ -5,6 +5,7 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
+#include "Engine/Math/BoxSphereBounds.h"
 
 struct aiScene;
 struct aiMesh;
@@ -55,6 +56,7 @@ namespace ZeoEngine {
 
 		uint32_t GetVertexCount() const { return m_VertexCount; }
 		uint32_t GetIndexCount() const { return m_IndexCount; }
+		const BoxSphereBounds& GetBounds() const { return m_Bounds; }
 
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
@@ -70,6 +72,7 @@ namespace ZeoEngine {
 		MeshVertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
+		BoxSphereBounds m_Bounds;
 
 		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
 	};

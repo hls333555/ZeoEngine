@@ -16,7 +16,32 @@ namespace ZeoEngine {
 		return m_Scene->m_Registry.valid(*this);
 	}
 
-	entt::meta_any Entity::AddComponentById(entt::id_type compId)
+	void Entity::UpdateBounds()
+	{
+		if (!HasComponent<TransformComponent>()) return;
+
+		Box boundingBox;
+		// For each component, accumulate its bounding box
+		for (const auto compId : GetOrderedComponentIds())
+		{
+			auto compInstance = GetComponentById(compId);
+			IComponent* comp = compInstance.try_cast<IComponent>();
+			if (comp->ComponentHelper)
+			{
+				boundingBox += comp->ComponentHelper->GetBounds().GetBox();
+			}
+		}
+		// If we create a new empty entity, give it a default bounds
+		GetComponent<BoundsComponent>().Bounds = boundingBox.bIsValid ? boundingBox : GetDefaultBounds();
+	}
+
+	BoxSphereBounds Entity::GetDefaultBounds()
+	{
+		auto& transformComp = GetComponent<TransformComponent>();
+		return BoxSphereBounds(transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f);
+	}
+
+	entt::meta_any Entity::AddComponentById(entt::id_type compId, bool bIsDeserialize)
 	{
 		auto compType = entt::resolve(compId);
 		if (!compType)
@@ -34,13 +59,19 @@ namespace ZeoEngine {
 		auto compInstance = Reflection::ConstructComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
+		// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
+		AddComponentId(compId);
 		comp->CreateHelper(this);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->OnComponentAdded();
+			comp->ComponentHelper->OnComponentAdded(bIsDeserialize);
+			// All bounds will be updated after deserialization
+			if (!bIsDeserialize)
+			{
+				UpdateBounds();
+			}
 			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
 		}
-		AddComponentId(compId);
 		
 		return compInstance;
 	}
@@ -55,6 +86,7 @@ namespace ZeoEngine {
 		}
 
 		RemoveComponentId(compId);
+		UpdateBounds();
 		Reflection::RemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
 	}
 
@@ -79,7 +111,7 @@ namespace ZeoEngine {
 		return bHas.cast<bool>();
 	}
 
-	entt::meta_any Entity::GetOrAddComponentById(entt::id_type compId)
+	entt::meta_any Entity::GetOrAddComponentById(entt::id_type compId, bool bIsDeserialize)
 	{
 		if (HasComponentById(compId))
 		{
@@ -87,7 +119,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			return AddComponentById(compId);
+			return AddComponentById(compId, bIsDeserialize);
 		}
 	}
 

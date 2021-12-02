@@ -20,21 +20,24 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
+			AddComponentId(entt::type_hash<T>::value());
 			comp.CreateHelper(this);
 			if (comp.ComponentHelper)
 			{
-				comp.ComponentHelper->OnComponentAdded();
+				comp.ComponentHelper->OnComponentAdded(false);
+				UpdateBounds();
 				m_Scene->m_Registry.on_destroy<T>().template connect<&IComponentHelper::OnComponentDestroy>(comp.ComponentHelper);
 			}
-			AddComponentId(entt::type_hash<T>::value());
 			return comp;
 		}
 
 		template<typename T>
-		void RemoveComponent()
+		auto RemoveComponent()
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			RemoveComponentId(entt::type_hash<T>::value());
+			UpdateBounds();
 			return m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
@@ -61,9 +64,21 @@ namespace ZeoEngine {
 		UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
 		const std::string& GetName() const { return GetComponent<CoreComponent>().Name; }
 		const glm::mat4& GetTransform() const { return GetComponent<TransformComponent>().GetTransform(); }
+		void SetTransform(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
+		{
+			auto& transformComp = GetComponent<TransformComponent>();
+			transformComp.Translation = translation;
+			transformComp.Rotation = rotation;
+			transformComp.Scale = scale;
+			UpdateBounds();
+		}
 		const glm::vec3& GetTranslation() const { return GetComponent<TransformComponent>().Translation; }
 		const glm::vec3& GetRotation() const { return GetComponent<TransformComponent>().Rotation; }
 		const glm::vec3& GetScale() const { return GetComponent<TransformComponent>().Scale; }
+		const BoxSphereBounds& GetBounds() const { return GetComponent<BoundsComponent>().Bounds; }
+
+		void UpdateBounds();
+		BoxSphereBounds GetDefaultBounds();
 
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
@@ -77,11 +92,11 @@ namespace ZeoEngine {
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	public:
-		entt::meta_any AddComponentById(entt::id_type compId);
+		entt::meta_any AddComponentById(entt::id_type compId, bool bIsDeserialize = false);
 		void RemoveComponentById(entt::id_type compId);
 		entt::meta_any GetComponentById(entt::id_type compId) const;
 		bool HasComponentById(entt::id_type compId) const;
-		entt::meta_any GetOrAddComponentById(entt::id_type compId);
+		entt::meta_any GetOrAddComponentById(entt::id_type compId, bool bIsDeserialize = false);
 		void CopyAllComponents(Entity srcEntity, const std::vector<uint32_t>& ignoredCompIds = {});
 		void CopyComponentById(entt::id_type compId, Entity srcEntity);
 

@@ -27,6 +27,16 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
+	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		GetOwnerEntity()->UpdateBounds();
+	}
+
+	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		GetOwnerEntity()->UpdateBounds();
+	}
+
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
@@ -82,7 +92,22 @@ namespace ZeoEngine {
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
 	}
 
-	void LightComponentHelper::OnComponentAdded()
+	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		if (dataId == ZDATA_ID(Mesh))
+		{
+			GetOwnerEntity()->UpdateBounds();
+		}
+	}
+
+	BoxSphereBounds MeshRendererComponentHelper::GetBounds()
+	{
+		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		return meshComp.Mesh ? meshComp.Mesh->GetMesh()->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+	}
+
+	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		GetOwnerEntity()->AddComponent<BillboardComponent>();
 		InitLight();
@@ -102,18 +127,45 @@ namespace ZeoEngine {
 		}
 	}
 
+	void LightComponentHelper::OnComponentDestroy()
+	{
+		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
+	}
+
+	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	{
+		if (dataId == ZDATA_ID(Radius))
+		{
+			GetOwnerEntity()->UpdateBounds();
+		}
+	}
+
 	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
 		if (dataId == ZDATA_ID(Type))
 		{
 			InitLight();
 		}
+		else if (dataId == ZDATA_ID(Radius))
+		{
+			GetOwnerEntity()->UpdateBounds();
+		}
+	}
+
+	BoxSphereBounds LightComponentHelper::GetBounds()
+	{
+		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
+		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
+		Sphere sphere{ transformComp.Translation, lightComp.LightSource->GetRadius() };
+		return sphere; // After conversion from BoxSphereBounds to Box, then to BoxSphereBounds, the SphereRadius is actually larger than current radius
 	}
 
 	void LightComponentHelper::InitLight()
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& billboardComp = GetOwnerEntity()->GetComponent<BillboardComponent>();
+		auto& boundsComp = GetOwnerEntity()->GetComponent<BoundsComponent>();
+		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:

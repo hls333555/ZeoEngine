@@ -99,6 +99,12 @@ namespace ZeoEngine {
 		{
 			ParticleSystemInstance::Create(particleComp);
 		});
+		
+		m_Registry.view<BoundsComponent>().each([this](auto e, auto& boundsComp)
+		{
+			Entity entity = { e, this };
+			entity.UpdateBounds();
+		});
 	}
 
 	Entity LevelEditorScene::GetSelectedEntity() const

@@ -101,15 +101,19 @@ namespace ZeoEngine {
 
 	void Mesh::LoadVertexData(const aiMesh* mesh, uint32_t baseIndex)
 	{
+		Box box;
 		for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 		{
 			const aiVector3D& position = mesh->mVertices[i];
 			const aiVector3D& normal = mesh->mNormals[i];
 			const aiVector3D& texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D();
-			m_VertexBuffer[baseIndex + i].Position = { position.x, position.y, position.z };
+			const glm::vec3 pos = { position.x, position.y, position.z };
+			box += pos;
+			m_VertexBuffer[baseIndex + i].Position = pos;
 			m_VertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
 			m_VertexBuffer[baseIndex + i].TexCoord = { texCoord.x, texCoord.y };
 		}
+		m_Bounds = m_Bounds + box;
 	}
 
 	void Mesh::LoadIndexData(const aiMesh* mesh, uint32_t baseIndex)

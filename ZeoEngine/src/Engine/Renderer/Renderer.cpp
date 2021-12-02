@@ -38,8 +38,8 @@ namespace ZeoEngine {
 				s_Data.PrimitiveBuffer.QuadVAO->AddVertexBuffer(s_Data.PrimitiveBuffer.QuadVBO);
 
 				s_Data.PrimitiveBuffer.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
-				s_Data.PrimitiveBuffer.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
-				s_Data.PrimitiveBuffer.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.0f };
+				s_Data.PrimitiveBuffer.QuadVertexPositions[2] = {  0.5f,  0.5f, 0.0f, 1.0f };
 				s_Data.PrimitiveBuffer.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
 				s_Data.PrimitiveBuffer.QuadVertexBufferBase = new QuadVertex[s_Data.PrimitiveBuffer.MaxVertices];
 
@@ -465,7 +465,7 @@ namespace ZeoEngine {
 		//	NextBatch();
 		//}
 
-		float radius = 0.5f;
+		float radius = 1.0f;
 		float angle = 0.0f;
 		const float doublePi = glm::pi<float>() * 2.0f;
 		for (uint32_t i = 0; i < segaments; ++i)

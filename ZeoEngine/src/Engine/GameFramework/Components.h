@@ -13,6 +13,7 @@
 #include "Engine/Renderer/Light.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
+#include "Engine/Math/BoxSphereBounds.h"
 
 namespace ZeoEngine {
 
@@ -68,6 +69,11 @@ namespace ZeoEngine {
 		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(const glm::vec3& translation)
 			: Translation(translation) {}
+
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<TransformComponentHelper>(entity);
+		}
 
 		static const char* GetIcon() { return ICON_FA_MAP_MARKER_ALT; }
 
@@ -293,6 +299,11 @@ namespace ZeoEngine {
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
+		}
+
 		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : MaterialsPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
@@ -355,6 +366,14 @@ namespace ZeoEngine {
 
 		BillboardComponent() = default;
 		BillboardComponent(const BillboardComponent&) = default;
+	};
+
+	struct BoundsComponent : public IComponent
+	{
+		BoxSphereBounds Bounds;
+
+		BoundsComponent() = default;
+		BoundsComponent(const BoundsComponent&) = default;
 	};
 
 }

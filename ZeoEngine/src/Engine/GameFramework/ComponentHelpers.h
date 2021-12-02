@@ -3,6 +3,7 @@
 #include <any>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Math/BoxSphereBounds.h"
 
 namespace ZeoEngine {
 
@@ -15,11 +16,17 @@ namespace ZeoEngine {
 		explicit IComponentHelper(Entity* entity);
 		virtual ~IComponentHelper();
 
-		/**  Called after component being added to the owner entity. */
-		virtual void OnComponentAdded() {}
-		/**  Called after component being copied to the owner entity. You should handle logic here instead of in the component's copy ctor. */
+		/** Called after component being added to the owner entity. If bIsDeserialize is true, the component is added during deserialization. */
+		virtual void OnComponentAdded(bool bIsDeserialize) {}
+		/** Called after component being copied to the owner entity. You should handle logic here instead of in the component's copy ctor. */
 		virtual void OnComponentCopied(IComponent* otherComp) {}
-		/** Called before component being removed from the owner entity. */
+		/**
+		 * Called before component being removed from the owner entity.
+		 * There are mainly three ways to remove a component:
+		 * Call Entity::RemoveComponent
+		 * Call Entity::RemoveComponentById
+		 * Destroy the owner entity
+		 */
 		virtual void OnComponentDestroy() {}
 
 		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
@@ -27,11 +34,23 @@ namespace ZeoEngine {
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 
+		/** Calculate component bounds or return an invalid one. */
+		virtual BoxSphereBounds GetBounds() { return {}; }
+
 		Entity* GetOwnerEntity() const;
 
 	private:
 		struct Impl;
 		Scope<Impl> m_Impl;
+	};
+
+	class TransformComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 	};
 
 	class ParticleSystemComponentHelper : public IComponentHelper
@@ -41,7 +60,6 @@ namespace ZeoEngine {
 
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void OnComponentDestroy() override;
-
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 	};
@@ -55,14 +73,26 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 	};
 
+	class MeshRendererComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual BoxSphereBounds GetBounds() override;
+	};
+
 	class LightComponentHelper : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;
 
-		virtual void OnComponentAdded() override;
+		virtual void OnComponentAdded(bool bIsDeserialize) override;
 		virtual void OnComponentCopied(IComponent* otherComp) override;
+		virtual void OnComponentDestroy() override;
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual BoxSphereBounds GetBounds() override;
 
 		void InitLight();
 	};

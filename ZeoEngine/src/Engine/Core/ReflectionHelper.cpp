@@ -153,4 +153,10 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
+	bool DoesTypeContainData(const entt::id_type compId)
+	{
+		const auto datas = entt::resolve(compId).data();
+		return datas.begin() != datas.end();
+	}
+
 }
