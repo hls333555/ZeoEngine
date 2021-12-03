@@ -2,7 +2,7 @@
 
 #include <IconsFontAwesome5.h>
 
-#include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Core/Assert.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/AssetManager.h"

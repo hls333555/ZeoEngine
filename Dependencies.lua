@@ -5,6 +5,7 @@ VULKAN_SDK = os.getenv("VULKAN_SDK")
 IncludeDir = {}
 IncludeDir["assimp"] = "%{wks.location}/ZeoEngine/vendor/assimp/include"
 IncludeDir["Box2D"] = "%{wks.location}/ZeoEngine/vendor/Box2D/include"
+IncludeDir["debug_draw"] = "%{wks.location}/ZeoEngine/vendor/debug_draw"
 IncludeDir["doctest"] = "%{wks.location}/ZeoEngine/vendor/doctest"
 IncludeDir["entt"] = "%{wks.location}/ZeoEngine/vendor/entt/include"
 IncludeDir["Glad"] = "%{wks.location}/ZeoEngine/vendor/Glad/include"

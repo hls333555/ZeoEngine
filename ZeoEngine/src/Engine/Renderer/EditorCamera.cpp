@@ -10,7 +10,7 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Application.h"
-#include "Engine/debug/BenchmarkTimer.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 

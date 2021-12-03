@@ -13,6 +13,15 @@
 
 namespace ZeoEngine {
 
+	struct LineVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+
+		// Editor-only
+		int32_t EntityID;
+	};
+
 	struct CircleVertex
 	{
 		glm::vec3 WorldPosition;

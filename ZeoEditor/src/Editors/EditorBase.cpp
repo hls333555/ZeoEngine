@@ -4,10 +4,9 @@
 #include "Panels/OpenAssetPanel.h"
 #include "Panels/SaveAssetPanel.h"
 #include "Engine/Renderer/Buffer.h"
-#include "Engine/Debug/Instrumentor.h"
-#include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/EditorCamera.h"
-#include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Profile/Instrumentor.h"
+#include "Engine/Profile/BenchmarkTimer.h"
+#include "Engine/Renderer/Renderer.h"
 
 #define FRAMEBUFFER_WIDTH 1280
 #define FRAMEBUFFER_HEIGHT 720
@@ -53,6 +52,9 @@ namespace ZeoEngine {
 				m_ActiveScene->OnRender(*m_EditorCamera);
 				m_PostSceneRenderDel.publish(m_FBO);
 			}
+
+			// Flush debug draw batches
+			Renderer::FlushDebugDraws();
 		}
 		EndFrameBuffer();
 	}

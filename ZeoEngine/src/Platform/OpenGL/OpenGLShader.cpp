@@ -9,7 +9,7 @@
 #include <spirv_cross/spirv_glsl.hpp>
 
 #include "Engine/Utils/PathUtils.h"
-#include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 

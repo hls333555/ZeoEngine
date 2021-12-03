@@ -17,6 +17,8 @@ namespace ZeoEngine {
 		virtual uint32_t GetWidth() const override { return m_Data.Width; }
 		virtual uint32_t GetHeight() const override { return m_Data.Height; }
 
+		virtual float GetTimeInSeconds() const override;
+
 		virtual void OnUpdate() override;
 
 		// Window attributes

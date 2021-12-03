@@ -4,8 +4,6 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 
-#include <GLFW/glfw3.h>
-
 extern "C"
 {
 	_declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
@@ -85,7 +83,7 @@ namespace ZeoEngine {
 			ZE_PROFILE_SCOPE("RunLoop");
 
 			// Platform::GetTime();
-			float time = static_cast<float>(glfwGetTime());
+			float time = static_cast<float>(m_Window->GetTimeInSeconds());
 			DeltaTime dt = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
@@ -115,6 +113,7 @@ namespace ZeoEngine {
 				m_ImGuiLayer->End();
 			}
 
+			// Do swap buffers and other stuff
 			m_Window->OnUpdate();
 		}
 	}

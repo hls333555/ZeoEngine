@@ -44,12 +44,12 @@ namespace ZeoEngine {
 		if (RendererAPI::Is2D())
 		{
 			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_LINE_SMOOTH);
 		}
 		else
 		{
 			glEnable(GL_DEPTH_TEST);
 		}
-		glEnable(GL_LINE_SMOOTH);
 
 	}
 

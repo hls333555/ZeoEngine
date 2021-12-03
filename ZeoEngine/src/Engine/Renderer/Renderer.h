@@ -9,6 +9,7 @@
 namespace ZeoEngine {
 
 	struct MeshRendererComponent;
+	class DDRenderInterface;
 
 	struct RenderData
 	{
@@ -79,15 +80,6 @@ namespace ZeoEngine {
 		int32_t EntityID;
 	};
 
-	struct LineVertex
-	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-
-		// Editor-only
-		int32_t EntityID;
-	};
-
 	struct PrimitiveData
 	{
 		const uint32_t MaxQuads = 10000;
@@ -102,23 +94,6 @@ namespace ZeoEngine {
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
-
-		Ref<VertexArray> LineVAO;
-		Ref<VertexBuffer> LineVBO;
-		Ref<Shader> LineShader;
-		uint32_t LineVertexCount = 0;
-		LineVertex* LineVertexBufferBase = nullptr;
-		LineVertex* LineVertexBufferPtr = nullptr;
-		float LineThickness = 2.0f;
-
-		Ref<VertexArray> CircleVAO;
-		Ref<VertexBuffer> CircleVBO;
-		Ref<IndexBuffer> CircleIBO;
-		uint32_t CircleIndexCount = 0;
-		LineVertex* CircleVertexBufferBase = nullptr;
-		LineVertex* CircleVertexBufferPtr = nullptr;
-		uint32_t* CircleIndexBufferBase = nullptr;
-		uint32_t* CircleIndexBufferPtr = nullptr;
 
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		Ref<Texture2D> WhiteTexture;
@@ -138,6 +113,8 @@ namespace ZeoEngine {
 			glm::mat4 View;
 			glm::mat4 Projection;
 			glm::vec3 Position;
+
+			glm::mat4 GetViewProjection() const { return Projection * View; }
 		};
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
@@ -212,10 +189,13 @@ namespace ZeoEngine {
 		static void Shutdown();
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
+		static void OnViewportResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void BeginScene(const EditorCamera& camera, bool bDrawGrid = false);
 		static void EndScene();
+
+		static void FlushDebugDraws();
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
@@ -231,17 +211,10 @@ namespace ZeoEngine {
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 		static void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
-		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID = -1);
-		static float GetLineThickness();
-		static void SetLineThickness(float thickness);
-
-		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityID = -1);
-		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-
-		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, uint32_t segaments = 32, int32_t entityID = -1);
-
 		static Statistics& GetStats();
 		static void ResetStats();
+
+		static glm::mat4 GetViewProjectionMatrix() { return s_Data.CameraBuffer.GetViewProjection(); }
 
 	private:
 		static void Prepare();
@@ -253,6 +226,7 @@ namespace ZeoEngine {
 
 	private:
 		static RendererData s_Data;
+		static Scope<DDRenderInterface> s_Ddri;
 	};
 
 }

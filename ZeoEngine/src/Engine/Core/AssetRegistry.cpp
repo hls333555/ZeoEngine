@@ -2,7 +2,7 @@
 #include "Engine/Core/AssetRegistry.h"
 
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/Debug/BenchmarkTimer.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/Serializer.h"
 #include "Engine/Core/ThumbnailManager.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Debug/Instrumentor.h"
+#include "Engine/Profile/Instrumentor.h"
 #include "Engine/Core/Application.h"
 
 #ifdef ZE_PLATFORM_WINDOWS

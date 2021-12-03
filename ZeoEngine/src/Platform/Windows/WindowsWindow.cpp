@@ -190,6 +190,11 @@ namespace ZeoEngine {
 		glfwTerminate();
 	}
 
+	float WindowsWindow::GetTimeInSeconds() const
+	{
+		return static_cast<float>(glfwGetTime());
+	}
+
 	void WindowsWindow::OnUpdate()
 	{
 		ZE_PROFILE_FUNCTION();

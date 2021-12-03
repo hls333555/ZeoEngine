@@ -8,7 +8,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Core/AssetRegistry.h"
-#include "Engine/Renderer/RendererAPI.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
 
@@ -138,6 +138,9 @@ namespace ZeoEngine {
 
 	void EditorViewPanelBase::OnViewportResize(const glm::vec2& size)
 	{
+		// Broadcast changes
+		Renderer::OnViewportResize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+
 		// Resize FrameBuffer
 		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
 

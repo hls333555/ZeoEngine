@@ -35,6 +35,7 @@ project "ZeoEngine"
 		"src",
 		"%{IncludeDir.assimp}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.debug_draw}",
 		"%{IncludeDir.doctest}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.Glad}",

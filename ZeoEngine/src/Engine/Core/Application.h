@@ -39,6 +39,8 @@ namespace ZeoEngine {
 		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 		Window& GetWindow() { return *m_Window; }
 
+		float GetTimeInSeconds() const { return m_Window->GetTimeInSeconds(); }
+
 		void Close();
 
 		void OnEvent(Event& e);
