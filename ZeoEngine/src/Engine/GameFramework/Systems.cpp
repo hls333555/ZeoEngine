@@ -93,12 +93,22 @@ namespace ZeoEngine {
 					// Draw sphere visualizer when selected
 					if (m_Scene->GetSelectedEntity() == entity)
 					{
-						DebugDrawUtils::DrawSphereBounds(transformComp.Translation, visualizeColor, pointLight->GetRadius());
+						DebugDrawUtils::DrawSphereBounds(transformComp.Translation, visualizeColor, pointLight->GetRange());
 					}
 					break;
 				}
 				case LightComponent::LightType::SpotLight:
 				{
+					const auto& spotLight = lightComp.GetLight<SpotLight>();
+					Renderer::AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
+
+					// Draw cone visualizer when selected
+					if (m_Scene->GetSelectedEntity() == entity)
+					{
+						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
+						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
+						DebugDrawUtils::DrawCone(transformComp.Translation, direction, visualizeColor, radius, 0.0f);
+					}
 					break;
 				}
 				default:

@@ -134,7 +134,7 @@ namespace ZeoEngine {
 
 	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
-		if (dataId == ZDATA_ID(Radius))
+		if (dataId == ZDATA_ID(Range))
 		{
 			GetOwnerEntity()->UpdateBounds();
 		}
@@ -146,7 +146,7 @@ namespace ZeoEngine {
 		{
 			InitLight();
 		}
-		else if (dataId == ZDATA_ID(Radius))
+		else if (dataId == ZDATA_ID(Range))
 		{
 			GetOwnerEntity()->UpdateBounds();
 		}
@@ -166,7 +166,7 @@ namespace ZeoEngine {
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
-		Sphere sphere{ transformComp.Translation, lightComp.LightSource->GetRadius() };
+		Sphere sphere{ transformComp.Translation, lightComp.LightSource->GetRange() * (lightComp.Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
 		return sphere; // After conversion from BoxSphereBounds to Box, then to BoxSphereBounds, the SphereRadius is actually larger than current radius
 	}
 

@@ -77,15 +77,8 @@ namespace ZeoEngine {
 
 		static const char* GetIcon() { return ICON_FA_MAP_MARKER_ALT; }
 
-		glm::vec3 GetRotationAsDegrees() const
-		{
-			return glm::degrees(Rotation);
-		}
-
-		void SetRotationToRadians(const glm::vec3& rotationInDegrees)
-		{
-			Rotation = glm::radians(rotationInDegrees);
-		}
+		glm::vec3 GetRotationAsDegrees() const { return glm::degrees(Rotation); }
+		void SetRotationToRadians(const glm::vec3& rotationInDegrees) { Rotation = glm::radians(rotationInDegrees); }
 
 		glm::mat4 GetTransform() const
 		{
@@ -344,8 +337,10 @@ namespace ZeoEngine {
 		void SetColor(const glm::vec4& color) { LightSource->SetColor(color); }
 		float GetIntensity() const { return LightSource->GetIntensity(); }
 		void SetIntensity(float intensity) { return LightSource->SetIntensity(intensity); }
-		float GetRadius() const { return LightSource->GetRadius(); }
-		void SetRadius(float radius) { LightSource->SetRadius(radius); }
+		float GetRange() const { return LightSource->GetRange(); }
+		void SetRange(float range) { LightSource->SetRange(range); }
+		float GetCutoffAsDegrees() const { return glm::degrees(LightSource->GetCutoff()); }
+		void SetCutoffToRadians(float cutoffInDegrees) { LightSource->SetCutoff(glm::radians(cutoffInDegrees)); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent

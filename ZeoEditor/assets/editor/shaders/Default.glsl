@@ -50,6 +50,7 @@ layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
 const int MAX_POINT_LIGHTS = 32;
+const int MAX_SPOT_LIGHTS = 32;
 
 struct LightBase
 {
@@ -70,11 +71,20 @@ struct PointLight
 	float Radius;
 };
 
+struct SpotLight
+{
+	PointLight Base;
+	vec3 Direction;
+	float Cutoff;
+};
+
 layout (std140, binding = 2) uniform Light
 {
 	DirectionalLight u_DirectionalLight;
 	PointLight u_PointLights[MAX_POINT_LIGHTS];
+	SpotLight u_SpotLights[MAX_SPOT_LIGHTS];
 	int u_NumPointLights;
+	int u_NumSpotLights;
 };
 
 layout (std140, binding = 3) uniform Material
@@ -119,18 +129,35 @@ vec4 CalculateDirectionalLight(vec3 vertexNormal)
 	return CalculateLightInternal(u_DirectionalLight.Base, u_DirectionalLight.Direction, vertexNormal);
 }
 
-vec4 CalculatePointLight(int index, vec3 vertexNormal)
+vec4 CalculatePointLight(PointLight pointLight, vec3 vertexNormal)
 {
-	vec3 lightDirection = Input.WorldPosition - u_PointLights[index].Position;
+	vec3 lightDirection = Input.WorldPosition - pointLight.Position;
 	float lightDistance = length(lightDirection);
 	lightDirection = normalize(lightDirection);
 
-	vec4 color = CalculateLightInternal(u_PointLights[index].Base, lightDirection, vertexNormal);
-	float normalizedDistance = lightDistance / u_PointLights[index].Radius;
+	vec4 color = CalculateLightInternal(pointLight.Base, lightDirection, vertexNormal);
+	float normalizedDistance = lightDistance / pointLight.Radius;
 	float attenuation = clamp(1.0f / (1.0f + 25.0f * normalizedDistance * normalizedDistance) *
 								clamp((1.0f - normalizedDistance) * 5.0f, 0.0f, 1.0f)
 							, 0.0f, 1.0f);
 	return color * attenuation;
+}
+
+vec4 CalculateSpotLight(SpotLight spotLight, vec3 vertexNormal)
+{
+	vec3 lightDirection = normalize(Input.WorldPosition - spotLight.Base.Position);
+	float spotFactor = dot(lightDirection, spotLight.Direction);
+
+	if (spotFactor > spotLight.Cutoff)
+	{
+		vec4 color = CalculatePointLight(spotLight.Base, vertexNormal);
+		float intensity = (1.0f - (1.0f - spotFactor) / (1.0f - spotLight.Cutoff));
+		return color * intensity;
+	}
+	else
+	{
+		return vec4(0.0f);
+	}
 }
 
 void main()
@@ -139,7 +166,11 @@ void main()
 	vec4 totalLight = CalculateDirectionalLight(normal);
 	for (int i = 0; i < u_NumPointLights; ++i)
 	{
-		totalLight += CalculatePointLight(i, normal);
+		totalLight += CalculatePointLight(u_PointLights[i], normal);
+	}
+	for (int i = 0; i < u_NumSpotLights; ++i)
+	{
+		totalLight += CalculateSpotLight(u_SpotLights[i], normal);
 	}
 	o_Color = totalLight;
 	// Force set opaque mode due to rgb texture's alpha is 0

@@ -244,8 +244,19 @@ namespace ZeoEngine {
 		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Color = pointLight->GetColor();
 		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Intensity = pointLight->GetIntensity();
 		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Position = position;
-		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Radius = pointLight->GetRadius();
+		s_Data.LightBuffer.PointLightBuffer[s_Data.LightBuffer.NumPointLights].Radius = pointLight->GetRange();
 		++s_Data.LightBuffer.NumPointLights;
+	}
+
+	void Renderer::AddSpotLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<SpotLight>& spotLight)
+	{
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Color = spotLight->GetColor();
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Intensity = spotLight->GetIntensity();
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Position = position;
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Radius = spotLight->GetRange();
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
+		s_Data.LightBuffer.SpotLightBuffer[s_Data.LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
+		++s_Data.LightBuffer.NumSpotLights;
 	}
 
 	void Renderer::UploadLightData()

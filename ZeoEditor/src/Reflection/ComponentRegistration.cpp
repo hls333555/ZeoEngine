@@ -130,7 +130,8 @@ namespace ZeoEngine {
 			ZDATA(LightComponent, Type)
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
 			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f))
-			ZDATA_SETTER_GETTER(LightComponent, Radius, SetRadius, GetRadius, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type != PointLight"));
+			ZDATA_SETTER_GETTER(LightComponent, Range, SetRange, GetRange, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type == DirectionalLight"))
+			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"));
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);

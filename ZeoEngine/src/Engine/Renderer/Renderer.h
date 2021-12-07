@@ -136,6 +136,7 @@ namespace ZeoEngine {
 		bool bDrawGrid = false;
 
 		static const int32_t MAX_POINT_LIGHTS = 32;
+		static const int32_t MAX_SPOT_LIGHTS = 32;
 		struct LightDataBase
 		{
 			glm::vec4 Color;
@@ -165,16 +166,25 @@ namespace ZeoEngine {
 			float Radius;
 		};
 
+		struct SpotLightData : public PointLightData
+		{
+			glm::vec3 Direction;
+			float Cutoff;
+		};
+
 		struct LightData
 		{
 			DirectionalLightData DirectionalLightBuffer;
 			PointLightData PointLightBuffer[MAX_POINT_LIGHTS];
+			SpotLightData SpotLightBuffer[MAX_SPOT_LIGHTS];
 			int32_t NumPointLights = 0;
+			int32_t NumSpotLights = 0;
 
 			void Reset()
 			{
 				DirectionalLightBuffer.Reset();
 				NumPointLights = 0;
+				NumSpotLights = 0;
 			}
 		};
 		LightData LightBuffer;
@@ -204,6 +214,7 @@ namespace ZeoEngine {
 
 		static void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 		static void AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight);
+		static void AddSpotLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<SpotLight>& spotLight);
 
 		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 
