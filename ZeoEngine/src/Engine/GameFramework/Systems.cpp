@@ -105,7 +105,6 @@ namespace ZeoEngine {
 					break;
 			}
 		});
-		Renderer::UploadLightData();
 
 		// Render meshes
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)

@@ -164,6 +164,7 @@ namespace ZeoEngine {
 			glm::vec3 Position;
 			float Radius;
 		};
+
 		struct LightData
 		{
 			DirectionalLightData DirectionalLightBuffer;
@@ -203,7 +204,6 @@ namespace ZeoEngine {
 
 		static void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 		static void AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight);
-		static void UploadLightData();
 
 		static void DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID = -1);
 
@@ -219,6 +219,7 @@ namespace ZeoEngine {
 	private:
 		static void Prepare();
 		static void Submit();
+		static void UploadLightData();
 
 		static void StartBatch();
 		static void NextBatch();

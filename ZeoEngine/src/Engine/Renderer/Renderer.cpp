@@ -134,6 +134,7 @@ namespace ZeoEngine {
 
 	void Renderer::EndScene()
 	{
+		Renderer::UploadLightData();
 		{
 			Submit();
 		}
