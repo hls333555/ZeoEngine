@@ -108,14 +108,4 @@ namespace ZeoEngine {
 		SceneSerializer::Deserialize(GetPath(), m_Scene, this);
 	}
 
-	void SceneAsset::PostDataDeserialize(entt::meta_any& compInstance, uint32_t dataId)
-	{
-		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
-		auto* lightComp = compInstance.try_cast<LightComponent>();
-		if (lightComp && dataId == ZDATA_ID(Type))
-		{
-			lightComp->GetHelper<LightComponentHelper>()->InitLight();
-		}
-	}
-
 }

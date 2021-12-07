@@ -441,7 +441,11 @@ namespace ZeoEngine {
 			if (dataValue)
 			{
 				EvaluateDeserializeData(data, instance, dataValue, false);
-				asset->PostDataDeserialize(instance, data.id());
+				IComponent* comp = instance.try_cast<IComponent>();
+				if (comp->ComponentHelper)
+				{
+					comp->ComponentHelper->PostDataDeserialize(data.id());
+				}
 			}
 		}
 	}

@@ -152,6 +152,16 @@ namespace ZeoEngine {
 		}
 	}
 
+	void LightComponentHelper::PostDataDeserialize(uint32_t dataId)
+	{
+		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
+		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
+		if (dataId == ZDATA_ID(Type))
+		{
+			lightComp.GetHelper<LightComponentHelper>()->InitLight();
+		}
+	}
+
 	BoxSphereBounds LightComponentHelper::GetBounds()
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();

@@ -34,6 +34,9 @@ namespace ZeoEngine {
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
 
+		/** Called after certain data has been deserialized. */
+		virtual void PostDataDeserialize(uint32_t dataId) {}
+
 		/** Calculate component bounds or return an invalid one. */
 		virtual BoxSphereBounds GetBounds() { return {}; }
 
@@ -92,6 +95,7 @@ namespace ZeoEngine {
 		virtual void OnComponentDestroy() override;
 		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
 		void InitLight();

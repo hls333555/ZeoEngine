@@ -18,7 +18,6 @@ namespace ZeoEngine {
 
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
-		virtual void PostDataDeserialize(entt::meta_any& compInstance, uint32_t dataId) {}
 
 		virtual void Reload() = 0;
 	};
