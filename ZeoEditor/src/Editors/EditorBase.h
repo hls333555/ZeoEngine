@@ -48,6 +48,7 @@ namespace ZeoEngine {
 		void SetContextEntity(Entity entity) { m_ContextEntity = entity; }
 		void FocusContextEntity();
 
+		EditorCamera* GetEditorCamera() const { return m_EditorCamera; }
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
 		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }

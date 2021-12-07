@@ -6,6 +6,7 @@
 #include "Engine/GameFramework/Components.h"
 #include "Editors/EditorBase.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Utils/EditorSceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -35,11 +36,34 @@ namespace ZeoEngine {
 		// Right-click on blank space
 		if (ImGui::BeginPopupContextWindowWithPadding(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
+			Entity newEntity;
+
 			if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
 			{
-				auto selectedEntity = scene->CreateEntity("New Entity");
-				sceneEditor->SetContextEntity(selectedEntity);
+				newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
 			}
+
+			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Light"))
+			{
+				if (ImGui::MenuItem(ICON_FA_SUN "  Directional Light"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlaceDirectionalLight(scene);
+				}
+
+				if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Point Light"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlacePointLight(scene);
+				}
+
+				if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Spot Light"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlaceSpotLight(scene);
+				}
+
+				ImGui::EndMenu();
+			}
+
+			sceneEditor->SetContextEntity(newEntity);
 
 			ImGui::EndPopup();
 		}

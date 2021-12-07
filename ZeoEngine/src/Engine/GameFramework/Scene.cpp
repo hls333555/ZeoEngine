@@ -7,12 +7,12 @@
 
 namespace ZeoEngine {
 
-	Entity Scene::CreateEntity(const std::string& name)
+	Entity Scene::CreateEntity(const std::string& name, const glm::vec3& translation)
 	{
-		return CreateEntityWithUUID(UUID(), name);
+		return CreateEntityWithUUID(UUID(), name, translation);
 	}
 
-	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const glm::vec3& translation)
 	{
 		Entity entity{ m_Registry.create(), this };
 
@@ -23,7 +23,7 @@ namespace ZeoEngine {
 		}
 		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<BoundsComponent>();
-		entity.AddComponent<TransformComponent>();
+		entity.AddComponent<TransformComponent>(translation);
 
 		// No need to sort if there is only one entity
 		if (GetEntityCount() > 1)

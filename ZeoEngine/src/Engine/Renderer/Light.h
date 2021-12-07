@@ -40,7 +40,7 @@ namespace ZeoEngine {
 
 	private:
 		/** Half the angle of the spot light cone stored in radians */
-		float m_CutoffAngle = glm::radians(60.0f);
+		float m_CutoffAngle = glm::radians(30.0f);
 	};
 
 }

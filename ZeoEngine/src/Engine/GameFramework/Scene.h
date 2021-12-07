@@ -44,8 +44,8 @@ namespace ZeoEngine {
 			return newScene;
 		}
 
-		Entity CreateEntity(const std::string& name = "Entity");
-		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity");
+		Entity CreateEntity(const std::string& name = "Entity", const glm::vec3& translation = glm::vec3(0.0f));
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const glm::vec3& translation = glm::vec3(0.0f));
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 
