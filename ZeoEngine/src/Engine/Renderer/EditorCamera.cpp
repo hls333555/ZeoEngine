@@ -112,7 +112,7 @@ namespace ZeoEngine {
 		// Only one control mode can take effect at a time
 		if (!IsControlModeReady(CameraControl_OrbitRotate)) return;
 
-		static bool bEnableControl = false;
+		bool& bEnableControl = m_bEnableControls[0];
 		if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 		{
 			if (Input::IsKeyPressed(Key::CameraControl))
@@ -143,7 +143,7 @@ namespace ZeoEngine {
 	{
 		if (!IsControlModeReady(CameraControl_Pan)) return;
 
-		static bool bEnableControl = false;
+		bool& bEnableControl = m_bEnableControls[1];
 		if (ImGui::IsMouseDragging(Mouse::ButtonMiddle))
 		{
 			EnterControlMode(CameraControl_Pan);
@@ -165,7 +165,7 @@ namespace ZeoEngine {
 	{
 		if (!IsControlModeReady(CameraControl_Zoom)) return;
 
-		static bool bEnableControl = false;
+		bool& bEnableControl = m_bEnableControls[2];
 		if (ImGui::IsMouseDragging(Mouse::ButtonRight))
 		{
 			if (Input::IsKeyPressed(Key::CameraControl))
@@ -193,7 +193,7 @@ namespace ZeoEngine {
 	{
 		if (!IsControlModeReady(CameraControl_FPS)) return;
 
-		static bool bEnableControl = false;
+		bool& bEnableControl = m_bEnableControls[3];
 		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
 			// Due to IsDragging evaluation being later than IsPressed, we need to add a separate check here

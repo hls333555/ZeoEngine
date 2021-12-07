@@ -97,6 +97,7 @@ namespace ZeoEngine {
 			CameraControl_Zoom = ZE_BIT(3),
 		};
 		uint8_t m_CameraControlModes = 0;
+		bool m_bEnableControls[4];
 		bool m_bIsFirstPress = true;
 		bool m_bIsRightMouseDragged = false;
 		bool m_bLastIsViewportHovered = false;
