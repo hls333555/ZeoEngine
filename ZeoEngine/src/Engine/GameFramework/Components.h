@@ -297,6 +297,8 @@ namespace ZeoEngine {
 		std::vector<AssetHandle<MaterialAsset>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
+		MeshRendererComponent(const AssetHandle<MeshAsset>& meshAsset)
+			: Mesh(meshAsset) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
 		virtual void CreateHelper(Entity* entity) override
@@ -321,7 +323,7 @@ namespace ZeoEngine {
 		LightType Type = LightType::PointLight;
 
 		LightComponent() = default;
-		explicit LightComponent(LightType type)
+		LightComponent(LightType type)
 			: Type(type) {}
 		LightComponent(const LightComponent& rhs) = default;
 

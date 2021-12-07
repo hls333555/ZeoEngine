@@ -53,9 +53,8 @@ namespace ZeoEngine {
 	{
 		Entity previewMaterialEntity = GetScene()->CreateEntity("Preview Material");
 		auto& materialPreviewComp = previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
-		auto& meshComp = previewMaterialEntity.AddComponent<MeshRendererComponent>();
+		auto& meshComp = previewMaterialEntity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultSphereMesh());
 		auto& lightComp = previewMaterialEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
-		meshComp.Mesh = MeshAssetLibrary::GetDefaultSphereMesh();
 		SetContextEntity(previewMaterialEntity);
 	}
 

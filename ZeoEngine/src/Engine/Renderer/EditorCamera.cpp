@@ -64,6 +64,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::StartFocusEntity(Entity entity)
 	{
+		if (!entity) return;
+
 		m_FocusTargetFocalPoint = entity.GetBounds().Origin;
 		m_FocusTargetDistance = entity.GetBounds().SphereRadius * 1.2f / sin(glm::radians(m_FOVy / 2.0f));
 		m_bStartLerpToFocus = true;

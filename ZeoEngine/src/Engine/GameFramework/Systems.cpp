@@ -11,6 +11,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
+#include "Engine/Utils/DebugDrawUtils.h"
 
 namespace ZeoEngine {
 
