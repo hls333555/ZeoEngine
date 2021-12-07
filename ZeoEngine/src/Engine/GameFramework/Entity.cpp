@@ -168,6 +168,8 @@ namespace ZeoEngine {
 
 	void Entity::RemoveComponentId(uint32_t Id)
 	{
+		if (!HasComponent<CoreComponent>()) return;
+
 		CoreComponent& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.erase(
 			std::remove_if(coreComp.OrderedComponents.begin(), coreComp.OrderedComponents.end(),

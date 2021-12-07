@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/GameFramework/Scene.h"
+#include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
 
@@ -27,7 +28,7 @@ namespace ZeoEngine {
 			{
 				comp.ComponentHelper->OnComponentAdded(false);
 				UpdateBounds();
-				m_Scene->m_Registry.on_destroy<T>().template connect<&IComponentHelper::OnComponentDestroy>(comp.ComponentHelper);
+				m_Scene->m_Registry.on_destroy<T>().template connect<&Reflection::on_destroy<T>>();
 			}
 			return comp;
 		}
