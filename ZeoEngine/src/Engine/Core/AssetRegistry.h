@@ -5,6 +5,7 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Texture.h"
+#include "Engine/Core/FileWatcher.h"
 
 namespace ZeoEngine {
 
@@ -151,6 +152,8 @@ namespace ZeoEngine {
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
 		void OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset);
 
+		const Scope<FileWatcher>& GetFileWatcher() const { return m_FileWatcher; }
+
 	private:
 		void Init();
 
@@ -202,6 +205,8 @@ namespace ZeoEngine {
 		std::unordered_map<std::string, Ref<PathSpec>> m_PathSpecs;
 		/** Map from asset type id to list of asset spec of this type */
 		std::unordered_map<AssetTypeId, std::vector<Ref<AssetSpec>>> m_AssetSpecsById;
+
+		Scope<FileWatcher> m_FileWatcher;
 	};
 
 }

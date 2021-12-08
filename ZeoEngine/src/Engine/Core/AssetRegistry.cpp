@@ -67,6 +67,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::Init()
 	{
+		m_FileWatcher = CreateScope<FileWatcher>(GetAssetRootDirectory(), std::chrono::duration<int32_t, std::milli>(1000));
 		ConstructPathTree();
 	}
 
