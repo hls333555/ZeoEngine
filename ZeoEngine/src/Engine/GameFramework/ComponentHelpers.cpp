@@ -167,7 +167,7 @@ namespace ZeoEngine {
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
 		Sphere sphere{ transformComp.Translation, lightComp.LightSource->GetRange() * (lightComp.Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
-		return sphere; // After conversion from BoxSphereBounds to Box, then to BoxSphereBounds, the SphereRadius is actually larger than current radius
+		return sphere;
 	}
 
 	void LightComponentHelper::InitLight()

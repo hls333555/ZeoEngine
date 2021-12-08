@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	Mesh::Mesh(const std::string& path)
 	{
 		Assimp::Importer Importer;
-		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
+		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
 		{
 			ZE_CORE_ERROR("Failed to load mesh! {0}", Importer.GetErrorString());

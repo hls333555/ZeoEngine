@@ -43,7 +43,27 @@ namespace ZeoEngine {
 				newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
 			}
 
-			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Light"))
+			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Shapes"))
+			{
+				if (ImGui::MenuItem(ICON_FA_CUBE "  Cube"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlaceCube(scene);
+				}
+
+				if (ImGui::MenuItem(ICON_FA_CIRCLE "  Sphere"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlaceSphere(scene);
+				}
+
+				if (ImGui::MenuItem(ICON_FA_SQUARE "  Plane"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlacePlane(scene);
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Lights"))
 			{
 				if (ImGui::MenuItem(ICON_FA_SUN "  Directional Light"))
 				{

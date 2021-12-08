@@ -19,6 +19,27 @@ namespace ZeoEngine {
 		return scene->CreateEntity(name, position);
 	}
 
+	Entity EditorSceneUtils::CreateAndPlaceCube(const Ref<Scene>& scene)
+	{
+		Entity entity = CreateAndPlaceEntity(scene, "Cube");
+		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultCubeMesh());
+		return entity;
+	}
+
+	Entity EditorSceneUtils::CreateAndPlaceSphere(const Ref<Scene>& scene)
+	{
+		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
+		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultSphereMesh());
+		return entity;
+	}
+
+	Entity EditorSceneUtils::CreateAndPlacePlane(const Ref<Scene>& scene)
+	{
+		Entity entity = CreateAndPlaceEntity(scene, "Plane");
+		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultPlaneMesh());
+		return entity;
+	}
+
 	Entity EditorSceneUtils::CreateAndPlaceDirectionalLight(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Directional Light");

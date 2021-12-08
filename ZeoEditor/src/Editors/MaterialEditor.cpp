@@ -5,6 +5,7 @@
 #include "Scenes/MaterialEditorScene.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
+#include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
 
@@ -13,6 +14,8 @@ namespace ZeoEngine {
 		m_PostSceneCreate.connect<&MaterialEditor::CreatePreviewMaterial>(this);
 
 		EditorBase::OnAttach();
+
+		GetEditorCamera()->SetDistance(2.0f);
 	}
 
 	Ref<EditorUIRendererBase> MaterialEditor::CreateEditorUIRenderer()

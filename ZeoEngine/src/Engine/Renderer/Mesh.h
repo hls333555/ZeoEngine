@@ -107,9 +107,19 @@ namespace ZeoEngine {
 	class MeshAssetLibrary : public AssetLibrary<MeshAssetLibrary, MeshAsset, MeshAssetLoader>
 	{
 	public:
+		static AssetHandle<MeshAsset> GetDefaultCubeMesh()
+		{
+			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
+		}
+
 		static AssetHandle<MeshAsset> GetDefaultSphereMesh()
 		{
 			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
+		}
+
+		static AssetHandle<MeshAsset> GetDefaultPlaneMesh()
+		{
+			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
 		}
 	};
 }
