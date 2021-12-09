@@ -117,8 +117,10 @@ namespace ZeoEngine {
 		virtual size_t GetResourceCount() const = 0;
 		virtual const std::unordered_map <uint32_t, UniformBlockData>& GetUniformBlockDatas() const = 0;
 
-		static Ref<Shader> Create(const std::string& filePath);
+		static Ref<Shader> Create(const std::string& filePath, bool bIsReload = false);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+
+		static void ClearCache(const std::string& filePath);
 
 	};
 
@@ -137,10 +139,15 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void Reload() override;
+		virtual void Reload(bool bIsCreate) override;
+
+	public:
+		entt::sink<void()> m_OnShaderReloaded{ m_OnShaderReloadedDel };
 
 	private:
 		Ref<Shader> m_Shader;
+
+		entt::sigh<void()> m_OnShaderReloadedDel;
 	};
 
 	struct ShaderAssetLoader final : AssetLoader<ShaderAssetLoader, ShaderAsset>

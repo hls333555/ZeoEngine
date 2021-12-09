@@ -53,7 +53,7 @@ namespace ZeoEngine {
 	Texture2DAsset::Texture2DAsset(const std::string& path)
 		: AssetBase(path)
 	{
-		Reload();
+		Reload(true);
 	}
 
 	Ref<Texture2DAsset> Texture2DAsset::Create(const std::string& path)
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 		return CreateRef<Texture2DAssetEnableShared>(path);
 	}
 
-	void Texture2DAsset::Reload()
+	void Texture2DAsset::Reload(bool bIsCreate)
 	{
 		auto texturePath = PathUtils::GetResourcePathFromAssetPath(GetPath());
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(texturePath));

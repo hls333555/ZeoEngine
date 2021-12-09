@@ -117,7 +117,7 @@ namespace ZeoEngine {
         SetupShaderPrograms();
         SetupVertexBuffers();
 
-        ZE_CORE_TRACE("OpenGLDDRenderInterface initialized!");
+        ZE_CORE_TRACE("OpenGLDDRenderInterface initialized");
     }
 
     OpenGLDDRenderInterface::~OpenGLDDRenderInterface()

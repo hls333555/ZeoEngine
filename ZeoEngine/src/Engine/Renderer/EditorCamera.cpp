@@ -40,6 +40,9 @@ namespace ZeoEngine {
 
 		if (ImGuizmo::IsUsing()) return;
 
+		// WORKAROUND: Disable alt toggle behavior
+		ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
+
 		//BEGIN_BENCHMARK()
 		ProcessOrbitControl(m_bLastIsViewportHovered, delta);
 		ProcessPanControl(m_bLastIsViewportHovered, delta);
@@ -117,9 +120,6 @@ namespace ZeoEngine {
 		{
 			if (Input::IsKeyPressed(Key::CameraControl))
 			{
-				// WORKAROUND: Disable alt toggle behavior
-				ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
-
 				// Set control mode once we are trying to manipulate
 				EnterControlMode(CameraControl_OrbitRotate);
 				// We detect first press hovering state so that the subsequent manipulation won't happen if we first press mouse in another panel
@@ -170,9 +170,6 @@ namespace ZeoEngine {
 		{
 			if (Input::IsKeyPressed(Key::CameraControl))
 			{
-				// WORKAROUND: Disable alt toggle behavior
-				ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
-
 				EnterControlMode(CameraControl_Zoom);
 				bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
 				m_bIsFirstPress = false;

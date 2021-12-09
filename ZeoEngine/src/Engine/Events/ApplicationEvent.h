@@ -40,6 +40,21 @@ namespace ZeoEngine {
 
 	};
 
+	class WindowFocusChangedEvent : public Event
+	{
+	public:
+		explicit WindowFocusChangedEvent(bool bFocused)
+			: m_bFocused(bFocused) {}
+
+		bool IsFocused() const { return m_bFocused; }
+
+		EVENT_CLASS_TYPE(WindowFocusChanged)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+
+	private:
+		bool m_bFocused;
+	};
+
 	class AppTickEvent : public Event
 	{
 	public:

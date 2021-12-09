@@ -156,7 +156,7 @@ namespace ZeoEngine {
 		return asset;
 	}
 
-	void ParticleTemplateAsset::Reload()
+	void ParticleTemplateAsset::Reload(bool bIsCreate)
 	{
 		Deserialize();
 		ResimulateAllParticleSystemInstances();

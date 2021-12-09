@@ -68,6 +68,7 @@ namespace ZeoEngine {
 
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+		bool OnWindowFocusChanged(WindowFocusChangedEvent& e);
 
 	private:
 		ApplicationCommandLineArgs m_CommandLineArgs;
@@ -75,6 +76,7 @@ namespace ZeoEngine {
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_bRunning = true;
 		bool m_bMinimized = false;
+		bool m_bFocused = true;
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
 

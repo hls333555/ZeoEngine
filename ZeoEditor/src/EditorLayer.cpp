@@ -31,6 +31,7 @@ namespace ZeoEngine {
 		EngineLayer::OnUpdate(dt);
 
 		EditorManager::Get().OnUpdate(dt);
+		AssetRegistry::Get().OnUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()

@@ -56,15 +56,9 @@ namespace ZeoEngine {
 			return nullptr;
 		}
 
-		static const char* GetCacheDirectory()
-		{
-			// TODO: make sure the assets directory is valid
-			return "assets/cache/shader/opengl";
-		}
-
 		static void CreateCacheDirectoryIfNeeded()
 		{
-			std::string cacheDirectory = GetCacheDirectory();
+			std::string cacheDirectory = OpenGLShader::GetCacheDirectory();
 			if (!PathUtils::DoesPathExist(cacheDirectory))
 			{
 				PathUtils::CreateDirectories(cacheDirectory);
@@ -75,8 +69,8 @@ namespace ZeoEngine {
 		{
 			switch (stage)
 			{
-				case GL_VERTEX_SHADER:		return ".cached_opengl.vert";
-				case GL_FRAGMENT_SHADER:	return ".cached_opengl.frag";
+				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[0];
+				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[1];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -87,8 +81,8 @@ namespace ZeoEngine {
 		{
 			switch (stage)
 			{
-				case GL_VERTEX_SHADER:		return ".cached_vulkan.vert";
-				case GL_FRAGMENT_SHADER:	return ".cached_vulkan.frag";
+				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[2];
+				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[3];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -97,7 +91,7 @@ namespace ZeoEngine {
 
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filePath)
+	OpenGLShader::OpenGLShader(const std::string& filePath, bool bIsReload)
 		: m_FilePath(filePath)
 		, m_Name(PathUtils::GetNameFromPath(filePath))
 	{
@@ -113,7 +107,7 @@ namespace ZeoEngine {
 			CompileOrGetVulkanBinaries(shaderSrcs);
 			CompileOrGetOpenGLBinaries();
 			CreateProgram();
-			ZE_CORE_WARN("Shader creation took {0} ms", timer.ElapsedMillis());
+			ZE_CORE_WARN("Shader {0} took {1} ms", bIsReload ? "reloading" : "creation", timer.ElapsedMillis());
 		}
 	}
 
@@ -215,7 +209,7 @@ namespace ZeoEngine {
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
 		}
 
-		std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
+		std::filesystem::path cacheDirectory = GetCacheDirectory();
 
 		auto& shaderData = m_VulkanSPIRV;
 		shaderData.clear();
@@ -257,6 +251,8 @@ namespace ZeoEngine {
 			}
 		}
 
+		m_ShaderReflectionData.clear();
+		m_UniformBlockDatas.clear();
 		for (auto&& [stage, data] : m_VulkanSPIRV)
 		{
 			Reflect(stage, data);
@@ -277,7 +273,7 @@ namespace ZeoEngine {
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
 		}
 
-		std::filesystem::path cacheDirectory = Utils::GetCacheDirectory();
+		std::filesystem::path cacheDirectory = GetCacheDirectory();
 
 		shaderData.clear();
 		m_OpenGLSourceCode.clear();
@@ -339,9 +335,9 @@ namespace ZeoEngine {
 
 		glLinkProgram(program);
 
-		GLint isLinked;
-		glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-		if (isLinked == GL_FALSE)
+		GLint bIsLinked;
+		glGetProgramiv(program, GL_LINK_STATUS, &bIsLinked);
+		if (bIsLinked == GL_FALSE)
 		{
 			GLint maxLength;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
@@ -364,6 +360,7 @@ namespace ZeoEngine {
 			glDeleteShader(id);
 		}
 
+		// If shader is hot reloaded, we do not need to delete the old program as this is a newly created one
 		m_RendererID = program;
 	}
 

@@ -180,6 +180,11 @@ namespace ZeoEngine {
 		ShaderAssetLibrary::Get().ReloadAsset(path);
 	}
 
+	void ShaderAssetActions::HotReloadAsset(const std::string& path) const
+	{
+		ReloadAsset(path);
+	}
+
 	void ShaderAssetActions::SaveAsset(const std::string& path) const
 	{
 		if (ShaderAssetLibrary::Get().HasAsset(path))

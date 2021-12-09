@@ -7,18 +7,18 @@
 
 namespace ZeoEngine {
 	
-	Ref<Shader> Shader::Create(const std::string& filePath)
+	Ref<Shader> Shader::Create(const std::string& filePath, bool bIsReload)
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(filePath);
-		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-			return nullptr;
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				return CreateRef<OpenGLShader>(filePath, bIsReload);
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
 		}
 	}
 
@@ -26,21 +26,49 @@ namespace ZeoEngine {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
-		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-			return nullptr;
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
+		}
+	}
+
+	void Shader::ClearCache(const std::string& filePath)
+	{
+		switch (Renderer::GetAPI())
+		{
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return;
+			case RendererAPI::API::OpenGL:
+			{
+				std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
+				std::filesystem::path shaderFilePath = filePath;
+				const auto& extensions = OpenGLShader::GetCacheFileExtensions();
+				for (const char* extension : extensions)
+				{
+					const std::string cachePath = (cacheDirectory / (shaderFilePath.filename().string() + extension)).string();
+					if (PathUtils::DoesPathExist(cachePath))
+					{
+						PathUtils::DeletePath(cachePath);
+					}
+				}
+				return;
+			}
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return;
 		}
 	}
 
 	ShaderAsset::ShaderAsset(const std::string& path)
 		: AssetBase(path)
 	{
-		Reload();
+		Reload(true);
 	}
 
 	Ref<ShaderAsset> ShaderAsset::Create(const std::string& path)
@@ -55,12 +83,21 @@ namespace ZeoEngine {
 		return CreateRef<ShaderAssetEnableShared>(path);
 	}
 
-	void ShaderAsset::Reload()
+	void ShaderAsset::Reload(bool bIsCreate)
 	{
 		auto shaderPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(shaderPath));
-		m_Shader = Shader::Create(shaderPath);
+
+		if (!bIsCreate)
+		{
+			Shader::ClearCache(shaderPath);
+		}
+		m_Shader = Shader::Create(shaderPath, !bIsCreate);
 		Deserialize();
+		if (!bIsCreate)
+		{
+			m_OnShaderReloadedDel.publish();
+		}
 	}
 
 	void ShaderAsset::Serialize(const std::string& path)

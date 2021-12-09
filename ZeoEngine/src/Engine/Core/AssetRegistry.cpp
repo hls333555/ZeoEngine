@@ -68,6 +68,7 @@ namespace ZeoEngine {
 	void AssetRegistry::Init()
 	{
 		m_FileWatcher = CreateScope<FileWatcher>(GetAssetRootDirectory(), std::chrono::duration<int32_t, std::milli>(1000));
+		m_FileWatcher->m_OnFileModified.connect<&AssetRegistry::OnAssetModified>(this);
 		ConstructPathTree();
 	}
 
@@ -288,6 +289,36 @@ namespace ZeoEngine {
 				(((bIsLhsDirectory && bIsRhsDirectory) || (!bIsLhsDirectory && !bIsRhsDirectory)) &&
 				Utils::FileNameToUpperCase(lhs.first) < Utils::FileNameToUpperCase(rhs.first));
 		});
+	}
+
+	void AssetRegistry::OnAssetModified(const std::string& path)
+	{
+		std::unique_lock<std::mutex> lock(m_Mutex);
+		m_CV.wait(lock, [this](){ return m_bModifiedAssetsProcessed; });
+		m_bModifiedAssetsReady = false;
+		m_PendingModifiedAssets.emplace(path);
+		m_bModifiedAssetsReady = true;
+		m_CV.notify_one();
+	}
+
+	void AssetRegistry::OnUpdate(DeltaTime dt)
+	{
+		std::unique_lock<std::mutex> lock(m_Mutex);
+		m_CV.wait(lock, [this]() { return m_bModifiedAssetsReady; });
+		m_bModifiedAssetsProcessed = false;
+		for (auto it = m_PendingModifiedAssets.begin(); it != m_PendingModifiedAssets.end();)
+		{
+			std::string assetPath = *it;
+			if (!GetPathSpec(*it))
+			{
+				assetPath = PathUtils::GetAssetPathFromResourcePath(*it);
+			}
+			ZE_CORE_ASSERT(PathUtils::DoesPathExist(assetPath));
+			AssetManager::Get().HotReloadAsset(assetPath);
+			it = m_PendingModifiedAssets.erase(it);
+		}
+		m_bModifiedAssetsProcessed = true;
+		m_CV.notify_one();
 	}
 
 	Ref<PathSpec> AssetRegistry::OnPathCreated(const std::string& path, AssetTypeId typeId)

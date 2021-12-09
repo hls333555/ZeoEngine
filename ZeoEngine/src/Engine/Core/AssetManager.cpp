@@ -125,6 +125,20 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	bool AssetManager::HotReloadAsset(const std::string& path) const
+	{
+		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();
+		auto it = m_AssetActions.find(typeId);
+		if (it != m_AssetActions.end())
+		{
+			it->second->HotReloadAsset(path);
+			return true;
+		}
+
+		ZE_CORE_WARN("Failed to hot-reload asset: {0}. Unknown asset type!", PathUtils::GetFileNameFromPath(path));
+		return false;
+	}
+
 	bool AssetManager::SaveAsset(const std::string& path) const
 	{
 		AssetTypeId typeId = AssetRegistry::Get().GetPathSpec(path)->GetAssetTypeId();

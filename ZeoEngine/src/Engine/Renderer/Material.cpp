@@ -104,6 +104,9 @@ namespace ZeoEngine {
 
 	void Material::InitMaterialData()
 	{
+		m_DynamicUniforms.clear();
+		m_DynamicUniformBuffers.clear();
+		m_DynamicUniformBufferDatas.clear();
 		InitUniformBuffers();
 		ParseReflectionData();
 	}
@@ -209,11 +212,20 @@ namespace ZeoEngine {
 		};
 
 		auto asset = CreateRef<MaterialAssetEnableShared>(path);
-		asset->Reload();
+		asset->Reload(true);
 		return asset;
 	}
 
-	void MaterialAsset::Reload()
+	void MaterialAsset::Reload(bool bIsCreate)
+	{
+		ReloadImpl();
+		if (bIsCreate)
+		{
+			m_Material->GetShaderAsset()->m_OnShaderReloaded.connect<&MaterialAsset::ReloadImpl>(this);
+		}
+	}
+
+	void MaterialAsset::ReloadImpl()
 	{
 		m_Material = CreateRef<Material>(GetPath());
 		m_Material->InitMaterialData();

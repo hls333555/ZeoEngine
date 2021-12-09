@@ -10,10 +10,9 @@
 
 namespace ZeoEngine {
 
+	/** A file watcher running on a separate thread. */
 	class FileWatcher
 	{
-		friend void Execute(FileWatcher& fileWatcher);
-
 	public:
 		FileWatcher(const std::string& directoryToWatch, std::chrono::duration<int32_t, std::milli> delay)
 			: m_DirectoryToWatch(directoryToWatch), m_Delay(delay)
@@ -33,13 +32,64 @@ namespace ZeoEngine {
 		void Start()
 		{
 			m_bIsRunning = true;
-			m_FileWatcherThread = CreateScope<std::thread>(Execute, std::ref(*this));
+			m_FileWatcherThread = CreateScope<std::thread>(&FileWatcher::Execute, this);
 			m_FileWatcherThread->detach();
 		}
 
 		void Stop()
 		{
-			m_bIsRunning = true;
+			m_bIsRunning = false;
+		}
+
+	private:
+		/** Monitor "m_DirectoryToWatch" for changes and in case of a change execute the delegate. */
+		void Execute()
+		{
+			while (m_bIsRunning)
+			{
+				// Wait for "m_Delay" milliseconds
+				std::this_thread::sleep_for(m_Delay);
+
+				auto it = m_WatchedFiles.begin();
+				while (it != m_WatchedFiles.end())
+				{
+					// File removal
+					if (!std::filesystem::exists(it->first))
+					{
+						m_OnFileRemovedDel.publish(it->first);
+						it = m_WatchedFiles.erase(it);
+					}
+					else
+					{
+						++it;
+					}
+				}
+
+				// Check if a file was created or modified
+				for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
+				{
+					if (entry.is_directory()) continue;
+
+					auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
+
+					std::string filePath = entry.path().string();
+					// File creation
+					if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
+					{
+						m_WatchedFiles[filePath] = currentFileLastWriteTime;
+						m_OnFileAddedDel.publish(filePath);
+					}
+					// File modification
+					else
+					{
+						if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
+						{
+							m_WatchedFiles[filePath] = currentFileLastWriteTime;
+							m_OnFileModifiedDel.publish(filePath);
+						}
+					}
+				}
+			}
 		}
 
 	public:
@@ -60,55 +110,5 @@ namespace ZeoEngine {
 
 		entt::sigh<void(const std::string&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;
 	};
-
-	/** Monitor "m_DirectoryToWatch" for changes and in case of a change execute the user supplied "action" function. */
-	static void Execute(FileWatcher& fileWatcher)
-	{
-		while (fileWatcher.m_bIsRunning)
-		{
-			// Wait for "m_Delay" milliseconds
-			std::this_thread::sleep_for(fileWatcher.m_Delay);
-
-			auto it = fileWatcher.m_WatchedFiles.begin();
-			while (it != fileWatcher.m_WatchedFiles.end())
-			{
-				// File removal
-				if (!std::filesystem::exists(it->first))
-				{
-					fileWatcher.m_OnFileRemovedDel.publish(it->first);
-					it = fileWatcher.m_WatchedFiles.erase(it);
-				}
-				else
-				{
-					++it;
-				}
-			}
-
-			// Check if a file was created or modified
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(fileWatcher.m_DirectoryToWatch))
-			{
-				if (entry.is_directory()) continue;
-
-				auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
-
-				std::string filePath = entry.path().string();
-				// File creation
-				if (fileWatcher.m_WatchedFiles.find(filePath) == fileWatcher.m_WatchedFiles.end())
-				{
-					fileWatcher.m_WatchedFiles[filePath] = currentFileLastWriteTime;
-					fileWatcher.m_OnFileAddedDel.publish(filePath);
-				}
-				// File modification
-				else
-				{
-					if (fileWatcher.m_WatchedFiles[filePath] != currentFileLastWriteTime)
-					{
-						fileWatcher.m_WatchedFiles[filePath] = currentFileLastWriteTime;
-						fileWatcher.m_OnFileModifiedDel.publish(filePath);
-					}
-				}
-			}
-		}
-	}
 
 }

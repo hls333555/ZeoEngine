@@ -38,7 +38,7 @@ namespace ZeoEngine {
 			if (!HasAsset(path)) return {};
 
 			auto asset = GetAsset(path);
-			asset->Reload();
+			asset->Reload(false);
 			return asset;
 		}
 

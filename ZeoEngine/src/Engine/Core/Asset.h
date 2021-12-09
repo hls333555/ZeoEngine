@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
 
-		virtual void Reload() = 0;
+		virtual void Reload(bool bIsCreate) = 0;
 	};
 
 	template<typename AssetClass>

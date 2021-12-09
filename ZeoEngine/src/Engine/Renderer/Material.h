@@ -18,6 +18,7 @@ namespace ZeoEngine {
 		~Material();
 
 		const AssetHandle<ShaderAsset>& GetShaderAsset() const { return m_Shader; }
+		AssetHandle<ShaderAsset>& GetShaderAsset() { return m_Shader; }
 		void SetShaderAsset(const AssetHandle<ShaderAsset>& shader) { m_Shader = shader; }
 
 		const auto& GetDynamicUniforms() const { return m_DynamicUniforms; }
@@ -210,7 +211,10 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void Reload() override;
+		virtual void Reload(bool bIsCreate) override;
+
+	private:
+		void ReloadImpl();
 
 	private:
 		Ref<Material> m_Material;

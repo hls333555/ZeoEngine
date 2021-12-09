@@ -81,7 +81,7 @@ namespace ZeoEngine {
 		return CreateRef<SceneAssetEnableShared>(path);
 	}
 
-	void SceneAsset::Reload()
+	void SceneAsset::Reload(bool bIsCreate)
 	{
 		Deserialize();
 		m_Scene->PostLoad();

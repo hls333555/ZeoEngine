@@ -132,7 +132,7 @@ namespace ZeoEngine {
 	MeshAsset::MeshAsset(const std::string& path)
 		: AssetBase(path)
 	{
-		Reload();
+		Reload(true);
 	}
 
 	Ref<MeshAsset> MeshAsset::Create(const std::string& path)
@@ -148,7 +148,7 @@ namespace ZeoEngine {
 		return CreateRef<MeshAssetEnableShared>(path);
 	}
 
-	void MeshAsset::Reload()
+	void MeshAsset::Reload(bool bIsCreate)
 	{
 		auto meshPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(meshPath));

@@ -3,6 +3,8 @@
 
 #include <filesystem>
 
+#include "Engine/Core/AssetRegistry.h"
+
 namespace ZeoEngine {
 
 	std::string PathUtils::GetCanonicalPath(const std::string& path)
@@ -86,6 +88,11 @@ namespace ZeoEngine {
 	std::string PathUtils::GetResourcePathFromAssetPath(const std::string& assetPath)
 	{
 		return assetPath.substr(0, assetPath.rfind("."));
+	}
+
+	std::string PathUtils::GetAssetPathFromResourcePath(const std::string& resourcePath)
+	{
+		return resourcePath + AssetRegistry::GetEngineAssetExtension();
 	}
 
 }

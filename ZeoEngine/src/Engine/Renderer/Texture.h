@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void Reload() override;
+		virtual void Reload(bool bIsCreate) override;
 
 	private:
 		Ref<Texture2D> m_Texture;

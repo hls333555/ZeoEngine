@@ -6,6 +6,7 @@
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/FileWatcher.h"
+#include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
 
@@ -81,6 +82,8 @@ namespace ZeoEngine {
 		static constexpr const char* GetAssetRootDirectory() { return "assets"; }
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
 
+		void OnUpdate(DeltaTime dt);
+
 		/** Get directory/asset spec of the specific path. The path should be relative. */
 		template<typename T = PathSpec>
 		Ref<T> GetPathSpec(const std::string& path) const
@@ -152,8 +155,6 @@ namespace ZeoEngine {
 		/** NOTE: Here we pass string by value because we will then modify values in container directly which will affect these strings if passed by reference. */
 		void OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset);
 
-		const Scope<FileWatcher>& GetFileWatcher() const { return m_FileWatcher; }
-
 	private:
 		void Init();
 
@@ -193,6 +194,9 @@ namespace ZeoEngine {
 		 */
 		void SortPathTree();
 
+		/** Called from file watcher callback on a separate thread. */
+		void OnAssetModified(const std::string& path);
+
 	protected:
 		AssetRegistry() = default;
 		AssetRegistry(const AssetRegistry&) = delete;
@@ -207,6 +211,12 @@ namespace ZeoEngine {
 		std::unordered_map<AssetTypeId, std::vector<Ref<AssetSpec>>> m_AssetSpecsById;
 
 		Scope<FileWatcher> m_FileWatcher;
+		/** Stores a series of modified assets to be processed by the main thread */
+		std::set<std::string> m_PendingModifiedAssets;
+		std::mutex m_Mutex;
+		std::condition_variable m_CV;
+		bool m_bModifiedAssetsReady = true;
+		bool m_bModifiedAssetsProcessed = false;
 	};
 
 }

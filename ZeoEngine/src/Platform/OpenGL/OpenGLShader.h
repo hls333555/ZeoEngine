@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(const std::string& filePath);
+		OpenGLShader(const std::string& filePath, bool bIsReload);
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
@@ -31,6 +31,9 @@ namespace ZeoEngine {
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
 		virtual size_t GetResourceCount() const override { return m_ResourceCount; }
 		virtual const std::unordered_map<uint32_t, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
+
+		static const char* GetCacheDirectory() { return "cache/shader/opengl"; }
+		static std::array<const char*, 4> GetCacheFileExtensions() { return { ".cached_opengl.vert", ".cached_opengl.frag", ".cached_vulkan.vert", ".cached_vulkan.frag" }; }
 
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values , uint32_t count);

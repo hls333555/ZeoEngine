@@ -46,6 +46,7 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowFocusChangedEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowFocusChanged));
 
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
@@ -90,6 +91,7 @@ namespace ZeoEngine {
 			// Stop updating layers if window is minimized
 			if (!m_bMinimized)
 			{
+				if (m_bFocused)
 				{
 					ZE_PROFILE_SCOPE("LayerStack OnUpdate");
 
@@ -143,6 +145,12 @@ namespace ZeoEngine {
 		m_bMinimized = false;
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
+		return false;
+	}
+
+	bool Application::OnWindowFocusChanged(WindowFocusChangedEvent& e)
+	{
+		m_bFocused = e.IsFocused();
 		return false;
 	}
 

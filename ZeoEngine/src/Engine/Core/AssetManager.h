@@ -40,6 +40,8 @@ namespace ZeoEngine {
 		bool DeleteAsset(const std::string& path) const;
 		/** Reload an existing asset from disk, any unsaved changes are discarded. */
 		bool ReloadAsset(const std::string& path) const;
+		/** Hot reload an existing asset from disk. */
+		bool HotReloadAsset(const std::string& path) const;
 		/** Save an existing asset. */
 		bool SaveAsset(const std::string& path) const;
 		/** Reimport an existing asset from its source place. */

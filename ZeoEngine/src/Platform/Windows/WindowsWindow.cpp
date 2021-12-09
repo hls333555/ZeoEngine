@@ -115,6 +115,12 @@ namespace ZeoEngine {
 			data.EventCallback(event);
 		});
 
+		glfwSetWindowFocusCallback(m_Window, [](GLFWwindow* window, int bFocused) {
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			WindowFocusChangedEvent event(bFocused == GLFW_TRUE);
+			data.EventCallback(event);
+		});
+
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			switch (action)
