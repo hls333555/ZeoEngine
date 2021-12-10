@@ -56,4 +56,5 @@ temp/
 # Directories
 ZeoEngine/vendor/VulkanSDK
 ZeoEditor/assets/cache
+ZeoEditor/cache
 scripts/__pycache__
