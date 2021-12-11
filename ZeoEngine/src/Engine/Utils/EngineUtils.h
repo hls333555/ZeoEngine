@@ -21,6 +21,18 @@ namespace ZeoEngine {
 			return Application::Get().GetTimeInSeconds();
 		}
 
+		static std::vector<std::string> SplitString(const std::string& str, char delimiter)
+		{
+			std::vector<std::string> tokens;
+			std::string token;
+			std::istringstream tokenStream(str);
+			while (std::getline(tokenStream, token, delimiter))
+			{
+				tokens.emplace_back(std::move(token));
+			}
+			return tokens;
+		}
+
 	};
 
 }

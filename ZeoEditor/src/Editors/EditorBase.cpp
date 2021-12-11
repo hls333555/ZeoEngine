@@ -3,13 +3,10 @@
 #include "EditorUIRenderers/EditorUIRendererBase.h"
 #include "Panels/OpenAssetPanel.h"
 #include "Panels/SaveAssetPanel.h"
-#include "Engine/Renderer/Buffer.h"
 #include "Engine/Profile/Instrumentor.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Renderer/Renderer.h"
-
-#define FRAMEBUFFER_WIDTH 1280
-#define FRAMEBUFFER_HEIGHT 720
+#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -18,9 +15,13 @@ namespace ZeoEngine {
 	{
 	}
 
+	EditorBase::~EditorBase() = default;
+
 	void EditorBase::OnAttach()
 	{
-		CreateFrameBuffer();
+		m_FBO = CreateFrameBuffer();
+		ZE_CORE_ASSERT(m_FBO);
+		m_RenderGraph = CreateRenderGraph(m_FBO);
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
 		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
@@ -30,33 +31,16 @@ namespace ZeoEngine {
 	{
 		if (!m_bShow) return;
 
+		Renderer::SetActiveRenderGraph(m_RenderGraph.get());
 		m_EditorUIRenderer->OnUpdate(dt);
-
 		m_ActiveScene->OnUpdate(dt);
-
-		BeginFrameBuffer();
+		m_FBO->Bind();
 		{
-			{
-				ZE_PROFILE_SCOPE("Renderer Prep");
-
-				glm::vec4 clearColor = { 0.2f, 0.2f, 0.2f, 1.0f };
-				RenderCommand::SetClearColor(clearColor);
-				RenderCommand::Clear();
-				// Clear entity ID buffer to -1
-				glm::vec4 clearIDValue{ -1.0f, 0.0f, 0.0f, 0.0f };
-				m_FBO->ClearAttachment(1, clearIDValue);
-			}
-			{
-				ZE_PROFILE_SCOPE("Renderer Draw");
-
-				m_ActiveScene->OnRender(*m_EditorCamera);
-				m_PostSceneRenderDel.publish(m_FBO);
-			}
-
-			// Flush debug draw batches
+			m_ActiveScene->OnRender(*m_EditorCamera);
+			m_PostSceneRenderDel.publish(m_FBO);
 			Renderer::FlushDebugDraws();
 		}
-		EndFrameBuffer();
+		m_FBO->Unbind();
 	}
 
 	void EditorBase::OnImGuiRender()
@@ -153,25 +137,6 @@ namespace ZeoEngine {
 		{
 			saveAssetPanel->Open();
 		}
-	}
-
-	void EditorBase::CreateFrameBuffer()
-	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
-		fbSpec.Width = FRAMEBUFFER_WIDTH;
-		fbSpec.Height = FRAMEBUFFER_HEIGHT;
-		m_FBO = FrameBuffer::Create(fbSpec);
-	}
-
-	void EditorBase::BeginFrameBuffer()
-	{
-		m_FBO->Bind();
-	}
-
-	void EditorBase::EndFrameBuffer()
-	{
-		m_FBO->Unbind();
 	}
 
 }

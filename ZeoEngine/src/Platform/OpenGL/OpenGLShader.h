@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void SetInt(const std::string& name, int value) override;

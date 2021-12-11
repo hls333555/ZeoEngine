@@ -68,7 +68,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DynamicUniformTexture2DData::Bind()
+	void DynamicUniformTexture2DData::Bind(uint32_t slot) const
 	{
 		// Bind default texture first
 		Texture2D::GetDefaultTexture()->Bind(Binding);
@@ -105,23 +105,29 @@ namespace ZeoEngine {
 	void Material::InitMaterialData()
 	{
 		m_DynamicUniforms.clear();
+		m_DynamicBindableUniforms.clear();
 		m_DynamicUniformBuffers.clear();
 		m_DynamicUniformBufferDatas.clear();
 		InitUniformBuffers();
 		ParseReflectionData();
-	}
 
-	void Material::Bind()
-	{
-		if (m_Shader)
+		RenderTechnique shade("Shade");
 		{
-			m_Shader->Bind();
-			BindUniformDatas();
+			RenderStep step("Opaque");
+			step.AddBindable(m_Shader ? m_Shader->GetShader() : m_DefaultShader->GetShader());
+			for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
+			{
+				step.AddBindable(uniformBuffer);
+			}
+			for (const auto& uniformBindableData : m_DynamicBindableUniforms)
+			{
+				step.AddBindable(uniformBindableData);
+			}
+			shade.AddStep(std::move(step));
 		}
-		else
-		{
-			m_DefaultShader->Bind();
-		}
+		m_Techniques.emplace_back(std::move(shade));
+
+		LinkRenderTechniques();
 	}
 
 	void Material::ApplyUniformDatas()
@@ -132,15 +138,19 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Material::BindUniformDatas()
+	void Material::Submit(const Drawable& drawable) const
 	{
-		for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
+		for (const auto& technique : m_Techniques)
 		{
-			uniformBuffer->Bind();
+			technique.Submit(drawable);
 		}
-		for (const auto& uniformData : m_DynamicUniforms)
+	}
+
+	void Material::LinkRenderTechniques()
+	{
+		for (auto& technique : m_Techniques)
 		{
-			uniformData->Bind();
+			technique.Link();
 		}
 	}
 
@@ -151,25 +161,25 @@ namespace ZeoEngine {
 			switch (reflectionData->GetType())
 			{
 			case ShaderReflectionType::Bool:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformBoolData>(*reflectionData, shared_from_this()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, shared_from_this()));
 				break;
 			case ShaderReflectionType::Int:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<int32_t>>(*reflectionData, shared_from_this(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<int32_t>>(*reflectionData, shared_from_this(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
 				break;
 			case ShaderReflectionType::Float:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec2:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec4:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformColorData>(*reflectionData, shared_from_this()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, shared_from_this()));
 				break;
 			case ShaderReflectionType::Texture2D:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformTexture2DData>(*reflectionData, shared_from_this()));
+				m_DynamicBindableUniforms.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, shared_from_this()));
 				break;
 			default:
 				break;

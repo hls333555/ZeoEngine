@@ -11,12 +11,14 @@ namespace ZeoEngine {
 	class Scene;
 	class FrameBuffer;
 	class IAsset;
+	class RenderGraph;
 
 	class EditorBase : public std::enable_shared_from_this<EditorBase>
 	{
 	public:
 		EditorBase() = delete;
 		explicit EditorBase(const char* editorName);
+		~EditorBase();
 
 	protected:
 		template<typename Derived>
@@ -62,6 +64,7 @@ namespace ZeoEngine {
 		void SetActiveScene(const Ref<Scene>& newScene) { m_ActiveScene = newScene; }
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
+		const Scope<RenderGraph>& GetRenderGraph() const { return m_RenderGraph; }
 
 		void Open();
 
@@ -87,9 +90,8 @@ namespace ZeoEngine {
 		virtual void LoadAsset(const std::string& path) = 0;
 		virtual void SaveAsset(const std::string& path) = 0;
 
-		void CreateFrameBuffer();
-		void BeginFrameBuffer();
-		void EndFrameBuffer();
+		virtual Ref<FrameBuffer> CreateFrameBuffer() = 0;
+		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) = 0;
 
 	public:
 		/**
@@ -120,7 +122,9 @@ namespace ZeoEngine {
 
 		Ref<EditorUIRendererBase> m_EditorUIRenderer;
 		Ref<Scene> m_ActiveScene;
+
 		Ref<FrameBuffer> m_FBO;
+		Scope<RenderGraph> m_RenderGraph;
 
 		bool m_bBlockSceneEvents = true;
 

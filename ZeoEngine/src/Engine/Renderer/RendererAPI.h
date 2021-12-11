@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		virtual void Clear() = 0;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
+		virtual void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
 		virtual void DrawInstanced(uint32_t instanceCount) = 0;
 		virtual void DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
 		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;

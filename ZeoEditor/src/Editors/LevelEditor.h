@@ -44,6 +44,9 @@ namespace ZeoEngine {
 		virtual void LoadAsset(const std::string& path) override;
 		virtual void SaveAsset(const std::string& path) override;
 
+		virtual Ref<FrameBuffer> CreateFrameBuffer() override;
+		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) override;
+
 		void ClearSelectedEntity();
 
 	private:

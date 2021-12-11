@@ -11,7 +11,7 @@ namespace ZeoEngine {
 		OpenGLVertexBuffer(void* vertices, uint32_t size);
 		virtual ~OpenGLVertexBuffer();
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void SetData(const void* data, uint32_t size) override;
@@ -32,7 +32,7 @@ namespace ZeoEngine {
 		OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
 		virtual ~OpenGLIndexBuffer();
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual uint32_t GetCount() const override { return m_Count; }
@@ -59,7 +59,7 @@ namespace ZeoEngine {
 
 		void Invalidate();
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
@@ -91,7 +91,7 @@ namespace ZeoEngine {
 
 		virtual void SetData(const void* data, uint32_t size = 0, uint32_t offset = 0) override;
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 
 	private:
 		uint32_t m_RendererID = 0;

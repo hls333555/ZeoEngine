@@ -18,6 +18,7 @@ namespace ZeoEngine {
 		const auto& material = materialComp.Template->GetMaterial();
 		const auto& shader = material->GetShader();
 		const auto& uniforms = material->GetDynamicUniforms();
+		const auto& bindableUniforms = material->GetDynamicBindableUniforms();
 		const auto& uniformBlockDatas = shader->GetUniformBlockDatas();
 
 		// Draw resources
@@ -28,7 +29,7 @@ namespace ZeoEngine {
 			ImGui::PushOverrideID(GetTableID());
 			if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 			{
-				DrawUniformData(uniforms[i]);
+				DrawUniformData(bindableUniforms[i]);
 
 				ImGui::EndTable();
 			}
@@ -61,7 +62,7 @@ namespace ZeoEngine {
 		return result;
 	}
 
-	void MaterialInspector::DrawUniformData(const Scope<DynamicUniformDataBase>& uniform)
+	void MaterialInspector::DrawUniformData(const Ref<DynamicUniformDataBase>& uniform) const
 	{
 		ImGui::TableNextColumn();
 

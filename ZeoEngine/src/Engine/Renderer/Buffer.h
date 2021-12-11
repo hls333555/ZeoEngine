@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Engine/Core/Assert.h"
-
 #include <glm/glm.hpp>
+
+#include "Engine/Core/Assert.h"
+#include "Engine/Renderer/Bindable.h"
+#include "Engine/Renderer/BufferResource.h"
 
 namespace ZeoEngine {
 
@@ -108,13 +110,10 @@ namespace ZeoEngine {
 
 	};
 
-	class VertexBuffer
+	class VertexBuffer : public Bindable
 	{
 	public:
 		virtual ~VertexBuffer() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
@@ -129,13 +128,10 @@ namespace ZeoEngine {
 	};
 
 	// Note: Currently ZeoEngine only supports 32-bit index buffers
-	class IndexBuffer
+	class IndexBuffer : public Bindable
 	{
 	public:
 		virtual ~IndexBuffer() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual uint32_t GetCount() const = 0;
 
@@ -180,14 +176,14 @@ namespace ZeoEngine {
 
 	struct FrameBufferSpec
 	{
-		uint32_t Width = 0, Height = 0;
+		uint32_t Width = 1280, Height = 720;
 		FrameBufferAttachmentSpec Attachments;
 		uint32_t Samples = 1;
 
 		bool bSwapChainTarget = false;
 	};
 
-	class FrameBuffer
+	class FrameBuffer : public Bindable, public BufferResource
 	{
 	public:
 		virtual ~FrameBuffer() = default;
@@ -195,9 +191,6 @@ namespace ZeoEngine {
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
 		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
@@ -211,13 +204,12 @@ namespace ZeoEngine {
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
 	};
 
-	class UniformBuffer
+	class UniformBuffer : public Bindable
 	{
 	public:
 		virtual ~UniformBuffer() = default;
 
 		virtual void SetData(const void* data, uint32_t size = 0, uint32_t offset = 0) = 0;
-		virtual void Bind() const = 0;
 
 		static Ref<UniformBuffer> Create(uint32_t size, uint32_t binding);
 	};

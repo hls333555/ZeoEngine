@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/EditorCamera.h"
+#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -50,6 +51,19 @@ namespace ZeoEngine {
 	{
 		auto& materialPreviewComp = GetContextEntity().GetComponent<MaterialPreviewComponent>();
 		materialPreviewComp.Template->Serialize(path);
+	}
+
+	Ref<FrameBuffer> MaterialEditor::CreateFrameBuffer()
+	{
+		// TODO:
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
+		return FrameBuffer::Create(fbSpec);
+	}
+
+	Scope<RenderGraph> MaterialEditor::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
+	{
+		return CreateScope<ForwardRenderGraph>(fbo);
 	}
 
 	void MaterialEditor::CreatePreviewMaterial(bool bIsFromLoad)

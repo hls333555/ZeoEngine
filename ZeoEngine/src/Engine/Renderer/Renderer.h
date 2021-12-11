@@ -3,48 +3,11 @@
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Shader.h"
-#include "Engine/Renderer/Mesh.h"
-#include "Engine/Renderer/Material.h"
 
 namespace ZeoEngine {
 
 	struct MeshRendererComponent;
 	class DDRenderInterface;
-
-	struct RenderData
-	{
-		Ref<VertexArray> VAO;
-		const MeshEntry* MeshEntries;
-		uint32_t MeshCount = 0;
-		const AssetHandle<MaterialAsset>* Materials;
-		uint32_t MaterialCount = 0;
-		struct ModelData
-		{
-			glm::mat4 Transform;
-			glm::mat4 NormalMatrix;
-
-			// Editor-only
-			int32_t EntityID;
-		};
-		ModelData ModelBuffer;
-		Ref<UniformBuffer> ModelUniformBuffer;
-
-		RenderData(const Ref<VertexArray>& vao, const MeshEntry* meshEntries, uint32_t meshCount, const AssetHandle<MaterialAsset>* materials, uint32_t materialCount, const glm::mat4& transform, int32_t entityID)
-			: VAO(vao), MeshEntries(meshEntries), MeshCount(meshCount), Materials(materials), MaterialCount(materialCount)
-		{
-			ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
-			ModelBuffer.Transform = transform;
-			ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
-			ModelBuffer.EntityID = entityID;
-			ModelUniformBuffer->SetData(&ModelBuffer);
-		}
-
-		void Bind()
-		{
-			ModelUniformBuffer->Bind();
-		}
-
-	};
 
 	struct Statistics
 	{
@@ -103,10 +66,9 @@ namespace ZeoEngine {
 	// Data alignment is required for std140 layout!
 	struct RendererData
 	{
-		PrimitiveData PrimitiveBuffer;
+		class RenderGraph* ActiveRenderGraph = nullptr;
 
-		Ref<Material> DefaultMaterial;
-		std::vector<RenderData> RenderQueue;
+		PrimitiveData PrimitiveBuffer;
 
 		struct CameraData
 		{
@@ -226,6 +188,9 @@ namespace ZeoEngine {
 		static void ResetStats();
 
 		static glm::mat4 GetViewProjectionMatrix() { return s_Data.CameraBuffer.GetViewProjection(); }
+
+		static void SetActiveRenderGraph(RenderGraph* renderGraph) { s_Data.ActiveRenderGraph = renderGraph; }
+		static RenderGraph* GetActiveRenderGraph() { return s_Data.ActiveRenderGraph; }
 
 	private:
 		static void Prepare();

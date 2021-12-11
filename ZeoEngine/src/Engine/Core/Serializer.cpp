@@ -630,33 +630,33 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MaterialSerializer::EvaluateSerializeData(YAML::Emitter& out, const Scope<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateSerializeData(YAML::Emitter& out, const Ref<DynamicUniformDataBase>& uniform)
 	{
 		switch (uniform->GetDataType())
 		{
-		case ShaderReflectionType::Bool:
-			SerializeData<bool>(out, uniform);
-			break;
-		case ShaderReflectionType::Int:
-			SerializeData<int32_t>(out, uniform);
-			break;
-		case ShaderReflectionType::Float:
-			SerializeData<float>(out, uniform);
-			break;
-		case ShaderReflectionType::Vec2:
-			SerializeData<glm::vec2>(out, uniform);
-			break;
-		case ShaderReflectionType::Vec3:
-			SerializeData<glm::vec3>(out, uniform);
-			break;
-		case ShaderReflectionType::Vec4:
-			SerializeData<glm::vec4>(out, uniform);
-			break;
-		case ShaderReflectionType::Texture2D:
-			SerializeData<AssetHandle<Texture2DAsset>>(out, uniform);
-			break;
-		default:
-			break;
+			case ShaderReflectionType::Bool:
+				SerializeData<bool>(out, uniform);
+				break;
+			case ShaderReflectionType::Int:
+				SerializeData<int32_t>(out, uniform);
+				break;
+			case ShaderReflectionType::Float:
+				SerializeData<float>(out, uniform);
+				break;
+			case ShaderReflectionType::Vec2:
+				SerializeData<glm::vec2>(out, uniform);
+				break;
+			case ShaderReflectionType::Vec3:
+				SerializeData<glm::vec3>(out, uniform);
+				break;
+			case ShaderReflectionType::Vec4:
+				SerializeData<glm::vec4>(out, uniform);
+				break;
+			case ShaderReflectionType::Texture2D:
+				SerializeData<AssetHandle<Texture2DAsset>>(out, uniform);
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -676,33 +676,33 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& value, const Scope<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& value, const Ref<DynamicUniformDataBase>& uniform)
 	{
 		switch (uniform->GetDataType())
 		{
-		case ShaderReflectionType::Bool:
-			DeserializeData<bool>(value, uniform);
-			break;
-		case ShaderReflectionType::Int:
-			DeserializeData<int32_t>(value, uniform);
-			break;
-		case ShaderReflectionType::Float:
-			DeserializeData<float>(value, uniform);
-			break;
-		case ShaderReflectionType::Vec2:
-			DeserializeData<glm::vec2>(value, uniform);
-			break;
-		case ShaderReflectionType::Vec3:
-			DeserializeData<glm::vec3>(value, uniform);
-			break;
-		case ShaderReflectionType::Vec4:
-			DeserializeData<glm::vec4>(value, uniform);
-			break;
-		case ShaderReflectionType::Texture2D:
-			DeserializeData<AssetHandle<Texture2DAsset>>(value, uniform);
-			break;
-		default:
-			break;
+			case ShaderReflectionType::Bool:
+				DeserializeData<bool>(value, uniform);
+				break;
+			case ShaderReflectionType::Int:
+				DeserializeData<int32_t>(value, uniform);
+				break;
+			case ShaderReflectionType::Float:
+				DeserializeData<float>(value, uniform);
+				break;
+			case ShaderReflectionType::Vec2:
+				DeserializeData<glm::vec2>(value, uniform);
+				break;
+			case ShaderReflectionType::Vec3:
+				DeserializeData<glm::vec3>(value, uniform);
+				break;
+			case ShaderReflectionType::Vec4:
+				DeserializeData<glm::vec4>(value, uniform);
+				break;
+			case ShaderReflectionType::Texture2D:
+				DeserializeData<AssetHandle<Texture2DAsset>>(value, uniform);
+				break;
+			default:
+				break;
 		}
 	}
 

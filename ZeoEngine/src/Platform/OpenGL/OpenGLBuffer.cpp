@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void OpenGLVertexBuffer::Bind() const
+	void OpenGLVertexBuffer::Bind(uint32_t slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -91,7 +91,7 @@ namespace ZeoEngine {
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void OpenGLIndexBuffer::Bind() const
+	void OpenGLIndexBuffer::Bind(uint32_t slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -316,7 +316,7 @@ namespace ZeoEngine {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFrameBuffer::Bind() const
+	void OpenGLFrameBuffer::Bind(uint32_t slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -421,7 +421,7 @@ namespace ZeoEngine {
 		glNamedBufferSubData(m_RendererID, offset, size == 0 ? m_Size : size, data);
 	}
 
-	void OpenGLUniformBuffer::Bind() const
+	void OpenGLUniformBuffer::Bind(uint32_t slot) const
 	{
 		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
 	}

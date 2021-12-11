@@ -12,8 +12,15 @@
 
 namespace ZeoEngine {
 
+	void MeshEntry::Submit() const
+	{
+		(*MaterialPtr)->GetMaterial()->Submit(*this);
+	}
+
 	Mesh::Mesh(const std::string& path)
 	{
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+
 		Assimp::Importer Importer;
 		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
@@ -36,57 +43,73 @@ namespace ZeoEngine {
 		return CreateRef<MeshEnableShared>(path);
 	}
 
+	void Mesh::Submit(const glm::mat4& transform, int32_t entityID)
+	{
+		m_ModelBuffer.Transform = transform;
+		m_ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
+		m_ModelBuffer.EntityID = entityID;
+		m_ModelUniformBuffer->SetData(&m_ModelBuffer);
+
+		for (const auto& entry : m_Entries)
+		{
+			entry.Submit();
+		}
+	}
+
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene, const std::string& path)
 	{
-		LoadMeshEntries(meshScene);
+		Ref<VertexArray> vao = VertexArray::Create();
 
+		LoadMeshEntries(meshScene, vao);
+
+		// TODO: Change to local
 		m_VertexBuffer = new MeshVertex[m_VertexCount];
 		m_IndexBuffer = new uint32_t[m_IndexCount];
 
 		// Load datas before submitting buffers
 		LoadDatas(meshScene);
 
-		m_VAO = VertexArray::Create();
-
-		m_VBO = VertexBuffer::Create(m_VertexBuffer, m_VertexCount * sizeof(MeshVertex));
+		Ref<VertexBuffer> vbo = VertexBuffer::Create(m_VertexBuffer, m_VertexCount * sizeof(MeshVertex));
 		BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal"   },
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		};
-		m_VBO->SetLayout(layout);
-		m_VAO->AddVertexBuffer(m_VBO);
+		vbo->SetLayout(layout);
+		vao->AddVertexBuffer(vbo);
 
-		Ref<IndexBuffer> IBO = IndexBuffer::Create(m_IndexBuffer, m_IndexCount);
-		m_VAO->SetIndexBuffer(IBO);
+		Ref<IndexBuffer> ibo = IndexBuffer::Create(m_IndexBuffer, m_IndexCount);
+		vao->SetIndexBuffer(ibo);
 
 		delete[] m_VertexBuffer;
 		delete[] m_IndexBuffer;
 	}
 
-	void Mesh::LoadMeshEntries(const aiScene* meshScene)
+	void Mesh::LoadMeshEntries(const aiScene* meshScene, const Ref<VertexArray>& vao)
 	{
-		uint32_t meshCount = meshScene->mNumMeshes;
-		m_Entries.resize(meshCount);
-		for (uint32_t i = 0; i < meshCount; ++i)
-		{
-			const aiMesh* mesh = meshScene->mMeshes[i];
-			m_Entries[i].Name = mesh->mName.C_Str();
-			m_Entries[i].VertexBufferPtr = m_VertexCount;
-			m_Entries[i].IndexBufferPtr = m_IndexCount;
-			m_Entries[i].IndexCount = mesh->mNumFaces * 3;
-			m_Entries[i].MaterialIndex = mesh->mMaterialIndex;
-
-			m_VertexCount += mesh->mNumVertices;
-			m_IndexCount += m_Entries[i].IndexCount;
-		}
-
 		// Init material slots with default materials
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
 		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
 		{
 			m_MaterialSlots.emplace_back(MaterialAssetLibrary::GetDefaultMaterialAsset());
 		}
+
+		uint32_t meshCount = meshScene->mNumMeshes;
+		m_Entries.resize(meshCount);
+		for (uint32_t i = 0; i < meshCount; ++i)
+		{
+			const aiMesh* mesh = meshScene->mMeshes[i];
+			m_Entries[i].SetVertexArray(vao);
+			m_Entries[i].SetModelUniformBuffer(m_ModelUniformBuffer);
+			m_Entries[i].Name = mesh->mName.C_Str();
+			m_Entries[i].BaseVertex = m_VertexCount;
+			m_Entries[i].BaseIndex = m_IndexCount;
+			m_Entries[i].SetIndexCount(mesh->mNumFaces * 3);
+			m_Entries[i].MaterialPtr = &m_MaterialSlots[mesh->mMaterialIndex];
+
+			m_VertexCount += mesh->mNumVertices;
+			m_IndexCount += m_Entries[i].GetIndexCount();
+		}		
 	}
 
 	void Mesh::LoadDatas(const aiScene* meshScene)
@@ -94,8 +117,8 @@ namespace ZeoEngine {
 		for (size_t i = 0; i < m_Entries.size(); ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
-			LoadVertexData(mesh, m_Entries[i].VertexBufferPtr);
-			LoadIndexData(mesh, m_Entries[i].IndexBufferPtr);
+			LoadVertexData(mesh, m_Entries[i].BaseVertex);
+			LoadIndexData(mesh, m_Entries[i].BaseIndex);
 		}
 	}
 

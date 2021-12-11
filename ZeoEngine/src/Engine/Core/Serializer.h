@@ -93,20 +93,20 @@ namespace ZeoEngine {
 		void Deserialize(const YAML::Node& value, const Ref<Material>& material);
 
 	private:
-		void EvaluateSerializeData(YAML::Emitter& out, const Scope<DynamicUniformDataBase>& uniform);
+		void EvaluateSerializeData(YAML::Emitter& out, const Ref<DynamicUniformDataBase>& uniform);
 
 		template<typename T>
-		void SerializeData(YAML::Emitter& out, const Scope<DynamicUniformDataBase>& uniform)
+		void SerializeData(YAML::Emitter& out, const Ref<DynamicUniformDataBase>& uniform)
 		{
 			const auto& dataName = uniform->Name;
 			const auto& dataValue = *static_cast<T*>(uniform->GetValuePtr());
 			out << YAML::Key << dataName << YAML::Value << dataValue;
 		}
 
-		void EvaluateDeserializeData(const YAML::Node& value, const Scope<DynamicUniformDataBase>& uniform);
+		void EvaluateDeserializeData(const YAML::Node& value, const Ref<DynamicUniformDataBase>& uniform);
 
 		template<typename T>
-		void DeserializeData(const YAML::Node& value, const Scope<DynamicUniformDataBase>& uniform)
+		void DeserializeData(const YAML::Node& value, const Ref<DynamicUniformDataBase>& uniform)
 		{
 			const auto& dataValue = value.as<T>();
 			*static_cast<T*>(uniform->GetValuePtr()) = dataValue;

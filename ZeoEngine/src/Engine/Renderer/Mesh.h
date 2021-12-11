@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Renderer/Drawable.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 #include "Engine/Math/BoxSphereBounds.h"
@@ -16,6 +17,7 @@ namespace ZeoEngine {
 	class VertexBuffer;
 	class Texture2D;
 	class MaterialAsset;
+	class UniformBuffer;
 
 	struct MeshVertex
 	{
@@ -24,13 +26,20 @@ namespace ZeoEngine {
 		glm::vec2 TexCoord;
 	};
 
-	struct MeshEntry
+	struct MeshEntry : public Drawable
 	{
 		const char* Name = nullptr;
-		uint32_t VertexBufferPtr = 0;
-		uint32_t IndexBufferPtr = 0;
-		uint32_t IndexCount = 0;
-		uint32_t MaterialIndex = 0;
+		uint32_t BaseVertex = 0;
+		uint32_t BaseIndex = 0;
+		AssetHandle<MaterialAsset>* MaterialPtr = nullptr;
+
+		virtual uint32_t GetBaseVertex() const override { return BaseVertex; }
+		virtual uint32_t GetBaseIndex() const override { return BaseIndex; }
+		virtual void Submit() const override;
+
+		void SetVertexArray(const Ref<VertexArray>& vao) { m_VAO = vao; }
+		void SetIndexCount(uint32_t count) { m_IndexCount = count; }
+		void SetModelUniformBuffer(const Ref<UniformBuffer>& ubo) { m_ModelUniformBuffer = ubo; }
 	};
 
 	class Mesh
@@ -39,8 +48,6 @@ namespace ZeoEngine {
 		explicit Mesh(const std::string& path);
 	public:
 		static Ref<Mesh> Create(const std::string& path);
-
-		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 
 		const MeshEntry* GetMeshEntries() const { return m_Entries.data(); }
 		uint32_t GetMeshCount() const { return static_cast<uint32_t>(m_Entries.size()); }
@@ -58,23 +65,34 @@ namespace ZeoEngine {
 		uint32_t GetIndexCount() const { return m_IndexCount; }
 		const BoxSphereBounds& GetBounds() const { return m_Bounds; }
 
+		void Submit(const glm::mat4& transform, int32_t entityID);
+
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
-		void LoadMeshEntries(const aiScene* meshScene);
+		void LoadMeshEntries(const aiScene* meshScene, const Ref<VertexArray>& vao);
 		void LoadDatas(const aiScene* meshScene);
 		void LoadVertexData(const aiMesh* mesh, uint32_t baseIndex);
 		void LoadIndexData(const aiMesh* mesh, uint32_t baseIndex);
 
 	private:
-		Ref<VertexArray> m_VAO;
-		Ref<VertexBuffer> m_VBO;
 		uint32_t m_VertexCount = 0, m_IndexCount = 0;
 		MeshVertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
+		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
 		BoxSphereBounds m_Bounds;
 
-		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
+		struct ModelData
+		{
+			glm::mat4 Transform;
+			glm::mat4 NormalMatrix;
+
+			// Editor-only
+			int32_t EntityID;
+		};
+		ModelData m_ModelBuffer;
+		// TODO: Move to MeshInstance
+		Ref<UniformBuffer> m_ModelUniformBuffer;
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>

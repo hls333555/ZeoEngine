@@ -10,8 +10,8 @@
 
 namespace ZeoEngine {
 
-	LevelEditorScene::LevelEditorScene(const Ref<LevelEditor>& sceneEditor)
-		: m_SceneEditor(sceneEditor)
+	LevelEditorScene::LevelEditorScene(const Ref<LevelEditor>& levelEditor)
+		: m_LevelEditor(levelEditor)
 	{
 		if (RendererAPI::Is2D())
 		{
@@ -39,7 +39,7 @@ namespace ZeoEngine {
 
 	void LevelEditorScene::OnUpdate(DeltaTime dt)
 	{
-		switch (m_SceneEditor->GetSceneState())
+		switch (m_LevelEditor->GetSceneState())
 		{
 			case SceneState::Edit:	OnUpdateEditor(dt); break;
 			case SceneState::Play:	OnUpdateRuntime(dt); break;
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 
 	void LevelEditorScene::OnRender(const EditorCamera& camera)
 	{
-		switch (m_SceneEditor->GetSceneState())
+		switch (m_LevelEditor->GetSceneState())
 		{
 			case SceneState::Edit:	OnRenderEditor(camera); break;
 			case SceneState::Play:
@@ -109,7 +109,7 @@ namespace ZeoEngine {
 
 	Entity LevelEditorScene::GetSelectedEntity() const
 	{
-		return m_SceneEditor->GetContextEntity();
+		return m_LevelEditor->GetContextEntity();
 	}
 
 }

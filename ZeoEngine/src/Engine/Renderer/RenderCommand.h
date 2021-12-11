@@ -40,9 +40,9 @@ namespace ZeoEngine {
 		}
 
 		/** Issue a draw call. */
-		static void DrawIndexed(const Ref<VertexArray>& vertexArray, int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0)
+		static void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0)
 		{
-			s_RendererAPI->DrawIndexed(vertexArray, baseVertex, indexCount, baseIndex);
+			s_RendererAPI->DrawIndexed(baseVertex, indexCount, baseIndex);
 		}
 
 		/** Issue a draw call. */

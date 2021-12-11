@@ -76,12 +76,10 @@ namespace ZeoEngine {
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, int32_t baseVertex, uint32_t indexCount, int32_t baseIndex)
+	void OpenGLRendererAPI::DrawIndexed(int32_t baseVertex, uint32_t indexCount, int32_t baseIndex)
 	{
-		vertexArray->Bind();
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		void* offset = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
-		glDrawElementsBaseVertex(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset, baseVertex);
+		void* indices = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
+		glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indices, baseVertex);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(uint32_t instanceCount)

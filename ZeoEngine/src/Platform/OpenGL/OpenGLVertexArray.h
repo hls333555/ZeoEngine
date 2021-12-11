@@ -10,7 +10,7 @@ namespace ZeoEngine {
 		OpenGLVertexArray();
 		virtual ~OpenGLVertexArray();
 
-		virtual void Bind() const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Unbind() const override;
 
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;

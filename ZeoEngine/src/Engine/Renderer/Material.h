@@ -8,6 +8,7 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Renderer/RenderTechnique.h"
 
 namespace ZeoEngine {
 
@@ -22,28 +23,32 @@ namespace ZeoEngine {
 		void SetShaderAsset(const AssetHandle<ShaderAsset>& shader) { m_Shader = shader; }
 
 		const auto& GetDynamicUniforms() const { return m_DynamicUniforms; }
+		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
 		auto& GetDynamicUniformBuffers() { return m_DynamicUniformBuffers; }
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
 
 		Ref<Shader> GetShader() const;
 
 		void InitMaterialData();
-		/** Bind shader and textures. Called before every draw call. */
-		void Bind();
 		void ApplyUniformDatas();
+
+		void Submit(const Drawable& drawable) const;
+		void LinkRenderTechniques();
 
 	private:
 		void ParseReflectionData(); // Should not be called within ctor due to shared_from_this()!
 		void InitUniformBuffers();
-		void BindUniformDatas();
 
 	private:
 		AssetHandle<ShaderAsset> m_DefaultShader, m_Shader;
-		std::vector<Scope<struct DynamicUniformDataBase>> m_DynamicUniforms;
+		std::vector<Ref<struct DynamicUniformDataBase>> m_DynamicUniforms;
+		std::vector<Ref<struct DynamicUniformTexture2DData>> m_DynamicBindableUniforms;
 		/** Map from uniform block binding to uniform buffers */
 		std::unordered_map<uint32_t, Ref<UniformBuffer>> m_DynamicUniformBuffers;
 		/** Map from uniform block binding to uniform buffer datas */
 		std::unordered_map<uint32_t, char*> m_DynamicUniformBufferDatas;
+
+		std::vector<RenderTechnique> m_Techniques;
 	};
 
 	struct DynamicUniformDataBase
@@ -62,8 +67,6 @@ namespace ZeoEngine {
 		virtual ShaderReflectionType GetDataType() const = 0 { return ShaderReflectionType::None; }
 		virtual void Draw() = 0;
 		virtual void* GetValuePtr() = 0;
-		/** Called when owner material is bound. */
-		virtual void Bind() {}
 		/** Called in material initialization or when value changes. */
 		virtual void Apply();
 	};
@@ -180,7 +183,7 @@ namespace ZeoEngine {
 		virtual void* GetValuePtr() override { return glm::value_ptr(Value); }
 	};
 
-	struct DynamicUniformTexture2DData : public DynamicUniformDataBase
+	struct DynamicUniformTexture2DData : public DynamicUniformDataBase, public Bindable
 	{
 		AssetBrowser Browser{ Texture2DAsset::TypeId() };
 		AssetHandle<Texture2DAsset> Value;
@@ -191,7 +194,7 @@ namespace ZeoEngine {
 		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Texture2D; }
 		virtual void Draw() override;
 		virtual void* GetValuePtr() override { return &Value; }
-		virtual void Bind() override;
+		virtual void Bind(uint32_t slot = 0) const override;
 		virtual void Apply() override;
 	};
 
@@ -205,8 +208,6 @@ namespace ZeoEngine {
 
 		const Ref<Material>& GetMaterial() const { return m_Material; }
 		Ref<Shader> GetShader() const { return m_Material->GetShader(); }
-
-		void Bind() const { m_Material->Bind(); }
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;

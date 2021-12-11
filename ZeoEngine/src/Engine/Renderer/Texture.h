@@ -4,13 +4,14 @@
 #include <unordered_map>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Renderer/Bindable.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
 
-	class Texture
+	class Texture : public Bindable
 	{
 	public:
 		virtual ~Texture() = default;

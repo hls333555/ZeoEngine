@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	class LevelEditorScene : public Scene
 	{
 	public:
-		explicit LevelEditorScene(const Ref<LevelEditor>& sceneEditor);
+		explicit LevelEditorScene(const Ref<LevelEditor>& levelEditor);
 		virtual ~LevelEditorScene();
 
 		virtual void OnUpdate(DeltaTime dt) override;
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 		Scope<NativeScriptSystem> m_NativeScriptSystem;
 		Scope<PhysicsSystem> m_PhysicsSystem;
 
-		Ref<LevelEditor> m_SceneEditor;
+		Ref<LevelEditor> m_LevelEditor;
 	};
 
 }

@@ -401,7 +401,7 @@ namespace ZeoEngine {
 
 			if (binding < 3) continue;
 
-			const auto dataCount = m_ShaderReflectionData.size();
+			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector
 			m_UniformBlockDatas[binding] = { resource.name, bufferSize, dataCount, dataCount + memberCount };
 			ReflectStructType(compiler, bufferType, binding);
@@ -457,7 +457,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLShader::Bind() const
+	void OpenGLShader::Bind(uint32_t slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 

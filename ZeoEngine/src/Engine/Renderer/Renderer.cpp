@@ -5,6 +5,7 @@
 #include "Engine/Renderer/DebugDrawRenderInterface.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -76,7 +77,6 @@ namespace ZeoEngine {
 			s_Data.PrimitiveBuffer.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 			s_Data.PrimitiveBuffer.TextureSlots[0] = s_Data.PrimitiveBuffer.WhiteTexture;
 
-			s_Data.DefaultMaterial = MaterialAssetLibrary::GetDefaultMaterialAsset()->GetMaterial();
 			s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(RendererData::CameraData), 0);
 
 			s_Data.GridShader = Shader::Create("assets/editor/shaders/Grid.glsl");
@@ -134,10 +134,8 @@ namespace ZeoEngine {
 
 	void Renderer::EndScene()
 	{
-		Renderer::UploadLightData();
-		{
-			Submit();
-		}
+		UploadLightData();
+		s_Data.ActiveRenderGraph->Execute();
 		RenderCommand::ToggleFaceCulling(false);
 		RenderCommand::ToggleDepthWriting(false);
 		{
@@ -150,6 +148,7 @@ namespace ZeoEngine {
 			Renderer::FlushBatch();
 		}
 		RenderCommand::ToggleFaceCulling(true);
+		s_Data.ActiveRenderGraph->Reset();
 	}
 
 	void Renderer::FlushDebugDraws()
@@ -159,7 +158,6 @@ namespace ZeoEngine {
 
 	void Renderer::Prepare()
 	{
-		s_Data.RenderQueue.clear();
 		s_Data.LightBuffer.Reset();
 		s_Data.LightUniformBuffer->SetData(&s_Data.LightBuffer);
 
@@ -168,25 +166,25 @@ namespace ZeoEngine {
 
 	void Renderer::Submit()
 	{
-		for (auto& renderData : s_Data.RenderQueue)
-		{
-			renderData.Bind();
-			for (uint32_t i = 0; i < renderData.MeshCount; ++i)
-			{
-				const auto& meshEntry = renderData.MeshEntries[i];
-				const auto& material = renderData.Materials[meshEntry.MaterialIndex];
-				if (material)
-				{
-					material->Bind();
-				}
-				else
-				{
-					s_Data.DefaultMaterial->Bind();
-				}
-				RenderCommand::DrawIndexed(renderData.VAO, meshEntry.VertexBufferPtr, meshEntry.IndexCount, meshEntry.IndexBufferPtr);
-				++s_Data.Stats.DrawCalls;
-			}
-		}
+		//for (auto& renderData : s_Data.RenderQueue)
+		//{
+		//	renderData.Bind();
+		//	for (uint32_t i = 0; i < renderData.MeshCount; ++i)
+		//	{
+		//		const auto& meshEntry = renderData.MeshEntries[i];
+		//		const auto& material = renderData.Materials[meshEntry.MaterialIndex];
+		//		if (material)
+		//		{
+		//			material->Bind();
+		//		}
+		//		else
+		//		{
+		//			s_Data.DefaultMaterial->Bind();
+		//		}
+		//		RenderCommand::DrawIndexed(renderData.VAO, meshEntry.BaseVertex, meshEntry.IndexCount, meshEntry.BaseIndex);
+		//		++s_Data.Stats.DrawCalls;
+		//	}
+		//}
 	}
 
 	void Renderer::StartBatch()
@@ -268,8 +266,7 @@ namespace ZeoEngine {
 	{
 		if (!mesh) return;
 
-		s_Data.RenderQueue.emplace_back(mesh->GetVAO(), mesh->GetMeshEntries(), mesh->GetMeshCount(), mesh->GetMaterials().data(), mesh->GetMaterialCount(), transform, entityID);
-		s_Data.Stats.MeshVertexCount += mesh->GetVertexCount();
+		mesh->Submit(transform, entityID);
 	}
 
 	void Renderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)

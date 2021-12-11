@@ -125,7 +125,7 @@ namespace ZeoEngine {
 			}
 		});
 
-		// Render billboards at last
+		// Render billboards
 		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
 		{
 			if (billboardComp.Texture)
