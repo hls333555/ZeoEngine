@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/SceneRenderer.h"
 
 namespace ZeoEngine {
 
@@ -120,6 +120,11 @@ namespace ZeoEngine {
         ZE_CORE_TRACE("OpenGLDDRenderInterface initialized");
     }
 
+    OpenGLDDRenderInterface::OpenGLDDRenderInterface(const Ref<SceneRenderer>& sceneRenderer)
+        : m_SceneRenderer(sceneRenderer)
+    {
+    }
+
     OpenGLDDRenderInterface::~OpenGLDDRenderInterface()
     {
         glDeleteProgram(m_LinePointShader);
@@ -191,7 +196,7 @@ namespace ZeoEngine {
         glBindVertexArray(m_LinePointVAO);
         glUseProgram(m_LinePointShader);
 
-        auto viewProjection = Renderer::GetViewProjectionMatrix();
+        auto viewProjection = m_SceneRenderer->GetViewProjectionMatrix();
         glUniformMatrix4fv(m_LinePointShader_MvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
         if (depthEnabled)
@@ -224,7 +229,7 @@ namespace ZeoEngine {
         glBindVertexArray(m_LinePointVAO);
         glUseProgram(m_LinePointShader);
 
-        auto viewProjection = Renderer::GetViewProjectionMatrix();
+        auto viewProjection = m_SceneRenderer->GetViewProjectionMatrix();
         glUniformMatrix4fv(m_LinePointShader_MvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
         if (depthEnabled)

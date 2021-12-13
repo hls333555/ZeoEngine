@@ -2,8 +2,8 @@
 
 #include "EditorUIRenderers/LevelEditorUIRenderer.h"
 #include "Scenes/LevelEditorScene.h"
-#include "Engine/Renderer/Buffer.h"
-#include "Engine/Renderer/RenderGraph.h"
+#include "SceneRenderers/LevelEditorSceneRenderer.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
 
@@ -29,11 +29,16 @@ namespace ZeoEngine {
 		return m_SceneForEdit;
 	}
 
-	void LevelEditor::UpdateSceneRef(bool bIsFromLoad)
+	Ref<SceneRenderer> LevelEditor::CreateSceneRenderer()
+	{
+		return CreateRef<LevelEditorSceneRenderer>(SharedFromBase<LevelEditor>());
+	}
+
+	void LevelEditor::UpdateSceneRef(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
 		if (!bIsFromLoad)
 		{
-			m_SceneAsset->UpdateScene(GetScene());
+			m_SceneAsset->UpdateScene(scene);
 		}
 	}
 
@@ -43,12 +48,20 @@ namespace ZeoEngine {
 		auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
 		SetActiveScene(sceneForPlay);
 		SetContextEntity({});
+		for (const auto& system : GetScene()->GetSystems())
+		{
+			system->BindUpdateFuncToRuntime();
+		}
 		GetScene<LevelEditorScene>()->OnRuntimeStart();
 	}
 
 	void LevelEditor::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		for (const auto& system : GetScene()->GetSystems())
+		{
+			system->BindUpdateFuncToEditor();
+		}
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
 		SetActiveScene(m_SceneForEdit);
 	}
@@ -107,18 +120,6 @@ namespace ZeoEngine {
 	void LevelEditor::SaveAsset(const std::string& path)
 	{
 		m_SceneAsset->Serialize(path);
-	}
-
-	Ref<FrameBuffer> LevelEditor::CreateFrameBuffer()
-	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
-		return FrameBuffer::Create(fbSpec);
-	}
-
-	Scope<RenderGraph> LevelEditor::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
-	{
-		return CreateScope<ForwardRenderGraph>(fbo);
 	}
 
 	void LevelEditor::ClearSelectedEntity()

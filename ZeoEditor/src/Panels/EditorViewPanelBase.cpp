@@ -139,7 +139,7 @@ namespace ZeoEngine {
 	void EditorViewPanelBase::OnViewportResize(const glm::vec2& size)
 	{
 		// Broadcast changes
-		Renderer::OnViewportResize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+		GetContextEditor()->m_OnViewportResizeDel.publish(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
 
 		// Resize FrameBuffer
 		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
@@ -150,10 +150,10 @@ namespace ZeoEngine {
 		UpdateViewportSizeOnSceneCameras();
 	}
 
-	void EditorViewPanelBase::PostSceneCreate()
+	void EditorViewPanelBase::PostSceneCreate(const Ref<Scene>& scene)
 	{
 		// This binding must be called after scene creation!
-		GetContextEditor()->GetScene()->m_Registry.on_construct<CameraComponent>().template connect<&EditorViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
+		scene->m_Registry.on_construct<CameraComponent>().template connect<&EditorViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
 	}
 
 	void EditorViewPanelBase::UpdateViewportSizeOnSceneCameras()

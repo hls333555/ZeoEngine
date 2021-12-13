@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Renderer/RendererAPI.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
 
@@ -28,21 +29,25 @@ namespace ZeoEngine {
 			s_RendererAPI->Clear();
 		}
 
+		/** Issue a draw call. */
 		static void DrawInstanced(uint32_t instanceCount)
 		{
 			s_RendererAPI->DrawInstanced(instanceCount);
+			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
 		static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount, baseIndex);
+			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
 		static void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0)
 		{
 			s_RendererAPI->DrawIndexed(baseVertex, indexCount, baseIndex);
+			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */

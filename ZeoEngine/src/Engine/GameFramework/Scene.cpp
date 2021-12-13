@@ -4,8 +4,25 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
+
+	Scene::~Scene()
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnDestroy();
+		}
+	}
+
+	void Scene::OnUpdate(DeltaTime dt)
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnUpdate(dt);
+		}
+	}
 
 	Entity Scene::CreateEntity(const std::string& name, const glm::vec3& translation)
 	{

@@ -4,9 +4,12 @@
 
 namespace ZeoEngine {
 
+    class SceneRenderer;
+
     class OpenGLDDRenderInterface : public DDRenderInterface
     {
     public:
+        explicit OpenGLDDRenderInterface(const Ref<SceneRenderer>& sceneRenderer);
         virtual ~OpenGLDDRenderInterface();
 
         virtual void Init() override;
@@ -28,6 +31,8 @@ namespace ZeoEngine {
         void linkProgram(const uint32_t program);
 
     private:
+        Ref<SceneRenderer> m_SceneRenderer;
+
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
         uint32_t m_LinePointShader;

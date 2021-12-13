@@ -27,13 +27,15 @@ namespace ZeoEngine {
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
+		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
-		void UpdateSceneRef(bool bIsFromLoad);
+		void UpdateSceneRef(const Ref<Scene>& scene, bool bIsFromLoad);
 
 		void OnScenePlay();
 		void OnSceneStop();
 		void OnScenePause();
 		void OnSceneResume();
+
 		void OnDuplicateEntity();
 		void OnDeleteEntity();
 
@@ -43,9 +45,6 @@ namespace ZeoEngine {
 	private:
 		virtual void LoadAsset(const std::string& path) override;
 		virtual void SaveAsset(const std::string& path) override;
-
-		virtual Ref<FrameBuffer> CreateFrameBuffer() override;
-		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) override;
 
 		void ClearSelectedEntity();
 

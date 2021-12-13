@@ -2,6 +2,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/ParticleEditorUIRenderer.h"
+#include "SceneRenderers/ParticleEditorSceneRenderer.h"
 #include "Scenes/ParticleEditorScene.h"
 #include "Engine/Renderer/RenderGraph.h"
 
@@ -25,6 +26,11 @@ namespace ZeoEngine {
 	Ref<Scene> ParticleEditor::CreateScene()
 	{
 		return CreateRef<ParticleEditorScene>();
+	}
+
+	Ref<SceneRenderer> ParticleEditor::CreateSceneRenderer()
+	{
+		return CreateScope<ParticleEditorSceneRenderer>(SharedFromBase<ParticleEditor>());
 	}
 
 	AssetTypeId ParticleEditor::GetAssetTypeId() const
@@ -51,19 +57,6 @@ namespace ZeoEngine {
 		particlePreviewComp.Template->Serialize(path);
 	}
 
-	Ref<FrameBuffer> ParticleEditor::CreateFrameBuffer()
-	{
-		// TODO:
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
-		return FrameBuffer::Create(fbSpec);
-	}
-
-	Scope<RenderGraph> ParticleEditor::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
-	{
-		return CreateScope<ForwardRenderGraph>(fbo);
-	}
-
 	void ParticleEditor::ReloadParticleTemplateData()
 	{
 		auto previewParticleEntity = GetContextEntity();
@@ -75,9 +68,9 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticleEditor::CreatePreviewParticle(bool bIsFromLoad)
+	void ParticleEditor::CreatePreviewParticle(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
-		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle");
+		Entity previewParticleEntity = scene->CreateEntity("Preview Particle");
 		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
 		SetContextEntity(previewParticleEntity);
 		if (!bIsFromLoad)

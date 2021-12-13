@@ -7,17 +7,15 @@ class b2World;
 
 namespace ZeoEngine {
 
+	class SceneRenderer;
+
 	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
 	class ISystem
 	{
 	public:
-		explicit ISystem(Scene* scene);
-
-		virtual void OnCreate() {}
-		virtual void OnUpdate(DeltaTime dt) = 0;
-		virtual void OnDestroy() {}
+		explicit ISystem(const Ref<Scene>& scene);
 
 	protected:
 		template<typename... Component, typename... Exclude, typename Func>
@@ -47,21 +45,57 @@ namespace ZeoEngine {
 		}
 
 	protected:
-		Scene* m_Scene = nullptr;
+		Ref<Scene> m_Scene;
 	};
 
-	class RenderSystem : public ISystem
+	class SystemBase : public ISystem
 	{
 	public:
-		using ISystem::ISystem;
-		
-		virtual void OnUpdate(DeltaTime dt) override;
-		virtual void OnRenderEditor(const EditorCamera& camera);
-		virtual void OnRenderRuntime();
-		virtual void OnDestroy() override;
+		explicit SystemBase(const Ref<Scene>& scene);
+
+		virtual void OnCreate() {}
+		void OnUpdate(DeltaTime dt);
+		virtual void OnDestroy() {}
+
+		void BindUpdateFuncToEditor();
+		void BindUpdateFuncToRuntime();
+
+		virtual void OnRuntimeStart() {}
+		virtual void OnRuntimeStop() {}
+	private:
+		virtual void OnUpdateEditor(DeltaTime dt) {}
+		virtual void OnUpdateRuntime(DeltaTime dt) {}
 
 	private:
-		void OnRender();
+		entt::delegate<void(DeltaTime)> m_UpdateFuncDel;
+	};
+
+	class RenderSystemBase : public ISystem
+	{
+	public:
+		RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer);
+		
+		virtual void OnRenderEditor() = 0;
+		virtual void OnRenderRuntime() {}
+
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
+
+		std::pair<Camera*, glm::mat4> GetActiveCamera();
+
+	protected:
+		Ref<SceneRenderer> m_SceneRenderer;
+	};
+
+	class RenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor();
+		virtual void OnRenderRuntime();
+
+	private:
+		void OnRenderImpl();
 	};
 
 	class RenderSystem2D : public RenderSystem
@@ -69,50 +103,73 @@ namespace ZeoEngine {
 	public:
 		using RenderSystem::RenderSystem;
 
-		virtual void OnRenderEditor(const EditorCamera& camera) override;
+		virtual void OnRenderEditor() override;
 		virtual void OnRenderRuntime() override;
 
 	private:
-		void OnRender();
+		void OnRenderImpl();
 	};
 
-	class ParticlePreviewRenderSystem : public ISystem
+	class ParticlePreviewRenderSystem : public RenderSystemBase
 	{
 	public:
-		using ISystem::ISystem;
+		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
-		void OnRender(const EditorCamera& camera);
+		virtual void OnRenderEditor() override;
+	};
+
+	class MaterialPreviewRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
+	};
+
+	class ParticleUpdateSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnUpdateEditor(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 		virtual void OnDestroy() override;
+
+	private:
+		void OnUpdateImpl(DeltaTime dt);
 	};
 
-	class MaterialPreviewRenderSystem : public ISystem
+	class ParticlePreviewUpdateSystem : public SystemBase
 	{
 	public:
-		using ISystem::ISystem;
+		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override {}
-		void OnRender(const EditorCamera& camera);
+		virtual void OnUpdateEditor(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnDestroy() override;
+
+	private:
+		void OnUpdateImpl(DeltaTime dt);
 	};
 
-	class NativeScriptSystem : public ISystem
+	class NativeScriptSystem : public SystemBase
 	{
 	public:
-		using ISystem::ISystem;
+		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 		void OnEvent(Event& e);
 	};
 
-	class PhysicsSystem : public ISystem
+	class PhysicsSystem : public SystemBase
 	{
 	public:
-		using ISystem::ISystem;
+		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
-		virtual void OnRuntimeStart();
-		virtual void OnRuntimeStop();
+		virtual void OnRuntimeStart() override;
+		virtual void OnRuntimeStop() override;
 	};
 
 	class PhysicsSystem2D : public PhysicsSystem
@@ -120,7 +177,7 @@ namespace ZeoEngine {
 	public:
 		using PhysicsSystem::PhysicsSystem;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;

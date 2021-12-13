@@ -3,10 +3,10 @@
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/MaterialEditorUIRenderer.h"
 #include "Scenes/MaterialEditorScene.h"
+#include "SceneRenderers/MaterialEditorSceneRenderer.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/EditorCamera.h"
-#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -27,6 +27,11 @@ namespace ZeoEngine {
 	Ref<Scene> MaterialEditor::CreateScene()
 	{
 		return CreateRef<MaterialEditorScene>();
+	}
+
+	Ref<SceneRenderer> MaterialEditor::CreateSceneRenderer()
+	{
+		return CreateRef<MaterialEditorSceneRenderer>(SharedFromBase<MaterialEditor>());
 	}
 
 	AssetTypeId MaterialEditor::GetAssetTypeId() const
@@ -53,22 +58,9 @@ namespace ZeoEngine {
 		materialPreviewComp.Template->Serialize(path);
 	}
 
-	Ref<FrameBuffer> MaterialEditor::CreateFrameBuffer()
+	void MaterialEditor::CreatePreviewMaterial(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
-		// TODO:
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
-		return FrameBuffer::Create(fbSpec);
-	}
-
-	Scope<RenderGraph> MaterialEditor::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
-	{
-		return CreateScope<ForwardRenderGraph>(fbo);
-	}
-
-	void MaterialEditor::CreatePreviewMaterial(bool bIsFromLoad)
-	{
-		Entity previewMaterialEntity = GetScene()->CreateEntity("Preview Material");
+		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
 		auto& materialPreviewComp = previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
 		auto& meshComp = previewMaterialEntity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultSphereMesh());
 		auto& lightComp = previewMaterialEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);

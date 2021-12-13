@@ -5,8 +5,9 @@
 #include "Panels/SaveAssetPanel.h"
 #include "Engine/Profile/Instrumentor.h"
 #include "Engine/Profile/BenchmarkTimer.h"
-#include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/RenderGraph.h"
+#include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Renderer/EditorCamera.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
 
@@ -19,28 +20,25 @@ namespace ZeoEngine {
 
 	void EditorBase::OnAttach()
 	{
-		m_FBO = CreateFrameBuffer();
-		ZE_CORE_ASSERT(m_FBO);
-		m_RenderGraph = CreateRenderGraph(m_FBO);
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
+		
 		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
+
+		m_SceneRenderer = CreateSceneRenderer();
+		m_SceneRenderer->OnAttach();
+		m_PostSceneCreate.connect<&RenderSystem::UpdateScene>(m_SceneRenderer->GetRenderSystem());
+		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
+		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)
 	{
 		if (!m_bShow) return;
 
-		Renderer::SetActiveRenderGraph(m_RenderGraph.get());
 		m_EditorUIRenderer->OnUpdate(dt);
 		m_ActiveScene->OnUpdate(dt);
-		m_FBO->Bind();
-		{
-			m_ActiveScene->OnRender(*m_EditorCamera);
-			m_PostSceneRenderDel.publish(m_FBO);
-			Renderer::FlushDebugDraws();
-		}
-		m_FBO->Unbind();
+		m_SceneRenderer->OnRender();
 	}
 
 	void EditorBase::OnImGuiRender()
@@ -67,6 +65,11 @@ namespace ZeoEngine {
 		m_EditorCamera->StartFocusEntity(m_ContextEntity);
 	}
 
+	const Ref<FrameBuffer>& EditorBase::GetFrameBuffer() const
+	{
+		return m_SceneRenderer->GetFrameBuffer();
+	}
+
 	void EditorBase::Open()
 	{
 		m_bShow = true;
@@ -76,7 +79,8 @@ namespace ZeoEngine {
 	{
 		m_PreSceneCreateDel.publish(bIsFromLoad);
 		m_ActiveScene = CreateScene();
-		m_PostSceneCreateDel.publish(bIsFromLoad);
+		m_ActiveScene->OnAttach();
+		m_PostSceneCreateDel.publish(m_ActiveScene, bIsFromLoad);
 	}
 
 	void EditorBase::LoadScene()
@@ -137,6 +141,11 @@ namespace ZeoEngine {
 		{
 			saveAssetPanel->Open();
 		}
+	}
+
+	void EditorBase::PostSceneRender(const Ref<FrameBuffer>& fbo)
+	{
+		m_PostSceneRenderDel.publish(fbo);
 	}
 
 }

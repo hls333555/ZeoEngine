@@ -6,7 +6,7 @@
 
 namespace ZeoEngine {
 
-	void DDRenderInterface::Init(const Scope<DDRenderInterface>& ddri)
+	void DDRenderInterface::Init(const Ref<DDRenderInterface>& ddri)
 	{
 		ddri->Init();
 		dd::initialize(static_cast<dd::RenderInterface*>(ddri.get()));
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		dd::shutdown();
 	}
 
-	Scope<DDRenderInterface> DDRenderInterface::Create()
+	Ref<DDRenderInterface> DDRenderInterface::Create(const Ref<SceneRenderer>& sceneRenderer)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateScope<OpenGLDDRenderInterface>();
+				return CreateRef<OpenGLDDRenderInterface>(sceneRenderer);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;

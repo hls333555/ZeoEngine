@@ -11,10 +11,12 @@ namespace ZeoEngine {
 	class Scene;
 	class FrameBuffer;
 	class IAsset;
-	class RenderGraph;
+	class SceneRenderer;
 
 	class EditorBase : public std::enable_shared_from_this<EditorBase>
 	{
+		friend class EditorViewPanelBase;
+
 	public:
 		EditorBase() = delete;
 		explicit EditorBase(const char* editorName);
@@ -63,8 +65,7 @@ namespace ZeoEngine {
 		}
 		void SetActiveScene(const Ref<Scene>& newScene) { m_ActiveScene = newScene; }
 
-		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
-		const Scope<RenderGraph>& GetRenderGraph() const { return m_RenderGraph; }
+		const Ref<FrameBuffer>& GetFrameBuffer() const;
 
 		void Open();
 
@@ -82,6 +83,9 @@ namespace ZeoEngine {
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
 		virtual Ref<Scene> CreateScene() = 0;
+		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
+
+		void PostSceneRender(const Ref<FrameBuffer>& fbo);
 
 	public:
 		virtual AssetHandle<IAsset> GetAsset() const = 0;
@@ -89,9 +93,6 @@ namespace ZeoEngine {
 	private:
 		virtual void LoadAsset(const std::string& path) = 0;
 		virtual void SaveAsset(const std::string& path) = 0;
-
-		virtual Ref<FrameBuffer> CreateFrameBuffer() = 0;
-		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) = 0;
 
 	public:
 		/**
@@ -103,7 +104,7 @@ namespace ZeoEngine {
 		 * Called after scene being created.
 		 * The bool argument indicates whether the scene is created by "Load" or "New"
 		 */
-		entt::sink<void(bool)> m_PostSceneCreate{ m_PostSceneCreateDel };
+		entt::sink<void(const Ref<Scene>&, bool)> m_PostSceneCreate{ m_PostSceneCreateDel };
 		/**
 		 * Called after scene being loaded.
 		 * All data have been loaded, initialization stuff can be done here (e.g. particle system creation)
@@ -111,6 +112,8 @@ namespace ZeoEngine {
 		entt::sink<void()> m_PostSceneLoad{ m_PostSceneLoadDel };
 		/** Called after scene being rendered. */
 		entt::sink<void(const Ref<FrameBuffer>&)> m_PostSceneRender{ m_PostSceneRenderDel };
+		/** Called when view panel being resized. */
+		entt::sink<void(uint32_t, uint32_t)> m_OnViewportResize{ m_OnViewportResizeDel };
 		
 	private:
 		std::string m_EditorName;
@@ -120,17 +123,18 @@ namespace ZeoEngine {
 		Entity m_ContextEntity;
 		EditorCamera* m_EditorCamera = nullptr;
 
+		// TODO: Change to Scope
 		Ref<EditorUIRendererBase> m_EditorUIRenderer;
 		Ref<Scene> m_ActiveScene;
-
-		Ref<FrameBuffer> m_FBO;
-		Scope<RenderGraph> m_RenderGraph;
+		Ref<SceneRenderer> m_SceneRenderer;
 
 		bool m_bBlockSceneEvents = true;
 
-		entt::sigh<void(bool)> m_PreSceneCreateDel, m_PostSceneCreateDel;
+		entt::sigh<void(bool)> m_PreSceneCreateDel;
+		entt::sigh<void(const Ref<Scene>&, bool)> m_PostSceneCreateDel;
 		entt::sigh<void()> m_PostSceneLoadDel;
 		entt::sigh<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
+		entt::sigh<void(uint32_t, uint32_t)> m_OnViewportResizeDel;
 	};
 
 }

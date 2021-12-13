@@ -13,6 +13,19 @@
 
 namespace ZeoEngine {
 
+	struct QuadVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 TexCoord;
+		glm::vec2 TilingFactor;
+		glm::vec2 UvOffset;
+		float TexIndex;
+
+		// Editor-only
+		int32_t EntityID;
+	};
+
 	struct LineVertex
 	{
 		glm::vec3 Position;
@@ -79,7 +92,7 @@ namespace ZeoEngine {
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
 
-		Statistics Stats;
+		RendererStats Stats;
 	};
 
 	class Renderer2D
@@ -131,7 +144,7 @@ namespace ZeoEngine {
 
 		static const Renderer2DData& GetRenderer2DData() { return s_Data; }
 
-		static Statistics& GetStats();
+		static RendererStats& GetStats();
 		static void ResetStats();
 
 	private:

@@ -14,6 +14,7 @@ namespace ZeoEngine {
 	private:
 		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
+		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
 	public:
 		virtual AssetHandle<IAsset> GetAsset() const override;
@@ -22,12 +23,9 @@ namespace ZeoEngine {
 		virtual void LoadAsset(const std::string& path) override;
 		virtual void SaveAsset(const std::string& path) override;
 
-		virtual Ref<FrameBuffer> CreateFrameBuffer() override;
-		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) override;
-
 		void ReloadParticleTemplateData();
 
-		void CreatePreviewParticle(bool bIsFromLoad = false);
+		void CreatePreviewParticle(const Ref<Scene>& scene, bool bIsFromLoad = false);
 	};
 
 }

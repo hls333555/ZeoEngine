@@ -46,7 +46,7 @@ namespace ZeoEngine {
 
 		void OnViewportResize(const glm::vec2& size);
 
-		void PostSceneCreate();
+		void PostSceneCreate(const Ref<Scene>& scene);
 
 		void UpdateViewportSizeOnSceneCameras();
 
@@ -62,8 +62,7 @@ namespace ZeoEngine {
 			std::string AssetPath;
 			std::string ThumbnailPath;
 			uint32_t ImageWidth;
-		} m_SnapshotSpec;
-
+		}m_SnapshotSpec;
 	};
 
 }

@@ -522,7 +522,7 @@ namespace ZeoEngine {
 		
 	}
 
-	Statistics& Renderer2D::GetStats()
+	RendererStats& Renderer2D::GetStats()
 	{
 		return s_Data.Stats;
 	}

@@ -12,8 +12,9 @@
 namespace ZeoEngine {
 
 	 class EditorCamera;
+	 class SystemBase;
 
-	class Scene
+	class Scene : public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
 		friend class SceneSerializer;
@@ -23,11 +24,13 @@ namespace ZeoEngine {
 
 	public:
 		Scene() = default;
-		virtual ~Scene() = default;
+		virtual ~Scene();
 
-		virtual void OnUpdate(DeltaTime dt) {}
-		virtual void OnRender(const EditorCamera& camera) {}
+		virtual void OnAttach() {}
+		void OnUpdate(DeltaTime dt);
 		virtual void OnEvent(Event& e) {}
+
+		const auto& GetSystems() const { return m_Systems; }
 
 		template<typename T, typename ... Args>
 		Ref<T> Copy(Args&& ... args)
@@ -57,6 +60,17 @@ namespace ZeoEngine {
 		/** Called after all data have been loaded. */
 		virtual void PostLoad() {}
 
+	protected:
+		template<typename T, typename ... Args>
+		void RegisterSystem(Args&& ... args)
+		{
+			static_assert(std::is_base_of_v<SystemBase, T>, "System type must be a SystemBase type!");
+
+			Scope<T> system = CreateScope<T>(std::forward<Args>(args)...);
+			system->OnCreate();
+			m_Systems.emplace_back(std::move(system));
+		}
+
 	private:
 		void SortEntities();
 
@@ -64,6 +78,9 @@ namespace ZeoEngine {
 		entt::registry m_Registry;
 
 	private:
+		// TODO: Copy performance?
+		std::vector<Scope<SystemBase>> m_Systems;
+
 		uint32_t m_CurrentEntityIndex = 0;
 	};
 
