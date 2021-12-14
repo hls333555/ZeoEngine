@@ -122,7 +122,7 @@ namespace ZeoEngine {
 		if (GetPath().empty()) return;
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetPath(), m_Scene, this);
+		SceneSerializer::Deserialize(GetPath(), m_Scene);
 	}
 
 }

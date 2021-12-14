@@ -115,7 +115,7 @@ namespace ZeoEngine {
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), {}, this);
+		AssetSerializer::Deserialize(GetPath(), TypeId(), {});
 	}
 
 
