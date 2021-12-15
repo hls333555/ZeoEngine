@@ -66,6 +66,17 @@ namespace ZeoEngine {
 	void RenderSystem::OnRenderEditor()
 	{
 		OnRenderImpl();
+
+		// Render billboards
+		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
+		{
+			if (billboardComp.Texture)
+			{
+				Entity entity = { e, m_Scene };
+				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
+				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
+			}
+		});
 	}
 
 	void RenderSystem::OnRenderRuntime()
@@ -132,17 +143,6 @@ namespace ZeoEngine {
 			if (meshComp.Mesh)
 			{
 				m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
-			}
-		});
-
-		// Render billboards
-		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
-		{
-			if (billboardComp.Texture)
-			{
-				Entity entity = { e, m_Scene.get() };
-				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
-				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
 		});
 	}
@@ -283,7 +283,7 @@ namespace ZeoEngine {
 			if (!nativeScriptComp.Instance)
 			{
 				nativeScriptComp.Instance = nativeScriptComp.InstantiateScript();
-				nativeScriptComp.Instance->m_Entity = Entity{ entity, m_Scene.get()};
+				nativeScriptComp.Instance->m_Entity = Entity{ entity, m_Scene };
 				nativeScriptComp.Instance->OnCreate();
 			}
 
@@ -327,7 +327,7 @@ namespace ZeoEngine {
 
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene.get() };
+			Entity entity = { e, m_Scene };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			// Retrieve transfrom from Box2D
@@ -358,7 +358,7 @@ namespace ZeoEngine {
 		m_PhysicsWorld = new b2World(gravity);
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene.get() };
+			Entity entity = { e, m_Scene };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			b2BodyDef bodyDef;

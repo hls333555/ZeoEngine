@@ -92,22 +92,6 @@ namespace ZeoEngine {
 		m_Sources.emplace_back(std::move(source));
 	}
 
-	FrameBufferClearPass::FrameBufferClearPass(std::string name)
-		: RenderPass(std::move(name))
-	{
-		RegisterSink(RenderPassBufferSink<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		RegisterSource(RenderPassBufferSource<FrameBuffer>::Create("FrameBuffer", m_FBO));
-	}
-
-	void FrameBufferClearPass::Execute() const
-	{
-		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.0f });
-		RenderCommand::Clear();
-
-		// Clear entity ID buffer to -1
-		m_FBO->ClearAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
-	}
-
 	void BindingPass::AddBind(Ref<Bindable> bindable)
 	{
 		m_Bindables.emplace_back(std::move(bindable));

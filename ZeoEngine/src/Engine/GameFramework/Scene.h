@@ -38,7 +38,7 @@ namespace ZeoEngine {
 			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
 			m_Registry.view<CoreComponent>().each([this, &newScene](auto entityId, auto& coreComp)
 			{
-				Entity entity{ entityId, this };
+				Entity entity{ entityId, shared_from_this() };
 				// Clone a new "empty" entity
 				auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
 				// Copy components to that entity

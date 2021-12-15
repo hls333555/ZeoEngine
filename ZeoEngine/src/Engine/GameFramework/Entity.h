@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	{
 	public:
 		Entity() = default;
-		Entity(entt::entity handle, Scene* scene);
+		Entity(entt::entity handle, const Ref<Scene>& scene);
 		Entity(const Entity&) = default;
 
 		bool IsValid() const;
@@ -107,7 +107,7 @@ namespace ZeoEngine {
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };
-		Scene* m_Scene = nullptr;
+		Ref<Scene> m_Scene;
 
 	};
 

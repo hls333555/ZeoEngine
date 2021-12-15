@@ -24,6 +24,7 @@ namespace ZeoEngine {
 
 	void LevelEditorScene::OnEvent(Event& e)
 	{
+		// TODO:
 		//m_NativeScriptSystem->OnEvent(e);
 	}
 
@@ -52,7 +53,7 @@ namespace ZeoEngine {
 		
 		m_Registry.view<BoundsComponent>().each([this](auto e, auto& boundsComp)
 		{
-			Entity entity = { e, this };
+			Entity entity = { e, shared_from_this() };
 			entity.UpdateBounds();
 		});
 	}

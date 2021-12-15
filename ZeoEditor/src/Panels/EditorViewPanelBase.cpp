@@ -8,13 +8,12 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Core/AssetRegistry.h"
-#include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
 
 	void EditorViewPanelBase::OnAttach()
 	{
-		m_EditorCamera = EditorCamera(RendererAPI::Is2D() ? 30.0f : 50.625f, 1.778f, 0.1f, 1000.0f);
+		m_EditorCamera = EditorCamera(50.625f, 1.778f, 0.1f, 1000.0f);
 		GetContextEditor()->SetEditorCamera(&m_EditorCamera);
 		GetContextEditor()->m_PostSceneCreate.connect<&EditorViewPanelBase::PostSceneCreate>(this);
 	}

@@ -874,7 +874,7 @@ namespace ZeoEngine {
 			{
 				scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
 				{
-					Entity entity = { entityId, scene.get() };
+					Entity entity = { entityId, scene };
 					if (!entity) return;
 
 					SerializeEntity(out, entity);

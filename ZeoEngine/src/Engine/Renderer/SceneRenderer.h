@@ -54,12 +54,12 @@ namespace ZeoEngine {
 
 		virtual void OnRenderScene() = 0;
 	protected:
+		virtual void Prepare();
 		void BeginScene(const EditorCamera& camera, bool bDrawGrid = false);
 		void BeginScene(const Camera& camera, const glm::mat4& transform);
 		void EndScene();
 
 	private:
-		void Prepare();
 		void RenderGrid();
 		void UploadLightData();
 		void FlushDebugDraws();

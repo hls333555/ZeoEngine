@@ -28,6 +28,14 @@ namespace ZeoEngine {
 		return CreateScope<RenderSystem>(m_LevelEditor->GetScene(), shared_from_this());
 	}
 
+	void LevelEditorSceneRenderer::Prepare()
+	{
+		SceneRenderer::Prepare();
+
+		// Clear entity ID buffer to -1
+		GetFrameBuffer()->ClearAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
+	}
+
 	void LevelEditorSceneRenderer::OnRenderScene()
 	{
 		switch (m_LevelEditor->GetSceneState())

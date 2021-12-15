@@ -36,17 +36,6 @@ namespace ZeoEngine {
 		std::vector<Scope<RenderPassSource>> m_Sources;
 	};
 
-	class FrameBufferClearPass : public RenderPass
-	{
-	public:
-		explicit FrameBufferClearPass(std::string name);
-
-		virtual void Execute() const override;
-
-	private:
-		Ref<FrameBuffer> m_FBO;
-	};
-
 	class BindingPass : public RenderPass
 	{
 	public:

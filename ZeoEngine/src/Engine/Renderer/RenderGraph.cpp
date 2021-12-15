@@ -174,13 +174,8 @@ namespace ZeoEngine {
 		: RenderGraph(fbo)
 	{
 		{
-			auto pass = CreateScope<FrameBufferClearPass>("ClearFrameBuffer");
-			pass->SetSinkLinkage("FrameBuffer", "$.BackFrameBuffer");
-			AddRenderPass(std::move(pass));
-		}
-		{
 			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
-			pass->SetSinkLinkage("FrameBuffer", "ClearFrameBuffer.FrameBuffer");
+			pass->SetSinkLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
 		SetGlobalSinkLinkage("BackFrameBuffer", "Opaque.FrameBuffer");

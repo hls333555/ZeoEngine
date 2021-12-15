@@ -44,8 +44,10 @@ namespace ZeoEngine {
 		Renderer::SetActiveRenderGraph(m_RenderGraph.get());
 		m_FBO->Bind();
 		{
+			Prepare();
 			OnRenderScene();
 			m_PostSceneRenderDel(m_FBO);
+			m_RenderGraph->Reset();
 			FlushDebugDraws();
 		}
 		m_FBO->Unbind();
@@ -59,8 +61,6 @@ namespace ZeoEngine {
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
 
 		m_bDrawGrid = bDrawGrid;
-
-		Prepare();
 	}
 
 	void SceneRenderer::BeginScene(const Camera& camera, const glm::mat4& transform)
@@ -68,8 +68,6 @@ namespace ZeoEngine {
 		m_CameraBuffer.View = glm::inverse(transform);
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
-
-		Prepare();
 	}
 
 	void SceneRenderer::EndScene()
@@ -88,11 +86,13 @@ namespace ZeoEngine {
 			m_Batcher.FlushBatch();
 		}
 		RenderCommand::ToggleFaceCulling(true);
-		m_RenderGraph->Reset();
 	}
 
 	void SceneRenderer::Prepare()
 	{
+		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.0f });
+		RenderCommand::Clear();
+
 		m_LightBuffer.Reset();
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 

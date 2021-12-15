@@ -31,7 +31,7 @@ namespace ZeoEngine {
 
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const glm::vec3& translation)
 	{
-		Entity entity{ m_Registry.create(), this };
+		Entity entity{ m_Registry.create(), shared_from_this() };
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
