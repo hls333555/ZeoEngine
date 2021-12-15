@@ -4,8 +4,8 @@ namespace ZeoEngine {
 
 	class RenderPass;
 	class RenderQueuePass;
-	class RenderPassSink;
-	class RenderPassSource;
+	class RenderPassInput;
+	class RenderPassOutput;
 	class FrameBuffer;
 
 	class RenderGraph
@@ -19,21 +19,21 @@ namespace ZeoEngine {
 		RenderQueuePass* GetRenderQueuePass(const std::string& passName);
 
 	protected:
-		void AddGlobalSink(Scope<RenderPassSink> sink);
-		void AddGlobalSource(Scope<RenderPassSource> source);
+		void AddGlobalInput(Scope<RenderPassInput> input);
+		void AddGlobalOutput(Scope<RenderPassOutput> output);
 		void AddRenderPass(Scope<RenderPass> pass);
-		void SetGlobalSinkLinkage(const std::string& sinkName, const std::string& targetName);
+		void SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 		void Finalize();
 
 	private:
-		/** Link outputs from passes (and global outputs) to pass inputs. */
-		void LinkSinks(const Scope<RenderPass>& pass);
-		void LinkGlobalSinks();
+		/** Link pass inputs to outputs from passes (and global outputs). */
+		void LinkInputs(const Scope<RenderPass>& pass);
+		void LinkGlobalInputs();
 
 	private:
 		std::vector<Scope<RenderPass>> m_Passes;
-		std::vector<Scope<RenderPassSink>> m_GlobalSinks;
-		std::vector<Scope<RenderPassSource>> m_GlobalSources;
+		std::vector<Scope<RenderPassInput>> m_GlobalInputs;
+		std::vector<Scope<RenderPassOutput>> m_GlobalOutputs;
 		Ref<FrameBuffer> m_BackFBO;
 		bool m_bFinalized = false;
 	};

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/Renderer/RenderTask.h"
-#include "Engine/Renderer/RenderPassSink.h"
-#include "Engine/Renderer/RenderPassSource.h"
+#include "Engine/Renderer/RenderPassInput.h"
+#include "Engine/Renderer/RenderPassOutput.h"
 #include "Engine/Renderer/Buffer.h"
 
 namespace ZeoEngine {
@@ -16,24 +16,24 @@ namespace ZeoEngine {
 		virtual ~RenderPass() = default;
 
 		const std::string& GetName() const { return m_Name; }
-		const auto& GetSinks() const { return m_Sinks; }
-		RenderPassSink* GetSink(const std::string& name) const;
-		RenderPassSource* GetSource(const std::string& name) const;
+		const auto& GetInputs() const { return m_Inputs; }
+		RenderPassInput* GetInput(const std::string& name) const;
+		RenderPassOutput* GetOuput(const std::string& name) const;
 
 		virtual void Execute() const = 0;
 		virtual void Reset() {}
 		virtual void Finalize();
 
-		void SetSinkLinkage(const std::string& sinkName, const std::string& targetName);
+		void SetInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 
 	protected:
-		void RegisterSink(Scope<RenderPassSink> sink);
-		void RegisterSource(Scope<RenderPassSource> source);
+		void RegisterInput(Scope<RenderPassInput> input);
+		void RegisterOutput(Scope<RenderPassOutput> output);
 
 	private:
 		std::string m_Name;
-		std::vector<Scope<RenderPassSink>> m_Sinks;
-		std::vector<Scope<RenderPassSource>> m_Sources;
+		std::vector<Scope<RenderPassInput>> m_Inputs;
+		std::vector<Scope<RenderPassOutput>> m_Outputs;
 	};
 
 	class BindingPass : public RenderPass

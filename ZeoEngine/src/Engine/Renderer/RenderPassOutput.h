@@ -5,10 +5,10 @@ namespace ZeoEngine {
 	class BufferResource;
 	class Bindable;
 
-	class RenderPassSource
+	class RenderPassOutput
 	{
 	protected:
-		RenderPassSource(std::string name);
+		RenderPassOutput(std::string name);
 
 	public:
 		const std::string& GetName() const { return m_Name; }
@@ -22,16 +22,16 @@ namespace ZeoEngine {
 	};
 
 	template<class T>
-	class RenderPassBufferSource : public RenderPassSource
+	class RenderPassBufferOutput : public RenderPassOutput
 	{
 	public:
-		RenderPassBufferSource(std::string name, Ref<T>& bufferResource)
-			: RenderPassSource(std::move(name))
+		RenderPassBufferOutput(std::string name, Ref<T>& bufferResource)
+			: RenderPassOutput(std::move(name))
 			, m_BufferResource(bufferResource) {}
 
-		static Scope<RenderPassBufferSource> Create(std::string name, Ref<T>& bufferResource)
+		static Scope<RenderPassBufferOutput> Create(std::string name, Ref<T>& bufferResource)
 		{
-			return CreateScope<RenderPassBufferSource>(std::move(name), bufferResource);
+			return CreateScope<RenderPassBufferOutput>(std::move(name), bufferResource);
 		}
 
 		virtual Ref<BufferResource> GetBufferResource() const override
@@ -48,16 +48,16 @@ namespace ZeoEngine {
 	};
 
 	template<class T>
-	class RenderPassBindableSource : public RenderPassSource
+	class RenderPassBindableOutput : public RenderPassOutput
 	{
 	public:
-		RenderPassBindableSource(std::string name, Ref<T>& bindable)
-			: RenderPassSource(std::move(name))
+		RenderPassBindableOutput(std::string name, Ref<T>& bindable)
+			: RenderPassOutput(std::move(name))
 			, m_Bindable(bindable) {}
 
-		static Scope<RenderPassBindableSource> Create(std::string name, Ref<T>& bindable)
+		static Scope<RenderPassBindableOutput> Create(std::string name, Ref<T>& bindable)
 		{
-			return CreateScope<RenderPassBindableSource>(std::move(name), bindable);
+			return CreateScope<RenderPassBindableOutput>(std::move(name), bindable);
 		}
 
 		virtual Ref<Bindable> GetBindable() const override

@@ -2,8 +2,8 @@
 #include "Engine/Renderer/RenderGraph.h"
 
 #include "Engine/Renderer/RenderPass.h"
-#include "Engine/Renderer/RenderPassSink.h"
-#include "Engine/Renderer/RenderPassSource.h"
+#include "Engine/Renderer/RenderPassInput.h"
+#include "Engine/Renderer/RenderPassOutput.h"
 #include "Engine/Renderer/RenderStep.h"
 #include "Engine/Utils/EngineUtils.h"
 
@@ -12,8 +12,8 @@ namespace ZeoEngine {
 	RenderGraph::RenderGraph(const Ref<FrameBuffer>& fbo)
 		: m_BackFBO(fbo)
 	{
-		AddGlobalSink(RenderPassBufferSink<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
-		AddGlobalSource(RenderPassBufferSource<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
+		AddGlobalInput(RenderPassBufferInput<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
+		AddGlobalOutput(RenderPassBufferOutput<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
 	}
 
 	RenderGraph::~RenderGraph() = default;
@@ -55,14 +55,14 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	void RenderGraph::AddGlobalSink(Scope<RenderPassSink> sink)
+	void RenderGraph::AddGlobalInput(Scope<RenderPassInput> input)
 	{
-		m_GlobalSinks.emplace_back(std::move(sink));
+		m_GlobalInputs.emplace_back(std::move(input));
 	}
 
-	void RenderGraph::AddGlobalSource(Scope<RenderPassSource> source)
+	void RenderGraph::AddGlobalOutput(Scope<RenderPassOutput> output)
 	{
-		m_GlobalSources.emplace_back(std::move(source));
+		m_GlobalOutputs.emplace_back(std::move(output));
 	}
 
 	void RenderGraph::AddRenderPass(Scope<RenderPass> pass)
@@ -78,25 +78,25 @@ namespace ZeoEngine {
 			}
 		}
 
-		LinkSinks(pass);
+		LinkInputs(pass);
 		m_Passes.emplace_back(std::move(pass));
 	}
 
-	void RenderGraph::SetGlobalSinkLinkage(const std::string& sinkName, const std::string& targetName)
+	void RenderGraph::SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName)
 	{
-		const auto it = std::find_if(m_GlobalSinks.begin(), m_GlobalSinks.end(), [&sinkName](const std::unique_ptr<RenderPassSink>& sink)
+		const auto it = std::find_if(m_GlobalInputs.begin(), m_GlobalInputs.end(), [&inputName](const std::unique_ptr<RenderPassInput>& input)
 		{
-			return sink->GetName() == sinkName;
+			return input->GetName() == inputName;
 		});
-		if (it == m_GlobalSinks.end())
+		if (it == m_GlobalInputs.end())
 		{
-			ZE_CORE_ERROR("Global render pass sink {0} does not exist!", sinkName);
+			ZE_CORE_ERROR("Global render pass input {0} does not exist!", inputName);
 		}
 
-		auto targetSplit = EngineUtils::SplitString(targetName, '.');
+		auto targetSplit = EngineUtils::SplitString(targetOutputName, '.');
 		if (targetSplit.size() != 2)
 		{
-			ZE_CORE_ERROR("Failed to link sink target with incorrect target name format \"{0}\"!", targetName);
+			ZE_CORE_ERROR("Failed to link input to output with incorrect target name format \"{0}\"!", targetOutputName);
 			return;
 		}
 
@@ -111,31 +111,31 @@ namespace ZeoEngine {
 		{
 			pass->Finalize();
 		}
-		LinkGlobalSinks();
+		LinkGlobalInputs();
 		m_bFinalized = true;
 	}
 
-	void RenderGraph::LinkSinks(const Scope<RenderPass>& pass)
+	void RenderGraph::LinkInputs(const Scope<RenderPass>& pass)
 	{
-		for (const auto& sink : pass->GetSinks())
+		for (const auto& input : pass->GetInputs())
 		{
-			const auto& inputPassName = sink->GetTargetRenderPassName();
+			const auto& inputPassName = input->GetTargetRenderPassName();
 
 			if (inputPassName == "$")
 			{
 				bool bHasBound = false;
-				for (const auto& source : m_GlobalSources)
+				for (const auto& output : m_GlobalOutputs)
 				{
-					if (source->GetName() == sink->GetTargetOutputName())
+					if (output->GetName() == input->GetTargetOutputName())
 					{
-						sink->Bind(source.get());
+						input->Bind(output.get());
 						bHasBound = true;
 						break;
 					}
 				}
 				if (!bHasBound)
 				{
-					ZE_CORE_ERROR("Failed to link render pass sink {0} to global sources!", sink->GetTargetOutputName());
+					ZE_CORE_ERROR("Failed to link render pass input {0} to global outputs!", input->GetTargetOutputName());
 				}
 			}
 			else
@@ -144,8 +144,8 @@ namespace ZeoEngine {
 				{
 					if (pass->GetName() == inputPassName)
 					{
-						auto* source = pass->GetSource(sink->GetTargetOutputName());
-						sink->Bind(source);
+						auto* output = pass->GetOuput(input->GetTargetOutputName());
+						input->Bind(output);
 						break;
 					}
 				}
@@ -153,17 +153,17 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderGraph::LinkGlobalSinks()
+	void RenderGraph::LinkGlobalInputs()
 	{
-		for (const auto& sink : m_GlobalSinks)
+		for (const auto& input : m_GlobalInputs)
 		{
-			const auto& inputPassName = sink->GetTargetRenderPassName();
+			const auto& inputPassName = input->GetTargetRenderPassName();
 			for (const auto& pass : m_Passes)
 			{
 				if (pass->GetName() == inputPassName)
 				{
-					auto* source = pass->GetSource(sink->GetTargetOutputName());
-					sink->Bind(source);
+					auto* output = pass->GetOuput(input->GetTargetOutputName());
+					input->Bind(output);
 					break;
 				}
 			}
@@ -175,10 +175,10 @@ namespace ZeoEngine {
 	{
 		{
 			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
-			pass->SetSinkLinkage("FrameBuffer", "$.BackFrameBuffer");
+			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		SetGlobalSinkLinkage("BackFrameBuffer", "Opaque.FrameBuffer");
+		SetGlobalInputLinkage("BackFrameBuffer", "Opaque.FrameBuffer");
 		Finalize();
 	}
 

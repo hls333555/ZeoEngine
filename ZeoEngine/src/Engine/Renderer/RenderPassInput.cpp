@@ -1,18 +1,18 @@
 #include "ZEpch.h"
-#include "Engine/Renderer/RenderPassSink.h"
+#include "Engine/Renderer/RenderPassInput.h"
 
 namespace ZeoEngine {
 
-	RenderPassSink::RenderPassSink(std::string name)
+	RenderPassInput::RenderPassInput(std::string name)
 		: m_Name(std::move(name))
 	{
 		if (m_Name.empty())
 		{
-			ZE_CORE_ASSERT(false, "Render pass sink name should not be empty!");
+			ZE_CORE_ASSERT(false, "Render pass input name should not be empty!");
 		}
 	}
 
-	void RenderPassSink::PostLinkValidate() const
+	void RenderPassInput::PostLinkValidate() const
 	{
 		if (!m_HasLinked)
 		{
@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderPassSink::SetLinkTarget(std::string targetPass, std::string targetOutput)
+	void RenderPassInput::SetLinkTarget(std::string targetPass, std::string targetOutput)
 	{
 		if (targetPass.empty())
 		{

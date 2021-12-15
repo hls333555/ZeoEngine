@@ -11,85 +11,85 @@ namespace ZeoEngine {
 	{
 	}
 
-	RenderPassSink* RenderPass::GetSink(const std::string& name) const
+	RenderPassInput* RenderPass::GetInput(const std::string& name) const
 	{
-		for (const auto& si : m_Sinks)
+		for (const auto& input : m_Inputs)
 		{
-			if (si->GetName() == name)
+			if (input->GetName() == name)
 			{
-				return si.get();
+				return input.get();
 			}
 		}
 
-		ZE_CORE_ERROR("Render pass sink {0} not found in pass {1}!", m_Name);
+		ZE_CORE_ERROR("Render pass input {0} not found in pass {1}!", m_Name);
 		return nullptr;
 	}
 
-	RenderPassSource* RenderPass::GetSource(const std::string& name) const
+	RenderPassOutput* RenderPass::GetOuput(const std::string& name) const
 	{
-		for (const auto& src : m_Sources)
+		for (const auto& output : m_Outputs)
 		{
-			if (src->GetName() == name)
+			if (output->GetName() == name)
 			{
-				return src.get();
+				return output.get();
 			}
 		}
 
-		ZE_CORE_ERROR("Render pass source {0} not found in pass {1}!", m_Name);
+		ZE_CORE_ERROR("Render pass output {0} not found in pass {1}!", m_Name);
 		return nullptr;
 	}
 
 	void RenderPass::Finalize()
 	{
-		for (const auto& in : m_Sinks)
+		for (const auto& input : m_Inputs)
 		{
-			in->PostLinkValidate();
+			input->PostLinkValidate();
 		}
-		for (const auto& out : m_Sources)
+		for (const auto& output : m_Outputs)
 		{
-			out->PostLinkValidate();
+			output->PostLinkValidate();
 		}
 	}
 
-	void RenderPass::SetSinkLinkage(const std::string& sinkName, const std::string& targetName)
+	void RenderPass::SetInputLinkage(const std::string& inputName, const std::string& targetOutputName)
 	{
-		auto* sink = GetSink(sinkName);
-		if (!sink) return;
+		auto* input = GetInput(inputName);
+		if (!input) return;
 
-		auto targetSplit = EngineUtils::SplitString(targetName, '.');
+		auto targetSplit = EngineUtils::SplitString(targetOutputName, '.');
 		if (targetSplit.size() != 2)
 		{
-			ZE_CORE_ERROR("Failed to link sink target with incorrect target name format \"{0}\"!", targetName);
+			ZE_CORE_ERROR("Failed to link input to output with incorrect target output name format \"{0}\"!", targetOutputName);
 			return;
 		}
 
-		sink->SetLinkTarget(std::move(targetSplit[0]), std::move(targetSplit[1]));
+		input->SetLinkTarget(std::move(targetSplit[0]), std::move(targetSplit[1]));
 	}
 
-	void RenderPass::RegisterSink(Scope<RenderPassSink> sink)
+	void RenderPass::RegisterInput(Scope<RenderPassInput> input)
 	{
-		for (const auto& si : m_Sinks)
+		for (const auto& i : m_Inputs)
 		{
-			if (si->GetName() == sink->GetName())
+			if (i->GetName() == input->GetName())
 			{
-				ZE_CORE_ERROR("Render pass sink {0} already registered in pass {1}!", sink->GetName(), m_Name);
+				ZE_CORE_ERROR("Render pass input {0} already registered in pass {1}!", input->GetName(), m_Name);
 				return;
 			}
 		}
-		m_Sinks.emplace_back(std::move(sink));
+		m_Inputs.emplace_back(std::move(input));
 	}
 
-	void RenderPass::RegisterSource(Scope<RenderPassSource> source)
+	void RenderPass::RegisterOutput(Scope<RenderPassOutput> output)
 	{
-		for (const auto& src : m_Sources)
+		for (const auto& o : m_Outputs)
 		{
-			if (src->GetName() == source->GetName())
+			if (o->GetName() == output->GetName())
 			{
-				ZE_CORE_ERROR("Render pass source {0} already registered in pass {1}!", source->GetName(), m_Name);
+				ZE_CORE_ERROR("Render pass output {0} already registered in pass {1}!", output->GetName(), m_Name);
 				return;
 			}
 		}
-		m_Sources.emplace_back(std::move(source));
+		m_Outputs.emplace_back(std::move(output));
 	}
 
 	void BindingPass::AddBind(Ref<Bindable> bindable)
@@ -143,8 +143,8 @@ namespace ZeoEngine {
 	OpaqueRenderPass::OpaqueRenderPass(std::string name)
 		: RenderQueuePass(std::move(name))
 	{
-		RegisterSink(RenderPassBufferSink<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		RegisterSource(RenderPassBufferSource<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 	}
 
 }
