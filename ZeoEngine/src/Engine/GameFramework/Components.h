@@ -132,6 +132,11 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<CameraComponentHelper>(entity);
+		}
+
 		static const char* GetIcon() { return ICON_FA_CAMERA; }
 
 		SceneCamera::ProjectionType GetProjectionType() const { return Camera.GetProjectionType(); }

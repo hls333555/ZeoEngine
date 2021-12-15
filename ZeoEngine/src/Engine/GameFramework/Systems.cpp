@@ -65,7 +65,8 @@ namespace ZeoEngine {
 
 	void RenderSystem::OnRenderEditor()
 	{
-		OnRenderImpl();
+		RenderLights(true);
+		RenderMeshes();
 
 		// Render billboards
 		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
@@ -77,17 +78,30 @@ namespace ZeoEngine {
 				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
 		});
+
+		// Render camera frustums
+		ForEachComponentView<TransformComponent, CameraComponent>([this](auto entity, auto& transformComp, auto& cameraComp)
+		{
+			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
+			// TODO: Replace this with FrameBuffer texture
+			// Draw frustum visualizer when selected
+			if (m_Scene->GetSelectedEntity() == entity)
+			{
+				glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
+				DebugDrawUtils::DrawFrustum(invMatix, visualizeColor);
+			}
+		});
 	}
 
 	void RenderSystem::OnRenderRuntime()
 	{
-		OnRenderImpl();
+		RenderLights(false);
+		RenderMeshes();
 	}
 
-	void RenderSystem::OnRenderImpl()
+	void RenderSystem::RenderLights(bool bIsEditor)
 	{
-		// Setup lights
-		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
+		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this, bIsEditor](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
 			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			switch (lightComp.Type)
@@ -98,7 +112,7 @@ namespace ZeoEngine {
 					m_SceneRenderer->SetupDirectionalLight(transformComp.Rotation, directionalLight);
 
 					// Draw arrow visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
 					{
 						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
@@ -112,7 +126,7 @@ namespace ZeoEngine {
 					m_SceneRenderer->AddPointLight(transformComp.Translation, pointLight);
 
 					// Draw sphere visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
 					{
 						DebugDrawUtils::DrawSphereBounds(transformComp.Translation, visualizeColor, pointLight->GetRange());
 					}
@@ -124,7 +138,7 @@ namespace ZeoEngine {
 					m_SceneRenderer->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
 
 					// Draw cone visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
 					{
 						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
 						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
@@ -136,8 +150,10 @@ namespace ZeoEngine {
 					break;
 			}
 		});
+	}
 
-		// Render meshes
+	void RenderSystem::RenderMeshes()
+	{
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
 			if (meshComp.Mesh)

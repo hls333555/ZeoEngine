@@ -56,6 +56,15 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 	};
 
+	class CameraComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void OnComponentAdded(bool bIsDeserialize) override;
+		virtual void OnComponentDestroy() override;
+	};
+
 	class ParticleSystemComponentHelper : public IComponentHelper
 	{
 	public:

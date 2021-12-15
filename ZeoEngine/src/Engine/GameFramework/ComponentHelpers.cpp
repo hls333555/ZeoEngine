@@ -37,6 +37,17 @@ namespace ZeoEngine {
 		GetOwnerEntity()->UpdateBounds();
 	}
 
+	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	{
+		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
+		billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/Camera.png.zasset");
+	}
+
+	void CameraComponentHelper::OnComponentDestroy()
+	{
+		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
+	}
+
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();

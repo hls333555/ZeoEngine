@@ -95,7 +95,8 @@ namespace ZeoEngine {
 		virtual void OnRenderRuntime();
 
 	private:
-		void OnRenderImpl();
+		void RenderLights(bool bIsEditor);
+		void RenderMeshes();
 	};
 
 	class RenderSystem2D : public RenderSystem

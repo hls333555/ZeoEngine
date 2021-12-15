@@ -68,6 +68,8 @@ namespace ZeoEngine {
 		m_CameraBuffer.View = glm::inverse(transform);
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
+
+		m_bDrawGrid = false;
 	}
 
 	void SceneRenderer::EndScene()

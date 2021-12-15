@@ -140,14 +140,20 @@ namespace ZeoEngine {
 			}
 			else
 			{
+				bool bHasBound = false;
 				for (const auto& pass : m_Passes)
 				{
 					if (pass->GetName() == inputPassName)
 					{
 						auto* output = pass->GetOuput(input->GetTargetOutputName());
 						input->Bind(output);
+						bHasBound = true;
 						break;
 					}
+				}
+				if (!bHasBound)
+				{
+					ZE_CORE_ERROR("Failed to link render pass input {0}! Target pass {1} not found.", input->GetTargetOutputName(), inputPassName);
 				}
 			}
 		}

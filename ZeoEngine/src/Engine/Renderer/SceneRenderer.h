@@ -55,7 +55,9 @@ namespace ZeoEngine {
 		virtual void OnRenderScene() = 0;
 	protected:
 		virtual void Prepare();
+		/** Begin scene for editor. */
 		void BeginScene(const EditorCamera& camera, bool bDrawGrid = false);
+		/** Begin scene for runtime. */
 		void BeginScene(const Camera& camera, const glm::mat4& transform);
 		void EndScene();
 
