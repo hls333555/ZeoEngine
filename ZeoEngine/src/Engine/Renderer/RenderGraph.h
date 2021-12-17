@@ -16,12 +16,14 @@ namespace ZeoEngine {
 
 		void Execute();
 		void Reset();
+		void ToggleRenderPassActive(const std::string& passName, bool bActive);
 		RenderQueuePass* GetRenderQueuePass(const std::string& passName);
 
 	protected:
 		void AddGlobalInput(Scope<RenderPassInput> input);
 		void AddGlobalOutput(Scope<RenderPassOutput> output);
 		void AddRenderPass(Scope<RenderPass> pass);
+		void RemoveRenderPass(const std::string& passName);
 		void SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 		void Finalize();
 
@@ -41,7 +43,7 @@ namespace ZeoEngine {
 	class ForwardRenderGraph : public RenderGraph
 	{
 	public:
-		explicit ForwardRenderGraph(const Ref<FrameBuffer>& fbo);
+		explicit ForwardRenderGraph(const Ref<FrameBuffer>& fbo, bool bDrawGrid = false);
 	};
 
 }

@@ -82,6 +82,18 @@ namespace ZeoEngine {
 		m_Passes.emplace_back(std::move(pass));
 	}
 
+	void RenderGraph::ToggleRenderPassActive(const std::string& passName, bool bActive)
+	{
+		for (const auto& pass : m_Passes)
+		{
+			if (pass->GetName() == passName)
+			{
+				pass->ToggleActive(bActive);
+				return;
+			}
+		}
+	}
+
 	void RenderGraph::SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName)
 	{
 		const auto it = std::find_if(m_GlobalInputs.begin(), m_GlobalInputs.end(), [&inputName](const std::unique_ptr<RenderPassInput>& input)
@@ -176,7 +188,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	ForwardRenderGraph::ForwardRenderGraph(const Ref<FrameBuffer>& fbo)
+	ForwardRenderGraph::ForwardRenderGraph(const Ref<FrameBuffer>& fbo, bool bDrawGrid)
 		: RenderGraph(fbo)
 	{
 		{
@@ -184,7 +196,13 @@ namespace ZeoEngine {
 			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		SetGlobalInputLinkage("BackFrameBuffer", "Opaque.FrameBuffer");
+		if (bDrawGrid)
+		{
+			auto pass = CreateScope<GridRenderPass>("Grid");
+			pass->SetInputLinkage("FrameBuffer", "Opaque.FrameBuffer");
+			AddRenderPass(std::move(pass));
+		}
+		SetGlobalInputLinkage("BackFrameBuffer", bDrawGrid ? "Grid.FrameBuffer" : "Opaque.FrameBuffer");
 		Finalize();
 	}
 

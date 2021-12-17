@@ -7,20 +7,22 @@
 
 namespace ZeoEngine {
 
-	class FrameBuffer;
+	class Shader;
 
 	class RenderPass
 	{
 	public:
-		explicit RenderPass(std::string name);
+		explicit RenderPass(std::string name, bool bAutoActive = true);
 		virtual ~RenderPass() = default;
 
 		const std::string& GetName() const { return m_Name; }
+		bool IsActive() const { return m_bIsActive; }
+		void ToggleActive(bool bActive) { m_bIsActive = bActive; }
 		const auto& GetInputs() const { return m_Inputs; }
 		RenderPassInput* GetInput(const std::string& name) const;
 		RenderPassOutput* GetOuput(const std::string& name) const;
 
-		virtual void Execute() const = 0;
+		virtual bool Execute() const = 0;
 		virtual void Reset() {}
 		virtual void Finalize();
 
@@ -32,6 +34,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_Name;
+		bool m_bIsActive = true;
 		std::vector<Scope<RenderPassInput>> m_Inputs;
 		std::vector<Scope<RenderPassOutput>> m_Outputs;
 	};
@@ -42,8 +45,9 @@ namespace ZeoEngine {
 		using RenderPass::RenderPass;
 
 	protected:
-		void AddBind(Ref<Bindable> bindable);
+		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
+		virtual bool Execute() const override;
 		virtual void Finalize() override;
 
 	private:
@@ -61,7 +65,7 @@ namespace ZeoEngine {
 		using BindingPass::BindingPass;
 
 		void AddTask(RenderTask task);
-		virtual void Execute() const override;
+		virtual bool Execute() const override;
 		virtual void Reset() override;
 
 	private:
@@ -71,7 +75,15 @@ namespace ZeoEngine {
 	class OpaqueRenderPass : public RenderQueuePass
 	{
 	public:
-		explicit OpaqueRenderPass(std::string name);
+		explicit OpaqueRenderPass(std::string name, bool bAutoActive = true);
+	};
+
+	class GridRenderPass : public BindingPass
+	{
+	public:
+		explicit GridRenderPass(std::string name, bool bAutoActive = true);
+
+		virtual bool Execute() const override;
 	};
 
 }

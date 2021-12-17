@@ -2,12 +2,13 @@
 #include "Engine/Renderer/RenderPass.h"
 
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/Renderer/BindableStates.h"
 #include "Engine/Renderer/RenderCommand.h"
 
 namespace ZeoEngine {
 
-	RenderPass::RenderPass(std::string name)
-		: m_Name(std::move(name))
+	RenderPass::RenderPass(std::string name, bool bAutoActive)
+		: m_Name(std::move(name)), m_bIsActive(bAutoActive)
 	{
 	}
 
@@ -92,7 +93,7 @@ namespace ZeoEngine {
 		m_Outputs.emplace_back(std::move(output));
 	}
 
-	void BindingPass::AddBind(Ref<Bindable> bindable)
+	void BindingPass::AddBindable(Ref<Bindable> bindable)
 	{
 		m_Bindables.emplace_back(std::move(bindable));
 	}
@@ -104,6 +105,14 @@ namespace ZeoEngine {
 		{
 			bindable->Bind();
 		}
+	}
+
+	bool BindingPass::Execute() const
+	{
+		if (!IsActive()) return false;
+
+		BindAll();
+		return true;
 	}
 
 	void BindingPass::Finalize()
@@ -126,13 +135,15 @@ namespace ZeoEngine {
 		m_Tasks.emplace_back(std::move(task));
 	}
 
-	void RenderQueuePass::Execute() const
+	bool RenderQueuePass::Execute() const
 	{
-		BindAll();
+		if (!BindingPass::Execute()) return false;
+
 		for (const auto& task : m_Tasks)
 		{
 			task.Execute();
 		}
+		return true;
 	}
 
 	void RenderQueuePass::Reset()
@@ -140,11 +151,47 @@ namespace ZeoEngine {
 		m_Tasks.clear();
 	}
 
-	OpaqueRenderPass::OpaqueRenderPass(std::string name)
-		: RenderQueuePass(std::move(name))
+	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bAutoActive)
+		: RenderQueuePass(std::move(name), bAutoActive)
 	{
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
+		AddBindable(TwoSided::Resolve(false));
+	}
+
+	GridRenderPass::GridRenderPass(std::string name, bool bAutoActive)
+		: BindingPass(std::move(name), bAutoActive)
+	{
+		struct GridData
+		{
+			glm::mat4 Transform = glm::mat4(1.0f);
+			glm::vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
+			glm::vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
+			glm::vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
+			glm::vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
+			float Extent = 101.0f;
+			float CellSize = 0.025f;
+		};
+		GridData gridBuffer;
+		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), 1);
+		gridUniformBuffer->SetData(&gridBuffer);
+
+		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		AddBindable(Shader::Create("assets/editor/shaders/Grid.glsl"));
+		AddBindable(gridUniformBuffer);
+		AddBindable(Depth::Resolve(Depth::State::ReadOnly));
+		AddBindable(TwoSided::Resolve(true));
+	}
+
+	bool GridRenderPass::Execute() const
+	{
+		if (!BindingPass::Execute()) return false;
+
+		static int32_t gridInstanceCount = 10;
+		RenderCommand::DrawInstanced(gridInstanceCount);
+		return true;
 	}
 
 }

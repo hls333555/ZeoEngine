@@ -117,6 +117,18 @@ namespace ZeoEngine {
 		}
 	}
 
+	void OpenGLRendererAPI::ToggleDepthTesting(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_DEPTH_TEST);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+		}
+	}
+
 	void OpenGLRendererAPI::ToggleDepthWriting(bool bEnable)
 	{
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);

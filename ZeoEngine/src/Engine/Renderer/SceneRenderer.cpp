@@ -31,11 +31,6 @@ namespace ZeoEngine {
 		m_RenderSystem = CreateRenderSystem();
 
 		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
-
-		m_GridShader = Shader::Create("assets/editor/shaders/Grid.glsl");
-		m_GridUniformBuffer = UniformBuffer::Create(sizeof(GridData), 1);
-		m_GridUniformBuffer->SetData(&m_GridBuffer);
-
 		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), 2);
 	}
 
@@ -48,19 +43,18 @@ namespace ZeoEngine {
 			OnRenderScene();
 			m_PostSceneRenderDel(m_FBO);
 			m_RenderGraph->Reset();
-			FlushDebugDraws();
 		}
 		m_FBO->Unbind();
 	}
 
-	void SceneRenderer::BeginScene(const EditorCamera& camera, bool bDrawGrid)
+	void SceneRenderer::BeginScene(const EditorCamera& camera)
 	{
 		m_CameraBuffer.View = camera.GetViewMatrix();
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraBuffer.Position = camera.GetPosition();
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
 
-		m_bDrawGrid = bDrawGrid;
+		m_RenderGraph->ToggleRenderPassActive("Grid", true);
 	}
 
 	void SceneRenderer::BeginScene(const Camera& camera, const glm::mat4& transform)
@@ -69,25 +63,20 @@ namespace ZeoEngine {
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
 
-		m_bDrawGrid = false;
+		m_RenderGraph->ToggleRenderPassActive("Grid", false);
 	}
 
 	void SceneRenderer::EndScene()
 	{
 		UploadLightData();
 		m_RenderGraph->Execute();
-		RenderCommand::ToggleFaceCulling(false);
-		RenderCommand::ToggleDepthWriting(false);
+		// TODO:
 		{
-			// Translucent grid
-			RenderGrid();
-		}
-		RenderCommand::ToggleDepthWriting(true);
-		{
+			RenderCommand::ToggleDepthWriting(true);
 			// Quads are drawn at last
 			m_Batcher.FlushBatch();
+			FlushDebugDraws();
 		}
-		RenderCommand::ToggleFaceCulling(true);
 	}
 
 	void SceneRenderer::Prepare()
@@ -111,15 +100,6 @@ namespace ZeoEngine {
 	void SceneRenderer::OnViewportResize(uint32_t width, uint32_t height)
 	{
 		m_Ddri->UpdateViewportSize(width, height);
-	}
-
-	void SceneRenderer::RenderGrid()
-	{
-		if (!m_bDrawGrid) return;
-
-		m_GridShader->Bind();
-		m_GridUniformBuffer->Bind();
-		RenderCommand::DrawInstanced(m_GridBuffer.InstanceCount);
 	}
 
 	void SceneRenderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)

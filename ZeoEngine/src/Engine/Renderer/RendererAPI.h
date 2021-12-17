@@ -32,6 +32,7 @@ namespace ZeoEngine {
 		virtual void SetLineThickness(float thickness) = 0;
 
 		virtual void ToggleFaceCulling(bool bEnable) = 0;
+		virtual void ToggleDepthTesting(bool bEnable) = 0;
 		virtual void ToggleDepthWriting(bool bEnable) = 0;
 
 		static API GetAPI() { return s_API; }

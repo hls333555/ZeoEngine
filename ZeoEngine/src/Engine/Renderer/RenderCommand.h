@@ -72,6 +72,11 @@ namespace ZeoEngine {
 			s_RendererAPI->ToggleFaceCulling(bEnable);
 		}
 
+		static void ToggleDepthTesting(bool bEnable)
+		{
+			s_RendererAPI->ToggleDepthTesting(bEnable);
+		}
+
 		static void ToggleDepthWriting(bool bEnable)
 		{
 			s_RendererAPI->ToggleDepthWriting(bEnable);

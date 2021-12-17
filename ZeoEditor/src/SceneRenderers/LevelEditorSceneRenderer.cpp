@@ -20,7 +20,7 @@ namespace ZeoEngine {
 
 	Scope<RenderGraph> LevelEditorSceneRenderer::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
 	{
-		return CreateScope<ForwardRenderGraph>(fbo);
+		return CreateScope<ForwardRenderGraph>(fbo, true);
 	}
 
 	Scope<RenderSystemBase> LevelEditorSceneRenderer::CreateRenderSystem()
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		switch (m_LevelEditor->GetSceneState())
 		{
 			case SceneState::Edit:
-				BeginScene(*m_LevelEditor->GetEditorCamera(), true);
+				BeginScene(*m_LevelEditor->GetEditorCamera());
 				GetRenderSystem()->OnRenderEditor();
 				break;
 			case SceneState::Play:

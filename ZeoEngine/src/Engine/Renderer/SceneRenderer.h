@@ -56,13 +56,12 @@ namespace ZeoEngine {
 	protected:
 		virtual void Prepare();
 		/** Begin scene for editor. */
-		void BeginScene(const EditorCamera& camera, bool bDrawGrid = false);
+		void BeginScene(const EditorCamera& camera);
 		/** Begin scene for runtime. */
 		void BeginScene(const Camera& camera, const glm::mat4& transform);
 		void EndScene();
 
 	private:
-		void RenderGrid();
 		void UploadLightData();
 		void FlushDebugDraws();
 
@@ -91,22 +90,6 @@ namespace ZeoEngine {
 		};
 		CameraData m_CameraBuffer;
 		Ref<UniformBuffer> m_CameraUniformBuffer;
-
-		struct GridData
-		{
-			glm::mat4 Transform = glm::mat4(1.0f);
-			glm::vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
-			glm::vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
-			glm::vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
-			glm::vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
-			float Extent = 101.0f;
-			float CellSize = 0.025f;
-			int32_t InstanceCount = 10;
-		};
-		GridData m_GridBuffer;
-		Ref<UniformBuffer> m_GridUniformBuffer;
-		Ref<Shader> m_GridShader;
-		bool m_bDrawGrid = false;
 
 		static const int32_t MAX_POINT_LIGHTS = 32;
 		static const int32_t MAX_SPOT_LIGHTS = 32;
