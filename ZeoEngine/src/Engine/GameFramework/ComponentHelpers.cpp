@@ -96,11 +96,23 @@ namespace ZeoEngine {
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
 	}
-
+	 
 	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+	}
+
+	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		MeshInstance::Create(meshComp);
+	}
+
+	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		MeshInstance::Create(meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
 	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
@@ -108,6 +120,25 @@ namespace ZeoEngine {
 		if (dataId == ZDATA_ID(Mesh))
 		{
 			GetOwnerEntity()->UpdateBounds();
+			auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+			if (meshComp.Mesh)
+			{
+				MeshInstance::Create(meshComp);
+			}
+			else
+			{
+				meshComp.Instance = nullptr;
+			}
+		}
+	}
+
+	void MeshRendererComponentHelper::PostDataDeserialize(uint32_t dataId)
+	{
+		// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		if (dataId == ZDATA_ID(Mesh))
+		{
+			MeshInstance::Create(meshComp);
 		}
 	}
 

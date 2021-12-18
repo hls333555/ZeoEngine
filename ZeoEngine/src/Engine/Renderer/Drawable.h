@@ -8,18 +8,18 @@ namespace ZeoEngine {
 	class Drawable
 	{
 	public:
+		Drawable(const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo);
 		virtual ~Drawable() = default;
 
-		uint32_t GetIndexCount() const { return m_IndexCount; }
 		virtual uint32_t GetBaseVertex() const { return 0; }
 		virtual uint32_t GetBaseIndex() const { return 0; }
+		virtual uint32_t GetIndexCount() const = 0;
 
 		void Bind() const;
 		virtual void Submit() const = 0;
 
-	protected:
+	private:
 		Ref<VertexArray> m_VAO;
-		uint32_t m_IndexCount = 0;
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 	};
 

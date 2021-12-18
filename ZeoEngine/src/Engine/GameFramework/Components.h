@@ -201,7 +201,7 @@ namespace ZeoEngine {
 			Template = ParticleTemplateAsset::Create(); // Create default particle asset
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		explicit ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
+		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
 		{
 			Template = pTemplate;
 		}
@@ -292,6 +292,7 @@ namespace ZeoEngine {
 	struct MeshRendererComponent : public IComponent
 	{
 		AssetHandle<MeshAsset> Mesh;
+		Ref<MeshInstance> Instance;
 		std::vector<AssetHandle<MaterialAsset>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
@@ -304,7 +305,7 @@ namespace ZeoEngine {
 			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
 		}
 
-		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : MaterialsPlaceholder; }
+		auto& GetMaterials() { return Instance ? Instance->GetMaterials() : MaterialsPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
@@ -323,7 +324,7 @@ namespace ZeoEngine {
 		LightComponent() = default;
 		LightComponent(LightType type)
 			: Type(type) {}
-		LightComponent(const LightComponent& rhs) = default;
+		LightComponent(const LightComponent&) = default;
 
 		virtual void CreateHelper(Entity* entity) override
 		{
@@ -353,7 +354,7 @@ namespace ZeoEngine {
 		AssetHandle<MaterialAsset> Template;
 
 		MaterialPreviewComponent() = default;
-		explicit MaterialPreviewComponent(const AssetHandle<MaterialAsset>& material)
+		MaterialPreviewComponent(const AssetHandle<MaterialAsset>& material)
 			: Template(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 

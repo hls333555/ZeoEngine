@@ -90,7 +90,10 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
+		virtual void OnComponentAdded(bool bIsDeserialize) override;
+		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 	};
 

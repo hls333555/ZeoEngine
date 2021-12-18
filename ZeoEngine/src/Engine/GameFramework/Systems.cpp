@@ -156,10 +156,7 @@ namespace ZeoEngine {
 	{
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
-			if (meshComp.Mesh)
-			{
-				m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
-			}
+			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<int32_t>(entity));
 		});
 	}
 
@@ -227,7 +224,7 @@ namespace ZeoEngine {
 		});
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
 		{
-			const auto& mesh = meshComp.Mesh->GetMesh();
+			const auto& mesh = meshComp.Instance;
 			mesh->SetMaterial(0, materialPreviewComp.Template);
 			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), mesh);
 		});

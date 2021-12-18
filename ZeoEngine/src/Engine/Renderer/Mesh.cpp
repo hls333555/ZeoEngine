@@ -12,15 +12,18 @@
 
 namespace ZeoEngine {
 
-	void MeshEntry::Submit() const
+	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, const AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo)
+		: Drawable(vao, ubo), EntryPtr(&entry), MaterialPtr(&material)
+	{
+	}
+
+	void MeshEntryInstance::Submit() const
 	{
 		(*MaterialPtr)->GetMaterial()->Submit(*this);
 	}
 
 	Mesh::Mesh(const std::string& path)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
-
 		Assimp::Importer Importer;
 		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
@@ -43,24 +46,11 @@ namespace ZeoEngine {
 		return CreateRef<MeshEnableShared>(path);
 	}
 
-	void Mesh::Submit(const glm::mat4& transform, int32_t entityID)
-	{
-		m_ModelBuffer.Transform = transform;
-		m_ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
-		m_ModelBuffer.EntityID = entityID;
-		m_ModelUniformBuffer->SetData(&m_ModelBuffer);
-
-		for (const auto& entry : m_Entries)
-		{
-			entry.Submit();
-		}
-	}
-
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene, const std::string& path)
 	{
-		Ref<VertexArray> vao = VertexArray::Create();
+		m_VAO = VertexArray::Create();
 
-		LoadMeshEntries(meshScene, vao);
+		LoadMeshEntries(meshScene);
 
 		// TODO: Change to local
 		m_VertexBuffer = new MeshVertex[m_VertexCount];
@@ -76,16 +66,16 @@ namespace ZeoEngine {
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		};
 		vbo->SetLayout(layout);
-		vao->AddVertexBuffer(vbo);
+		m_VAO->AddVertexBuffer(vbo);
 
 		Ref<IndexBuffer> ibo = IndexBuffer::Create(m_IndexBuffer, m_IndexCount);
-		vao->SetIndexBuffer(ibo);
+		m_VAO->SetIndexBuffer(ibo);
 
 		delete[] m_VertexBuffer;
 		delete[] m_IndexBuffer;
 	}
 
-	void Mesh::LoadMeshEntries(const aiScene* meshScene, const Ref<VertexArray>& vao)
+	void Mesh::LoadMeshEntries(const aiScene* meshScene)
 	{
 		// Init material slots with default materials
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
@@ -99,16 +89,14 @@ namespace ZeoEngine {
 		for (uint32_t i = 0; i < meshCount; ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
-			m_Entries[i].SetVertexArray(vao);
-			m_Entries[i].SetModelUniformBuffer(m_ModelUniformBuffer);
 			m_Entries[i].Name = mesh->mName.C_Str();
 			m_Entries[i].BaseVertex = m_VertexCount;
 			m_Entries[i].BaseIndex = m_IndexCount;
-			m_Entries[i].SetIndexCount(mesh->mNumFaces * 3);
-			m_Entries[i].MaterialPtr = &m_MaterialSlots[mesh->mMaterialIndex];
+			m_Entries[i].IndexCount = mesh->mNumFaces * 3;
+			m_Entries[i].MaterialIndex = mesh->mMaterialIndex;
 
 			m_VertexCount += mesh->mNumVertices;
-			m_IndexCount += m_Entries[i].GetIndexCount();
+			m_IndexCount += m_Entries[i].IndexCount;
 		}		
 	}
 
@@ -149,6 +137,56 @@ namespace ZeoEngine {
 			m_IndexBuffer[baseIndex + i * 3] = face.mIndices[0];
 			m_IndexBuffer[baseIndex + i * 3 + 1] = face.mIndices[1];
 			m_IndexBuffer[baseIndex + i * 3 + 2] = face.mIndices[2];
+		}
+	}
+
+	MeshInstance::MeshInstance(const Ref<class Mesh>& mesh)
+		: MeshPtr(mesh)
+	{
+		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		// Copy default materials
+		Materials = mesh->GetDefaultMaterials();
+		for (const auto& entry : MeshPtr->GetMeshEntries())
+		{
+			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], mesh->GetVAO(), ModelUniformBuffer);
+		}
+	}
+
+	MeshInstance::MeshInstance(const MeshInstance& other)
+		: MeshPtr(other.MeshPtr)
+	{
+		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		// Copy from other instance
+		Materials = other.Materials;
+		for (const auto& entry : MeshPtr->GetMeshEntries())
+		{
+			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], MeshPtr->GetVAO(), ModelUniformBuffer);
+		}
+	}
+
+	void MeshInstance::Create(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy)
+	{
+		if (meshInstanceToCopy)
+		{
+			// Copy construct mesh instance
+			meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
+		}
+		else if (meshComp.Mesh)
+		{
+			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh());
+		}
+	}
+
+	void MeshInstance::Submit(const glm::mat4& transform, int32_t entityID)
+	{
+		ModelBuffer.Transform = transform;
+		ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
+		ModelBuffer.EntityID = entityID;
+		ModelUniformBuffer->SetData(&ModelBuffer);
+
+		for (const auto& entryInstance : EntryInstances)
+		{
+			entryInstance.Submit();
 		}
 	}
 

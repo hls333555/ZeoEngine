@@ -23,7 +23,6 @@ namespace ZeoEngine {
 		void AddGlobalInput(Scope<RenderPassInput> input);
 		void AddGlobalOutput(Scope<RenderPassOutput> output);
 		void AddRenderPass(Scope<RenderPass> pass);
-		void RemoveRenderPass(const std::string& passName);
 		void SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 		void Finalize();
 

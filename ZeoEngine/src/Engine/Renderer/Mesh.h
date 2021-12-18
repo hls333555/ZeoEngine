@@ -18,6 +18,7 @@ namespace ZeoEngine {
 	class Texture2D;
 	class MaterialAsset;
 	class UniformBuffer;
+	struct MeshRendererComponent;
 
 	struct MeshVertex
 	{
@@ -26,20 +27,26 @@ namespace ZeoEngine {
 		glm::vec2 TexCoord;
 	};
 
-	struct MeshEntry : public Drawable
+	struct MeshEntry
 	{
-		const char* Name = nullptr;
+		const char* Name = nullptr; // TODO
 		uint32_t BaseVertex = 0;
 		uint32_t BaseIndex = 0;
-		AssetHandle<MaterialAsset>* MaterialPtr = nullptr;
+		uint32_t IndexCount = 0;
+		uint32_t MaterialIndex;
+	};
 
-		virtual uint32_t GetBaseVertex() const override { return BaseVertex; }
-		virtual uint32_t GetBaseIndex() const override { return BaseIndex; }
+	struct MeshEntryInstance : public Drawable
+	{
+		const MeshEntry* EntryPtr;
+		const AssetHandle<MaterialAsset>* MaterialPtr;
+
+		MeshEntryInstance(const MeshEntry& entry, const AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo);
+
+		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
+		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
+		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
 		virtual void Submit() const override;
-
-		void SetVertexArray(const Ref<VertexArray>& vao) { m_VAO = vao; }
-		void SetIndexCount(uint32_t count) { m_IndexCount = count; }
-		void SetModelUniformBuffer(const Ref<UniformBuffer>& ubo) { m_ModelUniformBuffer = ubo; }
 	};
 
 	class Mesh
@@ -49,39 +56,37 @@ namespace ZeoEngine {
 	public:
 		static Ref<Mesh> Create(const std::string& path);
 
-		const MeshEntry* GetMeshEntries() const { return m_Entries.data(); }
+		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
+		const auto& GetMeshEntries() const { return m_Entries; }
 		uint32_t GetMeshCount() const { return static_cast<uint32_t>(m_Entries.size()); }
 
-		auto& GetMaterials() { return m_MaterialSlots; }
-		void Mesh::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
-		{
-			if (index < 0 || index >= m_MaterialSlots.size()) return;
-
-			m_MaterialSlots[index] = material;
-		}
+		auto& GetDefaultMaterials() { return m_MaterialSlots; }
 		uint32_t GetMaterialCount() const { return static_cast<uint32_t>(m_MaterialSlots.size()); }
 
 		uint32_t GetVertexCount() const { return m_VertexCount; }
 		uint32_t GetIndexCount() const { return m_IndexCount; }
 		const BoxSphereBounds& GetBounds() const { return m_Bounds; }
 
-		void Submit(const glm::mat4& transform, int32_t entityID);
-
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
-		void LoadMeshEntries(const aiScene* meshScene, const Ref<VertexArray>& vao);
+		void LoadMeshEntries(const aiScene* meshScene);
 		void LoadDatas(const aiScene* meshScene);
 		void LoadVertexData(const aiMesh* mesh, uint32_t baseIndex);
 		void LoadIndexData(const aiMesh* mesh, uint32_t baseIndex);
 
 	private:
+		Ref<VertexArray> m_VAO;
 		uint32_t m_VertexCount = 0, m_IndexCount = 0;
 		MeshVertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
 		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
 		BoxSphereBounds m_Bounds;
+	};
 
+	struct MeshInstance
+	{
+		Ref<Mesh> MeshPtr;
 		struct ModelData
 		{
 			glm::mat4 Transform;
@@ -90,9 +95,24 @@ namespace ZeoEngine {
 			// Editor-only
 			int32_t EntityID;
 		};
-		ModelData m_ModelBuffer;
-		// TODO: Move to MeshInstance
-		Ref<UniformBuffer> m_ModelUniformBuffer;
+		ModelData ModelBuffer;
+		Ref<UniformBuffer> ModelUniformBuffer;
+		std::vector<MeshEntryInstance> EntryInstances;
+		std::vector<AssetHandle<MaterialAsset>> Materials;
+
+		explicit MeshInstance(const Ref<Mesh>& mesh);
+		MeshInstance(const MeshInstance& other);
+		static void Create(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy = {});
+
+		auto& GetMaterials() { return Materials; }
+		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
+		{
+			if (index < 0 || index >= Materials.size()) return;
+
+			Materials[index] = material;
+		}
+
+		void Submit(const glm::mat4& transform, int32_t entityID);
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>

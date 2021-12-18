@@ -134,12 +134,12 @@ namespace ZeoEngine {
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 	}
 
-	void SceneRenderer::DrawMesh(const glm::mat4& transform, const Ref<Mesh>& mesh, int32_t entityID)
+	void SceneRenderer::DrawMesh(const glm::mat4& transform, const Ref<MeshInstance>& mesh, int32_t entityID)
 	{
 		if (!mesh) return;
 
 		mesh->Submit(transform, entityID);
-		Renderer::GetStats().MeshVertexCount += mesh->GetVertexCount();
+		Renderer::GetStats().MeshVertexCount += mesh->MeshPtr->GetVertexCount();
 	}
 
 	void SceneRenderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
