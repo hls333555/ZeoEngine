@@ -628,6 +628,10 @@ namespace ZeoEngine {
 		{
 			EvaluateSerializeData(out, uniform);
 		}
+		for (const auto& uniform : material->GetDynamicBindableUniforms())
+		{
+			EvaluateSerializeData(out, uniform);
+		}
 	}
 
 	void MaterialSerializer::EvaluateSerializeData(YAML::Emitter& out, const Ref<DynamicUniformDataBase>& uniform)
@@ -674,7 +678,6 @@ namespace ZeoEngine {
 				EvaluateDeserializeData(dataValue, uniform);
 			}
 		}
-
 		for (const auto& uniform : material->GetDynamicBindableUniforms())
 		{
 			const auto& dataName = uniform->Name;
