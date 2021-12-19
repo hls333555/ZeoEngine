@@ -4,6 +4,8 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
+#include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -103,32 +105,45 @@ namespace ZeoEngine {
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
 	}
 
+	const RenderGraph* MeshRendererComponentHelper::GetRenderGraph(Entity* entityContext) const
+	{
+		return EngineUtils::GetSceneRendererFromContext(entityContext)->GetRenderGraph();
+	}
+
 	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Create(meshComp);
+		MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
 	}
 
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Create(meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
+		// When component is copied during scene copy, the active scene is not updated yet in EditorBase,
+		// therefore the render graph retrieved from the copied entity will be nullptr.
+		// So we use the original entity to retrieve that,
+		// which works because we assume the scene renderer is shared with the copied scene
+		MeshInstance::Create(meshComp, GetRenderGraph(otherComp->ComponentHelper->GetOwnerEntity()), static_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
 	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
 	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == ZDATA_ID(Mesh))
 		{
 			GetOwnerEntity()->UpdateBounds();
-			auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 			if (meshComp.Mesh)
 			{
-				MeshInstance::Create(meshComp);
+				MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
 			}
 			else
 			{
 				meshComp.Instance = nullptr;
 			}
+		}
+		else if (dataId == ZDATA_ID(MaterialSlots))
+		{
+			meshComp.Instance->SubmitAllTechniques();
 		}
 	}
 
@@ -138,7 +153,11 @@ namespace ZeoEngine {
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == ZDATA_ID(Mesh))
 		{
-			MeshInstance::Create(meshComp);
+			MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
+		}
+		else if (dataId == ZDATA_ID(MaterialSlots))
+		{
+			meshComp.Instance->SubmitAllTechniques();
 		}
 	}
 

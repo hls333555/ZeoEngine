@@ -41,8 +41,8 @@ namespace ZeoEngine {
 		m_UpdateFuncDel.connect<&SystemBase::OnUpdateRuntime>(this);
 	}
 
-	RenderSystemBase::RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer)
-		: ISystem(scene)
+	RenderSystemBase::RenderSystemBase(const Ref<SceneRenderer>& sceneRenderer)
+		: ISystem(nullptr)
 		, m_SceneRenderer(sceneRenderer)
 	{
 	}
@@ -224,9 +224,7 @@ namespace ZeoEngine {
 		});
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
 		{
-			const auto& mesh = meshComp.Instance;
-			mesh->SetMaterial(0, materialPreviewComp.Template);
-			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), mesh);
+			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
 		});
 	}
 

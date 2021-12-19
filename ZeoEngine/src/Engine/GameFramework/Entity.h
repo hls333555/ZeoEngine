@@ -81,6 +81,8 @@ namespace ZeoEngine {
 		void UpdateBounds();
 		BoxSphereBounds GetDefaultBounds();
 
+		const Ref<Scene>& GetScene() const { return m_Scene; }
+
 		/** Returns the entity identifier without the version. */
 		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
 

@@ -84,7 +84,7 @@ namespace ZeoEngine {
 		Bind();
 	}
 
-	Material::Material(const std::string& path)
+	Material::Material()
 	{
 		m_Shader = m_DefaultShader = ShaderAssetLibrary::GetDefaultShaderAsset();
 	}
@@ -126,8 +126,6 @@ namespace ZeoEngine {
 			shade.AddStep(std::move(step));
 		}
 		m_Techniques.emplace_back(std::move(shade));
-
-		LinkRenderTechniques();
 	}
 
 	void Material::ApplyUniformDatas()
@@ -135,22 +133,6 @@ namespace ZeoEngine {
 		for (const auto& uniformData : m_DynamicUniforms)
 		{
 			uniformData->Apply();
-		}
-	}
-
-	void Material::Submit(const Drawable& drawable) const
-	{
-		for (const auto& technique : m_Techniques)
-		{
-			technique.Submit(drawable);
-		}
-	}
-
-	void Material::LinkRenderTechniques()
-	{
-		for (auto& technique : m_Techniques)
-		{
-			technique.Link();
 		}
 	}
 
@@ -237,8 +219,9 @@ namespace ZeoEngine {
 
 	void MaterialAsset::ReloadImpl()
 	{
-		m_Material = CreateRef<Material>(GetPath());
+		m_Material = CreateRef<Material>();
 		m_Material->InitMaterialData();
+		m_OnMaterialInitializedDel.publish(SharedFromBase<MaterialAsset>());
 		Deserialize();
 	}
 

@@ -5,19 +5,21 @@ namespace ZeoEngine {
 	class Bindable;
 	class Drawable;
 	class RenderQueuePass;
+	class RenderGraph;
 
 	class RenderStep
 	{
 	public:
 		explicit RenderStep(std::string renderQueuePassName);
 		RenderStep(RenderStep&&) = default;
+		RenderStep(const RenderStep&) = default;
 		RenderStep& operator=(const RenderStep&) = delete;
 		RenderStep& operator=(RenderStep&&) = delete;
 
 		const std::string& GetRenderQueuePassName() const { return m_RenderQueuePassName; }
 
 		void AddBindable(const Ref<Bindable>& bindable);
-		void LinkRenderQueuePass();
+		void LinkRenderQueuePass(const RenderGraph& renderGraph);
 		void Bind() const;
 		void Submit(const Drawable& drawable) const;
 

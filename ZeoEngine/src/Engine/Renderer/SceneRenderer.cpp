@@ -36,7 +36,6 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnRender()
 	{
-		Renderer::SetActiveRenderGraph(m_RenderGraph.get());
 		m_FBO->Bind();
 		{
 			Prepare();
@@ -88,8 +87,6 @@ namespace ZeoEngine {
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 
 		m_Batcher.StartBatch();
-
-		Renderer::ResetStats();
 	}
 
 	void SceneRenderer::FlushDebugDraws()

@@ -5,8 +5,6 @@
 
 namespace ZeoEngine {
 
-	class RenderGraph;
-
 	struct RendererStats
 	{
 		uint32_t DrawCalls = 0;
@@ -28,7 +26,6 @@ namespace ZeoEngine {
 
 	struct RendererData
 	{
-		RenderGraph* ActiveRenderGraph = nullptr;
 		RendererStats Stats;
 	};
 
@@ -39,9 +36,6 @@ namespace ZeoEngine {
 		static void Shutdown();
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-
-		static RenderGraph* GetActiveRenderGraph() { return s_Data.ActiveRenderGraph; }
-		static void SetActiveRenderGraph(RenderGraph* renderGraph) { s_Data.ActiveRenderGraph = renderGraph; }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 

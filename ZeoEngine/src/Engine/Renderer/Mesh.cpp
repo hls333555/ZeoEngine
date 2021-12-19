@@ -6,20 +6,24 @@
 #include <assimp/postprocess.h>
 
 #include "Engine/Renderer/VertexArray.h"
-#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, const AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo)
-		: Drawable(vao, ubo), EntryPtr(&entry), MaterialPtr(&material)
+	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph)
+		: Drawable(vao, ubo), EntryPtr(&entry)
 	{
+		SubmitTechniques(material, renderGraph);
 	}
 
-	void MeshEntryInstance::Submit() const
+	void MeshEntryInstance::SubmitTechniques(const AssetHandle<MaterialAsset>& material, const RenderGraph& renderGraph)
 	{
-		(*MaterialPtr)->GetMaterial()->Submit(*this);
+		ClearTechniques();
+		for (const auto& technique : material->GetMaterial()->GetRenderTechniques())
+		{
+			AddTechnique(technique, renderGraph);
+		}
 	}
 
 	Mesh::Mesh(const std::string& path)
@@ -140,31 +144,31 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const Ref<class Mesh>& mesh)
-		: MeshPtr(mesh)
+	MeshInstance::MeshInstance(const Ref<class Mesh>& mesh, const RenderGraph* renderGraph)
+		: MeshPtr(mesh), RenderGraphPtr(renderGraph)
 	{
 		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
 		// Copy default materials
 		Materials = mesh->GetDefaultMaterials();
 		for (const auto& entry : MeshPtr->GetMeshEntries())
 		{
-			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], mesh->GetVAO(), ModelUniformBuffer);
+			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], mesh->GetVAO(), ModelUniformBuffer, *RenderGraphPtr);
 		}
 	}
 
 	MeshInstance::MeshInstance(const MeshInstance& other)
-		: MeshPtr(other.MeshPtr)
+		: MeshPtr(other.MeshPtr), RenderGraphPtr(other.RenderGraphPtr)
 	{
 		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
 		// Copy from other instance
 		Materials = other.Materials;
 		for (const auto& entry : MeshPtr->GetMeshEntries())
 		{
-			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], MeshPtr->GetVAO(), ModelUniformBuffer);
+			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], MeshPtr->GetVAO(), ModelUniformBuffer, *RenderGraphPtr);
 		}
 	}
 
-	void MeshInstance::Create(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy)
+	void MeshInstance::Create(MeshRendererComponent& meshComp, const RenderGraph* renderGraph, const Ref<MeshInstance>& meshInstanceToCopy)
 	{
 		if (meshInstanceToCopy)
 		{
@@ -173,7 +177,35 @@ namespace ZeoEngine {
 		}
 		else if (meshComp.Mesh)
 		{
-			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh());
+			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh(), renderGraph);
+		}
+	}
+
+	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
+	{
+		if (index < 0 || index >= Materials.size()) return;
+
+		Materials[index] = material;
+		for (auto& entryInstance : EntryInstances)
+		{
+			if (entryInstance.EntryPtr->MaterialIndex == index)
+			{
+				SubmitTechniques(entryInstance);
+			}
+		}
+	}
+
+	void MeshInstance::SubmitTechniques(MeshEntryInstance& entryInstance)
+	{
+		entryInstance.SubmitTechniques(Materials[entryInstance.EntryPtr->MaterialIndex], *RenderGraphPtr);
+		//Materials[entryInstance.EntryPtr->MaterialIndex]->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
+	}
+
+	void MeshInstance::SubmitAllTechniques()
+	{
+		for (auto& entryInstance : EntryInstances)
+		{
+			SubmitTechniques(entryInstance);
 		}
 	}
 

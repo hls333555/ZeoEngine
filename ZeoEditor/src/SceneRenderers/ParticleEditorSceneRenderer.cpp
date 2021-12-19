@@ -25,7 +25,7 @@ namespace ZeoEngine {
 
 	Scope<RenderSystemBase> ParticleEditorSceneRenderer::CreateRenderSystem()
 	{
-		return CreateScope<ParticlePreviewRenderSystem>(m_ParticleEditor->GetScene(), shared_from_this());
+		return CreateScope<ParticlePreviewRenderSystem>(shared_from_this());
 	}
 
 	void ParticleEditorSceneRenderer::OnRenderScene()

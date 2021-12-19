@@ -22,14 +22,15 @@ namespace ZeoEngine {
 	{
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
-		
-		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
 
 		m_SceneRenderer = CreateSceneRenderer();
 		m_SceneRenderer->OnAttach();
 		m_PostSceneCreate.connect<&RenderSystem::UpdateScene>(m_SceneRenderer->GetRenderSystem());
 		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
 		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
+
+		// Create scene at last so that delegates bound beforehand will be called here
+		NewScene();
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt)

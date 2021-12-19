@@ -9,6 +9,7 @@ namespace ZeoEngine {
 
 	class Entity;
 	struct IComponent;
+	class RenderGraph;
 
 	class IComponentHelper
 	{
@@ -95,6 +96,9 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
 		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
+
+	private:
+		const RenderGraph* GetRenderGraph(Entity* contextEntity) const;
 	};
 
 	class LightComponentHelper : public IComponentHelper

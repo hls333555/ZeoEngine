@@ -13,11 +13,11 @@ namespace ZeoEngine {
 		m_Steps.emplace_back(std::move(step));
 	}
 
-	void RenderTechnique::Link()
+	void RenderTechnique::Link(const RenderGraph& renderGraph)
 	{
 		for (auto& step : m_Steps)
 		{
-			step.LinkRenderQueuePass();
+			step.LinkRenderQueuePass(renderGraph);
 		}
 	}
 

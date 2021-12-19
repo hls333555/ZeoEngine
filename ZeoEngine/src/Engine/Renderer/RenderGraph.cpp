@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	RenderQueuePass* RenderGraph::GetRenderQueuePass(const std::string& passName)
+	RenderQueuePass* RenderGraph::GetRenderQueuePass(const std::string& passName) const
 	{
 		for (const auto& pass : m_Passes)
 		{

@@ -25,7 +25,7 @@ namespace ZeoEngine {
 
 	Scope<RenderSystemBase> LevelEditorSceneRenderer::CreateRenderSystem()
 	{
-		return CreateScope<RenderSystem>(m_LevelEditor->GetScene(), shared_from_this());
+		return CreateScope<RenderSystem>(shared_from_this());
 	}
 
 	void LevelEditorSceneRenderer::Prepare()

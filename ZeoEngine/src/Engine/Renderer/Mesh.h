@@ -19,6 +19,7 @@ namespace ZeoEngine {
 	class MaterialAsset;
 	class UniformBuffer;
 	struct MeshRendererComponent;
+	class RenderGraph;
 
 	struct MeshVertex
 	{
@@ -39,14 +40,14 @@ namespace ZeoEngine {
 	struct MeshEntryInstance : public Drawable
 	{
 		const MeshEntry* EntryPtr;
-		const AssetHandle<MaterialAsset>* MaterialPtr;
 
-		MeshEntryInstance(const MeshEntry& entry, const AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo);
+		MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph);
 
 		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
-		virtual void Submit() const override;
+
+		void SubmitTechniques(const AssetHandle<MaterialAsset>& material, const RenderGraph& renderGraph);
 	};
 
 	class Mesh
@@ -87,6 +88,8 @@ namespace ZeoEngine {
 	struct MeshInstance
 	{
 		Ref<Mesh> MeshPtr;
+		const RenderGraph* RenderGraphPtr;
+
 		struct ModelData
 		{
 			glm::mat4 Transform;
@@ -100,17 +103,15 @@ namespace ZeoEngine {
 		std::vector<MeshEntryInstance> EntryInstances;
 		std::vector<AssetHandle<MaterialAsset>> Materials;
 
-		explicit MeshInstance(const Ref<Mesh>& mesh);
+		MeshInstance(const Ref<Mesh>& mesh, const RenderGraph* renderGraph);
 		MeshInstance(const MeshInstance& other);
-		static void Create(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy = {});
+		static void Create(MeshRendererComponent& meshComp, const RenderGraph* renderGraph, const Ref<MeshInstance>& meshInstanceToCopy = {});
 
 		auto& GetMaterials() { return Materials; }
-		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
-		{
-			if (index < 0 || index >= Materials.size()) return;
+		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material);
 
-			Materials[index] = material;
-		}
+		void SubmitTechniques(MeshEntryInstance& entryInstance);
+		void SubmitAllTechniques();
 
 		void Submit(const glm::mat4& transform, int32_t entityID);
 	};

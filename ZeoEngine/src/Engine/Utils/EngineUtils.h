@@ -5,6 +5,9 @@
 #include "Engine/Core/Application.h"
 
 namespace ZeoEngine {
+	
+	class SceneRenderer;
+	class Entity;
 
 	class EngineUtils
 	{
@@ -32,6 +35,9 @@ namespace ZeoEngine {
 			}
 			return tokens;
 		}
+
+		// TODO:
+		static Ref<SceneRenderer> GetSceneRendererFromContext(Entity* entityContext);
 
 	};
 

@@ -25,6 +25,8 @@ namespace ZeoEngine {
 			return instance;
 		}
 
+		const auto& GetEditors() const { return m_Editors; }
+
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 		void OnEvent(Event& e);

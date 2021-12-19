@@ -18,11 +18,11 @@ namespace ZeoEngine {
 		m_Bindables.emplace_back(bindable);
 	}
 
-	void RenderStep::LinkRenderQueuePass()
+	void RenderStep::LinkRenderQueuePass(const RenderGraph& renderGraph)
 	{
 		ZE_CORE_ASSERT(!m_RenderQueuePass);
 
-		//m_RenderQueuePass = Renderer::GetActiveRenderGraph()->GetRenderQueuePass(m_RenderQueuePassName);
+		m_RenderQueuePass = renderGraph.GetRenderQueuePass(m_RenderQueuePassName);
 	}
 
 	void RenderStep::Bind() const
@@ -35,8 +35,7 @@ namespace ZeoEngine {
 
 	void RenderStep::Submit(const Drawable& drawable) const
 	{
-		// TODO:
-		Renderer::GetActiveRenderGraph()->GetRenderQueuePass(m_RenderQueuePassName)->AddTask(RenderTask(&drawable, this));
+		m_RenderQueuePass->AddTask(RenderTask(&drawable, this));
 	}
 
 }

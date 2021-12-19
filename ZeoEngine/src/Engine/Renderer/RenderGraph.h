@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		void Execute();
 		void Reset();
 		void ToggleRenderPassActive(const std::string& passName, bool bActive);
-		RenderQueuePass* GetRenderQueuePass(const std::string& passName);
+		RenderQueuePass* GetRenderQueuePass(const std::string& passName) const;
 
 	protected:
 		void AddGlobalInput(Scope<RenderPassInput> input);

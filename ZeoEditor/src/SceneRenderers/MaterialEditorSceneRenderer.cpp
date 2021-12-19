@@ -25,7 +25,7 @@ namespace ZeoEngine {
 
 	Scope<RenderSystemBase> MaterialEditorSceneRenderer::CreateRenderSystem()
 	{
-		return CreateScope<MaterialPreviewRenderSystem>(m_MaterialEditor->GetScene(), shared_from_this());
+		return CreateScope<MaterialPreviewRenderSystem>(shared_from_this());
 	}
 
 	void MaterialEditorSceneRenderer::OnRenderScene()

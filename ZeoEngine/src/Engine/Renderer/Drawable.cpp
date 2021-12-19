@@ -10,10 +10,29 @@ namespace ZeoEngine {
 	{
 	}
 
+	void Drawable::AddTechnique(RenderTechnique technique, const RenderGraph& renderGraph)
+	{
+		technique.Link(renderGraph);
+		m_Techniques.emplace_back(std::move(technique));
+	}
+
+	void Drawable::ClearTechniques()
+	{
+		m_Techniques.clear();
+	}
+
 	void Drawable::Bind() const
 	{
 		m_VAO->Bind();
 		m_ModelUniformBuffer->Bind();
+	}
+
+	void Drawable::Submit() const
+	{
+		for (const auto& technique : m_Techniques)
+		{
+			technique.Submit(*this);
+		}
 	}
 
 }

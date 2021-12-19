@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	class Material : public std::enable_shared_from_this<Material>
 	{
 	public:
-		explicit Material(const std::string& path);
+		Material();
 		~Material();
 
 		const AssetHandle<ShaderAsset>& GetShaderAsset() const { return m_Shader; }
@@ -26,14 +26,12 @@ namespace ZeoEngine {
 		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
 		auto& GetDynamicUniformBuffers() { return m_DynamicUniformBuffers; }
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
+		const auto& GetRenderTechniques() const { return m_Techniques; }
 
 		Ref<Shader> GetShader() const;
 
 		void InitMaterialData();
 		void ApplyUniformDatas();
-
-		void Submit(const Drawable& drawable) const;
-		void LinkRenderTechniques();
 
 	private:
 		void ParseReflectionData(); // Should not be called within ctor due to shared_from_this()!
@@ -217,8 +215,13 @@ namespace ZeoEngine {
 	private:
 		void ReloadImpl();
 
+	public:
+		entt::sink<void(const AssetHandle<MaterialAsset>&)> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
+
 	private:
 		Ref<Material> m_Material;
+
+		entt::sigh<void(const AssetHandle<MaterialAsset>&)> m_OnMaterialInitializedDel;
 	};
 
 	struct MaterialAssetLoader final : AssetLoader<MaterialAssetLoader, MaterialAsset>

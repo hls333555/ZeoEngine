@@ -56,6 +56,7 @@ namespace ZeoEngine {
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
 		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
+		const Ref<SceneRenderer>& GetSceneRenderer() const { return m_SceneRenderer; }
 
 		const Ref<Scene>& GetScene() const { return m_ActiveScene; }
 		template<typename T>

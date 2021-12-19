@@ -73,7 +73,7 @@ namespace ZeoEngine {
 	class RenderSystemBase : public ISystem
 	{
 	public:
-		RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer);
+		explicit RenderSystemBase(const Ref<SceneRenderer>& sceneRenderer);
 		
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}

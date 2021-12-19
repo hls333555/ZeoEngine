@@ -36,6 +36,7 @@ namespace ZeoEngine {
 		Ref<T> Copy(Args&& ... args)
 		{
 			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
+			newScene->m_Systems = m_Systems;
 			m_Registry.view<CoreComponent>().each([this, &newScene](auto entityId, auto& coreComp)
 			{
 				Entity entity{ entityId, shared_from_this() };
@@ -66,7 +67,7 @@ namespace ZeoEngine {
 		{
 			static_assert(std::is_base_of_v<SystemBase, T>, "System type must be a SystemBase type!");
 
-			Scope<T> system = CreateScope<T>(std::forward<Args>(args)...);
+			Ref<T> system = CreateScope<T>(std::forward<Args>(args)...);
 			system->OnCreate();
 			m_Systems.emplace_back(std::move(system));
 		}
@@ -79,8 +80,7 @@ namespace ZeoEngine {
 
 	private:
 		// TODO: Copy performance?
-		std::vector<Scope<SystemBase>> m_Systems;
-
+		std::vector<Ref<SystemBase>> m_Systems;
 		uint32_t m_CurrentEntityIndex = 0;
 	};
 
