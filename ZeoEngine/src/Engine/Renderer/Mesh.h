@@ -40,14 +40,16 @@ namespace ZeoEngine {
 	struct MeshEntryInstance : public Drawable
 	{
 		const MeshEntry* EntryPtr;
+		const RenderGraph* RenderGraphPtr;
 
-		MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph);
+		MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize = false);
 
 		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
 
-		void SubmitTechniques(const AssetHandle<MaterialAsset>& material, const RenderGraph& renderGraph);
+		void BindAndSubmitTechniques(AssetHandle<MaterialAsset>& material);
+		void SubmitTechniques(const AssetHandle<MaterialAsset>& material);
 	};
 
 	class Mesh
@@ -85,10 +87,28 @@ namespace ZeoEngine {
 		BoxSphereBounds m_Bounds;
 	};
 
-	struct MeshInstance
+	class MeshInstance
 	{
-		Ref<Mesh> MeshPtr;
-		const RenderGraph* RenderGraphPtr;
+	public:
+		MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize);
+		MeshInstance(const MeshInstance& other);
+
+		static void Create(MeshRendererComponent& meshComp, const RenderGraph& renderGraph, const Ref<MeshInstance>& meshInstanceToCopy = nullptr, bool bIsDeserialize = false);
+
+		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }
+		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
+		auto& GetMeshEntryInstances() { return m_EntryInstances; }
+		auto& GetMaterials() { return m_Materials; }
+		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material);
+		void OnMaterialChanged(uint32_t index, AssetHandle<MaterialAsset>& oldMaterial);
+
+		void SubmitTechniques(MeshEntryInstance& entryInstance);
+		void SubmitAllTechniques();
+
+		void Submit(const glm::mat4& transform, int32_t entityID);
+
+	private:
+		Ref<Mesh> m_MeshPtr;
 
 		struct ModelData
 		{
@@ -98,22 +118,10 @@ namespace ZeoEngine {
 			// Editor-only
 			int32_t EntityID;
 		};
-		ModelData ModelBuffer;
-		Ref<UniformBuffer> ModelUniformBuffer;
-		std::vector<MeshEntryInstance> EntryInstances;
-		std::vector<AssetHandle<MaterialAsset>> Materials;
-
-		MeshInstance(const Ref<Mesh>& mesh, const RenderGraph* renderGraph);
-		MeshInstance(const MeshInstance& other);
-		static void Create(MeshRendererComponent& meshComp, const RenderGraph* renderGraph, const Ref<MeshInstance>& meshInstanceToCopy = {});
-
-		auto& GetMaterials() { return Materials; }
-		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material);
-
-		void SubmitTechniques(MeshEntryInstance& entryInstance);
-		void SubmitAllTechniques();
-
-		void Submit(const glm::mat4& transform, int32_t entityID);
+		ModelData m_ModelBuffer;
+		Ref<UniformBuffer> m_ModelUniformBuffer;
+		std::vector<MeshEntryInstance> m_EntryInstances;
+		std::vector<AssetHandle<MaterialAsset>> m_Materials;
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>

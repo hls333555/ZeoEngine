@@ -11,18 +11,29 @@
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph)
-		: Drawable(vao, ubo), EntryPtr(&entry)
+	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize)
+		: Drawable(vao, ubo), EntryPtr(&entry), RenderGraphPtr(&renderGraph)
 	{
-		SubmitTechniques(material, renderGraph);
+		// This will be done after deserialization if bIsDeserialize is false
+		if (!bIsDeserialize)
+		{
+			BindAndSubmitTechniques(material);
+		}
 	}
 
-	void MeshEntryInstance::SubmitTechniques(const AssetHandle<MaterialAsset>& material, const RenderGraph& renderGraph)
+	void MeshEntryInstance::BindAndSubmitTechniques(AssetHandle<MaterialAsset>& material)
+	{
+		SubmitTechniques(material);
+		// Connect callback on new material for this instance
+		material->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(this);
+	}
+
+	void MeshEntryInstance::SubmitTechniques(const AssetHandle<MaterialAsset>& material)
 	{
 		ClearTechniques();
 		for (const auto& technique : material->GetMaterial()->GetRenderTechniques())
 		{
-			AddTechnique(technique, renderGraph);
+			AddTechnique(technique, *RenderGraphPtr);
 		}
 	}
 
@@ -144,31 +155,31 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const Ref<class Mesh>& mesh, const RenderGraph* renderGraph)
-		: MeshPtr(mesh), RenderGraphPtr(renderGraph)
+	MeshInstance::MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
+		: m_MeshPtr(mesh)
 	{
-		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
 		// Copy default materials
-		Materials = mesh->GetDefaultMaterials();
-		for (const auto& entry : MeshPtr->GetMeshEntries())
+		m_Materials = mesh->GetDefaultMaterials();
+		for (const auto& entry : m_MeshPtr->GetMeshEntries())
 		{
-			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], mesh->GetVAO(), ModelUniformBuffer, *RenderGraphPtr);
+			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], mesh->GetVAO(), m_ModelUniformBuffer, renderGraph, bIsDeserialize);
 		}
 	}
 
 	MeshInstance::MeshInstance(const MeshInstance& other)
-		: MeshPtr(other.MeshPtr), RenderGraphPtr(other.RenderGraphPtr)
+		: m_MeshPtr(other.m_MeshPtr), m_Materials(other.m_Materials)
 	{
-		ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
-		// Copy from other instance
-		Materials = other.Materials;
-		for (const auto& entry : MeshPtr->GetMeshEntries())
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		const auto& entries = m_MeshPtr->GetMeshEntries();
+		for (size_t i = 0; i < entries.size(); ++i)
 		{
-			EntryInstances.emplace_back(entry, Materials[entry.MaterialIndex], MeshPtr->GetVAO(), ModelUniformBuffer, *RenderGraphPtr);
+			const auto& entry = entries[i];
+			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer, *other.m_EntryInstances[i].RenderGraphPtr);
 		}
 	}
 
-	void MeshInstance::Create(MeshRendererComponent& meshComp, const RenderGraph* renderGraph, const Ref<MeshInstance>& meshInstanceToCopy)
+	void MeshInstance::Create(MeshRendererComponent& meshComp, const RenderGraph& renderGraph, const Ref<MeshInstance>& meshInstanceToCopy, bool bIsDeserialize)
 	{
 		if (meshInstanceToCopy)
 		{
@@ -177,19 +188,30 @@ namespace ZeoEngine {
 		}
 		else if (meshComp.Mesh)
 		{
-			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh(), renderGraph);
+			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh(), renderGraph, bIsDeserialize);
 		}
 	}
 
 	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
 	{
-		if (index < 0 || index >= Materials.size()) return;
+		if (index < 0 || index >= m_Materials.size()) return;
 
-		Materials[index] = material;
-		for (auto& entryInstance : EntryInstances)
+		auto& oldMaterial = m_Materials[index];
+		m_Materials[index] = material;
+		OnMaterialChanged(index, oldMaterial);
+	}
+
+	void MeshInstance::OnMaterialChanged(uint32_t index, AssetHandle<MaterialAsset>& oldMaterial)
+	{
+		for (auto& entryInstance : m_EntryInstances)
 		{
 			if (entryInstance.EntryPtr->MaterialIndex == index)
 			{
+				if (oldMaterial)
+				{
+					// Disconnect callback on old material for all referenced instances
+					oldMaterial->m_OnMaterialInitialized.disconnect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
+				}
 				SubmitTechniques(entryInstance);
 			}
 		}
@@ -197,13 +219,15 @@ namespace ZeoEngine {
 
 	void MeshInstance::SubmitTechniques(MeshEntryInstance& entryInstance)
 	{
-		entryInstance.SubmitTechniques(Materials[entryInstance.EntryPtr->MaterialIndex], *RenderGraphPtr);
-		//Materials[entryInstance.EntryPtr->MaterialIndex]->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
+		auto& material = m_Materials[entryInstance.EntryPtr->MaterialIndex];
+		if (!material) return;
+
+		entryInstance.BindAndSubmitTechniques(material);
 	}
 
 	void MeshInstance::SubmitAllTechniques()
 	{
-		for (auto& entryInstance : EntryInstances)
+		for (auto& entryInstance : m_EntryInstances)
 		{
 			SubmitTechniques(entryInstance);
 		}
@@ -211,12 +235,12 @@ namespace ZeoEngine {
 
 	void MeshInstance::Submit(const glm::mat4& transform, int32_t entityID)
 	{
-		ModelBuffer.Transform = transform;
-		ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
-		ModelBuffer.EntityID = entityID;
-		ModelUniformBuffer->SetData(&ModelBuffer);
+		m_ModelBuffer.Transform = transform;
+		m_ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
+		m_ModelBuffer.EntityID = entityID;
+		m_ModelUniformBuffer->SetData(&m_ModelBuffer);
 
-		for (const auto& entryInstance : EntryInstances)
+		for (const auto& entryInstance : m_EntryInstances)
 		{
 			entryInstance.Submit();
 		}

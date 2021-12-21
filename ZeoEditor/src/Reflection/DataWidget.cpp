@@ -105,7 +105,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
+	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex)
 	{
 		if (m_bIsTest) return;
 
@@ -114,11 +114,11 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(comp);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->OnComponentDataValueEditChange(data.id(), oldValue);
+			comp->ComponentHelper->OnComponentDataValueEditChange(data.id(), oldValue, elementIndex);
 		}
 	}
 
-	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue)
+	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex)
 	{
 		if (m_bIsTest) return;
 
@@ -127,7 +127,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(comp);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->PostComponentDataValueEditChange(data.id(), oldValue);
+			comp->ComponentHelper->PostComponentDataValueEditChange(data.id(), oldValue, elementIndex);
 		}
 	}
 
@@ -136,9 +136,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		if (ImGui::Checkbox("##Bool", &m_Buffer))
 		{
@@ -162,9 +162,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		if (m_EnumDatas.empty())
 		{
@@ -188,7 +188,7 @@ namespace ZeoEngine {
 						{
 							// TODO: Think a better way for enum sequence container
 							Reflection::SetEnumValueForSeq(instance, m_Buffer);
-							InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer);
+							InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer, m_DataSpec.ElementIndex);
 						}
 						else
 						{
@@ -258,9 +258,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		ImGui::InputText("##String", &m_Buffer, ImGuiInputTextFlags_AutoSelectAll);
 		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
@@ -297,9 +297,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		bool bChanged = ImGui::ColorEdit4("", glm::value_ptr(m_Buffer));
 		// For dragging
@@ -350,9 +350,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
@@ -381,9 +381,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
@@ -418,9 +418,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void MeshDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void MeshDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
@@ -449,9 +449,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void MaterialDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void MaterialDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
@@ -480,9 +480,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ShaderDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void ShaderDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
@@ -506,9 +506,9 @@ namespace ZeoEngine {
 	}
 #endif
 
-	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
+	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		m_DataSpec.Update(compInstance, instance);
+		m_DataSpec.Update(compInstance, instance, elementIndex);
 
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
 		const auto size = seqView.size();
@@ -546,11 +546,11 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
 		if (!m_ElementWidgetTemplate) return;
 
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
 		uint32_t i = 0;
@@ -647,7 +647,7 @@ namespace ZeoEngine {
 						if (it != seqView.end())
 						{
 							// Draw element widget
-							m_ElementWidgetTemplate->Draw(compInstance, elementInstance);
+							m_ElementWidgetTemplate->Draw(compInstance, elementInstance, i);
 						}
 
 						ImGui::TreePop();
@@ -658,7 +658,7 @@ namespace ZeoEngine {
 					// Make sure element widget + dropdown button can reach desired size
 					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - GetDropdownWidth());
 					// Draw element widget
-					m_ElementWidgetTemplate->Draw(compInstance, elementInstance);
+					m_ElementWidgetTemplate->Draw(compInstance, elementInstance, i);
 					ImGui::SameLine();
 					// Insert and erase buttons
 					DrawContainerElementOperationWidget(seqView, it);
@@ -720,7 +720,8 @@ namespace ZeoEngine {
 			{
 				if (seqSize > 0 && seqView.clear())
 				{
-					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+					// TODO:
+					InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {}, -1);
 				}
 			}
 			if (ImGui::IsItemHovered())
@@ -765,7 +766,8 @@ namespace ZeoEngine {
 		auto [retIt, res] = seqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
 		if (res)
 		{
-			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+			// TODO:
+			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {}, -1);
 			return retIt;
 		}
 		else
@@ -782,7 +784,8 @@ namespace ZeoEngine {
 		auto [retIt, res] = seqView.erase(it);
 		if (res)
 		{
-			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {});
+			// TODO:
+			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {}, -1);
 			return retIt;
 		}
 		else
@@ -803,9 +806,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 
 
@@ -857,9 +860,9 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance)
+	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		m_DataSpec.Update(compInstance, instance);
+		m_DataSpec.Update(compInstance, instance, elementIndex);
 
 		// Data name
 		bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultStructDataTreeNodeFlags);
@@ -873,9 +876,9 @@ namespace ZeoEngine {
 		return bIsDataTreeExpanded;
 	}
 
-	void StructWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance)
+	void StructWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 	{
-		if (!PreDraw(compInstance, instance)) return;
+		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		const auto structType = m_DataSpec.GetType();
 		auto structInstance = m_DataSpec.GetValue();

@@ -624,11 +624,11 @@ namespace ZeoEngine {
 	{
 		if (!material) return;
 
-		for (const auto& uniform : material->GetDynamicUniforms())
+		for (const auto& uniform : material->GetDynamicBindableUniforms())
 		{
 			EvaluateSerializeData(out, uniform);
 		}
-		for (const auto& uniform : material->GetDynamicBindableUniforms())
+		for (const auto& uniform : material->GetDynamicUniforms())
 		{
 			EvaluateSerializeData(out, uniform);
 		}
@@ -668,7 +668,7 @@ namespace ZeoEngine {
 	{
 		if (!material) return;
 
-		for (const auto& uniform : material->GetDynamicUniforms())
+		for (const auto& uniform : material->GetDynamicBindableUniforms())
 		{
 			const auto& dataName = uniform->Name;
 			const auto& dataValue = value[dataName];
@@ -678,7 +678,7 @@ namespace ZeoEngine {
 				EvaluateDeserializeData(dataValue, uniform);
 			}
 		}
-		for (const auto& uniform : material->GetDynamicBindableUniforms())
+		for (const auto& uniform : material->GetDynamicUniforms())
 		{
 			const auto& dataName = uniform->Name;
 			const auto& dataValue = value[dataName];

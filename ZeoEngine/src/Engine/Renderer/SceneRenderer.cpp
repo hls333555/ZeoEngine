@@ -136,7 +136,7 @@ namespace ZeoEngine {
 		if (!mesh) return;
 
 		mesh->Submit(transform, entityID);
-		Renderer::GetStats().MeshVertexCount += mesh->MeshPtr->GetVertexCount();
+		Renderer::GetStats().MeshVertexCount += mesh->GetMesh()->GetVertexCount();
 	}
 
 	void SceneRenderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)

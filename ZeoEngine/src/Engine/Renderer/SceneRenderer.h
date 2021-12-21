@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	class Shader;
 	class UniformBuffer;
 	class DDRenderInterface;
-	struct MeshInstance;
+	class MeshInstance;
 	class DirectionalLight;
 	class PointLight;
 	class SpotLight;
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
-		const RenderGraph* GetRenderGraph() const { return m_RenderGraph.get(); }
+		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }
 		const Scope<RenderSystemBase>& GetRenderSystem() const { return m_RenderSystem; }
 
 		glm::mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }

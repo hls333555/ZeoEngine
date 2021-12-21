@@ -29,12 +29,12 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
-	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
 
-	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
@@ -65,13 +65,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		ParticleSystemInstance::Create(particleComp);
 	}
 
-	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		if (dataId == ZDATA_ID(Template))
@@ -93,19 +93,19 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
 	}
 	 
-	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
 	}
 
-	const RenderGraph* MeshRendererComponentHelper::GetRenderGraph(Entity* entityContext) const
+	const RenderGraph& MeshRendererComponentHelper::GetRenderGraph(Entity* entityContext) const
 	{
 		return EngineUtils::GetSceneRendererFromContext(entityContext)->GetRenderGraph();
 	}
@@ -113,7 +113,7 @@ namespace ZeoEngine {
 	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
+		MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()), nullptr, bIsDeserialize);
 	}
 
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -126,7 +126,7 @@ namespace ZeoEngine {
 		MeshInstance::Create(meshComp, GetRenderGraph(otherComp->ComponentHelper->GetOwnerEntity()), static_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
-	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == ZDATA_ID(Mesh))
@@ -143,16 +143,17 @@ namespace ZeoEngine {
 		}
 		else if (dataId == ZDATA_ID(MaterialSlots))
 		{
-			meshComp.Instance->SubmitAllTechniques();
+			auto oldMaterial = (*oldValue._Cast<AssetHandle<MaterialAsset>>());
+			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
 		}
 	}
 
 	void MeshRendererComponentHelper::PostDataDeserialize(uint32_t dataId)
 	{
-		// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == ZDATA_ID(Mesh))
 		{
+			// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
 			MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
 		}
 		else if (dataId == ZDATA_ID(MaterialSlots))
@@ -193,7 +194,7 @@ namespace ZeoEngine {
 		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
 	}
 
-	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		if (dataId == ZDATA_ID(Range))
 		{
@@ -201,7 +202,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		if (dataId == ZDATA_ID(Type))
 		{

@@ -12,6 +12,8 @@ namespace ZeoEngine {
 	{
 	public:
 		Drawable(const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo);
+		Drawable(const Drawable&) = delete;
+		Drawable(Drawable&&) = default;
 		virtual ~Drawable() = default;
 
 		virtual uint32_t GetBaseVertex() const { return 0; }

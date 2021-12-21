@@ -31,9 +31,9 @@ namespace ZeoEngine {
 		virtual void OnComponentDestroy() {}
 
 		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex) {}
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) {}
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex) {}
 
 		/** Called after certain data has been deserialized. */
 		virtual void PostDataDeserialize(uint32_t dataId) {}
@@ -53,8 +53,8 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 	};
 
 	class CameraComponentHelper : public IComponentHelper
@@ -73,8 +73,8 @@ namespace ZeoEngine {
 
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void OnComponentDestroy() override;
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 	};
 
 	class ParticleSystemPreviewComponentHelper : public IComponentHelper
@@ -82,8 +82,8 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 	};
 
 	class MeshRendererComponentHelper : public IComponentHelper
@@ -93,12 +93,12 @@ namespace ZeoEngine {
 
 		virtual void OnComponentAdded(bool bIsDeserialize) override;
 		virtual void OnComponentCopied(IComponent* otherComp) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
 	private:
-		const RenderGraph* GetRenderGraph(Entity* contextEntity) const;
+		const RenderGraph& GetRenderGraph(Entity* contextEntity) const;
 	};
 
 	class LightComponentHelper : public IComponentHelper
@@ -109,8 +109,8 @@ namespace ZeoEngine {
 		virtual void OnComponentAdded(bool bIsDeserialize) override;
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void OnComponentDestroy() override;
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue) override;
+		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
