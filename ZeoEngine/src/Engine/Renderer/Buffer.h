@@ -149,11 +149,10 @@ namespace ZeoEngine {
 		RGBA16F, // This format can store negative values
 		RED_INTEGER,
 
+		// Depth
+		DEPTH32F,
 		// Depth/stencil
 		DEPTH24STENCIL8,
-		
-		// Defaults
-		Depth = DEPTH24STENCIL8
 	};
 
 	struct FrameBufferTextureSpec
@@ -191,18 +190,32 @@ namespace ZeoEngine {
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
 		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
+		virtual void* GetDepthAttachment() const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
 		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) = 0;
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
-		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
 
-		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
+		virtual void BindAsBuffer() const = 0;
+		virtual void UnbindAsBuffer() const = 0;
+
+		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
 	};
+
+	namespace UniformBufferBinding {
+
+		static uint32_t Camera = 0;
+		static uint32_t Model = 1;
+		static uint32_t Light = 2;
+		static uint32_t LightSpace = 3;
+
+		static uint32_t Material = 4;
+	}
 
 	class UniformBuffer : public Bindable
 	{

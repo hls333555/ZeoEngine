@@ -107,14 +107,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool BindingPass::Execute() const
-	{
-		if (!IsActive()) return false;
-
-		BindAll();
-		return true;
-	}
-
 	void BindingPass::Finalize()
 	{
 		RenderPass::Finalize();
@@ -126,7 +118,7 @@ namespace ZeoEngine {
 
 	void BindingPass::BindBufferResource() const
 	{
-		m_FBO->Bind();
+		m_FBO->BindAsBuffer();
 	}
 
 	void RenderQueuePass::AddTask(RenderTask task)
@@ -135,15 +127,20 @@ namespace ZeoEngine {
 		m_Tasks.emplace_back(std::move(task));
 	}
 
-	bool RenderQueuePass::Execute() const
+	void RenderQueuePass::ExecuteTasks() const
 	{
-		if (!BindingPass::Execute()) return false;
-
 		for (const auto& task : m_Tasks)
 		{
 			task.Execute();
 		}
-		return true;
+	}
+
+	void RenderQueuePass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		ExecuteTasks();
 	}
 
 	void RenderQueuePass::Reset()
@@ -151,13 +148,44 @@ namespace ZeoEngine {
 		m_Tasks.clear();
 	}
 
+	static const uint32_t Shadow_Width = 1024, Shadow_Height = 1024;
+
+	ShadowMappingPass::ShadowMappingPass(std::string name, bool bAutoActive)
+		: RenderQueuePass(std::move(name), bAutoActive)
+	{
+		CreateDepthBuffer();
+		AddBindable(Shader::Create("assets/editor/shaders/Depth.glsl"));
+		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts!
+		AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
+	}
+
+	void ShadowMappingPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		RenderCommand::Clear(RendererAPI::ClearType::Depth);
+		ExecuteTasks();
+	}
+
+	void ShadowMappingPass::CreateDepthBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Width = Shadow_Width;
+		fbSpec.Height = Shadow_Height;
+		fbSpec.Attachments = { FrameBufferTextureFormat::DEPTH32F };
+		m_FBO = FrameBuffer::Create(fbSpec, 0);
+	}
+
 	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
 	{
+		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
-		AddBindable(TwoSided::Resolve(false));
+		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 	}
 
 	GridRenderPass::GridRenderPass(std::string name, bool bAutoActive)
@@ -182,16 +210,16 @@ namespace ZeoEngine {
 		AddBindable(Shader::Create("assets/editor/shaders/Grid.glsl"));
 		AddBindable(gridUniformBuffer);
 		AddBindable(Depth::Resolve(Depth::State::ReadOnly));
-		AddBindable(TwoSided::Resolve(true));
+		AddBindable(TwoSided::Resolve(TwoSided::State::Disable));
 	}
 
-	bool GridRenderPass::Execute() const
+	void GridRenderPass::Execute() const
 	{
-		if (!BindingPass::Execute()) return false;
+		if (!IsActive()) return;
 
+		BindAll();
 		static int32_t gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
-		return true;
 	}
 
 }

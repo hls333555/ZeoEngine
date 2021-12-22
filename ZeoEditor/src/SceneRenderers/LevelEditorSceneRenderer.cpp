@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	Ref<FrameBuffer> LevelEditorSceneRenderer::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::DEPTH24STENCIL8 };
 		return FrameBuffer::Create(fbSpec);
 	}
 
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		SceneRenderer::Prepare();
 
 		// Clear entity ID buffer to -1
-		GetFrameBuffer()->ClearAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
+		GetFrameBuffer()->ClearColorAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
 	}
 
 	void LevelEditorSceneRenderer::OnRenderScene()

@@ -5,7 +5,7 @@
 
 namespace ZeoEngine {
 
-	void Depth::Bind(uint32_t slot) const
+	void Depth::Bind() const
 	{
 		switch (m_State)
 		{
@@ -23,9 +23,22 @@ namespace ZeoEngine {
 		}
 	}
 
-	void TwoSided::Bind(uint32_t slot) const
+	void TwoSided::Bind() const
 	{
-		RenderCommand::ToggleFaceCulling(!m_bEnable);
+		switch (m_State)
+		{
+		case TwoSided::State::CullFront:
+			RenderCommand::ToggleFaceCulling(true);
+			RenderCommand::SetFaceCullingMode(false);
+			break;
+		case TwoSided::State::CullBack:
+			RenderCommand::ToggleFaceCulling(true);
+			RenderCommand::SetFaceCullingMode(true);
+			break;
+		case TwoSided::State::Disable:
+			RenderCommand::ToggleFaceCulling(false);
+			break;
+		}
 	}
 
 }

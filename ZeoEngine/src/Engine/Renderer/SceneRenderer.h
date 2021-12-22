@@ -145,6 +145,13 @@ namespace ZeoEngine {
 		};
 		LightData m_LightBuffer;
 		Ref<UniformBuffer> m_LightUniformBuffer;
+
+		struct LightSpaceData
+		{
+			glm::mat4 ViewProjection;
+		};
+		LightSpaceData m_LightSpaceBuffer;
+		Ref<UniformBuffer> m_LightSpaceUniformBuffer;
 	};
 
 }

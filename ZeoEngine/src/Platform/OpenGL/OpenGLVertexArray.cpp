@@ -43,7 +43,7 @@ namespace ZeoEngine {
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
-	void OpenGLVertexArray::Bind(uint32_t slot) const
+	void OpenGLVertexArray::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 

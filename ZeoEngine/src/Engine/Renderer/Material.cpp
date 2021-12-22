@@ -68,7 +68,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DynamicUniformTexture2DData::Bind(uint32_t slot) const
+	void DynamicUniformTexture2DData::Bind() const
 	{
 		// Bind default texture first
 		Texture2D::GetDefaultTexture()->Bind(Binding);
@@ -111,21 +111,32 @@ namespace ZeoEngine {
 		InitUniformBuffers();
 		ParseReflectionData();
 
-		RenderTechnique shade("Shade");
 		{
-			RenderStep step("Opaque");
-			step.AddBindable(m_Shader ? m_Shader->GetShader() : m_DefaultShader->GetShader());
-			for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
+			RenderTechnique shade("Shade");
 			{
-				step.AddBindable(uniformBuffer);
+				RenderStep step("Opaque");
+				// TODO:
+				step.AddBindable(m_Shader ? m_Shader->GetShader() : m_DefaultShader->GetShader());
+				for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
+				{
+					step.AddBindable(uniformBuffer);
+				}
+				for (const auto& uniformBindableData : m_DynamicBindableUniforms)
+				{
+					step.AddBindable(uniformBindableData);
+				}
+				shade.AddStep(std::move(step));
 			}
-			for (const auto& uniformBindableData : m_DynamicBindableUniforms)
-			{
-				step.AddBindable(uniformBindableData);
-			}
-			shade.AddStep(std::move(step));
+			m_Techniques.emplace_back(std::move(shade));
 		}
-		m_Techniques.emplace_back(std::move(shade));
+		{
+			RenderTechnique shadow("Shadow");
+			{
+				RenderStep step("ShadowMapping");
+				shadow.AddStep(std::move(step));
+			}
+			m_Techniques.emplace_back(std::move(shadow));
+		}
 	}
 
 	void Material::ApplyUniformDatas()

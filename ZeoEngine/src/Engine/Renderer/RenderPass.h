@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		RenderPassInput* GetInput(const std::string& name) const;
 		RenderPassOutput* GetOuput(const std::string& name) const;
 
-		virtual bool Execute() const = 0;
+		virtual void Execute() const = 0;
 		virtual void Reset() {}
 		virtual void Finalize();
 
@@ -47,8 +47,16 @@ namespace ZeoEngine {
 	protected:
 		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
-		virtual bool Execute() const override;
 		virtual void Finalize() override;
+
+		/** Register a bindable input and add that to the bindable list. */
+		template<class T>
+		void RegisterBindableInput(std::string name)
+		{
+			const auto index = m_Bindables.size();
+			m_Bindables.emplace_back();
+			RegisterInput(RenderPassContainerBindableInput<T>::Create(std::move(name), m_Bindables, index));
+		}
 
 	private:
 		void BindBufferResource() const;
@@ -65,11 +73,23 @@ namespace ZeoEngine {
 		using BindingPass::BindingPass;
 
 		void AddTask(RenderTask task);
-		virtual bool Execute() const override;
+		void ExecuteTasks() const;
+		virtual void Execute() const override;
 		virtual void Reset() override;
 
 	private:
 		std::vector<RenderTask> m_Tasks;
+	};
+
+	class ShadowMappingPass : public RenderQueuePass
+	{
+	public:
+		explicit ShadowMappingPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+
+	private:
+		void CreateDepthBuffer();
 	};
 
 	class OpaqueRenderPass : public RenderQueuePass
@@ -83,7 +103,7 @@ namespace ZeoEngine {
 	public:
 		explicit GridRenderPass(std::string name, bool bAutoActive = true);
 
-		virtual bool Execute() const override;
+		virtual void Execute() const override;
 	};
 
 }

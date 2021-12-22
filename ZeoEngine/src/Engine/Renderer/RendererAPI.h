@@ -16,13 +16,19 @@ namespace ZeoEngine {
 			OpenGL = 1,
 		};
 
+		enum class ClearType
+		{
+			Color_Depth_Stencil,
+			Depth,
+		};
+
 	public:
 		virtual void Init() = 0;
 
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
 		virtual void SetClearColor(const glm::vec4& color) = 0;
-		virtual void Clear() = 0;
+		virtual void Clear(ClearType type) = 0;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
 		virtual void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
@@ -32,6 +38,7 @@ namespace ZeoEngine {
 		virtual void SetLineThickness(float thickness) = 0;
 
 		virtual void ToggleFaceCulling(bool bEnable) = 0;
+		virtual void SetFaceCullingMode(bool bIsBack) = 0;
 		virtual void ToggleDepthTesting(bool bEnable) = 0;
 		virtual void ToggleDepthWriting(bool bEnable) = 0;
 

@@ -72,7 +72,7 @@ namespace ZeoEngine {
 			return typeid(Depth).name() + "#"s + std::string(stateStr);
 		}
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind() const override;
 
 	private:
 		State m_State;
@@ -81,24 +81,30 @@ namespace ZeoEngine {
 	class TwoSided : public Bindable
 	{
 	public:
-		explicit TwoSided(bool bEnable)
-			: m_bEnable(bEnable) {}
-
-		static Ref<TwoSided> Resolve(bool bEnable)
+		enum class State
 		{
-			return BindableStates::Resolve<TwoSided>(bEnable);
+			CullFront, CullBack, Disable
+		};
+
+		explicit TwoSided(State state)
+			: m_State(state) {}
+
+		static Ref<TwoSided> Resolve(State state)
+		{
+			return BindableStates::Resolve<TwoSided>(state);
 		}
 
-		static std::string GenerateUID(bool bEnable)
+		static std::string GenerateUID(State state)
 		{
 			using namespace std::string_literals;
-			return typeid(TwoSided).name() + "#"s + std::string(bEnable ? "Enable" : "Disable");
+			auto stateStr = magic_enum::enum_name(state);
+			return typeid(TwoSided).name() + "#"s + std::string(stateStr);
 		}
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind() const override;
 
 	private:
-		bool m_bEnable;
+		State m_State;
 	};
 
 }

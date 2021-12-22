@@ -10,6 +10,8 @@
 
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Profile/BenchmarkTimer.h"
+#include "Engine/Renderer/Buffer.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -369,19 +371,22 @@ namespace ZeoEngine {
 		spirv_cross::Compiler compiler(shaderData);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 		const auto uniformBufferCount = resources.uniform_buffers.size();
-		m_ResourceCount = resources.sampled_images.size();
 
 		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
 		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferCount);
-		ZE_CORE_TRACE("    {0} resources", m_ResourceCount);
 
 		// Reflect resources first (non-uniform block)
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			if (binding < TextureBinding::Max) continue;
+
 			const auto& name = resource.name;
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
+			++m_ResourceCount;
 		}
+
+		ZE_CORE_TRACE("    {0} resources", m_ResourceCount);
 
 		if (uniformBufferCount <= 0) return;
 
@@ -399,7 +404,7 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
 
-			if (binding < 3) continue;
+			if (binding < UniformBufferBinding::Material) continue;
 
 			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector
@@ -457,7 +462,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLShader::Bind(uint32_t slot) const
+	void OpenGLShader::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 

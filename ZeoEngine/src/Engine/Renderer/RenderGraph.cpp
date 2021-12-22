@@ -192,7 +192,12 @@ namespace ZeoEngine {
 		: RenderGraph(fbo)
 	{
 		{
+			auto pass = CreateScope<ShadowMappingPass>("ShadowMapping");
+			AddRenderPass(std::move(pass));
+		}
+		{
 			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
+			pass->SetInputLinkage("ShadowMap", "ShadowMapping.ShadowMap");
 			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}

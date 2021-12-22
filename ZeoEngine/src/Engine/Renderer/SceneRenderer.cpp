@@ -30,20 +30,21 @@ namespace ZeoEngine {
 		m_RenderGraph = CreateRenderGraph(m_FBO);
 		m_RenderSystem = CreateRenderSystem();
 
-		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
-		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), 2);
+		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), UniformBufferBinding::Camera);
+		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), UniformBufferBinding::Light);
+		m_LightSpaceUniformBuffer = UniformBuffer::Create(sizeof(LightSpaceData), UniformBufferBinding::LightSpace);
 	}
 
 	void SceneRenderer::OnRender()
 	{
-		m_FBO->Bind();
+		m_FBO->BindAsBuffer();
 		{
 			Prepare();
 			OnRenderScene();
 			m_PostSceneRenderDel(m_FBO);
 			m_RenderGraph->Reset();
 		}
-		m_FBO->Unbind();
+		m_FBO->UnbindAsBuffer();
 	}
 
 	void SceneRenderer::BeginScene(const EditorCamera& camera)
@@ -81,7 +82,7 @@ namespace ZeoEngine {
 	void SceneRenderer::Prepare()
 	{
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.0f });
-		RenderCommand::Clear();
+		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
 
 		m_LightBuffer.Reset();
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
@@ -104,6 +105,8 @@ namespace ZeoEngine {
 		m_LightBuffer.DirectionalLightBuffer.Color = directionalLight->GetColor();
 		m_LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
 		m_LightBuffer.DirectionalLightBuffer.Direction = directionalLight->CalculateDirection(rotation);
+		const glm::mat4 viewMatrix = glm::inverse(glm::toMat4(glm::quat(rotation)));
+		m_LightSpaceBuffer.ViewProjection = directionalLight->GetProjection() * viewMatrix;
 	}
 
 	void SceneRenderer::AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight)
@@ -129,6 +132,7 @@ namespace ZeoEngine {
 	void SceneRenderer::UploadLightData()
 	{
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
+		m_LightSpaceUniformBuffer->SetData(&m_LightSpaceBuffer);
 	}
 
 	void SceneRenderer::DrawMesh(const glm::mat4& transform, const Ref<MeshInstance>& mesh, int32_t entityID)

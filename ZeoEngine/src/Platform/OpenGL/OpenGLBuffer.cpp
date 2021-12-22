@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void OpenGLVertexBuffer::Bind(uint32_t slot) const
+	void OpenGLVertexBuffer::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -91,7 +91,7 @@ namespace ZeoEngine {
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void OpenGLIndexBuffer::Bind(uint32_t slot) const
+	void OpenGLIndexBuffer::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -117,6 +117,7 @@ namespace ZeoEngine {
 		{
 			switch (format)
 			{
+				case FrameBufferTextureFormat::DEPTH32F:
 				case FrameBufferTextureFormat::DEPTH24STENCIL8: return true;
 			}
 
@@ -175,6 +176,9 @@ namespace ZeoEngine {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				// To be used by hardware PCF
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			}
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(bIsMultiSampled), ID, 0);
@@ -201,6 +205,7 @@ namespace ZeoEngine {
 				case FrameBufferTextureFormat::RGBA8:
 				case FrameBufferTextureFormat::RGBA16F:			return GL_RGBA;
 				case FrameBufferTextureFormat::RED_INTEGER:		return GL_RED_INTEGER;
+				case FrameBufferTextureFormat::DEPTH32F:		return GL_DEPTH_COMPONENT32F;
 				case FrameBufferTextureFormat::DEPTH24STENCIL8:	return GL_DEPTH24_STENCIL8;
 				default:
 					ZE_CORE_ASSERT(false);
@@ -223,10 +228,23 @@ namespace ZeoEngine {
 			return 0;
 		}
 
+		static GLenum ToGLDepthAttachment(FrameBufferTextureFormat format)
+		{
+			switch (format)
+			{
+				case FrameBufferTextureFormat::DEPTH32F:		return GL_DEPTH_ATTACHMENT;
+				case FrameBufferTextureFormat::DEPTH24STENCIL8:	return GL_DEPTH_STENCIL_ATTACHMENT;
+				default:
+					ZE_CORE_ASSERT(false);
+					break;
+			}
+			return 0;
+		}
+
 	}
 
-	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpec& spec)
-		: m_Spec(spec)
+	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex, uint32_t textureBindingSlot)
+		: m_Spec(spec), m_TextureBindingAttachmentIndex(textureBindingAttachmentIndex), m_TextureBindingSlot(textureBindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -296,7 +314,7 @@ namespace ZeoEngine {
 		{
 			Utils::CreateTextures(bIsMultiSampled, &m_DepthAttachment, 1);
 			Utils::BindTexture(bIsMultiSampled, m_DepthAttachment);
-			Utils::AttachDepthTexture(m_DepthAttachment, m_Spec.Samples, Utils::ToGLTextureFormat(format), GL_DEPTH_STENCIL_ATTACHMENT, m_Spec.Width, m_Spec.Height);
+			Utils::AttachDepthTexture(m_DepthAttachment, m_Spec.Samples, Utils::ToGLTextureFormat(format), Utils::ToGLDepthAttachment(format), m_Spec.Width, m_Spec.Height);
 		}
 
 		if (m_ColorAttachments.size() > 1)
@@ -316,7 +334,25 @@ namespace ZeoEngine {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFrameBuffer::Bind(uint32_t slot) const
+	void OpenGLFrameBuffer::Bind() const
+	{
+		if (m_TextureBindingAttachmentIndex < 0) return;
+
+		auto colorAttachmentCount = m_ColorAttachments.size();
+		auto textureTarget = Utils::TextureTarget(m_Spec.Samples > 1);
+		if (m_TextureBindingAttachmentIndex < colorAttachmentCount)
+		{
+			glActiveTexture(GL_TEXTURE0 + m_TextureBindingSlot);
+			glBindTexture(textureTarget, m_ColorAttachments[m_TextureBindingAttachmentIndex]);
+		}
+		else if (m_TextureBindingAttachmentIndex == colorAttachmentCount)
+		{
+			glActiveTexture(GL_TEXTURE0 + m_TextureBindingSlot);
+			glBindTexture(textureTarget, m_DepthAttachment);
+		}
+	}
+
+	void OpenGLFrameBuffer::BindAsBuffer() const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -325,7 +361,7 @@ namespace ZeoEngine {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 	}
 
-	void OpenGLFrameBuffer::Unbind() const
+	void OpenGLFrameBuffer::UnbindAsBuffer() const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -354,7 +390,7 @@ namespace ZeoEngine {
 		glReadPixels(x, y, 1, 1, Utils::ToGLTextureFormat(format), Utils::ToGLDataType(format), outPixelData);
 	}
 
-	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int32_t clearValue)
+	void OpenGLFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue)
 	{
 		ZE_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
@@ -362,7 +398,7 @@ namespace ZeoEngine {
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::ToGLTextureFormat(spec.TextureFormat), Utils::ToGLDataType(spec.TextureFormat), &clearValue);
 	}
 
-	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue)
+	void OpenGLFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue)
 	{
 		ZE_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
@@ -421,7 +457,7 @@ namespace ZeoEngine {
 		glNamedBufferSubData(m_RendererID, offset, size == 0 ? m_Size : size, data);
 	}
 
-	void OpenGLUniformBuffer::Bind(uint32_t slot) const
+	void OpenGLUniformBuffer::Bind() const
 	{
 		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
 	}

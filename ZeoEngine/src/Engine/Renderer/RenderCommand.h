@@ -24,9 +24,9 @@ namespace ZeoEngine {
 		}
 
 		/** Call this before any rendering calls! */
-		static void Clear()
+		static void Clear(RendererAPI::ClearType type)
 		{
-			s_RendererAPI->Clear();
+			s_RendererAPI->Clear(type);
 		}
 
 		/** Issue a draw call. */
@@ -70,6 +70,11 @@ namespace ZeoEngine {
 		static void ToggleFaceCulling(bool bEnable)
 		{
 			s_RendererAPI->ToggleFaceCulling(bEnable);
+		}
+
+		static void SetFaceCullingMode(bool bIsBack)
+		{
+			s_RendererAPI->SetFaceCullingMode(bIsBack);
 		}
 
 		static void ToggleDepthTesting(bool bEnable)

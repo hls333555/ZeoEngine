@@ -11,7 +11,15 @@
 
 namespace ZeoEngine {
 
-	class Texture : public Bindable
+	namespace TextureBinding {
+
+		// Reserved texture binding slots
+		static const uint32_t ShadowMap = 0;
+		static const uint32_t Max = 1;
+
+	}
+
+	class Texture
 	{
 	public:
 		virtual ~Texture() = default;
@@ -24,7 +32,7 @@ namespace ZeoEngine {
 		/** Upload a block of memory with texture data to GPU. */
 		virtual void SetData(void* data, uint32_t size) = 0;
 
-		virtual void Bind(uint32_t slot = 0) const = 0;
+		virtual void Bind(uint32_t slot) const = 0;
 
 		virtual bool operator==(const Texture& other) const = 0;
 	};

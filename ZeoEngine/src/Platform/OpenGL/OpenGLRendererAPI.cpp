@@ -63,9 +63,17 @@ namespace ZeoEngine {
 		glClearColor(color.r, color.g, color.b, color.a);
 	}
 
-	void OpenGLRendererAPI::Clear()
+	void OpenGLRendererAPI::Clear(ClearType type)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		switch (type)
+		{
+			case ClearType::Color_Depth_Stencil:
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				break;
+			case ClearType::Depth:
+				glClear(GL_DEPTH_BUFFER_BIT);
+				break;
+		}
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount, int32_t baseIndex)
@@ -115,6 +123,11 @@ namespace ZeoEngine {
 		{
 			glDisable(GL_CULL_FACE);
 		}
+	}
+
+	void OpenGLRendererAPI::SetFaceCullingMode(bool bIsBack)
+	{
+		glCullFace(bIsBack ? GL_BACK : GL_FRONT);
 	}
 
 	void OpenGLRendererAPI::ToggleDepthTesting(bool bEnable)

@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	Ref<FrameBuffer> ParticleEditorSceneRenderer::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
+		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::DEPTH24STENCIL8 };
 		return FrameBuffer::Create(fbSpec);
 	}
 

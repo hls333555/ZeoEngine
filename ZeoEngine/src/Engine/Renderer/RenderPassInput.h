@@ -3,6 +3,7 @@
 namespace ZeoEngine {
 
 	class RenderPassOutput;
+	class Bindable;
 
 	class RenderPassInput
 	{
@@ -97,6 +98,42 @@ namespace ZeoEngine {
 
 	private:
 		Ref<T>& m_BindTarget;
+	};
+
+	template<typename T>
+	class RenderPassContainerBindableInput : public RenderPassInput
+	{
+		static_assert(std::is_base_of_v<Bindable, T>, "RenderPassContainerBindableInput target type must be a Bindable type!");
+
+	public:
+		RenderPassContainerBindableInput(std::string name, std::vector<Ref<Bindable>>& container, size_t index)
+			: RenderPassInput(std::move(name))
+			, m_BindTargetContainer(container), m_Index(index) {}
+
+		static Scope<RenderPassInput> Create(std::string name, std::vector<Ref<Bindable>>& container, size_t index)
+		{
+			return CreateScope<RenderPassContainerBindableInput>(std::move(name), container, index);
+		}
+
+		virtual void Bind(const RenderPassOutput* output) override
+		{
+			if (!output) return;
+
+			auto bindable = std::dynamic_pointer_cast<T>(output->GetBindable());
+			if (!bindable)
+			{
+				ZE_CORE_ERROR("Failed to bind render pass input {0} to output {1}.{2}! {3} is not compatible with {4}.",
+					GetName(), GetTargetRenderPassName(), GetTargetOutputName(), typeid(T).name(), typeid(*output->GetBindable().get()).name());
+				return;
+			}
+
+			m_BindTargetContainer[m_Index] = std::move(bindable);
+			m_HasLinked = true;
+		}
+
+	private:
+		std::vector<Ref<Bindable>>& m_BindTargetContainer;
+		size_t m_Index;
 	};
 
 }

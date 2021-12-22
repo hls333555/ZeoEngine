@@ -11,7 +11,7 @@ namespace ZeoEngine {
 		OpenGLVertexBuffer(void* vertices, uint32_t size);
 		virtual ~OpenGLVertexBuffer();
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
 		virtual void SetData(const void* data, uint32_t size) override;
@@ -32,7 +32,7 @@ namespace ZeoEngine {
 		OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
 		virtual ~OpenGLIndexBuffer();
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
 		virtual uint32_t GetCount() const override { return m_Count; }
@@ -46,7 +46,13 @@ namespace ZeoEngine {
 	class OpenGLFrameBuffer : public FrameBuffer
 	{
 	public:
-		OpenGLFrameBuffer(const FrameBufferSpec& spec);
+		/**
+		 * Create an OpenGL frame buffer object.
+		 * @param spec - Specification for the FBO
+		 * @param textureBindingAttachmentIndex - The index of the attachment whose texture will be bound when called, the order is from color attachments to depth attachment
+		 * @param textureBindingSlot - The slot the attachment texture will be bound to when called
+		 */
+		OpenGLFrameBuffer(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
 		virtual ~OpenGLFrameBuffer();
 
 		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
@@ -56,18 +62,20 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
 			return (void*)(intptr_t)m_ColorAttachments[index];
 		}
+		virtual void* GetDepthAttachment() const override { return (void*)(intptr_t)m_DepthAttachment; }
 
 		void Invalidate();
 
-		virtual void Bind(uint32_t slot = 0) const override;
-		virtual void Unbind() const override;
+		virtual void Bind() const override;
+		virtual void BindAsBuffer() const override;
+		virtual void UnbindAsBuffer() const override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
 		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) override;
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
-		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) override;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) override;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) override;
 
@@ -81,6 +89,9 @@ namespace ZeoEngine {
 		std::vector<uint32_t> m_ColorAttachments;
 		uint32_t m_DepthAttachment = 0;
 
+		int32_t m_TextureBindingAttachmentIndex;
+		uint32_t m_TextureBindingSlot;
+
 	};
 
 	class OpenGLUniformBuffer : public UniformBuffer
@@ -91,7 +102,7 @@ namespace ZeoEngine {
 
 		virtual void SetData(const void* data, uint32_t size = 0, uint32_t offset = 0) override;
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind() const override;
 
 	private:
 		uint32_t m_RendererID = 0;

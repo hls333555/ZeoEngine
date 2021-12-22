@@ -158,7 +158,7 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), UniformBufferBinding::Model);
 		// Copy default materials
 		m_Materials = mesh->GetDefaultMaterials();
 		for (const auto& entry : m_MeshPtr->GetMeshEntries())

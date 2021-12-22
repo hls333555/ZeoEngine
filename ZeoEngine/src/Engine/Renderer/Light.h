@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Renderer/Camera.h"
+
 namespace ZeoEngine {
 
 	class Light
@@ -24,8 +26,10 @@ namespace ZeoEngine {
 		float m_Range = 1.0f;
 	};
 
-	class DirectionalLight : public Light
+	class DirectionalLight : public Light, public Camera
 	{
+	public:
+		DirectionalLight();
 	};
 
 	class PointLight : public Light

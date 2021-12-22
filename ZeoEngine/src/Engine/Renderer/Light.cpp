@@ -10,4 +10,10 @@ namespace ZeoEngine {
         return glm::rotate(glm::quat(rotation), { 0.0f, 0.0f, -1.0f });
     }
 
+    DirectionalLight::DirectionalLight()
+    {
+        // TODO:
+        m_Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 20.0f);
+    }
+
 }
