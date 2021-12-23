@@ -83,8 +83,9 @@ namespace ZeoEngine {
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 
+		// TODO:
 		/** Returns the entity identifier without the version. */
-		uint32_t GetEntityId() const { return static_cast<uint32_t>(entt::registry::entity(m_EntityHandle)); }
+		uint32_t GetEntityId() const { return entt::to_entity(m_EntityHandle); }
 
 		/** This only checks if this entity is a null-entity while IsValid() checks if this entity is still alive. */
 		operator bool() const { return m_EntityHandle != entt::null; }

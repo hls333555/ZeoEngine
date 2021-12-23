@@ -216,7 +216,7 @@ namespace ZeoEngine {
 		void ReloadImpl();
 
 	public:
-		entt::sink<void(const AssetHandle<MaterialAsset>&)> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
+		entt::sink<entt::sigh<void(const AssetHandle<MaterialAsset>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
 
 	private:
 		Ref<Material> m_Material;

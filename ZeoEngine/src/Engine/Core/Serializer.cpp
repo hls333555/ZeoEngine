@@ -540,18 +540,13 @@ namespace ZeoEngine {
 
 	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(const entt::meta_data data, entt::meta_sequence_container& seqView)
 	{
-		auto [retIt, res] = seqView.insert(seqView.end(), seqView.value_type().construct());
-		if (res)
-		{
-			return retIt;
-		}
-		else
+		auto retIt = seqView.insert(seqView.end(), seqView.value_type().construct());
+		if (!retIt)
 		{
 			auto dataName = GetMetaObjectDisplayName(data);
 			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
 		}
-
-		return {};
+		return retIt;
 	}
 
 	void ComponentSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)

@@ -140,7 +140,7 @@ namespace ZeoEngine {
 		virtual void Reload(bool bIsCreate) override;
 
 	public:
-		entt::sink<void()> m_OnShaderReloaded{ m_OnShaderReloadedDel };
+		entt::sink<entt::sigh<void()>> m_OnShaderReloaded{ m_OnShaderReloadedDel };
 
 	private:
 		Ref<Shader> m_Shader;

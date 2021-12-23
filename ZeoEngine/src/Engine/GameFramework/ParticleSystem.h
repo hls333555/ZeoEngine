@@ -186,7 +186,7 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnSystemFinishedDel;
 	public:
 		/** Called when this particle system is about to be destroyed */
-		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
+		entt::sink<entt::sigh<void()>> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
 		// Burst data specification
