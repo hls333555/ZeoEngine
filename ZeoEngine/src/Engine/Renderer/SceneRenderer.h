@@ -96,7 +96,11 @@ namespace ZeoEngine {
 		struct LightDataBase
 		{
 			glm::vec4 Color;
-			float Intensity, Padding, Padding1, Padding2; // NOTE: The paddings are only needed in code
+			float Intensity;
+			int32_t bCastShadow;
+			float DepthBias;
+			float NormalBias;
+			int PcfLevel; float Padding, Padding1, Padding2;
 
 			void Reset()
 			{

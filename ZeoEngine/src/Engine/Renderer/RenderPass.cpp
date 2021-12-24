@@ -155,8 +155,8 @@ namespace ZeoEngine {
 	{
 		CreateDepthBuffer();
 		AddBindable(Shader::Create("assets/editor/shaders/Depth.glsl"));
-		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts!
-		AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
+		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
+		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
 	}
 

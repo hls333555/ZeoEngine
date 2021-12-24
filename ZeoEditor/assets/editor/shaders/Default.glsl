@@ -21,27 +21,20 @@ layout (std140, binding = 1) uniform Model
 	int EntityID;
 }u_Model;
 
-layout (std140, binding = 3) uniform LightSpace
-{
-    mat4 ViewProjection;
-}u_LightSpace;
-
 struct VertexOutput
 {
 	vec3 WorldPosition;
-	vec4 LightSpacePosition;
 	vec3 Normal;
 	vec2 TexCoord;
 	vec3 CameraPosition;
 };
 
 layout (location = 0) out VertexOutput Output;
-layout (location = 5) out flat int v_EntityID;
+layout (location = 4) out flat int v_EntityID;
 
 void main()
 {
 	Output.WorldPosition = vec3(u_Model.Transform * vec4(a_Position, 1.0f));
-	Output.LightSpacePosition = u_LightSpace.ViewProjection * vec4(Output.WorldPosition, 1.0f);
 	Output.Normal = mat3(u_Model.NormalMatrix) * a_Normal;
 	Output.TexCoord = a_TexCoord;
 	Output.CameraPosition = u_Camera.Position;
@@ -63,6 +56,10 @@ struct LightBase
 {
 	vec4 Color;
 	float Intensity;
+	bool bCastShadow;
+	float DepthBias;
+	float NormalBias;
+	int PcfLevel;
 };
 
 struct DirectionalLight
@@ -94,6 +91,11 @@ layout (std140, binding = 2) uniform Light
 	int u_NumSpotLights;
 };
 
+layout (std140, binding = 3) uniform LightSpace
+{
+    mat4 ViewProjection;
+}u_LightSpace;
+
 layout (std140, binding = 4) uniform Material
 {
 	float Shininess;
@@ -102,23 +104,26 @@ layout (std140, binding = 4) uniform Material
 struct VertexOutput
 {
 	vec3 WorldPosition;
-	vec4 LightSpacePosition;
 	vec3 Normal;
 	vec2 TexCoord;
 	vec3 CameraPosition;
 };
 
 layout (location = 0) in VertexOutput Input;
-layout (location = 5) in flat int v_EntityID;
+layout (location = 4) in flat int v_EntityID;
 
 layout (binding = 0) uniform sampler2DShadow u_ShadowMap;
 layout (binding = 1) uniform sampler2D u_DiffuseTexture;
 layout (binding = 2) uniform sampler2D u_SpecularTexture;
 
-float CalculateShadow()
+float CalculateShadow(LightBase base, vec3 lightDirection, vec3 vertexNormal)
 {
+	float dotRes = clamp(dot(vertexNormal, normalize(-lightDirection)), 0.0f, 1.0f);
+	// Normal bias offset applied to world position before shadow evaluation
+    vec3 posOffset = base.NormalBias * (1.0f - dotRes) * vertexNormal;
+	vec4 lightSpacePosition = u_LightSpace.ViewProjection * vec4(Input.WorldPosition + posOffset, 1.0f);
 	// Perform perspective divide, now in [-1,1] range
-    vec3 projCoords = Input.LightSpacePosition.xyz / Input.LightSpacePosition.w;
+    vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
 	// Transform to [0,1] range
     projCoords = projCoords * 0.5f + 0.5f;
     // Get depth of current fragment from light's perspective
@@ -128,21 +133,21 @@ float CalculateShadow()
 	{
 		vec2 texelSize = 1.0f / textureSize(u_ShadowMap, 0);
 		// Hardware PCF
-		for (float x = -1.5f; x <= 1.5f; x += 1.0f)
+		float pcfBase = (base.PcfLevel - 1.0f) / 2.0f;
+		for (float x = -pcfBase; x <= pcfBase; x += 1.0f)
 		{
-			for (float y = -1.5f; y <= 1.5f; y += 1.0f)
+			for (float y = -pcfBase; y <= pcfBase; y += 1.0f)
 			{
-				// No bias needed! Front face culling solves those artifacts!
-				shadow += 1.0f - texture(u_ShadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, projCoords.z));
+				shadow += 1.0f - texture(u_ShadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, projCoords.z - base.DepthBias * texelSize.x));
 			}
 		}
-		shadow /= 16.0f;
+		shadow /= base.PcfLevel * base.PcfLevel;
 	}
 
     return shadow;
 }
 
-vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 vertexNormal, bool bCastShadow)
+vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 vertexNormal)
 {
 	// Ambient
 	vec4 ambientColor = texture(u_DiffuseTexture, Input.TexCoord) * 0.3f;
@@ -158,14 +163,14 @@ vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 vertexNorm
 	vec4 specularColor = specular * texture(u_SpecularTexture, Input.TexCoord);
 
 	// Shadow
-	float shadow = bCastShadow ? CalculateShadow() : 0.0f;
+	float shadow = base.bCastShadow ? CalculateShadow(base, lightDirection, vertexNormal) : 0.0f;
 
 	return (ambientColor + (1.0f - shadow) * (diffuseColor + specularColor)) * base.Color * base.Intensity;
 }
 
 vec4 CalculateDirectionalLight(vec3 vertexNormal)
 {
-	return CalculateLightInternal(u_DirectionalLight.Base, u_DirectionalLight.Direction, vertexNormal, true);
+	return CalculateLightInternal(u_DirectionalLight.Base, u_DirectionalLight.Direction, vertexNormal);
 }
 
 vec4 CalculatePointLight(PointLight pointLight, vec3 vertexNormal)
@@ -174,7 +179,7 @@ vec4 CalculatePointLight(PointLight pointLight, vec3 vertexNormal)
 	float lightDistance = length(lightDirection);
 	lightDirection = normalize(lightDirection);
 
-	vec4 color = CalculateLightInternal(pointLight.Base, lightDirection, vertexNormal, false);
+	vec4 color = CalculateLightInternal(pointLight.Base, lightDirection, vertexNormal);
 	float normalizedDistance = lightDistance / pointLight.Radius;
 	float attenuation = clamp(1.0f / (1.0f + 25.0f * normalizedDistance * normalizedDistance) *
 								clamp((1.0f - normalizedDistance) * 5.0f, 0.0f, 1.0f)

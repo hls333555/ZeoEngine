@@ -13,7 +13,7 @@ namespace ZeoEngine {
     DirectionalLight::DirectionalLight()
     {
         // TODO:
-        m_Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 20.0f);
+        m_Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -5.0f, 5.0f);
     }
 
 }

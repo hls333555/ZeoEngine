@@ -131,7 +131,11 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
 			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f))
 			ZDATA_SETTER_GETTER(LightComponent, Range, SetRange, GetRange, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type == DirectionalLight"))
-			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"));
+			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"))
+			ZDATA_SETTER_GETTER(LightComponent, CastShadow, SetCastShadow, IsCastShadow)
+			ZDATA_SETTER_GETTER(LightComponent, DepthBias, SetDepthBias, GetDepthBias, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, NormalBias, SetNormalBias, GetNormalBias, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 3.0f), ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, PcfLevel, SetPcfLevel, GetPcfLevel, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 1), ZPROP(ClampMax, 5), ZPROP(HideCondition, "CastShadow == false"));
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);

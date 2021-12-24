@@ -347,6 +347,14 @@ namespace ZeoEngine {
 		void SetRange(float range) { LightSource->SetRange(range); }
 		float GetCutoffAsDegrees() const { return glm::degrees(LightSource->GetCutoff()); }
 		void SetCutoffToRadians(float cutoffInDegrees) { LightSource->SetCutoff(glm::radians(cutoffInDegrees)); }
+		bool IsCastShadow() const { return LightSource->IsCastShadow(); }
+		void SetCastShadow(bool bCast) { LightSource->SetCastShadow(bCast); }
+		float GetDepthBias() const { return LightSource->GetDepthBias(); }
+		void SetDepthBias(float bias) { LightSource->SetDepthBias(bias); }
+		float GetNormalBias() const { return LightSource->GetNormalBias(); }
+		void SetNormalBias(float bias) { LightSource->SetNormalBias(bias); }
+		uint32_t GetPcfLevel() const { return LightSource->GetPcfLevel(); }
+		void SetPcfLevel(uint32_t level) { LightSource->SetPcfLevel(level); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent

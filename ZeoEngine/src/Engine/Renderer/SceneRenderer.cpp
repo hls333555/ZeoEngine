@@ -105,6 +105,10 @@ namespace ZeoEngine {
 		m_LightBuffer.DirectionalLightBuffer.Color = directionalLight->GetColor();
 		m_LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
 		m_LightBuffer.DirectionalLightBuffer.Direction = directionalLight->CalculateDirection(rotation);
+		m_LightBuffer.DirectionalLightBuffer.bCastShadow = directionalLight->IsCastShadow();
+		m_LightBuffer.DirectionalLightBuffer.DepthBias = directionalLight->GetDepthBias();
+		m_LightBuffer.DirectionalLightBuffer.NormalBias = directionalLight->GetNormalBias();
+		m_LightBuffer.DirectionalLightBuffer.PcfLevel = directionalLight->GetPcfLevel();
 		const glm::mat4 viewMatrix = glm::inverse(glm::toMat4(glm::quat(rotation)));
 		m_LightSpaceBuffer.ViewProjection = directionalLight->GetProjection() * viewMatrix;
 	}
@@ -115,6 +119,10 @@ namespace ZeoEngine {
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Intensity = pointLight->GetIntensity();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Position = position;
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = pointLight->GetRange();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = pointLight->IsCastShadow();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = pointLight->GetDepthBias();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = pointLight->GetNormalBias();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].PcfLevel = pointLight->GetPcfLevel();
 		++m_LightBuffer.NumPointLights;
 	}
 
@@ -126,6 +134,9 @@ namespace ZeoEngine {
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Radius = spotLight->GetRange();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].PcfLevel = spotLight->GetPcfLevel();
 		++m_LightBuffer.NumSpotLights;
 	}
 

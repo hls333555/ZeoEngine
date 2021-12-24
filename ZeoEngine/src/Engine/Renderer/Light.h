@@ -17,6 +17,14 @@ namespace ZeoEngine {
 		void SetRange(float range) { m_Range  = range; }
 		virtual float GetCutoff() const { return 0.0f; }
 		virtual void SetCutoff(float cutoff) {}
+		bool IsCastShadow() const { return m_bCastShadow; }
+		void SetCastShadow(bool bCast) { m_bCastShadow = bCast; }
+		float GetDepthBias() const { return m_DepthBias; }
+		void SetDepthBias(float bias) { m_DepthBias = bias; }
+		float GetNormalBias() const { return m_NormalBias; }
+		void SetNormalBias(float bias) { m_NormalBias = bias; }
+		uint32_t GetPcfLevel() const { return m_PcfLevel; }
+		void SetPcfLevel(uint32_t level) { m_PcfLevel = level; }
 
 		glm::vec3 CalculateDirection(const glm::vec3& rotation) const;
 
@@ -24,6 +32,10 @@ namespace ZeoEngine {
 		glm::vec4 m_Color{ 1.0f };
 		float m_Intensity = 1.0f;
 		float m_Range = 1.0f;
+		bool m_bCastShadow = false;
+		float m_DepthBias = 1.0f;
+		float m_NormalBias = 0.1f;
+		uint32_t m_PcfLevel = 3;
 	};
 
 	class DirectionalLight : public Light, public Camera
