@@ -67,6 +67,7 @@ namespace ZeoEngine {
 		void Invalidate();
 
 		virtual void Bind() const override;
+		virtual void Unbind() const override;
 		virtual void BindAsBuffer() const override;
 		virtual void UnbindAsBuffer() const override;
 
@@ -88,6 +89,7 @@ namespace ZeoEngine {
 
 		std::vector<uint32_t> m_ColorAttachments;
 		uint32_t m_DepthAttachment = 0;
+		std::vector<uint32_t> m_DepthSamplers;
 
 		int32_t m_TextureBindingAttachmentIndex;
 		uint32_t m_TextureBindingSlot;

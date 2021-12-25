@@ -98,9 +98,12 @@ namespace ZeoEngine {
 			glm::vec4 Color;
 			float Intensity;
 			int32_t bCastShadow;
+			int32_t ShadowType;
 			float DepthBias;
 			float NormalBias;
-			int PcfLevel; float Padding, Padding1, Padding2;
+			int PcfLevel;
+			float LightSize;
+			float NearPlane;
 
 			void Reset()
 			{

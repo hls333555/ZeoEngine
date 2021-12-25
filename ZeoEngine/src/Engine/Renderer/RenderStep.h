@@ -21,6 +21,7 @@ namespace ZeoEngine {
 		void AddBindable(const Ref<Bindable>& bindable);
 		void LinkRenderQueuePass(const RenderGraph& renderGraph);
 		void Bind() const;
+		void Unbind() const;
 		void Submit(const Drawable& drawable) const;
 
 	private:

@@ -17,6 +17,7 @@ namespace ZeoEngine {
 		m_Drawable->Bind();
 		m_Step->Bind();
 		RenderCommand::DrawIndexed(m_Drawable->GetBaseVertex(), m_Drawable->GetIndexCount(), m_Drawable->GetBaseIndex());
+		m_Step->Unbind();
 	}
 
 }

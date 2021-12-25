@@ -33,6 +33,14 @@ namespace ZeoEngine {
 		}
 	}
 
+	void RenderStep::Unbind() const
+	{
+		for (const auto& bindable : m_Bindables)
+		{
+			bindable->Unbind();
+		}
+	}
+
 	void RenderStep::Submit(const Drawable& drawable) const
 	{
 		m_RenderQueuePass->AddTask(RenderTask(&drawable, this));

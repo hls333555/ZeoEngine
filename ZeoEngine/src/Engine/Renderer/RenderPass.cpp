@@ -107,6 +107,14 @@ namespace ZeoEngine {
 		}
 	}
 
+	void BindingPass::UnbindBindables() const
+	{
+		for (const auto& bindable : m_Bindables)
+		{
+			bindable->Unbind();
+		}
+	}
+
 	void BindingPass::Finalize()
 	{
 		RenderPass::Finalize();
@@ -141,6 +149,7 @@ namespace ZeoEngine {
 
 		BindAll();
 		ExecuteTasks();
+		UnbindBindables();
 	}
 
 	void RenderQueuePass::Reset()
@@ -167,6 +176,7 @@ namespace ZeoEngine {
 		BindAll();
 		RenderCommand::Clear(RendererAPI::ClearType::Depth);
 		ExecuteTasks();
+		UnbindBindables();
 	}
 
 	void ShadowMappingPass::CreateDepthBuffer()
@@ -220,6 +230,7 @@ namespace ZeoEngine {
 		BindAll();
 		static int32_t gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
+		UnbindBindables();
 	}
 
 }

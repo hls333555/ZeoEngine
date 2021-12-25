@@ -126,6 +126,11 @@ namespace ZeoEngine {
 			ZENUM_DATA(LightComponent::LightType, PointLight, ZPROP(Tooltip, ZTEXT("点光源")))
 			ZENUM_DATA(LightComponent::LightType, SpotLight, ZPROP(Tooltip, ZTEXT("聚光灯")));
 
+		ZENUM(Light::ShadowType)
+			ZENUM_DATA(Light::ShadowType, HardShadow, ZPROP(Tooltip, ZTEXT("硬阴影")))
+			ZENUM_DATA(Light::ShadowType, PCF, ZPROP(Tooltip, ZTEXT("PCF软阴影")))
+			ZENUM_DATA(Light::ShadowType, PCSS, ZPROP(Tooltip, ZTEXT("PCSS软阴影")));
+
 		ZCOMPONENT(LightComponent, ZPROP(DisplayName, ZTEXT("Light")), ZPROP(Tooltip, ZTEXT("灯光组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(LightComponent, Type)
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
@@ -133,9 +138,12 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(LightComponent, Range, SetRange, GetRange, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type == DirectionalLight"))
 			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"))
 			ZDATA_SETTER_GETTER(LightComponent, CastShadow, SetCastShadow, IsCastShadow)
+			ZDATA_SETTER_GETTER(LightComponent, ShadowType, SetShadowType, GetShadowType, ZPROP(HideCondition, "CastShadow == false"))
 			ZDATA_SETTER_GETTER(LightComponent, DepthBias, SetDepthBias, GetDepthBias, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false"))
-			ZDATA_SETTER_GETTER(LightComponent, NormalBias, SetNormalBias, GetNormalBias, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 3.0f), ZPROP(HideCondition, "CastShadow == false"))
-			ZDATA_SETTER_GETTER(LightComponent, PcfLevel, SetPcfLevel, GetPcfLevel, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 1), ZPROP(ClampMax, 5), ZPROP(HideCondition, "CastShadow == false"));
+			ZDATA_SETTER_GETTER(LightComponent, NormalBias, SetNormalBias, GetNormalBias, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, PcfLevel, SetPcfLevel, GetPcfLevel, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 1), ZPROP(ClampMax, 5), ZPROP(HideCondition, "CastShadow == false || ShadowType != PCF"))
+			ZDATA_SETTER_GETTER(LightComponent, LightSize, SetLightSize, GetLightSize, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false || ShadowType != PCSS"))
+			ZDATA_SETTER_GETTER(LightComponent, NearPlane, SetNearPlane, GetNearPlane, ZPROP(DragSensitivity, 0.01f), ZPROP(HideCondition, "CastShadow == false || ShadowType != PCSS"));
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);

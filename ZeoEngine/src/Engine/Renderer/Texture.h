@@ -15,7 +15,8 @@ namespace ZeoEngine {
 
 		// Reserved texture binding slots
 		static const uint32_t ShadowMap = 0;
-		static const uint32_t Max = 1;
+		static const uint32_t PcfShadowMap = 1;
+		static const uint32_t Max = 2;
 
 	}
 

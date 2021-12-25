@@ -106,9 +106,12 @@ namespace ZeoEngine {
 		m_LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
 		m_LightBuffer.DirectionalLightBuffer.Direction = directionalLight->CalculateDirection(rotation);
 		m_LightBuffer.DirectionalLightBuffer.bCastShadow = directionalLight->IsCastShadow();
+		m_LightBuffer.DirectionalLightBuffer.ShadowType = static_cast<int32_t>(directionalLight->GetShadowType());
 		m_LightBuffer.DirectionalLightBuffer.DepthBias = directionalLight->GetDepthBias();
 		m_LightBuffer.DirectionalLightBuffer.NormalBias = directionalLight->GetNormalBias();
 		m_LightBuffer.DirectionalLightBuffer.PcfLevel = directionalLight->GetPcfLevel();
+		m_LightBuffer.DirectionalLightBuffer.LightSize = directionalLight->GetLightSize();
+		m_LightBuffer.DirectionalLightBuffer.NearPlane = directionalLight->GetNearPlane();
 		const glm::mat4 viewMatrix = glm::inverse(glm::toMat4(glm::quat(rotation)));
 		m_LightSpaceBuffer.ViewProjection = directionalLight->GetProjection() * viewMatrix;
 	}
@@ -120,9 +123,12 @@ namespace ZeoEngine {
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Position = position;
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = pointLight->GetRange();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = pointLight->IsCastShadow();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].ShadowType = static_cast<int32_t>(pointLight->GetShadowType());
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = pointLight->GetDepthBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = pointLight->GetNormalBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].PcfLevel = pointLight->GetPcfLevel();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].LightSize = pointLight->GetLightSize();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NearPlane = pointLight->GetNearPlane();
 		++m_LightBuffer.NumPointLights;
 	}
 
@@ -135,8 +141,11 @@ namespace ZeoEngine {
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].ShadowType = static_cast<int32_t>(spotLight->GetShadowType());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].PcfLevel = spotLight->GetPcfLevel();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = spotLight->GetLightSize();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].NearPlane = spotLight->GetNearPlane();
 		++m_LightBuffer.NumSpotLights;
 	}
 

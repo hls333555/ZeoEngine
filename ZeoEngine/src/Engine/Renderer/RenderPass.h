@@ -47,6 +47,7 @@ namespace ZeoEngine {
 	protected:
 		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
+		void UnbindBindables() const;
 		virtual void Finalize() override;
 
 		/** Register a bindable input and add that to the bindable list. */

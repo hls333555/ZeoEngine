@@ -129,9 +129,14 @@ namespace ZeoEngine {
 			return bIsMultiSampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 		}
 
-		static void CreateTextures(bool bIsMultiSampled, uint32_t* outID, uint32_t count)
+		static void CreateTextures(bool bIsMultiSampled, uint32_t* outIDs, uint32_t count)
 		{
-			glCreateTextures(TextureTarget(bIsMultiSampled), count, outID);
+			glCreateTextures(TextureTarget(bIsMultiSampled), count, outIDs);
+		}
+
+		static void CreateSamplers(uint32_t count, uint32_t* outIDs)
+		{
+			glCreateSamplers(count, outIDs);
 		}
 
 		static void BindTexture(bool bIsMultiSampled, uint32_t ID)
@@ -160,7 +165,7 @@ namespace ZeoEngine {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(bIsMultiSampled), ID, 0);
 		}
 
-		static void AttachDepthTexture(uint32_t ID, uint32_t samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
+		static void AttachDepthTexture(uint32_t ID, uint32_t samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height, uint32_t* samplers)
 		{
 			bool bIsMultiSampled = samples > 1;
 			if (bIsMultiSampled)
@@ -171,14 +176,34 @@ namespace ZeoEngine {
 			{
 				glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				// To be used by hardware PCF bilinear filtering
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+				if (samplers)
+				{
+					const float border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+					glSamplerParameteri(samplers[0], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					glSamplerParameteri(samplers[0], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+					glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+					glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+					glSamplerParameterfv(samplers[0], GL_TEXTURE_BORDER_COLOR, border);
+
+					glSamplerParameteri(samplers[1], GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glSamplerParameteri(samplers[1], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+					glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+					glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+					// To be used by hardware PCF bilinear filtering
+					glSamplerParameteri(samplers[1], GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+					glSamplerParameteri(samplers[1], GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+					glSamplerParameterfv(samplers[1], GL_TEXTURE_BORDER_COLOR, border);
+				}
+				else
+				{
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				}
 			}
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(bIsMultiSampled), ID, 0);
@@ -270,6 +295,7 @@ namespace ZeoEngine {
 		glDeleteFramebuffers(1, &m_RendererID);
 		glDeleteTextures(static_cast<uint32_t>(m_ColorAttachments.size()), m_ColorAttachments.data());
 		glDeleteTextures(1, &m_DepthAttachment);
+		glDeleteSamplers(static_cast<uint32_t>(m_DepthSamplers.size()), m_DepthSamplers.data());
 	}
 
 	void OpenGLFrameBuffer::Invalidate()
@@ -314,7 +340,13 @@ namespace ZeoEngine {
 		{
 			Utils::CreateTextures(bIsMultiSampled, &m_DepthAttachment, 1);
 			Utils::BindTexture(bIsMultiSampled, m_DepthAttachment);
-			Utils::AttachDepthTexture(m_DepthAttachment, m_Spec.Samples, Utils::ToGLTextureFormat(format), Utils::ToGLDepthAttachment(format), m_Spec.Width, m_Spec.Height);
+			if (format == FrameBufferTextureFormat::DEPTH32F)
+			{
+				const uint32_t samplerCount = 2;
+				m_DepthSamplers.resize(samplerCount);
+				Utils::CreateSamplers(samplerCount, m_DepthSamplers.data());
+			}
+			Utils::AttachDepthTexture(m_DepthAttachment, m_Spec.Samples, Utils::ToGLTextureFormat(format), Utils::ToGLDepthAttachment(format), m_Spec.Width, m_Spec.Height, m_DepthSamplers.data());
 		}
 
 		if (m_ColorAttachments.size() > 1)
@@ -349,6 +381,25 @@ namespace ZeoEngine {
 		{
 			glActiveTexture(GL_TEXTURE0 + m_TextureBindingSlot);
 			glBindTexture(textureTarget, m_DepthAttachment);
+			// Bind shadow map sampler
+			glBindSampler(m_TextureBindingSlot, m_DepthSamplers[0]);
+			glActiveTexture(GL_TEXTURE0 + m_TextureBindingSlot + 1);
+			glBindTexture(textureTarget, m_DepthAttachment);
+			// Bind PCF shadow map sampler
+			glBindSampler(m_TextureBindingSlot + 1, m_DepthSamplers[1]);
+		}
+	}
+
+	void OpenGLFrameBuffer::Unbind() const
+	{
+		if (m_TextureBindingAttachmentIndex < 0) return;
+
+		auto colorAttachmentCount = m_ColorAttachments.size();
+		if (m_TextureBindingAttachmentIndex == colorAttachmentCount)
+		{
+			// NOTE: We must unbind shader after draw call which uses these samplers, otherwise errors will keep emitting even if no draw call is issued
+			glBindSampler(m_TextureBindingSlot, 0);
+			glBindSampler(m_TextureBindingSlot + 1, 0);
 		}
 	}
 
