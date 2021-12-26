@@ -45,6 +45,7 @@ namespace ZeoEngine {
 				// Copy components to that entity
 				newEntity.CopyAllComponents(entity);
 			});
+			m_OnSceneCopiedDel.publish(newScene);
 			return newScene;
 		}
 
@@ -75,13 +76,15 @@ namespace ZeoEngine {
 	private:
 		void SortEntities();
 
+	public:
+		entt::sink<void(const Ref<Scene>&)> m_OnSceneCopied{ m_OnSceneCopiedDel };
 	protected:
 		entt::registry m_Registry;
-
 	private:
 		// TODO: Copy performance?
 		std::vector<Ref<SystemBase>> m_Systems;
 		uint32_t m_CurrentEntityIndex = 0;
+		entt::sigh<void(const Ref<Scene>&)> m_OnSceneCopiedDel;
 	};
 
 	class SceneAsset : public AssetBase<SceneAsset>

@@ -50,8 +50,10 @@ namespace ZeoEngine {
 		SetContextEntity({});
 		for (const auto& system : GetScene()->GetSystems())
 		{
+			system->UpdateScene(sceneForPlay);
 			system->BindUpdateFuncToRuntime();
 		}
+		GetSceneRenderer()->GetRenderSystem()->UpdateScene(sceneForPlay);
 		GetScene<LevelEditorScene>()->OnRuntimeStart();
 	}
 
@@ -60,8 +62,10 @@ namespace ZeoEngine {
 		m_SceneState = SceneState::Edit;
 		for (const auto& system : GetScene()->GetSystems())
 		{
+			system->UpdateScene(m_SceneForEdit);
 			system->BindUpdateFuncToEditor();
 		}
+		GetSceneRenderer()->GetRenderSystem()->UpdateScene(m_SceneForEdit);
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
 		SetActiveScene(m_SceneForEdit);
 	}

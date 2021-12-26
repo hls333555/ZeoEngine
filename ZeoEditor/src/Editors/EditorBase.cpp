@@ -25,7 +25,7 @@ namespace ZeoEngine {
 
 		m_SceneRenderer = CreateSceneRenderer();
 		m_SceneRenderer->OnAttach();
-		m_PostSceneCreate.connect<&RenderSystem::UpdateScene>(m_SceneRenderer->GetRenderSystem());
+		m_PostSceneCreate.connect<&ISystem::UpdateScene>(m_SceneRenderer->GetRenderSystem());
 		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
 		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
 

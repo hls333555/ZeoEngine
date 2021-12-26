@@ -17,6 +17,8 @@ namespace ZeoEngine {
 	public:
 		explicit ISystem(const Ref<Scene>& scene);
 
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
+
 	protected:
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
@@ -77,8 +79,6 @@ namespace ZeoEngine {
 		
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}
-
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
 
 		std::pair<Camera*, glm::mat4> GetActiveCamera();
 
