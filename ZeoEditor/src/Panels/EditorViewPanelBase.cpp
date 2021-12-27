@@ -8,6 +8,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Core/AssetRegistry.h"
+#include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
 

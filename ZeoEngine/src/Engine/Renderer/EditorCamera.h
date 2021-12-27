@@ -35,8 +35,10 @@ namespace ZeoEngine {
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
-		float GetNearClip() const { return m_NearClip; }
-		float GetFarClip() const { return m_FarClip; }
+		virtual float GetNearClip() const override { return m_NearClip; }
+		virtual float GetFarClip() const override { return m_FarClip; }
+
+		virtual glm::mat4 CalculatePerspectiveProjection(float nearClip, float farClip) const override;
 
 		glm::vec3 GetForwardVector() const;
 		glm::vec3 GetRightVector() const;

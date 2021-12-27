@@ -29,6 +29,7 @@ namespace ZeoEngine {
 		{
 			if (type == "vertex")						return GL_VERTEX_SHADER;
 			if (type == "fragment" || type == "pixel")	return GL_FRAGMENT_SHADER;
+			if (type == "geometry")						return GL_GEOMETRY_SHADER;
 
 			ZE_CORE_ASSERT(false, "Unknown shader type!");
 			return 0;
@@ -40,6 +41,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return shaderc_glsl_vertex_shader;
 				case GL_FRAGMENT_SHADER:	return shaderc_glsl_fragment_shader;
+				case GL_GEOMETRY_SHADER:	return shaderc_glsl_geometry_shader;
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -52,6 +54,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return "GL_VERTEX_SHADER";
 				case GL_FRAGMENT_SHADER:	return "GL_FRAGMENT_SHADER";
+				case GL_GEOMETRY_SHADER:	return "GL_GEOMETRY_SHADER";
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -73,6 +76,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[0];
 				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[1];
+				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[2];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -83,8 +87,9 @@ namespace ZeoEngine {
 		{
 			switch (stage)
 			{
-				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[2];
-				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[3];
+				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[3];
+				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[4];
+				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[5];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -380,7 +385,7 @@ namespace ZeoEngine {
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			if (binding < TextureBinding::Max) continue;
+			if (binding < static_cast<uint32_t>(TextureBinding::Material)) continue;
 
 			const auto& name = resource.name;
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
@@ -405,7 +410,7 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
 
-			if (binding < UniformBufferBinding::Material) continue;
+			if (binding < static_cast<uint32_t>(UniformBufferBinding::Material)) continue;
 
 			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector

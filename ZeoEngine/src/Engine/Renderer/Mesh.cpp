@@ -158,7 +158,7 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), UniformBufferBinding::Model);
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
 		// Copy default materials
 		m_Materials = mesh->GetDefaultMaterials();
 		const auto& entries = m_MeshPtr->GetMeshEntries();
@@ -173,7 +173,7 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const MeshInstance& other)
 		: m_MeshPtr(other.m_MeshPtr), m_Materials(other.m_Materials)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), UniformBufferBinding::Model);
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
 		const auto& entries = m_MeshPtr->GetMeshEntries();
 		const auto size = entries.size();
 		// Allocate space first so that every element's address remains unchanged

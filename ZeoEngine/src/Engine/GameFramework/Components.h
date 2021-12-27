@@ -355,12 +355,18 @@ namespace ZeoEngine {
 		void SetDepthBias(float bias) { LightSource->SetDepthBias(bias); }
 		float GetNormalBias() const { return LightSource->GetNormalBias(); }
 		void SetNormalBias(float bias) { LightSource->SetNormalBias(bias); }
-		uint32_t GetPcfLevel() const { return LightSource->GetPcfLevel(); }
-		void SetPcfLevel(uint32_t level) { LightSource->SetPcfLevel(level); }
 		float GetLightSize() const { return LightSource->GetLightSize(); }
 		void SetLightSize(float size) { LightSource->SetLightSize(size); }
-		float GetNearPlane() const { return LightSource->GetNearPlane(); }
-		void SetNearPlane(float nearPlane) { LightSource->SetNearPlane(nearPlane); }
+		float GetFilterSize() const { return LightSource->GetFilterSize(); }
+		void SetFilterSize(float size) { LightSource->SetFilterSize(size); }
+		uint32_t GetCascadeCount() const { return LightSource->GetCascadeCount(); }
+		void SetCascadeCount(uint32_t count) { LightSource->SetCascadeCount(count); }
+		float GetCascadeBlendThreshold() const { return LightSource->GetCascadeBlendThreshold(); }
+		void SetCascadeBlendThreshold(float threshold) { LightSource->SetCascadeBlendThreshold(threshold); }
+		float GetMaxShadowDistance() { return LightSource->GetMaxShadowDistance(); }
+		void SetMaxShadowDistance(float distance) { LightSource->SetMaxShadowDistance(distance); }
+		float GetCascadeSplitLambda() { return LightSource->GetCascadeSplitLambda(); }
+		void SetCascadeSplitLambda(float lambda) { LightSource->SetGetCascadeSplitLambda(lambda); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent

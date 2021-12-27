@@ -20,6 +20,19 @@ namespace ZeoEngine {
 			case Depth::State::Disable:
 				RenderCommand::ToggleDepthTesting(false);
 				break;
+			case Depth::State::ToggleClamp:
+				RenderCommand::ToggleDepthClamping(true);
+				break;
+		}
+	}
+
+	void Depth::Unbind() const
+	{
+		switch (m_State)
+		{
+			case Depth::State::ToggleClamp:
+				RenderCommand::ToggleDepthClamping(false);
+				break;
 		}
 	}
 
@@ -27,17 +40,17 @@ namespace ZeoEngine {
 	{
 		switch (m_State)
 		{
-		case TwoSided::State::CullFront:
-			RenderCommand::ToggleFaceCulling(true);
-			RenderCommand::SetFaceCullingMode(false);
-			break;
-		case TwoSided::State::CullBack:
-			RenderCommand::ToggleFaceCulling(true);
-			RenderCommand::SetFaceCullingMode(true);
-			break;
-		case TwoSided::State::Disable:
-			RenderCommand::ToggleFaceCulling(false);
-			break;
+			case TwoSided::State::CullFront:
+				RenderCommand::ToggleFaceCulling(true);
+				RenderCommand::SetFaceCullingMode(false);
+				break;
+			case TwoSided::State::CullBack:
+				RenderCommand::ToggleFaceCulling(true);
+				RenderCommand::SetFaceCullingMode(true);
+				break;
+			case TwoSided::State::Disable:
+				RenderCommand::ToggleFaceCulling(false);
+				break;
 		}
 	}
 

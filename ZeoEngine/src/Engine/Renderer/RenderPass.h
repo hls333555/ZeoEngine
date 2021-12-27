@@ -89,8 +89,61 @@ namespace ZeoEngine {
 
 		virtual void Execute() const override;
 
+		static Ref<FrameBuffer> GetDepthFrameBuffer() { return s_FBO; }
+
 	private:
 		void CreateDepthBuffer();
+
+	private:
+		static Ref<FrameBuffer> s_FBO;
+	};
+
+	class ScreenSpaceShadowPass : public RenderQueuePass
+	{
+	public:
+		explicit ScreenSpaceShadowPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+
+		static Ref<FrameBuffer> GetShadowFrameBuffer() { return s_FBO; }
+
+	private:
+		void CreateShadowBuffer();
+
+	private:
+		static Ref<FrameBuffer> s_FBO;
+	};
+
+	class HorizontalBlurPass : public BindingPass
+	{
+	public:
+		explicit HorizontalBlurPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+
+		static Ref<FrameBuffer> GetHorizontalBlurFrameBuffer() { return s_FBO; }
+
+	private:
+		void CreateHorizontalBlurBuffer();
+
+	private:
+		static Ref<FrameBuffer> s_FBO;
+	};
+
+	class VerticalBlurPass : public BindingPass
+	{
+	public:
+		explicit VerticalBlurPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+
+		static Ref<FrameBuffer> GetVerticalBlurFrameBuffer() { return s_FBO; }
+
+	private:
+		void CreateVerticalBlurBuffer();
+
+	private:
+		static Ref<FrameBuffer> s_FBO;
 	};
 
 	class OpaqueRenderPass : public RenderQueuePass
@@ -103,6 +156,14 @@ namespace ZeoEngine {
 	{
 	public:
 		explicit GridRenderPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+	};
+
+	class FullscreenPass : public BindingPass
+	{
+	public:
+		explicit FullscreenPass(std::string name, bool bAutoActive = true);
 
 		virtual void Execute() const override;
 	};

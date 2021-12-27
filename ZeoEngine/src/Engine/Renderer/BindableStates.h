@@ -54,7 +54,7 @@ namespace ZeoEngine {
 	public:
 		enum class State
 		{
-			ReadWrite, ReadOnly, Disable
+			ReadWrite, ReadOnly, Disable, ToggleClamp
 		};
 
 		explicit Depth(State state)
@@ -73,6 +73,7 @@ namespace ZeoEngine {
 		}
 
 		virtual void Bind() const override;
+		virtual void Unbind() const override;
 
 	private:
 		State m_State;

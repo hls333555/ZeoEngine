@@ -14,7 +14,10 @@ namespace ZeoEngine {
 	Ref<FrameBuffer> MaterialEditorSceneRenderer::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::DEPTH24STENCIL8 };
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+		};
 		return FrameBuffer::Create(fbSpec);
 	}
 

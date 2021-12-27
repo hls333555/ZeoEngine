@@ -74,6 +74,11 @@ namespace ZeoEngine {
 		m_bStartLerpToFocus = true;
 	}
 
+	glm::mat4 EditorCamera::CalculatePerspectiveProjection(float nearClip, float farClip) const
+	{
+		return glm::perspective(glm::radians(m_FOVy), m_AspectRatio, nearClip, farClip);
+	}
+
 	glm::vec3 EditorCamera::GetForwardVector() const
 	{
 		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f));
@@ -97,7 +102,7 @@ namespace ZeoEngine {
 	void EditorCamera::UpdateProjection()
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-		m_Projection = glm::perspective(glm::radians(m_FOVy), m_AspectRatio, m_NearClip, m_FarClip);
+		m_Projection = CalculatePerspectiveProjection(m_NearClip, m_FarClip);
 	}
 
 	void EditorCamera::UpdateView()

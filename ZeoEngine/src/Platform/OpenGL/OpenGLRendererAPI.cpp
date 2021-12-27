@@ -76,6 +76,11 @@ namespace ZeoEngine {
 		}
 	}
 
+	void OpenGLRendererAPI::DrawArrays(uint32_t vertexCount)
+	{
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+	}
+
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount, int32_t baseIndex)
 	{
 		vertexArray->Bind();
@@ -145,6 +150,18 @@ namespace ZeoEngine {
 	void OpenGLRendererAPI::ToggleDepthWriting(bool bEnable)
 	{
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
+	}
+
+	void OpenGLRendererAPI::ToggleDepthClamping(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_DEPTH_CLAMP);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_CLAMP);
+		}
 	}
 
 }

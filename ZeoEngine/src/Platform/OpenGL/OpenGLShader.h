@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		virtual const std::unordered_map<uint32_t, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
 
 		static const char* GetCacheDirectory() { return "cache/shader/opengl"; }
-		static std::array<const char*, 4> GetCacheFileExtensions() { return { ".cached_opengl.vert", ".cached_opengl.frag", ".cached_vulkan.vert", ".cached_vulkan.frag" }; }
+		static std::array<const char*, 6> GetCacheFileExtensions() { return { ".cached_opengl.vert", ".cached_opengl.frag", ".cached_opengl.geom", ".cached_vulkan.vert", ".cached_vulkan.frag", ".cached_vulkan.geom" }; }
 
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values , uint32_t count);

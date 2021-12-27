@@ -4,6 +4,7 @@
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Renderer/BindableStates.h"
 #include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/SceneSettings.h"
 
 namespace ZeoEngine {
 
@@ -157,15 +158,18 @@ namespace ZeoEngine {
 		m_Tasks.clear();
 	}
 
-	static const uint32_t Shadow_Width = 1024, Shadow_Height = 1024;
+	Ref<FrameBuffer> ShadowMappingPass::s_FBO = nullptr;
 
 	ShadowMappingPass::ShadowMappingPass(std::string name, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
 	{
 		CreateDepthBuffer();
-		AddBindable(Shader::Create("assets/editor/shaders/Depth.glsl"));
+		AddBindable(Shader::Create("assets/editor/shaders/ShadowMap.glsl"));
 		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
+		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
+		AddBindable(Depth::Resolve(Depth::State::ToggleClamp));
+
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
 	}
 
@@ -174,6 +178,7 @@ namespace ZeoEngine {
 		if (!IsActive()) return;
 
 		BindAll();
+		// TODO: This should not be forgotten
 		RenderCommand::Clear(RendererAPI::ClearType::Depth);
 		ExecuteTasks();
 		UnbindBindables();
@@ -182,20 +187,124 @@ namespace ZeoEngine {
 	void ShadowMappingPass::CreateDepthBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Width = Shadow_Width;
-		fbSpec.Height = Shadow_Height;
-		fbSpec.Attachments = { FrameBufferTextureFormat::DEPTH32F };
-		m_FBO = FrameBuffer::Create(fbSpec, 0);
+		fbSpec.Width = SceneSettings::ShadowMapResolution;
+		fbSpec.Height = SceneSettings::ShadowMapResolution;
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::DEPTH32F, { FrameBufferSamplerType::ShadowDepth, FrameBufferSamplerType::ShadowPCF }, SceneSettings::MaxCascades }
+		};
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ShadowMap));
+	}
+
+	Ref<FrameBuffer> ScreenSpaceShadowPass::s_FBO = nullptr;
+
+	ScreenSpaceShadowPass::ScreenSpaceShadowPass(std::string name, bool bAutoActive)
+		: RenderQueuePass(std::move(name), bAutoActive)
+	{
+		CreateShadowBuffer();
+		AddBindable(Shader::Create("assets/editor/shaders/ScreenSpaceShadow.glsl"));
+		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
+		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
+
+		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
+	}
+
+	void ScreenSpaceShadowPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		// TODO: This should not be forgotten
+		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
+		ExecuteTasks();
+		UnbindBindables();
+	}
+
+	void ScreenSpaceShadowPass::CreateShadowBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+		};
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+	}
+
+	Ref<FrameBuffer> HorizontalBlurPass::s_FBO = nullptr;
+
+	HorizontalBlurPass::HorizontalBlurPass(std::string name, bool bAutoActive)
+		: BindingPass(std::move(name), bAutoActive)
+	{
+		CreateHorizontalBlurBuffer();
+		AddBindable(Shader::Create("assets/editor/shaders/HorizontalBlur.glsl"));
+
+		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
+	}
+
+	void HorizontalBlurPass::CreateHorizontalBlurBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+		};
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+	}
+
+	void HorizontalBlurPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		// TODO: This should not be forgotten
+		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
+		RenderCommand::DrawArrays(6);
+		UnbindBindables();
+	}
+
+	Ref<FrameBuffer> VerticalBlurPass::s_FBO = nullptr;
+
+	VerticalBlurPass::VerticalBlurPass(std::string name, bool bAutoActive)
+		: BindingPass(std::move(name), bAutoActive)
+	{
+		CreateVerticalBlurBuffer();
+		AddBindable(Shader::Create("assets/editor/shaders/VerticalBlur.glsl"));
+
+		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
+	}
+
+	void VerticalBlurPass::CreateVerticalBlurBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+		};
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+	}
+
+	void VerticalBlurPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		// TODO: This should not be forgotten
+		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
+		RenderCommand::DrawArrays(6);
+		UnbindBindables();
 	}
 
 	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
 	{
+		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
+		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
+
 		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
-		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 	}
 
 	GridRenderPass::GridRenderPass(std::string name, bool bAutoActive)
@@ -212,7 +321,7 @@ namespace ZeoEngine {
 			float CellSize = 0.025f;
 		};
 		GridData gridBuffer;
-		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), 1);
+		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), static_cast<uint32_t>(UniformBufferBinding::Grid));
 		gridUniformBuffer->SetData(&gridBuffer);
 
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
@@ -230,6 +339,24 @@ namespace ZeoEngine {
 		BindAll();
 		static int32_t gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
+		UnbindBindables();
+	}
+
+	FullscreenPass::FullscreenPass(std::string name, bool bAutoActive)
+		: BindingPass(std::move(name), bAutoActive)
+	{
+		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		AddBindable(Shader::Create("assets/editor/shaders/Fullscreen.glsl"));
+	}
+
+	void FullscreenPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		RenderCommand::DrawArrays(6);
 		UnbindBindables();
 	}
 

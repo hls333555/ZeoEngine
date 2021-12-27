@@ -43,6 +43,10 @@ namespace ZeoEngine {
 		GLenum internalFormat = 0, dataFormat = 0;
 		switch (channels)
 		{
+			case 1:
+				internalFormat = GL_R8;
+				dataFormat = GL_RED;
+				break;
 			case 3:
 				internalFormat = GL_RGB8;
 				dataFormat = GL_RGB;

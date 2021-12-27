@@ -34,8 +34,8 @@ namespace ZeoEngine {
 
 			m_PrimitiveBuffer.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 			m_PrimitiveBuffer.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
-			m_PrimitiveBuffer.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
-			m_PrimitiveBuffer.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
+			m_PrimitiveBuffer.QuadVertexPositions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };
+			m_PrimitiveBuffer.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
 			m_PrimitiveBuffer.QuadVertexBufferBase = new QuadVertex[m_PrimitiveBuffer.MaxVertices];
 
 			uint32_t* quadIndices = new uint32_t[m_PrimitiveBuffer.MaxIndices];

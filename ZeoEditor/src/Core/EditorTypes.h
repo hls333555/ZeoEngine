@@ -18,6 +18,7 @@ namespace ZeoEngine {
 #define CONTENT_BROWSER			ICON_FA_FOLDER "  Content Browser"
 #define CONSOLE					ICON_FA_TERMINAL "  Console"
 #define STATS					ICON_FA_CHART_PIE "  Stats"
+#define FRAME_DEBUGGER			ICON_FA_BUG "  Frame Debugger"
 #define PREFERENCES				ICON_FA_COGS "  Preferences"
 #define ABOUT					ICON_FA_QUESTION_CIRCLE "  About"
 #define PARTICLE_EDITOR_VIEW	ICON_FA_PLAY_CIRCLE "  Particle Editor View"

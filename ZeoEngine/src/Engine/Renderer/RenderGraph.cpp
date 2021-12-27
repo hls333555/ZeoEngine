@@ -196,8 +196,23 @@ namespace ZeoEngine {
 			AddRenderPass(std::move(pass));
 		}
 		{
-			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
+			auto pass = CreateScope<ScreenSpaceShadowPass>("ScreenSpaceShadow");
 			pass->SetInputLinkage("ShadowMap", "ShadowMapping.ShadowMap");
+			AddRenderPass(std::move(pass));
+		}
+		//{
+		//	auto pass = CreateScope<HorizontalBlurPass>("HorizontalBlur");
+		//	pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
+		//	AddRenderPass(std::move(pass));
+		//}
+		//{
+		//	auto pass = CreateScope<VerticalBlurPass>("VerticalBlur");
+		//	pass->SetInputLinkage("ShadowMap", "HorizontalBlur.ShadowMap");
+		//	AddRenderPass(std::move(pass));
+		//}
+		{
+			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
+			pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
 			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}

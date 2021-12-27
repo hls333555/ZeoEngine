@@ -10,6 +10,12 @@ namespace ZeoEngine {
 		RecalculateProjection();
 	}
 
+	glm::mat4 SceneCamera::CalculatePerspectiveProjection(float nearClip, float farClip) const
+	{
+		ZE_CORE_ASSERT(m_ProjectionType == ProjectionType::Perspective);
+		return glm::perspective(m_PerspectiveFOV, m_AspectRatio, nearClip, farClip);
+	}
+
 	void SceneCamera::SetPerspective(float verticalFOV, float nearClip, float farClip)
 	{
 		m_ProjectionType = ProjectionType::Perspective;
@@ -38,7 +44,7 @@ namespace ZeoEngine {
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+			m_Projection = CalculatePerspectiveProjection(m_PerspectiveNear, m_PerspectiveFar);
 		}
 		else
 		{

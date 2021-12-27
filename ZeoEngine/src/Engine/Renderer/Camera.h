@@ -13,6 +13,9 @@ namespace ZeoEngine {
 
 		virtual ~Camera() = default;
 
+		virtual glm::mat4 CalculatePerspectiveProjection(float nearClip, float farClip) const = 0;
+		virtual float GetNearClip() const = 0;
+		virtual float GetFarClip() const = 0;
 		const glm::mat4& GetProjection() const { return m_Projection; }
 
 	protected:

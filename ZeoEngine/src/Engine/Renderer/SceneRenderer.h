@@ -5,6 +5,7 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Renderer/BatchRenderer.h"
+#include "Engine/Renderer/SceneSettings.h"
 
 namespace ZeoEngine {
 
@@ -62,6 +63,7 @@ namespace ZeoEngine {
 		void EndScene();
 
 	private:
+		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction);
 		void UploadLightData();
 		void FlushDebugDraws();
 
@@ -80,6 +82,13 @@ namespace ZeoEngine {
 
 		BatchRenderer m_Batcher;
 
+		struct GlobalData
+		{
+			glm::vec2 ScreenSize;
+		};
+		GlobalData m_GlobalBuffer;
+		Ref<UniformBuffer> m_GlobalUniformBuffer;
+
 		struct CameraData
 		{
 			glm::mat4 View;
@@ -90,20 +99,21 @@ namespace ZeoEngine {
 		};
 		CameraData m_CameraBuffer;
 		Ref<UniformBuffer> m_CameraUniformBuffer;
+		const Camera* m_ActiveCamera = nullptr;
 
-		static const int32_t MAX_POINT_LIGHTS = 32;
-		static const int32_t MAX_SPOT_LIGHTS = 32;
 		struct LightDataBase
 		{
 			glm::vec4 Color;
+
 			float Intensity;
 			int32_t bCastShadow;
 			int32_t ShadowType;
 			float DepthBias;
+
 			float NormalBias;
-			int PcfLevel;
+			float FilterSize;
 			float LightSize;
-			float NearPlane;
+			float _Padding;
 
 			void Reset()
 			{
@@ -114,7 +124,14 @@ namespace ZeoEngine {
 
 		struct DirectionalLightData : public LightDataBase
 		{
-			glm::vec3 Direction; float Padding;
+			glm::vec3 Direction;
+			int32_t CascadeCount;
+			float CascadeSplits[SceneSettings::MaxCascades];
+			glm::mat4 CascadeReferenceMatrix;
+			glm::vec4 CascadeOffsets[SceneSettings::MaxCascades];
+			glm::vec4 CascadeScales[SceneSettings::MaxCascades];
+			float CascadeBlendThreshold;
+			float _Padding, _Padding2, _Padding3;
 
 			void Reset()
 			{
@@ -138,8 +155,8 @@ namespace ZeoEngine {
 		struct LightData
 		{
 			DirectionalLightData DirectionalLightBuffer;
-			PointLightData PointLightBuffer[MAX_POINT_LIGHTS];
-			SpotLightData SpotLightBuffer[MAX_SPOT_LIGHTS];
+			PointLightData PointLightBuffer[SceneSettings::MaxPointLights];
+			SpotLightData SpotLightBuffer[SceneSettings::MaxSpotLights];
 			int32_t NumPointLights = 0;
 			int32_t NumSpotLights = 0;
 
@@ -153,12 +170,12 @@ namespace ZeoEngine {
 		LightData m_LightBuffer;
 		Ref<UniformBuffer> m_LightUniformBuffer;
 
-		struct LightSpaceData
+		struct ShadowCameraData
 		{
-			glm::mat4 ViewProjection;
+			glm::mat4 ViewProjection[SceneSettings::MaxCascades];
 		};
-		LightSpaceData m_LightSpaceBuffer;
-		Ref<UniformBuffer> m_LightSpaceUniformBuffer;
+		ShadowCameraData m_ShadowCameraBuffer;
+		Ref<UniformBuffer> m_ShadowCameraUniformBuffer;
 	};
 
 }

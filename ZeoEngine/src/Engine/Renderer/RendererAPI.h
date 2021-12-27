@@ -30,6 +30,7 @@ namespace ZeoEngine {
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 		virtual void Clear(ClearType type) = 0;
 
+		virtual void DrawArrays(uint32_t vertexCount) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
 		virtual void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
 		virtual void DrawInstanced(uint32_t instanceCount) = 0;
@@ -41,6 +42,7 @@ namespace ZeoEngine {
 		virtual void SetFaceCullingMode(bool bIsBack) = 0;
 		virtual void ToggleDepthTesting(bool bEnable) = 0;
 		virtual void ToggleDepthWriting(bool bEnable) = 0;
+		virtual void ToggleDepthClamping(bool bEnable) = 0;
 
 		static API GetAPI() { return s_API; }
 		static bool Is2D() { return s_bIs2D; }

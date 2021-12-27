@@ -62,7 +62,7 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
 			return (void*)(intptr_t)m_ColorAttachments[index];
 		}
-		virtual void* GetDepthAttachment() const override { return (void*)(intptr_t)m_DepthAttachment; }
+		virtual void* GetDepthAttachment(uint32_t index = 0) const override { return (void*)(intptr_t)m_DepthAttachmentViews[index]; }
 
 		void Invalidate();
 
@@ -81,6 +81,11 @@ namespace ZeoEngine {
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) override;
 
 	private:
+		void Cleanup();
+
+	private:
+		static std::unordered_map<FrameBufferSamplerType, uint32_t> s_Samplers;
+
 		FrameBufferSpec m_Spec;
 		uint32_t m_RendererID = 0;
 
@@ -88,8 +93,11 @@ namespace ZeoEngine {
 		FrameBufferTextureSpec m_DepthAttachmentSpec;
 
 		std::vector<uint32_t> m_ColorAttachments;
+		std::vector<uint32_t> m_ColorSamplers; // One color sampler map to one color texture
+
 		uint32_t m_DepthAttachment = 0;
 		std::vector<uint32_t> m_DepthSamplers;
+		std::vector<uint32_t> m_DepthAttachmentViews;
 
 		int32_t m_TextureBindingAttachmentIndex;
 		uint32_t m_TextureBindingSlot;

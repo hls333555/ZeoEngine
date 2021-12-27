@@ -30,6 +30,13 @@ namespace ZeoEngine {
 		}
 
 		/** Issue a draw call. */
+		static void DrawArrays(uint32_t vertexCount)
+		{
+			s_RendererAPI->DrawArrays(vertexCount);
+			++Renderer::GetStats().DrawCalls;
+		}
+
+		/** Issue a draw call. */
 		static void DrawInstanced(uint32_t instanceCount)
 		{
 			s_RendererAPI->DrawInstanced(instanceCount);
@@ -85,6 +92,11 @@ namespace ZeoEngine {
 		static void ToggleDepthWriting(bool bEnable)
 		{
 			s_RendererAPI->ToggleDepthWriting(bEnable);
+		}
+
+		static void ToggleDepthClamping(bool bEnable)
+		{
+			s_RendererAPI->ToggleDepthClamping(bEnable);
 		}
 
 	private:

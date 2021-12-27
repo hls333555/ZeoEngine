@@ -12,6 +12,7 @@
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
+#include "Panels/FrameDebugPanel.h"
 
 namespace ZeoEngine {
 
@@ -48,6 +49,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel<ContentBrowserPanel>>(CONTENT_BROWSER)
 			.MenuItem<MenuItem_TogglePanel<ConsolePanel>>(CONSOLE)
 			.MenuItem<MenuItem_TogglePanel<StatsPanel>>(STATS)
+			.MenuItem<MenuItem_TogglePanel<FrameDebugPanel>>(FRAME_DEBUGGER)
 			.MenuItem<MenuItem_TogglePanel<PreferencesPanel>>(PREFERENCES)
 			.MenuItem<MenuItem_Seperator>()
 			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");

@@ -14,7 +14,11 @@ namespace ZeoEngine {
 	Ref<FrameBuffer> LevelEditorSceneRenderer::CreateFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::DEPTH24STENCIL8 };
+		fbSpec.Attachments = {
+			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::RGBA16F, { FrameBufferSamplerType::BilinearClamp } },
+			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+		};
 		return FrameBuffer::Create(fbSpec);
 	}
 

@@ -137,6 +137,14 @@ namespace ZeoEngine {
 			}
 			m_Techniques.emplace_back(std::move(shadow));
 		}
+		{
+			RenderTechnique shadow("Shadow");
+			{
+				RenderStep step("ScreenSpaceShadow");
+				shadow.AddStep(std::move(step));
+			}
+			m_Techniques.emplace_back(std::move(shadow));
+		}
 	}
 
 	void Material::ApplyUniformDatas()

@@ -2,13 +2,15 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Renderer/Camera.h"
-
 namespace ZeoEngine {
+
+	class Camera;
 
 	class Light
 	{
 	public:
+		virtual ~Light() = default;
+
 		enum class ShadowType
 		{
 			HardShadow = 0,
@@ -32,12 +34,18 @@ namespace ZeoEngine {
 		void SetDepthBias(float bias) { m_DepthBias = bias; }
 		float GetNormalBias() const { return m_NormalBias; }
 		void SetNormalBias(float bias) { m_NormalBias = bias; }
-		uint32_t GetPcfLevel() const { return m_PcfLevel; }
-		void SetPcfLevel(uint32_t level) { m_PcfLevel = level; }
 		float GetLightSize() const { return m_LightSize; }
 		void SetLightSize(float size) { m_LightSize = size; }
-		float GetNearPlane() const { return m_NearPlane; }
-		void SetNearPlane(float nearPlane) { m_NearPlane = nearPlane; }
+		float GetFilterSize() const { return m_FilterSize; }
+		void SetFilterSize(float size) { m_FilterSize = size; }
+		virtual uint32_t GetCascadeCount() const { return 0; }
+		virtual void SetCascadeCount(uint32_t count) {}
+		virtual float GetCascadeBlendThreshold() const { return 0.0f; }
+		virtual void SetCascadeBlendThreshold(float threshold) {}
+		virtual float GetMaxShadowDistance() { return 0.0f; }
+		virtual void SetMaxShadowDistance(float distance) {}
+		virtual float GetCascadeSplitLambda() { return 0.0f; }
+		virtual void SetGetCascadeSplitLambda(float lambda) {}
 
 		glm::vec3 CalculateDirection(const glm::vec3& rotation) const;
 
@@ -47,17 +55,29 @@ namespace ZeoEngine {
 		float m_Range = 1.0f;
 		bool m_bCastShadow = false;
 		ShadowType m_ShadowType = ShadowType::HardShadow;
-		float m_DepthBias = 1.0f;
-		float m_NormalBias = 0.1f;
-		uint32_t m_PcfLevel = 3;
-		float m_LightSize = 0.05f;
-		float m_NearPlane = 0.1f;
+		float m_DepthBias = 0.002f;
+		float m_NormalBias = 30.0f;
+		float m_FilterSize = 20.0f;
+		float m_LightSize = 150.0f;
 	};
 
-	class DirectionalLight : public Light, public Camera
+	class DirectionalLight : public Light
 	{
 	public:
-		DirectionalLight();
+		virtual uint32_t GetCascadeCount() const override { return m_CascadeCount; }
+		virtual void SetCascadeCount(uint32_t count) override { m_CascadeCount = count; }
+		virtual float GetCascadeBlendThreshold() const { return m_CascadeBlendThreshold; }
+		virtual void SetCascadeBlendThreshold(float threshold) { m_CascadeBlendThreshold = threshold; }
+		virtual float GetMaxShadowDistance() override { return m_MaxShadowDistance; }
+		virtual void SetMaxShadowDistance(float distance) override { m_MaxShadowDistance = distance; }
+		virtual float GetCascadeSplitLambda() override { return m_CascadeSplitLambda; }
+		virtual void SetGetCascadeSplitLambda(float lambda) override { m_CascadeSplitLambda = lambda; }
+
+	private:
+		uint32_t m_CascadeCount = 4;
+		float m_CascadeBlendThreshold = 0.5f;
+		float m_MaxShadowDistance =100.0f;
+		float m_CascadeSplitLambda = 0.85f;
 	};
 
 	class PointLight : public Light

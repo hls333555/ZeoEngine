@@ -149,19 +149,40 @@ namespace ZeoEngine {
 		RGBA16F, // This format can store negative values
 		RED_INTEGER,
 
+		_DEPTH_START_,
 		// Depth
 		DEPTH32F,
 		// Depth/stencil
 		DEPTH24STENCIL8,
 	};
 
+	enum class FrameBufferSamplerType
+	{
+		PointClamp,
+		PointRepeat,
+		BilinearClamp,
+		ShadowDepth, // PointClamp
+		ShadowPCF,
+	};
+
+	struct FrameBufferTextureSamplerSpec
+	{
+		FrameBufferTextureSamplerSpec() = default;
+		FrameBufferTextureSamplerSpec(std::initializer_list<FrameBufferSamplerType> samplers)
+			: Samplers(samplers) {}
+
+		std::vector<FrameBufferSamplerType> Samplers;
+	};
+
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(FrameBufferTextureFormat format)
-			: TextureFormat(format) {}
+		FrameBufferTextureSpec(FrameBufferTextureFormat format, const FrameBufferTextureSamplerSpec& samplerSpecs, uint32_t textureArraySize = 1)
+			: TextureFormat(format), TextureSamplerSpecs(samplerSpecs), TextureArraySize(textureArraySize) {}
 
 		FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
+		FrameBufferTextureSamplerSpec TextureSamplerSpecs;
+		uint32_t TextureArraySize = 1;
 	};
 
 	struct FrameBufferAttachmentSpec
@@ -190,7 +211,7 @@ namespace ZeoEngine {
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
 		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
-		virtual void* GetDepthAttachment() const = 0;
+		virtual void* GetDepthAttachment(uint32_t index = 0) const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
@@ -207,16 +228,18 @@ namespace ZeoEngine {
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
 	};
 
-	namespace UniformBufferBinding {
+	enum class UniformBufferBinding
+	{
+		Global = 0,
+		Camera,
+		Grid,
+		Model,
+		Light,
+		ShadowCamera,
 
-		static const uint32_t Camera = 0;
-		static const uint32_t Model = 1;
-		static const uint32_t Light = 2;
-		static const uint32_t LightSpace = 3;
+		Material,
 
-		static const uint32_t Material = 4;
-
-	}
+	};
 
 	class UniformBuffer : public Bindable
 	{

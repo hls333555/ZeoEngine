@@ -3,14 +3,14 @@
 #type vertex
 #version 450 core
 
-layout (std140, binding = 0) uniform Camera
+layout (std140, binding = 1) uniform Camera
 {
     mat4 View;
     mat4 Projection;
     vec3 Position;
 }u_Camera;
 
-layout (std140, binding = 1) uniform Grid
+layout (std140, binding = 2) uniform Grid
 {
 	mat4 Transform;
 	vec4 ThinLinesColor;
