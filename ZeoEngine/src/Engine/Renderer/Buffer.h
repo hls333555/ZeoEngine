@@ -209,12 +209,13 @@ namespace ZeoEngine {
 
 	namespace UniformBufferBinding {
 
-		static uint32_t Camera = 0;
-		static uint32_t Model = 1;
-		static uint32_t Light = 2;
-		static uint32_t LightSpace = 3;
+		static const uint32_t Camera = 0;
+		static const uint32_t Model = 1;
+		static const uint32_t Light = 2;
+		static const uint32_t LightSpace = 3;
 
-		static uint32_t Material = 4;
+		static const uint32_t Material = 4;
+
 	}
 
 	class UniformBuffer : public Bindable

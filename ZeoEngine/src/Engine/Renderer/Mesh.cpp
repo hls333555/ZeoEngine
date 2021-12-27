@@ -161,7 +161,10 @@ namespace ZeoEngine {
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), UniformBufferBinding::Model);
 		// Copy default materials
 		m_Materials = mesh->GetDefaultMaterials();
-		for (const auto& entry : m_MeshPtr->GetMeshEntries())
+		const auto& entries = m_MeshPtr->GetMeshEntries();
+		// Allocate space first so that every element's address remains unchanged
+		m_EntryInstances.reserve(entries.size());
+		for (const auto& entry : entries)
 		{
 			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], mesh->GetVAO(), m_ModelUniformBuffer, renderGraph, bIsDeserialize);
 		}
@@ -170,9 +173,12 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const MeshInstance& other)
 		: m_MeshPtr(other.m_MeshPtr), m_Materials(other.m_Materials)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), 1);
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), UniformBufferBinding::Model);
 		const auto& entries = m_MeshPtr->GetMeshEntries();
-		for (size_t i = 0; i < entries.size(); ++i)
+		const auto size = entries.size();
+		// Allocate space first so that every element's address remains unchanged
+		m_EntryInstances.reserve(size);
+		for (size_t i = 0; i < size; ++i)
 		{
 			const auto& entry = entries[i];
 			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer, *other.m_EntryInstances[i].RenderGraphPtr);
