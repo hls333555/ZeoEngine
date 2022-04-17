@@ -5,6 +5,7 @@
 #include "Engine/Core/Assert.h"
 #include "Engine/Renderer/Bindable.h"
 #include "Engine/Renderer/BufferResource.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -140,48 +141,14 @@ namespace ZeoEngine {
 
 	};
 
-	enum class FrameBufferTextureFormat
-	{
-		None = 0,
-
-		// Color
-		RGBA8,
-		RGBA16F, // This format can store negative values
-		RED_INTEGER,
-
-		_DEPTH_START_,
-		// Depth
-		DEPTH32F,
-		// Depth/stencil
-		DEPTH24STENCIL8,
-	};
-
-	enum class FrameBufferSamplerType
-	{
-		PointClamp,
-		PointRepeat,
-		BilinearClamp,
-		ShadowDepth, // PointClamp
-		ShadowPCF,
-	};
-
-	struct FrameBufferTextureSamplerSpec
-	{
-		FrameBufferTextureSamplerSpec() = default;
-		FrameBufferTextureSamplerSpec(std::initializer_list<FrameBufferSamplerType> samplers)
-			: Samplers(samplers) {}
-
-		std::vector<FrameBufferSamplerType> Samplers;
-	};
-
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(FrameBufferTextureFormat format, const FrameBufferTextureSamplerSpec& samplerSpecs, uint32_t textureArraySize = 1)
-			: TextureFormat(format), TextureSamplerSpecs(samplerSpecs), TextureArraySize(textureArraySize) {}
+		FrameBufferTextureSpec(TextureFormat format, const std::vector<SamplerType>& samplers, uint32_t textureArraySize = 1)
+			: TextureFormat(format), TextureSamplers(samplers), TextureArraySize(textureArraySize) {}
 
-		FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
-		FrameBufferTextureSamplerSpec TextureSamplerSpecs;
+		TextureFormat TextureFormat = TextureFormat::None;
+		std::vector<SamplerType> TextureSamplers;
 		uint32_t TextureArraySize = 1;
 	};
 

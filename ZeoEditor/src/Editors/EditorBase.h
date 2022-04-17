@@ -20,7 +20,7 @@ namespace ZeoEngine {
 	public:
 		EditorBase() = delete;
 		explicit EditorBase(const char* editorName);
-		~EditorBase();
+		virtual ~EditorBase();
 
 	protected:
 		template<typename Derived>

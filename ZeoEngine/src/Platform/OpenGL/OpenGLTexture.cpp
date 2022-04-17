@@ -4,15 +4,17 @@
 #include <stb_image.h>
 
 #include "Engine/Utils/PathUtils.h"
+#include "Platform/OpenGL/OpenGLUtils.h"
 
 namespace ZeoEngine {
-	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
+
+	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
 		: m_Width(width), m_Height(height)
 	{
 		ZE_PROFILE_FUNCTION();
 
-		m_InternalFormat = GL_RGBA8;
-		m_DataFormat = GL_RGBA;
+		m_InternalFormat = OpenGLUtils::ToGLTextureInternalFormat(format);
+		m_DataFormat = OpenGLUtils::ToGLTextureFormat(format);
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		// Allocate memory on the GPU to store the data
@@ -22,6 +24,11 @@ namespace ZeoEngine {
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		if (type != SamplerType::None)
+		{
+			m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+		}
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool bAutoGenerateMipmaps)
@@ -96,6 +103,7 @@ namespace ZeoEngine {
 		glDeleteTextures(1, &m_RendererID);
 	}
 
+	// TODO:
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
 		ZE_PROFILE_FUNCTION();
@@ -106,11 +114,110 @@ namespace ZeoEngine {
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
+	void OpenGLTexture2D::ChangeSampler(SamplerType type)
+	{
+		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+	}
+
 	void OpenGLTexture2D::Bind(uint32_t slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
 		glBindTextureUnit(slot, m_RendererID);
+		if (m_Sampler)
+		{
+			m_Sampler->Bind(slot);
+		}
+	}
+
+	void OpenGLTexture2D::Unbind(uint32_t slot) const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, 0);
+		if (m_Sampler)
+		{
+			m_Sampler->Unbind(slot);
+		}
+	}
+
+	OpenGLTexture2DArray::OpenGLTexture2DArray(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type)
+		: m_ArraySize(arraySize)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		m_Width = width;
+		m_Height = height;
+
+		m_InternalFormat = OpenGLUtils::ToGLTextureInternalFormat(format);
+		m_DataFormat = OpenGLUtils::ToGLTextureFormat(format);
+
+		glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_RendererID);
+		// Allocate memory on the GPU to store the data
+		glTextureStorage3D(m_RendererID, 1, m_InternalFormat, width, height, arraySize);
+
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		if (type != SamplerType::None)
+		{
+			m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+		}
+
+		m_TextureViews.resize(arraySize);
+		glGenTextures(arraySize, m_TextureViews.data());
+		for (uint32_t i = 0; i < arraySize; ++i)
+		{
+			glTextureView(m_TextureViews[i], GL_TEXTURE_2D, m_RendererID, m_DataFormat, 0, 1, i, 1);
+		}
+	}
+
+	OpenGLTexture2DArray::~OpenGLTexture2DArray()
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glDeleteTextures(1, &m_RendererID);
+		glDeleteTextures(m_ArraySize, m_TextureViews.data());
+	}
+
+	// TODO:
+	void OpenGLTexture2DArray::SetData(void* data, uint32_t size)
+	{
+		ZE_PROFILE_FUNCTION();
+
+		// Bytes per pixel
+		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+	}
+
+	void OpenGLTexture2DArray::ChangeSampler(SamplerType type)
+	{
+		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+	}
+
+	void OpenGLTexture2DArray::Bind(uint32_t slot) const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, m_RendererID);
+		if (m_Sampler)
+		{
+			m_Sampler->Bind(slot);
+		}
+	}
+
+	void OpenGLTexture2DArray::Unbind(uint32_t slot) const
+	{
+		ZE_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, 0);
+		if (m_Sampler)
+		{
+			m_Sampler->Unbind(slot);
+		}
 	}
 
 }

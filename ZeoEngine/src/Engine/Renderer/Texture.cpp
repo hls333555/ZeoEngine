@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
+	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -16,7 +16,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(width, height);
+				return CreateRef<OpenGLTexture2D>(width, height, format, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
@@ -48,6 +48,21 @@ namespace ZeoEngine {
 	{
 		static Ref<Texture2D> texture = Texture2D::Create("resources/textures/AssetBackground.png", true);
 		return texture;
+	}
+
+	Ref<Texture2DArray> Texture2DArray::Create(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type)
+	{
+		switch (Renderer::GetAPI())
+		{
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				return CreateRef<OpenGLTexture2DArray>(width, height, arraySize, format, type);
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
+		}
 	}
 
 	Texture2DAsset::Texture2DAsset(const std::string& path)

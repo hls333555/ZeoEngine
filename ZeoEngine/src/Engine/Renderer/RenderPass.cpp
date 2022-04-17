@@ -190,7 +190,7 @@ namespace ZeoEngine {
 		fbSpec.Width = SceneSettings::ShadowMapResolution;
 		fbSpec.Height = SceneSettings::ShadowMapResolution;
 		fbSpec.Attachments = {
-			{ FrameBufferTextureFormat::DEPTH32F, { FrameBufferSamplerType::ShadowDepth, FrameBufferSamplerType::ShadowPCF }, SceneSettings::MaxCascades }
+			{ TextureFormat::DEPTH32F, { SamplerType::ShadowDepth, SamplerType::ShadowPCF }, SceneSettings::MaxCascades }
 		};
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ShadowMap));
 	}
@@ -224,8 +224,8 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
-			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}
@@ -246,8 +246,8 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
-			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}
@@ -279,8 +279,8 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
-			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}

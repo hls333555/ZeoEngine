@@ -15,9 +15,9 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ FrameBufferTextureFormat::RGBA8, { FrameBufferSamplerType::BilinearClamp } },
-			{ FrameBufferTextureFormat::RGBA16F, { FrameBufferSamplerType::BilinearClamp } },
-			{ FrameBufferTextureFormat::DEPTH24STENCIL8, { FrameBufferSamplerType::BilinearClamp } }
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::RGBA16F, { SamplerType::BilinearClamp } },
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
 		return FrameBuffer::Create(fbSpec);
 	}
