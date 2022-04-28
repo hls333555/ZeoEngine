@@ -9,18 +9,18 @@ namespace ZeoEngine {
 	{
 		switch (m_State)
 		{
-			case Depth::State::ReadWrite:
+			case State::ReadWrite:
 				RenderCommand::ToggleDepthTesting(true);
 				RenderCommand::ToggleDepthWriting(true);
 				break;
-			case Depth::State::ReadOnly:
+			case State::ReadOnly:
 				RenderCommand::ToggleDepthTesting(true);
 				RenderCommand::ToggleDepthWriting(false);
 				break;
-			case Depth::State::Disable:
+			case State::Disable:
 				RenderCommand::ToggleDepthTesting(false);
 				break;
-			case Depth::State::ToggleClamp:
+			case State::ToggleClamp:
 				RenderCommand::ToggleDepthClamping(true);
 				break;
 		}
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 	{
 		switch (m_State)
 		{
-			case Depth::State::ToggleClamp:
+			case State::ToggleClamp:
 				RenderCommand::ToggleDepthClamping(false);
 				break;
 		}
@@ -40,18 +40,30 @@ namespace ZeoEngine {
 	{
 		switch (m_State)
 		{
-			case TwoSided::State::CullFront:
+			case State::CullFront:
 				RenderCommand::ToggleFaceCulling(true);
 				RenderCommand::SetFaceCullingMode(false);
 				break;
-			case TwoSided::State::CullBack:
+			case State::CullBack:
 				RenderCommand::ToggleFaceCulling(true);
 				RenderCommand::SetFaceCullingMode(true);
 				break;
-			case TwoSided::State::Disable:
+			case State::Disable:
 				RenderCommand::ToggleFaceCulling(false);
 				break;
 		}
 	}
 
+	void Clear::Bind() const
+	{
+		switch (m_State)
+		{
+			case State::ClearColorDepthStencil:
+				RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
+				break;
+			case State::ClearDepth:
+				RenderCommand::Clear(RendererAPI::ClearType::Depth);
+				break;
+		}
+	}
 }

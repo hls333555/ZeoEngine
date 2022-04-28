@@ -36,18 +36,15 @@ namespace ZeoEngine {
 		m_ShadowCameraUniformBuffer = UniformBuffer::Create(sizeof(ShadowCameraData), static_cast<uint32_t>(UniformBufferBinding::ShadowCamera));
 	}
 
-	static uint64_t frameCount = -1;
 	void SceneRenderer::OnRender()
 	{
-		++frameCount;
-		m_FBO->BindAsBuffer();
+		m_RenderGraph->Start();
 		{
 			Prepare();
 			OnRenderScene();
 			m_PostSceneRenderDel(m_FBO);
-			m_RenderGraph->Reset();
 		}
-		m_FBO->UnbindAsBuffer();
+		m_RenderGraph->Stop();
 	}
 
 	void SceneRenderer::BeginScene(const EditorCamera& camera)
@@ -95,9 +92,6 @@ namespace ZeoEngine {
 
 	void SceneRenderer::Prepare()
 	{
-		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.0f });
-		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
-
 		m_LightBuffer.Reset();
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 

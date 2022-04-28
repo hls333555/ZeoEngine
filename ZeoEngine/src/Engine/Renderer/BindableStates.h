@@ -68,7 +68,7 @@ namespace ZeoEngine {
 		static std::string GenerateUID(State state)
 		{
 			using namespace std::string_literals;
-			auto stateStr = magic_enum::enum_name(state);
+			const auto stateStr = magic_enum::enum_name(state);
 			return typeid(Depth).name() + "#"s + std::string(stateStr);
 		}
 
@@ -98,8 +98,37 @@ namespace ZeoEngine {
 		static std::string GenerateUID(State state)
 		{
 			using namespace std::string_literals;
-			auto stateStr = magic_enum::enum_name(state);
+			const auto stateStr = magic_enum::enum_name(state);
 			return typeid(TwoSided).name() + "#"s + std::string(stateStr);
+		}
+
+		virtual void Bind() const override;
+
+	private:
+		State m_State;
+	};
+
+	class Clear : public Bindable
+	{
+	public:
+		enum class State
+		{
+			ClearColorDepthStencil, ClearDepth
+		};
+
+		explicit Clear(State state)
+			: m_State(state) {}
+
+		static Ref<Clear> Resolve(State state)
+		{
+			return BindableStates::Resolve<Clear>(state);
+		}
+
+		static std::string GenerateUID(State state)
+		{
+			using namespace std::string_literals;
+			const auto stateStr = magic_enum::enum_name(state);
+			return typeid(Clear).name() + "#"s + std::string(stateStr);
 		}
 
 		virtual void Bind() const override;

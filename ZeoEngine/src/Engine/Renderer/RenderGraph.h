@@ -14,8 +14,10 @@ namespace ZeoEngine {
 		explicit RenderGraph(const Ref<FrameBuffer>& fbo);
 		~RenderGraph();
 
-		void Execute();
-		void Reset();
+		void Start() const;
+		void Execute() const;
+		void Stop() const;
+		
 		void ToggleRenderPassActive(const std::string& passName, bool bActive);
 		RenderQueuePass* GetRenderQueuePass(const std::string& passName) const;
 
@@ -30,6 +32,7 @@ namespace ZeoEngine {
 		/** Link pass inputs to outputs from passes (and global outputs). */
 		void LinkInputs(const Scope<RenderPass>& pass);
 		void LinkGlobalInputs();
+		void Reset() const;
 
 	private:
 		std::vector<Scope<RenderPass>> m_Passes;

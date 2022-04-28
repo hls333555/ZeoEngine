@@ -18,7 +18,12 @@ namespace ZeoEngine {
 
 	RenderGraph::~RenderGraph() = default;
 
-	void RenderGraph::Execute()
+	void RenderGraph::Start() const
+	{
+		m_BackFBO->BindAsBuffer();
+	}
+
+	void RenderGraph::Execute() const
 	{
 		ZE_CORE_ASSERT(m_bFinalized);
 
@@ -28,7 +33,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderGraph::Reset()
+	void RenderGraph::Stop() const
+	{
+		Reset();
+		m_BackFBO->UnbindAsBuffer();
+	}
+
+	void RenderGraph::Reset() const
 	{
 		ZE_CORE_ASSERT(m_bFinalized);
 

@@ -158,6 +158,15 @@ namespace ZeoEngine {
 		m_Tasks.clear();
 	}
 
+	void FullscreenPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindAll();
+		RenderCommand::DrawArrays(6);
+		UnbindBindables();
+	}
+
 	Ref<FrameBuffer> ShadowMappingPass::s_FBO = nullptr;
 
 	ShadowMappingPass::ShadowMappingPass(std::string name, bool bAutoActive)
@@ -169,19 +178,9 @@ namespace ZeoEngine {
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
 		AddBindable(Depth::Resolve(Depth::State::ToggleClamp));
+		AddBindable(Clear::Resolve(Clear::State::ClearDepth));
 
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
-	}
-
-	void ShadowMappingPass::Execute() const
-	{
-		if (!IsActive()) return;
-
-		BindAll();
-		// TODO: This should not be forgotten
-		RenderCommand::Clear(RendererAPI::ClearType::Depth);
-		ExecuteTasks();
-		UnbindBindables();
 	}
 
 	void ShadowMappingPass::CreateDepthBuffer()
@@ -204,20 +203,10 @@ namespace ZeoEngine {
 		AddBindable(Shader::Create("assets/editor/shaders/ScreenSpaceShadow.glsl"));
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
+		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
-	}
-
-	void ScreenSpaceShadowPass::Execute() const
-	{
-		if (!IsActive()) return;
-
-		BindAll();
-		// TODO: This should not be forgotten
-		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
-		ExecuteTasks();
-		UnbindBindables();
 	}
 
 	void ScreenSpaceShadowPass::CreateShadowBuffer()
@@ -233,10 +222,11 @@ namespace ZeoEngine {
 	Ref<FrameBuffer> HorizontalBlurPass::s_FBO = nullptr;
 
 	HorizontalBlurPass::HorizontalBlurPass(std::string name, bool bAutoActive)
-		: BindingPass(std::move(name), bAutoActive)
+		: FullscreenPass(std::move(name), bAutoActive)
 	{
 		CreateHorizontalBlurBuffer();
 		AddBindable(Shader::Create("assets/editor/shaders/HorizontalBlur.glsl"));
+		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
@@ -252,24 +242,14 @@ namespace ZeoEngine {
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
-	void HorizontalBlurPass::Execute() const
-	{
-		if (!IsActive()) return;
-
-		BindAll();
-		// TODO: This should not be forgotten
-		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
-		RenderCommand::DrawArrays(6);
-		UnbindBindables();
-	}
-
 	Ref<FrameBuffer> VerticalBlurPass::s_FBO = nullptr;
 
 	VerticalBlurPass::VerticalBlurPass(std::string name, bool bAutoActive)
-		: BindingPass(std::move(name), bAutoActive)
+		: FullscreenPass(std::move(name), bAutoActive)
 	{
 		CreateVerticalBlurBuffer();
 		AddBindable(Shader::Create("assets/editor/shaders/VerticalBlur.glsl"));
+		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
@@ -285,22 +265,12 @@ namespace ZeoEngine {
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
-	void VerticalBlurPass::Execute() const
-	{
-		if (!IsActive()) return;
-
-		BindAll();
-		// TODO: This should not be forgotten
-		RenderCommand::Clear(RendererAPI::ClearType::Color_Depth_Stencil);
-		RenderCommand::DrawArrays(6);
-		UnbindBindables();
-	}
-
 	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
 	{
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
+		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterBindableInput<Bindable>("ShadowMap");
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
@@ -337,26 +307,8 @@ namespace ZeoEngine {
 		if (!IsActive()) return;
 
 		BindAll();
-		static int32_t gridInstanceCount = 10;
+		static constexpr int32_t gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
-		UnbindBindables();
-	}
-
-	FullscreenPass::FullscreenPass(std::string name, bool bAutoActive)
-		: BindingPass(std::move(name), bAutoActive)
-	{
-		RegisterBindableInput<Bindable>("ShadowMap");
-		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		AddBindable(Shader::Create("assets/editor/shaders/Fullscreen.glsl"));
-	}
-
-	void FullscreenPass::Execute() const
-	{
-		if (!IsActive()) return;
-
-		BindAll();
-		RenderCommand::DrawArrays(6);
 		UnbindBindables();
 	}
 
