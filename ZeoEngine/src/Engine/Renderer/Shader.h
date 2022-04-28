@@ -148,9 +148,11 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnShaderReloadedDel;
 	};
 
-	struct ShaderAssetLoader final : AssetLoader<ShaderAssetLoader, ShaderAsset>
+	struct ShaderAssetLoader final
 	{
-		AssetHandle<ShaderAsset> load(const std::string& path) const
+		using result_type = Ref<ShaderAsset>;
+
+		Ref<ShaderAsset> operator()(const std::string& path) const
 		{
 			return ShaderAsset::Create(path);
 		}

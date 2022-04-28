@@ -7,7 +7,7 @@
 namespace ZeoEngine {
 
 	template<typename AssetLibraryClass, typename AssetClass, typename AssetLoaderClass>
-	class AssetLibrary : private entt::resource_cache<AssetClass>
+	class AssetLibrary : private entt::resource_cache<AssetClass, AssetLoaderClass>
 	{
 	public:
 		static AssetLibraryClass& Get()
@@ -21,38 +21,21 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ASSERT(!path.IsEmpty());
 
-			return load<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
-		}
-
-		template<typename... Args>
-		AssetHandle<AssetClass> ReloadAsset(AssetPath path, Args &&... args)
-		{
-			ZE_CORE_ASSERT(!path.IsEmpty());
-
-			return reload<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
+			auto ret = load(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
+			return ret.first->second;
 		}
 
 		AssetHandle<AssetClass> ReloadAsset(AssetPath path)
 		{
-			if (path.IsEmpty()) return {};
-			if (!HasAsset(path)) return {};
+			ZE_CORE_ASSERT(!path.IsEmpty());
 
-			auto asset = GetAsset(path);
-			asset->Reload(false);
-			return asset;
+			auto ret = force_load(path.ToId(), path.GetPath());
+			return ret.first->second;
 		}
 
 		void DiscardAsset(AssetPath path)
 		{
-			discard(path.ToId());
-		}
-
-		AssetHandle<AssetClass> GetAsset(AssetPath path)
-		{
-			const auto id = path.ToId();
-			ZE_CORE_ASSERT(contains(id));
-
-			return handle(id);
+			erase(path.ToId());
 		}
 
 		bool HasAsset(AssetPath path)

@@ -29,21 +29,19 @@ namespace ZeoEngine {
 		explicit AssetBase(const std::string& path)
 			: m_AssetPath(path) {}
 
-		template<typename Derived>
-		Ref<Derived> SharedFromBase()
-		{
-			return std::static_pointer_cast<Derived>(shared_from_this());
-		}
-		template<typename Derived>
-		Ref<const Derived> SharedFromBase() const
-		{
-			return std::static_pointer_cast<const Derived>(shared_from_this());
-		}
-
 	private:
 		using std::enable_shared_from_this<AssetClass>::shared_from_this;
 
 	public:
+		AssetHandle<AssetClass> GetAssetHandle()
+		{
+			return AssetHandle<AssetClass>(std::static_pointer_cast<AssetClass>(shared_from_this()));
+		}
+		AssetHandle<const AssetClass> GetAssetHandle() const
+		{
+			return AssetHandle<AssetClass>(std::static_pointer_cast<const AssetClass>(shared_from_this()));
+		}
+
 		static constexpr AssetTypeId TypeId()
 		{
 			return entt::type_hash<AssetClass>::value();

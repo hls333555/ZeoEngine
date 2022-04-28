@@ -240,7 +240,7 @@ namespace ZeoEngine {
 	{
 		m_Material = CreateRef<Material>();
 		m_Material->InitMaterialData();
-		m_OnMaterialInitializedDel.publish(SharedFromBase<MaterialAsset>());
+		m_OnMaterialInitializedDel.publish(GetAssetHandle());
 		Deserialize();
 	}
 
@@ -252,14 +252,14 @@ namespace ZeoEngine {
 		{
 			SetPath(path);
 		}
-		MaterialAssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
+		MaterialAssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
 	}
 
 	void MaterialAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
+		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
 		// Apply uniform datas after loading
 		GetMaterial()->ApplyUniformDatas();
 	}

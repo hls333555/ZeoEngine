@@ -198,7 +198,7 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
-			Template = ParticleTemplateAsset::Create(); // Create default particle asset
+			Template = ParticleTemplateAsset::Create()->GetAssetHandle(); // Create default particle asset
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)

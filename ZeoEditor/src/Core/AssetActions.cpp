@@ -91,9 +91,9 @@ namespace ZeoEngine {
 	// TODO: Only to save those which are marked modified
 	void SceneAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (SceneAssetLibrary::Get().HasAsset(path))
+		if (auto asset = SceneAssetLibrary::Get().LoadAsset(path))
 		{
-			SceneAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 
@@ -109,9 +109,9 @@ namespace ZeoEngine {
 
 	void ParticleAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (ParticleTemplateAssetLibrary::Get().HasAsset(path))
+		if (auto asset = ParticleTemplateAssetLibrary::Get().LoadAsset(path))
 		{
-			ParticleTemplateAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 
@@ -127,9 +127,9 @@ namespace ZeoEngine {
 
 	void Texture2DAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (Texture2DAssetLibrary::Get().HasAsset(path))
+		if (auto asset = Texture2DAssetLibrary::Get().LoadAsset(path))
 		{
-			Texture2DAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 
@@ -145,9 +145,9 @@ namespace ZeoEngine {
 
 	void MeshAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (MeshAssetLibrary::Get().HasAsset(path))
+		if (auto asset = MeshAssetLibrary::Get().LoadAsset(path))
 		{
-			MeshAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 
@@ -163,9 +163,9 @@ namespace ZeoEngine {
 
 	void MaterialAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (MaterialAssetLibrary::Get().HasAsset(path))
+		if (auto asset = MaterialAssetLibrary::Get().LoadAsset(path))
 		{
-			MaterialAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 
@@ -187,9 +187,9 @@ namespace ZeoEngine {
 
 	void ShaderAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (ShaderAssetLibrary::Get().HasAsset(path))
+		if (auto asset = ShaderAssetLibrary::Get().LoadAsset(path))
 		{
-			ShaderAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			asset->Serialize(path);
 		}
 	}
 

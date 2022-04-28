@@ -67,7 +67,7 @@ namespace ZeoEngine {
 		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
-		static AssetHandle<ParticleTemplateAsset> Create(const std::string& path = "");
+		static Ref<ParticleTemplateAsset> Create(const std::string& path = "");
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -273,9 +273,11 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
+	struct ParticleTemplateAssetLoader final
 	{
-		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
+		using result_type = Ref<ParticleTemplateAsset>;
+
+		Ref<ParticleTemplateAsset> operator()(const std::string& path) const
 		{
 			return ParticleTemplateAsset::Create(path);
 		}
