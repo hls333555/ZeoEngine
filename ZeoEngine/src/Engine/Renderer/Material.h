@@ -216,7 +216,7 @@ namespace ZeoEngine {
 		void ReloadImpl();
 
 	public:
-		entt::sink<void(const AssetHandle<MaterialAsset>&)> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
+		entt::sink<entt::sigh<void(const AssetHandle<MaterialAsset>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
 
 	private:
 		Ref<Material> m_Material;
@@ -224,9 +224,11 @@ namespace ZeoEngine {
 		entt::sigh<void(const AssetHandle<MaterialAsset>&)> m_OnMaterialInitializedDel;
 	};
 
-	struct MaterialAssetLoader final : AssetLoader<MaterialAssetLoader, MaterialAsset>
+	struct MaterialAssetLoader final
 	{
-		AssetHandle<MaterialAsset> load(const std::string& path) const
+		using result_type = Ref<MaterialAsset>;
+
+		Ref<MaterialAsset> operator()(const std::string& path) const
 		{
 			return MaterialAsset::Create(path);
 		}

@@ -93,9 +93,9 @@ namespace ZeoEngine {
 		}
 
 	public:
-		entt::sink<void(const std::string&)> m_OnFileAdded{ m_OnFileAddedDel };
-		entt::sink<void(const std::string&)> m_OnFileModified{ m_OnFileModifiedDel };
-		entt::sink<void(const std::string&)> m_OnFileRemoved{ m_OnFileRemovedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileAdded{ m_OnFileAddedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileModified{ m_OnFileModifiedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
 
 	private:
 		std::string m_DirectoryToWatch;

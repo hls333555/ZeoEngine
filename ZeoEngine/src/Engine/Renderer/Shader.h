@@ -140,7 +140,7 @@ namespace ZeoEngine {
 		virtual void Reload(bool bIsCreate) override;
 
 	public:
-		entt::sink<void()> m_OnShaderReloaded{ m_OnShaderReloadedDel };
+		entt::sink<entt::sigh<void()>> m_OnShaderReloaded{ m_OnShaderReloadedDel };
 
 	private:
 		Ref<Shader> m_Shader;
@@ -148,9 +148,11 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnShaderReloadedDel;
 	};
 
-	struct ShaderAssetLoader final : AssetLoader<ShaderAssetLoader, ShaderAsset>
+	struct ShaderAssetLoader final
 	{
-		AssetHandle<ShaderAsset> load(const std::string& path) const
+		using result_type = Ref<ShaderAsset>;
+
+		Ref<ShaderAsset> operator()(const std::string& path) const
 		{
 			return ShaderAsset::Create(path);
 		}

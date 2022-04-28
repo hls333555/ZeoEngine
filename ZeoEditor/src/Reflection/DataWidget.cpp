@@ -598,8 +598,8 @@ namespace ZeoEngine {
 						{
 							auto sourceElement = seqView[sourceIndex];
 							auto targetIt = it;
-							auto [retIt, res] = seqView.insert(bMoveDownward ? ++targetIt : targetIt, sourceElement);
-							ZE_CORE_ASSERT(res);
+							auto retIt = seqView.insert(bMoveDownward ? ++targetIt : targetIt, sourceElement);
+							ZE_CORE_ASSERT(retIt);
 						}
 
 						// Erase from source location
@@ -609,8 +609,8 @@ namespace ZeoEngine {
 							{
 								++sourceIt;
 							}
-							auto [retIt, res] = seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
-							ZE_CORE_ASSERT(res);
+							auto retIt = seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
+							ZE_CORE_ASSERT(retIt);
 						}
 
 						// Update iterator to last draw location
@@ -763,38 +763,34 @@ namespace ZeoEngine {
 	entt::meta_sequence_container::iterator SequenceContainerWidget::InsertValue(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
 		const auto elementType = seqView.value_type();
-		auto [retIt, res] = seqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
-		if (res)
+		auto retIt = seqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
+		if (retIt)
 		{
 			// TODO:
 			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {}, -1);
-			return retIt;
 		}
 		else
 		{
 			auto dataName = GetMetaObjectDisplayName(m_DataSpec.Data);
 			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
 		}
-
-		return {};
+		return retIt;
 	}
 
 	entt::meta_sequence_container::iterator SequenceContainerWidget::EraseValue(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it)
 	{
-		auto [retIt, res] = seqView.erase(it);
-		if (res)
+		auto retIt = seqView.erase(it);
+		if (retIt)
 		{
 			// TODO:
 			InvokePostDataValueEditChangeCallback(m_DataSpec.Data, {}, -1);
-			return retIt;
 		}
 		else
 		{
 			auto dataName = GetMetaObjectDisplayName(m_DataSpec.Data);
 			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
 		}
-		
-		return {};
+		return retIt;
 	}
 
 	AssociativeContainerWidget::AssociativeContainerWidget(DataSpec& dataSpec, bool bIsTest)

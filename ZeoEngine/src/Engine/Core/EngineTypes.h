@@ -7,21 +7,7 @@ namespace ZeoEngine {
 	using AssetTypeId = uint32_t;
 
 	template<typename AssetClass>
-	using AssetHandle = entt::resource_handle<AssetClass>;
-
-	template<typename AssetLoaderClass, typename AssetClass>
-	using AssetLoader = entt::resource_loader<AssetLoaderClass, AssetClass>;
-
-	template<typename T>
-	bool operator==(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
-	{
-		return (!lhs && !rhs) || (lhs && rhs && std::addressof(*lhs) == std::addressof(*rhs));
-	}
-	template<typename T>
-	bool operator!=(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
-	{
-		return !(lhs == rhs);
-	}
+	using AssetHandle = entt::resource<AssetClass>;
 
 	class AssetPath
 	{

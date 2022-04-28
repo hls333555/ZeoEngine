@@ -102,8 +102,9 @@ using namespace entt::literals;
 #define ZDATA_ID(data) ZE_CAT(ZE_STRINGIFY(data), _hs)
 
 #define _ZPROP_SHARED(_type, ...)																	\
-.prop(PropertyType::Name, ZE_STRINGIFY(_type))														\
-.prop(std::make_tuple(__VA_ARGS__))
+.props(std::make_pair(PropertyType::Name, ZE_STRINGIFY(_type)), std::make_tuple(__VA_ARGS__))
+#define _ZPROP_STRUCT(_type, ...)																	\
+.props(std::make_pair(PropertyType::Name, ZE_STRINGIFY(_type)), PropertyType::Inherent, PropertyType::Struct, std::make_tuple(__VA_ARGS__))
 
 //////////////////////////////////////////////////////////////////////////////
 // IMPORTANT NOTE ////////////////////////////////////////////////////////////
@@ -146,12 +147,12 @@ entt::meta<_comp>()																					\
     .type()																							\
         _ZPROP_SHARED(_comp, __VA_ARGS__)															\
 		.ctor<&ZeoEngine::Reflection::emplace<_comp>, entt::as_ref_t>()								\
-		.func<&ZeoEngine::Reflection::remove<_comp>, entt::as_ref_t>("remove"_hs)					\
+		.func<&ZeoEngine::Reflection::remove<_comp>, entt::as_void_t>("remove"_hs)					\
 		.func<&ZeoEngine::Reflection::get<_comp>, entt::as_ref_t>("get"_hs)							\
 		.func<&ZeoEngine::Reflection::has<_comp>>("has"_hs)											\
 		.func<&ZeoEngine::Reflection::copy<_comp>, entt::as_ref_t>("copy"_hs)						\
-		.func<&ZeoEngine::Reflection::bind_on_destroy<_comp>, entt::as_ref_t>("bind_on_destroy"_hs)	\
-		.func<&_comp::GetIcon, entt::as_ref_t>("get_icon"_hs)										\
+		.func<&ZeoEngine::Reflection::bind_on_destroy<_comp>, entt::as_void_t>("bind_on_destroy"_hs)\
+		.func<&_comp::GetIcon>("get_icon"_hs)														\
 		.base<IComponent>()
 
 //////////////////////////////////////////////////////////////////////////
@@ -165,7 +166,7 @@ entt::meta<_comp>()																					\
  */
 #define ZENUM(_enum)																				\
 entt::meta<_enum>()																					\
-	.func<&ZeoEngine::Reflection::set_enum_value_for_seq<_enum>, entt::as_ref_t>("set_enum_value_for_seq"_hs)
+	.func<&ZeoEngine::Reflection::set_enum_value_for_seq<_enum>, entt::as_void_t>("set_enum_value_for_seq"_hs)
 
 //////////////////////////////////////////////////////////////////////////
 // Custom Struct Registration ////////////////////////////////////////////
@@ -188,9 +189,7 @@ entt::meta<_enum>()																					\
 #define ZSTRUCT(_struct, ...)																		\
 entt::meta<_struct>()																				\
     .type()																							\
-	    _ZPROP_SHARED(_struct, __VA_ARGS__)															\
-        .prop(PropertyType::Inherent)																\
-        .prop(PropertyType::Struct)
+	    _ZPROP_STRUCT(_struct, __VA_ARGS__)
 
 //////////////////////////////////////////////////////////////////////////
 // Data Registration /////////////////////////////////////////////////////

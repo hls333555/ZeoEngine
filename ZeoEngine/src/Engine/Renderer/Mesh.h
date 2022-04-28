@@ -143,9 +143,11 @@ namespace ZeoEngine {
 		Ref<Mesh> m_Mesh;
 	};
 
-	struct MeshAssetLoader final : AssetLoader<MeshAssetLoader, MeshAsset>
+	struct MeshAssetLoader final
 	{
-		AssetHandle<MeshAsset> load(const std::string& path) const
+		using result_type = Ref<MeshAsset>;
+
+		Ref<MeshAsset> operator()(const std::string& path) const
 		{
 			return MeshAsset::Create(path);
 		}

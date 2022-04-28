@@ -141,7 +141,7 @@ namespace ZeoEngine {
 		ColorEnd.SetConstant(glm::vec4{ 0.0f });
 	}
 
-	AssetHandle<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
+	Ref<ParticleTemplateAsset> ParticleTemplateAsset::Create(const std::string& path)
 	{
 		// A way to allow std::make_shared() to access ParticleTemplateAsset's private constructor
 		class ParticleTemplateAssetEnableShared : public ParticleTemplateAsset
@@ -171,14 +171,14 @@ namespace ZeoEngine {
 			SetPath(path);
 		}
 
-		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
+		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
 	}
 
 	void ParticleTemplateAsset::Deserialize()
 	{
 		if (GetPath().empty()) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ SharedFromBase<ParticleTemplateAsset>() });
+		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
 	}
 
 	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()

@@ -100,21 +100,21 @@ namespace ZeoEngine {
 		 * Called before scene being created.
 		 * The bool argument indicates whether the scene is created by "Load" or "New"
 		 */
-		entt::sink<void(bool)> m_PreSceneCreate{ m_PreSceneCreateDel };
+		entt::sink<entt::sigh<void(bool)>> m_PreSceneCreate{ m_PreSceneCreateDel };
 		/**
 		 * Called after scene being created.
 		 * The bool argument indicates whether the scene is created by "Load" or "New"
 		 */
-		entt::sink<void(const Ref<Scene>&, bool)> m_PostSceneCreate{ m_PostSceneCreateDel };
+		entt::sink<entt::sigh<void(const Ref<Scene>&, bool)>> m_PostSceneCreate{ m_PostSceneCreateDel };
 		/**
 		 * Called after scene being loaded.
 		 * All data have been loaded, initialization stuff can be done here (e.g. particle system creation)
 		 */
-		entt::sink<void()> m_PostSceneLoad{ m_PostSceneLoadDel };
+		entt::sink<entt::sigh<void()>> m_PostSceneLoad{ m_PostSceneLoadDel };
 		/** Called after scene being rendered. */
-		entt::sink<void(const Ref<FrameBuffer>&)> m_PostSceneRender{ m_PostSceneRenderDel };
+		entt::sink<entt::sigh<void(const Ref<FrameBuffer>&)>> m_PostSceneRender{ m_PostSceneRenderDel };
 		/** Called when view panel being resized. */
-		entt::sink<void(uint32_t, uint32_t)> m_OnViewportResize{ m_OnViewportResizeDel };
+		entt::sink<entt::sigh<void(uint32_t, uint32_t)>> m_OnViewportResize{ m_OnViewportResizeDel };
 		
 	private:
 		std::string m_EditorName;

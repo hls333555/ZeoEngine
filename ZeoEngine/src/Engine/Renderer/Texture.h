@@ -105,9 +105,11 @@ namespace ZeoEngine {
 		Ref<Texture2D> m_Texture;
 	};
 
-	struct Texture2DAssetLoader final : AssetLoader<Texture2DAssetLoader, Texture2DAsset>
+	struct Texture2DAssetLoader final
 	{
-		AssetHandle<Texture2DAsset> load(const std::string& path) const
+		using result_type = Ref<Texture2DAsset>;
+
+		Ref<Texture2DAsset> operator()(const std::string& path) const
 		{
 			return Texture2DAsset::Create(path);
 		}

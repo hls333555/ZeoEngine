@@ -67,7 +67,7 @@ namespace ZeoEngine {
 		explicit ParticleTemplateAsset(const std::string& path);
 
 	public:
-		static AssetHandle<ParticleTemplateAsset> Create(const std::string& path = "");
+		static Ref<ParticleTemplateAsset> Create(const std::string& path = "");
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -186,7 +186,7 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnSystemFinishedDel;
 	public:
 		/** Called when this particle system is about to be destroyed */
-		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
+		entt::sink<entt::sigh<void()>> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
 		// Burst data specification
@@ -273,9 +273,11 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
+	struct ParticleTemplateAssetLoader final
 	{
-		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
+		using result_type = Ref<ParticleTemplateAsset>;
+
+		Ref<ParticleTemplateAsset> operator()(const std::string& path) const
 		{
 			return ParticleTemplateAsset::Create(path);
 		}
