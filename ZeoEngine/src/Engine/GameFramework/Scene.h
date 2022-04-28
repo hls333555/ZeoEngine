@@ -77,7 +77,7 @@ namespace ZeoEngine {
 		void SortEntities();
 
 	public:
-		entt::sink<void(const Ref<Scene>&)> m_OnSceneCopied{ m_OnSceneCopiedDel };
+		entt::sink<entt::sigh<void(const Ref<Scene>&)>> m_OnSceneCopied{ m_OnSceneCopiedDel };
 	protected:
 		entt::registry m_Registry;
 	private:
