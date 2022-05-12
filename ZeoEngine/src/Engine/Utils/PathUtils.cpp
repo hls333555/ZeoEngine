@@ -14,7 +14,7 @@ namespace ZeoEngine {
 
 	std::string PathUtils::GetRelativePath(const std::string& path)
 	{
-		return std::filesystem::relative(std::filesystem::canonical(path)).string();
+		return std::filesystem::relative(path).string();
 	}
 
 	std::string PathUtils::GetParentPath(const std::string& path)
@@ -44,7 +44,7 @@ namespace ZeoEngine {
 
 	std::string PathUtils::AppendPath(const std::string& basePath, const std::string& appendPath)
 	{
-		auto path = std::filesystem::path{ basePath };
+		const auto path = std::filesystem::path{ basePath };
 		return (path / appendPath).string();
 	}
 
@@ -85,14 +85,25 @@ namespace ZeoEngine {
 		return std::filesystem::copy_file(srcPath, destPath, bShouldOverwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none);
 	}
 
-	std::string PathUtils::GetResourcePathFromAssetPath(const std::string& assetPath)
+	std::string PathUtils::GetResourcePathFromPath(const std::string& path)
 	{
-		return assetPath.substr(0, assetPath.rfind("."));
+		return path.substr(0, path.rfind(AssetRegistry::GetEngineAssetExtension()));
 	}
 
-	std::string PathUtils::GetAssetPathFromResourcePath(const std::string& resourcePath)
+	static std::string NormalizePathSeparator(const std::string& path)
 	{
-		return resourcePath + AssetRegistry::GetEngineAssetExtension();
+		return std::filesystem::path(path).make_preferred().string();
+	}
+
+	std::string PathUtils::GetNormalizedAssetPath(const std::string& path)
+	{
+		std::string normalizedPath = NormalizePathSeparator(path);
+		const char* extension = AssetRegistry::GetEngineAssetExtension();
+		if (normalizedPath.rfind(AssetRegistry::GetEngineAssetExtension()) == normalizedPath.size() - strlen(extension))
+		{
+			return normalizedPath;
+		}
+		return normalizedPath + extension;
 	}
 
 }

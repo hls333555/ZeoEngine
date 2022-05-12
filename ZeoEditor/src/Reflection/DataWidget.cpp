@@ -357,10 +357,10 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, [](){});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, [](){});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? Texture2DAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2DAsset>{};
+			m_Buffer = retSpec ? Texture2DLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2D>{};
 			SetValueToData();
 		}
 
@@ -388,7 +388,7 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Particle template asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, [this]()
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, [this]()
 		{
 			if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 			{
@@ -425,7 +425,7 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Mesh asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
 			m_Buffer = retSpec ? MeshAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MeshAsset>{};
@@ -456,7 +456,7 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Material asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
 			m_Buffer = retSpec ? MaterialAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MaterialAsset>{};
@@ -487,7 +487,7 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Shader asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetPath() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
 			m_Buffer = retSpec ? ShaderAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ShaderAsset>{};

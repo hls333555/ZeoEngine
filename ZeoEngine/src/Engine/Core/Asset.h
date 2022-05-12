@@ -2,7 +2,6 @@
 
 #include <entt.hpp>
 
-#include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
@@ -12,27 +11,25 @@ namespace ZeoEngine {
 	public:
 		virtual ~IAsset() = default;
 
-		virtual std::string GetPath() const = 0;
-		virtual void SetPath(const std::string& path) = 0;
-		virtual std::string GetName() const = 0;
+		virtual const std::string& GetID() const = 0;
+		virtual void SetID(std::string ID) = 0;
 
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
 
-		virtual void Reload(bool bIsCreate) = 0;
+		// TODO:
+		virtual void Reload(bool bIsCreate) {}
 	};
 
 	template<typename AssetClass>
 	class AssetBase : public IAsset, public std::enable_shared_from_this<AssetClass>
 	{
-	protected:
-		explicit AssetBase(const std::string& path)
-			: m_AssetPath(path) {}
-
-	private:
 		using std::enable_shared_from_this<AssetClass>::shared_from_this;
 
-	public:
+	protected:
+		explicit AssetBase(std::string ID)
+			: m_ID(std::move(ID)) {}
+
 		AssetHandle<AssetClass> GetAssetHandle()
 		{
 			return AssetHandle<AssetClass>(std::static_pointer_cast<AssetClass>(shared_from_this()));
@@ -42,6 +39,7 @@ namespace ZeoEngine {
 			return AssetHandle<AssetClass>(std::static_pointer_cast<const AssetClass>(shared_from_this()));
 		}
 
+	public:
 		static constexpr AssetTypeId TypeId()
 		{
 			return entt::type_hash<AssetClass>::value();
@@ -55,12 +53,12 @@ namespace ZeoEngine {
 			return view.substr(separator + 2, view.size() - separator);
 		}
 
-		virtual std::string GetPath() const override { return m_AssetPath.GetPath(); }
-		virtual void SetPath(const std::string& path) override { m_AssetPath = path; }
-		virtual std::string GetName() const override { return m_AssetPath.GetName(); }
+		virtual const std::string& GetID() const override final { return m_ID; }
+		virtual void SetID(std::string ID) override final { m_ID = std::move(ID); }
 
 	private:
-		AssetPath m_AssetPath;
+		/** Asset path or ID */
+		std::string m_ID;
 	};
 
 }

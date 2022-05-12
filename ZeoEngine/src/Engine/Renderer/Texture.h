@@ -32,6 +32,7 @@ namespace ZeoEngine {
 		None = 0,
 
 		// Color
+		RGB8,
 		RGBA8,
 		RGBA16F, // This format can store negative values
 		RED_INTEGER,
@@ -65,16 +66,44 @@ namespace ZeoEngine {
 		virtual bool operator==(const Texture& other) const = 0;
 	};
 
-	class Texture2D : public Texture
+	class Texture2D : public Texture, public AssetBase<Texture2D>
 	{
 	public:
-		/** Used for constructing a texture from memory. */
-		static Ref<Texture2D> Create(uint32_t width, uint32_t height, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
-		/** Used for loading a texture from disk. */
+		explicit Texture2D(std::string ID)
+			: AssetBase(std::move(ID)) {}
+
+		/** Construct a texture from memory. */
+		static Ref<Texture2D> Create(std::string ID, uint32_t width, uint32_t height, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
+		/** Construct a 1x1 solid-color-texture from memory.  */
+		static Ref<Texture2D> Create(std::string ID, uint32_t hexColor);
+		/** Load a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false);
 
-		static Ref<Texture2D> GetDefaultTexture();
-		static Ref<Texture2D> GetAssetBackgroundTexture();
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
+	};
+
+	struct Texture2DLoader final
+	{
+		using result_type = Ref<Texture2D>;
+
+		Ref<Texture2D> operator()(std::string ID, uint32_t hexColor) const
+		{
+			return Texture2D::Create(std::move(ID), hexColor);
+		}
+
+		Ref<Texture2D> operator()(const std::string& path) const
+		{
+			return Texture2D::Create(path);
+		}
+	};
+
+	class Texture2DLibrary : public AssetLibrary<Texture2DLibrary, Texture2D, Texture2DLoader>
+	{
+	public:
+		static AssetHandle<Texture2D> GetWhiteTexture();
+		static AssetHandle<Texture2D> GetDefaultMaterialTexture();
+		static AssetHandle<Texture2D> GetAssetBackgroundTexture();
 	};
 
 	class Texture2DArray : public Texture
@@ -83,38 +112,5 @@ namespace ZeoEngine {
 		/** Used for constructing a texture from memory. */
 		static Ref<Texture2DArray> Create(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
 	};
-
-	class Texture2DAsset : public AssetBase<Texture2DAsset>
-	{
-	private:
-		explicit Texture2DAsset(const std::string& path);
-
-	public:
-		static Ref<Texture2DAsset> Create(const std::string& path);
-
-		const Ref<Texture2D>& GetTexture() const { return m_Texture; }
-
-		void Bind(uint32_t slot = 0) const { m_Texture->Bind(slot); }
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		virtual void Reload(bool bIsCreate) override;
-
-	private:
-		Ref<Texture2D> m_Texture;
-	};
-
-	struct Texture2DAssetLoader final
-	{
-		using result_type = Ref<Texture2DAsset>;
-
-		Ref<Texture2DAsset> operator()(const std::string& path) const
-		{
-			return Texture2DAsset::Create(path);
-		}
-	};
-
-	class Texture2DAssetLibrary : public AssetLibrary<Texture2DAssetLibrary, Texture2DAsset, Texture2DAssetLoader>{};
 
 }

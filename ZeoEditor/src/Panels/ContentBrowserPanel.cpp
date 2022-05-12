@@ -9,6 +9,7 @@
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -228,7 +229,7 @@ namespace ZeoEngine {
 			// Draw tooltip thumbnail
 			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
 				GetTileThumbnailWidth(), thumbnailRounding,
-				true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
+				true, Texture2DLibrary::GetAssetBackgroundTexture()->GetTextureID());
 
 			ImGui::EndDragDropSource();
 		}

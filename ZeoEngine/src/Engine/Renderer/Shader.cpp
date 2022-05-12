@@ -85,7 +85,7 @@ namespace ZeoEngine {
 
 	void ShaderAsset::Reload(bool bIsCreate)
 	{
-		auto shaderPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
+		const std::string& shaderPath = GetID();
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(shaderPath));
 
 		if (!bIsCreate)
@@ -102,20 +102,18 @@ namespace ZeoEngine {
 
 	void ShaderAsset::Serialize(const std::string& path)
 	{
-		if (path.empty()) return;
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		AssetSerializer::Serialize(GetPath(), TypeId(), {});
+		SetID(std::move(assetPath));
+		AssetSerializer::Serialize(GetID(), TypeId(), {});
 	}
 
 	void ShaderAsset::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), {});
+		AssetSerializer::Deserialize(GetID(), TypeId(), {});
 	}
 
 

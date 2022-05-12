@@ -9,9 +9,9 @@ namespace ZeoEngine {
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(uint32_t width, uint32_t height, TextureFormat format, SamplerType type);
-		OpenGLTexture2D(const std::string& path, bool bAutoGenerateMipmaps);
-		virtual ~OpenGLTexture2D();
+		OpenGLTexture2D(std::string ID, uint32_t width, uint32_t height, TextureFormat format, SamplerType type);
+		OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps);
+		virtual ~OpenGLTexture2D() override;
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
@@ -44,7 +44,7 @@ namespace ZeoEngine {
 	{
 	public:
 		OpenGLTexture2DArray(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type);
-		virtual ~OpenGLTexture2DArray();
+		virtual ~OpenGLTexture2DArray() override;
 
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }

@@ -147,6 +147,7 @@ namespace ZeoEngine {
 	{
 		using result_type = Ref<MeshAsset>;
 
+		// TODO:
 		Ref<MeshAsset> operator()(const std::string& path) const
 		{
 			return MeshAsset::Create(path);
@@ -158,17 +159,17 @@ namespace ZeoEngine {
 	public:
 		static AssetHandle<MeshAsset> GetDefaultCubeMesh()
 		{
-			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
+			return Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
 		}
 
 		static AssetHandle<MeshAsset> GetDefaultSphereMesh()
 		{
-			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
+			return Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
 		}
 
 		static AssetHandle<MeshAsset> GetDefaultPlaneMesh()
 		{
-			return MeshAssetLibrary::Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
+			return Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
 		}
 	};
 }

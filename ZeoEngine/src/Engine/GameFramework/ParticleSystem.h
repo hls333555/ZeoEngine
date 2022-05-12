@@ -122,7 +122,7 @@ namespace ZeoEngine {
 
 		ParticleFloat Lifetime;
 
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
@@ -206,7 +206,7 @@ namespace ZeoEngine {
 			float LoopDuration;
 			float SpawnRate;
 			std::vector<BurstDataSpec> BurstList;
-			AssetHandle<Texture2DAsset> Texture;
+			AssetHandle<Texture2D> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
 			glm::vec3 InheritVelocityRatio{ 0.0f };
@@ -277,6 +277,7 @@ namespace ZeoEngine {
 	{
 		using result_type = Ref<ParticleTemplateAsset>;
 
+		// TODO:
 		Ref<ParticleTemplateAsset> operator()(const std::string& path) const
 		{
 			return ParticleTemplateAsset::Create(path);

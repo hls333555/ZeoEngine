@@ -4,6 +4,7 @@
 #include <entt.hpp>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/BatchRenderer.h"
 #include "Engine/Renderer/SceneSettings.h"
 
@@ -39,8 +40,8 @@ namespace ZeoEngine {
 		void DrawMesh(const glm::mat4& transform, const Ref<MeshInstance>& mesh, int32_t entityID = -1);
 
 		void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-		void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
-		void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }

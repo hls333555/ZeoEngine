@@ -160,7 +160,7 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string assetPath = m_ContextEditor->GetAsset()->GetPath();
+		const std::string assetPath = m_ContextEditor->GetAsset()->GetID();
 		// This may be null e.g. default particle system
 		if (assetPath.empty()) return;
 

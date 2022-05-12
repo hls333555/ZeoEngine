@@ -60,22 +60,24 @@ namespace ZeoEngine {
 	void DynamicUniformTexture2DData::Draw()
 	{
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = Browser.Draw(Value ? Value->GetPath() : std::string{}, -1.0f, []() {});
+		auto [bIsBufferChanged, retSpec] = Browser.Draw(Value ? Value->GetID() : std::string{}, -1.0f, []() {});
 		if (bIsBufferChanged)
 		{
-			Value = retSpec ? Texture2DAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2DAsset>{};
+			Value = retSpec ? Texture2DLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2D>{};
 			Apply();
 		}
 	}
 
 	void DynamicUniformTexture2DData::Bind() const
 	{
-		// Bind default texture first
-		Texture2D::GetDefaultTexture()->Bind(Binding);
-		// Override with our texture if set
 		if (Value)
 		{
 			Value->Bind(Binding);
+		}
+		else
+		{
+			// Bind default texture
+			Texture2DLibrary::GetDefaultMaterialTexture()->Bind(Binding);
 		}
 	}
 
@@ -246,20 +248,18 @@ namespace ZeoEngine {
 
 	void MaterialAsset::Serialize(const std::string& path)
 	{
-		if (path.empty()) return;
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		MaterialAssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
+		SetID(std::move(assetPath));
+		MaterialAssetSerializer::Serialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
 	}
 
 	void MaterialAsset::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
+		MaterialAssetSerializer::Deserialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetMaterial());
 		// Apply uniform datas after loading
 		GetMaterial()->ApplyUniformDatas();
 	}

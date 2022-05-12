@@ -42,7 +42,7 @@ namespace ZeoEngine {
 	void ResourceAssetFactoryBase::CreateAsset(const std::string& path) const
 	{
 		// Copy resource template file
-		std::string resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		PathUtils::CopyFile(GetResourceTemplatePath(), resourcePath, true);
 		// Create zasset file
 		AssetFactoryBase::CreateAsset(path);

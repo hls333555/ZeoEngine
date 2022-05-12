@@ -303,7 +303,7 @@ namespace ZeoEngine {
 #endif
 	};
 
-	class Texture2DDataWidget : public BasicDataWidgetT<AssetHandle<Texture2DAsset>>
+	class Texture2DDataWidget : public BasicDataWidgetT<AssetHandle<Texture2D>>
 	{
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -316,7 +316,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ Texture2DAsset::TypeId() };
+		AssetBrowser m_Browser{ Texture2D::TypeId() };
 	};
 
 	class ParticleTemplateDataWidget : public BasicDataWidgetT<AssetHandle<ParticleTemplateAsset>>

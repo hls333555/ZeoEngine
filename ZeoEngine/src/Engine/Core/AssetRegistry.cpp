@@ -311,7 +311,7 @@ namespace ZeoEngine {
 			std::string assetPath = *it;
 			if (!GetPathSpec(*it))
 			{
-				assetPath = PathUtils::GetAssetPathFromResourcePath(*it);
+				assetPath = PathUtils::GetNormalizedAssetPath(*it);
 			}
 			ZE_CORE_ASSERT(PathUtils::DoesPathExist(assetPath));
 			AssetManager::Get().HotReloadAsset(assetPath);

@@ -60,10 +60,7 @@ namespace ZeoEngine {
 		}
 
 		// Generate a 1x1 white texture to be used by flat color
-		m_PrimitiveBuffer.WhiteTexture = Texture2D::Create(1, 1);
-		uint32_t whiteTextureData = 0xffffffff;
-		m_PrimitiveBuffer.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
-		m_PrimitiveBuffer.TextureSlots[0] = m_PrimitiveBuffer.WhiteTexture;
+		m_PrimitiveBuffer.TextureSlots[0] = Texture2DLibrary::GetWhiteTexture();
 	}
 
 	void BatchRenderer::StartBatch()
@@ -129,7 +126,7 @@ namespace ZeoEngine {
 		++Renderer::GetStats().QuadCount;
 	}
 
-	void BatchRenderer::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void BatchRenderer::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -141,7 +138,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < m_PrimitiveBuffer.TextureSlotIndex; ++i)
 		{
-			if (*m_PrimitiveBuffer.TextureSlots[i] == *texture)
+			if (m_PrimitiveBuffer.TextureSlots[i] == texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;

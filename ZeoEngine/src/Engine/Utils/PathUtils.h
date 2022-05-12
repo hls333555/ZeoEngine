@@ -63,10 +63,10 @@ namespace ZeoEngine {
 			}
 		}
 
-		/** Get resource path by erasing asset extension. */
-		static std::string GetResourcePathFromAssetPath(const std::string& assetPath);
-		/** Get asset path by appending asset extension. */
-		static std::string GetAssetPathFromResourcePath(const std::string& resourcePath);
+		/** Get resource path by erasing asset extension if necessary. */
+		static std::string GetResourcePathFromPath(const std::string& path);
+		/** Get asset path by appending asset extension if necessary. */
+		static std::string GetNormalizedAssetPath(const std::string& path);
 
 	};
 

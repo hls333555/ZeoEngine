@@ -164,21 +164,18 @@ namespace ZeoEngine {
 
 	void ParticleTemplateAsset::Serialize(const std::string& path)
 	{
-		if (path.empty()) return;
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-
-		AssetSerializer::Serialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
+		SetID(std::move(assetPath));
+		AssetSerializer::Serialize(GetID(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
 	}
 
 	void ParticleTemplateAsset::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		AssetSerializer::Deserialize(GetPath(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
+		AssetSerializer::Deserialize(GetID(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
 	}
 
 	void ParticleTemplateAsset::ResimulateAllParticleSystemInstances()

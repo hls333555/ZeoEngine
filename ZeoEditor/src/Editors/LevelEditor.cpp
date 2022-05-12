@@ -9,7 +9,8 @@ namespace ZeoEngine {
 
 	void LevelEditor::OnAttach()
 	{
-		m_SceneAsset = SceneAsset::Create()->GetAssetHandle();
+		// TODO:
+		m_SceneAsset = AssetHandle<SceneAsset>(SceneAsset::Create());
 
 		// Bind delegates before scene creation
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);

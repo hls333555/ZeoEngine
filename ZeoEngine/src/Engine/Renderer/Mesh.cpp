@@ -273,28 +273,27 @@ namespace ZeoEngine {
 
 	void MeshAsset::Reload(bool bIsCreate)
 	{
-		auto meshPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
+		const std::string& meshPath = GetID();
 		ZE_CORE_ASSERT(PathUtils::DoesPathExist(meshPath));
+
 		m_Mesh = Mesh::Create(meshPath);
 		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
 	}
 
 	void MeshAsset::Serialize(const std::string& path)
 	{
-		if (path.empty()) return;
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), {}); // TODO: Update component instance here
+		SetID(std::move(assetPath));
+		ImportableAssetSerializer::Serialize(GetID(), TypeId(), {}); // TODO: Update component instance here
 	}
 
 	void MeshAsset::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {}, this);  // TODO: Update component instance here
+		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);  // TODO: Update component instance here
 	}
 
 }

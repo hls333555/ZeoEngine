@@ -114,6 +114,7 @@ namespace ZeoEngine {
 	{
 		using result_type = Ref<SceneAsset>;
 
+		// TODO:
 		Ref<SceneAsset> operator()(const std::string& path) const
 		{
 			return SceneAsset::Create(path);

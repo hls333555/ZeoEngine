@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
 	class VertexArray;
@@ -21,7 +23,7 @@ namespace ZeoEngine {
 		void FlushBatch();
 
 		void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-		void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
 	private:
 		struct QuadVertex
@@ -42,7 +44,7 @@ namespace ZeoEngine {
 			const uint32_t MaxQuads = 10000;
 			const uint32_t MaxVertices = MaxQuads * 4;
 			const uint32_t MaxIndices = MaxQuads * 6;
-			static const uint32_t MaxTextureSlots = 32;
+			static constexpr uint32_t MaxTextureSlots = 32;
 
 			Ref<VertexArray> QuadVAO;
 			Ref<VertexBuffer> QuadVBO;
@@ -52,8 +54,7 @@ namespace ZeoEngine {
 			QuadVertex* QuadVertexBufferBase = nullptr;
 			QuadVertex* QuadVertexBufferPtr = nullptr;
 
-			std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
-			Ref<Texture2D> WhiteTexture;
+			std::array<AssetHandle<Texture2D>, MaxTextureSlots> TextureSlots;
 			uint32_t TextureSlotIndex = 1; // 0 = white texture
 		};
 		PrimitiveData m_PrimitiveBuffer;

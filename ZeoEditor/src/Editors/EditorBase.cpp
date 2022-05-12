@@ -111,7 +111,7 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveScene()
 	{
-		const std::string assetPath = GetAsset()->GetPath();
+		const std::string& assetPath = GetAsset()->GetID();
 		if (assetPath.empty())
 		{
 			SaveSceneAs();

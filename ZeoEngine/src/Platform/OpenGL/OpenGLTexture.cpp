@@ -8,8 +8,8 @@
 
 namespace ZeoEngine {
 
-	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
-		: m_Width(width), m_Height(height)
+	OpenGLTexture2D::OpenGLTexture2D(std::string ID, uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
+		: Texture2D(std::move(ID)), m_Width(width), m_Height(height)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -31,7 +31,8 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool bAutoGenerateMipmaps)
+	OpenGLTexture2D::OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps)
+		: Texture2D(PathUtils::GetNormalizedAssetPath(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -103,13 +104,18 @@ namespace ZeoEngine {
 		glDeleteTextures(1, &m_RendererID);
 	}
 
-	// TODO:
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		// Bytes per pixel
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		uint32_t bpp = 0;
+		switch (m_DataFormat)
+		{
+			case GL_RGB:	bpp = 3; break;
+			case GL_RGBA:	bpp = 4; break;
+		}
+		ZE_CORE_ASSERT(bpp != 0, "Data format must be RGB or RGBA!");
 		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
@@ -188,7 +194,13 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		// Bytes per pixel
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		uint32_t bpp = 0;
+		switch (m_DataFormat)
+		{
+			case GL_RGB:	bpp = 3; break;
+			case GL_RGBA:	bpp = 4; break;
+		}
+		ZE_CORE_ASSERT(bpp != 0, "Data format must be RGB or RGBA!");
 		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}

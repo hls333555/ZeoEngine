@@ -64,7 +64,7 @@ namespace ZeoEngine {
 		
 		previewParticleEntity.PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleTemplateAssetLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetPath());
+			ParticleTemplateAssetLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetID());
 		});
 	}
 

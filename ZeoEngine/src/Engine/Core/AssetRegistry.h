@@ -4,11 +4,12 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Core/FileWatcher.h"
 #include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
+
+	class Texture2D;
 
 	enum EPathFlag : uint8_t
 	{

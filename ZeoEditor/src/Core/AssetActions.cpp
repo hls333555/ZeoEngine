@@ -29,8 +29,8 @@ namespace ZeoEngine {
 
 	void ResourceAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
-		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(oldPath);
-		auto newResourcePath = PathUtils::GetResourcePathFromAssetPath(newPath);
+		auto resourcePath = PathUtils::GetResourcePathFromPath(oldPath);
+		auto newResourcePath = PathUtils::GetResourcePathFromPath(newPath);
 		// Rename resource
 		PathUtils::RenamePath(resourcePath, newResourcePath);
 		// Rename asset
@@ -39,7 +39,7 @@ namespace ZeoEngine {
 
 	void ResourceAssetActionsBase::DeleteAsset(const std::string& path) const
 	{
-		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		auto resourcePath = PathUtils::GetResourcePathFromPath(path);
 		// Delete resource
 		PathUtils::DeletePath(resourcePath);
 		// Delete asset
@@ -58,7 +58,7 @@ namespace ZeoEngine {
 			srcPath = PathUtils::GetRelativePath(*filePath);
 		}
 
-		const auto destPath = PathUtils::GetResourcePathFromAssetPath(path);
+		const auto destPath = PathUtils::GetResourcePathFromPath(path);
 		if (destPath != srcPath)
 		{
 			// Copy and overwrite existing resource
@@ -122,12 +122,12 @@ namespace ZeoEngine {
 
 	void Texture2DAssetActions::ReloadAsset(const std::string& path) const
 	{
-		Texture2DAssetLibrary::Get().ReloadAsset(path);
+		Texture2DLibrary::Get().ReloadAsset(path);
 	}
 
 	void Texture2DAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (auto asset = Texture2DAssetLibrary::Get().LoadAsset(path))
+		if (auto asset = Texture2DLibrary::Get().LoadAsset(path))
 		{
 			asset->Serialize(path);
 		}
@@ -171,7 +171,7 @@ namespace ZeoEngine {
 
 	void ShaderAssetActions::OpenAsset(const std::string& path) const
 	{
-		std::string resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		PlatformUtils::OpenFile(resourcePath);
 	}
 

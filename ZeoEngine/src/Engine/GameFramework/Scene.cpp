@@ -106,23 +106,21 @@ namespace ZeoEngine {
 
 	void SceneAsset::Serialize(const std::string& path)
 	{
-		if (path.empty()) return;
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
+		SetID(std::move(assetPath));
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Serialize(GetPath(), m_Scene);
+		SceneSerializer::Serialize(GetID(), m_Scene);
 	}
 
 	void SceneAsset::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetPath(), m_Scene);
+		SceneSerializer::Deserialize(GetID(), m_Scene);
 	}
 
 }

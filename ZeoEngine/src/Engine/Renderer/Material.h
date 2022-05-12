@@ -183,8 +183,8 @@ namespace ZeoEngine {
 
 	struct DynamicUniformTexture2DData : public DynamicUniformDataBase, public Bindable
 	{
-		AssetBrowser Browser{ Texture2DAsset::TypeId() };
-		AssetHandle<Texture2DAsset> Value;
+		AssetBrowser Browser{ Texture2D::TypeId() };
+		AssetHandle<Texture2D> Value;
 
 		DynamicUniformTexture2DData(const ShaderReflectionDataBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformDataBase(reflectionData, material) {}
@@ -228,6 +228,7 @@ namespace ZeoEngine {
 	{
 		using result_type = Ref<MaterialAsset>;
 
+		// TODO:
 		Ref<MaterialAsset> operator()(const std::string& path) const
 		{
 			return MaterialAsset::Create(path);

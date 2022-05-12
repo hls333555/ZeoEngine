@@ -169,9 +169,6 @@ namespace ZeoEngine {
 		if (m_RendererID)
 		{
 			Cleanup();
-
-			m_ColorAttachments.clear();
-			m_DepthAttachment = 0;
 		}
 
 		glCreateFramebuffers(1, &m_RendererID);
@@ -187,7 +184,7 @@ namespace ZeoEngine {
 			// TODO: Add texture array support?
 			for (uint32_t i = 0; i < colorCount; ++i)
 			{
-				auto texture = Texture2D::Create(m_Spec.Width, m_Spec.Height, m_ColorAttachmentSpecs[i].TextureFormat);
+				auto texture = Texture2D::Create("ZID_ColorAttachment" + std::to_string(i), m_Spec.Width, m_Spec.Height, m_ColorAttachmentSpecs[i].TextureFormat);
 				uint32_t id = (uint32_t)(intptr_t)texture->GetTextureID();
 				glNamedFramebufferTexture(m_RendererID, GL_COLOR_ATTACHMENT0 + i, id, 0);
 				m_ColorAttachments.emplace_back(std::move(texture));
@@ -206,7 +203,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				m_DepthAttachment = Texture2D::Create(m_Spec.Width, m_Spec.Height, format);
+				m_DepthAttachment = Texture2D::Create("ZID_DepthAttachment", m_Spec.Width, m_Spec.Height, format);
 			}
 			uint32_t id = (uint32_t)(intptr_t)m_DepthAttachment->GetTextureID();
 			glNamedFramebufferTexture(m_RendererID, attachmentType, id, 0);
@@ -264,6 +261,7 @@ namespace ZeoEngine {
 			const auto& samplers = m_ColorAttachmentSpecs[m_TextureBindingAttachmentIndex].TextureSamplers;
 			for (size_t i = 0; i < samplers.size(); ++i)
 			{
+				m_ColorAttachments[m_TextureBindingAttachmentIndex]->ChangeSampler(samplers[i]);
 				m_ColorAttachments[m_TextureBindingAttachmentIndex]->Unbind(m_TextureBindingSlot + static_cast<uint32_t>(i));
 			}
 		}
@@ -272,6 +270,7 @@ namespace ZeoEngine {
 			const auto& samplers = m_DepthAttachmentSpec.TextureSamplers;
 			for (size_t i = 0; i < samplers.size(); ++i)
 			{
+				m_DepthAttachment->ChangeSampler(samplers[i]);
 				m_DepthAttachment->Unbind(m_TextureBindingSlot + static_cast<uint32_t>(i));
 			}
 		}

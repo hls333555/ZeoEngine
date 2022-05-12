@@ -17,7 +17,7 @@
 
 namespace ZeoEngine {
 
-	class Texture2DAsset;
+	class Texture2D;
 	class ScriptableEntity;
 	class ShaderAsset;
 
@@ -94,7 +94,7 @@ namespace ZeoEngine {
 	struct SpriteRendererComponent : public IComponent
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> Texture;
 		glm::vec2 TextureTiling{ 1.0f };
 		int32_t SortingOrder = 0;
 
@@ -102,7 +102,7 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const AssetHandle<Texture2DAsset>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
+		SpriteRendererComponent(const AssetHandle<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
 			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
@@ -198,7 +198,8 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
-			Template = ParticleTemplateAsset::Create()->GetAssetHandle(); // Create default particle asset
+			// TODO:
+			//Template = ParticleTemplateAsset::Create()->GetAssetHandle(); // Create default particle asset
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
@@ -230,8 +231,8 @@ namespace ZeoEngine {
 		ParticleColor& GetColorBegin() { return Template->ColorBegin; }
 		ParticleColor& GetColorEnd() { return Template->ColorEnd; }
 		ParticleFloat& GetLifetime() { return Template->Lifetime; }
-		const AssetHandle<Texture2DAsset>& GetTexture() const { return Template->Texture; }
-		void SetTexture(const AssetHandle<Texture2DAsset>& texture) { Template->Texture = texture; }
+		const AssetHandle<Texture2D>& GetTexture() const { return Template->Texture; }
+		void SetTexture(const AssetHandle<Texture2D>& texture) { Template->Texture = texture; }
 		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
 		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
 		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
@@ -384,7 +385,7 @@ namespace ZeoEngine {
 
 	struct BillboardComponent : public IComponent
 	{
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> Texture;
 		glm::vec2 Size{ 0.5f, 0.5f };
 
 		BillboardComponent() = default;
