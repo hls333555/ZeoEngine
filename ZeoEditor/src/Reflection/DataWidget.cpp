@@ -397,7 +397,7 @@ namespace ZeoEngine {
 		});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? ParticleTemplateAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ParticleTemplateAsset>{};
+			m_Buffer = retSpec ? ParticleTemplateLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ParticleTemplate>{};
 			SetValueToData();
 		}
 
@@ -407,7 +407,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = ParticleTemplateAssetLibrary::Get().LoadAsset("assets/particles/Test.zasset");
+		m_Buffer = ParticleTemplateLibrary::Get().LoadAsset("assets/particles/Test.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

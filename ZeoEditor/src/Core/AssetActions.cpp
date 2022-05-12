@@ -104,12 +104,12 @@ namespace ZeoEngine {
 
 	void ParticleAssetActions::ReloadAsset(const std::string& path) const
 	{
-		ParticleTemplateAssetLibrary::Get().ReloadAsset(path);
+		ParticleTemplateLibrary::Get().ReloadAsset(path);
 	}
 
 	void ParticleAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (auto asset = ParticleTemplateAssetLibrary::Get().LoadAsset(path))
+		if (auto asset = ParticleTemplateLibrary::Get().LoadAsset(path))
 		{
 			asset->Serialize(path);
 		}

@@ -86,106 +86,62 @@ namespace YAML {
 		}
 	};
 
-	// TODO: Use macro to simplify these
-	template<>
-	struct convert<AssetHandle<Texture2D>>
+	Emitter& operator<<(Emitter& out, const Entity& e)
 	{
-		static Node encode(const AssetHandle<Texture2D>& rhs)
-		{
-			Node node;
-			node.push_back(rhs ? rhs->GetID() : "");
-			return node;
-		}
+		out << e.GetEntityId();
+		return out;
+	}
 
-		static bool decode(const Node& node, AssetHandle<Texture2D>& rhs)
-		{
-			const auto& path = node.as<std::string>();
-			if (path.empty()) return true;
-
-			rhs = Texture2DLibrary::Get().LoadAsset(path);
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<AssetHandle<ParticleTemplateAsset>>
+	Emitter& operator<<(Emitter& out, const glm::vec2& v)
 	{
-		static Node encode(const AssetHandle<ParticleTemplateAsset>& rhs)
-		{
-			Node node;
-			node.push_back(rhs ? rhs->GetID() : "");
-			return node;
-		}
+		out << Flow;
+		out << BeginSeq << v.x << v.y << EndSeq;
+		return out;
+	}
 
-		static bool decode(const Node& node, AssetHandle<ParticleTemplateAsset>& rhs)
-		{
-			const auto& path = node.as<std::string>();
-			if (path.empty()) return true;
-
-			rhs = ParticleTemplateAssetLibrary::Get().LoadAsset(path);
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<AssetHandle<MeshAsset>>
+	Emitter& operator<<(Emitter& out, const glm::vec3& v)
 	{
-		static Node encode(const AssetHandle<MeshAsset>& rhs)
-		{
-			Node node;
-			node.push_back(rhs ? rhs->GetID() : "");
-			return node;
-		}
+		out << Flow;
+		out << BeginSeq << v.x << v.y << v.z << EndSeq;
+		return out;
+	}
 
-		static bool decode(const Node& node, AssetHandle<MeshAsset>& rhs)
-		{
-			const auto& path = node.as<std::string>();
-			if (path.empty()) return true;
-
-			rhs = MeshAssetLibrary::Get().LoadAsset(path);
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<AssetHandle<MaterialAsset>>
+	Emitter& operator<<(Emitter& out, const glm::vec4& v)
 	{
-		static Node encode(const AssetHandle<MaterialAsset>& rhs)
-		{
-			Node node;
-			node.push_back(rhs ? rhs->GetID() : "");
-			return node;
-		}
+		out << Flow;
+		out << BeginSeq << v.x << v.y << v.z << v.w << EndSeq;
+		return out;
+	}
 
-		static bool decode(const Node& node, AssetHandle<MaterialAsset>& rhs)
-		{
-			const auto& path = node.as<std::string>();
-			if (path.empty()) return true;
+#define DEFINE_ASSET_CONVERTOR(assetClass)									\
+	template<>																\
+	struct convert<AssetHandle<assetClass>>									\
+	{																		\
+		static Node encode(const AssetHandle<assetClass>& rhs)				\
+		{																	\
+			Node node;														\
+			node.push_back(rhs ? rhs->GetID() : "");						\
+			return node;													\
+		}																	\
+		static bool decode(const Node& node, AssetHandle<assetClass>& rhs)	\
+		{																	\
+			const auto& path = node.as<std::string>();						\
+			if (path.empty()) return true;									\
+			rhs = ZE_CAT(assetClass, Library)::Get().LoadAsset(path);		\
+			return true;													\
+		}																	\
+	};																		\
+	Emitter& operator<<(Emitter& out, const AssetHandle<assetClass>& asset)	\
+	{																		\
+		out << (asset ? asset->GetID() : "");								\
+		return out;															\
+	}
 
-			rhs = MaterialAssetLibrary::Get().LoadAsset(path);
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<AssetHandle<ShaderAsset>>
-	{
-		static Node encode(const AssetHandle<ShaderAsset>& rhs)
-		{
-			Node node;
-			node.push_back(rhs ? rhs->GetID() : "");
-			return node;
-		}
-
-		static bool decode(const Node& node, AssetHandle<ShaderAsset>& rhs)
-		{
-			const auto& path = node.as<std::string>();
-			if (path.empty()) return true;
-
-			rhs = ShaderAssetLibrary::Get().LoadAsset(path);
-			return true;
-		}
-	};
+	DEFINE_ASSET_CONVERTOR(Texture2D);
+	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
+	DEFINE_ASSET_CONVERTOR(MeshAsset);
+	DEFINE_ASSET_CONVERTOR(MaterialAsset);
+	DEFINE_ASSET_CONVERTOR(ShaderAsset);
 
 }
 
@@ -193,63 +149,6 @@ namespace ZeoEngine {
 
 	const char* g_AssetTypeToken = "AssetType";
 	const char* g_SourceToken = "SourcePath";
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Entity& e)
-	{
-		out << e.GetEntityId();
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<Texture2D>& texture)
-	{
-		out << (texture ? texture->GetID() : "");
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<ParticleTemplateAsset>& pTemplate)
-	{
-		out << (pTemplate ? pTemplate->GetID() : "");
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<MeshAsset>& mesh)
-	{
-		out << (mesh ? mesh->GetID() : "");
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<MaterialAsset>& material)
-	{
-		out << (material ? material->GetID() : "");
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle<ShaderAsset>& shader)
-	{
-		out << (shader ? shader->GetID() : "");
-		return out;
-	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// ComponentSerializer ///////////////////////////////////////////////////
@@ -350,7 +249,7 @@ namespace ZeoEngine {
 				SerializeData<AssetHandle<Texture2D>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				SerializeData<AssetHandle<ParticleTemplateAsset>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<ParticleTemplate>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
 				SerializeData<AssetHandle<MeshAsset>>(out, data, instance, bIsSeqElement);
@@ -521,7 +420,7 @@ namespace ZeoEngine {
 				DeserializeData<AssetHandle<Texture2D>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				DeserializeData<AssetHandle<ParticleTemplateAsset>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<ParticleTemplate>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
 				DeserializeData<AssetHandle<MeshAsset>>(data, instance, value, bIsSeqElement);

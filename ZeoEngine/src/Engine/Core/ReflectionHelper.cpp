@@ -60,8 +60,8 @@ namespace ZeoEngine {
 				case entt::type_hash<glm::vec2>::value():							return BasicMetaType::VEC2;
 				case entt::type_hash<glm::vec3>::value():							return BasicMetaType::VEC3;
 				case entt::type_hash<glm::vec4>::value():							return BasicMetaType::VEC4;
-				case entt::type_hash<AssetHandle<Texture2D>>::value():			return BasicMetaType::TEXTURE;
-				case entt::type_hash<AssetHandle<ParticleTemplateAsset>>::value():	return BasicMetaType::PARTICLE;
+				case entt::type_hash<AssetHandle<Texture2D>>::value():				return BasicMetaType::TEXTURE;
+				case entt::type_hash<AssetHandle<ParticleTemplate>>::value():		return BasicMetaType::PARTICLE;
 				case entt::type_hash<AssetHandle<MeshAsset>>::value():				return BasicMetaType::MESH;
 				case entt::type_hash<AssetHandle<MaterialAsset>>::value():			return BasicMetaType::MATERIAL;
 				case entt::type_hash<AssetHandle<ShaderAsset>>::value():			return BasicMetaType::SHADER;

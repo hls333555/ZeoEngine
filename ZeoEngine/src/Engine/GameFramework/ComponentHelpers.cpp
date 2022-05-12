@@ -76,7 +76,7 @@ namespace ZeoEngine {
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		if (dataId == ZDATA_ID(Template))
 		{
-			AssetHandle<ParticleTemplateAsset> oldTemplate = (*oldValue._Cast<AssetHandle<ParticleTemplateAsset>>());
+			AssetHandle<ParticleTemplate> oldTemplate = (*oldValue._Cast<AssetHandle<ParticleTemplate>>());
 			if (oldTemplate)
 			{
 				oldTemplate->RemoveParticleSystemInstance(particleComp.Instance);

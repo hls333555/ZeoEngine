@@ -71,21 +71,6 @@ namespace ZeoEngine {
 		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);
 	}
 
-	AssetHandle<Texture2D> Texture2DLibrary::GetWhiteTexture()
-	{
-		return Get().LoadAsset("ZID_WhiteTexture", 0xffffff);
-	}
-
-	AssetHandle<Texture2D> Texture2DLibrary::GetDefaultMaterialTexture()
-	{
-		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080);
-	}
-
-	AssetHandle<Texture2D> Texture2DLibrary::GetAssetBackgroundTexture()
-	{
-		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414);
-	}
-
 	Ref<Texture2DArray> Texture2DArray::Create(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type)
 	{
 		switch (Renderer::GetAPI())

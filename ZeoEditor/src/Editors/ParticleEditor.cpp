@@ -35,7 +35,7 @@ namespace ZeoEngine {
 
 	AssetTypeId ParticleEditor::GetAssetTypeId() const
 	{
-		return ParticleTemplateAsset::TypeId();
+		return ParticleTemplate::TypeId();
 	}
 
 	AssetHandle<IAsset> ParticleEditor::GetAsset() const
@@ -47,7 +47,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path](auto& particlePreviewComp)
 		{
-			particlePreviewComp.Template = ParticleTemplateAssetLibrary::Get().LoadAsset(path);
+			particlePreviewComp.Template = ParticleTemplateLibrary::Get().LoadAsset(path);
 		});
 	}
 
@@ -64,7 +64,7 @@ namespace ZeoEngine {
 		
 		previewParticleEntity.PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleTemplateAssetLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetID());
+			ParticleTemplateLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetID());
 		});
 	}
 

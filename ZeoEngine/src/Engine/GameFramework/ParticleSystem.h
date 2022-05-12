@@ -4,7 +4,6 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 
@@ -61,13 +60,12 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public AssetBase<ParticleTemplateAsset>
+	class ParticleTemplate : public AssetBase<ParticleTemplate>
 	{
-	private:
-		explicit ParticleTemplateAsset(const std::string& path);
-
 	public:
-		static Ref<ParticleTemplateAsset> Create(const std::string& path = "");
+		explicit ParticleTemplate(const std::string& path);
+
+		static Ref<ParticleTemplate> Create(const std::string& path);
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -85,7 +83,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		void ResimulateAllParticleSystemInstances();
+		void ResimulateAllParticleSystemInstances() const;
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
@@ -139,14 +137,24 @@ namespace ZeoEngine {
 
 	};
 
+	REGISTER_ASSET(ParticleTemplate,
+	Ref<ParticleTemplate> operator()(const std::string& path) const
+	{
+		return ParticleTemplate::Create(path);
+	},
+	static AssetHandle<ParticleTemplate> GetDefaultTemplate()
+	{
+		return Get().LoadAsset("");
+	})
+
 	class ParticleSystemInstance
 	{
 		friend class ParticleEditorViewPanel;
-		friend class ParticleTemplateAsset;
+		friend class ParticleTemplate;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const AssetHandle<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
 		/**
@@ -156,7 +164,7 @@ namespace ZeoEngine {
 		 */
 		static void Create(ParticleSystemComponent& particleComp);
 
-		const AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
+		const AssetHandle<ParticleTemplate>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -240,7 +248,7 @@ namespace ZeoEngine {
 		struct Impl;
 		Scope<Impl> m_Impl;
 
-		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
+		AssetHandle<ParticleTemplate> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
@@ -272,18 +280,5 @@ namespace ZeoEngine {
 #endif
 
 	};
-
-	struct ParticleTemplateAssetLoader final
-	{
-		using result_type = Ref<ParticleTemplateAsset>;
-
-		// TODO:
-		Ref<ParticleTemplateAsset> operator()(const std::string& path) const
-		{
-			return ParticleTemplateAsset::Create(path);
-		}
-	};
-	
-	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>{};
 
 }

@@ -83,28 +83,27 @@ namespace ZeoEngine {
 		virtual void Deserialize() override;
 	};
 
-	struct Texture2DLoader final
+	REGISTER_ASSET(Texture2D,
+	Ref<Texture2D> operator()(std::string ID, uint32_t hexColor) const
 	{
-		using result_type = Ref<Texture2D>;
-
-		Ref<Texture2D> operator()(std::string ID, uint32_t hexColor) const
-		{
-			return Texture2D::Create(std::move(ID), hexColor);
-		}
-
-		Ref<Texture2D> operator()(const std::string& path) const
-		{
-			return Texture2D::Create(path);
-		}
-	};
-
-	class Texture2DLibrary : public AssetLibrary<Texture2DLibrary, Texture2D, Texture2DLoader>
+		return Texture2D::Create(std::move(ID), hexColor);
+	}
+	Ref<Texture2D> operator()(const std::string& path) const
 	{
-	public:
-		static AssetHandle<Texture2D> GetWhiteTexture();
-		static AssetHandle<Texture2D> GetDefaultMaterialTexture();
-		static AssetHandle<Texture2D> GetAssetBackgroundTexture();
-	};
+		return Texture2D::Create(path);
+	},
+	static AssetHandle<Texture2D> GetWhiteTexture()
+	{
+		return Get().LoadAsset("ZID_WhiteTexture", 0xffffff);
+	}
+	static AssetHandle<Texture2D> GetDefaultMaterialTexture()
+	{
+		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080);
+	}
+	static AssetHandle<Texture2D> GetAssetBackgroundTexture()
+	{
+		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414);
+	})
 
 	class Texture2DArray : public Texture
 	{

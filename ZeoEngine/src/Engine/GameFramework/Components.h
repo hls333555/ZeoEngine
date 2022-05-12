@@ -178,7 +178,7 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		AssetHandle<ParticleTemplateAsset> Template;
+		AssetHandle<ParticleTemplate> Template;
 		glm::vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
@@ -198,11 +198,10 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
-			// TODO:
-			//Template = ParticleTemplateAsset::Create()->GetAssetHandle(); // Create default particle asset
+			Template = ParticleTemplateLibrary::GetDefaultTemplate();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
+		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplate>& pTemplate)
 		{
 			Template = pTemplate;
 		}

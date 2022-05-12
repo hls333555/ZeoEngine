@@ -80,12 +80,6 @@ namespace ZeoEngine {
 			return contains(Utils::GetIDFromString(ID));
 		}
 
-		// TODO:
-		template<typename Func>
-		void ForEach(Func func) const
-		{
-			each(func);
-		}
 	};
 
 }

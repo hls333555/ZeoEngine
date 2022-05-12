@@ -61,4 +61,17 @@ namespace ZeoEngine {
 		std::string m_ID;
 	};
 
+#define REGISTER_ASSET(assetClass, loaderStructBody, libraryClassBody)																\
+	static_assert(std::is_base_of<AssetBase<assetClass>, assetClass>::value, "Asset class is not derived from 'AssetBase'!");		\
+	struct ZE_CAT(assetClass, Loader) final																							\
+	{																																\
+		using result_type = Ref<assetClass>;																						\
+		loaderStructBody																											\
+	};																																\
+	class ZE_CAT(assetClass, Library) : public AssetLibrary<ZE_CAT(assetClass, Library), assetClass, ZE_CAT(assetClass, Loader)>	\
+	{																																\
+	public:																															\
+		libraryClassBody																											\
+	};
+
 }
