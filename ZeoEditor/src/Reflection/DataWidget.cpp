@@ -459,7 +459,7 @@ namespace ZeoEngine {
 		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? MaterialAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MaterialAsset>{};
+			m_Buffer = retSpec ? MaterialLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Material>{};
 			SetValueToData();
 		}
 

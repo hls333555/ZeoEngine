@@ -36,7 +36,7 @@ namespace ZeoEngine {
 
 	AssetTypeId MaterialEditor::GetAssetTypeId() const
 	{
-		return MaterialAsset::TypeId();
+		return Material::TypeId();
 	}
 
 	AssetHandle<IAsset> MaterialEditor::GetAsset() const
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.Template = MaterialAssetLibrary::Get().LoadAsset(path);
+			materialPreviewComp.Template = MaterialLibrary::Get().LoadAsset(path);
 			auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
 			meshComp.Instance->SetMaterial(0, materialPreviewComp.Template);
 		});

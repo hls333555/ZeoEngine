@@ -63,7 +63,7 @@ namespace ZeoEngine {
 				case entt::type_hash<AssetHandle<Texture2D>>::value():				return BasicMetaType::TEXTURE;
 				case entt::type_hash<AssetHandle<ParticleTemplate>>::value():		return BasicMetaType::PARTICLE;
 				case entt::type_hash<AssetHandle<MeshAsset>>::value():				return BasicMetaType::MESH;
-				case entt::type_hash<AssetHandle<MaterialAsset>>::value():			return BasicMetaType::MATERIAL;
+				case entt::type_hash<AssetHandle<Material>>::value():				return BasicMetaType::MATERIAL;
 				case entt::type_hash<AssetHandle<ShaderAsset>>::value():			return BasicMetaType::SHADER;
 			}
 		}

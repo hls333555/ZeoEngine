@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		ImGui::Separator();
 
 		const auto& materialComp = GetOwnerEntity().GetComponent<MaterialPreviewComponent>();
-		const auto& material = materialComp.Template->GetMaterial();
+		const auto& material = materialComp.Template;
 		const auto& shader = material->GetShader();
 		const auto& uniforms = material->GetDynamicUniforms();
 		const auto& bindableUniforms = material->GetDynamicBindableUniforms();

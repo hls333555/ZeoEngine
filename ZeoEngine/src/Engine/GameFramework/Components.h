@@ -293,7 +293,7 @@ namespace ZeoEngine {
 	{
 		AssetHandle<MeshAsset> Mesh;
 		Ref<MeshInstance> Instance;
-		std::vector<AssetHandle<MaterialAsset>> MaterialsPlaceholder;
+		std::vector<AssetHandle<Material>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const AssetHandle<MeshAsset>& meshAsset)
@@ -371,15 +371,15 @@ namespace ZeoEngine {
 
 	struct MaterialPreviewComponent : public IComponent
 	{
-		AssetHandle<MaterialAsset> Template;
+		AssetHandle<Material> Template;
 
 		MaterialPreviewComponent() = default;
-		MaterialPreviewComponent(const AssetHandle<MaterialAsset>& material)
+		MaterialPreviewComponent(const AssetHandle<Material>& material)
 			: Template(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
-		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); } 
+		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetShaderAsset(); }
+		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->SetShaderAsset(shader); } 
 	};
 
 	struct BillboardComponent : public IComponent

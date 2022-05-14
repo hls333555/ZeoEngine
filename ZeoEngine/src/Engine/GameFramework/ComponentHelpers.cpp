@@ -143,7 +143,7 @@ namespace ZeoEngine {
 		}
 		else if (dataId == ZDATA_ID(MaterialSlots))
 		{
-			auto oldMaterial = (*oldValue._Cast<AssetHandle<MaterialAsset>>());
+			auto oldMaterial = (*oldValue._Cast<AssetHandle<Material>>());
 			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
 		}
 	}

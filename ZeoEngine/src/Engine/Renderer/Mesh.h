@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	class VertexArray;
 	class VertexBuffer;
 	class Texture2D;
-	class MaterialAsset;
+	class Material;
 	class UniformBuffer;
 	struct MeshRendererComponent;
 	class RenderGraph;
@@ -42,14 +42,14 @@ namespace ZeoEngine {
 		const MeshEntry* EntryPtr;
 		const RenderGraph* RenderGraphPtr;
 
-		MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize = false);
+		MeshEntryInstance(const MeshEntry& entry, AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize = false);
 
 		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
 
-		void BindAndSubmitTechniques(AssetHandle<MaterialAsset>& material);
-		void SubmitTechniques(const AssetHandle<MaterialAsset>& material);
+		void BindAndSubmitTechniques(AssetHandle<Material>& material);
+		void SubmitTechniques(const AssetHandle<Material>& material);
 	};
 
 	class Mesh
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 		MeshVertex* m_VertexBuffer = nullptr;
 		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
-		std::vector<AssetHandle<MaterialAsset>> m_MaterialSlots;
+		std::vector<AssetHandle<Material>> m_MaterialSlots;
 		BoxSphereBounds m_Bounds;
 	};
 
@@ -99,8 +99,8 @@ namespace ZeoEngine {
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
 		auto& GetMaterials() { return m_Materials; }
-		void SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material);
-		void OnMaterialChanged(uint32_t index, AssetHandle<MaterialAsset>& oldMaterial);
+		void SetMaterial(uint32_t index, const AssetHandle<Material>& material);
+		void OnMaterialChanged(uint32_t index, AssetHandle<Material>& oldMaterial);
 
 		void SubmitTechniques(MeshEntryInstance& entryInstance);
 		void SubmitAllTechniques();
@@ -121,7 +121,7 @@ namespace ZeoEngine {
 		ModelData m_ModelBuffer;
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 		std::vector<MeshEntryInstance> m_EntryInstances;
-		std::vector<AssetHandle<MaterialAsset>> m_Materials;
+		std::vector<AssetHandle<Material>> m_Materials;
 	};
 
 	class MeshAsset : public AssetBase<MeshAsset>
@@ -148,7 +148,7 @@ namespace ZeoEngine {
 		using result_type = Ref<MeshAsset>;
 
 		// TODO:
-		Ref<MeshAsset> operator()(const std::string& path) const
+		Ref<MeshAsset> operator()(const std::string& path, bool bIsReload) const
 		{
 			return MeshAsset::Create(path);
 		}

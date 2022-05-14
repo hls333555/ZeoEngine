@@ -140,7 +140,7 @@ namespace YAML {
 	DEFINE_ASSET_CONVERTOR(Texture2D);
 	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
 	DEFINE_ASSET_CONVERTOR(MeshAsset);
-	DEFINE_ASSET_CONVERTOR(MaterialAsset);
+	DEFINE_ASSET_CONVERTOR(Material);
 	DEFINE_ASSET_CONVERTOR(ShaderAsset);
 
 }
@@ -255,7 +255,7 @@ namespace ZeoEngine {
 				SerializeData<AssetHandle<MeshAsset>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
-				SerializeData<AssetHandle<MaterialAsset>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<Material>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
 				SerializeData<AssetHandle<ShaderAsset>>(out, data, instance, bIsSeqElement);
@@ -426,7 +426,7 @@ namespace ZeoEngine {
 				DeserializeData<AssetHandle<MeshAsset>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
-				DeserializeData<AssetHandle<MaterialAsset>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<Material>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
 				DeserializeData<AssetHandle<ShaderAsset>>(data, instance, value, bIsSeqElement);
@@ -515,7 +515,7 @@ namespace ZeoEngine {
 	// MaterialSerializer ////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void MaterialSerializer::Serialize(YAML::Emitter& out, const Ref<Material>& material)
+	void MaterialSerializer::Serialize(YAML::Emitter& out, const AssetHandle<Material>& material)
 	{
 		if (!material) return;
 
@@ -559,7 +559,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MaterialSerializer::Deserialize(const YAML::Node& value, const Ref<Material>& material)
+	void MaterialSerializer::Deserialize(const YAML::Node& value, const AssetHandle<Material>& material)
 	{
 		if (!material) return;
 
@@ -677,7 +677,7 @@ namespace ZeoEngine {
 	// MaterialAssetSerializer ///////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void MaterialAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material)
+	void MaterialAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material)
 	{
 		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
 		{
@@ -691,7 +691,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const Ref<Material>& material)
+	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material)
 	{
 		const auto data = ReadDataFromAsset(path, typeId);
 		if (!data) return false;

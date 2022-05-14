@@ -138,7 +138,7 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(ParticleTemplate,
-	Ref<ParticleTemplate> operator()(const std::string& path) const
+	Ref<ParticleTemplate> operator()(const std::string& path, bool bIsReload) const
 	{
 		return ParticleTemplate::Create(path);
 	},

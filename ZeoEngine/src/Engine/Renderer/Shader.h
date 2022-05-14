@@ -153,7 +153,7 @@ namespace ZeoEngine {
 		using result_type = Ref<ShaderAsset>;
 
 		// TODO:
-		Ref<ShaderAsset> operator()(const std::string& path) const
+		Ref<ShaderAsset> operator()(const std::string& path, bool bIsReload) const
 		{
 			return ShaderAsset::Create(path);
 		}

@@ -11,7 +11,7 @@
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<MaterialAsset>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize)
+	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize)
 		: Drawable(vao, ubo), EntryPtr(&entry), RenderGraphPtr(&renderGraph)
 	{
 		// This will be done after deserialization if bIsDeserialize is false
@@ -21,17 +21,17 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MeshEntryInstance::BindAndSubmitTechniques(AssetHandle<MaterialAsset>& material)
+	void MeshEntryInstance::BindAndSubmitTechniques(AssetHandle<Material>& material)
 	{
 		SubmitTechniques(material);
 		// Connect callback on new material for this instance
 		material->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(this);
 	}
 
-	void MeshEntryInstance::SubmitTechniques(const AssetHandle<MaterialAsset>& material)
+	void MeshEntryInstance::SubmitTechniques(const AssetHandle<Material>& material)
 	{
 		ClearTechniques();
-		for (const auto& technique : material->GetMaterial()->GetRenderTechniques())
+		for (const auto& technique : material->GetRenderTechniques())
 		{
 			AddTechnique(technique, *RenderGraphPtr);
 		}
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
 		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
 		{
-			m_MaterialSlots.emplace_back(MaterialAssetLibrary::GetDefaultMaterialAsset());
+			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterialAsset());
 		}
 
 		uint32_t meshCount = meshScene->mNumMeshes;
@@ -198,7 +198,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<MaterialAsset>& material)
+	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<Material>& material)
 	{
 		if (index < 0 || index >= m_Materials.size()) return;
 
@@ -207,7 +207,7 @@ namespace ZeoEngine {
 		OnMaterialChanged(index, oldMaterial);
 	}
 
-	void MeshInstance::OnMaterialChanged(uint32_t index, AssetHandle<MaterialAsset>& oldMaterial)
+	void MeshInstance::OnMaterialChanged(uint32_t index, AssetHandle<Material>& oldMaterial)
 	{
 		for (auto& entryInstance : m_EntryInstances)
 		{

@@ -53,16 +53,15 @@ namespace ZeoEngine {
 		{
 			if (!Utils::Validate(ID)) return {};
 
-			auto ret = load(Utils::GetIDFromString(ID), ID, std::forward<Args>(args)...);
+			auto ret = load(Utils::GetIDFromString(ID), ID, false/* IsReload */, std::forward<Args>(args)...);
 			return ret.first->second;
 		}
 
-		// TODO:
 		AssetHandle<AssetClass> ReloadAsset(std::string ID)
 		{
 			if (!HasAsset(ID)) return {};
 
-			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID));
+			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */);
 			return ret.first->second;
 		}
 

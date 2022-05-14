@@ -19,14 +19,14 @@ namespace ZeoEngine {
 		RegisterAssetFactory(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2D::TypeId(), CreateRef<Texture2DAssetFactory>());
 		RegisterAssetFactory(MeshAsset::TypeId(), CreateRef<MeshAssetFactory>());
-		RegisterAssetFactory(MaterialAsset::TypeId(), CreateRef<MaterialAssetFactory>());
+		RegisterAssetFactory(Material::TypeId(), CreateRef<MaterialAssetFactory>());
 		RegisterAssetFactory(ShaderAsset::TypeId(), CreateRef<ShaderAssetFactory>());
 
 		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
 		RegisterAssetActions(ParticleTemplate::TypeId(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(Texture2D::TypeId(), CreateRef<Texture2DAssetActions>());
 		RegisterAssetActions(MeshAsset::TypeId(), CreateRef<MeshAssetActions>());
-		RegisterAssetActions(MaterialAsset::TypeId(), CreateRef<MaterialAssetActions>());
+		RegisterAssetActions(Material::TypeId(), CreateRef<MaterialAssetActions>());
 		RegisterAssetActions(ShaderAsset::TypeId(), CreateRef<ShaderAssetActions>());
 
 		InitSupportedFileExtensions();

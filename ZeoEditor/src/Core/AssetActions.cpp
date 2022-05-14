@@ -158,12 +158,12 @@ namespace ZeoEngine {
 
 	void MaterialAssetActions::ReloadAsset(const std::string& path) const
 	{
-		MaterialAssetLibrary::Get().ReloadAsset(path);
+		MaterialLibrary::Get().ReloadAsset(path);
 	}
 
 	void MaterialAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (auto asset = MaterialAssetLibrary::Get().LoadAsset(path))
+		if (auto asset = MaterialLibrary::Get().LoadAsset(path))
 		{
 			asset->Serialize(path);
 		}

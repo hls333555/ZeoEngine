@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
 
-		// TODO:
+		// TODO: Remove
 		virtual void Reload(bool bIsCreate) {}
 	};
 

@@ -351,7 +351,7 @@ namespace ZeoEngine {
 		AssetBrowser m_Browser{ MeshAsset::TypeId() };
 	};
 
-	class MaterialDataWidget : public BasicDataWidgetT<AssetHandle<MaterialAsset>>
+	class MaterialDataWidget : public BasicDataWidgetT<AssetHandle<Material>>
 	{
 	public:
 		MaterialDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -364,7 +364,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ MaterialAsset::TypeId() };
+		AssetBrowser m_Browser{ Material::TypeId() };
 	};
 
 	class ShaderDataWidget : public BasicDataWidgetT<AssetHandle<ShaderAsset>>
