@@ -43,6 +43,20 @@ namespace ZeoEngine {
 
 		Entity* GetOwnerEntity() const;
 
+	protected:
+		template<typename Component>
+		uint32_t GetDataIdByName(const char* dataName) const
+		{
+			const uint32_t dataId = entt::hashed_string(dataName);
+			const auto data = entt::resolve<Component>().data(dataId);
+			if (!data)
+			{
+				ZE_CORE_ERROR("Failed to resolve data by name: {0}::{1}!", entt::type_name<Component>::value(), dataName);
+				return 0;
+			}
+			return dataId;
+		}
+
 	private:
 		struct Impl;
 		Scope<Impl> m_Impl;
