@@ -41,30 +41,30 @@ namespace ZeoEngine {
 
 	AssetHandle<IAsset> MaterialEditor::GetAsset() const
 	{
-		return GetContextEntity().GetComponent<MaterialPreviewComponent>().Template;
+		return GetContextEntity().GetComponent<MaterialPreviewComponent>().MaterialAsset;
 	}
 
 	void MaterialEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.Template = MaterialLibrary::Get().LoadAsset(path);
+			materialPreviewComp.MaterialAsset = MaterialLibrary::Get().LoadAsset(path);
 			auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-			meshComp.Instance->SetMaterial(0, materialPreviewComp.Template);
+			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
 		});
 	}
 
 	void MaterialEditor::SaveAsset(const std::string& path)
 	{
 		auto& materialPreviewComp = GetContextEntity().GetComponent<MaterialPreviewComponent>();
-		materialPreviewComp.Template->Serialize(path);
+		materialPreviewComp.MaterialAsset->Serialize(path);
 	}
 
 	void MaterialEditor::CreatePreviewMaterial(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
 		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
 		previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
-		previewMaterialEntity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultSphereMesh());
+		previewMaterialEntity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultSphereMesh());
 		previewMaterialEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
 		SetContextEntity(previewMaterialEntity);
 	}

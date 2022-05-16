@@ -143,9 +143,9 @@ namespace ZeoEngine {
 
 	Ref<ParticleTemplate> ParticleTemplate::Create(const std::string& path)
 	{
-		auto asset = CreateRef<ParticleTemplate>(path);
-		asset->Deserialize(); // NOTE: Do not call it in constructor as it contains shared_from_this()!
-		return asset;
+		auto particleTemplate = CreateRef<ParticleTemplate>(path);
+		particleTemplate->Deserialize(); // NOTE: Do not call it in constructor as it contains shared_from_this()!
+		return particleTemplate;
 	}
 
 	// TODO:
@@ -207,16 +207,16 @@ namespace ZeoEngine {
 				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 
-		if (particleComp.Template)
+		if (particleComp.ParticleTemplateAsset)
 		{
-			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.Template, particleComp.ComponentHelper->GetOwnerEntity(), particleComp.PositionOffset);
+			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.ParticleTemplateAsset, particleComp.ComponentHelper->GetOwnerEntity(), particleComp.PositionOffset);
 			if (particleComp.Instance)
 			{
 				// Get old template from instance as template in component may have been updated
 				particleComp.Instance->m_ParticleTemplate->RemoveParticleSystemInstance(particleComp.Instance);
 			}
 			particleComp.Instance = psInstance;
-			particleComp.Template->AddParticleSystemInstance(psInstance);
+			particleComp.ParticleTemplateAsset->AddParticleSystemInstance(psInstance);
 		}
 	}
 

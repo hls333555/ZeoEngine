@@ -104,13 +104,13 @@ namespace ZeoEngine {
 
 	Ref<Material> Material::Create(const std::string& path, bool bIsReload)
 	{
-		auto asset = CreateRef<Material>(path);
-		asset->Reload();
+		auto material = CreateRef<Material>(path);
+		material->Reload();
 		if (!bIsReload)
 		{
-			asset->GetShader()->m_OnShaderReloaded.connect<&Material::Reload>(asset);
+			material->GetShader()->m_OnShaderReloaded.connect<&Material::Reload>(material);
 		}
-		return asset;
+		return material;
 	}
 
 	void Material::Reload()

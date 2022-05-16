@@ -22,21 +22,21 @@ namespace ZeoEngine {
 	Entity EditorSceneUtils::CreateAndPlaceCube(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Cube");
-		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultCubeMesh());
+		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultCubeMesh());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlaceSphere(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
-		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultSphereMesh());
+		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultSphereMesh());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlacePlane(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Plane");
-		entity.AddComponent<MeshRendererComponent>(MeshAssetLibrary::GetDefaultPlaneMesh());
+		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultPlaneMesh());
 		return entity;
 	}
 

@@ -52,12 +52,14 @@ namespace ZeoEngine {
 		void SubmitTechniques(const AssetHandle<Material>& material);
 	};
 
-	class Mesh
+	class Mesh : public AssetBase<Mesh>
 	{
-	private:
-		explicit Mesh(const std::string& path);
 	public:
+		explicit Mesh(const std::string& path);
 		static Ref<Mesh> Create(const std::string& path);
+
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
 
 		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 		const auto& GetMeshEntries() const { return m_Entries; }
@@ -71,13 +73,15 @@ namespace ZeoEngine {
 		const BoxSphereBounds& GetBounds() const { return m_Bounds; }
 
 	private:
-		void LoadFromMeshScene(const aiScene* meshScene, const std::string& path);
+		void LoadFromMeshScene(const aiScene* meshScene);
 		void LoadMeshEntries(const aiScene* meshScene);
 		void LoadDatas(const aiScene* meshScene);
 		void LoadVertexData(const aiMesh* mesh, uint32_t baseIndex);
 		void LoadIndexData(const aiMesh* mesh, uint32_t baseIndex);
 
 	private:
+		std::string m_MeshResourcePath;
+
 		Ref<VertexArray> m_VAO;
 		uint32_t m_VertexCount = 0, m_IndexCount = 0;
 		MeshVertex* m_VertexBuffer = nullptr;
@@ -87,15 +91,35 @@ namespace ZeoEngine {
 		BoxSphereBounds m_Bounds;
 	};
 
+	REGISTER_ASSET(Mesh,
+	Ref<Mesh> operator()(const std::string& path, bool bIsReload) const
+	{
+		return Mesh::Create(path);
+	},
+	static AssetHandle<Mesh> GetDefaultCubeMesh()
+	{
+		return Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
+	}
+
+	static AssetHandle<Mesh> GetDefaultSphereMesh()
+	{
+		return Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
+	}
+
+	static AssetHandle<Mesh> GetDefaultPlaneMesh()
+	{
+		return Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
+	})
+
 	class MeshInstance
 	{
 	public:
-		MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize);
+		MeshInstance(const AssetHandle<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize);
 		MeshInstance(const MeshInstance& other);
 
 		static void Create(MeshRendererComponent& meshComp, const RenderGraph& renderGraph, const Ref<MeshInstance>& meshInstanceToCopy = nullptr, bool bIsDeserialize = false);
 
-		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }
+		const AssetHandle<Mesh>& GetMesh() const { return m_MeshPtr; }
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
 		auto& GetMaterials() { return m_Materials; }
@@ -108,7 +132,7 @@ namespace ZeoEngine {
 		void Submit(const glm::mat4& transform, int32_t entityID);
 
 	private:
-		Ref<Mesh> m_MeshPtr;
+		AssetHandle<Mesh> m_MeshPtr;
 
 		struct ModelData
 		{
@@ -122,54 +146,5 @@ namespace ZeoEngine {
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 		std::vector<MeshEntryInstance> m_EntryInstances;
 		std::vector<AssetHandle<Material>> m_Materials;
-	};
-
-	class MeshAsset : public AssetBase<MeshAsset>
-	{
-	private:
-		explicit MeshAsset(const std::string& path);
-
-	public:
-		static Ref<MeshAsset> Create(const std::string& path);
-
-		const Ref<Mesh>& GetMesh() const { return m_Mesh; }
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		virtual void Reload(bool bIsCreate) override;
-
-	private:
-		Ref<Mesh> m_Mesh;
-	};
-
-	struct MeshAssetLoader final
-	{
-		using result_type = Ref<MeshAsset>;
-
-		// TODO:
-		Ref<MeshAsset> operator()(const std::string& path, bool bIsReload) const
-		{
-			return MeshAsset::Create(path);
-		}
-	};
-
-	class MeshAssetLibrary : public AssetLibrary<MeshAssetLibrary, MeshAsset, MeshAssetLoader>
-	{
-	public:
-		static AssetHandle<MeshAsset> GetDefaultCubeMesh()
-		{
-			return Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
-		}
-
-		static AssetHandle<MeshAsset> GetDefaultSphereMesh()
-		{
-			return Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
-		}
-
-		static AssetHandle<MeshAsset> GetDefaultPlaneMesh()
-		{
-			return Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
-		}
 	};
 }

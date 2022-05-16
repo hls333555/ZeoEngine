@@ -335,7 +335,7 @@ namespace ZeoEngine {
 		AssetBrowser m_Browser{ ParticleTemplate::TypeId() };
 	};
 
-	class MeshDataWidget : public BasicDataWidgetT<AssetHandle<MeshAsset>>
+	class MeshDataWidget : public BasicDataWidgetT<AssetHandle<Mesh>>
 	{
 	public:
 		MeshDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -348,7 +348,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ MeshAsset::TypeId() };
+		AssetBrowser m_Browser{ Mesh::TypeId() };
 	};
 
 	class MaterialDataWidget : public BasicDataWidgetT<AssetHandle<Material>>

@@ -139,7 +139,7 @@ namespace YAML {
 
 	DEFINE_ASSET_CONVERTOR(Texture2D);
 	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
-	DEFINE_ASSET_CONVERTOR(MeshAsset);
+	DEFINE_ASSET_CONVERTOR(Mesh);
 	DEFINE_ASSET_CONVERTOR(Material);
 	DEFINE_ASSET_CONVERTOR(Shader);
 
@@ -252,7 +252,7 @@ namespace ZeoEngine {
 				SerializeData<AssetHandle<ParticleTemplate>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
-				SerializeData<AssetHandle<MeshAsset>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<Mesh>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
 				SerializeData<AssetHandle<Material>>(out, data, instance, bIsSeqElement);
@@ -423,7 +423,7 @@ namespace ZeoEngine {
 				DeserializeData<AssetHandle<ParticleTemplate>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
-				DeserializeData<AssetHandle<MeshAsset>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<Mesh>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
 				DeserializeData<AssetHandle<Material>>(data, instance, value, bIsSeqElement);

@@ -428,7 +428,7 @@ namespace ZeoEngine {
 		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? MeshAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<MeshAsset>{};
+			m_Buffer = retSpec ? MeshLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Mesh>{};
 			SetValueToData();
 		}
 
@@ -438,7 +438,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 	{
-		m_Buffer = MeshAssetLibrary::GetDefaultSphereMesh();
+		m_Buffer = MeshLibrary::GetDefaultSphereMesh();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

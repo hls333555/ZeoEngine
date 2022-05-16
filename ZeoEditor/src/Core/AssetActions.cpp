@@ -140,12 +140,12 @@ namespace ZeoEngine {
 
 	void MeshAssetActions::ReloadAsset(const std::string& path) const
 	{
-		MeshAssetLibrary::Get().ReloadAsset(path);
+		MeshLibrary::Get().ReloadAsset(path);
 	}
 
 	void MeshAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (auto asset = MeshAssetLibrary::Get().LoadAsset(path))
+		if (auto asset = MeshLibrary::Get().LoadAsset(path))
 		{
 			asset->Serialize(path);
 		}

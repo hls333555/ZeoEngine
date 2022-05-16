@@ -20,7 +20,7 @@ namespace ZeoEngine {
 
 		ZCOMPONENT(SpriteRendererComponent, ZPROP(DisplayName, ZTEXT("Sprite Renderer")), ZPROP(Tooltip, ZTEXT("精灵渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(SpriteRendererComponent, TintColor)
-			ZDATA(SpriteRendererComponent, Texture)
+			ZDATA(SpriteRendererComponent, TextureAsset)
 			ZDATA(SpriteRendererComponent, TextureTiling)
 			ZDATA(SpriteRendererComponent, SortingOrder);
 
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 		ZCOMPONENT(NativeScriptComponent, ZPROP(DisplayName, ZTEXT("Native Script")), ZPROP(Tooltip, ZTEXT("C++脚本组件")), ZPROP(Category, ZTEXT("Scripts")));
 
 		ZCOMPONENT(ParticleSystemComponent, ZPROP(DisplayName, ZTEXT("Particle System")), ZPROP(Tooltip, ZTEXT("粒子系统组件")), ZPROP(Category, ZTEXT("Effects")))
-			ZDATA(ParticleSystemComponent, Template)
+			ZDATA(ParticleSystemComponent, ParticleTemplateAsset)
 			ZDATA(ParticleSystemComponent, PositionOffset);
 
 		ZENUM(ParticleVariationType)
@@ -118,7 +118,7 @@ namespace ZeoEngine {
 			ZDATA(CircleCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 
 		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
-			ZDATA(MeshRendererComponent, Mesh)
+			ZDATA(MeshRendererComponent, MeshAsset)
 			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer));
 
 		ZENUM(LightComponent::LightType)

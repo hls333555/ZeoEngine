@@ -18,14 +18,14 @@ namespace ZeoEngine {
 		RegisterAssetFactory(SceneAsset::TypeId(), CreateRef<SceneAssetFactory>());
 		RegisterAssetFactory(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2D::TypeId(), CreateRef<Texture2DAssetFactory>());
-		RegisterAssetFactory(MeshAsset::TypeId(), CreateRef<MeshAssetFactory>());
+		RegisterAssetFactory(Mesh::TypeId(), CreateRef<MeshAssetFactory>());
 		RegisterAssetFactory(Material::TypeId(), CreateRef<MaterialAssetFactory>());
 		RegisterAssetFactory(Shader::TypeId(), CreateRef<ShaderAssetFactory>());
 
 		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
 		RegisterAssetActions(ParticleTemplate::TypeId(), CreateRef<ParticleAssetActions>());
 		RegisterAssetActions(Texture2D::TypeId(), CreateRef<Texture2DAssetActions>());
-		RegisterAssetActions(MeshAsset::TypeId(), CreateRef<MeshAssetActions>());
+		RegisterAssetActions(Mesh::TypeId(), CreateRef<MeshAssetActions>());
 		RegisterAssetActions(Material::TypeId(), CreateRef<MaterialAssetActions>());
 		RegisterAssetActions(Shader::TypeId(), CreateRef<ShaderAssetActions>());
 
@@ -201,8 +201,8 @@ namespace ZeoEngine {
 	{
 		m_SupportedFileExtensions.insert(std::make_pair(".png", Texture2D::TypeId()));
 		m_SupportedFileExtensions.insert(std::make_pair(".tga", Texture2D::TypeId()));
-		m_SupportedFileExtensions.insert(std::make_pair(".fbx", MeshAsset::TypeId()));
-		m_SupportedFileExtensions.insert(std::make_pair(".obj", MeshAsset::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".fbx", Mesh::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".obj", Mesh::TypeId()));
 	}
 
 }

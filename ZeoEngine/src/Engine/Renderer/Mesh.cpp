@@ -38,30 +38,47 @@ namespace ZeoEngine {
 	}
 
 	Mesh::Mesh(const std::string& path)
+		: AssetBase(PathUtils::GetNormalizedAssetPath(path))
+		, m_MeshResourcePath(path)
 	{
 		Assimp::Importer Importer;
-		const aiScene* meshScene = Importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
+		const aiScene* meshScene = Importer.ReadFile(m_MeshResourcePath.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
 		{
 			ZE_CORE_ERROR("Failed to load mesh! {0}", Importer.GetErrorString());
 			return;
 		}
 
-		LoadFromMeshScene(meshScene, path);
+		LoadFromMeshScene(meshScene);
 	}
 
 	Ref<Mesh> Mesh::Create(const std::string& path)
 	{
-		class MeshEnableShared : public Mesh
-		{
-		public:
-			explicit MeshEnableShared(const std::string& path)
-				: Mesh(path) {}
-		};
-		return CreateRef<MeshEnableShared>(path);
+		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
+		if (!PathUtils::DoesPathExist(resourcePath)) return {};
+
+		auto mesh = CreateRef<Mesh>(std::move(resourcePath));
+		mesh->Deserialize();
+		return mesh;
 	}
 
-	void Mesh::LoadFromMeshScene(const aiScene* meshScene, const std::string& path)
+	void Mesh::Serialize(const std::string& path)
+	{
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
+
+		SetID(std::move(assetPath));
+		ImportableAssetSerializer::Serialize(GetID(), TypeId(), {}); // TODO: Update component instance here
+	}
+
+	void Mesh::Deserialize()
+	{
+		if (!PathUtils::DoesPathExist(GetID())) return;
+
+		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);  // TODO: Update component instance here
+	}
+
+	void Mesh::LoadFromMeshScene(const aiScene* meshScene)
 	{
 		m_VAO = VertexArray::Create();
 
@@ -155,7 +172,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const Ref<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
+	MeshInstance::MeshInstance(const AssetHandle<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
@@ -192,9 +209,9 @@ namespace ZeoEngine {
 			// Copy construct mesh instance
 			meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 		}
-		else if (meshComp.Mesh)
+		else if (meshComp.MeshAsset)
 		{
-			meshComp.Instance = CreateRef<MeshInstance>(meshComp.Mesh->GetMesh(), renderGraph, bIsDeserialize);
+			meshComp.Instance = CreateRef<MeshInstance>(meshComp.MeshAsset, renderGraph, bIsDeserialize);
 		}
 	}
 
@@ -250,50 +267,6 @@ namespace ZeoEngine {
 		{
 			entryInstance.Submit();
 		}
-	}
-
-	MeshAsset::MeshAsset(const std::string& path)
-		: AssetBase(path)
-	{
-		Reload(true);
-	}
-
-	Ref<MeshAsset> MeshAsset::Create(const std::string& path)
-	{
-		// A way to allow std::make_shared() to access MeshAsset's private constructor
-		class MeshAssetEnableShared : public MeshAsset
-		{
-		public:
-			explicit MeshAssetEnableShared(const std::string& path)
-				: MeshAsset(path) {}
-		};
-
-		return CreateRef<MeshAssetEnableShared>(path);
-	}
-
-	void MeshAsset::Reload(bool bIsCreate)
-	{
-		const std::string& meshPath = GetID();
-		ZE_CORE_ASSERT(PathUtils::DoesPathExist(meshPath));
-
-		m_Mesh = Mesh::Create(meshPath);
-		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
-	}
-
-	void MeshAsset::Serialize(const std::string& path)
-	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		ImportableAssetSerializer::Serialize(GetID(), TypeId(), {}); // TODO: Update component instance here
-	}
-
-	void MeshAsset::Deserialize()
-	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);  // TODO: Update component instance here
 	}
 
 }

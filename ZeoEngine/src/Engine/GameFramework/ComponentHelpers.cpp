@@ -42,7 +42,7 @@ namespace ZeoEngine {
 	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
-		billboardComp.Texture = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/Camera.png.zasset");
+		billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraComponentHelper::OnComponentDestroy()
@@ -59,9 +59,9 @@ namespace ZeoEngine {
 	void ParticleSystemComponentHelper::OnComponentDestroy()
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		if (particleComp.Template)
+		if (particleComp.ParticleTemplateAsset)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
 		}
 	}
 
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 			}
 		}
 		// Manually clear particle template selection
-		if (!particleComp.Template)
+		if (!particleComp.ParticleTemplateAsset)
 		{
 			particleComp.Instance.reset();
 		}
@@ -96,13 +96,13 @@ namespace ZeoEngine {
 	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 	 
 	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 
 	const RenderGraph& MeshRendererComponentHelper::GetRenderGraph(Entity* entityContext) const
@@ -132,7 +132,7 @@ namespace ZeoEngine {
 		if (dataId == ZDATA_ID(Mesh))
 		{
 			GetOwnerEntity()->UpdateBounds();
-			if (meshComp.Mesh)
+			if (meshComp.MeshAsset)
 			{
 				MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
 			}
@@ -166,7 +166,7 @@ namespace ZeoEngine {
 	{
 		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		return meshComp.Mesh ? meshComp.Mesh->GetMesh()->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
 	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
@@ -240,15 +240,15 @@ namespace ZeoEngine {
 		{
 			case LightComponent::LightType::DirectionalLight:
 				lightComp.LightSource = CreateRef<DirectionalLight>();
-				billboardComp.Texture = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/DirectionalLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
 				lightComp.LightSource = CreateRef<PointLight>();
-				billboardComp.Texture = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/PointLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
 				lightComp.LightSource = CreateRef<SpotLight>();
-				billboardComp.Texture = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/SpotLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

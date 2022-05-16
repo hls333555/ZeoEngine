@@ -71,11 +71,11 @@ namespace ZeoEngine {
 		// Render billboards
 		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
 		{
-			if (billboardComp.Texture)
+			if (billboardComp.TextureAsset)
 			{
 				Entity entity = { e, m_Scene };
 				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
-				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
+				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
 		});
 
@@ -162,9 +162,9 @@ namespace ZeoEngine {
 
 	static void RemoveParticleSystemInstance(ParticleSystemComponent& particleComp)
 	{
-		if (particleComp.Template)
+		if (particleComp.ParticleTemplateAsset)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
 		}
 	}
 

@@ -1,4 +1,4 @@
-AssetType: 878988238
+AssetType: 779009498
 Shader: assets\editor\shaders\Default.glsl.zasset
 u_DiffuseTexture: ""
 u_SpecularTexture: ""
