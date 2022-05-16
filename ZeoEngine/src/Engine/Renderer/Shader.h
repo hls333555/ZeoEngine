@@ -20,8 +20,9 @@ namespace ZeoEngine {
 		uint32_t Offset = 0;
 		size_t Size = 0;
 
-		ShaderReflectionDataBase(const std::string& name, uint32_t binding, uint32_t offset = 0, size_t size = 0)
-			: Name(name), Binding(binding), Offset(offset), Size(size) {}
+		ShaderReflectionDataBase(std::string name, uint32_t binding, uint32_t offset = 0, size_t size = 0)
+			: Name(std::move(name)), Binding(binding), Offset(offset), Size(size) {}
+		virtual ~ShaderReflectionDataBase() = default;
 
 		virtual ShaderReflectionType GetType() const = 0 { return ShaderReflectionType::None; }
 	};
@@ -97,10 +98,18 @@ namespace ZeoEngine {
 		size_t BeginIndex, EndIndex;
 	};
 
-	class Shader : public Bindable
+	class Shader : public Bindable, public AssetBase<Shader>
 	{
 	public:
+		explicit Shader(std::string ID)
+			: AssetBase(std::move(ID)) {}
 		virtual ~Shader() = default;
+
+		static Ref<Shader> Create(const std::string& path, bool bIsReload = false);
+		static Ref<Shader> Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
+
+		virtual void Serialize(const std::string& path) override;
+		virtual void Deserialize() override;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
@@ -110,62 +119,27 @@ namespace ZeoEngine {
 		virtual void SetFloat4(const std::string& name, const glm::vec4& value) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 
-		virtual const std::string& GetName() const = 0;
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const = 0;
 		virtual size_t GetResourceCount() const = 0;
 		virtual const std::unordered_map <uint32_t, UniformBlockData>& GetUniformBlockDatas() const = 0;
 
-		static Ref<Shader> Create(const std::string& filePath, bool bIsReload = false);
-		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
-
-		static void ClearCache(const std::string& filePath);
-
-	};
-
-	class ShaderAsset : public AssetBase<ShaderAsset>
-	{
-	private:
-		explicit ShaderAsset(const std::string& path);
-
-	public:
-		static Ref<ShaderAsset> Create(const std::string& path);
-
-		const Ref<Shader>& GetShader() const { return m_Shader; }
-
-		void Bind() const { m_Shader->Bind(); }
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		virtual void Reload(bool bIsCreate) override;
+		static void ClearCache(const std::string& path);
 
 	public:
 		entt::sink<entt::sigh<void()>> m_OnShaderReloaded{ m_OnShaderReloadedDel };
 
 	private:
-		Ref<Shader> m_Shader;
-
 		entt::sigh<void()> m_OnShaderReloadedDel;
 	};
 
-	struct ShaderAssetLoader final
+	REGISTER_ASSET(Shader,
+	Ref<Shader> operator()(const std::string& path, bool bIsReload) const
 	{
-		using result_type = Ref<ShaderAsset>;
-
-		// TODO:
-		Ref<ShaderAsset> operator()(const std::string& path, bool bIsReload) const
-		{
-			return ShaderAsset::Create(path);
-		}
-	};
-
-	class ShaderAssetLibrary : public AssetLibrary<ShaderAssetLibrary, ShaderAsset, ShaderAssetLoader>
+		return Shader::Create(path, bIsReload);
+	},
+	static AssetHandle<Shader> GetDefaultShader()
 	{
-	public:
-		static AssetHandle<ShaderAsset> GetDefaultShaderAsset()
-		{
-			return ShaderAssetLibrary::Get().LoadAsset("assets/editor/shaders/Default.glsl.zasset");
-		}
-	};
+		return ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Default.glsl.zasset");
+	})
 
 }

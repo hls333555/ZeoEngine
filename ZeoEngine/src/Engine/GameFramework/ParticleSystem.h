@@ -142,7 +142,7 @@ namespace ZeoEngine {
 	{
 		return ParticleTemplate::Create(path);
 	},
-	static AssetHandle<ParticleTemplate> GetDefaultTemplate()
+	static AssetHandle<ParticleTemplate> GetDefaultParticleTemplate()
 	{
 		return Get().LoadAsset("");
 	})

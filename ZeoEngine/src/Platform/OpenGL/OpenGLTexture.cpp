@@ -33,6 +33,7 @@ namespace ZeoEngine {
 
 	OpenGLTexture2D::OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps)
 		: Texture2D(PathUtils::GetNormalizedAssetPath(path))
+		, m_TextureResourcePath(std::move(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -42,7 +43,7 @@ namespace ZeoEngine {
 		{
 			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&, bool)");
 
-			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+			data = stbi_load(m_TextureResourcePath.c_str(), &width, &height, &channels, 0);
 		}
 		ZE_CORE_ASSERT(data, "Failed to load image!");
 		m_Width = width;

@@ -98,15 +98,15 @@ namespace ZeoEngine {
 
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filePath, bool bIsReload)
-		: m_FilePath(filePath)
-		, m_Name(PathUtils::GetNameFromPath(filePath))
+	OpenGLShader::OpenGLShader(std::string path, bool bIsReload)
+		: Shader(PathUtils::GetNormalizedAssetPath(path))
+		, m_ShaderResourcePath(std::move(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
 		Utils::CreateCacheDirectoryIfNeeded();
 
-		std::string src = ReadFile(filePath);
+		const std::string src = ReadFile(m_ShaderResourcePath);
 		auto shaderSrcs = PreProcess(src);
 		
 		{
@@ -118,8 +118,8 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-		: m_Name(name)
+	OpenGLShader::OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: Shader(std::move(ID))
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -139,19 +139,19 @@ namespace ZeoEngine {
 		glDeleteProgram(m_RendererID);
 	}
 
-	std::string OpenGLShader::ReadFile(const std::string& filePath)
+	std::string OpenGLShader::ReadFile(const std::string& path)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		std::string result;
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
+		std::ifstream in(path, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
 			size_t size = in.tellg();
 			if (size == -1)
 			{
-				ZE_CORE_ERROR("Could not read from file '{0}'!", filePath);
+				ZE_CORE_ERROR("Could not read from file '{0}'!", path);
 			}
 			else
 			{
@@ -162,7 +162,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			ZE_CORE_ERROR("Could not open file: '{0}'", filePath);
+			ZE_CORE_ERROR("Could not open file: '{0}'", path);
 		}
 
 		return result;
@@ -223,7 +223,7 @@ namespace ZeoEngine {
 		shaderData.clear();
 		for (auto&& [stage, source] : shaderSources)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
+			std::filesystem::path shaderFilePath = m_ShaderResourcePath;
 			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedVulkanFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
@@ -239,7 +239,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR(module.GetErrorMessage());
@@ -287,7 +287,7 @@ namespace ZeoEngine {
 		m_OpenGLSourceCode.clear();
 		for (auto&& [stage, spirv] : m_VulkanSPIRV)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
+			std::filesystem::path shaderFilePath = m_ShaderResourcePath;
 			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedOpenGLFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
@@ -307,7 +307,7 @@ namespace ZeoEngine {
 				m_OpenGLSourceCode[stage] = glslCompiler.compile();
 				auto& source = m_OpenGLSourceCode[stage];
 
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR(module.GetErrorMessage());
@@ -352,7 +352,7 @@ namespace ZeoEngine {
 
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
-			ZE_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
+			ZE_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_ShaderResourcePath, infoLog.data());
 
 			glDeleteProgram(program);
 
@@ -378,7 +378,7 @@ namespace ZeoEngine {
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 		const auto uniformBufferCount = resources.uniform_buffers.size();
 
-		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
+		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_ShaderResourcePath);
 		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferCount);
 
 		// Reflect resources first (non-uniform block)

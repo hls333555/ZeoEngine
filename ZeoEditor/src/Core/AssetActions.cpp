@@ -177,7 +177,7 @@ namespace ZeoEngine {
 
 	void ShaderAssetActions::ReloadAsset(const std::string& path) const
 	{
-		ShaderAssetLibrary::Get().ReloadAsset(path);
+		ShaderLibrary::Get().ReloadAsset(path);
 	}
 
 	void ShaderAssetActions::HotReloadAsset(const std::string& path) const
@@ -187,7 +187,7 @@ namespace ZeoEngine {
 
 	void ShaderAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (auto asset = ShaderAssetLibrary::Get().LoadAsset(path))
+		if (auto asset = ShaderLibrary::Get().LoadAsset(path))
 		{
 			asset->Serialize(path);
 		}

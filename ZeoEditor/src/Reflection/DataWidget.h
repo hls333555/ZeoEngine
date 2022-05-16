@@ -367,7 +367,7 @@ namespace ZeoEngine {
 		AssetBrowser m_Browser{ Material::TypeId() };
 	};
 
-	class ShaderDataWidget : public BasicDataWidgetT<AssetHandle<ShaderAsset>>
+	class ShaderDataWidget : public BasicDataWidgetT<AssetHandle<Shader>>
 	{
 	public:
 		ShaderDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -380,7 +380,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ ShaderAsset::TypeId() };
+		AssetBrowser m_Browser{ Shader::TypeId() };
 	};
 
 	class ContainerWidget : public DataWidget

@@ -19,7 +19,6 @@ namespace ZeoEngine {
 
 	class Texture2D;
 	class ScriptableEntity;
-	class ShaderAsset;
 
 	struct IComponent
 	{
@@ -198,7 +197,7 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
-			Template = ParticleTemplateLibrary::GetDefaultTemplate();
+			Template = ParticleTemplateLibrary::GetDefaultParticleTemplate();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
 		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplate>& pTemplate)
@@ -378,8 +377,8 @@ namespace ZeoEngine {
 			: Template(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetShaderAsset(); }
-		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->SetShaderAsset(shader); } 
+		const AssetHandle<Shader>& GetShader() const { return Template->GetShader(); }
+		void SetShader(const AssetHandle<Shader>& shader) { Template->SetShader(shader); } 
 	};
 
 	struct BillboardComponent : public IComponent

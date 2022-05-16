@@ -12,8 +12,8 @@ namespace ZeoEngine {
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(const std::string& filePath, bool bIsReload);
-		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+		OpenGLShader(std::string path, bool bIsReload);
+		OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
 		virtual void Bind() const override;
@@ -27,7 +27,6 @@ namespace ZeoEngine {
 		virtual void SetFloat4(const std::string& name, const glm::vec4& value) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 
-		virtual const std::string& GetName() const override { return m_Name; }
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
 		virtual size_t GetResourceCount() const override { return m_ResourceCount; }
 		virtual const std::unordered_map<uint32_t, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
@@ -47,7 +46,7 @@ namespace ZeoEngine {
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 
 	private:
-		std::string ReadFile(const std::string& filePath);
+		std::string ReadFile(const std::string& path);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& src);
 		
 		void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
@@ -59,8 +58,7 @@ namespace ZeoEngine {
 
 	private:
 		uint32_t m_RendererID;
-		std::string m_FilePath;
-		std::string m_Name;
+		std::string m_ShaderResourcePath;
 
 		std::unordered_map<GLenum, std::vector<uint32_t>> m_VulkanSPIRV;
 		std::unordered_map<GLenum, std::vector<uint32_t>> m_OpenGLSPIRV;

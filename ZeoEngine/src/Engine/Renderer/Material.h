@@ -164,7 +164,7 @@ namespace ZeoEngine {
 	class Material : public AssetBase<Material>
 	{
 	public:
-		explicit Material(const std::string& ID);
+		explicit Material(const std::string& path);
 		virtual ~Material();
 
 		static Ref<Material> Create(const std::string& path, bool bIsReload);
@@ -172,17 +172,14 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		const AssetHandle<ShaderAsset>& GetShaderAsset() const { return m_Shader; }
-		AssetHandle<ShaderAsset>& GetShaderAsset() { return m_Shader; }
-		void SetShaderAsset(const AssetHandle<ShaderAsset>& shader) { m_Shader = shader; }
+		const AssetHandle<Shader>& GetShader() const { return m_Shader; }
+		void SetShader(const AssetHandle<Shader>& shader) { m_Shader = shader; }
 
 		const auto& GetDynamicUniforms() const { return m_DynamicUniforms; }
 		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
 		auto& GetDynamicUniformBuffers() { return m_DynamicUniformBuffers; }
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
 		const auto& GetRenderTechniques() const { return m_Techniques; }
-
-		Ref<Shader> GetShader() const;
 
 		void InitMaterialData();
 		void ApplyUniformDatas() const;
@@ -196,7 +193,7 @@ namespace ZeoEngine {
 		entt::sink<entt::sigh<void(const AssetHandle<Material>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
 
 	private:
-		AssetHandle<ShaderAsset> m_DefaultShader, m_Shader;
+		AssetHandle<Shader> m_DefaultShader, m_Shader;
 		std::vector<Ref<DynamicUniformDataBase>> m_DynamicUniforms;
 		std::vector<Ref<DynamicUniformTexture2DData>> m_DynamicBindableUniforms;
 		/** Map from uniform block binding to uniform buffers */
@@ -214,7 +211,7 @@ namespace ZeoEngine {
 	{
 		return Material::Create(path, bIsReload);
 	},
-	static AssetHandle<Material> GetDefaultMaterialAsset()
+	static AssetHandle<Material> GetDefaultMaterial()
 	{
 		return Get().LoadAsset("assets/editor/materials/Default.zasset");
 	})

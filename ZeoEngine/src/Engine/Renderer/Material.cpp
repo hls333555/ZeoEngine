@@ -86,10 +86,10 @@ namespace ZeoEngine {
 		Bind();
 	}
 
-	Material::Material(const std::string& ID)
-		: AssetBase(ID)
+	Material::Material(const std::string& path)
+		: AssetBase(path)
 	{
-		m_Shader = m_DefaultShader = ShaderAssetLibrary::GetDefaultShaderAsset();
+		m_Shader = ShaderLibrary::GetDefaultShader();
 	}
 
 	Material::~Material()
@@ -108,7 +108,7 @@ namespace ZeoEngine {
 		asset->Reload();
 		if (!bIsReload)
 		{
-			asset->GetShaderAsset()->m_OnShaderReloaded.connect<&Material::Reload>(asset);
+			asset->GetShader()->m_OnShaderReloaded.connect<&Material::Reload>(asset);
 		}
 		return asset;
 	}
@@ -138,11 +138,6 @@ namespace ZeoEngine {
 		ApplyUniformDatas();
 	}
 
-	Ref<Shader> Material::GetShader() const
-	{
-		return m_Shader ? m_Shader->GetShader() : Ref<Shader>{};
-	}
-
 	void Material::InitMaterialData()
 	{
 		m_DynamicUniforms.clear();
@@ -156,8 +151,7 @@ namespace ZeoEngine {
 			RenderTechnique shade("Shade");
 			{
 				RenderStep step("Opaque");
-				// TODO:
-				step.AddBindable(m_Shader ? m_Shader->GetShader() : m_DefaultShader->GetShader());
+				step.AddBindable(m_Shader.to_ref());
 				for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
 				{
 					step.AddBindable(uniformBuffer);

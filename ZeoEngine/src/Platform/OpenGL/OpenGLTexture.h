@@ -31,9 +31,11 @@ namespace ZeoEngine {
 		}
 
 	private:
+		uint32_t m_RendererID;
+		std::string m_TextureResourcePath;
+
 		uint32_t m_Width, m_Height;
 		uint32_t m_MipmapLevels = 1;
-		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 		bool m_bHasAlpha = false;
 

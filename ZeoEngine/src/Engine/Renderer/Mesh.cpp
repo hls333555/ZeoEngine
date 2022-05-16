@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
 		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
 		{
-			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterialAsset());
+			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterial());
 		}
 
 		uint32_t meshCount = meshScene->mNumMeshes;

@@ -370,7 +370,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 {
-		m_Buffer = Texture2DAssetLibrary::Get().LoadAsset("assets/textures/Ship.png.zasset");
+		m_Buffer = Texture2DLibrary::Get().LoadAsset("assets/textures/Ship.png.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -469,7 +469,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void MaterialDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 	{
-		m_Buffer = MaterialAssetLibrary::GetDefaultMaterialAsset();
+		m_Buffer = MaterialLibrary::GetDefaultMaterial();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -490,7 +490,7 @@ namespace ZeoEngine {
 		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? ShaderAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ShaderAsset>{};
+			m_Buffer = retSpec ? ShaderLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Shader>{};
 			SetValueToData();
 		}
 
@@ -500,7 +500,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ShaderDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
 	{
-		m_Buffer = ShaderAssetLibrary::GetDefaultShaderAsset();
+		m_Buffer = ShaderLibrary::GetDefaultShader();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

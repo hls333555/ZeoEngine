@@ -141,7 +141,7 @@ namespace YAML {
 	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
 	DEFINE_ASSET_CONVERTOR(MeshAsset);
 	DEFINE_ASSET_CONVERTOR(Material);
-	DEFINE_ASSET_CONVERTOR(ShaderAsset);
+	DEFINE_ASSET_CONVERTOR(Shader);
 
 }
 
@@ -258,7 +258,7 @@ namespace ZeoEngine {
 				SerializeData<AssetHandle<Material>>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
-				SerializeData<AssetHandle<ShaderAsset>>(out, data, instance, bIsSeqElement);
+				SerializeData<AssetHandle<Shader>>(out, data, instance, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -429,7 +429,7 @@ namespace ZeoEngine {
 				DeserializeData<AssetHandle<Material>>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
-				DeserializeData<AssetHandle<ShaderAsset>>(data, instance, value, bIsSeqElement);
+				DeserializeData<AssetHandle<Shader>>(data, instance, value, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);

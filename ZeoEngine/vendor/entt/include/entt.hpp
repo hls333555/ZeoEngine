@@ -57419,6 +57419,11 @@ namespace entt {
             return value.use_count();
         }
 
+        // TODO:
+        const auto& to_ref() const ENTT_NOEXCEPT {
+            return value;
+        }
+
     private:
         std::shared_ptr<Type> value;
     };
