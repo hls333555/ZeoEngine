@@ -9,12 +9,9 @@ namespace ZeoEngine {
 
 	void LevelEditor::OnAttach()
 	{
-		// TODO:
-		m_SceneAsset = AssetHandle<SceneAsset>(SceneAsset::Create());
-
 		// Bind delegates before scene creation
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
-		m_PostSceneCreate.connect<&LevelEditor::UpdateSceneRef>(this);
+		m_PostSceneCreate.connect<&LevelEditor::UpdateLevelAsset>(this);
 
 		EditorBase::OnAttach();
 	}
@@ -35,11 +32,11 @@ namespace ZeoEngine {
 		return CreateRef<LevelEditorSceneRenderer>(SharedFromBase<LevelEditor>());
 	}
 
-	void LevelEditor::UpdateSceneRef(const Ref<Scene>& scene, bool bIsFromLoad)
+	void LevelEditor::UpdateLevelAsset(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
 		if (!bIsFromLoad)
 		{
-			m_SceneAsset->UpdateScene(scene);
+			m_LevelAsset = LevelLibrary::GetDefaultEmptyLevel(scene);
 		}
 	}
 
@@ -107,7 +104,7 @@ namespace ZeoEngine {
 
 	AssetTypeId LevelEditor::GetAssetTypeId() const
 	{
-		return SceneAsset::TypeId();
+		return Level::TypeId();
 	}
 
 	void LevelEditor::LoadAsset(const std::string& path)
@@ -117,14 +114,7 @@ namespace ZeoEngine {
 		{
 			OnSceneStop();
 		}
-		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
-		m_SceneAsset->UpdateScene(GetScene());
-		m_SceneAsset->Deserialize();
-	}
-
-	void LevelEditor::SaveAsset(const std::string& path)
-	{
-		m_SceneAsset->Serialize(path);
+		m_LevelAsset = LevelLibrary::Get().LoadAsset(path, GetScene());
 	}
 
 	void LevelEditor::ClearSelectedEntity()

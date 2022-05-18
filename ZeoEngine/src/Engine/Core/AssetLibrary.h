@@ -57,19 +57,27 @@ namespace ZeoEngine {
 			return ret.first->second;
 		}
 
-		AssetHandle<AssetClass> ReloadAsset(std::string ID)
+		template<typename... Args>
+		AssetHandle<AssetClass> ReloadAsset(std::string ID, Args &&... args)
 		{
 			if (!HasAsset(ID)) return {};
 
-			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */);
+			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */, std::forward<Args>(args)...);
 			return ret.first->second;
 		}
 
-		void DiscardAsset(std::string ID)
+		void UnloadAsset(std::string ID)
 		{
 			if (!Utils::Validate(ID)) return;
 
 			erase(Utils::GetIDFromString(ID));
+		}
+
+		AssetHandle<AssetClass> GetAsset(std::string ID)
+		{
+			if (!Utils::Validate(ID)) return {};
+
+			return operator[](Utils::GetIDFromString(ID));
 		}
 
 		bool HasAsset(std::string ID)

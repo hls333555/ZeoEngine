@@ -93,7 +93,7 @@ namespace ZeoEngine {
 		virtual AssetTypeId GetAssetTypeId() const = 0;
 	private:
 		virtual void LoadAsset(const std::string& path) = 0;
-		virtual void SaveAsset(const std::string& path) = 0;
+		virtual void SaveAsset(const std::string& path);
 
 	public:
 		/**

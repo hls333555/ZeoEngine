@@ -37,7 +37,7 @@ namespace ZeoEngine {
 		virtual void ReimportAsset(const std::string& path) const override;
 	};
 
-	class SceneAssetActions final : public AssetActionsBase
+	class LevelAssetActions final : public AssetActionsBase
 	{
 	public:
 		virtual void OpenAsset(const std::string& path) const override;
@@ -45,7 +45,7 @@ namespace ZeoEngine {
 		virtual void SaveAsset(const std::string& path) const override;
 	};
 
-	class ParticleAssetActions : public AssetActionsBase
+	class ParticleTemplateAssetActions : public AssetActionsBase
 	{
 	public:
 		virtual void OpenAsset(const std::string& path) const override;

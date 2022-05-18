@@ -765,7 +765,7 @@ namespace ZeoEngine {
 
 	void SceneSerializer::Serialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		WriteDataToAsset(path, SceneAsset::TypeId(), [&](YAML::Emitter& out)
+		WriteDataToAsset(path, Level::TypeId(), [&](YAML::Emitter& out)
 		{
 			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 			{
@@ -789,7 +789,7 @@ namespace ZeoEngine {
 
 	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
 	{
-		auto data = ReadDataFromAsset(path, SceneAsset::TypeId());
+		auto data = ReadDataFromAsset(path, Level::TypeId());
 		if (!data) return false;
 
 		if (auto entities = (*data)["Entities"])

@@ -149,4 +149,8 @@ namespace ZeoEngine {
 		m_PostSceneRenderDel.publish(fbo);
 	}
 
+	void EditorBase::SaveAsset(const std::string& path)
+	{
+		GetAsset()->Serialize(path);
+	}
 }

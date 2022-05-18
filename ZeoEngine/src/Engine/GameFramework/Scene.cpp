@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Scene::OnUpdate(DeltaTime dt)
+	void Scene::OnUpdate(DeltaTime dt) const
 	{
 		for (const auto& system : m_Systems)
 		{
@@ -80,31 +80,15 @@ namespace ZeoEngine {
 		});
 	}
 
-	SceneAsset::SceneAsset(const std::string& path)
-		: AssetBase(path)
+	Ref<Level> Level::Create(std::string ID, const Ref<Scene>& scene)
 	{
+		auto level = CreateRef<Level>(std::move(ID), scene);
+		level->Deserialize();
+		scene->PostLoad();
+		return level;
 	}
 
-	Ref<SceneAsset> SceneAsset::Create(const std::string& path)
-	{
-		// A way to allow std::make_shared() to access SceneAsset's private constructor
-		class SceneAssetEnableShared : public SceneAsset
-		{
-		public:
-			explicit SceneAssetEnableShared(const std::string& path)
-				: SceneAsset(path) {}
-		};
-
-		return CreateRef<SceneAssetEnableShared>(path);
-	}
-
-	void SceneAsset::Reload(bool bIsCreate)
-	{
-		Deserialize();
-		m_Scene->PostLoad();
-	}
-
-	void SceneAsset::Serialize(const std::string& path)
+	void Level::Serialize(const std::string& path)
 	{
 		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
 		if (!PathUtils::DoesPathExist(assetPath)) return;
@@ -115,7 +99,7 @@ namespace ZeoEngine {
 		SceneSerializer::Serialize(GetID(), m_Scene);
 	}
 
-	void SceneAsset::Deserialize()
+	void Level::Deserialize()
 	{
 		if (!PathUtils::DoesPathExist(GetID())) return;
 

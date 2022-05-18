@@ -5,8 +5,6 @@
 
 namespace ZeoEngine {
 
-	ParticleEditorScene::ParticleEditorScene() = default;
-
 	void ParticleEditorScene::OnAttach()
 	{
 		RegisterSystem<ParticlePreviewUpdateSystem>(shared_from_this());

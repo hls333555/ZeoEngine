@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	class SceneAsset;
+	class Level;
 	class LevelEditorScene;
 
 	enum class SceneState
@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
-		void UpdateSceneRef(const Ref<Scene>& scene, bool bIsFromLoad);
+		void UpdateLevelAsset(const Ref<Scene>& scene, bool bIsFromLoad);
 
 		void OnScenePlay();
 		void OnSceneStop();
@@ -40,11 +40,10 @@ namespace ZeoEngine {
 		void OnDeleteEntity();
 
 	public:
-		virtual AssetHandle<IAsset> GetAsset() const override { return m_SceneAsset; }
+		virtual AssetHandle<IAsset> GetAsset() const override { return m_LevelAsset; }
 		virtual AssetTypeId GetAssetTypeId() const override;
 	private:
 		virtual void LoadAsset(const std::string& path) override;
-		virtual void SaveAsset(const std::string& path) override;
 
 		void ClearSelectedEntity();
 
@@ -53,7 +52,7 @@ namespace ZeoEngine {
 
 		Ref<LevelEditorScene> m_SceneForEdit;
 
-		AssetHandle<SceneAsset> m_SceneAsset;
+		AssetHandle<Level> m_LevelAsset;
 	};
 
 }

@@ -27,7 +27,7 @@ namespace ZeoEngine {
 		virtual ~Scene();
 
 		virtual void OnAttach() {}
-		void OnUpdate(DeltaTime dt);
+		void OnUpdate(DeltaTime dt) const;
 		virtual void OnEvent(Event& e) {}
 
 		const auto& GetSystems() const { return m_Systems; }
@@ -68,7 +68,7 @@ namespace ZeoEngine {
 		{
 			static_assert(std::is_base_of_v<SystemBase, T>, "System type must be a SystemBase type!");
 
-			Ref<T> system = CreateScope<T>(std::forward<Args>(args)...);
+			Ref<T> system = CreateRef<T>(std::forward<Args>(args)...);
 			system->OnCreate();
 			m_Systems.emplace_back(std::move(system));
 		}
@@ -81,46 +81,36 @@ namespace ZeoEngine {
 	protected:
 		entt::registry m_Registry;
 	private:
-		// TODO: Copy performance?
 		std::vector<Ref<SystemBase>> m_Systems;
 		uint32_t m_CurrentEntityIndex = 0;
 		entt::sigh<void(const Ref<Scene>&)> m_OnSceneCopiedDel;
 	};
 
-	class SceneAsset : public AssetBase<SceneAsset>
+	class Level : public AssetBase<Level>
 	{
-	private:
-		explicit SceneAsset(const std::string& path);
-
 	public:
-		static Ref<SceneAsset> Create(const std::string& path = "");
+		explicit Level(std::string ID, const Ref<Scene>& scene)
+			: AssetBase(std::move(ID)), m_Scene(scene) {}
+
+		static Ref<Level> Create(std::string ID, const Ref<Scene>& scene);
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
-		/** Update scene referenece. */
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
-		/** Clear scene referenece. */
-		void ClearScene() { m_Scene.reset(); }
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
-
-		virtual void Reload(bool bIsCreate) override;
 
 	private:
 		Ref<Scene> m_Scene;
 	};
 
-	struct SceneAssetLoader final
+	REGISTER_ASSET(Level,
+	Ref<Level> operator()(std::string ID, bool bIsReload, const Ref<Scene>& scene) const
 	{
-		using result_type = Ref<SceneAsset>;
-
-		// TODO:
-		Ref<SceneAsset> operator()(const std::string& path, bool bIsReload) const
-		{
-			return SceneAsset::Create(path);
-		}
-	};
-
-	class SceneAssetLibrary : public AssetLibrary<SceneAssetLibrary, SceneAsset, SceneAssetLoader>{};
+		return Level::Create(std::move(ID), scene);
+	},
+	static AssetHandle<Level> GetDefaultEmptyLevel(const Ref<Scene>& scene)
+	{
+		return Get().LoadAsset("ZID_DefaultEmptyLevel", scene);
+	})
 
 }

@@ -88,7 +88,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void Reload(bool bIsCreate) override;
+		void Reload(bool bIsCreate);
 
 	public:
 		bool bIsLocalSpace = false;
@@ -144,7 +144,7 @@ namespace ZeoEngine {
 	},
 	static AssetHandle<ParticleTemplate> GetDefaultParticleTemplate()
 	{
-		return Get().LoadAsset("");
+		return Get().LoadAsset("ZID_DefaultParticleTemplate");
 	})
 
 	class ParticleSystemInstance

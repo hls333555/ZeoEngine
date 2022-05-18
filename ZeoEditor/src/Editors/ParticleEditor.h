@@ -21,7 +21,6 @@ namespace ZeoEngine {
 		virtual AssetTypeId GetAssetTypeId() const override;
 	private:
 		virtual void LoadAsset(const std::string& path) override;
-		virtual void SaveAsset(const std::string& path) override;
 
 		void ReloadParticleTemplateData();
 

@@ -51,12 +51,6 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticleEditor::SaveAsset(const std::string& path)
-	{
-		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.ParticleTemplateAsset->Serialize(path);
-	}
-
 	void ParticleEditor::ReloadParticleTemplateData()
 	{
 		auto previewParticleEntity = GetContextEntity();

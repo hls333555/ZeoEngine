@@ -15,15 +15,15 @@ namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
-		RegisterAssetFactory(SceneAsset::TypeId(), CreateRef<SceneAssetFactory>());
+		RegisterAssetFactory(Level::TypeId(), CreateRef<SceneAssetFactory>());
 		RegisterAssetFactory(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2D::TypeId(), CreateRef<Texture2DAssetFactory>());
 		RegisterAssetFactory(Mesh::TypeId(), CreateRef<MeshAssetFactory>());
 		RegisterAssetFactory(Material::TypeId(), CreateRef<MaterialAssetFactory>());
 		RegisterAssetFactory(Shader::TypeId(), CreateRef<ShaderAssetFactory>());
 
-		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
-		RegisterAssetActions(ParticleTemplate::TypeId(), CreateRef<ParticleAssetActions>());
+		RegisterAssetActions(Level::TypeId(), CreateRef<LevelAssetActions>());
+		RegisterAssetActions(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetActions>());
 		RegisterAssetActions(Texture2D::TypeId(), CreateRef<Texture2DAssetActions>());
 		RegisterAssetActions(Mesh::TypeId(), CreateRef<MeshAssetActions>());
 		RegisterAssetActions(Material::TypeId(), CreateRef<MaterialAssetActions>());

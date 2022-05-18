@@ -54,12 +54,6 @@ namespace ZeoEngine {
 		});
 	}
 
-	void MaterialEditor::SaveAsset(const std::string& path)
-	{
-		auto& materialPreviewComp = GetContextEntity().GetComponent<MaterialPreviewComponent>();
-		materialPreviewComp.MaterialAsset->Serialize(path);
-	}
-
 	void MaterialEditor::CreatePreviewMaterial(const Ref<Scene>& scene, bool bIsFromLoad)
 	{
 		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
