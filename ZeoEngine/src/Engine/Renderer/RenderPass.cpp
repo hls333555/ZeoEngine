@@ -174,7 +174,7 @@ namespace ZeoEngine {
 	{
 		CreateDepthBuffer();
 
-		AddBindable(Shader::Create("assets/editor/shaders/ShadowMap.glsl"));
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/ShadowMap.glsl").to_ref());
 		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
@@ -205,7 +205,7 @@ namespace ZeoEngine {
 		RegisterBindableInput<Bindable>("ShadowMap");
 		// NOTE: Bind shader after all its required bindings being bound properly!
 		// Or OpenGL warnings will keep poping up
-		AddBindable(Shader::Create("assets/editor/shaders/ScreenSpaceShadow.glsl"));
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/ScreenSpaceShadow.glsl").to_ref());
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
@@ -231,7 +231,7 @@ namespace ZeoEngine {
 		CreateHorizontalBlurBuffer();
 
 		RegisterBindableInput<Bindable>("ShadowMap");
-		AddBindable(Shader::Create("assets/editor/shaders/HorizontalBlur.glsl"));
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/HorizontalBlur.glsl").to_ref());
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
@@ -255,7 +255,7 @@ namespace ZeoEngine {
 		CreateVerticalBlurBuffer();
 
 		RegisterBindableInput<Bindable>("ShadowMap");
-		AddBindable(Shader::Create("assets/editor/shaders/VerticalBlur.glsl"));
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/VerticalBlur.glsl").to_ref());
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
@@ -300,9 +300,8 @@ namespace ZeoEngine {
 		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), static_cast<uint32_t>(UniformBufferBinding::Grid));
 		gridUniformBuffer->SetData(&gridBuffer);
 
-
 		AddBindable(gridUniformBuffer);
-		AddBindable(Shader::Create("assets/editor/shaders/Grid.glsl"));
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Grid.glsl").to_ref());
 		AddBindable(Depth::Resolve(Depth::State::ReadOnly));
 		AddBindable(TwoSided::Resolve(TwoSided::State::Disable));
 

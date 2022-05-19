@@ -34,9 +34,9 @@ struct CameraOutput
 	mat4 View;
 };
 
-layout (location = 0) out VertexOutput v_VertexOutput;
-layout (location = 3) out CameraOutput v_CameraOutput;
-layout (location = 10) out flat int v_EntityID;
+layout (location = 0) out flat int v_EntityID;
+layout (location = 1) out VertexOutput v_VertexOutput;
+layout (location = 4) out CameraOutput v_CameraOutput;
 
 void main()
 {
@@ -138,9 +138,9 @@ struct CameraInput
 	mat4 View;
 };
 
-layout (location = 0) in VertexInput v_VertexInput;
-layout (location = 3) in CameraInput v_CameraInput;
-layout (location = 10) in flat int v_EntityID;
+layout (location = 0) in flat int v_EntityID;
+layout (location = 1) in VertexInput v_VertexInput;
+layout (location = 4) in CameraInput v_CameraInput;
 
 layout (binding = 3) uniform sampler2D u_ScreenSpaceShadowMap;
 
