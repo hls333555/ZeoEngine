@@ -11,19 +11,9 @@ namespace ZeoEngine {
 	{
 	}
 
-	Ref<FrameBuffer> MaterialEditorSceneRenderer::CreateFrameBuffer()
+	Scope<RenderGraph> MaterialEditorSceneRenderer::CreateRenderGraph()
 	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = {
-			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
-		};
-		return FrameBuffer::Create(fbSpec);
-	}
-
-	Scope<RenderGraph> MaterialEditorSceneRenderer::CreateRenderGraph(const Ref<FrameBuffer>& fbo)
-	{
-		return CreateScope<ForwardRenderGraph>(fbo);
+		return CreateScope<EditorPreviewRenderGraph>();
 	}
 
 	Scope<RenderSystemBase> MaterialEditorSceneRenderer::CreateRenderSystem()

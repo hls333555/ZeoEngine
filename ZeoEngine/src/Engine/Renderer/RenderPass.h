@@ -151,10 +151,13 @@ namespace ZeoEngine {
 	class OpaqueRenderPass : public RenderQueuePass
 	{
 	public:
-		explicit OpaqueRenderPass(std::string name, bool bAutoActive = true);
+		explicit OpaqueRenderPass(std::string name, bool bShouldClearIDBuffer, bool bAutoActive = true);
 
 	private:
 		virtual void ClearFrameBufferAttachment() const override;
+
+	private:
+		bool m_bShouldClearIDBuffer;
 	};
 
 	class GridRenderPass : public BindingPass

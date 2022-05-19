@@ -25,9 +25,8 @@ namespace ZeoEngine {
 		// Init debug draw render interface
 		DDRenderInterface::Init(m_Ddri);
 
-		m_FBO = CreateFrameBuffer();
-		ZE_CORE_ASSERT(m_FBO);
-		m_RenderGraph = CreateRenderGraph(m_FBO);
+		m_RenderGraph = CreateRenderGraph();
+		m_RenderGraph->Init();
 		m_RenderSystem = CreateRenderSystem();
 
 		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<uint32_t>(UniformBufferBinding::Global));
@@ -42,14 +41,15 @@ namespace ZeoEngine {
 		{
 			Prepare();
 			OnRenderScene();
-			m_PostSceneRenderDel(m_FBO);
+			m_PostSceneRenderDel(GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
 	}
 
 	void SceneRenderer::BeginScene(const EditorCamera& camera)
 	{
-		m_GlobalBuffer.ScreenSize = { m_FBO->GetSpec().Width, m_FBO->GetSpec().Height };
+		const auto& fbo = GetFrameBuffer();
+		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
 		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);
 
 		m_CameraBuffer.View = camera.GetViewMatrix();
@@ -63,7 +63,8 @@ namespace ZeoEngine {
 
 	void SceneRenderer::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		m_GlobalBuffer.ScreenSize = { m_FBO->GetSpec().Width, m_FBO->GetSpec().Height };
+		const auto& fbo = GetFrameBuffer();
+		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
 		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);
 
 		m_CameraBuffer.View = glm::inverse(transform);

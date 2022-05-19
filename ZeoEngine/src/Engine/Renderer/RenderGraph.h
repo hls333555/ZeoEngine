@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/Core.h"
+
 namespace ZeoEngine {
 
 	class RenderPass;
@@ -11,9 +13,12 @@ namespace ZeoEngine {
 	class RenderGraph
 	{
 	public:
-		explicit RenderGraph(const Ref<FrameBuffer>& fbo);
-		~RenderGraph();
+		RenderGraph();
+		virtual ~RenderGraph();
 
+		const Ref<FrameBuffer>& GetBackFrameBuffer() const { return m_BackFBO; }
+
+		void Init();
 		void Start() const;
 		void Execute() const;
 		void Stop() const;
@@ -22,6 +27,7 @@ namespace ZeoEngine {
 		RenderQueuePass* GetRenderQueuePass(const std::string& passName) const;
 
 	protected:
+		constexpr const char* GetBackFrameBufferName() const { return "BackFrameBuffer"; }
 		void AddGlobalInput(Scope<RenderPassInput> input);
 		void AddGlobalOutput(Scope<RenderPassOutput> output);
 		void AddRenderPass(Scope<RenderPass> pass);
@@ -29,6 +35,9 @@ namespace ZeoEngine {
 		void Finalize();
 
 	private:
+		virtual Ref<FrameBuffer> CreateBackFrameBuffer() = 0;
+		virtual void InitRenderPasses() = 0;
+
 		/** Link pass inputs to outputs from passes (and global outputs). */
 		void LinkInputs(const Scope<RenderPass>& pass);
 		void LinkGlobalInputs();
@@ -44,8 +53,16 @@ namespace ZeoEngine {
 
 	class ForwardRenderGraph : public RenderGraph
 	{
-	public:
-		explicit ForwardRenderGraph(const Ref<FrameBuffer>& fbo, bool bDrawGrid = false);
+	private:
+		virtual Ref<FrameBuffer> CreateBackFrameBuffer() override;
+		virtual void InitRenderPasses() override;
+	};
+
+	class EditorPreviewRenderGraph : public RenderGraph
+	{
+	private:
+		virtual Ref<FrameBuffer> CreateBackFrameBuffer() override;
+		virtual void InitRenderPasses() override;
 	};
 
 }

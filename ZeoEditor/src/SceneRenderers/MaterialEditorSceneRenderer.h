@@ -13,8 +13,7 @@ namespace ZeoEngine {
 		explicit MaterialEditorSceneRenderer(const Ref<MaterialEditor>& materialEditor);
 
 	private:
-		virtual Ref<FrameBuffer> CreateFrameBuffer() override;
-		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) override;
+		virtual Scope<RenderGraph> CreateRenderGraph() override;
 		virtual Scope<RenderSystemBase> CreateRenderSystem() override;
 
 		virtual void OnRenderScene() override;

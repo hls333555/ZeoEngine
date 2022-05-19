@@ -272,8 +272,9 @@ namespace ZeoEngine {
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
-	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bAutoActive)
+	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bShouldClearIDBuffer, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
+		, m_bShouldClearIDBuffer(bShouldClearIDBuffer)
 	{
 		RegisterBindableInput<Bindable>("ShadowMap");
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
@@ -286,6 +287,8 @@ namespace ZeoEngine {
 
 	void OpaqueRenderPass::ClearFrameBufferAttachment() const
 	{
+		if (!m_bShouldClearIDBuffer) return;
+
 		// Clear entity ID buffer to -1
 		m_FBO->ClearColorAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
 	}

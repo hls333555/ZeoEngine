@@ -9,14 +9,19 @@
 
 namespace ZeoEngine {
 
-	RenderGraph::RenderGraph(const Ref<FrameBuffer>& fbo)
-		: m_BackFBO(fbo)
+	RenderGraph::RenderGraph()
 	{
-		AddGlobalInput(RenderPassBufferInput<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
-		AddGlobalOutput(RenderPassBufferOutput<FrameBuffer>::Create("BackFrameBuffer", m_BackFBO));
+		AddGlobalInput(RenderPassBufferInput<FrameBuffer>::Create(GetBackFrameBufferName(), m_BackFBO));
+		AddGlobalOutput(RenderPassBufferOutput<FrameBuffer>::Create(GetBackFrameBufferName(), m_BackFBO));
 	}
 
 	RenderGraph::~RenderGraph() = default;
+
+	void RenderGraph::Init()
+	{
+		m_BackFBO = CreateBackFrameBuffer();
+		InitRenderPasses();
+	}
 
 	void RenderGraph::Start() const
 	{
@@ -199,8 +204,18 @@ namespace ZeoEngine {
 		}
 	}
 
-	ForwardRenderGraph::ForwardRenderGraph(const Ref<FrameBuffer>& fbo, bool bDrawGrid)
-		: RenderGraph(fbo)
+	Ref<FrameBuffer> ForwardRenderGraph::CreateBackFrameBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::RGBA16F, { SamplerType::BilinearClamp } }, // Entity ID buffer
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
+		};
+		return FrameBuffer::Create(fbSpec);
+	}
+
+	void ForwardRenderGraph::InitRenderPasses()
 	{
 		{
 			auto pass = CreateScope<ShadowMappingPass>("ShadowMapping");
@@ -222,18 +237,49 @@ namespace ZeoEngine {
 		//	AddRenderPass(std::move(pass));
 		//}
 		{
-			auto pass = CreateScope<OpaqueRenderPass>("Opaque");
+			auto pass = CreateScope<OpaqueRenderPass>("Opaque", true);
 			pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
 			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		if (bDrawGrid)
 		{
 			auto pass = CreateScope<GridRenderPass>("Grid");
 			pass->SetInputLinkage("FrameBuffer", "Opaque.FrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		SetGlobalInputLinkage("BackFrameBuffer", bDrawGrid ? "Grid.FrameBuffer" : "Opaque.FrameBuffer");
+		SetGlobalInputLinkage(GetBackFrameBufferName(), "Grid.FrameBuffer");
+		Finalize();
+	}
+
+	Ref<FrameBuffer> EditorPreviewRenderGraph::CreateBackFrameBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
+			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
+		};
+		return FrameBuffer::Create(fbSpec);
+	}
+
+	// TODO:
+	void EditorPreviewRenderGraph::InitRenderPasses()
+	{
+		{
+			auto pass = CreateScope<ShadowMappingPass>("ShadowMapping");
+			AddRenderPass(std::move(pass));
+		}
+		{
+			auto pass = CreateScope<ScreenSpaceShadowPass>("ScreenSpaceShadow");
+			pass->SetInputLinkage("ShadowMap", "ShadowMapping.ShadowMap");
+			AddRenderPass(std::move(pass));
+		}
+		{
+			auto pass = CreateScope<OpaqueRenderPass>("Opaque", false);
+			pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
+			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
+			AddRenderPass(std::move(pass));
+		}
+		SetGlobalInputLinkage(GetBackFrameBufferName(), "Opaque.FrameBuffer");
 		Finalize();
 	}
 

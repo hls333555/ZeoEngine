@@ -7,6 +7,7 @@
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/BatchRenderer.h"
 #include "Engine/Renderer/SceneSettings.h"
+#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -43,15 +44,14 @@ namespace ZeoEngine {
 		void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 		void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
 
-		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_FBO; }
+		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_RenderGraph->GetBackFrameBuffer(); }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }
 		const Scope<RenderSystemBase>& GetRenderSystem() const { return m_RenderSystem; }
 
 		glm::mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
 
 	private:
-		virtual Ref<FrameBuffer> CreateFrameBuffer() = 0;
-		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) = 0;
+		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
 		virtual Scope<RenderSystemBase> CreateRenderSystem() = 0;
 
 		void Prepare();
@@ -73,7 +73,6 @@ namespace ZeoEngine {
 	private:
 		EditorCamera* m_EditorCamera = nullptr;
 
-		Ref<FrameBuffer> m_FBO;
 		Scope<RenderGraph> m_RenderGraph;
 		Scope<RenderSystemBase> m_RenderSystem;
 
