@@ -77,6 +77,8 @@ namespace ZeoEngine {
 		void ExecuteTasks() const;
 		virtual void Execute() const override;
 		virtual void Reset() override;
+	private:
+		virtual void ClearFrameBufferAttachment() const {}
 
 	private:
 		std::vector<RenderTask> m_Tasks;
@@ -150,6 +152,9 @@ namespace ZeoEngine {
 	{
 	public:
 		explicit OpaqueRenderPass(std::string name, bool bAutoActive = true);
+
+	private:
+		virtual void ClearFrameBufferAttachment() const override;
 	};
 
 	class GridRenderPass : public BindingPass

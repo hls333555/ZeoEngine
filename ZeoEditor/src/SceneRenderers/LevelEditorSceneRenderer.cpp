@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::RGBA16F, { SamplerType::BilinearClamp } },
+			{ TextureFormat::RGBA16F, { SamplerType::BilinearClamp } }, // Entity ID buffer
 			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
 		return FrameBuffer::Create(fbSpec);
@@ -30,14 +30,6 @@ namespace ZeoEngine {
 	Scope<RenderSystemBase> LevelEditorSceneRenderer::CreateRenderSystem()
 	{
 		return CreateScope<RenderSystem>(shared_from_this());
-	}
-
-	void LevelEditorSceneRenderer::Prepare()
-	{
-		SceneRenderer::Prepare();
-
-		// Clear entity ID buffer to -1
-		GetFrameBuffer()->ClearColorAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
 	}
 
 	void LevelEditorSceneRenderer::OnRenderScene()

@@ -149,6 +149,7 @@ namespace ZeoEngine {
 		if (!IsActive()) return;
 
 		BindAll();
+		ClearFrameBufferAttachment();
 		ExecuteTasks();
 		UnbindBindables();
 	}
@@ -281,6 +282,12 @@ namespace ZeoEngine {
 		
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
 		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+	}
+
+	void OpaqueRenderPass::ClearFrameBufferAttachment() const
+	{
+		// Clear entity ID buffer to -1
+		m_FBO->ClearColorAttachment(1, { -1.0f, 0.0f, 0.0f, 0.0f });
 	}
 
 	GridRenderPass::GridRenderPass(std::string name, bool bAutoActive)

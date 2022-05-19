@@ -54,9 +54,9 @@ namespace ZeoEngine {
 		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) = 0;
 		virtual Scope<RenderSystemBase> CreateRenderSystem() = 0;
 
+		void Prepare();
 		virtual void OnRenderScene() = 0;
 	protected:
-		virtual void Prepare();
 		/** Begin scene for editor. */
 		void BeginScene(const EditorCamera& camera);
 		/** Begin scene for runtime. */

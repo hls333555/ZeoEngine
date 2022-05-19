@@ -17,7 +17,6 @@ namespace ZeoEngine {
 		virtual Scope<RenderGraph> CreateRenderGraph(const Ref<FrameBuffer>& fbo) override;
 		virtual Scope<RenderSystemBase> CreateRenderSystem() override;
 
-		virtual void Prepare() override;
 		virtual void OnRenderScene() override;
 
 	private:
