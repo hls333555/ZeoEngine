@@ -58,7 +58,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::N && bIsCtrlPressed)
 		{
-			m_ContextEditor->NewScene();
+			m_ContextEditor->NewDefaultScene();
 			return true;
 		}
 
@@ -67,7 +67,7 @@ namespace ZeoEngine {
 
 	void MenuItem_NewAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->NewScene();
+		m_ContextEditor->NewDefaultScene();
 	}
 
 	bool MenuItem_LoadAsset::OnKeyPressedImpl(KeyPressedEvent& e)

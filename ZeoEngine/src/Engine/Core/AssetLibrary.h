@@ -57,12 +57,11 @@ namespace ZeoEngine {
 			return ret.first->second;
 		}
 
-		template<typename... Args>
-		AssetHandle<AssetClass> ReloadAsset(std::string ID, Args &&... args)
+		AssetHandle<AssetClass> ReloadAsset(std::string ID)
 		{
 			if (!HasAsset(ID)) return {};
 
-			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */, std::forward<Args>(args)...);
+			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */);
 			return ret.first->second;
 		}
 
@@ -71,13 +70,6 @@ namespace ZeoEngine {
 			if (!Utils::Validate(ID)) return;
 
 			erase(Utils::GetIDFromString(ID));
-		}
-
-		AssetHandle<AssetClass> GetAsset(std::string ID)
-		{
-			if (!Utils::Validate(ID)) return {};
-
-			return operator[](Utils::GetIDFromString(ID));
 		}
 
 		bool HasAsset(std::string ID)

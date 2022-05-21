@@ -7,7 +7,7 @@
 namespace ZeoEngine {
 	
 	class SceneRenderer;
-	class Entity;
+	class Scene;
 
 	class EngineUtils
 	{
@@ -36,8 +36,7 @@ namespace ZeoEngine {
 			return tokens;
 		}
 
-		// TODO:
-		static Ref<SceneRenderer> GetSceneRendererFromContext(Entity* entityContext);
+		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& sceneContext);
 
 	};
 

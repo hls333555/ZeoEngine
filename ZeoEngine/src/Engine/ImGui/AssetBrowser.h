@@ -1,5 +1,6 @@
 #pragma once
 #include <imgui.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"

@@ -5,13 +5,11 @@
 
 namespace ZeoEngine {
 
-	Ref<SceneRenderer> EngineUtils::GetSceneRendererFromContext(Entity* entityContext)
+	Ref<SceneRenderer> EngineUtils::GetSceneRendererFromContext(const Ref<Scene>& sceneContext)
 	{
-		if (!entityContext) return nullptr;
-
 		for (const auto& [name, editor] : EditorManager::Get().GetEditors())
 		{
-			if (editor->GetScene() == entityContext->GetScene())
+			if (editor->GetScene()->GetContext() == sceneContext->GetContext())
 			{
 				return editor->GetSceneRenderer();
 			}

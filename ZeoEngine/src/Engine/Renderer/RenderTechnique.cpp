@@ -13,19 +13,19 @@ namespace ZeoEngine {
 		m_Steps.emplace_back(std::move(step));
 	}
 
-	void RenderTechnique::Link(const RenderGraph& renderGraph)
+	void RenderTechnique::UpdateContext(const Weak<Scene>& sceneContext)
 	{
 		for (auto& step : m_Steps)
 		{
-			step.LinkRenderQueuePass(renderGraph);
+			step.SetContext(sceneContext);
 		}
 	}
 
-	void RenderTechnique::Submit(const Drawable& drawable) const
+	void RenderTechnique::Submit(const Drawable& drawable)
 	{
 		if (m_bActive)
 		{
-			for (const auto& step : m_Steps)
+			for (auto& step : m_Steps)
 			{
 				step.Submit(drawable);
 			}

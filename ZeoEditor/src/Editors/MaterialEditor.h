@@ -21,8 +21,9 @@ namespace ZeoEngine {
 		virtual AssetTypeId GetAssetTypeId() const override;
 	private:
 		virtual void LoadAsset(const std::string& path) override;
+		virtual void LoadAndApplyDefaultAsset() override;
 
-		void CreatePreviewMaterial(const Ref<Scene>& scene, bool bIsFromLoad = false);
+		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) override;
 
 	};
 

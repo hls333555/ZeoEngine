@@ -5,7 +5,7 @@ namespace ZeoEngine {
 	class Bindable;
 	class Drawable;
 	class RenderQueuePass;
-	class RenderGraph;
+	class Scene;
 
 	class RenderStep
 	{
@@ -19,13 +19,17 @@ namespace ZeoEngine {
 		const std::string& GetRenderQueuePassName() const { return m_RenderQueuePassName; }
 
 		void AddBindable(const Ref<Bindable>& bindable);
-		void LinkRenderQueuePass(const RenderGraph& renderGraph);
+		void SetContext(const Weak<Scene>& sceneContext);
 		void Bind() const;
 		void Unbind() const;
-		void Submit(const Drawable& drawable) const;
+		void Submit(const Drawable& drawable);
+
+	private:
+		void LinkRenderQueuePass();
 
 	private:
 		std::string m_RenderQueuePassName;
+		Weak<Scene> m_SceneContext;
 		RenderQueuePass* m_RenderQueuePass = nullptr;
 		std::vector<Ref<Bindable>> m_Bindables;
 	};

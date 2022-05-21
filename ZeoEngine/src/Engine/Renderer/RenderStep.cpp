@@ -2,9 +2,11 @@
 #include "Engine/Renderer/RenderStep.h"
 
 #include "Engine/Renderer/Bindable.h"
+#include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Renderer/RenderGraph.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -18,11 +20,9 @@ namespace ZeoEngine {
 		m_Bindables.emplace_back(bindable);
 	}
 
-	void RenderStep::LinkRenderQueuePass(const RenderGraph& renderGraph)
+	void RenderStep::SetContext(const Weak<Scene>& sceneContext)
 	{
-		ZE_CORE_ASSERT(!m_RenderQueuePass);
-
-		m_RenderQueuePass = renderGraph.GetRenderQueuePass(m_RenderQueuePassName);
+		m_SceneContext = sceneContext;
 	}
 
 	void RenderStep::Bind() const
@@ -41,8 +41,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderStep::Submit(const Drawable& drawable) const
+	void RenderStep::LinkRenderQueuePass()
 	{
+		const auto& sceneRenderer = EngineUtils::GetSceneRendererFromContext(m_SceneContext.lock());
+		ZE_CORE_ASSERT(sceneRenderer);
+
+		m_RenderQueuePass = sceneRenderer->GetRenderGraph().GetRenderQueuePass(m_RenderQueuePassName);
+	}
+
+	void RenderStep::Submit(const Drawable& drawable)
+	{
+		if (!m_RenderQueuePass)
+		{
+			LinkRenderQueuePass();
+			ZE_CORE_ASSERT(m_RenderQueuePass);
+		}
 		m_RenderQueuePass->AddTask(RenderTask(&drawable, this));
 	}
 

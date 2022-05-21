@@ -19,7 +19,7 @@ namespace ZeoEngine {
 	class Material;
 	class UniformBuffer;
 	struct MeshRendererComponent;
-	class RenderGraph;
+	class Scene;
 
 	struct MeshVertex
 	{
@@ -40,15 +40,15 @@ namespace ZeoEngine {
 	struct MeshEntryInstance : public Drawable
 	{
 		const MeshEntry* EntryPtr;
-		const RenderGraph* RenderGraphPtr;
+		const Weak<Scene> SceneContext;
 
-		MeshEntryInstance(const MeshEntry& entry, AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize = false);
+		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
 
 		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
 
-		void BindAndSubmitTechniques(AssetHandle<Material>& material);
+		void BindAndSubmitTechniques(const AssetHandle<Material>& material);
 		void SubmitTechniques(const AssetHandle<Material>& material);
 	};
 
@@ -114,10 +114,11 @@ namespace ZeoEngine {
 	class MeshInstance
 	{
 	public:
-		MeshInstance(const AssetHandle<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize);
+		MeshInstance(const Ref<Scene>& sceneContext, const AssetHandle<Mesh>& mesh, bool bIsDeserialize);
 		MeshInstance(const MeshInstance& other);
 
-		static void Create(MeshRendererComponent& meshComp, const RenderGraph& renderGraph, const Ref<MeshInstance>& meshInstanceToCopy = nullptr, bool bIsDeserialize = false);
+		static void Create(const Ref<Scene>& sceneContext, MeshRendererComponent& meshComp, bool bIsDeserialize = false);
+		static void Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy);
 
 		const AssetHandle<Mesh>& GetMesh() const { return m_MeshPtr; }
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }

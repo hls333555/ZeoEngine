@@ -5,21 +5,19 @@
 #include "Platform/OpenGL/OpenGLDebugDrawRenderInterface.h"
 
 namespace ZeoEngine {
-
-	void DDRenderInterface::Init(const Ref<DDRenderInterface>& ddri)
+	void DDRenderInterface::Init(const Ref<SceneContext>& sceneContext)
 	{
-		ddri->Init();
-		dd::initialize(static_cast<dd::RenderInterface*>(ddri.get()));
+		dd::initialize(&sceneContext->DebugDrawContext, this);
 	}
 
-	void DDRenderInterface::Flush(float timeInMs)
+	void DDRenderInterface::Flush(const Ref<SceneContext>& sceneContext, float timeInMs)
 	{
-		dd::flush(static_cast<int64_t>(timeInMs));
+		dd::flush(sceneContext->DebugDrawContext, static_cast<int64_t>(timeInMs));
 	}
 
-	void DDRenderInterface::Shutdown()
+	void DDRenderInterface::Shutdown(const Ref<SceneContext>& sceneContext)
 	{
-		dd::shutdown();
+		dd::shutdown(sceneContext->DebugDrawContext);
 	}
 
 	Ref<DDRenderInterface> DDRenderInterface::Create(const Ref<SceneRenderer>& sceneRenderer)

@@ -6,7 +6,7 @@ namespace ZeoEngine {
 
 	class VertexArray;
 	class UniformBuffer;
-	class RenderGraph;
+	class Scene;
 
 	class Drawable
 	{
@@ -20,10 +20,10 @@ namespace ZeoEngine {
 		virtual uint32_t GetBaseIndex() const { return 0; }
 		virtual uint32_t GetIndexCount() const = 0;
 
-		void AddTechnique(RenderTechnique technique, const RenderGraph& renderGraph);
+		void AddTechnique(RenderTechnique technique, const Weak<Scene>& sceneContext);
 		void ClearTechniques();
 		void Bind() const;
-		void Submit() const;
+		void Submit();
 
 	private:
 		Ref<VertexArray> m_VAO;

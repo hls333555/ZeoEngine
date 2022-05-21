@@ -88,7 +88,7 @@ namespace ZeoEngine {
 			if (m_Scene->GetSelectedEntity() == entity)
 			{
 				glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
-				DebugDrawUtils::DrawFrustum(invMatix, visualizeColor);
+				DebugDrawUtils::DrawFrustum(m_Scene, invMatix, visualizeColor);
 			}
 		});
 	}
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 					{
 						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
-						DebugDrawUtils::DrawArrow(transformComp.Translation, endPosition, visualizeColor, 0.25f);
+						DebugDrawUtils::DrawArrow(m_Scene, transformComp.Translation, endPosition, visualizeColor, 0.25f);
 					}
 					break;
 				}
@@ -128,7 +128,7 @@ namespace ZeoEngine {
 					// Draw sphere visualizer when selected
 					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
 					{
-						DebugDrawUtils::DrawSphereBounds(transformComp.Translation, visualizeColor, pointLight->GetRange());
+						DebugDrawUtils::DrawSphereBounds(m_Scene, transformComp.Translation, visualizeColor, pointLight->GetRange());
 					}
 					break;
 				}
@@ -142,7 +142,7 @@ namespace ZeoEngine {
 					{
 						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
 						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
-						DebugDrawUtils::DrawCone(transformComp.Translation, direction, visualizeColor, radius, 0.0f);
+						DebugDrawUtils::DrawCone(m_Scene, transformComp.Translation, direction, visualizeColor, radius, 0.0f);
 					}
 					break;
 				}

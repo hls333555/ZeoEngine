@@ -110,9 +110,6 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
 		virtual void PostDataDeserialize(uint32_t dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
-
-	private:
-		const RenderGraph& GetRenderGraph(Entity* contextEntity) const;
 	};
 
 	class LightComponentHelper : public IComponentHelper

@@ -4,7 +4,6 @@
 #include "EditorUIRenderers/ParticleEditorUIRenderer.h"
 #include "SceneRenderers/ParticleEditorSceneRenderer.h"
 #include "Scenes/ParticleEditorScene.h"
-#include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
@@ -13,7 +12,6 @@ namespace ZeoEngine {
 		// TODO: If no change was made, no need to reload
 		// When a new scene is created, all previous particle's changes should be discarded
 		m_PreSceneCreate.connect<&ParticleEditor::ReloadParticleTemplateData>(this);
-		m_PostSceneCreate.connect<&ParticleEditor::CreatePreviewParticle>(this);
 
 		EditorBase::OnAttach();
 	}
@@ -51,6 +49,24 @@ namespace ZeoEngine {
 		});
 	}
 
+	void ParticleEditor::LoadAndApplyDefaultAsset()
+	{
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
+		{
+			particlePreviewComp.ParticleTemplateAsset = ParticleTemplateLibrary::GetDefaultParticleTemplate();
+		});
+	}
+
+	Entity ParticleEditor::CreatePreviewEntity(const Ref<Scene>& scene)
+	{
+		Entity previewParticleEntity = scene->CreateEntity("Preview Particle");
+		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		// TODO:
+		// For loading phase, instance will be created in ParticleScene::PostLoad
+		ParticleSystemInstance::Create(particlePreviewComp);
+		return previewParticleEntity;
+	}
+
 	void ParticleEditor::ReloadParticleTemplateData()
 	{
 		auto previewParticleEntity = GetContextEntity();
@@ -60,18 +76,6 @@ namespace ZeoEngine {
 		{
 			ParticleTemplateLibrary::Get().ReloadAsset(particlePreviewComp.ParticleTemplateAsset->GetID());
 		});
-	}
-
-	void ParticleEditor::CreatePreviewParticle(const Ref<Scene>& scene, bool bIsFromLoad)
-	{
-		Entity previewParticleEntity = scene->CreateEntity("Preview Particle");
-		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
-		SetContextEntity(previewParticleEntity);
-		if (!bIsFromLoad)
-		{
-			// For loading phase, instance will be created in ParticleScene::PostLoad
-			ParticleSystemInstance::Create(particlePreviewComp);
-		}
 	}
 
 }

@@ -144,6 +144,7 @@ namespace ZeoEngine {
 	},
 	static AssetHandle<ParticleTemplate> GetDefaultParticleTemplate()
 	{
+		// TODO: Move to disk asset
 		return Get().LoadAsset("ZID_DefaultParticleTemplate");
 	})
 

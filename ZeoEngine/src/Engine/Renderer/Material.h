@@ -213,7 +213,7 @@ namespace ZeoEngine {
 	},
 	static AssetHandle<Material> GetDefaultMaterial()
 	{
-		return Get().LoadAsset("assets/editor/materials/DefaultMaterial.zasset");
+		return Get().LoadAsset("assets/editor/materials/NewMaterial.zasset");
 	})
 
 }

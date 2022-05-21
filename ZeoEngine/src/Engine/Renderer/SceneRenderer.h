@@ -14,6 +14,8 @@ namespace ZeoEngine {
 	class Camera;
 	class EditorCamera;
 	class FrameBuffer;
+	class Scene;
+	struct SceneContext;
 	class RenderGraph;
 	class RenderSystemBase;
 	class Shader;
@@ -31,8 +33,10 @@ namespace ZeoEngine {
 	public:
 		virtual ~SceneRenderer();
 
-		void OnAttach();
+		void OnAttach(const Ref<Scene>& scene);
 		void OnRender();
+
+		void UpdateSceneContext(const Ref<Scene>& scene);
 
 		void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 		void AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight);
@@ -66,17 +70,17 @@ namespace ZeoEngine {
 	private:
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction);
 		void UploadLightData();
-		void FlushDebugDraws();
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 	private:
 		EditorCamera* m_EditorCamera = nullptr;
 
+		Ref<SceneContext> m_SceneContext;
 		Scope<RenderGraph> m_RenderGraph;
 		Scope<RenderSystemBase> m_RenderSystem;
 
-		Ref<DDRenderInterface> m_Ddri; // TODO: Context? Per-SceneRenderer flush?
+		Ref<DDRenderInterface> m_Ddri;
 
 		entt::delegate<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
 

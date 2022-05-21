@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		T& AddComponent(Args&&... args)
 		{
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
-			T& comp = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			T& comp = m_Scene.lock()->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
 			AddComponentId(entt::type_hash<T>::value());
 			comp.CreateHelper(this);
@@ -28,7 +28,7 @@ namespace ZeoEngine {
 			{
 				comp.ComponentHelper->OnComponentAdded(false);
 				UpdateBounds();
-				m_Scene->m_Registry.on_destroy<T>().template connect<&Reflection::on_destroy<T>>();
+				m_Scene.lock()->m_Registry.on_destroy<T>().template connect<&Reflection::on_destroy<T>>();
 			}
 			return comp;
 		}
@@ -39,27 +39,27 @@ namespace ZeoEngine {
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			RemoveComponentId(entt::type_hash<T>::value());
 			UpdateBounds();
-			return m_Scene->m_Registry.remove<T>(m_EntityHandle);
+			return m_Scene.lock()->m_Registry.remove<T>(m_EntityHandle);
 		}
 
 		template<typename T>
 		T& GetComponent() const
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			return m_Scene->m_Registry.get<T>(m_EntityHandle);
+			return m_Scene.lock()->m_Registry.get<T>(m_EntityHandle);
 		}
 
 		template<typename T>
 		bool HasComponent() const
 		{
-			return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
+			return m_Scene.lock()->m_Registry.all_of<T>(m_EntityHandle);
 		}
 
 		template<typename T, typename... Func>
 		void PatchComponent(Func&&... func)
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			m_Scene->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
+			m_Scene.lock()->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 
 		UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
@@ -79,9 +79,9 @@ namespace ZeoEngine {
 		const BoxSphereBounds& GetBounds() const { return GetComponent<BoundsComponent>().Bounds; }
 
 		void UpdateBounds();
-		BoxSphereBounds GetDefaultBounds();
+		BoxSphereBounds GetDefaultBounds() const;
 
-		const Ref<Scene>& GetScene() const { return m_Scene; }
+		Ref<Scene> GetScene() const { return m_Scene.lock(); }
 
 		// TODO:
 		/** Returns the entity identifier without the version. */
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 		operator entt::entity() const { return m_EntityHandle; }
 		operator uint32_t() const { return static_cast<uint32_t>(m_EntityHandle); }
 
-		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
+		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene.lock() == other.m_Scene.lock(); }
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	public:
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };
-		Ref<Scene> m_Scene;
+		Weak<Scene> m_Scene; // Weak reference which will not prevent scene from being destroyed (e.g. when end play, copied scene should be destroyed)
 
 	};
 

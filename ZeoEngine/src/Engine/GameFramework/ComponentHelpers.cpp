@@ -5,7 +5,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
 #include "Engine/Renderer/SceneRenderer.h"
-#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -105,25 +104,16 @@ namespace ZeoEngine {
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 
-	const RenderGraph& MeshRendererComponentHelper::GetRenderGraph(Entity* entityContext) const
-	{
-		return EngineUtils::GetSceneRendererFromContext(entityContext)->GetRenderGraph();
-	}
-
 	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()), nullptr, bIsDeserialize);
+		MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp, bIsDeserialize);
 	}
 
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		// When component is copied during scene copy, the active scene is not updated yet in EditorBase,
-		// therefore the render graph retrieved from the copied entity will be nullptr.
-		// So we use the original entity to retrieve that,
-		// which works because we assume the scene renderer is shared with the copied scene
-		MeshInstance::Create(meshComp, GetRenderGraph(otherComp->ComponentHelper->GetOwnerEntity()), static_cast<MeshRendererComponent*>(otherComp)->Instance);
+		MeshInstance::Copy(meshComp, dynamic_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
 	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
@@ -134,7 +124,7 @@ namespace ZeoEngine {
 			GetOwnerEntity()->UpdateBounds();
 			if (meshComp.MeshAsset)
 			{
-				MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
+				MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
 			}
 			else
 			{
@@ -154,7 +144,7 @@ namespace ZeoEngine {
 		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
 		{
 			// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
-			MeshInstance::Create(meshComp, GetRenderGraph(GetOwnerEntity()));
+			MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
 		}
 		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
 		{

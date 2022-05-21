@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <IconsFontAwesome5.h>
 
 #include "Engine/Core/EngineTypes.h"
 

@@ -30,10 +30,10 @@ namespace ZeoEngine {
 		CreatePanel<ConsolePanel>(CONSOLE);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New Scene", "CTRL+N")
-			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load Scene", "CTRL+O")
-			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save Scene", "CTRL+S")
-			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save Scene As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New level", "CTRL+N")
+			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load level", "CTRL+O")
+			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save level", "CTRL+S")
+			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save level As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")

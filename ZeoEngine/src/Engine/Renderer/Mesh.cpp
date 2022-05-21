@@ -11,8 +11,8 @@
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const MeshEntry& entry, AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, const RenderGraph& renderGraph, bool bIsDeserialize)
-		: Drawable(vao, ubo), EntryPtr(&entry), RenderGraphPtr(&renderGraph)
+	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
+		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext)
 	{
 		// This will be done after deserialization if bIsDeserialize is false
 		if (!bIsDeserialize)
@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MeshEntryInstance::BindAndSubmitTechniques(AssetHandle<Material>& material)
+	void MeshEntryInstance::BindAndSubmitTechniques(const AssetHandle<Material>& material)
 	{
 		SubmitTechniques(material);
 		// Connect callback on new material for this instance
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		ClearTechniques();
 		for (const auto& technique : material->GetRenderTechniques())
 		{
-			AddTechnique(technique, *RenderGraphPtr);
+			AddTechnique(technique, SceneContext);
 		}
 	}
 
@@ -172,7 +172,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const AssetHandle<Mesh>& mesh, const RenderGraph& renderGraph, bool bIsDeserialize)
+	MeshInstance::MeshInstance(const Ref<Scene>& sceneContext, const AssetHandle<Mesh>& mesh, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
@@ -183,7 +183,7 @@ namespace ZeoEngine {
 		m_EntryInstances.reserve(entries.size());
 		for (const auto& entry : entries)
 		{
-			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], mesh->GetVAO(), m_ModelUniformBuffer, renderGraph, bIsDeserialize);
+			m_EntryInstances.emplace_back(sceneContext, entry, m_Materials[entry.MaterialIndex], mesh->GetVAO(), m_ModelUniformBuffer, bIsDeserialize);
 		}
 	}
 
@@ -198,21 +198,22 @@ namespace ZeoEngine {
 		for (size_t i = 0; i < size; ++i)
 		{
 			const auto& entry = entries[i];
-			m_EntryInstances.emplace_back(entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer, *other.m_EntryInstances[i].RenderGraphPtr);
+			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
 		}
 	}
 
-	void MeshInstance::Create(MeshRendererComponent& meshComp, const RenderGraph& renderGraph, const Ref<MeshInstance>& meshInstanceToCopy, bool bIsDeserialize)
+	void MeshInstance::Create(const Ref<Scene>& sceneContext, MeshRendererComponent& meshComp, bool bIsDeserialize)
 	{
-		if (meshInstanceToCopy)
+		if (meshComp.MeshAsset)
 		{
-			// Copy construct mesh instance
-			meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
+			meshComp.Instance = CreateRef<MeshInstance>(sceneContext, meshComp.MeshAsset, bIsDeserialize);
 		}
-		else if (meshComp.MeshAsset)
-		{
-			meshComp.Instance = CreateRef<MeshInstance>(meshComp.MeshAsset, renderGraph, bIsDeserialize);
-		}
+	}
+
+	void MeshInstance::Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy)
+	{
+		// Copy construct mesh instance
+		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 	}
 
 	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<Material>& material)
@@ -263,7 +264,7 @@ namespace ZeoEngine {
 		m_ModelBuffer.EntityID = entityID;
 		m_ModelUniformBuffer->SetData(&m_ModelBuffer);
 
-		for (const auto& entryInstance : m_EntryInstances)
+		for (auto& entryInstance : m_EntryInstances)
 		{
 			entryInstance.Submit();
 		}

@@ -29,8 +29,6 @@ namespace ZeoEngine {
 		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
-		void UpdateLevelAsset(const Ref<Scene>& scene, bool bIsFromLoad);
-
 		void OnScenePlay();
 		void OnSceneStop();
 		void OnScenePause();
@@ -44,6 +42,7 @@ namespace ZeoEngine {
 		virtual AssetTypeId GetAssetTypeId() const override;
 	private:
 		virtual void LoadAsset(const std::string& path) override;
+		virtual void LoadAndApplyDefaultAsset() override;
 
 		void ClearSelectedEntity();
 

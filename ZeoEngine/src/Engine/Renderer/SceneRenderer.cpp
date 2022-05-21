@@ -14,20 +14,20 @@ namespace ZeoEngine {
 	
 	SceneRenderer::~SceneRenderer()
 	{
-		DDRenderInterface::Shutdown();
+		DDRenderInterface::Shutdown(m_SceneContext);
 	}
 
-	void SceneRenderer::OnAttach()
+	void SceneRenderer::OnAttach(const Ref<Scene>& scene)
 	{
 		m_Batcher.Init();
 
 		m_Ddri = DDRenderInterface::Create(shared_from_this());
-		// Init debug draw render interface
-		DDRenderInterface::Init(m_Ddri);
+		UpdateSceneContext(scene);
 
 		m_RenderGraph = CreateRenderGraph();
 		m_RenderGraph->Init();
 		m_RenderSystem = CreateRenderSystem();
+		m_RenderSystem->UpdateScene(scene);
 
 		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<uint32_t>(UniformBufferBinding::Global));
 		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), static_cast<uint32_t>(UniformBufferBinding::Camera));
@@ -44,6 +44,13 @@ namespace ZeoEngine {
 			m_PostSceneRenderDel(GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
+	}
+
+	void SceneRenderer::UpdateSceneContext(const Ref<Scene>& scene)
+	{
+		m_SceneContext = scene->GetContext();
+		// Recreate ddri context when a new scene is created
+		m_Ddri->Init(m_SceneContext);
 	}
 
 	void SceneRenderer::BeginScene(const EditorCamera& camera)
@@ -87,7 +94,7 @@ namespace ZeoEngine {
 			RenderCommand::ToggleDepthWriting(true);
 			// Quads are drawn at last
 			m_Batcher.FlushBatch();
-			FlushDebugDraws();
+			DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
 		}
 	}
 
@@ -97,11 +104,6 @@ namespace ZeoEngine {
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 
 		m_Batcher.StartBatch();
-	}
-
-	void SceneRenderer::FlushDebugDraws()
-	{
-		DDRenderInterface::Flush(EngineUtils::GetTimeInSeconds() * 1000.0f);
 	}
 
 	void SceneRenderer::OnViewportResize(uint32_t width, uint32_t height)

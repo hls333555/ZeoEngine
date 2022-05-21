@@ -1,6 +1,8 @@
 #pragma once
 
 #include <entt.hpp>
+#define DEBUG_DRAW_EXPLICIT_CONTEXT
+#include <debug_draw.hpp>
 
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/Core.h"
@@ -13,6 +15,12 @@ namespace ZeoEngine {
 
 	 class EditorCamera;
 	 class SystemBase;
+
+	/** A scene context which shares among copied scenes. */
+	 struct SceneContext
+	 {
+		 dd::ContextHandle DebugDrawContext = nullptr;
+	 };
 
 	class Scene : public std::enable_shared_from_this<Scene>
 	{
@@ -30,22 +38,19 @@ namespace ZeoEngine {
 		void OnUpdate(DeltaTime dt) const;
 		virtual void OnEvent(Event& e) {}
 
-		const auto& GetSystems() const { return m_Systems; }
+		/** Copy function which processes member copy. */
+		virtual void Copy(const Ref<Scene>& other);
 
+		const auto& GetSystems() const { return m_Systems; }
+		const auto& GetContext() const { return m_Context;}
+
+		// We cannot copy Scene through copy constructor as it is a deleted function
+		// So we construct a new scene and call our "copy" function instead
 		template<typename T, typename ... Args>
 		Ref<T> Copy(Args&& ... args)
 		{
 			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
-			newScene->m_Systems = m_Systems;
-			m_Registry.view<CoreComponent>().each([this, &newScene](auto entityId, auto& coreComp)
-			{
-				Entity entity{ entityId, shared_from_this() };
-				// Clone a new "empty" entity
-				auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
-				// Copy components to that entity
-				newEntity.CopyAllComponents(entity);
-			});
-			m_OnSceneCopiedDel.publish(newScene);
+			newScene->Copy(shared_from_this());
 			return newScene;
 		}
 
@@ -81,7 +86,10 @@ namespace ZeoEngine {
 	protected:
 		entt::registry m_Registry;
 	private:
+		/** Systems are shared among copied scenes. */
 		std::vector<Ref<SystemBase>> m_Systems;
+		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
+
 		uint32_t m_CurrentEntityIndex = 0;
 		entt::sigh<void(const Ref<Scene>&)> m_OnSceneCopiedDel;
 	};
@@ -89,12 +97,14 @@ namespace ZeoEngine {
 	class Level : public AssetBase<Level>
 	{
 	public:
-		explicit Level(std::string ID, const Ref<Scene>& scene)
-			: AssetBase(std::move(ID)), m_Scene(scene) {}
+		explicit Level(std::string ID)
+			: AssetBase(std::move(ID)) {}
 
-		static Ref<Level> Create(std::string ID, const Ref<Scene>& scene);
+		static Ref<Level> Create(std::string ID);
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
+		/** Update scene reference and deserialize scene data. */
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
@@ -104,13 +114,13 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Level,
-	Ref<Level> operator()(std::string ID, bool bIsReload, const Ref<Scene>& scene) const
+	Ref<Level> operator()(std::string ID, bool bIsReload) const
 	{
-		return Level::Create(std::move(ID), scene);
+		return Level::Create(std::move(ID));
 	},
-	static AssetHandle<Level> GetDefaultEmptyLevel(const Ref<Scene>& scene)
+	static AssetHandle<Level> GetDefaultEmptyLevel()
 	{
-		return Get().LoadAsset("ZID_DefaultEmptyLevel", scene);
+		return Get().LoadAsset("assets/editor/levels/NewLevel.zasset");
 	})
 
 }

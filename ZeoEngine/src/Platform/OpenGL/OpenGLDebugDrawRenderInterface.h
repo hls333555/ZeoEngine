@@ -12,7 +12,6 @@ namespace ZeoEngine {
         explicit OpenGLDDRenderInterface(const Ref<SceneRenderer>& sceneRenderer);
         virtual ~OpenGLDDRenderInterface();
 
-        virtual void Init() override;
         virtual void UpdateViewportSize(uint32_t width, uint32_t height) override { m_ViewportWidth = width; m_ViewportHeight = height; }
 
         virtual void beginDraw() override;
@@ -31,7 +30,7 @@ namespace ZeoEngine {
         void linkProgram(const uint32_t program);
 
     private:
-        Ref<SceneRenderer> m_SceneRenderer;
+        Weak<SceneRenderer> m_SceneRenderer;
 
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

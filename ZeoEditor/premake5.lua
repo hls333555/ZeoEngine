@@ -22,6 +22,7 @@ project "ZeoEditor"
 	{
 		"src",
 		"%{wks.location}/ZeoEngine/src",
+		"%{IncludeDir.debug_draw}",
 		"%{IncludeDir.doctest}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",

@@ -24,6 +24,21 @@ namespace ZeoEngine {
 		}
 	}
 
+	void Scene::Copy(const Ref<Scene>& other)
+	{
+		m_Systems = other->m_Systems;
+		m_Context = other->m_Context;
+		other->m_Registry.view<CoreComponent>().each([this, &other](auto entityId, auto& coreComp)
+		{
+			Entity entity{ entityId, other };
+			// Clone a new "empty" entity
+			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+			// Copy components to that entity
+			newEntity.CopyAllComponents(entity);
+		});
+		other->m_OnSceneCopiedDel.publish(shared_from_this());
+	}
+
 	Entity Scene::CreateEntity(const std::string& name, const glm::vec3& translation)
 	{
 		return CreateEntityWithUUID(UUID(), name, translation);
@@ -80,12 +95,9 @@ namespace ZeoEngine {
 		});
 	}
 
-	Ref<Level> Level::Create(std::string ID, const Ref<Scene>& scene)
+	Ref<Level> Level::Create(std::string ID)
 	{
-		auto level = CreateRef<Level>(std::move(ID), scene);
-		level->Deserialize();
-		scene->PostLoad();
-		return level;
+		return CreateRef<Level>(std::move(ID));
 	}
 
 	void Level::Serialize(const std::string& path)

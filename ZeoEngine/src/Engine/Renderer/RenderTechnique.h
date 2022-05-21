@@ -5,7 +5,7 @@
 namespace ZeoEngine {
 
 	class Drawable;
-	class RenderGraph;
+	class Scene;
 
 	class RenderTechnique
 	{
@@ -16,8 +16,8 @@ namespace ZeoEngine {
 		bool IsActive() const { return m_bActive; }
 
 		void AddStep(RenderStep step);
-		void Link(const RenderGraph& renderGraph);
-		void Submit(const Drawable& drawable) const;
+		void UpdateContext(const Weak<Scene>& sceneContext);
+		void Submit(const Drawable& drawable);
 
 	private:
 		std::string m_Name;

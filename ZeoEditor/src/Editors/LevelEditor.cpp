@@ -11,7 +11,6 @@ namespace ZeoEngine {
 	{
 		// Bind delegates before scene creation
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
-		m_PostSceneCreate.connect<&LevelEditor::UpdateLevelAsset>(this);
 
 		EditorBase::OnAttach();
 	}
@@ -32,26 +31,17 @@ namespace ZeoEngine {
 		return CreateRef<LevelEditorSceneRenderer>(SharedFromBase<LevelEditor>());
 	}
 
-	void LevelEditor::UpdateLevelAsset(const Ref<Scene>& scene, bool bIsFromLoad)
-	{
-		if (!bIsFromLoad)
-		{
-			m_LevelAsset = LevelLibrary::GetDefaultEmptyLevel(scene);
-		}
-	}
-
 	void LevelEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
-		SetActiveScene(sceneForPlay);
+		const auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
 		SetContextEntity({});
 		for (const auto& system : GetScene()->GetSystems())
 		{
 			system->UpdateScene(sceneForPlay);
 			system->BindUpdateFuncToRuntime();
 		}
-		GetSceneRenderer()->GetRenderSystem()->UpdateScene(sceneForPlay);
+		SetActiveScene(sceneForPlay, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStart();
 	}
 
@@ -63,9 +53,8 @@ namespace ZeoEngine {
 			system->UpdateScene(m_SceneForEdit);
 			system->BindUpdateFuncToEditor();
 		}
-		GetSceneRenderer()->GetRenderSystem()->UpdateScene(m_SceneForEdit);
+		SetActiveScene(m_SceneForEdit, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
-		SetActiveScene(m_SceneForEdit);
 	}
 
 	void LevelEditor::OnScenePause()
@@ -114,7 +103,23 @@ namespace ZeoEngine {
 		{
 			OnSceneStop();
 		}
-		m_LevelAsset = LevelLibrary::Get().LoadAsset(path, GetScene());
+		m_LevelAsset = LevelLibrary::Get().LoadAsset(path);
+		if (const auto& scene = m_LevelAsset->GetScene())
+		{
+			m_SceneForEdit = std::dynamic_pointer_cast<LevelEditorScene>(scene);
+			SetActiveScene(scene, false);
+		}
+		else // If it is the first load
+		{
+			NewScene(false);
+			m_LevelAsset->UpdateScene(GetScene());
+		}
+	}
+
+	void LevelEditor::LoadAndApplyDefaultAsset()
+	{
+		m_LevelAsset = LevelLibrary::GetDefaultEmptyLevel();
+		m_LevelAsset->UpdateScene(GetScene());
 	}
 
 	void LevelEditor::ClearSelectedEntity()

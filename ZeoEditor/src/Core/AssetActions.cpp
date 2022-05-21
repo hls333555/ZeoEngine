@@ -85,14 +85,14 @@ namespace ZeoEngine {
 
 	void LevelAssetActions::ReloadAsset(const std::string& path) const
 	{
-		const auto level = LevelLibrary::Get().GetAsset(path);
-		LevelLibrary::Get().ReloadAsset(path, level->GetScene());
+		// TODO:
+		LevelLibrary::Get().ReloadAsset(path);
 	}
 
 	// TODO: Only to save those which are marked modified
 	void LevelAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (const auto level = LevelLibrary::Get().GetAsset(path))
+		if (const auto level = LevelLibrary::Get().LoadAsset(path))
 		{
 			level->Serialize(path);
 		}

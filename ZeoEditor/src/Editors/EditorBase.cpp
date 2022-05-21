@@ -23,17 +23,17 @@ namespace ZeoEngine {
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
 
+		NewDefaultScene();
+		LoadAndApplyDefaultAsset();
 		m_SceneRenderer = CreateSceneRenderer();
-		m_SceneRenderer->OnAttach();
-		m_PostSceneCreate.connect<&ISystem::UpdateScene>(m_SceneRenderer->GetRenderSystem());
+		m_SceneRenderer->OnAttach(m_ActiveScene);
+
+		m_OnActiveSceneChanged.connect<&EditorBase::OnActiveSceneChanged>(this);
 		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
 		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
-
-		// Create scene at last so that delegates bound beforehand will be called here
-		NewScene();
 	}
 
-	void EditorBase::OnUpdate(DeltaTime dt)
+	void EditorBase::OnUpdate(DeltaTime dt) const
 	{
 		if (!m_bShow) return;
 
@@ -42,14 +42,14 @@ namespace ZeoEngine {
 		m_SceneRenderer->OnRender();
 	}
 
-	void EditorBase::OnImGuiRender()
+	void EditorBase::OnImGuiRender() const
 	{
 		if (!m_bShow) return;
 
 		m_EditorUIRenderer->OnImGuiRender();
 	}
 
-	void EditorBase::OnEvent(Event& e)
+	void EditorBase::OnEvent(Event& e) const
 	{
 		if (!m_bShow) return;
 
@@ -61,7 +61,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::FocusContextEntity()
+	void EditorBase::FocusContextEntity() const
 	{
 		m_EditorCamera->StartFocusEntity(m_ContextEntity);
 	}
@@ -71,17 +71,27 @@ namespace ZeoEngine {
 		return m_SceneRenderer->GetFrameBuffer();
 	}
 
-	void EditorBase::Open()
+	void EditorBase::SetActiveScene(const Ref<Scene>& newScene, bool bIsCreateDefault)
 	{
-		m_bShow = true;
+		if (newScene == m_ActiveScene) return;
+
+		m_ActiveScene = newScene;
+		m_OnActiveSceneChangedDel.publish(m_ActiveScene, bIsCreateDefault);
 	}
 
-	void EditorBase::NewScene(bool bIsFromLoad)
+	void EditorBase::NewDefaultScene()
 	{
-		m_PreSceneCreateDel.publish(bIsFromLoad);
-		m_ActiveScene = CreateScene();
-		m_ActiveScene->OnAttach();
-		m_PostSceneCreateDel.publish(m_ActiveScene, bIsFromLoad);
+		NewScene(true);
+	}
+
+	void EditorBase::NewScene(bool bIsCreateDefault)
+	{
+		m_PreSceneCreateDel.publish(bIsCreateDefault);
+		const auto scene = CreateScene();
+		scene->OnAttach();
+		m_ContextEntity = CreatePreviewEntity(scene);
+		m_PostSceneCreateDel.publish(scene, bIsCreateDefault);
+		SetActiveScene(scene, bIsCreateDefault);
 	}
 
 	void EditorBase::LoadScene()
@@ -101,7 +111,6 @@ namespace ZeoEngine {
 	{
 		BenchmarkTimer timer;
 
-		NewScene(true);
 		LoadAsset(path);
 		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
@@ -144,7 +153,22 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::PostSceneRender(const Ref<FrameBuffer>& fbo)
+	void EditorBase::Open()
+	{
+		m_bShow = true;
+	}
+
+	void EditorBase::OnActiveSceneChanged(const Ref<Scene>& scene, bool bIsCreateDefault)
+	{
+		m_SceneRenderer->GetRenderSystem()->UpdateScene(m_ActiveScene);
+		m_SceneRenderer->UpdateSceneContext(m_ActiveScene);
+		if (bIsCreateDefault)
+		{
+			LoadAndApplyDefaultAsset();
+		}
+	}
+
+	void EditorBase::PostSceneRender(const Ref<FrameBuffer>& fbo) const
 	{
 		m_PostSceneRenderDel.publish(fbo);
 	}

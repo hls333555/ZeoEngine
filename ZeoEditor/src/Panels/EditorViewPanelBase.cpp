@@ -104,7 +104,6 @@ namespace ZeoEngine {
 	std::string EditorViewPanelBase::GetPanelTitle() const
 	{
 		std::string assetName = PathUtils::GetNameFromPath(GetContextEditor()->GetAsset()->GetID());
-		// TODO:
 		if (assetName.empty())
 		{
 			assetName = "Untitled";
