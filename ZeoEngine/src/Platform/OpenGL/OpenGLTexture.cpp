@@ -177,7 +177,7 @@ namespace ZeoEngine {
 		glGenTextures(arraySize, m_TextureViews.data());
 		for (uint32_t i = 0; i < arraySize; ++i)
 		{
-			glTextureView(m_TextureViews[i], GL_TEXTURE_2D, m_RendererID, m_DataFormat, 0, 1, i, 1);
+			glTextureView(m_TextureViews[i], GL_TEXTURE_2D, m_RendererID, m_InternalFormat, 0, 1, i, 1);
 		}
 	}
 

@@ -17,6 +17,7 @@ namespace ZeoEngine {
 		const char* message,
 		const void* userParam)
 	{
+		// NOTE: Add a breakpoint below to see where the error was generated
 		switch (severity)
 		{
 			case GL_DEBUG_SEVERITY_HIGH:         ZE_CORE_CRITICAL(message); return;
