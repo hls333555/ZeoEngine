@@ -85,8 +85,7 @@ namespace ZeoEngine {
 
 	void LevelAssetActions::ReloadAsset(const std::string& path) const
 	{
-		// TODO:
-		LevelLibrary::Get().ReloadAsset(path);
+		OpenAsset(path);
 	}
 
 	// TODO: Only to save those which are marked modified

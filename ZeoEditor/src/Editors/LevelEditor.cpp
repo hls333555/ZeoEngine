@@ -104,16 +104,8 @@ namespace ZeoEngine {
 			OnSceneStop();
 		}
 		m_LevelAsset = LevelLibrary::Get().LoadAsset(path);
-		if (const auto& scene = m_LevelAsset->GetScene())
-		{
-			m_SceneForEdit = std::dynamic_pointer_cast<LevelEditorScene>(scene);
-			SetActiveScene(scene, false);
-		}
-		else // If it is the first load
-		{
-			NewScene(false);
-			m_LevelAsset->UpdateScene(GetScene());
-		}
+		NewScene(false);
+		m_LevelAsset->UpdateScene(GetScene());
 	}
 
 	void LevelEditor::LoadAndApplyDefaultAsset()
