@@ -53,6 +53,7 @@ namespace ZeoEngine {
 			system->UpdateScene(m_SceneForEdit);
 			system->BindUpdateFuncToEditor();
 		}
+		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
 	}

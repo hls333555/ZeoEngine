@@ -13,7 +13,11 @@ namespace ZeoEngine {
 
 	bool Entity::IsValid() const
 	{
-		return m_Scene.lock()->m_Registry.valid(*this);
+		if (const auto scene = m_Scene.lock())
+		{
+			return scene->m_Registry.valid(*this);
+		}
+		return false;
 	}
 
 	void Entity::UpdateBounds()
