@@ -17,13 +17,15 @@ namespace ZeoEngine {
 	public:
 		explicit ISystem(const Ref<Scene>& scene);
 
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; }
+		Ref<Scene> GetScene() const { return m_Scene.lock(); }
+		const Scene* GetSceneRaw() const { return m_SceneRaw; }
+		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; m_SceneRaw = scene.get(); }
 
 	protected:
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
 		{
-			m_Scene->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
+			m_SceneRaw->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
 		}
 
 		struct DefaultCompare
@@ -38,7 +40,7 @@ namespace ZeoEngine {
 		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
 		void ForEachComponentGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
 		{
-			auto group = m_Scene->m_Registry.group<Owned..., Get...>(exclude);
+			auto group = m_SceneRaw->m_Registry.group<Owned..., Get...>(exclude);
 			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
 			{
 				group.sort<Owned..., Get...>(std::move(compareFunc));
@@ -46,8 +48,9 @@ namespace ZeoEngine {
 			group.each(std::forward<Func>(func));
 		}
 
-	protected:
-		Ref<Scene> m_Scene;
+	private:
+		Weak<Scene> m_Scene;
+		Scene* m_SceneRaw = nullptr; // We cannot only store std::weak_ptr here as its lock() will return nullptr inside Scene's destructor
 	};
 
 	class SystemBase : public ISystem
@@ -56,7 +59,7 @@ namespace ZeoEngine {
 		explicit SystemBase(const Ref<Scene>& scene);
 
 		virtual void OnCreate() {}
-		void OnUpdate(DeltaTime dt);
+		void OnUpdate(DeltaTime dt) const;
 		virtual void OnDestroy() {}
 
 		void BindUpdateFuncToEditor();

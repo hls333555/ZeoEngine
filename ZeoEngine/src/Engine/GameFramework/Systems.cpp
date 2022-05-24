@@ -17,6 +17,7 @@ namespace ZeoEngine {
 
 	ISystem::ISystem(const Ref<Scene>& scene)
 		: m_Scene(scene)
+		, m_SceneRaw(scene.get())
 	{
 	}
 
@@ -26,7 +27,7 @@ namespace ZeoEngine {
 		BindUpdateFuncToEditor();
 	}
 
-	void SystemBase::OnUpdate(DeltaTime dt)
+	void SystemBase::OnUpdate(DeltaTime dt) const
 	{
 		m_UpdateFuncDel(dt);
 	}
@@ -73,7 +74,7 @@ namespace ZeoEngine {
 		{
 			if (billboardComp.TextureAsset)
 			{
-				Entity entity = { e, m_Scene };
+				const Entity entity = { e, GetScene() };
 				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
 				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
@@ -85,10 +86,10 @@ namespace ZeoEngine {
 			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			// TODO: Replace this with FrameBuffer texture
 			// Draw frustum visualizer when selected
-			if (m_Scene->GetSelectedEntity() == entity)
+			if (GetSceneRaw()->GetSelectedEntity() == entity)
 			{
 				glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
-				DebugDrawUtils::DrawFrustum(m_Scene, invMatix, visualizeColor);
+				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, visualizeColor);
 			}
 		});
 	}
@@ -112,11 +113,11 @@ namespace ZeoEngine {
 					m_SceneRenderer->SetupDirectionalLight(transformComp.Rotation, directionalLight);
 
 					// Draw arrow visualizer when selected
-					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
 						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
-						DebugDrawUtils::DrawArrow(m_Scene, transformComp.Translation, endPosition, visualizeColor, 0.25f);
+						DebugDrawUtils::DrawArrow(GetScene(), transformComp.Translation, endPosition, visualizeColor, 0.25f);
 					}
 					break;
 				}
@@ -126,9 +127,9 @@ namespace ZeoEngine {
 					m_SceneRenderer->AddPointLight(transformComp.Translation, pointLight);
 
 					// Draw sphere visualizer when selected
-					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
-						DebugDrawUtils::DrawSphereBounds(m_Scene, transformComp.Translation, visualizeColor, pointLight->GetRange());
+						DebugDrawUtils::DrawSphereBounds(GetScene(), transformComp.Translation, visualizeColor, pointLight->GetRange());
 					}
 					break;
 				}
@@ -138,11 +139,11 @@ namespace ZeoEngine {
 					m_SceneRenderer->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
 
 					// Draw cone visualizer when selected
-					if (bIsEditor && m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
 						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
 						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
-						DebugDrawUtils::DrawCone(m_Scene, transformComp.Translation, direction, visualizeColor, radius, 0.0f);
+						DebugDrawUtils::DrawCone(GetScene(), transformComp.Translation, direction, visualizeColor, radius, 0.0f);
 					}
 					break;
 				}
@@ -294,7 +295,7 @@ namespace ZeoEngine {
 			if (!nativeScriptComp.Instance)
 			{
 				nativeScriptComp.Instance = nativeScriptComp.InstantiateScript();
-				nativeScriptComp.Instance->m_Entity = Entity{ entity, m_Scene };
+				nativeScriptComp.Instance->m_Entity = Entity{ entity, GetScene() };
 				nativeScriptComp.Instance->OnCreate();
 			}
 
@@ -338,11 +339,11 @@ namespace ZeoEngine {
 
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene };
+			const Entity entity = { e, GetScene() };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			// Retrieve transfrom from Box2D
-			b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
+			const b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
 			const auto& position = body->GetPosition();
 			transformComp.Translation.x = position.x;
 			transformComp.Translation.y = position.y;
@@ -369,8 +370,8 @@ namespace ZeoEngine {
 		m_PhysicsWorld = new b2World(gravity);
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene };
-			auto& transformComp = entity.GetComponent<TransformComponent>();
+			const Entity entity = { e, GetScene() };
+			const auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			b2BodyDef bodyDef;
 			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
@@ -383,7 +384,7 @@ namespace ZeoEngine {
 
 			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
-				auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
+				const auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
 
 				b2PolygonShape boxShape;
 				boxShape.SetAsBox(bc2dComp.Size.x * transformComp.Scale.x, bc2dComp.Size.y * transformComp.Scale.y);
@@ -399,7 +400,7 @@ namespace ZeoEngine {
 
 			if (entity.HasComponent<CircleCollider2DComponent>())
 			{
-				auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
+				const auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
 
 				b2CircleShape circleShape;
 				circleShape.m_p.Set(cc2dComp.Offset.x, cc2dComp.Offset.y);
