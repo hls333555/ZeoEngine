@@ -108,6 +108,9 @@ namespace ZeoEngine {
 		static Ref<Shader> Create(const std::string& path, bool bIsReload = false);
 		static Ref<Shader> Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
 
+		static constexpr const char* GetTemplatePath() { return "assets/editor/shaders/NewShader.glsl.zasset"; }
+		static constexpr const char* GetResourceTemplatePath() { return "assets/editor/shaders/NewShader.glsl"; }
+
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
@@ -137,6 +140,7 @@ namespace ZeoEngine {
 	{
 		return Shader::Create(path, bIsReload);
 	},
+	// TODO:
 	static AssetHandle<Shader> GetDefaultShader()
 	{
 		return ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Default.glsl.zasset");

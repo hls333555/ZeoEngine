@@ -138,7 +138,7 @@ namespace ZeoEngine {
 				{
 					char baseName[MAX_PATH_SIZE] = "New";
 					strcat_s(baseName, assetTypeName);
-					strcat_s(baseName, factory->GetAssetExtension());
+					strcat_s(baseName, factory->GetResourceExtension());
 					std::string formattedName = GetFormatedAssetTypeName(baseName);
 					std::string newPath = GetAvailableNewPathName(formattedName.c_str(), true);
 					RequestPathCreation(newPath, typeId, true);

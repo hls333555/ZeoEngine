@@ -102,6 +102,8 @@ namespace ZeoEngine {
 
 		static Ref<Level> Create(std::string ID);
 
+		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewLevel.zasset"; }
+
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		/** Update scene reference and deserialize scene data. */
 		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
@@ -120,7 +122,7 @@ namespace ZeoEngine {
 	},
 	static AssetHandle<Level> GetDefaultEmptyLevel()
 	{
-		return Get().LoadAsset("assets/editor/levels/NewLevel.zasset");
+		return Get().LoadAsset(Level::GetTemplatePath());
 	})
 
 }

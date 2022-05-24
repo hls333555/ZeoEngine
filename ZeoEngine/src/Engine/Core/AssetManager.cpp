@@ -15,7 +15,7 @@ namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
-		RegisterAssetFactory(Level::TypeId(), CreateRef<SceneAssetFactory>());
+		RegisterAssetFactory(Level::TypeId(), CreateRef<LevelAssetFactory>());
 		RegisterAssetFactory(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
 		RegisterAssetFactory(Texture2D::TypeId(), CreateRef<Texture2DAssetFactory>());
 		RegisterAssetFactory(Mesh::TypeId(), CreateRef<MeshAssetFactory>());

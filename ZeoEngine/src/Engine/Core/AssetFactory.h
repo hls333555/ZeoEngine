@@ -11,8 +11,9 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual const char* GetAssetTypeName() const = 0;
-		virtual const char* GetAssetExtension() const { return ""; }
+		virtual const char* GetResourceExtension() const { return ""; }
 		virtual bool ShouldShowInContextMenu() const = 0;
+		virtual const char* GetAssetTemplatePath() const { return ""; }
 		virtual void CreateAsset(const std::string& path) const = 0;
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const {}
 	};
@@ -33,13 +34,17 @@ namespace ZeoEngine {
 	public:
 		virtual bool ShouldShowInContextMenu() const override { return false; }
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
+
+	private:
+		void CreateAsset(const std::string& path, const std::string& resourcePath) const;
 	};
 
-	class SceneAssetFactory : public AssetFactoryBase
+	class LevelAssetFactory : public AssetFactoryBase
 	{
 	public:
-		virtual const char* GetAssetTypeName() const override { return "Scene"; }
+		virtual const char* GetAssetTypeName() const override { return "Level"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
+		virtual const char* GetAssetTemplatePath() const override;
 	};
 
 	class ParticleTemplateAssetFactory : public AssetFactoryBase
@@ -66,13 +71,14 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Material"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
+		virtual const char* GetAssetTemplatePath() const override;
 	};
 
 	class ResourceAssetFactoryBase : public AssetFactoryBase
 	{
 	public:
-		virtual const char* GetResourceTemplatePath() const = 0;
 		virtual bool ShouldShowInContextMenu() const override { return true; }
+		virtual const char* GetResourceTemplatePath() const = 0;
 		virtual void CreateAsset(const std::string& path) const override;
 	};
 
@@ -80,8 +86,9 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Shader"; }
-		virtual const char* GetAssetExtension() const override { return ".glsl"; }
-		virtual const char* GetResourceTemplatePath() const override { return "assets/editor/shaders/Template.glsl"; }
+		virtual const char* GetResourceExtension() const override { return ".glsl"; }
+		virtual const char* GetAssetTemplatePath() const override;
+		virtual const char* GetResourceTemplatePath() const override;
 	};
 
 }

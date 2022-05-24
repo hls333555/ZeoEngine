@@ -169,6 +169,8 @@ namespace ZeoEngine {
 
 		static Ref<Material> Create(const std::string& path, bool bIsReload);
 
+		static constexpr const char* GetTemplatePath() { return "assets/editor/materials/NewMaterial.zasset"; }
+
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
@@ -213,7 +215,7 @@ namespace ZeoEngine {
 	},
 	static AssetHandle<Material> GetDefaultMaterial()
 	{
-		return Get().LoadAsset("assets/editor/materials/NewMaterial.zasset");
+		return Get().LoadAsset(Material::GetTemplatePath());
 	})
 
 }
