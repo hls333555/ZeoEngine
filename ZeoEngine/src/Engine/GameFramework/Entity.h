@@ -43,6 +43,18 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
+		auto RemoveComponentIfExist()
+		{
+			if (HasComponent<T>())
+			{
+				RemoveComponentId(entt::type_hash<T>::value());
+				UpdateBounds();
+				return m_Scene.lock()->m_Registry.remove<T>(m_EntityHandle);
+			}
+			return static_cast<size_t>(0);
+		}
+
+		template<typename T>
 		T& GetComponent() const
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");

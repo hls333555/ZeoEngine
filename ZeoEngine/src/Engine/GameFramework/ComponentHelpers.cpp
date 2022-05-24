@@ -46,7 +46,7 @@ namespace ZeoEngine {
 
 	void CameraComponentHelper::OnComponentDestroy()
 	{
-		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
+		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -181,7 +181,7 @@ namespace ZeoEngine {
 
 	void LightComponentHelper::OnComponentDestroy()
 	{
-		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
+		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 
 	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
