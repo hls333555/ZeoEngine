@@ -50,16 +50,11 @@ namespace ZeoEngine {
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_RenderGraph->GetBackFrameBuffer(); }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }
+		RenderGraph& GetRenderGraph() { return *m_RenderGraph; }
 		const Scope<RenderSystemBase>& GetRenderSystem() const { return m_RenderSystem; }
 
 		glm::mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
 
-	private:
-		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
-		virtual Scope<RenderSystemBase> CreateRenderSystem() = 0;
-
-		void Prepare();
-		virtual void OnRenderScene() = 0;
 	protected:
 		/** Begin scene for editor. */
 		void BeginScene(const EditorCamera& camera);
@@ -68,6 +63,12 @@ namespace ZeoEngine {
 		void EndScene();
 
 	private:
+		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<Scene>& scene) = 0;
+
+		void PrepareScene();
+		virtual void OnRenderScene() = 0;
+
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction);
 		void UploadLightData();
 

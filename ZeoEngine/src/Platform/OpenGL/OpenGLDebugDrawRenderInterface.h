@@ -2,6 +2,8 @@
 
 #include "Engine/Renderer/DebugDrawRenderInterface.h"
 
+#include <glad/glad.h>
+
 namespace ZeoEngine {
 
     class SceneRenderer;
@@ -31,6 +33,8 @@ namespace ZeoEngine {
 
     private:
         Weak<SceneRenderer> m_SceneRenderer;
+
+        GLboolean m_bLastEnabledCullFace, m_bLastEnabledDepthTest, m_bLastEnabledBlend;
 
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

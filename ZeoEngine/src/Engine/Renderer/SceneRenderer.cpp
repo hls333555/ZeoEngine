@@ -26,8 +26,7 @@ namespace ZeoEngine {
 
 		m_RenderGraph = CreateRenderGraph();
 		m_RenderGraph->Init();
-		m_RenderSystem = CreateRenderSystem();
-		m_RenderSystem->UpdateScene(scene);
+		m_RenderSystem = CreateRenderSystem(scene);
 
 		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<uint32_t>(UniformBufferBinding::Global));
 		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), static_cast<uint32_t>(UniformBufferBinding::Camera));
@@ -39,7 +38,7 @@ namespace ZeoEngine {
 	{
 		m_RenderGraph->Start();
 		{
-			Prepare();
+			PrepareScene();
 			OnRenderScene();
 			m_PostSceneRenderDel(GetFrameBuffer());
 		}
@@ -53,57 +52,47 @@ namespace ZeoEngine {
 		m_Ddri->Init(m_SceneContext);
 	}
 
-	void SceneRenderer::BeginScene(const EditorCamera& camera)
+	void SceneRenderer::PrepareScene()
 	{
 		const auto& fbo = GetFrameBuffer();
 		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
 		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);
 
+		m_LightBuffer.Reset();
+		m_LightUniformBuffer->SetData(&m_LightBuffer);
+
+		m_Batcher.StartBatch();
+
+		m_ActiveCamera = nullptr;
+	}
+
+	void SceneRenderer::BeginScene(const EditorCamera& camera)
+	{
 		m_CameraBuffer.View = camera.GetViewMatrix();
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraBuffer.Position = camera.GetPosition();
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
 		m_ActiveCamera = &camera;
-
-		m_RenderGraph->ToggleRenderPassActive("Grid", true);
 	}
 
 	void SceneRenderer::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		const auto& fbo = GetFrameBuffer();
-		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
-		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);
-
 		m_CameraBuffer.View = glm::inverse(transform);
 		m_CameraBuffer.Projection = camera.GetProjection();
-		// TODO:
-		//m_CameraBuffer.Position = camera.GetPosition();
+		m_CameraBuffer.Position = Math::GetTranslationFromTransform(transform);
 		m_CameraUniformBuffer->SetData(&m_CameraBuffer);
 		m_ActiveCamera = &camera;
-
-		m_RenderGraph->ToggleRenderPassActive("Grid", false);
 	}
 
 	void SceneRenderer::EndScene()
 	{
-		m_ActiveCamera = nullptr;
 		UploadLightData();
 		m_RenderGraph->Execute();
-		// TODO:
 		{
-			RenderCommand::ToggleDepthWriting(true);
 			// Quads are drawn at last
 			m_Batcher.FlushBatch();
 			DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
 		}
-	}
-
-	void SceneRenderer::Prepare()
-	{
-		m_LightBuffer.Reset();
-		m_LightUniformBuffer->SetData(&m_LightBuffer);
-
-		m_Batcher.StartBatch();
 	}
 
 	void SceneRenderer::OnViewportResize(uint32_t width, uint32_t height)

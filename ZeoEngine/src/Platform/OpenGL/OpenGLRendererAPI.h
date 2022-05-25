@@ -22,11 +22,12 @@ namespace ZeoEngine {
 		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 		virtual void SetLineThickness(float thickness) override;
 
-		virtual void ToggleFaceCulling(bool bEnable) override;
-		virtual void SetFaceCullingMode(bool bIsBack) override;
-		virtual void ToggleDepthTesting(bool bEnable) override;
-		virtual void ToggleDepthWriting(bool bEnable) override;
-		virtual void ToggleDepthClamping(bool bEnable) override;
+		virtual void ToggleBlend(bool bEnable) override;
+		virtual void ToggleCullFace(bool bEnable) override;
+		virtual void SetCullFaceMode(bool bIsBack) override;
+		virtual void ToggleDepthTest(bool bEnable) override;
+		virtual void ToggleDepthWrite(bool bEnable) override;
+		virtual void ToggleDepthClamp(bool bEnable) override;
 
 	};
 

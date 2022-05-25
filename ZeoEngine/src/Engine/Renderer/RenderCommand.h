@@ -74,29 +74,34 @@ namespace ZeoEngine {
 			s_RendererAPI->SetLineThickness(thickness);
 		}
 
-		static void ToggleFaceCulling(bool bEnable)
+		static void ToggleBlend(bool bEnable)
 		{
-			s_RendererAPI->ToggleFaceCulling(bEnable);
+			s_RendererAPI->ToggleBlend(bEnable);
 		}
 
-		static void SetFaceCullingMode(bool bIsBack)
+		static void ToggleCullFace(bool bEnable)
 		{
-			s_RendererAPI->SetFaceCullingMode(bIsBack);
+			s_RendererAPI->ToggleCullFace(bEnable);
 		}
 
-		static void ToggleDepthTesting(bool bEnable)
+		static void SetCullFaceMode(bool bIsBack)
 		{
-			s_RendererAPI->ToggleDepthTesting(bEnable);
+			s_RendererAPI->SetCullFaceMode(bIsBack);
 		}
 
-		static void ToggleDepthWriting(bool bEnable)
+		static void ToggleDepthTest(bool bEnable)
 		{
-			s_RendererAPI->ToggleDepthWriting(bEnable);
+			s_RendererAPI->ToggleDepthTest(bEnable);
 		}
 
-		static void ToggleDepthClamping(bool bEnable)
+		static void ToggleDepthWrite(bool bEnable)
 		{
-			s_RendererAPI->ToggleDepthClamping(bEnable);
+			s_RendererAPI->ToggleDepthWrite(bEnable);
+		}
+
+		static void ToggleDepthClamp(bool bEnable)
+		{
+			s_RendererAPI->ToggleDepthClamp(bEnable);
 		}
 
 	private:

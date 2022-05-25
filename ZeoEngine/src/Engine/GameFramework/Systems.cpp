@@ -42,15 +42,15 @@ namespace ZeoEngine {
 		m_UpdateFuncDel.connect<&SystemBase::OnUpdateRuntime>(this);
 	}
 
-	RenderSystemBase::RenderSystemBase(const Ref<SceneRenderer>& sceneRenderer)
-		: ISystem(nullptr)
+	RenderSystemBase::RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer)
+		: ISystem(scene)
 		, m_SceneRenderer(sceneRenderer)
 	{
 	}
 
-	std::pair<Camera*, glm::mat4> RenderSystemBase::GetActiveCamera()
+	std::pair<SceneCamera*, glm::mat4> RenderSystemBase::GetActiveSceneCamera()
 	{
-		Camera* camera = nullptr;
+		SceneCamera* camera = nullptr;
 		glm::mat4 transform;
 		ForEachComponentView<TransformComponent, CameraComponent>([&camera, &transform](auto entity, auto& transformComp, auto& cameraComp)
 		{
@@ -76,7 +76,7 @@ namespace ZeoEngine {
 			{
 				const Entity entity = { e, GetScene() };
 				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
-				m_SceneRenderer->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
+				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
 			}
 		});
 
@@ -88,7 +88,7 @@ namespace ZeoEngine {
 			// Draw frustum visualizer when selected
 			if (GetSceneRaw()->GetSelectedEntity() == entity)
 			{
-				glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
+				const glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
 				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, visualizeColor);
 			}
 		});
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 				case LightComponent::LightType::DirectionalLight:
 				{
 					const auto& directionalLight = lightComp.GetLight<DirectionalLight>();
-					m_SceneRenderer->SetupDirectionalLight(transformComp.Rotation, directionalLight);
+					GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, directionalLight);
 
 					// Draw arrow visualizer when selected
 					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
@@ -124,7 +124,7 @@ namespace ZeoEngine {
 				case LightComponent::LightType::PointLight:
 				{
 					const auto& pointLight = lightComp.GetLight<PointLight>();
-					m_SceneRenderer->AddPointLight(transformComp.Translation, pointLight);
+					GetSceneRenderer()->AddPointLight(transformComp.Translation, pointLight);
 
 					// Draw sphere visualizer when selected
 					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
@@ -136,7 +136,7 @@ namespace ZeoEngine {
 				case LightComponent::LightType::SpotLight:
 				{
 					const auto& spotLight = lightComp.GetLight<SpotLight>();
-					m_SceneRenderer->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
+					GetSceneRenderer()->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
 
 					// Draw cone visualizer when selected
 					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
@@ -157,7 +157,7 @@ namespace ZeoEngine {
 	{
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
-			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<int32_t>(entity));
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<int32_t>(entity));
 		});
 	}
 
@@ -221,11 +221,11 @@ namespace ZeoEngine {
 	{
 		ForEachComponentView<TransformComponent, LightComponent>([this](auto entity, auto& transformComp, auto& lightComp)
 		{
-			m_SceneRenderer->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 		});
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
 		{
-			m_SceneRenderer->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
 		});
 	}
 

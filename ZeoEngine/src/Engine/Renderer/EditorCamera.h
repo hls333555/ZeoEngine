@@ -18,6 +18,8 @@ namespace ZeoEngine {
 		EditorCamera() = default;
 		EditorCamera(float fovy, float aspectRatio, float nearClip, float farClip);
 
+		void SetEnableUpdate(bool bEnable) { m_bEnableUpdate = bEnable; }
+
 		void OnUpdate(DeltaTime dt, bool bIsViewportHovered);
 
 		void StartFocusEntity(Entity entity);
@@ -37,8 +39,6 @@ namespace ZeoEngine {
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
 		virtual float GetNearClip() const override { return m_NearClip; }
 		virtual float GetFarClip() const override { return m_FarClip; }
-
-		virtual glm::mat4 CalculatePerspectiveProjection(float nearClip, float farClip) const override;
 
 		glm::vec3 GetForwardVector() const;
 		glm::vec3 GetRightVector() const;
@@ -73,6 +73,8 @@ namespace ZeoEngine {
 		void SetMouseLock(bool bLock);
 
 	private:
+		bool m_bEnableUpdate = true;
+
 		bool m_bStartLerpToFocus = false;
 		glm::vec3 m_FocusTargetFocalPoint;
 		float m_FocusTargetDistance;

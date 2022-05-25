@@ -4,6 +4,7 @@
 #include "Scenes/LevelEditorScene.h"
 #include "SceneRenderers/LevelEditorSceneRenderer.h"
 #include "Engine/GameFramework/Systems.h"
+#include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
 
@@ -43,6 +44,7 @@ namespace ZeoEngine {
 		}
 		SetActiveScene(sceneForPlay, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStart();
+		GetEditorCamera()->SetEnableUpdate(false);
 	}
 
 	void LevelEditor::OnSceneStop()
@@ -56,6 +58,7 @@ namespace ZeoEngine {
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
+		GetEditorCamera()->SetEnableUpdate(true);
 	}
 
 	void LevelEditor::OnScenePause()

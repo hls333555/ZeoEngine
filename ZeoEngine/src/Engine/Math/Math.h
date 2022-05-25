@@ -11,6 +11,8 @@ namespace ZeoEngine::Math {
 
 	bool DecomposeTransform(const glm::mat4& transfrom, glm::vec3& outTranslation, glm::vec3& outRotation, glm::vec3& outScale);
 
+	glm::vec3 GetTranslationFromTransform(const glm::mat4& transfrom);
+
 	/** Interpolate float from current to target. Scaled by distance to Target, so it has a strong start speed and ease out. */
 	float FInterpTo(float current, float target, DeltaTime dt, float interpSpeed);
 

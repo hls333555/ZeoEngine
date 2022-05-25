@@ -16,7 +16,6 @@ namespace ZeoEngine {
 		SceneCamera();
 		virtual ~SceneCamera() = default;
 
-		virtual glm::mat4 CalculatePerspectiveProjection(float nearClip, float farClip) const override;
 		virtual float GetNearClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveNear : m_OrthographicNear; }
 		virtual float GetFarClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveFar : m_OrthographicFar; }
 

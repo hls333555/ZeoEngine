@@ -16,9 +16,9 @@ namespace ZeoEngine {
 		return CreateScope<EditorPreviewRenderGraph>();
 	}
 
-	Scope<RenderSystemBase> MaterialEditorSceneRenderer::CreateRenderSystem()
+	Scope<RenderSystemBase> MaterialEditorSceneRenderer::CreateRenderSystem(const Ref<Scene>& scene)
 	{
-		return CreateScope<MaterialPreviewRenderSystem>(shared_from_this());
+		return CreateScope<MaterialPreviewRenderSystem>(scene, shared_from_this());
 	}
 
 	void MaterialEditorSceneRenderer::OnRenderScene()

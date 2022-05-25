@@ -37,14 +37,13 @@ namespace ZeoEngine {
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(OpenGLMessageCallback, nullptr);
-
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		if (RendererAPI::Is2D())
+		if (Is2D())
 		{
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_LINE_SMOOTH);
@@ -53,7 +52,6 @@ namespace ZeoEngine {
 		{
 			glEnable(GL_DEPTH_TEST);
 		}
-
 	}
 
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -121,7 +119,19 @@ namespace ZeoEngine {
 		glLineWidth(thickness);
 	}
 
-	void OpenGLRendererAPI::ToggleFaceCulling(bool bEnable)
+	void OpenGLRendererAPI::ToggleBlend(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_BLEND);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
+	}
+
+	void OpenGLRendererAPI::ToggleCullFace(bool bEnable)
 	{
 		if (bEnable)
 		{
@@ -133,12 +143,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::SetFaceCullingMode(bool bIsBack)
+	void OpenGLRendererAPI::SetCullFaceMode(bool bIsBack)
 	{
 		glCullFace(bIsBack ? GL_BACK : GL_FRONT);
 	}
 
-	void OpenGLRendererAPI::ToggleDepthTesting(bool bEnable)
+	void OpenGLRendererAPI::ToggleDepthTest(bool bEnable)
 	{
 		if (bEnable)
 		{
@@ -150,12 +160,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::ToggleDepthWriting(bool bEnable)
+	void OpenGLRendererAPI::ToggleDepthWrite(bool bEnable)
 	{
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
 	}
 
-	void OpenGLRendererAPI::ToggleDepthClamping(bool bEnable)
+	void OpenGLRendererAPI::ToggleDepthClamp(bool bEnable)
 	{
 		if (bEnable)
 		{

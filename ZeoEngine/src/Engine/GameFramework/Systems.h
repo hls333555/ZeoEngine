@@ -17,11 +17,12 @@ namespace ZeoEngine {
 	public:
 		explicit ISystem(const Ref<Scene>& scene);
 
-		Ref<Scene> GetScene() const { return m_Scene.lock(); }
-		const Scene* GetSceneRaw() const { return m_SceneRaw; }
 		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; m_SceneRaw = scene.get(); }
 
 	protected:
+		Ref<Scene> GetScene() const { return m_Scene.lock(); }
+		const Scene* GetSceneRaw() const { return m_SceneRaw; }
+
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
 		{
@@ -78,15 +79,18 @@ namespace ZeoEngine {
 	class RenderSystemBase : public ISystem
 	{
 	public:
-		explicit RenderSystemBase(const Ref<SceneRenderer>& sceneRenderer);
+		RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer);
 		
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}
 
-		std::pair<Camera*, glm::mat4> GetActiveCamera();
+		std::pair<SceneCamera*, glm::mat4> GetActiveSceneCamera();
 
 	protected:
-		Ref<SceneRenderer> m_SceneRenderer;
+		Ref<SceneRenderer> GetSceneRenderer() const { return m_SceneRenderer.lock(); }
+
+	private:
+		Weak<SceneRenderer> m_SceneRenderer;
 	};
 
 	class RenderSystem : public RenderSystemBase
@@ -94,8 +98,8 @@ namespace ZeoEngine {
 	public:
 		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnRenderEditor();
-		virtual void OnRenderRuntime();
+		virtual void OnRenderEditor() override;
+		virtual void OnRenderRuntime() override;
 
 	private:
 		void RenderLights(bool bIsEditor);

@@ -1,7 +1,6 @@
 #include "ZEpch.h"
 #include "Platform/OpenGL/OpenGLDebugDrawRenderInterface.h"
 
-#include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/Renderer/SceneRenderer.h"
@@ -135,16 +134,20 @@ namespace ZeoEngine {
 
     void OpenGLDDRenderInterface::beginDraw()
     {
+        m_bLastEnabledCullFace = glIsEnabled(GL_CULL_FACE);
+        m_bLastEnabledDepthTest = glIsEnabled(GL_DEPTH_TEST);
+        m_bLastEnabledBlend = glIsEnabled(GL_BLEND);
+
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
     }
 
-    // TODO:
     void OpenGLDDRenderInterface::endDraw()
     {
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
+        if (m_bLastEnabledCullFace) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
+        if (m_bLastEnabledDepthTest) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+        if (m_bLastEnabledBlend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
     }
 
     dd::GlyphTextureHandle OpenGLDDRenderInterface::createGlyphTexture(int width, int height, const void* pixels)

@@ -16,9 +16,9 @@ namespace ZeoEngine {
 		return CreateScope<ForwardRenderGraph>();
 	}
 
-	Scope<RenderSystemBase> LevelEditorSceneRenderer::CreateRenderSystem()
+	Scope<RenderSystemBase> LevelEditorSceneRenderer::CreateRenderSystem(const Ref<Scene>& scene)
 	{
-		return CreateScope<RenderSystem>(shared_from_this());
+		return CreateScope<RenderSystem>(scene, shared_from_this());
 	}
 
 	void LevelEditorSceneRenderer::OnRenderScene()
@@ -27,14 +27,21 @@ namespace ZeoEngine {
 		{
 			case SceneState::Edit:
 				BeginScene(*m_LevelEditor->GetEditorCamera());
+				GetRenderGraph().ToggleRenderPassActive("Grid", true);
 				GetRenderSystem()->OnRenderEditor();
 				break;
 			case SceneState::Play:
 			case SceneState::Pause:
-				auto [camera, transform] = GetRenderSystem()->GetActiveCamera();
-				if (!camera) return;
-
-				BeginScene(*camera, transform);
+				auto [sceneDamera, transform] = GetRenderSystem()->GetActiveSceneCamera();
+				if (sceneDamera)
+				{
+					BeginScene(*sceneDamera, transform);
+				}
+				else
+				{
+					BeginScene(*m_LevelEditor->GetEditorCamera());
+				}
+				GetRenderGraph().ToggleRenderPassActive("Grid", false);
 				GetRenderSystem()->OnRenderRuntime();
 				break;
 		}

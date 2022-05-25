@@ -38,11 +38,12 @@ namespace ZeoEngine {
 		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
 		virtual void SetLineThickness(float thickness) = 0;
 
-		virtual void ToggleFaceCulling(bool bEnable) = 0;
-		virtual void SetFaceCullingMode(bool bIsBack) = 0;
-		virtual void ToggleDepthTesting(bool bEnable) = 0;
-		virtual void ToggleDepthWriting(bool bEnable) = 0;
-		virtual void ToggleDepthClamping(bool bEnable) = 0;
+		virtual void ToggleBlend(bool bEnable) = 0;
+		virtual void ToggleCullFace(bool bEnable) = 0;
+		virtual void SetCullFaceMode(bool bIsBack) = 0;
+		virtual void ToggleDepthTest(bool bEnable) = 0;
+		virtual void ToggleDepthWrite(bool bEnable) = 0;
+		virtual void ToggleDepthClamp(bool bEnable) = 0;
 
 		static API GetAPI() { return s_API; }
 		static bool Is2D() { return s_bIs2D; }
