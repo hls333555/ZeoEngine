@@ -16,9 +16,9 @@ namespace ZeoEngine {
 		EditorBase::OnAttach();
 	}
 
-	Ref<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
+	Scope<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<LevelEditorUIRenderer>(SharedFromBase<LevelEditor>());
+		return CreateScope<LevelEditorUIRenderer>(SharedFromBase<LevelEditor>());
 	}
 
 	Ref<Scene> LevelEditor::CreateScene()

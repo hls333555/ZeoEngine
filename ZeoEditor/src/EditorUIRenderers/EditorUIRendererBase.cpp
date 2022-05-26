@@ -34,7 +34,7 @@ namespace ZeoEngine {
 
 	void EditorUIRendererBase::RenderDockspace()
 	{
-		const std::string& editorName = m_ContextEditor->GetEditorName();
+		const std::string& editorName = GetContextEditor()->GetEditorName();
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		bool bIsSceneEditor = editorName == LEVEL_EDITOR;
 		if (!bIsSceneEditor)
@@ -51,7 +51,7 @@ namespace ZeoEngine {
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin(m_ContextEditor->GetEditorName().c_str(), m_ContextEditor->GetShowPtr(), m_DockspaceSpec.WindowFlags);
+		ImGui::Begin(GetContextEditor()->GetEditorName().c_str(), GetContextEditor()->GetShowPtr(), m_DockspaceSpec.WindowFlags);
 		ImGui::PopStyleVar();
 
 		m_bIsEditorFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_DockHierarchy);
@@ -166,7 +166,7 @@ namespace ZeoEngine {
 		return *menu;
 	}
 
-	Ref<EditorViewPanelBase> EditorUIRendererBase::GetViewPanel()
+	Ref<EditorViewPanelBase> EditorUIRendererBase::GetViewPanel() const
 	{
 		for (auto& [type, panel] : m_Panels)
 		{

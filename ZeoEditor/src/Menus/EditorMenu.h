@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	{
 	public:
 		EditorMenu() = delete;
-		EditorMenu(const std::string& menuName, const Ref<EditorBase>& contextEditor);
+		EditorMenu(std::string menuName, const Weak<EditorBase>& contextEditor);
 
 		void OnImGuiRender();
 		void OnEvent(Event& e);
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_MenuName;
-		Ref<EditorBase> m_ContextEditor;
+		Weak<EditorBase> m_ContextEditor;
 		bool m_bEnabled = true;
 		std::vector<Ref<MenuItemBase>> m_MenuItems;
 	};

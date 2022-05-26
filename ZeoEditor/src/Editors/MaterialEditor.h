@@ -12,7 +12,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
+		virtual Scope<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 

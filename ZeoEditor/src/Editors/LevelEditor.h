@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		SceneState GetSceneState() const { return m_SceneState; }
 
 	private:
-		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() override;
+		virtual Scope<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 

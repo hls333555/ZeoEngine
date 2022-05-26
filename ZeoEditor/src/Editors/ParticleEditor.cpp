@@ -16,9 +16,9 @@ namespace ZeoEngine {
 		EditorBase::OnAttach();
 	}
 
-	Ref<EditorUIRendererBase> ParticleEditor::CreateEditorUIRenderer()
+	Scope<EditorUIRendererBase> ParticleEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<ParticleEditorUIRenderer>(SharedFromBase<ParticleEditor>());
+		return CreateScope<ParticleEditorUIRenderer>(SharedFromBase<ParticleEditor>());
 	}
 
 	Ref<Scene> ParticleEditor::CreateScene()

@@ -17,9 +17,9 @@ namespace ZeoEngine {
 		GetEditorCamera()->SetDistance(2.0f);
 	}
 
-	Ref<EditorUIRendererBase> MaterialEditor::CreateEditorUIRenderer()
+	Scope<EditorUIRendererBase> MaterialEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<MaterialEditorUIRenderer>(SharedFromBase<MaterialEditor>());
+		return CreateScope<MaterialEditorUIRenderer>(SharedFromBase<MaterialEditor>());
 	}
 
 	Ref<Scene> MaterialEditor::CreateScene()

@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	MenuItemBase::MenuItemBase(const Ref<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName)
+	MenuItemBase::MenuItemBase(const Weak<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName)
 		: m_ContextEditor(contextEditor)
 		, m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
 	{
@@ -29,9 +29,9 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(MenuItemBase::OnKeyPressed));
 	}
 
-	Ref<EditorUIRendererBase> MenuItemBase::GetContextEditorUIRenderer() const
+	EditorUIRendererBase& MenuItemBase::GetContextEditorUIRenderer() const
 	{
-		return m_ContextEditor->GetEditorUIRenderer();
+		return *GetContextEditor()->GetEditorUIRenderer();
 	}
 
 	bool MenuItemBase::OnKeyPressed(KeyPressedEvent& e)
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		return OnKeyPressedImpl(e);
 	}
 
-	MenuItem_Seperator::MenuItem_Seperator(const Ref<EditorBase>& contextEditor, const char* menuItemName)
+	MenuItem_Seperator::MenuItem_Seperator(const Weak<EditorBase>& contextEditor, const char* menuItemName)
 		: MenuItemBase(contextEditor, menuItemName)
 	{
 	}
@@ -53,12 +53,12 @@ namespace ZeoEngine {
 
 	bool MenuItem_NewAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+N" || !GetContextEditorUIRenderer()->IsEditorFocused()) return false;
+		if (m_ShortcutName != "CTRL+N" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::N && bIsCtrlPressed)
 		{
-			m_ContextEditor->NewDefaultScene();
+			GetContextEditor()->NewDefaultScene();
 			return true;
 		}
 
@@ -67,17 +67,17 @@ namespace ZeoEngine {
 
 	void MenuItem_NewAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->NewDefaultScene();
+		GetContextEditor()->NewDefaultScene();
 	}
 
 	bool MenuItem_LoadAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+O" || !GetContextEditorUIRenderer()->IsEditorFocused()) return false;
+		if (m_ShortcutName != "CTRL+O" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::O && bIsCtrlPressed)
 		{
-			m_ContextEditor->LoadScene();
+			GetContextEditor()->LoadScene();
 			return true;
 		}
 
@@ -86,17 +86,17 @@ namespace ZeoEngine {
 
 	void MenuItem_LoadAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->LoadScene();
+		GetContextEditor()->LoadScene();
 	}
 
 	bool MenuItem_SaveAsset::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+S" || !GetContextEditorUIRenderer()->IsEditorFocused()) return false;
+		if (m_ShortcutName != "CTRL+S" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::S && bIsCtrlPressed)
 		{
-			m_ContextEditor->SaveScene();
+			GetContextEditor()->SaveScene();
 			return true;
 		}
 
@@ -105,18 +105,18 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveAsset::OnMenuItemActivated()
 	{
-		m_ContextEditor->SaveScene();
+		GetContextEditor()->SaveScene();
 	}
 
 	bool MenuItem_SaveAssetAs::OnKeyPressedImpl(KeyPressedEvent& e)
 	{
-		if (m_ShortcutName != "CTRL+ALT+S" || !GetContextEditorUIRenderer()->IsEditorFocused()) return false;
+		if (m_ShortcutName != "CTRL+ALT+S" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 		if (e.GetKeyCode() == Key::S && bIsCtrlPressed && bIsAltPressed)
 		{
-			m_ContextEditor->SaveSceneAs();
+			GetContextEditor()->SaveSceneAs();
 			return true;
 		}
 
@@ -125,7 +125,7 @@ namespace ZeoEngine {
 
 	void MenuItem_SaveAssetAs::OnMenuItemActivated()
 	{
-		m_ContextEditor->SaveSceneAs();
+		GetContextEditor()->SaveSceneAs();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()
@@ -160,11 +160,11 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string assetPath = m_ContextEditor->GetAsset()->GetID();
+		const std::string assetPath = GetContextEditor()->GetAsset()->GetID();
 		// This may be null e.g. default particle system
 		if (assetPath.empty()) return;
 
-		auto viewPanel = GetContextEditorUIRenderer()->GetViewPanel();
+		const auto viewPanel = GetContextEditorUIRenderer().GetViewPanel();
 		viewPanel->Snapshot(assetPath, 256);
 	}
 

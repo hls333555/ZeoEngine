@@ -6,8 +6,8 @@
 
 namespace ZeoEngine {
 
-	EditorMenu::EditorMenu(const std::string& menuName, const Ref<EditorBase>& contextEditor)
-		: m_MenuName(menuName)
+	EditorMenu::EditorMenu(std::string menuName, const Weak<EditorBase>& contextEditor)
+		: m_MenuName(std::move(menuName))
 		, m_ContextEditor(contextEditor)
 	{
 	}

@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		EditorCamera* GetEditorCamera() const { return m_EditorCamera; }
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }
 
-		const Ref<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
+		const Scope<EditorUIRendererBase>& GetEditorUIRenderer() const { return m_EditorUIRenderer; }
 		const Ref<SceneRenderer>& GetSceneRenderer() const { return m_SceneRenderer; }
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const;
@@ -82,7 +82,7 @@ namespace ZeoEngine {
 		void BlockSceneEvents(bool bBlock) { m_bBlockSceneEvents = bBlock; }
 
 	private:
-		virtual Ref<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
+		virtual Scope<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
 		virtual Ref<Scene> CreateScene() = 0;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
 
@@ -135,8 +135,7 @@ namespace ZeoEngine {
 		Entity m_ContextEntity;
 		EditorCamera* m_EditorCamera = nullptr;
 
-		// TODO: Change to Scope
-		Ref<EditorUIRendererBase> m_EditorUIRenderer;
+		Scope<EditorUIRendererBase> m_EditorUIRenderer;
 		Ref<Scene> m_ActiveScene;
 		Ref<SceneRenderer> m_SceneRenderer;
 
