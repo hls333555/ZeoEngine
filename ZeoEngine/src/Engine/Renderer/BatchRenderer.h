@@ -17,13 +17,14 @@ namespace ZeoEngine {
 		~BatchRenderer();
 
 		void Init();
-
 		void StartBatch();
-		void NextBatch();
-		void FlushBatch();
+		void FlushBatch() const;
 
 		void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
 		void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+
+	private:
+		void NextBatch();
 
 	private:
 		struct QuadVertex

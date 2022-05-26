@@ -68,6 +68,7 @@ namespace ZeoEngine {
 
 		void PrepareScene();
 		virtual void OnRenderScene() = 0;
+		void FlushScene() const;
 
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction);
 		void UploadLightData();
@@ -85,7 +86,7 @@ namespace ZeoEngine {
 
 		entt::delegate<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
 
-		BatchRenderer m_Batcher;
+		BatchRenderer m_QuadBatcher;
 
 		struct GlobalData
 		{

@@ -7,7 +7,6 @@
 #include "Engine/GameFramework/Systems.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Utils/EngineUtils.h"
-#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
@@ -19,7 +18,7 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnAttach(const Ref<Scene>& scene)
 	{
-		m_Batcher.Init();
+		m_QuadBatcher.Init();
 
 		m_Ddri = DDRenderInterface::Create(shared_from_this());
 		UpdateSceneContext(scene);
@@ -61,7 +60,7 @@ namespace ZeoEngine {
 		m_LightBuffer.Reset();
 		m_LightUniformBuffer->SetData(&m_LightBuffer);
 
-		m_Batcher.StartBatch();
+		m_QuadBatcher.StartBatch();
 
 		m_ActiveCamera = nullptr;
 	}
@@ -88,11 +87,13 @@ namespace ZeoEngine {
 	{
 		UploadLightData();
 		m_RenderGraph->Execute();
-		{
-			// Quads are drawn at last
-			m_Batcher.FlushBatch();
-			DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
-		}
+		FlushScene();
+	}
+
+	void SceneRenderer::FlushScene() const
+	{
+		m_QuadBatcher.FlushBatch();
+		DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
 	}
 
 	void SceneRenderer::OnViewportResize(uint32_t width, uint32_t height)
@@ -297,12 +298,12 @@ namespace ZeoEngine {
 
 	void SceneRenderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
 	{
-		m_Batcher.DrawQuad(transform, color, entityID);
+		m_QuadBatcher.DrawQuad(transform, color, entityID);
 	}
 
 	void SceneRenderer::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
-		m_Batcher.DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
+		m_QuadBatcher.DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
 	}
 
 	void SceneRenderer::DrawBillboard(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
@@ -312,7 +313,7 @@ namespace ZeoEngine {
 			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		glm::vec4 color = tintColor;
 		color.a = 1.0f;
-		m_Batcher.DrawQuad(transform, texture, tilingFactor, uvOffset, color, entityID);
+		m_QuadBatcher.DrawQuad(transform, texture, tilingFactor, uvOffset, color, entityID);
 	}
 
 }

@@ -94,8 +94,31 @@ namespace ZeoEngine {
 		m_Outputs.emplace_back(std::move(output));
 	}
 
+	BindingPass::BindingPass(std::string name, bool bAutoActive)
+		: RenderPass(std::move(name), bAutoActive)
+	{
+		// Init default states
+		AddBindable(Blend::Resolve(Blend::State::Enable));
+		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
+		AddBindable(DepthClamp::Resolve(DepthClamp::State::Disable));
+		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
+	}
+
 	void BindingPass::AddBindable(Ref<Bindable> bindable)
 	{
+		// For bindable states, previous state will be replaced by the new state
+		if (dynamic_cast<BindableState*>(bindable.get()))
+		{
+			const auto it = std::find_if(m_Bindables.begin(), m_Bindables.end(), [&bindable](const Ref<Bindable>& _bindable)
+			{
+				return _bindable && typeid(*_bindable) == typeid(*bindable);
+			});
+			if (it != m_Bindables.end())
+			{
+				*it = std::move(bindable);
+				return;
+			}
+		}
 		m_Bindables.emplace_back(std::move(bindable));
 	}
 
@@ -132,8 +155,7 @@ namespace ZeoEngine {
 
 	void RenderQueuePass::AddTask(RenderTask task)
 	{
-		// TODO:
-		m_Tasks.emplace_back(std::move(task));
+		m_Tasks.emplace_back(task);
 	}
 
 	void RenderQueuePass::ExecuteTasks() const
@@ -179,7 +201,7 @@ namespace ZeoEngine {
 		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
-		AddBindable(Depth::Resolve(Depth::State::ToggleClamp));
+		AddBindable(DepthClamp::Resolve(DepthClamp::State::Enable));
 		AddBindable(Clear::Resolve(Clear::State::ClearDepth));
 
 		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));

@@ -7,20 +7,23 @@
 
 namespace ZeoEngine {
 
-	class BindableStates
+	class BindableState : public Bindable {};
+
+	class BindableStateLibrary
 	{
 	public:
+		BindableStateLibrary(const BindableStateLibrary&) = delete;
+		BindableStateLibrary& operator=(const BindableStateLibrary&) = delete;
+
 		template<class T, typename...Args>
 		static Ref<T> Resolve(Args&&...args)
 		{
-			static_assert(std::is_base_of<Bindable, T>::value, "Can only resolve classes derived from Bindable!");
+			static_assert(std::is_base_of<BindableState, T>::value, "Can only resolve classes derived from BindableState!");
 			return Get().ResolveImpl<T>(std::forward<Args>(args)...);
 		}
 
 	private:
-		BindableStates() = default;
-		BindableStates(const BindableStates&) = delete;
-		BindableStates& operator=(const BindableStates&) = delete;
+		BindableStateLibrary() = default;
 
 		template<class T, typename...Args>
 		Ref<T> ResolveImpl(Args&&...args)
@@ -39,9 +42,9 @@ namespace ZeoEngine {
 			}
 		}
 
-		static BindableStates& Get()
+		static BindableStateLibrary& Get()
 		{
-			static BindableStates instance;
+			static BindableStateLibrary instance;
 			return instance;
 		}
 
@@ -49,12 +52,12 @@ namespace ZeoEngine {
 		std::unordered_map<std::string, Ref<Bindable>> m_BindableStates;
 	};
 
-	class Depth : public Bindable
+	class Depth : public BindableState
 	{
 	public:
 		enum class State
 		{
-			ReadWrite, ReadOnly, Disable, ToggleClamp
+			ReadWrite, ReadOnly, Disable
 		};
 
 		explicit Depth(State state)
@@ -62,7 +65,7 @@ namespace ZeoEngine {
 
 		static Ref<Depth> Resolve(State state)
 		{
-			return BindableStates::Resolve<Depth>(state);
+			return BindableStateLibrary::Resolve<Depth>(state);
 		}
 
 		static std::string GenerateUID(State state)
@@ -73,18 +76,75 @@ namespace ZeoEngine {
 		}
 
 		virtual void Bind() const override;
-		virtual void Unbind() const override;
 
 	private:
 		State m_State;
 	};
 
-	class TwoSided : public Bindable
+	class DepthClamp : public BindableState
 	{
 	public:
 		enum class State
 		{
-			CullFront, CullBack, Disable
+			Disable, Enable
+		};
+
+		explicit DepthClamp(State state)
+			: m_State(state) {}
+
+		static Ref<DepthClamp> Resolve(State state)
+		{
+			return BindableStateLibrary::Resolve<DepthClamp>(state);
+		}
+
+		static std::string GenerateUID(State state)
+		{
+			using namespace std::string_literals;
+			const auto stateStr = magic_enum::enum_name(state);
+			return typeid(DepthClamp).name() + "#"s + std::string(stateStr);
+		}
+
+		virtual void Bind() const override;
+
+	private:
+		State m_State;
+	};
+
+	class Blend : public BindableState
+	{
+	public:
+		enum class State
+		{
+			Enable, Disable
+		};
+
+		explicit Blend(State state)
+			: m_State(state) {}
+
+		static Ref<Blend> Resolve(State state)
+		{
+			return BindableStateLibrary::Resolve<Blend>(state);
+		}
+
+		static std::string GenerateUID(State state)
+		{
+			using namespace std::string_literals;
+			const auto stateStr = magic_enum::enum_name(state);
+			return typeid(Blend).name() + "#"s + std::string(stateStr);
+		}
+
+		virtual void Bind() const override;
+
+	private:
+		State m_State;
+	};
+
+	class TwoSided : public BindableState
+	{
+	public:
+		enum class State
+		{
+			CullBack, CullFront, Disable
 		};
 
 		explicit TwoSided(State state)
@@ -92,7 +152,7 @@ namespace ZeoEngine {
 
 		static Ref<TwoSided> Resolve(State state)
 		{
-			return BindableStates::Resolve<TwoSided>(state);
+			return BindableStateLibrary::Resolve<TwoSided>(state);
 		}
 
 		static std::string GenerateUID(State state)
@@ -108,7 +168,7 @@ namespace ZeoEngine {
 		State m_State;
 	};
 
-	class Clear : public Bindable
+	class Clear : public BindableState
 	{
 	public:
 		enum class State
@@ -121,7 +181,7 @@ namespace ZeoEngine {
 
 		static Ref<Clear> Resolve(State state)
 		{
-			return BindableStates::Resolve<Clear>(state);
+			return BindableStateLibrary::Resolve<Clear>(state);
 		}
 
 		static std::string GenerateUID(State state)

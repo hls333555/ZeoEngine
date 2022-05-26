@@ -38,7 +38,6 @@ namespace ZeoEngine {
 	class AssetLibrary : private entt::resource_cache<AssetClass, AssetLoaderClass>
 	{
 	public:
-		AssetLibrary() = default;
 		AssetLibrary(const AssetLibrary&) = delete;
 		AssetLibrary& operator=(const AssetLibrary&) = delete;
 
@@ -79,6 +78,8 @@ namespace ZeoEngine {
 			return contains(Utils::GetIDFromString(ID));
 		}
 
+	protected:
+		AssetLibrary() = default;
 	};
 
 }

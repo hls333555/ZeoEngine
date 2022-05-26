@@ -20,7 +20,7 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.QuadVAO = VertexArray::Create();
 
 			m_PrimitiveBuffer.QuadVBO = VertexBuffer::Create(m_PrimitiveBuffer.MaxVertices * sizeof(QuadVertex));
-			BufferLayout quadLayout = {
+			const BufferLayout quadLayout = {
 				{ ShaderDataType::Float3, "a_Position"     },
 				{ ShaderDataType::Float4, "a_Color"        },
 				{ ShaderDataType::Float2, "a_TexCoord"     },
@@ -77,11 +77,11 @@ namespace ZeoEngine {
 		StartBatch();
 	}
 
-	void BatchRenderer::FlushBatch()
+	void BatchRenderer::FlushBatch() const
 	{
 		if (m_PrimitiveBuffer.QuadIndexCount)
 		{
-			auto dataSize = reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferBase);
+			const auto dataSize = reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferBase);
 			m_PrimitiveBuffer.QuadVBO->SetData(m_PrimitiveBuffer.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 
 			for (uint32_t i = 0; i < m_PrimitiveBuffer.TextureSlotIndex; i++)
@@ -89,6 +89,7 @@ namespace ZeoEngine {
 				m_PrimitiveBuffer.TextureSlots[i]->Bind(i);
 			}
 			m_PrimitiveBuffer.QuadShader->Bind();
+			RenderCommand::ToggleDepthWrite(true);
 			RenderCommand::DrawIndexed(m_PrimitiveBuffer.QuadVAO, m_PrimitiveBuffer.QuadIndexCount);
 		}
 	}

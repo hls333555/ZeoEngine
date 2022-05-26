@@ -2,8 +2,6 @@
 
 #include "Engine/Renderer/DebugDrawRenderInterface.h"
 
-#include <glad/glad.h>
-
 namespace ZeoEngine {
 
     class SceneRenderer;
@@ -17,7 +15,6 @@ namespace ZeoEngine {
         virtual void UpdateViewportSize(uint32_t width, uint32_t height) override { m_ViewportWidth = width; m_ViewportHeight = height; }
 
         virtual void beginDraw() override;
-        virtual void endDraw() override;
 
         virtual dd::GlyphTextureHandle createGlyphTexture(int width, int height, const void* pixels) override;
         virtual void destroyGlyphTexture(dd::GlyphTextureHandle glyphTex) override;
@@ -33,8 +30,6 @@ namespace ZeoEngine {
 
     private:
         Weak<SceneRenderer> m_SceneRenderer;
-
-        GLboolean m_bLastEnabledCullFace, m_bLastEnabledDepthTest, m_bLastEnabledBlend;
 
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

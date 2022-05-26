@@ -42,7 +42,7 @@ namespace ZeoEngine {
 	class BindingPass : public RenderPass
 	{
 	public:
-		using RenderPass::RenderPass;
+		explicit BindingPass(std::string name, bool bAutoActive = true);
 
 	protected:
 		void AddBindable(Ref<Bindable> bindable);

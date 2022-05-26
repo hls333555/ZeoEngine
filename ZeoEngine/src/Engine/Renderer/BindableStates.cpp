@@ -20,22 +20,31 @@ namespace ZeoEngine {
 			case State::Disable:
 				RenderCommand::ToggleDepthTest(false);
 				break;
-			case State::ToggleClamp:
+		}
+	}
+
+	void DepthClamp::Bind() const
+	{
+		switch (m_State)
+		{
+			case State::Disable:
+				RenderCommand::ToggleDepthClamp(false);
+				break;
+			case State::Enable:
 				RenderCommand::ToggleDepthClamp(true);
 				break;
 		}
 	}
 
-	void Depth::Unbind() const
+	void Blend::Bind() const
 	{
 		switch (m_State)
 		{
-			case State::ReadOnly:
-				RenderCommand::ToggleDepthTest(true);
-				RenderCommand::ToggleDepthWrite(true);
+			case State::Enable:
+				RenderCommand::ToggleBlend(true);
 				break;
-			case State::ToggleClamp:
-				RenderCommand::ToggleDepthClamp(false);
+			case State::Disable:
+				RenderCommand::ToggleBlend(false);
 				break;
 		}
 	}
@@ -44,13 +53,13 @@ namespace ZeoEngine {
 	{
 		switch (m_State)
 		{
-			case State::CullFront:
-				RenderCommand::ToggleCullFace(true);
-				RenderCommand::SetCullFaceMode(false);
-				break;
 			case State::CullBack:
 				RenderCommand::ToggleCullFace(true);
 				RenderCommand::SetCullFaceMode(true);
+				break;
+			case State::CullFront:
+				RenderCommand::ToggleCullFace(true);
+				RenderCommand::SetCullFaceMode(false);
 				break;
 			case State::Disable:
 				RenderCommand::ToggleCullFace(false);

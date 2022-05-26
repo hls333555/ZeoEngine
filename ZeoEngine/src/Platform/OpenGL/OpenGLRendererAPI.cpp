@@ -41,16 +41,10 @@ namespace ZeoEngine {
 #endif
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if (Is2D())
 		{
-			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_LINE_SMOOTH);
-		}
-		else
-		{
-			glEnable(GL_DEPTH_TEST);
 		}
 	}
 
