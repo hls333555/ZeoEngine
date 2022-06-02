@@ -140,6 +140,7 @@ namespace ZeoEngine {
 
 	void Material::InitMaterialData()
 	{
+		m_Techniques.clear();
 		m_DynamicUniforms.clear();
 		m_DynamicBindableUniforms.clear();
 		m_DynamicUniformBuffers.clear();
@@ -151,7 +152,6 @@ namespace ZeoEngine {
 			RenderTechnique shade("Shade");
 			{
 				RenderStep step("Opaque");
-				step.AddBindable(m_Shader.to_ref());
 				for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
 				{
 					step.AddBindable(uniformBuffer);
@@ -160,6 +160,7 @@ namespace ZeoEngine {
 				{
 					step.AddBindable(uniformBindableData);
 				}
+				step.AddBindable(m_Shader.to_ref());
 				shade.AddStep(std::move(step));
 			}
 			m_Techniques.emplace_back(std::move(shade));

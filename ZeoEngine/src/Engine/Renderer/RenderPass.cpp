@@ -153,9 +153,21 @@ namespace ZeoEngine {
 		m_FBO->BindAsBuffer();
 	}
 
-	void RenderQueuePass::AddTask(RenderTask task)
+	void RenderQueuePass::AddTask(const Drawable* drawable, const RenderStep* step)
 	{
-		m_Tasks.emplace_back(task);
+		const SubRenderTask subTask(drawable);
+		for (auto& task : m_Tasks)
+		{
+			if (task.HasSameMaterial(step))
+			{
+				task.AddSubTask(subTask);
+				return;
+			}
+		}
+
+		RenderTask task(step);
+		task.AddSubTask(subTask);
+		m_Tasks.emplace_back(std::move(task));
 	}
 
 	void RenderQueuePass::ExecuteTasks() const

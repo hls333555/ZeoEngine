@@ -181,7 +181,7 @@ namespace ZeoEngine {
 		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
 		auto& GetDynamicUniformBuffers() { return m_DynamicUniformBuffers; }
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
-		const auto& GetRenderTechniques() const { return m_Techniques; }
+		auto& GetRenderTechniques() { return m_Techniques; }
 
 		void InitMaterialData();
 		void ApplyUniformDatas() const;

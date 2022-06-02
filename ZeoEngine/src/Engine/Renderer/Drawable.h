@@ -20,8 +20,8 @@ namespace ZeoEngine {
 		virtual uint32_t GetBaseIndex() const { return 0; }
 		virtual uint32_t GetIndexCount() const = 0;
 
-		void AddTechnique(RenderTechnique technique, const Weak<Scene>& sceneContext);
-		void ClearTechniques();
+		void AddTechnique(RenderTechnique technique);
+		void PrepareTechniques(size_t size);
 		void Bind() const;
 		void Submit();
 

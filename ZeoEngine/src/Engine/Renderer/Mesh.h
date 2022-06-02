@@ -75,17 +75,15 @@ namespace ZeoEngine {
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene);
 		void LoadMeshEntries(const aiScene* meshScene);
-		void LoadDatas(const aiScene* meshScene);
-		void LoadVertexData(const aiMesh* mesh, uint32_t baseIndex);
-		void LoadIndexData(const aiMesh* mesh, uint32_t baseIndex);
+		void LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, uint32_t* indexBuffer);
+		void LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, uint32_t baseIndex);
+		void LoadIndexData(const aiMesh* mesh, uint32_t* indexBuffer, uint32_t baseIndex);
 
 	private:
 		std::string m_MeshResourcePath;
 
 		Ref<VertexArray> m_VAO;
 		uint32_t m_VertexCount = 0, m_IndexCount = 0;
-		MeshVertex* m_VertexBuffer = nullptr;
-		uint32_t* m_IndexBuffer = nullptr;
 		std::vector<MeshEntry> m_Entries;
 		std::vector<AssetHandle<Material>> m_MaterialSlots;
 		BoxSphereBounds m_Bounds;

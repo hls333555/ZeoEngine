@@ -10,15 +10,15 @@ namespace ZeoEngine {
 	{
 	}
 
-	void Drawable::AddTechnique(RenderTechnique technique, const Weak<Scene>& sceneContext)
+	void Drawable::AddTechnique(RenderTechnique technique)
 	{
-		technique.UpdateContext(sceneContext);
 		m_Techniques.emplace_back(std::move(technique));
 	}
 
-	void Drawable::ClearTechniques()
+	void Drawable::PrepareTechniques(size_t size)
 	{
 		m_Techniques.clear();
+		m_Techniques.reserve(size);
 	}
 
 	void Drawable::Bind() const

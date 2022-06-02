@@ -73,7 +73,7 @@ namespace ZeoEngine {
 	public:
 		using BindingPass::BindingPass;
 
-		void AddTask(RenderTask task);
+		void AddTask(const Drawable* drawable, const RenderStep* step);
 		void ExecuteTasks() const;
 		virtual void Execute() const override;
 		virtual void Reset() override;

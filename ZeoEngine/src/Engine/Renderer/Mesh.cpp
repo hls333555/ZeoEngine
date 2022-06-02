@@ -30,10 +30,12 @@ namespace ZeoEngine {
 
 	void MeshEntryInstance::SubmitTechniques(const AssetHandle<Material>& material)
 	{
-		ClearTechniques();
-		for (const auto& technique : material->GetRenderTechniques())
+		auto& techniques = material->GetRenderTechniques();
+		PrepareTechniques(techniques.size());
+		for (auto& technique : techniques)
 		{
-			AddTechnique(technique, SceneContext);
+			technique.UpdateContext(SceneContext, material);
+			AddTechnique(technique);
 		}
 	}
 
@@ -84,15 +86,14 @@ namespace ZeoEngine {
 
 		LoadMeshEntries(meshScene);
 
-		// TODO: Change to local
-		m_VertexBuffer = new MeshVertex[m_VertexCount];
-		m_IndexBuffer = new uint32_t[m_IndexCount];
+		auto* vertexBuffer = new MeshVertex[m_VertexCount];
+		auto* indexBuffer = new uint32_t[m_IndexCount];
 
 		// Load datas before submitting buffers
-		LoadDatas(meshScene);
+		LoadDatas(meshScene, vertexBuffer, indexBuffer);
 
-		Ref<VertexBuffer> vbo = VertexBuffer::Create(m_VertexBuffer, m_VertexCount * sizeof(MeshVertex));
-		BufferLayout layout = {
+		Ref<VertexBuffer> vbo = VertexBuffer::Create(vertexBuffer, m_VertexCount * sizeof(MeshVertex));
+		const BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal"   },
 			{ ShaderDataType::Float2, "a_TexCoord" },
@@ -100,11 +101,11 @@ namespace ZeoEngine {
 		vbo->SetLayout(layout);
 		m_VAO->AddVertexBuffer(vbo);
 
-		Ref<IndexBuffer> ibo = IndexBuffer::Create(m_IndexBuffer, m_IndexCount);
+		Ref<IndexBuffer> ibo = IndexBuffer::Create(indexBuffer, m_IndexCount);
 		m_VAO->SetIndexBuffer(ibo);
 
-		delete[] m_VertexBuffer;
-		delete[] m_IndexBuffer;
+		delete[] vertexBuffer;
+		delete[] indexBuffer;
 	}
 
 	void Mesh::LoadMeshEntries(const aiScene* meshScene)
@@ -116,7 +117,7 @@ namespace ZeoEngine {
 			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterial());
 		}
 
-		uint32_t meshCount = meshScene->mNumMeshes;
+		const uint32_t meshCount = meshScene->mNumMeshes;
 		m_Entries.resize(meshCount);
 		for (uint32_t i = 0; i < meshCount; ++i)
 		{
@@ -132,17 +133,17 @@ namespace ZeoEngine {
 		}		
 	}
 
-	void Mesh::LoadDatas(const aiScene* meshScene)
+	void Mesh::LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, uint32_t* indexBuffer)
 	{
 		for (size_t i = 0; i < m_Entries.size(); ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
-			LoadVertexData(mesh, m_Entries[i].BaseVertex);
-			LoadIndexData(mesh, m_Entries[i].BaseIndex);
+			LoadVertexData(mesh, vertexBuffer, m_Entries[i].BaseVertex);
+			LoadIndexData(mesh, indexBuffer, m_Entries[i].BaseIndex);
 		}
 	}
 
-	void Mesh::LoadVertexData(const aiMesh* mesh, uint32_t baseIndex)
+	void Mesh::LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, uint32_t baseIndex)
 	{
 		Box box;
 		for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
@@ -152,23 +153,23 @@ namespace ZeoEngine {
 			const aiVector3D& texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D();
 			const glm::vec3 pos = { position.x, position.y, position.z };
 			box += pos;
-			m_VertexBuffer[baseIndex + i].Position = pos;
-			m_VertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
-			m_VertexBuffer[baseIndex + i].TexCoord = { texCoord.x, texCoord.y };
+			vertexBuffer[baseIndex + i].Position = pos;
+			vertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
+			vertexBuffer[baseIndex + i].TexCoord = { texCoord.x, texCoord.y };
 		}
 		m_Bounds = m_Bounds + box;
 	}
 
-	void Mesh::LoadIndexData(const aiMesh* mesh, uint32_t baseIndex)
+	void Mesh::LoadIndexData(const aiMesh* mesh, uint32_t* indexBuffer, uint32_t baseIndex)
 	{
 		for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
 		{
 			const aiFace& face = mesh->mFaces[i];
 			ZE_CORE_ASSERT(face.mNumIndices == 3);
 
-			m_IndexBuffer[baseIndex + i * 3] = face.mIndices[0];
-			m_IndexBuffer[baseIndex + i * 3 + 1] = face.mIndices[1];
-			m_IndexBuffer[baseIndex + i * 3 + 2] = face.mIndices[2];
+			indexBuffer[baseIndex + i * 3] = face.mIndices[0];
+			indexBuffer[baseIndex + i * 3 + 1] = face.mIndices[1];
+			indexBuffer[baseIndex + i * 3 + 2] = face.mIndices[2];
 		}
 	}
 

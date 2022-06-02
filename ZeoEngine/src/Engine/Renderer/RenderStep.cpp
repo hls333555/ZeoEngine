@@ -20,9 +20,10 @@ namespace ZeoEngine {
 		m_Bindables.emplace_back(bindable);
 	}
 
-	void RenderStep::SetContext(const Weak<Scene>& sceneContext)
+	void RenderStep::SetContext(const Weak<Scene>& sceneContext, const AssetHandle<Material>& material)
 	{
 		m_SceneContext = sceneContext;
+		m_MaterialRef = material;
 	}
 
 	void RenderStep::Bind() const
@@ -56,7 +57,7 @@ namespace ZeoEngine {
 			LinkRenderQueuePass();
 			ZE_CORE_ASSERT(m_RenderQueuePass);
 		}
-		m_RenderQueuePass->AddTask(RenderTask(&drawable, this));
+		m_RenderQueuePass->AddTask(&drawable, this);
 	}
 
 }

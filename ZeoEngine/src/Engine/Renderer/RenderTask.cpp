@@ -7,16 +7,41 @@
 
 namespace ZeoEngine {
 
-	RenderTask::RenderTask(const Drawable* drawable, const RenderStep* step)
-		: m_Drawable(drawable), m_Step(step)
+	SubRenderTask::SubRenderTask(const Drawable* drawable)
+		: m_Drawable(drawable)
 	{
+	}
+
+	void SubRenderTask::Execute() const
+	{
+		m_Drawable->Bind();
+		RenderCommand::DrawIndexed(m_Drawable->GetBaseVertex(), m_Drawable->GetIndexCount(), m_Drawable->GetBaseIndex());
+	}
+
+	RenderTask::RenderTask(const RenderStep* step)
+		: m_Step(step)
+	{
+	}
+
+	bool RenderTask::HasSameMaterial(const RenderStep* step) const
+	{
+		return m_Step->GetMaterialRef() == step->GetMaterialRef();
+	}
+
+	void RenderTask::AddSubTask(SubRenderTask subTask)
+	{
+		m_SubTasks.emplace_back(subTask);
 	}
 
 	void RenderTask::Execute() const
 	{
-		m_Drawable->Bind();
+		// Bind material
 		m_Step->Bind();
-		RenderCommand::DrawIndexed(m_Drawable->GetBaseVertex(), m_Drawable->GetIndexCount(), m_Drawable->GetBaseIndex());
+		for (const auto& subTask : m_SubTasks)
+		{
+			subTask.Execute();
+		}
+		// TODO: Can remove?
 		m_Step->Unbind();
 	}
 

@@ -57,8 +57,8 @@ namespace ZeoEngine {
 
 	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+		//glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glNamedBufferSubData(m_RendererID, 0, size, data);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -386,7 +386,7 @@ namespace ZeoEngine {
 
 	void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
-		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
+		//glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
 		glNamedBufferSubData(m_RendererID, offset, size == 0 ? m_Size : size, data);
 	}
 

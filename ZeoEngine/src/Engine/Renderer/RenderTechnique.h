@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		bool IsActive() const { return m_bActive; }
 
 		void AddStep(RenderStep step);
-		void UpdateContext(const Weak<Scene>& sceneContext);
+		void UpdateContext(const Weak<Scene>& sceneContext, const AssetHandle<Material>& material);
 		void Submit(const Drawable& drawable);
 
 	private:

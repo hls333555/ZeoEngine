@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
 	class Bindable;
 	class Drawable;
 	class RenderQueuePass;
 	class Scene;
+	class Material;
 
 	class RenderStep
 	{
@@ -17,9 +20,10 @@ namespace ZeoEngine {
 		RenderStep& operator=(RenderStep&&) = delete;
 
 		const std::string& GetRenderQueuePassName() const { return m_RenderQueuePassName; }
+		const auto& GetMaterialRef() const { return m_MaterialRef; }
 
 		void AddBindable(const Ref<Bindable>& bindable);
-		void SetContext(const Weak<Scene>& sceneContext);
+		void SetContext(const Weak<Scene>& sceneContext, const AssetHandle<Material>& material);
 		void Bind() const;
 		void Unbind() const;
 		void Submit(const Drawable& drawable);
@@ -32,6 +36,7 @@ namespace ZeoEngine {
 		Weak<Scene> m_SceneContext;
 		RenderQueuePass* m_RenderQueuePass = nullptr;
 		std::vector<Ref<Bindable>> m_Bindables;
+		AssetHandle<Material> m_MaterialRef;
 	};
 
 }
