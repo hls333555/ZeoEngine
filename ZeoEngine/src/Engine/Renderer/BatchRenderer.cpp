@@ -81,6 +81,7 @@ namespace ZeoEngine {
 	{
 		if (m_PrimitiveBuffer.QuadIndexCount)
 		{
+			m_PrimitiveBuffer.QuadVBO->Bind();
 			const auto dataSize = reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferBase);
 			m_PrimitiveBuffer.QuadVBO->SetData(m_PrimitiveBuffer.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 

@@ -57,6 +57,11 @@ namespace ZeoEngine {
 
 	void SceneRenderer::PrepareScene()
 	{
+		m_GlobalUniformBuffer->Bind();
+		m_CameraUniformBuffer->Bind();
+		m_LightUniformBuffer->Bind();
+		m_ShadowCameraUniformBuffer->Bind();
+
 		const auto& fbo = GetFrameBuffer();
 		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
 		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);

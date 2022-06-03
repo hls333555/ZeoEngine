@@ -142,6 +142,7 @@ namespace ZeoEngine {
 	{
 		if (s_Data.QuadIndexCount)
 		{
+			s_Data.QuadVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
 			s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 
@@ -158,6 +159,7 @@ namespace ZeoEngine {
 
 		if (s_Data.CircleIndexCount)
 		{
+			s_Data.CircleVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferBase);
 			s_Data.CircleVBO->SetData(s_Data.CircleVertexBufferBase, static_cast<uint32_t>(dataSize));
 
@@ -168,6 +170,7 @@ namespace ZeoEngine {
 
 		if (s_Data.LineVertexCount)
 		{
+			s_Data.LineVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferBase);
 			s_Data.LineVBO->SetData(s_Data.LineVertexBufferBase, static_cast<uint32_t>(dataSize));
 

@@ -18,20 +18,16 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		// Call glCreateBuffers() instead of glGenBuffers() just for consistency
 		glCreateBuffers(1, &m_RendererID);
-		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+		glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size)
 	{
 		ZE_PROFILE_FUNCTION();
 
-		// Call glCreateBuffers() instead of glGenBuffers() just for consistency
 		glCreateBuffers(1, &m_RendererID);
-		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+		glNamedBufferData(m_RendererID, size, vertices, GL_STATIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
@@ -71,9 +67,8 @@ namespace ZeoEngine {
 
 		// Call glCreateBuffers() instead of glGenBuffers() just for consistency
 		glCreateBuffers(1, &m_RendererID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 		// Since index buffer state is managed by vao, index buffer data is manipulated in VertexArray::SetIndexBufferData
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+		glNamedBufferData(m_RendererID, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
@@ -82,8 +77,7 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		glCreateBuffers(1, &m_RendererID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+		glNamedBufferData(m_RendererID, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
@@ -376,7 +370,6 @@ namespace ZeoEngine {
 	{
 		glCreateBuffers(1, &m_RendererID);
 		glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
-		glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_RendererID);
 	}
 
 	OpenGLUniformBuffer::~OpenGLUniformBuffer()
