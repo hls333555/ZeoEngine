@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <IconsFontAwesome5.h>
 
+#include "EditorLayer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
@@ -12,6 +13,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Editors/EditorBase.h"
 #include "Editors/LevelEditor.h"
+#include "Engine/Core/Application.h"
 
 namespace ZeoEngine {
 
@@ -175,6 +177,12 @@ namespace ZeoEngine {
 						sceneEditor->OnSceneStop();
 						return true;
 					}
+					break;
+				}
+				case Key::F9:
+				{
+					// TODO:
+					Application::Get().GetRenderDoc().ToggleEnableCapture();
 					break;
 				}
 			}

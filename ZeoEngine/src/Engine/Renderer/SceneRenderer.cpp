@@ -18,6 +18,8 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnAttach(const Ref<Scene>& scene)
 	{
+		m_RenderDocRef = &Application::Get().GetRenderDoc();
+
 		m_QuadBatcher.Init();
 
 		m_Ddri = DDRenderInterface::Create(shared_from_this());
@@ -35,6 +37,7 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnRender()
 	{
+		m_RenderDocRef->StartFrameCapture();
 		m_RenderGraph->Start();
 		{
 			PrepareScene();
@@ -42,6 +45,7 @@ namespace ZeoEngine {
 			m_PostSceneRenderDel(GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
+		m_RenderDocRef->StopFrameCapture();
 	}
 
 	void SceneRenderer::UpdateSceneContext(const Ref<Scene>& scene)

@@ -84,7 +84,7 @@ namespace ZeoEngine {
 			ZE_PROFILE_SCOPE("RunLoop");
 
 			// Platform::GetTime();
-			float time = static_cast<float>(m_Window->GetTimeInSeconds());
+			float time = m_Window->GetTimeInSeconds();
 			DeltaTime dt = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 

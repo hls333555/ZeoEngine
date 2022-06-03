@@ -25,6 +25,7 @@ namespace ZeoEngine {
 	class DirectionalLight;
 	class PointLight;
 	class SpotLight;
+	class RenderDoc;
 
 	class SceneRenderer : public std::enable_shared_from_this<SceneRenderer>
 	{
@@ -77,6 +78,8 @@ namespace ZeoEngine {
 
 	private:
 		EditorCamera* m_EditorCamera = nullptr;
+
+		RenderDoc* m_RenderDocRef = nullptr;
 
 		Ref<SceneContext> m_SceneContext;
 		Scope<RenderGraph> m_RenderGraph;

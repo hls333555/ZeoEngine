@@ -8,6 +8,7 @@
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/GameFramework/EngineLayer.h"
+#include "Tools/RenderDoc/RenderDoc.h"
 
 int main(int argc, char** argv);
 
@@ -38,6 +39,7 @@ namespace ZeoEngine {
 		static Application& Get() { return *s_Instance; }
 		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 		Window& GetWindow() { return *m_Window; }
+		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
 
 		float GetTimeInSeconds() const { return m_Window->GetTimeInSeconds(); }
 
@@ -79,6 +81,9 @@ namespace ZeoEngine {
 		bool m_bFocused = true;
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
+
+		// TODO: Move to ToolsManager
+		RenderDoc m_RenderDoc;
 
 		static Application* s_Instance;
 
