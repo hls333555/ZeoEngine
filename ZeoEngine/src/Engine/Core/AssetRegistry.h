@@ -215,9 +215,6 @@ namespace ZeoEngine {
 		/** Stores a series of modified assets to be processed by the main thread */
 		std::set<std::string> m_PendingModifiedAssets;
 		std::mutex m_Mutex;
-		std::condition_variable m_CV;
-		bool m_bModifiedAssetsReady = true;
-		bool m_bModifiedAssetsProcessed = false;
 	};
 
 }

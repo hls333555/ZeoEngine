@@ -65,27 +65,31 @@ namespace ZeoEngine {
 					}
 				}
 
-				// Check if a file was created or modified
-				for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
+				std::filesystem::path watchedPath(m_DirectoryToWatch);
+				if (std::filesystem::exists(watchedPath))
 				{
-					if (entry.is_directory()) continue;
-
-					auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
-
-					std::string filePath = entry.path().string();
-					// File creation
-					if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
+					// Check if a file was created or modified
+					for (const auto& entry : std::filesystem::recursive_directory_iterator(watchedPath))
 					{
-						m_WatchedFiles[filePath] = currentFileLastWriteTime;
-						m_OnFileAddedDel.publish(filePath);
-					}
-					// File modification
-					else
-					{
-						if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
+						if (entry.is_directory()) continue;
+
+						auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
+
+						std::string filePath = entry.path().string();
+						// File creation
+						if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
 						{
 							m_WatchedFiles[filePath] = currentFileLastWriteTime;
-							m_OnFileModifiedDel.publish(filePath);
+							m_OnFileAddedDel.publish(filePath);
+						}
+						// File modification
+						else
+						{
+							if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
+							{
+								m_WatchedFiles[filePath] = currentFileLastWriteTime;
+								m_OnFileModifiedDel.publish(filePath);
+							}
 						}
 					}
 				}
