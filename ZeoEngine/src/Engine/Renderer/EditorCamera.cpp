@@ -22,6 +22,8 @@ namespace ZeoEngine {
 
 	void EditorCamera::OnUpdate(DeltaTime dt, bool bIsViewportHovered)
 	{
+		if (!m_bEnableUpdate) return;
+
 		const glm::vec2 mousePos = Input::GetMousePosition();
 		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;

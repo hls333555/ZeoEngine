@@ -16,6 +16,9 @@ namespace ZeoEngine {
 		SceneCamera();
 		virtual ~SceneCamera() = default;
 
+		virtual float GetNearClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveNear : m_OrthographicNear; }
+		virtual float GetFarClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveFar : m_OrthographicFar; }
+
 		void SetPerspective(float verticalFOV, float nearClip, float farClip);
 		void SetOrthographic(float size, float nearClip, float farClip);
 

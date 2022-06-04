@@ -20,7 +20,7 @@ namespace ZeoEngine {
 
 		ZCOMPONENT(SpriteRendererComponent, ZPROP(DisplayName, ZTEXT("Sprite Renderer")), ZPROP(Tooltip, ZTEXT("精灵渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(SpriteRendererComponent, TintColor)
-			ZDATA(SpriteRendererComponent, Texture)
+			ZDATA(SpriteRendererComponent, TextureAsset)
 			ZDATA(SpriteRendererComponent, TextureTiling)
 			ZDATA(SpriteRendererComponent, SortingOrder);
 
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 		ZCOMPONENT(NativeScriptComponent, ZPROP(DisplayName, ZTEXT("Native Script")), ZPROP(Tooltip, ZTEXT("C++脚本组件")), ZPROP(Category, ZTEXT("Scripts")));
 
 		ZCOMPONENT(ParticleSystemComponent, ZPROP(DisplayName, ZTEXT("Particle System")), ZPROP(Tooltip, ZTEXT("粒子系统组件")), ZPROP(Category, ZTEXT("Effects")))
-			ZDATA(ParticleSystemComponent, Template)
+			ZDATA(ParticleSystemComponent, ParticleTemplateAsset)
 			ZDATA(ParticleSystemComponent, PositionOffset);
 
 		ZENUM(ParticleVariationType)
@@ -118,7 +118,7 @@ namespace ZeoEngine {
 			ZDATA(CircleCollider2DComponent, RestitutionThreshold, ZPROP(Tooltip, ZTEXT("弹力阈值，速度高于该值时的碰撞将会反弹")), ZPROP(Category, ZTEXT("Physics Material")), ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f));
 
 		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
-			ZDATA(MeshRendererComponent, Mesh)
+			ZDATA(MeshRendererComponent, MeshAsset)
 			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer));
 
 		ZENUM(LightComponent::LightType)
@@ -126,12 +126,27 @@ namespace ZeoEngine {
 			ZENUM_DATA(LightComponent::LightType, PointLight, ZPROP(Tooltip, ZTEXT("点光源")))
 			ZENUM_DATA(LightComponent::LightType, SpotLight, ZPROP(Tooltip, ZTEXT("聚光灯")));
 
+		ZENUM(Light::ShadowType)
+			ZENUM_DATA(Light::ShadowType, HardShadow, ZPROP(Tooltip, ZTEXT("硬阴影")))
+			ZENUM_DATA(Light::ShadowType, PCF, ZPROP(Tooltip, ZTEXT("PCF软阴影")))
+			ZENUM_DATA(Light::ShadowType, PCSS, ZPROP(Tooltip, ZTEXT("PCSS软阴影")));
+
 		ZCOMPONENT(LightComponent, ZPROP(DisplayName, ZTEXT("Light")), ZPROP(Tooltip, ZTEXT("灯光组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(LightComponent, Type)
 			ZDATA_SETTER_GETTER(LightComponent, Color, SetColor, GetColor)
 			ZDATA_SETTER_GETTER(LightComponent, Intensity, SetIntensity, GetIntensity, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f))
 			ZDATA_SETTER_GETTER(LightComponent, Range, SetRange, GetRange, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "Type == DirectionalLight"))
-			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"));
+			ZDATA_SETTER_GETTER(LightComponent, CutoffAngle, SetCutoffToRadians, GetCutoffAsDegrees, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 89.0f), ZPROP(HideCondition, "Type != SpotLight"))
+			ZDATA_SETTER_GETTER(LightComponent, CastShadow, SetCastShadow, IsCastShadow)
+			ZDATA_SETTER_GETTER(LightComponent, ShadowType, SetShadowType, GetShadowType, ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, DepthBias, SetDepthBias, GetDepthBias, ZPROP(DragSensitivity, 0.001f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, NormalBias, SetNormalBias, GetNormalBias, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false"))
+			ZDATA_SETTER_GETTER(LightComponent, FilterSize, SetFilterSize, GetFilterSize, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false || ShadowType != PCSS"))
+			ZDATA_SETTER_GETTER(LightComponent, LightSize, SetLightSize, GetLightSize, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false || ShadowType != PCSS"))
+			ZDATA_SETTER_GETTER(LightComponent, CascadeCount, SetCascadeCount, GetCascadeCount, ZPROP(DragSensitivity, 0.1f), ZPROP(ClampMin, 1), ZPROP(ClampMax, 4), ZPROP(HideCondition, "CastShadow == false || Type != DirectionalLight"))
+			ZDATA_SETTER_GETTER(LightComponent, CascadeBlendThreshold, SetCascadeBlendThreshold, GetCascadeBlendThreshold, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f), ZPROP(HideCondition, "CastShadow == false || Type != DirectionalLight"))
+			ZDATA_SETTER_GETTER(LightComponent, MaxShadowDistance, SetMaxShadowDistance, GetMaxShadowDistance, ZPROP(DragSensitivity, 1.0f), ZPROP(ClampMin, 0.0f), ZPROP(HideCondition, "CastShadow == false || Type != DirectionalLight"))
+			ZDATA_SETTER_GETTER(LightComponent, CascadeSplitLambda, SetCascadeSplitLambda, GetCascadeSplitLambda, ZPROP(DragSensitivity, 0.01f), ZPROP(ClampMin, 0.0f), ZPROP(ClampMax, 1.0f), ZPROP(HideCondition, "CastShadow == false || Type != DirectionalLight"));
 
 		ZCOMPONENT(MaterialPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA_SETTER_GETTER(MaterialPreviewComponent, Shader, SetShader, GetShader);

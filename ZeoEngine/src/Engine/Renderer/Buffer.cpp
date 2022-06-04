@@ -55,12 +55,12 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpec& spec)
+	Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex, uint32_t textureBindingSlot)
 	{
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None:	ZE_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL:	return CreateRef<OpenGLFrameBuffer>(spec);
+			case RendererAPI::API::OpenGL:	return CreateRef<OpenGLFrameBuffer>(spec, textureBindingAttachmentIndex, textureBindingSlot);
 		}
 
 		ZE_CORE_ASSERT(false, "Unknown RendererAPI!");

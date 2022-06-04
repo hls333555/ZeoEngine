@@ -10,6 +10,8 @@
 
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Profile/BenchmarkTimer.h"
+#include "Engine/Renderer/Buffer.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -27,6 +29,7 @@ namespace ZeoEngine {
 		{
 			if (type == "vertex")						return GL_VERTEX_SHADER;
 			if (type == "fragment" || type == "pixel")	return GL_FRAGMENT_SHADER;
+			if (type == "geometry")						return GL_GEOMETRY_SHADER;
 
 			ZE_CORE_ASSERT(false, "Unknown shader type!");
 			return 0;
@@ -38,6 +41,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return shaderc_glsl_vertex_shader;
 				case GL_FRAGMENT_SHADER:	return shaderc_glsl_fragment_shader;
+				case GL_GEOMETRY_SHADER:	return shaderc_glsl_geometry_shader;
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -50,6 +54,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return "GL_VERTEX_SHADER";
 				case GL_FRAGMENT_SHADER:	return "GL_FRAGMENT_SHADER";
+				case GL_GEOMETRY_SHADER:	return "GL_GEOMETRY_SHADER";
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -71,6 +76,7 @@ namespace ZeoEngine {
 			{
 				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[0];
 				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[1];
+				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[2];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -81,8 +87,9 @@ namespace ZeoEngine {
 		{
 			switch (stage)
 			{
-				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[2];
-				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[3];
+				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[3];
+				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[4];
+				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[5];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -91,15 +98,15 @@ namespace ZeoEngine {
 
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filePath, bool bIsReload)
-		: m_FilePath(filePath)
-		, m_Name(PathUtils::GetNameFromPath(filePath))
+	OpenGLShader::OpenGLShader(std::string path, bool bIsReload)
+		: Shader(PathUtils::GetNormalizedAssetPath(path))
+		, m_ShaderResourcePath(std::move(path))
 	{
 		ZE_PROFILE_FUNCTION();
 
 		Utils::CreateCacheDirectoryIfNeeded();
 
-		std::string src = ReadFile(filePath);
+		const std::string src = ReadFile(m_ShaderResourcePath);
 		auto shaderSrcs = PreProcess(src);
 		
 		{
@@ -111,8 +118,8 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-		: m_Name(name)
+	OpenGLShader::OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
+		: Shader(std::move(ID))
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -132,19 +139,19 @@ namespace ZeoEngine {
 		glDeleteProgram(m_RendererID);
 	}
 
-	std::string OpenGLShader::ReadFile(const std::string& filePath)
+	std::string OpenGLShader::ReadFile(const std::string& path)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		std::string result;
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
+		std::ifstream in(path, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
 			size_t size = in.tellg();
 			if (size == -1)
 			{
-				ZE_CORE_ERROR("Could not read from file '{0}'!", filePath);
+				ZE_CORE_ERROR("Could not read from file '{0}'!", path);
 			}
 			else
 			{
@@ -155,7 +162,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			ZE_CORE_ERROR("Could not open file: '{0}'", filePath);
+			ZE_CORE_ERROR("Could not open file: '{0}'", path);
 		}
 
 		return result;
@@ -203,7 +210,8 @@ namespace ZeoEngine {
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 		// This is required in order for the names being retrieved correctly during reflection
 		options.SetGenerateDebugInfo();
-		const bool optimize = true;
+		// NOTE: Turning on optimization will sometimes cause glsl compiler to crash
+		const bool optimize = false;
 		if (optimize)
 		{
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -215,7 +223,7 @@ namespace ZeoEngine {
 		shaderData.clear();
 		for (auto&& [stage, source] : shaderSources)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
+			std::filesystem::path shaderFilePath = m_ShaderResourcePath;
 			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedVulkanFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
@@ -231,7 +239,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR(module.GetErrorMessage());
@@ -279,7 +287,7 @@ namespace ZeoEngine {
 		m_OpenGLSourceCode.clear();
 		for (auto&& [stage, spirv] : m_VulkanSPIRV)
 		{
-			std::filesystem::path shaderFilePath = m_FilePath;
+			std::filesystem::path shaderFilePath = m_ShaderResourcePath;
 			std::filesystem::path cachedPath = cacheDirectory / (shaderFilePath.filename().string() + Utils::GLShaderStageCachedOpenGLFileExtension(stage));
 
 			std::ifstream in(cachedPath, std::ios::in | std::ios::binary);
@@ -299,7 +307,7 @@ namespace ZeoEngine {
 				m_OpenGLSourceCode[stage] = glslCompiler.compile();
 				auto& source = m_OpenGLSourceCode[stage];
 
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str(), options);
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR(module.GetErrorMessage());
@@ -344,7 +352,7 @@ namespace ZeoEngine {
 
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
-			ZE_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
+			ZE_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_ShaderResourcePath, infoLog.data());
 
 			glDeleteProgram(program);
 
@@ -369,19 +377,22 @@ namespace ZeoEngine {
 		spirv_cross::Compiler compiler(shaderData);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 		const auto uniformBufferCount = resources.uniform_buffers.size();
-		m_ResourceCount = resources.sampled_images.size();
 
-		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_FilePath);
+		ZE_CORE_TRACE("OpenGLShader::Reflect - {0} {1}", Utils::GLShaderStageToString(stage), m_ShaderResourcePath);
 		ZE_CORE_TRACE("    {0} uniform buffers", uniformBufferCount);
-		ZE_CORE_TRACE("    {0} resources", m_ResourceCount);
 
 		// Reflect resources first (non-uniform block)
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			if (binding < static_cast<uint32_t>(TextureBinding::Material)) continue;
+
 			const auto& name = resource.name;
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
+			++m_ResourceCount;
 		}
+
+		ZE_CORE_TRACE("    {0} resources", m_ResourceCount);
 
 		if (uniformBufferCount <= 0) return;
 
@@ -399,9 +410,9 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
 
-			if (binding < 3) continue;
+			if (binding < static_cast<uint32_t>(UniformBufferBinding::Material)) continue;
 
-			const auto dataCount = m_ShaderReflectionData.size();
+			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector
 			m_UniformBlockDatas[binding] = { resource.name, bufferSize, dataCount, dataCount + memberCount };
 			ReflectStructType(compiler, bufferType, binding);

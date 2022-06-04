@@ -3,13 +3,11 @@
 #include "EditorUIRenderers/EditorUIRendererBase.h"
 #include "Panels/OpenAssetPanel.h"
 #include "Panels/SaveAssetPanel.h"
-#include "Engine/Renderer/Buffer.h"
 #include "Engine/Profile/Instrumentor.h"
 #include "Engine/Profile/BenchmarkTimer.h"
-#include "Engine/Renderer/Renderer.h"
-
-#define FRAMEBUFFER_WIDTH 1280
-#define FRAMEBUFFER_HEIGHT 720
+#include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Renderer/EditorCamera.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
 
@@ -18,55 +16,40 @@ namespace ZeoEngine {
 	{
 	}
 
+	EditorBase::~EditorBase() = default;
+
 	void EditorBase::OnAttach()
 	{
-		CreateFrameBuffer();
 		m_EditorUIRenderer = CreateEditorUIRenderer();
 		m_EditorUIRenderer->OnAttach();
-		NewScene(); // Create scene at last so that delegates bound beforehand will be called here
+
+		NewDefaultScene();
+		LoadAndApplyDefaultAsset();
+		m_SceneRenderer = CreateSceneRenderer();
+		m_SceneRenderer->OnAttach(m_ActiveScene);
+
+		m_OnActiveSceneChanged.connect<&EditorBase::OnActiveSceneChanged>(this);
+		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
+		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
 	}
 
-	void EditorBase::OnUpdate(DeltaTime dt)
+	void EditorBase::OnUpdate(DeltaTime dt) const
 	{
 		if (!m_bShow) return;
 
 		m_EditorUIRenderer->OnUpdate(dt);
-
 		m_ActiveScene->OnUpdate(dt);
-
-		BeginFrameBuffer();
-		{
-			{
-				ZE_PROFILE_SCOPE("Renderer Prep");
-
-				glm::vec4 clearColor = { 0.2f, 0.2f, 0.2f, 1.0f };
-				RenderCommand::SetClearColor(clearColor);
-				RenderCommand::Clear();
-				// Clear entity ID buffer to -1
-				glm::vec4 clearIDValue{ -1.0f, 0.0f, 0.0f, 0.0f };
-				m_FBO->ClearAttachment(1, clearIDValue);
-			}
-			{
-				ZE_PROFILE_SCOPE("Renderer Draw");
-
-				m_ActiveScene->OnRender(*m_EditorCamera);
-				m_PostSceneRenderDel.publish(m_FBO);
-			}
-
-			// Flush debug draw batches
-			Renderer::FlushDebugDraws();
-		}
-		EndFrameBuffer();
+		m_SceneRenderer->OnRender();
 	}
 
-	void EditorBase::OnImGuiRender()
+	void EditorBase::OnImGuiRender() const
 	{
 		if (!m_bShow) return;
 
 		m_EditorUIRenderer->OnImGuiRender();
 	}
 
-	void EditorBase::OnEvent(Event& e)
+	void EditorBase::OnEvent(Event& e) const
 	{
 		if (!m_bShow) return;
 
@@ -78,21 +61,37 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::FocusContextEntity()
+	void EditorBase::FocusContextEntity() const
 	{
 		m_EditorCamera->StartFocusEntity(m_ContextEntity);
 	}
 
-	void EditorBase::Open()
+	const Ref<FrameBuffer>& EditorBase::GetFrameBuffer() const
 	{
-		m_bShow = true;
+		return m_SceneRenderer->GetFrameBuffer();
 	}
 
-	void EditorBase::NewScene(bool bIsFromLoad)
+	void EditorBase::SetActiveScene(const Ref<Scene>& newScene, bool bIsCreateDefault)
 	{
-		m_PreSceneCreateDel.publish(bIsFromLoad);
-		m_ActiveScene = CreateScene();
-		m_PostSceneCreateDel.publish(bIsFromLoad);
+		if (newScene == m_ActiveScene) return;
+
+		m_ActiveScene = newScene;
+		m_OnActiveSceneChangedDel.publish(m_ActiveScene, bIsCreateDefault);
+	}
+
+	void EditorBase::NewDefaultScene()
+	{
+		NewScene(true);
+	}
+
+	void EditorBase::NewScene(bool bIsCreateDefault)
+	{
+		m_PreSceneCreateDel.publish(bIsCreateDefault);
+		const auto scene = CreateScene();
+		scene->OnAttach();
+		m_ContextEntity = CreatePreviewEntity(scene);
+		m_PostSceneCreateDel.publish(scene, bIsCreateDefault);
+		SetActiveScene(scene, bIsCreateDefault);
 	}
 
 	void EditorBase::LoadScene()
@@ -112,7 +111,6 @@ namespace ZeoEngine {
 	{
 		BenchmarkTimer timer;
 
-		NewScene(true);
 		LoadAsset(path);
 		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
@@ -122,7 +120,7 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveScene()
 	{
-		const std::string assetPath = GetAsset()->GetPath();
+		const std::string& assetPath = GetAsset()->GetID();
 		if (assetPath.empty())
 		{
 			SaveSceneAs();
@@ -155,23 +153,28 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::CreateFrameBuffer()
+	void EditorBase::Open()
 	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RGBA16F, FrameBufferTextureFormat::Depth };
-		fbSpec.Width = FRAMEBUFFER_WIDTH;
-		fbSpec.Height = FRAMEBUFFER_HEIGHT;
-		m_FBO = FrameBuffer::Create(fbSpec);
+		m_bShow = true;
 	}
 
-	void EditorBase::BeginFrameBuffer()
+	void EditorBase::OnActiveSceneChanged(const Ref<Scene>& scene, bool bIsCreateDefault)
 	{
-		m_FBO->Bind();
+		m_SceneRenderer->GetRenderSystem()->UpdateScene(m_ActiveScene);
+		m_SceneRenderer->UpdateSceneContext(m_ActiveScene);
+		if (bIsCreateDefault)
+		{
+			LoadAndApplyDefaultAsset();
+		}
 	}
 
-	void EditorBase::EndFrameBuffer()
+	void EditorBase::PostSceneRender(const Ref<FrameBuffer>& fbo) const
 	{
-		m_FBO->Unbind();
+		m_PostSceneRenderDel.publish(fbo);
 	}
 
+	void EditorBase::SaveAsset(const std::string& path)
+	{
+		GetAsset()->Serialize(path);
+	}
 }

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "Engine/Core/Assert.h"
-
 #include <glm/glm.hpp>
+
+#include "Engine/Core/Assert.h"
+#include "Engine/Renderer/Bindable.h"
+#include "Engine/Renderer/BufferResource.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -108,13 +111,10 @@ namespace ZeoEngine {
 
 	};
 
-	class VertexBuffer
+	class VertexBuffer : public Bindable
 	{
 	public:
 		virtual ~VertexBuffer() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
@@ -129,13 +129,10 @@ namespace ZeoEngine {
 	};
 
 	// Note: Currently ZeoEngine only supports 32-bit index buffers
-	class IndexBuffer
+	class IndexBuffer : public Bindable
 	{
 	public:
 		virtual ~IndexBuffer() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual uint32_t GetCount() const = 0;
 
@@ -144,29 +141,15 @@ namespace ZeoEngine {
 
 	};
 
-	enum class FrameBufferTextureFormat
-	{
-		None = 0,
-
-		// Color
-		RGBA8,
-		RGBA16F, // This format can store negative values
-		RED_INTEGER,
-
-		// Depth/stencil
-		DEPTH24STENCIL8,
-		
-		// Defaults
-		Depth = DEPTH24STENCIL8
-	};
-
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(FrameBufferTextureFormat format)
-			: TextureFormat(format) {}
+		FrameBufferTextureSpec(TextureFormat format, const std::vector<SamplerType>& samplers, uint32_t textureArraySize = 1)
+			: TextureFormat(format), TextureSamplers(samplers), TextureArraySize(textureArraySize) {}
 
-		FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
+		TextureFormat TextureFormat = TextureFormat::None;
+		std::vector<SamplerType> TextureSamplers;
+		uint32_t TextureArraySize = 1;
 	};
 
 	struct FrameBufferAttachmentSpec
@@ -180,14 +163,14 @@ namespace ZeoEngine {
 
 	struct FrameBufferSpec
 	{
-		uint32_t Width = 0, Height = 0;
+		uint32_t Width = 1280, Height = 720;
 		FrameBufferAttachmentSpec Attachments;
 		uint32_t Samples = 1;
 
 		bool bSwapChainTarget = false;
 	};
 
-	class FrameBuffer
+	class FrameBuffer : public Bindable, public BufferResource
 	{
 	public:
 		virtual ~FrameBuffer() = default;
@@ -195,29 +178,42 @@ namespace ZeoEngine {
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
 		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual void* GetDepthAttachment(uint32_t index = 0) const = 0;
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
 		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) = 0;
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
-		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
 
-		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
+		virtual void BindAsBuffer() const = 0;
+		virtual void UnbindAsBuffer() const = 0;
+
+		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
 	};
 
-	class UniformBuffer
+	enum class UniformBufferBinding
+	{
+		Global = 0,
+		Camera,
+		Grid,
+		Model,
+		Light,
+		ShadowCamera,
+
+		Material,
+
+	};
+
+	class UniformBuffer : public Bindable
 	{
 	public:
 		virtual ~UniformBuffer() = default;
 
 		virtual void SetData(const void* data, uint32_t size = 0, uint32_t offset = 0) = 0;
-		virtual void Bind() const = 0;
 
 		static Ref<UniformBuffer> Create(uint32_t size, uint32_t binding);
 	};

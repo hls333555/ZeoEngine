@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <IconsFontAwesome5.h>
 
+#include "EditorLayer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Input.h"
@@ -12,6 +13,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Editors/EditorBase.h"
 #include "Editors/LevelEditor.h"
+#include "Engine/Core/Application.h"
 
 namespace ZeoEngine {
 
@@ -177,6 +179,12 @@ namespace ZeoEngine {
 					}
 					break;
 				}
+				case Key::F9:
+				{
+					// TODO:
+					Application::Get().GetRenderDoc().ToggleEnableCapture();
+					break;
+				}
 			}
 		}
 
@@ -254,7 +262,7 @@ namespace ZeoEngine {
 		{
 			glm::vec4 pixel;
 			frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my), glm::value_ptr(pixel));
-			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel.x), GetContextEditor()->GetScene().get());
+			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel.x), GetContextEditor()->GetScene());
 
 			auto& Stats = Renderer::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;

@@ -4,6 +4,7 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
+#include "Engine/Renderer/SceneRenderer.h"
 
 namespace ZeoEngine {
 
@@ -27,14 +28,25 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
-	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
 
-	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
+	}
+
+	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	{
+		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
+		billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/Camera.png.zasset");
+	}
+
+	void CameraComponentHelper::OnComponentDestroy()
+	{
+		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -46,31 +58,31 @@ namespace ZeoEngine {
 	void ParticleSystemComponentHelper::OnComponentDestroy()
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		if (particleComp.Template)
+		if (particleComp.ParticleTemplateAsset)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
 		}
 	}
 
-	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		ParticleSystemInstance::Create(particleComp);
 	}
 
-	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		if (dataId == ZDATA_ID(Template))
+		if (dataId == GetDataIdByName<ParticleSystemComponent>("ParticleTemplateAsset"))
 		{
-			AssetHandle<ParticleTemplateAsset> oldTemplate = (*oldValue._Cast<AssetHandle<ParticleTemplateAsset>>());
+			AssetHandle<ParticleTemplate> oldTemplate = (*oldValue._Cast<AssetHandle<ParticleTemplate>>());
 			if (oldTemplate)
 			{
 				oldTemplate->RemoveParticleSystemInstance(particleComp.Instance);
 			}
 		}
 		// Manually clear particle template selection
-		if (!particleComp.Template)
+		if (!particleComp.ParticleTemplateAsset)
 		{
 			particleComp.Instance.reset();
 		}
@@ -80,23 +92,63 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
-
-	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	 
+	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.Template->ResimulateAllParticleSystemInstances();
+		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 
-	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
-		if (dataId == ZDATA_ID(Mesh))
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp, bIsDeserialize);
+	}
+
+	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		MeshInstance::Copy(meshComp, dynamic_cast<MeshRendererComponent*>(otherComp)->Instance);
+	}
+
+	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
 		{
 			GetOwnerEntity()->UpdateBounds();
+			if (meshComp.MeshAsset)
+			{
+				MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
+			}
+			else
+			{
+				meshComp.Instance = nullptr;
+			}
+		}
+		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
+		{
+			auto oldMaterial = (*oldValue._Cast<AssetHandle<Material>>());
+			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
+		}
+	}
+
+	void MeshRendererComponentHelper::PostDataDeserialize(uint32_t dataId)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
+		{
+			// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
+			MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
+		}
+		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
+		{
+			meshComp.Instance->SubmitAllTechniques();
 		}
 	}
 
@@ -104,7 +156,7 @@ namespace ZeoEngine {
 	{
 		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		return meshComp.Mesh ? meshComp.Mesh->GetMesh()->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
 	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
@@ -129,24 +181,24 @@ namespace ZeoEngine {
 
 	void LightComponentHelper::OnComponentDestroy()
 	{
-		GetOwnerEntity()->RemoveComponent<BillboardComponent>();
+		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 
-	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
-		if (dataId == ZDATA_ID(Range))
+		if (dataId == GetDataIdByName<LightComponent>("Range"))
 		{
 			GetOwnerEntity()->UpdateBounds();
 		}
 	}
 
-	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue)
+	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
 	{
-		if (dataId == ZDATA_ID(Type))
+		if (dataId == GetDataIdByName<LightComponent>("Type"))
 		{
 			InitLight();
 		}
-		else if (dataId == ZDATA_ID(Range))
+		else if (dataId == GetDataIdByName<LightComponent>("Range"))
 		{
 			GetOwnerEntity()->UpdateBounds();
 		}
@@ -156,7 +208,7 @@ namespace ZeoEngine {
 	{
 		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
-		if (dataId == ZDATA_ID(Type))
+		if (dataId == GetDataIdByName<LightComponent>("Type"))
 		{
 			lightComp.GetHelper<LightComponentHelper>()->InitLight();
 		}
@@ -174,21 +226,19 @@ namespace ZeoEngine {
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& billboardComp = GetOwnerEntity()->GetComponent<BillboardComponent>();
-		auto& boundsComp = GetOwnerEntity()->GetComponent<BoundsComponent>();
-		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:
 				lightComp.LightSource = CreateRef<DirectionalLight>();
-				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/DirectionalLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
 				lightComp.LightSource = CreateRef<PointLight>();
-				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/PointLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
 				lightComp.LightSource = CreateRef<SpotLight>();
-				billboardComp.Texture = Texture2DAssetLibrary::Get().LoadAsset("resources/textures/icons/SpotLight.png.zasset");
+				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

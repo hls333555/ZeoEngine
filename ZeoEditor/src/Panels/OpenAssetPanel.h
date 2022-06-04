@@ -7,7 +7,7 @@ namespace ZeoEngine {
 	class OpenAssetPanel : public AssetBrowserPanelBase
 	{
 	public:
-		OpenAssetPanel(const char* panelName, const Ref<EditorBase>& contextEditor, AssetTypeId assetTypeId);
+		OpenAssetPanel(const char* panelName, const Weak<EditorBase>& contextEditor, AssetTypeId assetTypeId);
 
 		virtual void OnAttach() override;
 

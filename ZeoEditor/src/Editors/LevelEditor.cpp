@@ -2,23 +2,23 @@
 
 #include "EditorUIRenderers/LevelEditorUIRenderer.h"
 #include "Scenes/LevelEditorScene.h"
+#include "SceneRenderers/LevelEditorSceneRenderer.h"
+#include "Engine/GameFramework/Systems.h"
+#include "Engine/Renderer/EditorCamera.h"
 
 namespace ZeoEngine {
 
 	void LevelEditor::OnAttach()
 	{
-		m_SceneAsset = SceneAsset::Create();
-
 		// Bind delegates before scene creation
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
-		m_PostSceneCreate.connect<&LevelEditor::UpdateSceneRef>(this);
 
 		EditorBase::OnAttach();
 	}
 
-	Ref<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
+	Scope<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<LevelEditorUIRenderer>(SharedFromBase<LevelEditor>());
+		return CreateScope<LevelEditorUIRenderer>(SharedFromBase<LevelEditor>());
 	}
 
 	Ref<Scene> LevelEditor::CreateScene()
@@ -27,28 +27,38 @@ namespace ZeoEngine {
 		return m_SceneForEdit;
 	}
 
-	void LevelEditor::UpdateSceneRef(bool bIsFromLoad)
+	Ref<SceneRenderer> LevelEditor::CreateSceneRenderer()
 	{
-		if (!bIsFromLoad)
-		{
-			m_SceneAsset->UpdateScene(GetScene());
-		}
+		return CreateRef<LevelEditorSceneRenderer>(SharedFromBase<LevelEditor>());
 	}
 
 	void LevelEditor::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
-		SetActiveScene(sceneForPlay);
+		const auto sceneForPlay = m_SceneForEdit->Copy<LevelEditorScene>(SharedFromBase<LevelEditor>());
 		SetContextEntity({});
+		for (const auto& system : GetScene()->GetSystems())
+		{
+			system->UpdateScene(sceneForPlay);
+			system->BindUpdateFuncToRuntime();
+		}
+		SetActiveScene(sceneForPlay, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStart();
+		GetEditorCamera()->SetEnableUpdate(false);
 	}
 
 	void LevelEditor::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		for (const auto& system : GetScene()->GetSystems())
+		{
+			system->UpdateScene(m_SceneForEdit);
+			system->BindUpdateFuncToEditor();
+		}
+		SetContextEntity({});
+		SetActiveScene(m_SceneForEdit, false);
 		GetScene<LevelEditorScene>()->OnRuntimeStop();
-		SetActiveScene(m_SceneForEdit);
+		GetEditorCamera()->SetEnableUpdate(true);
 	}
 
 	void LevelEditor::OnScenePause()
@@ -87,7 +97,7 @@ namespace ZeoEngine {
 
 	AssetTypeId LevelEditor::GetAssetTypeId() const
 	{
-		return SceneAsset::TypeId();
+		return Level::TypeId();
 	}
 
 	void LevelEditor::LoadAsset(const std::string& path)
@@ -97,14 +107,15 @@ namespace ZeoEngine {
 		{
 			OnSceneStop();
 		}
-		m_SceneAsset = SceneAssetLibrary::Get().LoadAsset(path);
-		m_SceneAsset->UpdateScene(GetScene());
-		m_SceneAsset->Deserialize();
+		m_LevelAsset = LevelLibrary::Get().LoadAsset(path);
+		NewScene(false);
+		m_LevelAsset->UpdateScene(GetScene());
 	}
 
-	void LevelEditor::SaveAsset(const std::string& path)
+	void LevelEditor::LoadAndApplyDefaultAsset()
 	{
-		m_SceneAsset->Serialize(path);
+		m_LevelAsset = LevelLibrary::GetDefaultEmptyLevel();
+		m_LevelAsset->UpdateScene(GetScene());
 	}
 
 	void LevelEditor::ClearSelectedEntity()

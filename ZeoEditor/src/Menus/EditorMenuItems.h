@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	{
 	public:
 		MenuItemBase() = delete;
-		MenuItemBase(const Ref<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName = "");
+		MenuItemBase(const Weak<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName = "");
 	protected:
 		virtual ~MenuItemBase() = default;
 	
@@ -26,7 +26,8 @@ namespace ZeoEngine {
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
 	protected:
-		Ref<EditorUIRendererBase> GetContextEditorUIRenderer() const;
+		Ref<EditorBase> GetContextEditor() const { return m_ContextEditor.lock(); }
+		EditorUIRendererBase& GetContextEditorUIRenderer() const;
 
 	private:
 		virtual void OnMenuItemActivated() {}
@@ -36,7 +37,7 @@ namespace ZeoEngine {
 		virtual bool OnKeyPressedImpl(KeyPressedEvent& e) { return false; }
 
 	protected:
-		Ref<EditorBase> m_ContextEditor;
+		Weak<EditorBase> m_ContextEditor;
 		std::string m_MenuItemName;
 		std::string m_ShortcutName;
 		bool* m_bSelected = nullptr;
@@ -46,7 +47,7 @@ namespace ZeoEngine {
 	class MenuItem_Seperator : public MenuItemBase
 	{
 	public:
-		explicit MenuItem_Seperator(const Ref<EditorBase>& contextEditor, const char* menuItemName = "Seperator");
+		explicit MenuItem_Seperator(const Weak<EditorBase>& contextEditor, const char* menuItemName = "Seperator");
 
 		virtual void OnImGuiRender() override;
 	};
@@ -55,7 +56,7 @@ namespace ZeoEngine {
 	class MenuItem_ToggleEditor : public MenuItemBase
 	{
 	public:
-		MenuItem_ToggleEditor(const Ref<EditorBase>& contextEditor, const char* editorName, const char* shortcutName = "")
+		MenuItem_ToggleEditor(const Weak<EditorBase>& contextEditor, const char* editorName, const char* shortcutName = "")
 			: MenuItemBase(contextEditor, editorName, shortcutName)
 			, m_EditorName(editorName)
 		{
@@ -91,7 +92,7 @@ namespace ZeoEngine {
 	class MenuItem_TogglePanel : public MenuItemBase
 	{
 	public:
-		MenuItem_TogglePanel(const Ref<EditorBase>& contextEditor, const char* panelName, const char* shortcutName = "")
+		MenuItem_TogglePanel(const Weak<EditorBase>& contextEditor, const char* panelName, const char* shortcutName = "")
 			: MenuItemBase(contextEditor, panelName, shortcutName)
 			, m_PanelName(panelName)
 		{
@@ -101,7 +102,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				if (auto panel = GetContextEditorUIRenderer()->GetPanel(m_PanelName.c_str()))
+				if (auto panel = GetContextEditorUIRenderer().GetPanel(m_PanelName.c_str()))
 				{
 					m_bSelected = panel->GetShowPtr();
 				}
@@ -115,7 +116,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				GetContextEditorUIRenderer()->OpenPanel<PanelClass>(m_PanelName.c_str());
+				GetContextEditorUIRenderer().OpenPanel<PanelClass>(m_PanelName.c_str());
 			}
 		}
 

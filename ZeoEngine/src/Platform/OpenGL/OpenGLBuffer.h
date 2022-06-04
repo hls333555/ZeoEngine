@@ -46,7 +46,13 @@ namespace ZeoEngine {
 	class OpenGLFrameBuffer : public FrameBuffer
 	{
 	public:
-		OpenGLFrameBuffer(const FrameBufferSpec& spec);
+		/**
+		 * Create an OpenGL frame buffer object.
+		 * @param spec - Specification for the FBO
+		 * @param textureBindingAttachmentIndex - The index of the attachment whose texture will be bound when called, the order is from color attachments to depth attachment
+		 * @param textureBindingSlot - The slot the attachment texture will be bound to when called
+		 */
+		OpenGLFrameBuffer(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
 		virtual ~OpenGLFrameBuffer();
 
 		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
@@ -54,22 +60,28 @@ namespace ZeoEngine {
 		virtual void* GetColorAttachment(uint32_t index = 0) const override
 		{
 			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
-			return (void*)(intptr_t)m_ColorAttachments[index];
+			return m_ColorAttachments[index]->GetTextureID();
 		}
+		virtual void* GetDepthAttachment(uint32_t index = 0) const override { return m_DepthAttachment->GetTextureViewID(index); }
 
 		void Invalidate();
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
+		virtual void BindAsBuffer() const override;
+		virtual void UnbindAsBuffer() const override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
 		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) override;
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
-		virtual void ClearAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) override;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue) override;
+		virtual void ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) override;
 
 		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) override;
+
+	private:
+		void Cleanup();
 
 	private:
 		FrameBufferSpec m_Spec;
@@ -78,8 +90,11 @@ namespace ZeoEngine {
 		std::vector<FrameBufferTextureSpec> m_ColorAttachmentSpecs;
 		FrameBufferTextureSpec m_DepthAttachmentSpec;
 
-		std::vector<uint32_t> m_ColorAttachments;
-		uint32_t m_DepthAttachment = 0;
+		std::vector<Ref<Texture>> m_ColorAttachments;
+		Ref<Texture> m_DepthAttachment;
+
+		int32_t m_TextureBindingAttachmentIndex;
+		uint32_t m_TextureBindingSlot;
 
 	};
 

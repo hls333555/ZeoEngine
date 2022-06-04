@@ -6,6 +6,7 @@
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
 
@@ -30,6 +31,7 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnUpdate(dt);
 
+		Renderer::ResetStats();
 		EditorManager::Get().OnUpdate(dt);
 		AssetRegistry::Get().OnUpdate(dt);
 	}

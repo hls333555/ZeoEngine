@@ -4,8 +4,40 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
+
+	Scene::~Scene()
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnDestroy();
+		}
+	}
+
+	void Scene::OnUpdate(DeltaTime dt) const
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnUpdate(dt);
+		}
+	}
+
+	void Scene::Copy(const Ref<Scene>& other)
+	{
+		m_Systems = other->m_Systems;
+		m_Context = other->m_Context;
+		other->m_Registry.view<CoreComponent>().each([this, &other](auto entityId, auto& coreComp)
+		{
+			Entity entity{ entityId, other };
+			// Clone a new "empty" entity
+			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+			// Copy components to that entity
+			newEntity.CopyAllComponents(entity);
+		});
+		other->m_OnSceneCopiedDel.publish(shared_from_this());
+	}
 
 	Entity Scene::CreateEntity(const std::string& name, const glm::vec3& translation)
 	{
@@ -14,7 +46,7 @@ namespace ZeoEngine {
 
 	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const glm::vec3& translation)
 	{
-		Entity entity{ m_Registry.create(), this };
+		Entity entity{ m_Registry.create(), shared_from_this() };
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
@@ -63,49 +95,28 @@ namespace ZeoEngine {
 		});
 	}
 
-	SceneAsset::SceneAsset(const std::string& path)
-		: AssetBase(path)
+	Ref<Level> Level::Create(std::string ID)
 	{
+		return CreateRef<Level>(std::move(ID));
 	}
 
-	AssetHandle<SceneAsset> SceneAsset::Create(const std::string& path)
+	void Level::Serialize(const std::string& path)
 	{
-		// A way to allow std::make_shared() to access SceneAsset's private constructor
-		class SceneAssetEnableShared : public SceneAsset
-		{
-		public:
-			explicit SceneAssetEnableShared(const std::string& path)
-				: SceneAsset(path) {}
-		};
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
 
-		return CreateRef<SceneAssetEnableShared>(path);
-	}
-
-	void SceneAsset::Reload(bool bIsCreate)
-	{
-		Deserialize();
-		m_Scene->PostLoad();
-	}
-
-	void SceneAsset::Serialize(const std::string& path)
-	{
-		if (path.empty()) return;
-
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
+		SetID(std::move(assetPath));
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Serialize(GetPath(), m_Scene);
+		SceneSerializer::Serialize(GetID(), m_Scene);
 	}
 
-	void SceneAsset::Deserialize()
+	void Level::Deserialize()
 	{
-		if (GetPath().empty()) return;
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
 		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetPath(), m_Scene, this);
+		SceneSerializer::Deserialize(GetID(), m_Scene);
 	}
 
 }

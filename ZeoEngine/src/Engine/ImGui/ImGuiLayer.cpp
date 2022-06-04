@@ -114,14 +114,14 @@ namespace ZeoEngine {
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Load full Chinese characters
-		io.Fonts->AddFontFromFileTTF("assets/editor/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+		io.Fonts->AddFontFromFileTTF("resources/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
 
 		ImFontConfig config;
 		config.MergeMode = true; // Merge into first font
 		config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
 		static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 		// Load font awesome 5 icons
-		io.Fonts->AddFontFromFileTTF("assets/editor/fonts/" FONT_ICON_FILE_NAME_FAS, 13.0f, &config, iconRanges);
+		io.Fonts->AddFontFromFileTTF("resources/fonts/" FONT_ICON_FILE_NAME_FAS, 13.0f, &config, iconRanges);
 
 		io.Fonts->Build();
 	}

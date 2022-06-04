@@ -87,21 +87,11 @@ namespace ZeoEngine {
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
 
 		// Generate a 1x1 white texture to be used by flat color
-		s_Data.WhiteTexture = Texture2D::Create(1, 1);
-		uint32_t whiteTextureData = 0xffffffff;
-		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
+		s_Data.TextureSlots[0] = Texture2DLibrary::GetWhiteTexture();
 
-		int32_t samplers[s_Data.MaxTextureSlots];
-		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; ++i)
-		{
-			samplers[i] = i;
-		}
 		s_Data.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
 		s_Data.CircleShader = Shader::Create("assets/editor/shaders/Renderer2D_Circle.glsl");
 		s_Data.LineShader = Shader::Create("assets/editor/shaders/Renderer2D_Line.glsl");
-
-		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
-
 		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
 
 	}
@@ -152,6 +142,7 @@ namespace ZeoEngine {
 	{
 		if (s_Data.QuadIndexCount)
 		{
+			s_Data.QuadVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase);
 			s_Data.QuadVBO->SetData(s_Data.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
 
@@ -168,6 +159,7 @@ namespace ZeoEngine {
 
 		if (s_Data.CircleIndexCount)
 		{
+			s_Data.CircleVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.CircleVertexBufferBase);
 			s_Data.CircleVBO->SetData(s_Data.CircleVertexBufferBase, static_cast<uint32_t>(dataSize));
 
@@ -178,6 +170,7 @@ namespace ZeoEngine {
 
 		if (s_Data.LineVertexCount)
 		{
+			s_Data.LineVBO->Bind();
 			auto dataSize = reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferPtr) - reinterpret_cast<uint8_t*>(s_Data.LineVertexBufferBase);
 			s_Data.LineVBO->SetData(s_Data.LineVertexBufferBase, static_cast<uint32_t>(dataSize));
 
@@ -258,12 +251,12 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -273,7 +266,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -285,7 +278,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i] == *texture->GetTexture())
+			if (s_Data.TextureSlots[i] == texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -299,7 +292,7 @@ namespace ZeoEngine {
 			}
 
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture->GetTexture();
+			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
 		}
 
 		constexpr size_t quadVertexCount = 4;
@@ -366,7 +359,7 @@ namespace ZeoEngine {
 			}
 
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = AssetHandle<Texture2D>(texture); // TODO:
 		}
 
 		for (size_t i = 0; i < quadVertexCount; i++)
@@ -477,12 +470,12 @@ namespace ZeoEngine {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2DAsset>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -511,9 +504,9 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawSprite(const glm::mat4& transform, const SpriteRendererComponent& spriteComp, int32_t entityID)
 	{
-		if (spriteComp.Texture)
+		if (spriteComp.TextureAsset)
 		{
-			DrawQuad(transform, spriteComp.Texture, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor, entityID);
+			DrawQuad(transform, spriteComp.TextureAsset, spriteComp.TextureTiling, { 0.0f, 0.0f }, spriteComp.TintColor, entityID);
 		}
 		else
 		{
@@ -522,7 +515,7 @@ namespace ZeoEngine {
 		
 	}
 
-	Statistics& Renderer2D::GetStats()
+	RendererStats& Renderer2D::GetStats()
 	{
 		return s_Data.Stats;
 	}

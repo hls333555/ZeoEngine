@@ -4,7 +4,6 @@
 
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Utils/PathUtils.h"
 #include "Engine/Core/Asset.h"
 #include "Engine/Core/AssetLibrary.h"
 
@@ -61,13 +60,12 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public AssetBase<ParticleTemplateAsset>
+	class ParticleTemplate : public AssetBase<ParticleTemplate>
 	{
-	private:
-		explicit ParticleTemplateAsset(const std::string& path);
-
 	public:
-		static AssetHandle<ParticleTemplateAsset> Create(const std::string& path = "");
+		explicit ParticleTemplate(const std::string& path);
+
+		static Ref<ParticleTemplate> Create(const std::string& path);
 
 		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
@@ -85,12 +83,12 @@ namespace ZeoEngine {
 			}
 		}
 
-		void ResimulateAllParticleSystemInstances();
+		void ResimulateAllParticleSystemInstances() const;
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void Reload(bool bIsCreate) override;
+		void Reload(bool bIsCreate);
 
 	public:
 		bool bIsLocalSpace = false;
@@ -122,7 +120,7 @@ namespace ZeoEngine {
 
 		ParticleFloat Lifetime;
 
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
@@ -139,14 +137,25 @@ namespace ZeoEngine {
 
 	};
 
+	REGISTER_ASSET(ParticleTemplate,
+	Ref<ParticleTemplate> operator()(const std::string& path, bool bIsReload) const
+	{
+		return ParticleTemplate::Create(path);
+	},
+	static AssetHandle<ParticleTemplate> GetDefaultParticleTemplate()
+	{
+		// TODO: Move to disk asset
+		return Get().LoadAsset("ZID_DefaultParticleTemplate");
+	})
+
 	class ParticleSystemInstance
 	{
 		friend class ParticleEditorViewPanel;
-		friend class ParticleTemplateAsset;
+		friend class ParticleTemplate;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const AssetHandle<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
 
 	public:
 		/**
@@ -156,7 +165,7 @@ namespace ZeoEngine {
 		 */
 		static void Create(ParticleSystemComponent& particleComp);
 
-		const AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
+		const AssetHandle<ParticleTemplate>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -186,7 +195,7 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnSystemFinishedDel;
 	public:
 		/** Called when this particle system is about to be destroyed */
-		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
+		entt::sink<entt::sigh<void()>> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
 		// Burst data specification
@@ -206,7 +215,7 @@ namespace ZeoEngine {
 			float LoopDuration;
 			float SpawnRate;
 			std::vector<BurstDataSpec> BurstList;
-			AssetHandle<Texture2DAsset> Texture;
+			AssetHandle<Texture2D> Texture;
 			glm::vec2 SubImageSize{ 0.0f };
 			glm::vec2 TilingFactor{ 1.0f };
 			glm::vec3 InheritVelocityRatio{ 0.0f };
@@ -240,7 +249,7 @@ namespace ZeoEngine {
 		struct Impl;
 		Scope<Impl> m_Impl;
 
-		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
+		AssetHandle<ParticleTemplate> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
@@ -272,15 +281,5 @@ namespace ZeoEngine {
 #endif
 
 	};
-
-	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
-	{
-		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
-		{
-			return ParticleTemplateAsset::Create(path);
-		}
-	};
-	
-	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>{};
 
 }

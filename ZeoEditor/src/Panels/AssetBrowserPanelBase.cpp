@@ -10,6 +10,7 @@
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 

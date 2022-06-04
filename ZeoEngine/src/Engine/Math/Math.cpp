@@ -82,6 +82,11 @@ namespace ZeoEngine::Math {
 		return true;
 	}
 
+	glm::vec3 GetTranslationFromTransform(const glm::mat4& transfrom)
+	{
+		return glm::vec3(transfrom[3]);
+	}
+
 	float FInterpTo(float current, float target, DeltaTime dt, float interpSpeed)
 	{
 		// If no interp speed, jump to target value

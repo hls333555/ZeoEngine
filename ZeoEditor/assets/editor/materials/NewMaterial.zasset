@@ -1,0 +1,5 @@
+AssetType: 779009498
+Shader: assets\editor\shaders\Default.glsl.zasset
+u_DiffuseTexture: ""
+u_SpecularTexture: ""
+Shininess: 32

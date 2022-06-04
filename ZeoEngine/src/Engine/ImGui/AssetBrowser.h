@@ -1,5 +1,6 @@
 #pragma once
 #include <imgui.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
@@ -41,9 +42,9 @@ namespace ZeoEngine {
 					static const float previewRounding = 5.0f;
 
 					// Draw asset thumbnail or default background
-					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : Texture2D::GetAssetBackgroundTexture()->GetTextureID(),
-						assetPreviewWidth, previewRounding,
-						true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
+					auto textureID = Texture2DLibrary::GetAssetBackgroundTexture()->GetTextureID();
+					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : textureID,
+						assetPreviewWidth, previewRounding, true, textureID);
 
 					// If asset is set...
 					if (retSpec)

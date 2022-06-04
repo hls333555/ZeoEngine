@@ -9,64 +9,100 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/Renderer2D.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/Utils/DebugDrawUtils.h"
 
 namespace ZeoEngine {
 
-	ISystem::ISystem(Scene* scene)
+	ISystem::ISystem(const Ref<Scene>& scene)
 		: m_Scene(scene)
+		, m_SceneRaw(scene.get())
 	{
 	}
 
-	void RenderSystem::OnUpdate(DeltaTime dt)
+	SystemBase::SystemBase(const Ref<Scene>& scene)
+		: ISystem(scene)
 	{
-		ForEachComponentView<ParticleSystemComponent>([dt](auto entity, auto& particleComp)
+		BindUpdateFuncToEditor();
+	}
+
+	void SystemBase::OnUpdate(DeltaTime dt) const
+	{
+		m_UpdateFuncDel(dt);
+	}
+
+	void SystemBase::BindUpdateFuncToEditor()
+	{
+		m_UpdateFuncDel.connect<&SystemBase::OnUpdateEditor>(this);
+	}
+
+	void SystemBase::BindUpdateFuncToRuntime()
+	{
+		m_UpdateFuncDel.connect<&SystemBase::OnUpdateRuntime>(this);
+	}
+
+	RenderSystemBase::RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer)
+		: ISystem(scene)
+		, m_SceneRenderer(sceneRenderer)
+	{
+	}
+
+	std::pair<SceneCamera*, glm::mat4> RenderSystemBase::GetActiveSceneCamera()
+	{
+		SceneCamera* camera = nullptr;
+		glm::mat4 transform;
+		ForEachComponentView<TransformComponent, CameraComponent>([&camera, &transform](auto entity, auto& transformComp, auto& cameraComp)
 		{
-			if (particleComp.Instance)
+			if (cameraComp.bIsPrimary)
 			{
-				particleComp.Instance->OnUpdate(dt);
+				camera = &cameraComp.Camera;
+				transform = transformComp.GetTransform();
+				return;
 			}
 		});
+		return std::make_pair(camera, transform);
 	}
 
-	void RenderSystem::OnRenderEditor(const EditorCamera& camera)
+	void RenderSystem::OnRenderEditor()
 	{
-		Renderer::BeginScene(camera, true);
+		RenderLights(true);
+		RenderMeshes();
+
+		// Render billboards
+		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
 		{
-			OnRender();
-		}
-		Renderer::EndScene();
+			if (billboardComp.TextureAsset)
+			{
+				const Entity entity = { e, GetScene() };
+				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
+				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
+			}
+		});
+
+		// Render camera frustums
+		ForEachComponentView<TransformComponent, CameraComponent>([this](auto entity, auto& transformComp, auto& cameraComp)
+		{
+			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
+			// TODO: Replace this with FrameBuffer texture
+			// Draw frustum visualizer when selected
+			if (GetSceneRaw()->GetSelectedEntity() == entity)
+			{
+				const glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
+				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, visualizeColor);
+			}
+		});
 	}
 
 	void RenderSystem::OnRenderRuntime()
 	{
-		Camera* mainCamera = nullptr;
-		glm::mat4 cameraTransform;
-		ForEachComponentView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
-		{
-			if (cameraComp.bIsPrimary)
-			{
-				mainCamera = &cameraComp.Camera;
-				cameraTransform = transformComp.GetTransform();
-				return;
-			}
-		});
-		if (mainCamera)
-		{
-			Renderer::BeginScene(*mainCamera, cameraTransform);
-			{
-				OnRender();
-			}
-			Renderer::EndScene();
-		}
+		RenderLights(false);
+		RenderMeshes();
 	}
 
-	void RenderSystem::OnRender()
+	void RenderSystem::RenderLights(bool bIsEditor)
 	{
-		// Setup lights
-		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
+		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this, bIsEditor](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
 			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			switch (lightComp.Type)
@@ -74,40 +110,40 @@ namespace ZeoEngine {
 				case LightComponent::LightType::DirectionalLight:
 				{
 					const auto& directionalLight = lightComp.GetLight<DirectionalLight>();
-					Renderer::SetupDirectionalLight(transformComp.Rotation, directionalLight);
+					GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, directionalLight);
 
 					// Draw arrow visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
 						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
-						DebugDrawUtils::DrawArrow(transformComp.Translation, endPosition, visualizeColor, 0.25f);
+						DebugDrawUtils::DrawArrow(GetScene(), transformComp.Translation, endPosition, visualizeColor, 0.25f);
 					}
 					break;
 				}
 				case LightComponent::LightType::PointLight:
 				{
 					const auto& pointLight = lightComp.GetLight<PointLight>();
-					Renderer::AddPointLight(transformComp.Translation, pointLight);
+					GetSceneRenderer()->AddPointLight(transformComp.Translation, pointLight);
 
 					// Draw sphere visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
-						DebugDrawUtils::DrawSphereBounds(transformComp.Translation, visualizeColor, pointLight->GetRange());
+						DebugDrawUtils::DrawSphereBounds(GetScene(), transformComp.Translation, visualizeColor, pointLight->GetRange());
 					}
 					break;
 				}
 				case LightComponent::LightType::SpotLight:
 				{
 					const auto& spotLight = lightComp.GetLight<SpotLight>();
-					Renderer::AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
+					GetSceneRenderer()->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
 
 					// Draw cone visualizer when selected
-					if (m_Scene->GetSelectedEntity() == entity)
+					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
 						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
 						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
-						DebugDrawUtils::DrawCone(transformComp.Translation, direction, visualizeColor, radius, 0.0f);
+						DebugDrawUtils::DrawCone(GetScene(), transformComp.Translation, direction, visualizeColor, radius, 0.0f);
 					}
 					break;
 				}
@@ -115,77 +151,35 @@ namespace ZeoEngine {
 					break;
 			}
 		});
+	}
 
-		// Render meshes
-		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [](auto entity, auto& transformComp, auto& meshComp)
+	void RenderSystem::RenderMeshes()
+	{
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
-			if (meshComp.Mesh)
-			{
-				Renderer::DrawMesh(transformComp.GetTransform(), meshComp.Mesh->GetMesh(), static_cast<int32_t>(entity));
-			}
-		});
-
-		// Render billboards at last
-		ForEachComponentView<TransformComponent, BillboardComponent>([this](auto e, auto& transformComp, auto& billboardComp)
-		{
-			if (billboardComp.Texture)
-			{
-				Entity entity = { e, m_Scene };
-				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
-				Renderer::DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.Texture->GetTexture(), { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
-			}
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<int32_t>(entity));
 		});
 	}
 
 	static void RemoveParticleSystemInstance(ParticleSystemComponent& particleComp)
 	{
-		if (particleComp.Template)
+		if (particleComp.ParticleTemplateAsset)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
 		}
 	}
 
-	void RenderSystem::OnDestroy()
+	void RenderSystem2D::OnRenderEditor()
 	{
-		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
-		{
-			RemoveParticleSystemInstance(particleComp);
-		});
-	}
-
-	void RenderSystem2D::OnRenderEditor(const EditorCamera& camera)
-	{
-		Renderer2D::BeginScene(camera);
-		{
-			OnRender();
-		}
-		Renderer2D::EndScene();
+		OnRenderImpl();
 	}
 
 	void RenderSystem2D::OnRenderRuntime()
 	{
-		Camera* mainCamera = nullptr;
-		glm::mat4 cameraTransform;
-		ForEachComponentView<TransformComponent, CameraComponent>([&mainCamera, &cameraTransform](auto entity, auto& transformComp, auto& cameraComp)
-		{
-			if (cameraComp.bIsPrimary)
-			{
-				mainCamera = &cameraComp.Camera;
-				cameraTransform = transformComp.GetTransform();
-				return;
-			}
-		});
-		if (mainCamera)
-		{
-			Renderer2D::BeginScene(*mainCamera, cameraTransform);
-			{
-				OnRender();
-			}
-			Renderer2D::EndScene();
-		}
+		OnRenderImpl();
 	}
 
-	void RenderSystem2D::OnRender()
+	void RenderSystem2D::OnRenderImpl()
 	{
 		// Render sprites
 		ForEachComponentGroup<TransformComponent>(entt::get<SpriteRendererComponent>, [](auto entity, auto& transformComp, auto& spriteComp)
@@ -215,27 +209,77 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticlePreviewRenderSystem::OnUpdate(DeltaTime dt)
+	void ParticlePreviewRenderSystem::OnRenderEditor()
 	{
-		ForEachComponentView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
+		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 		{
-			particlePreviewComp.Instance->OnUpdate(dt);
+			particlePreviewComp.Instance->OnRender();
 		});
 	}
 
-	void ParticlePreviewRenderSystem::OnRender(const EditorCamera& camera)
+	void MaterialPreviewRenderSystem::OnRenderEditor()
 	{
-		Renderer2D::BeginScene(camera);
+		ForEachComponentView<TransformComponent, LightComponent>([this](auto entity, auto& transformComp, auto& lightComp)
 		{
-			ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
-			{
-				particlePreviewComp.Instance->OnRender();
-			});
-		}
-		Renderer2D::EndScene();
+			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+		});
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
+		{
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
+		});
 	}
 
-	void ParticlePreviewRenderSystem::OnDestroy()
+	void ParticleUpdateSystem::OnUpdateEditor(DeltaTime dt)
+	{
+		OnUpdateImpl(dt);
+	}
+
+	void ParticleUpdateSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		OnUpdateImpl(dt);
+	}
+
+	void ParticleUpdateSystem::OnUpdateImpl(DeltaTime dt)
+	{
+		ForEachComponentView<ParticleSystemComponent>([dt](auto entity, auto& particleComp)
+		{
+			if (particleComp.Instance)
+			{
+				particleComp.Instance->OnUpdate(dt);
+			}
+		});
+	}
+
+	void ParticleUpdateSystem::OnDestroy()
+	{
+		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		{
+			RemoveParticleSystemInstance(particleComp);
+		});
+	}
+
+	void ParticlePreviewUpdateSystem::OnUpdateEditor(DeltaTime dt)
+	{
+		OnUpdateImpl(dt);
+	}
+
+	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		OnUpdateImpl(dt);
+	}
+
+	void ParticlePreviewUpdateSystem::OnUpdateImpl(DeltaTime dt)
+	{
+		ForEachComponentView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
+		{
+			if (particlePreviewComp.Instance)
+			{
+				particlePreviewComp.Instance->OnUpdate(dt);
+			}
+		});
+	}
+
+	void ParticlePreviewUpdateSystem::OnDestroy()
 	{
 		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 		{
@@ -243,25 +287,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void MaterialPreviewRenderSystem::OnRender(const EditorCamera& camera)
-	{
-		Renderer::BeginScene(camera);
-		{
-			ForEachComponentView<TransformComponent, LightComponent>([](auto entity, auto& transformComp, auto& lightComp)
-			{
-				Renderer::SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
-			});
-			ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
-			{
-				const auto& mesh = meshComp.Mesh->GetMesh();
-				mesh->SetMaterial(0, materialPreviewComp.Template);
-				Renderer::DrawMesh(transformComp.GetTransform(), mesh);
-			});
-		}
-		Renderer::EndScene();
-	}
-
-	void NativeScriptSystem::OnUpdate(DeltaTime dt)
+	void NativeScriptSystem::OnUpdateRuntime(DeltaTime dt)
 	{
 		ForEachComponentView<NativeScriptComponent>([=](auto entity, auto& nativeScriptComp)
 		{
@@ -269,7 +295,7 @@ namespace ZeoEngine {
 			if (!nativeScriptComp.Instance)
 			{
 				nativeScriptComp.Instance = nativeScriptComp.InstantiateScript();
-				nativeScriptComp.Instance->m_Entity = Entity{ entity, m_Scene };
+				nativeScriptComp.Instance->m_Entity = Entity{ entity, GetScene() };
 				nativeScriptComp.Instance->OnCreate();
 			}
 
@@ -288,7 +314,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void PhysicsSystem::OnUpdate(DeltaTime dt)
+	void PhysicsSystem::OnUpdateRuntime(DeltaTime dt)
 	{
 
 	}
@@ -305,7 +331,7 @@ namespace ZeoEngine {
 
 	}
 
-	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
+	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
 	{
 		const int32_t velocityIterations = 6;
 		const int32_t positionIterations = 2;
@@ -313,11 +339,11 @@ namespace ZeoEngine {
 
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene };
+			const Entity entity = { e, GetScene() };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			// Retrieve transfrom from Box2D
-			b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
+			const b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
 			const auto& position = body->GetPosition();
 			transformComp.Translation.x = position.x;
 			transformComp.Translation.y = position.y;
@@ -344,8 +370,8 @@ namespace ZeoEngine {
 		m_PhysicsWorld = new b2World(gravity);
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			Entity entity = { e, m_Scene };
-			auto& transformComp = entity.GetComponent<TransformComponent>();
+			const Entity entity = { e, GetScene() };
+			const auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			b2BodyDef bodyDef;
 			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
@@ -358,7 +384,7 @@ namespace ZeoEngine {
 
 			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
-				auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
+				const auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
 
 				b2PolygonShape boxShape;
 				boxShape.SetAsBox(bc2dComp.Size.x * transformComp.Scale.x, bc2dComp.Size.y * transformComp.Scale.y);
@@ -374,7 +400,7 @@ namespace ZeoEngine {
 
 			if (entity.HasComponent<CircleCollider2DComponent>())
 			{
-				auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
+				const auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
 
 				b2CircleShape circleShape;
 				circleShape.m_p.Set(cc2dComp.Offset.x, cc2dComp.Offset.y);

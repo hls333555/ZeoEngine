@@ -4,11 +4,12 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Core/FileWatcher.h"
 #include "Engine/Core/DeltaTime.h"
 
 namespace ZeoEngine {
+
+	class Texture2D;
 
 	enum EPathFlag : uint8_t
 	{
@@ -214,9 +215,6 @@ namespace ZeoEngine {
 		/** Stores a series of modified assets to be processed by the main thread */
 		std::set<std::string> m_PendingModifiedAssets;
 		std::mutex m_Mutex;
-		std::condition_variable m_CV;
-		bool m_bModifiedAssetsReady = true;
-		bool m_bModifiedAssetsProcessed = false;
 	};
 
 }

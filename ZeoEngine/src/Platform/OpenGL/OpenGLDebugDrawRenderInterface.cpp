@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/SceneRenderer.h"
 
 namespace ZeoEngine {
 
@@ -109,9 +109,10 @@ namespace ZeoEngine {
         "    o_Color.a = texture(u_GlyphTexture, v_TexCoords).r;\n"
         "}\n";
 
-    void OpenGLDDRenderInterface::Init()
+    OpenGLDDRenderInterface::OpenGLDDRenderInterface(const Ref<SceneRenderer>& sceneRenderer)
+        : m_SceneRenderer(sceneRenderer)
     {
-        // This has to be enabled since the point drawing shader will use gl_PointSize
+    	// This has to be enabled since the point drawing shader will use gl_PointSize
         glEnable(GL_PROGRAM_POINT_SIZE);
 
         SetupShaderPrograms();
@@ -137,13 +138,6 @@ namespace ZeoEngine {
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-    }
-
-    // TODO:
-    void OpenGLDDRenderInterface::endDraw()
-    {
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
     }
 
     dd::GlyphTextureHandle OpenGLDDRenderInterface::createGlyphTexture(int width, int height, const void* pixels)
@@ -191,7 +185,7 @@ namespace ZeoEngine {
         glBindVertexArray(m_LinePointVAO);
         glUseProgram(m_LinePointShader);
 
-        auto viewProjection = Renderer::GetViewProjectionMatrix();
+        auto viewProjection = m_SceneRenderer.lock()->GetViewProjectionMatrix();
         glUniformMatrix4fv(m_LinePointShader_MvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
         if (depthEnabled)
@@ -224,7 +218,7 @@ namespace ZeoEngine {
         glBindVertexArray(m_LinePointVAO);
         glUseProgram(m_LinePointShader);
 
-        auto viewProjection = Renderer::GetViewProjectionMatrix();
+        auto viewProjection = m_SceneRenderer.lock()->GetViewProjectionMatrix();
         glUniformMatrix4fv(m_LinePointShader_MvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
         if (depthEnabled)

@@ -21,7 +21,6 @@ namespace ZeoEngine {
 	public:
 		EditorUIRendererBase() = delete;
 		explicit EditorUIRendererBase(const Ref<EditorBase>& contextEditor);
-	protected:
 		virtual ~EditorUIRendererBase() = default;
 
 	public:
@@ -30,7 +29,7 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		const Ref<EditorBase>& GetContextEditor() const { return m_ContextEditor; }
+		Ref<EditorBase> GetContextEditor() const { return m_ContextEditor.lock(); }
 		template<typename T>
 		Ref<T> GetContextEditor()
 		{
@@ -74,13 +73,13 @@ namespace ZeoEngine {
 		}
 
 		template<typename T = PanelBase>
-		Ref<T> GetPanel(const char* panelName)
+		Ref<T> GetPanel(const char* panelName) const
 		{
 			auto it = m_Panels.find(panelName);
 			if (it == m_Panels.end()) return {};
 
 			Ref<PanelBase> panel = it->second;
-			if constexpr (std::is_same<T, PanelBase>::value)
+			if constexpr (std::is_same_v<T, PanelBase>)
 			{
 				return panel;
 			}
@@ -90,7 +89,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		Ref<EditorViewPanelBase> GetViewPanel();
+		Ref<EditorViewPanelBase> GetViewPanel() const;
 
 		void RebuildDockLayout() { m_bShouldRebuildDockLayout = true; }
 
@@ -111,7 +110,7 @@ namespace ZeoEngine {
 		DockspaceSpec m_DockspaceSpec;
 
 	private:
-		Ref<EditorBase> m_ContextEditor;
+		Weak<EditorBase> m_ContextEditor;
 
 		bool m_bIsEditorFocused = false, m_bIsEditorHovered = false;
 		bool m_bShouldRebuildDockLayout = false;

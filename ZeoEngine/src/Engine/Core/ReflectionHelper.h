@@ -53,6 +53,7 @@ namespace ZeoEngine {
 
 		bool bIsStructSubdata = false;
 		bool bIsSeqElement = false;
+		int32_t ElementIndex = -1;
 
 		DataSpec() = default;
 		// NOTE: Instances should not be const otherwise const version of as_ref() will be invoked, then they will become const references and cannot get modified directly
@@ -74,6 +75,7 @@ namespace ZeoEngine {
 			ComponentInstance = other.ComponentInstance.as_ref();
 			bIsStructSubdata = other.bIsStructSubdata;
 			bIsSeqElement = other.bIsSeqElement;
+			ElementIndex = other.ElementIndex;
 		}
 		DataSpec& operator=(const DataSpec& other)
 		{
@@ -83,13 +85,15 @@ namespace ZeoEngine {
 			ComponentInstance = other.ComponentInstance.as_ref();
 			bIsStructSubdata = other.bIsStructSubdata;
 			bIsSeqElement = other.bIsSeqElement;
+			ElementIndex = other.ElementIndex;
 			return *this;
 		}
 
-		void Update(entt::meta_any& compInstance, entt::meta_any& instance)
+		void Update(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
 		{
 			ComponentInstance = compInstance.as_ref();
 			Instance = instance.as_ref();
+			ElementIndex = elementIndex;
 		}
 
 		entt::meta_type GetType() const

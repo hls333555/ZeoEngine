@@ -6,14 +6,18 @@
 
 namespace ZeoEngine {
 	
-	Entity::Entity(entt::entity handle, Scene* scene)
+	Entity::Entity(entt::entity handle, const Ref<Scene>& scene)
 		: m_EntityHandle(handle), m_Scene(scene)
 	{
 	}
 
 	bool Entity::IsValid() const
 	{
-		return m_Scene->m_Registry.valid(*this);
+		if (const auto scene = m_Scene.lock())
+		{
+			return scene->m_Registry.valid(*this);
+		}
+		return false;
 	}
 
 	void Entity::UpdateBounds()
@@ -35,7 +39,7 @@ namespace ZeoEngine {
 		GetComponent<BoundsComponent>().Bounds = boundingBox.bIsValid ? boundingBox : GetDefaultBounds();
 	}
 
-	BoxSphereBounds Entity::GetDefaultBounds()
+	BoxSphereBounds Entity::GetDefaultBounds() const
 	{
 		auto& transformComp = GetComponent<TransformComponent>();
 		return BoxSphereBounds(transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f);
@@ -56,7 +60,7 @@ namespace ZeoEngine {
 			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *compName);
 			return {};
 		}
-		auto compInstance = Reflection::ConstructComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		auto compInstance = Reflection::ConstructComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
@@ -70,7 +74,7 @@ namespace ZeoEngine {
 			{
 				UpdateBounds();
 			}
-			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
+			Reflection::BindOnComponentDestroy(compType, m_Scene.lock()->m_Registry);
 		}
 		
 		return compInstance;
@@ -87,7 +91,7 @@ namespace ZeoEngine {
 
 		RemoveComponentId(compId);
 		UpdateBounds();
-		Reflection::RemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		Reflection::RemoveComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
 	}
 
 	entt::meta_any Entity::GetComponentById(entt::id_type compId) const
@@ -99,7 +103,7 @@ namespace ZeoEngine {
 			return {};
 		}
 
-		return Reflection::GetComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		return Reflection::GetComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
 	}
 
 	bool Entity::HasComponentById(entt::id_type compId) const
@@ -107,7 +111,7 @@ namespace ZeoEngine {
 		auto compType = entt::resolve(compId);
 		if (!compType) return false;
 
-		auto bHas = Reflection::HasComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		auto bHas = Reflection::HasComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
 		return bHas.cast<bool>();
 	}
 
@@ -144,14 +148,15 @@ namespace ZeoEngine {
 		}
 
 		auto srcCompInstance = srcEntity.GetComponentById(compId);
-		auto compInstance = Reflection::CopyComponent(compType, m_Scene->m_Registry, m_EntityHandle, srcCompInstance);
+		IComponent* srcComp = srcCompInstance.try_cast<IComponent>();
+		auto compInstance = Reflection::CopyComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle, srcCompInstance);
 		IComponent* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->CreateHelper(this);
 		if (comp->ComponentHelper)
 		{
-			comp->ComponentHelper->OnComponentCopied(comp);
-			Reflection::BindOnComponentDestroy(compType, m_Scene->m_Registry);
+			comp->ComponentHelper->OnComponentCopied(srcComp);
+			Reflection::BindOnComponentDestroy(compType, m_Scene.lock()->m_Registry);
 		}
 	}
 

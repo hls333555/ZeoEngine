@@ -7,7 +7,39 @@
 
 namespace ZeoEngine {
 	
-	Ref<Shader> Shader::Create(const std::string& filePath, bool bIsReload)
+	Ref<Shader> Shader::Create(const std::string& path, bool bIsReload)
+	{
+		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
+		if (!PathUtils::DoesPathExist(resourcePath)) return {};
+
+		if (bIsReload)
+		{
+			ClearCache(resourcePath);
+		}
+
+		Ref<Shader> shader;
+		switch (Renderer::GetAPI())
+		{
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				shader = CreateRef<OpenGLShader>(std::move(resourcePath), bIsReload);
+				break;
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
+		}
+
+		shader->Deserialize();
+		if (bIsReload)
+		{
+			shader->m_OnShaderReloadedDel.publish();
+		}
+		return shader;
+	}
+
+	Ref<Shader> Shader::Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,39 +47,24 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLShader>(filePath, bIsReload);
+				return CreateRef<OpenGLShader>(std::move(ID), vertexSrc, fragmentSrc);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 	}
 
-	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	void Shader::ClearCache(const std::string& path)
 	{
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None:
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-				return nullptr;
-			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
-			default:
-				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-				return nullptr;
-		}
-	}
-
-	void Shader::ClearCache(const std::string& filePath)
-	{
-		switch (Renderer::GetAPI())
-		{
-			case RendererAPI::API::None:
-				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-				return;
+				break;
 			case RendererAPI::API::OpenGL:
 			{
-				std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
-				std::filesystem::path shaderFilePath = filePath;
+				const std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
+				const std::filesystem::path shaderFilePath = path;
 				const auto& extensions = OpenGLShader::GetCacheFileExtensions();
 				for (const char* extension : extensions)
 				{
@@ -57,67 +74,28 @@ namespace ZeoEngine {
 						PathUtils::DeletePath(cachePath);
 					}
 				}
-				return;
+				break;
 			}
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-				return;
+				break;
 		}
 	}
 
-	ShaderAsset::ShaderAsset(const std::string& path)
-		: AssetBase(path)
+	void Shader::Serialize(const std::string& path)
 	{
-		Reload(true);
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
+
+		SetID(std::move(assetPath));
+		AssetSerializer::Serialize(GetID(), TypeId(), {});
 	}
 
-	Ref<ShaderAsset> ShaderAsset::Create(const std::string& path)
+	void Shader::Deserialize()
 	{
-		class ShaderAssetEnableShared : public ShaderAsset
-		{
-		public:
-			explicit ShaderAssetEnableShared(const std::string& path)
-				: ShaderAsset(path) {}
-		};
+		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		return CreateRef<ShaderAssetEnableShared>(path);
+		AssetSerializer::Deserialize(GetID(), TypeId(), {});
 	}
-
-	void ShaderAsset::Reload(bool bIsCreate)
-	{
-		auto shaderPath = PathUtils::GetResourcePathFromAssetPath(GetPath());
-		ZE_CORE_ASSERT(PathUtils::DoesPathExist(shaderPath));
-
-		if (!bIsCreate)
-		{
-			Shader::ClearCache(shaderPath);
-		}
-		m_Shader = Shader::Create(shaderPath, !bIsCreate);
-		Deserialize();
-		if (!bIsCreate)
-		{
-			m_OnShaderReloadedDel.publish();
-		}
-	}
-
-	void ShaderAsset::Serialize(const std::string& path)
-	{
-		if (path.empty()) return;
-
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		AssetSerializer::Serialize(GetPath(), TypeId(), {});
-	}
-
-	void ShaderAsset::Deserialize()
-	{
-		if (GetPath().empty()) return;
-
-		AssetSerializer::Deserialize(GetPath(), TypeId(), {}, this);
-	}
-
-
 
 }

@@ -22,13 +22,16 @@ project "ZeoEditor"
 	{
 		"src",
 		"%{wks.location}/ZeoEngine/src",
+		"%{IncludeDir.debug_draw}",
 		"%{IncludeDir.doctest}",
+		"%{IncludeDir.dylib}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.IconFontCppHeaders}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.yaml_cpp}",
 	}

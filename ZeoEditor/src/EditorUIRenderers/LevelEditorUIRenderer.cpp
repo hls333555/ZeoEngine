@@ -12,6 +12,7 @@
 #include "Panels/StatsPanel.h"
 #include "Panels/PreferencesPanel.h"
 #include "Panels/AboutPanel.h"
+#include "Panels/FrameDebugPanel.h"
 
 namespace ZeoEngine {
 
@@ -29,10 +30,10 @@ namespace ZeoEngine {
 		CreatePanel<ConsolePanel>(CONSOLE);
 
 		CreateMenu("File")
-			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New Scene", "CTRL+N")
-			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load Scene", "CTRL+O")
-			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save Scene", "CTRL+S")
-			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save Scene As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_NewAsset>(ICON_FA_FILE "  New level", "CTRL+N")
+			.MenuItem<MenuItem_LoadAsset>(ICON_FA_FILE_IMPORT "  Load level", "CTRL+O")
+			.MenuItem<MenuItem_SaveAsset>(ICON_FA_SAVE "  Save level", "CTRL+S")
+			.MenuItem<MenuItem_SaveAssetAs>(ICON_FA_SAVE "  Save level As", "CTRL+ALT+S");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
@@ -48,6 +49,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel<ContentBrowserPanel>>(CONTENT_BROWSER)
 			.MenuItem<MenuItem_TogglePanel<ConsolePanel>>(CONSOLE)
 			.MenuItem<MenuItem_TogglePanel<StatsPanel>>(STATS)
+			.MenuItem<MenuItem_TogglePanel<FrameDebugPanel>>(FRAME_DEBUGGER)
 			.MenuItem<MenuItem_TogglePanel<PreferencesPanel>>(PREFERENCES)
 			.MenuItem<MenuItem_Seperator>()
 			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");

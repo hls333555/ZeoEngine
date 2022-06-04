@@ -9,6 +9,7 @@
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -137,7 +138,7 @@ namespace ZeoEngine {
 				{
 					char baseName[MAX_PATH_SIZE] = "New";
 					strcat_s(baseName, assetTypeName);
-					strcat_s(baseName, factory->GetAssetExtension());
+					strcat_s(baseName, factory->GetResourceExtension());
 					std::string formattedName = GetFormatedAssetTypeName(baseName);
 					std::string newPath = GetAvailableNewPathName(formattedName.c_str(), true);
 					RequestPathCreation(newPath, typeId, true);
@@ -228,7 +229,7 @@ namespace ZeoEngine {
 			// Draw tooltip thumbnail
 			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
 				GetTileThumbnailWidth(), thumbnailRounding,
-				true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
+				true, Texture2DLibrary::GetAssetBackgroundTexture()->GetTextureID());
 
 			ImGui::EndDragDropSource();
 		}

@@ -2,6 +2,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/ParticleEditorUIRenderer.h"
+#include "SceneRenderers/ParticleEditorSceneRenderer.h"
 #include "Scenes/ParticleEditorScene.h"
 
 namespace ZeoEngine {
@@ -11,14 +12,13 @@ namespace ZeoEngine {
 		// TODO: If no change was made, no need to reload
 		// When a new scene is created, all previous particle's changes should be discarded
 		m_PreSceneCreate.connect<&ParticleEditor::ReloadParticleTemplateData>(this);
-		m_PostSceneCreate.connect<&ParticleEditor::CreatePreviewParticle>(this);
 
 		EditorBase::OnAttach();
 	}
 
-	Ref<EditorUIRendererBase> ParticleEditor::CreateEditorUIRenderer()
+	Scope<EditorUIRendererBase> ParticleEditor::CreateEditorUIRenderer()
 	{
-		return CreateRef<ParticleEditorUIRenderer>(SharedFromBase<ParticleEditor>());
+		return CreateScope<ParticleEditorUIRenderer>(SharedFromBase<ParticleEditor>());
 	}
 
 	Ref<Scene> ParticleEditor::CreateScene()
@@ -26,28 +26,45 @@ namespace ZeoEngine {
 		return CreateRef<ParticleEditorScene>();
 	}
 
+	Ref<SceneRenderer> ParticleEditor::CreateSceneRenderer()
+	{
+		return CreateScope<ParticleEditorSceneRenderer>(SharedFromBase<ParticleEditor>());
+	}
+
 	AssetTypeId ParticleEditor::GetAssetTypeId() const
 	{
-		return ParticleTemplateAsset::TypeId();
+		return ParticleTemplate::TypeId();
 	}
 
 	AssetHandle<IAsset> ParticleEditor::GetAsset() const
 	{
-		return GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Template;
+		return GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().ParticleTemplateAsset;
 	}
 
 	void ParticleEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path](auto& particlePreviewComp)
 		{
-			particlePreviewComp.Template = ParticleTemplateAssetLibrary::Get().LoadAsset(path);
+			particlePreviewComp.ParticleTemplateAsset = ParticleTemplateLibrary::Get().LoadAsset(path);
 		});
 	}
 
-	void ParticleEditor::SaveAsset(const std::string& path)
+	void ParticleEditor::LoadAndApplyDefaultAsset()
 	{
-		auto& particlePreviewComp = GetContextEntity().GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.Template->Serialize(path);
+		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
+		{
+			particlePreviewComp.ParticleTemplateAsset = ParticleTemplateLibrary::GetDefaultParticleTemplate();
+		});
+	}
+
+	Entity ParticleEditor::CreatePreviewEntity(const Ref<Scene>& scene)
+	{
+		Entity previewParticleEntity = scene->CreateEntity("Preview Particle");
+		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		// TODO:
+		// For loading phase, instance will be created in ParticleScene::PostLoad
+		ParticleSystemInstance::Create(particlePreviewComp);
+		return previewParticleEntity;
 	}
 
 	void ParticleEditor::ReloadParticleTemplateData()
@@ -57,20 +74,8 @@ namespace ZeoEngine {
 		
 		previewParticleEntity.PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleTemplateAssetLibrary::Get().ReloadAsset(particlePreviewComp.Template->GetPath());
+			ParticleTemplateLibrary::Get().ReloadAsset(particlePreviewComp.ParticleTemplateAsset->GetID());
 		});
-	}
-
-	void ParticleEditor::CreatePreviewParticle(bool bIsFromLoad)
-	{
-		Entity previewParticleEntity = GetScene()->CreateEntity("Preview Particle");
-		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
-		SetContextEntity(previewParticleEntity);
-		if (!bIsFromLoad)
-		{
-			// For loading phase, instance will be created in ParticleScene::PostLoad
-			ParticleSystemInstance::Create(particlePreviewComp);
-		}
 	}
 
 }

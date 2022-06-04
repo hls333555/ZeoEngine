@@ -13,6 +13,8 @@ namespace ZeoEngine {
 
 		virtual ~Camera() = default;
 
+		virtual float GetNearClip() const = 0;
+		virtual float GetFarClip() const = 0;
 		const glm::mat4& GetProjection() const { return m_Projection; }
 
 	protected:

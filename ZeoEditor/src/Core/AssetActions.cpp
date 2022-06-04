@@ -29,8 +29,8 @@ namespace ZeoEngine {
 
 	void ResourceAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
-		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(oldPath);
-		auto newResourcePath = PathUtils::GetResourcePathFromAssetPath(newPath);
+		const auto resourcePath = PathUtils::GetResourcePathFromPath(oldPath);
+		const auto newResourcePath = PathUtils::GetResourcePathFromPath(newPath);
 		// Rename resource
 		PathUtils::RenamePath(resourcePath, newResourcePath);
 		// Rename asset
@@ -39,7 +39,7 @@ namespace ZeoEngine {
 
 	void ResourceAssetActionsBase::DeleteAsset(const std::string& path) const
 	{
-		auto resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		const auto resourcePath = PathUtils::GetResourcePathFromPath(path);
 		// Delete resource
 		PathUtils::DeletePath(resourcePath);
 		// Delete asset
@@ -48,21 +48,21 @@ namespace ZeoEngine {
 
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
-		auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
+		const auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
 		auto& srcPath = assetSpec->SourcePath;
 		if (srcPath.empty() || !PathUtils::DoesPathExist(srcPath))
 		{
-			auto filePath = FileDialogs::OpenFile();
+			const auto filePath = FileDialogs::OpenFile();
 			if (!filePath) return;
 
 			srcPath = PathUtils::GetRelativePath(*filePath);
 		}
 
-		const auto destPath = PathUtils::GetResourcePathFromAssetPath(path);
+		const auto destPath = PathUtils::GetResourcePathFromPath(path);
 		if (destPath != srcPath)
 		{
 			// Copy and overwrite existing resource
-			bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
+			const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
 			if (!bSuccess)
 			{
 				ZE_CORE_ERROR("Failed to reimport asset!");
@@ -78,40 +78,40 @@ namespace ZeoEngine {
 		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, srcPath);
 	}
 
-	void SceneAssetActions::OpenAsset(const std::string& path) const
+	void LevelAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().GetEditor(LEVEL_EDITOR)->LoadScene(path);
 	}
 
-	void SceneAssetActions::ReloadAsset(const std::string& path) const
+	void LevelAssetActions::ReloadAsset(const std::string& path) const
 	{
-		SceneAssetLibrary::Get().ReloadAsset(path);
+		OpenAsset(path);
 	}
 
 	// TODO: Only to save those which are marked modified
-	void SceneAssetActions::SaveAsset(const std::string& path) const
+	void LevelAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (SceneAssetLibrary::Get().HasAsset(path))
+		if (const auto level = LevelLibrary::Get().LoadAsset(path))
 		{
-			SceneAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			level->Serialize(path);
 		}
 	}
 
-	void ParticleAssetActions::OpenAsset(const std::string& path) const
+	void ParticleTemplateAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR)->LoadScene(path);
 	}
 
-	void ParticleAssetActions::ReloadAsset(const std::string& path) const
+	void ParticleTemplateAssetActions::ReloadAsset(const std::string& path) const
 	{
-		ParticleTemplateAssetLibrary::Get().ReloadAsset(path);
+		ParticleTemplateLibrary::Get().ReloadAsset(path);
 	}
 
-	void ParticleAssetActions::SaveAsset(const std::string& path) const
+	void ParticleTemplateAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (ParticleTemplateAssetLibrary::Get().HasAsset(path))
+		if (const auto particleTemplate = ParticleTemplateLibrary::Get().LoadAsset(path))
 		{
-			ParticleTemplateAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			particleTemplate->Serialize(path);
 		}
 	}
 
@@ -122,14 +122,14 @@ namespace ZeoEngine {
 
 	void Texture2DAssetActions::ReloadAsset(const std::string& path) const
 	{
-		Texture2DAssetLibrary::Get().ReloadAsset(path);
+		Texture2DLibrary::Get().ReloadAsset(path);
 	}
 
 	void Texture2DAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (Texture2DAssetLibrary::Get().HasAsset(path))
+		if (const auto texture = Texture2DLibrary::Get().LoadAsset(path))
 		{
-			Texture2DAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			texture->Serialize(path);
 		}
 	}
 
@@ -140,14 +140,14 @@ namespace ZeoEngine {
 
 	void MeshAssetActions::ReloadAsset(const std::string& path) const
 	{
-		MeshAssetLibrary::Get().ReloadAsset(path);
+		MeshLibrary::Get().ReloadAsset(path);
 	}
 
 	void MeshAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (MeshAssetLibrary::Get().HasAsset(path))
+		if (const auto mesh = MeshLibrary::Get().LoadAsset(path))
 		{
-			MeshAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			mesh->Serialize(path);
 		}
 	}
 
@@ -158,26 +158,26 @@ namespace ZeoEngine {
 
 	void MaterialAssetActions::ReloadAsset(const std::string& path) const
 	{
-		MaterialAssetLibrary::Get().ReloadAsset(path);
+		MaterialLibrary::Get().ReloadAsset(path);
 	}
 
 	void MaterialAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (MaterialAssetLibrary::Get().HasAsset(path))
+		if (const auto material = MaterialLibrary::Get().LoadAsset(path))
 		{
-			MaterialAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			material->Serialize(path);
 		}
 	}
 
 	void ShaderAssetActions::OpenAsset(const std::string& path) const
 	{
-		std::string resourcePath = PathUtils::GetResourcePathFromAssetPath(path);
+		const std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		PlatformUtils::OpenFile(resourcePath);
 	}
 
 	void ShaderAssetActions::ReloadAsset(const std::string& path) const
 	{
-		ShaderAssetLibrary::Get().ReloadAsset(path);
+		ShaderLibrary::Get().ReloadAsset(path);
 	}
 
 	void ShaderAssetActions::HotReloadAsset(const std::string& path) const
@@ -187,9 +187,9 @@ namespace ZeoEngine {
 
 	void ShaderAssetActions::SaveAsset(const std::string& path) const
 	{
-		if (ShaderAssetLibrary::Get().HasAsset(path))
+		if (const auto shader = ShaderLibrary::Get().LoadAsset(path))
 		{
-			ShaderAssetLibrary::Get().GetAsset(path)->Serialize(path);
+			shader->Serialize(path);
 		}
 	}
 

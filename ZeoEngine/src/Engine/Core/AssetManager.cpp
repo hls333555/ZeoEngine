@@ -15,19 +15,19 @@ namespace ZeoEngine {
 
 	void AssetManager::Init()
 	{
-		RegisterAssetFactory(SceneAsset::TypeId(), CreateRef<SceneAssetFactory>());
-		RegisterAssetFactory(ParticleTemplateAsset::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
-		RegisterAssetFactory(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetFactory>());
-		RegisterAssetFactory(MeshAsset::TypeId(), CreateRef<MeshAssetFactory>());
-		RegisterAssetFactory(MaterialAsset::TypeId(), CreateRef<MaterialAssetFactory>());
-		RegisterAssetFactory(ShaderAsset::TypeId(), CreateRef<ShaderAssetFactory>());
+		RegisterAssetFactory(Level::TypeId(), CreateRef<LevelAssetFactory>());
+		RegisterAssetFactory(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetFactory>());
+		RegisterAssetFactory(Texture2D::TypeId(), CreateRef<Texture2DAssetFactory>());
+		RegisterAssetFactory(Mesh::TypeId(), CreateRef<MeshAssetFactory>());
+		RegisterAssetFactory(Material::TypeId(), CreateRef<MaterialAssetFactory>());
+		RegisterAssetFactory(Shader::TypeId(), CreateRef<ShaderAssetFactory>());
 
-		RegisterAssetActions(SceneAsset::TypeId(), CreateRef<SceneAssetActions>());
-		RegisterAssetActions(ParticleTemplateAsset::TypeId(), CreateRef<ParticleAssetActions>());
-		RegisterAssetActions(Texture2DAsset::TypeId(), CreateRef<Texture2DAssetActions>());
-		RegisterAssetActions(MeshAsset::TypeId(), CreateRef<MeshAssetActions>());
-		RegisterAssetActions(MaterialAsset::TypeId(), CreateRef<MaterialAssetActions>());
-		RegisterAssetActions(ShaderAsset::TypeId(), CreateRef<ShaderAssetActions>());
+		RegisterAssetActions(Level::TypeId(), CreateRef<LevelAssetActions>());
+		RegisterAssetActions(ParticleTemplate::TypeId(), CreateRef<ParticleTemplateAssetActions>());
+		RegisterAssetActions(Texture2D::TypeId(), CreateRef<Texture2DAssetActions>());
+		RegisterAssetActions(Mesh::TypeId(), CreateRef<MeshAssetActions>());
+		RegisterAssetActions(Material::TypeId(), CreateRef<MaterialAssetActions>());
+		RegisterAssetActions(Shader::TypeId(), CreateRef<ShaderAssetActions>());
 
 		InitSupportedFileExtensions();
 	}
@@ -199,10 +199,10 @@ namespace ZeoEngine {
 
 	void AssetManager::InitSupportedFileExtensions()
 	{
-		m_SupportedFileExtensions.insert(std::make_pair(".png", Texture2DAsset::TypeId()));
-		m_SupportedFileExtensions.insert(std::make_pair(".tga", Texture2DAsset::TypeId()));
-		m_SupportedFileExtensions.insert(std::make_pair(".fbx", MeshAsset::TypeId()));
-		m_SupportedFileExtensions.insert(std::make_pair(".obj", MeshAsset::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".png", Texture2D::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".tga", Texture2D::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".fbx", Mesh::TypeId()));
+		m_SupportedFileExtensions.insert(std::make_pair(".obj", Mesh::TypeId()));
 	}
 
 }

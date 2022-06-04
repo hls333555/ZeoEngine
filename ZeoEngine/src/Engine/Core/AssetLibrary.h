@@ -2,14 +2,45 @@
 
 #include <entt.hpp>
 
+#include "Engine/Core/AssetRegistry.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
+	namespace Utils {
+
+		/** Returns true if ID begins with "assets". */
+		static bool IsPath(const std::string& ID)
+		{
+			const char* assetRoot = AssetRegistry::GetAssetRootDirectory();
+			return ID.find(assetRoot) == 0;
+		}
+
+		static bool Validate(std::string& ID)
+		{
+			if (IsPath(ID))
+			{
+				ID = PathUtils::GetNormalizedAssetPath(ID);
+				if (!PathUtils::DoesPathExist(ID)) return false;
+			}
+			return true;
+		}
+
+		static uint32_t GetIDFromString(const std::string& ID)
+		{
+			return entt::hashed_string{ ID.c_str() };
+		}
+
+	}
+
 	template<typename AssetLibraryClass, typename AssetClass, typename AssetLoaderClass>
-	class AssetLibrary : private entt::resource_cache<AssetClass>
+	class AssetLibrary : private entt::resource_cache<AssetClass, AssetLoaderClass>
 	{
 	public:
+		AssetLibrary(const AssetLibrary&) = delete;
+		AssetLibrary& operator=(const AssetLibrary&) = delete;
+
 		static AssetLibraryClass& Get()
 		{
 			static AssetLibraryClass instance;
@@ -17,59 +48,38 @@ namespace ZeoEngine {
 		}
 
 		template<typename... Args>
-		AssetHandle<AssetClass> LoadAsset(AssetPath path, Args &&... args)
+		AssetHandle<AssetClass> LoadAsset(std::string ID, Args &&... args)
 		{
-			ZE_CORE_ASSERT(!path.IsEmpty());
+			if (!Utils::Validate(ID)) return {};
 
-			return load<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
+			auto ret = load(Utils::GetIDFromString(ID), ID, false/* IsReload */, std::forward<Args>(args)...);
+			return ret.first->second;
 		}
 
-		template<typename... Args>
-		AssetHandle<AssetClass> ReloadAsset(AssetPath path, Args &&... args)
+		AssetHandle<AssetClass> ReloadAsset(std::string ID)
 		{
-			ZE_CORE_ASSERT(!path.IsEmpty());
+			if (!HasAsset(ID)) return {};
 
-			return reload<AssetLoaderClass>(path.ToId(), path.GetPath(), std::forward<Args>(args)...);
+			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */);
+			return ret.first->second;
 		}
 
-		AssetHandle<AssetClass> ReloadAsset(AssetPath path)
+		void UnloadAsset(std::string ID)
 		{
-			if (path.IsEmpty()) return {};
-			if (!HasAsset(path)) return {};
+			if (!Utils::Validate(ID)) return;
 
-			auto asset = GetAsset(path);
-			asset->Reload(false);
-			return asset;
+			erase(Utils::GetIDFromString(ID));
 		}
 
-		void DiscardAsset(AssetPath path)
+		bool HasAsset(std::string ID)
 		{
-			discard(path.ToId());
-		}
+			if (!Utils::Validate(ID)) return false;
 
-		AssetHandle<AssetClass> GetAsset(AssetPath path)
-		{
-			const auto id = path.ToId();
-			ZE_CORE_ASSERT(contains(id));
-
-			return handle(id);
-		}
-
-		bool HasAsset(AssetPath path)
-		{
-			return contains(path.ToId());
-		}
-
-		template<typename Func>
-		void ForEach(Func func) const
-		{
-			each(func);
+			return contains(Utils::GetIDFromString(ID));
 		}
 
 	protected:
 		AssetLibrary() = default;
-		AssetLibrary(const AssetLibrary&) = delete;
-		AssetLibrary& operator=(const AssetLibrary&) = delete;
 	};
 
 }

@@ -5,9 +5,9 @@
 
 namespace ZeoEngine {
 
-    glm::vec3 Light::CalculateDirection(const glm::vec3& rotation) const
-    {
-        return glm::rotate(glm::quat(rotation), { 0.0f, 0.0f, -1.0f });
-    }
+	glm::vec3 Light::CalculateDirection(const glm::vec3& rotation) const
+	{
+		return glm::rotate(glm::quat(rotation), { 0.0f, 0.0f, -1.0f });
+	}
 
 }

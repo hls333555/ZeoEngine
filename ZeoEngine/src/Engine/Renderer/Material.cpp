@@ -60,22 +60,24 @@ namespace ZeoEngine {
 	void DynamicUniformTexture2DData::Draw()
 	{
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = Browser.Draw(Value ? Value->GetPath() : std::string{}, -1.0f, []() {});
+		auto [bIsBufferChanged, retSpec] = Browser.Draw(Value ? Value->GetID() : std::string{}, -1.0f, []() {});
 		if (bIsBufferChanged)
 		{
-			Value = retSpec ? Texture2DAssetLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2DAsset>{};
+			Value = retSpec ? Texture2DLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2D>{};
 			Apply();
 		}
 	}
 
-	void DynamicUniformTexture2DData::Bind()
+	void DynamicUniformTexture2DData::Bind() const
 	{
-		// Bind default texture first
-		Texture2D::GetDefaultTexture()->Bind(Binding);
-		// Override with our texture if set
 		if (Value)
 		{
 			Value->Bind(Binding);
+		}
+		else
+		{
+			// Bind default texture
+			Texture2DLibrary::GetDefaultMaterialTexture()->Bind(Binding);
 		}
 	}
 
@@ -85,8 +87,9 @@ namespace ZeoEngine {
 	}
 
 	Material::Material(const std::string& path)
+		: AssetBase(path)
 	{
-		m_Shader = m_DefaultShader = ShaderAssetLibrary::GetDefaultShaderAsset();
+		m_Shader = ShaderLibrary::GetDefaultShader();
 	}
 
 	Material::~Material()
@@ -95,52 +98,96 @@ namespace ZeoEngine {
 		{
 			delete[] uniformBufferDatas;
 		}
+		// TODO: Verfy this
+		m_Shader->m_OnShaderReloaded.disconnect(this);
 	}
 
-	Ref<Shader> Material::GetShader() const
+	Ref<Material> Material::Create(const std::string& path, bool bIsReload)
 	{
-		return m_Shader ? m_Shader->GetShader() : Ref<Shader>{};
+		auto material = CreateRef<Material>(path);
+		material->Reload();
+		if (!bIsReload)
+		{
+			material->GetShader()->m_OnShaderReloaded.connect<&Material::Reload>(material);
+		}
+		return material;
+	}
+
+	void Material::Reload()
+	{
+		InitMaterialData();
+		m_OnMaterialInitializedDel.publish(GetAssetHandle());
+		Deserialize();
+	}
+
+	void Material::Serialize(const std::string& path)
+	{
+		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
+		if (!PathUtils::DoesPathExist(assetPath)) return;
+
+		SetID(std::move(assetPath));
+		MaterialAssetSerializer::Serialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle());
+	}
+
+	void Material::Deserialize()
+	{
+		if (!PathUtils::DoesPathExist(GetID())) return;
+
+		MaterialAssetSerializer::Deserialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle());
+		// Apply uniform datas after loading
+		ApplyUniformDatas();
 	}
 
 	void Material::InitMaterialData()
 	{
+		m_Techniques.clear();
 		m_DynamicUniforms.clear();
+		m_DynamicBindableUniforms.clear();
 		m_DynamicUniformBuffers.clear();
 		m_DynamicUniformBufferDatas.clear();
 		InitUniformBuffers();
 		ParseReflectionData();
+
+		{
+			RenderTechnique shade("Shade");
+			{
+				RenderStep step("Opaque");
+				for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
+				{
+					step.AddBindable(uniformBuffer);
+				}
+				for (const auto& uniformBindableData : m_DynamicBindableUniforms)
+				{
+					step.AddBindable(uniformBindableData);
+				}
+				step.AddBindable(m_Shader.to_ref());
+				shade.AddStep(std::move(step));
+			}
+			m_Techniques.emplace_back(std::move(shade));
+		}
+		{
+			RenderTechnique shadow("Shadow");
+			{
+				RenderStep step("ShadowMapping");
+				shadow.AddStep(std::move(step));
+			}
+			m_Techniques.emplace_back(std::move(shadow));
+		}
+		{
+			RenderTechnique shadow("Shadow");
+			{
+				RenderStep step("ScreenSpaceShadow");
+				shadow.AddStep(std::move(step));
+			}
+			m_Techniques.emplace_back(std::move(shadow));
+		}
 	}
 
-	void Material::Bind()
-	{
-		if (m_Shader)
-		{
-			m_Shader->Bind();
-			BindUniformDatas();
-		}
-		else
-		{
-			m_DefaultShader->Bind();
-		}
-	}
-
-	void Material::ApplyUniformDatas()
+	void Material::ApplyUniformDatas() const
 	{
 		for (const auto& uniformData : m_DynamicUniforms)
 		{
 			uniformData->Apply();
-		}
-	}
-
-	void Material::BindUniformDatas()
-	{
-		for (const auto& [binding, uniformBuffer] : m_DynamicUniformBuffers)
-		{
-			uniformBuffer->Bind();
-		}
-		for (const auto& uniformData : m_DynamicUniforms)
-		{
-			uniformData->Bind();
 		}
 	}
 
@@ -151,25 +198,25 @@ namespace ZeoEngine {
 			switch (reflectionData->GetType())
 			{
 			case ShaderReflectionType::Bool:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformBoolData>(*reflectionData, shared_from_this()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, GetAssetHandle()));
 				break;
 			case ShaderReflectionType::Int:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<int32_t>>(*reflectionData, shared_from_this(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<int32_t>>(*reflectionData, GetAssetHandle(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
 				break;
 			case ShaderReflectionType::Float:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec2:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, shared_from_this(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec4:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformColorData>(*reflectionData, shared_from_this()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, GetAssetHandle()));
 				break;
 			case ShaderReflectionType::Texture2D:
-				m_DynamicUniforms.emplace_back(CreateScope<DynamicUniformTexture2DData>(*reflectionData, shared_from_this()));
+				m_DynamicBindableUniforms.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, GetAssetHandle()));
 				break;
 			default:
 				break;
@@ -195,61 +242,6 @@ namespace ZeoEngine {
 			uniformBuffer->SetData(bufferData);
 			m_DynamicUniformBuffers[binding] = std::move(uniformBuffer);
 		}
-	}
-
-	MaterialAsset::MaterialAsset(const std::string& path)
-		: AssetBase(path)
-	{
-	}
-
-	Ref<MaterialAsset> MaterialAsset::Create(const std::string& path)
-	{
-		class MaterialAssetEnableShared : public MaterialAsset
-		{
-		public:
-			explicit MaterialAssetEnableShared(const std::string& path)
-				: MaterialAsset(path) {}
-		};
-
-		auto asset = CreateRef<MaterialAssetEnableShared>(path);
-		asset->Reload(true);
-		return asset;
-	}
-
-	void MaterialAsset::Reload(bool bIsCreate)
-	{
-		ReloadImpl();
-		if (bIsCreate)
-		{
-			m_Material->GetShaderAsset()->m_OnShaderReloaded.connect<&MaterialAsset::ReloadImpl>(this);
-		}
-	}
-
-	void MaterialAsset::ReloadImpl()
-	{
-		m_Material = CreateRef<Material>(GetPath());
-		m_Material->InitMaterialData();
-		Deserialize();
-	}
-
-	void MaterialAsset::Serialize(const std::string& path)
-	{
-		if (path.empty()) return;
-
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		MaterialAssetSerializer::Serialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial());
-	}
-
-	void MaterialAsset::Deserialize()
-	{
-		if (GetPath().empty()) return;
-
-		MaterialAssetSerializer::Deserialize(GetPath(), TypeId(), MaterialPreviewComponent{ SharedFromBase<MaterialAsset>() }, GetMaterial(), this);
-		// Apply uniform datas after loading
-		GetMaterial()->ApplyUniformDatas();
 	}
 
 }

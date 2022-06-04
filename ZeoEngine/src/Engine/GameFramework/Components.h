@@ -17,9 +17,8 @@
 
 namespace ZeoEngine {
 
-	class Texture2DAsset;
+	class Texture2D;
 	class ScriptableEntity;
-	class ShaderAsset;
 
 	struct IComponent
 	{
@@ -94,7 +93,7 @@ namespace ZeoEngine {
 	struct SpriteRendererComponent : public IComponent
 	{
 		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> TextureAsset;
 		glm::vec2 TextureTiling{ 1.0f };
 		int32_t SortingOrder = 0;
 
@@ -102,8 +101,8 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const AssetHandle<Texture2DAsset>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
-			: Texture(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
+		SpriteRendererComponent(const AssetHandle<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
+			: TextureAsset(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
 
@@ -131,6 +130,11 @@ namespace ZeoEngine {
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
+
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<CameraComponentHelper>(entity);
+		}
 
 		static const char* GetIcon() { return ICON_FA_CAMERA; }
 
@@ -173,7 +177,7 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		AssetHandle<ParticleTemplateAsset> Template;
+		AssetHandle<ParticleTemplate> ParticleTemplateAsset;
 		glm::vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
@@ -193,12 +197,12 @@ namespace ZeoEngine {
 	{
 		ParticleSystemPreviewComponent()
 		{
-			Template = ParticleTemplateAsset::Create(); // Create default particle asset
+			ParticleTemplateAsset = ParticleTemplateLibrary::GetDefaultParticleTemplate();
 		}
 		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		explicit ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplateAsset>& pTemplate)
+		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplate>& particleTemplate)
 		{
-			Template = pTemplate;
+			ParticleTemplateAsset = particleTemplate;
 		}
 
 		virtual void CreateHelper(Entity* entity) override
@@ -206,31 +210,31 @@ namespace ZeoEngine {
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(entity);
 		}
 
-		bool IsLocalSpace() const { return Template->bIsLocalSpace; }
-		void SetLocalSpace(bool bValue) { Template->bIsLocalSpace = bValue; }
-		int32_t GetLoopCount() const { return Template->LoopCount; }
-		void SetLoopCount(int32_t count) { Template->LoopCount = count; }
-		float GetLoopDuration() const { return Template->LoopDuration; }
-		void SetLoopDuration(float duration) { Template->LoopDuration = duration; }
-		ParticleFloat& GetSpawnRate() { return Template->SpawnRate; }
-		auto& GetBurstList() { return Template->BurstList; }
-		ParticleVec3& GetInitialPosition() { return Template->InitialPosition; }
-		ParticleVec3& GetInitialRotation() { return Template->InitialRotation; }
-		ParticleVec3& GetRotationRate() { return Template->RotationRate; }
-		ParticleVec3& GetSizeBegin() { return Template->SizeBegin; }
-		ParticleVec3& GetSizeEnd() { return Template->SizeEnd; }
-		ParticleVec3& GetInitialVelocity() { return Template->InitialVelocity; }
-		const glm::vec3& GetInheritVelocityRatio() const { return Template->InheritVelocityRatio; }
-		void SetInheritVelocityRatio(const glm::vec3& ratio) { Template->InheritVelocityRatio = ratio; }
-		ParticleColor& GetColorBegin() { return Template->ColorBegin; }
-		ParticleColor& GetColorEnd() { return Template->ColorEnd; }
-		ParticleFloat& GetLifetime() { return Template->Lifetime; }
-		const AssetHandle<Texture2DAsset>& GetTexture() const { return Template->Texture; }
-		void SetTexture(const AssetHandle<Texture2DAsset>& texture) { Template->Texture = texture; }
-		const glm::vec2& GetSubImageSize() const { return Template->SubImageSize; }
-		void SetSubImageSize(const glm::vec2& size) { Template->SubImageSize = size; }
-		uint32_t GetMaxParticles() const { return Template->MaxParticles; }
-		void SetMaxParticles(uint32_t count) { Template->MaxParticles = count; }
+		bool IsLocalSpace() const { return ParticleTemplateAsset->bIsLocalSpace; }
+		void SetLocalSpace(bool bValue) { ParticleTemplateAsset->bIsLocalSpace = bValue; }
+		int32_t GetLoopCount() const { return ParticleTemplateAsset->LoopCount; }
+		void SetLoopCount(int32_t count) { ParticleTemplateAsset->LoopCount = count; }
+		float GetLoopDuration() const { return ParticleTemplateAsset->LoopDuration; }
+		void SetLoopDuration(float duration) { ParticleTemplateAsset->LoopDuration = duration; }
+		ParticleFloat& GetSpawnRate() { return ParticleTemplateAsset->SpawnRate; }
+		auto& GetBurstList() { return ParticleTemplateAsset->BurstList; }
+		ParticleVec3& GetInitialPosition() { return ParticleTemplateAsset->InitialPosition; }
+		ParticleVec3& GetInitialRotation() { return ParticleTemplateAsset->InitialRotation; }
+		ParticleVec3& GetRotationRate() { return ParticleTemplateAsset->RotationRate; }
+		ParticleVec3& GetSizeBegin() { return ParticleTemplateAsset->SizeBegin; }
+		ParticleVec3& GetSizeEnd() { return ParticleTemplateAsset->SizeEnd; }
+		ParticleVec3& GetInitialVelocity() { return ParticleTemplateAsset->InitialVelocity; }
+		const glm::vec3& GetInheritVelocityRatio() const { return ParticleTemplateAsset->InheritVelocityRatio; }
+		void SetInheritVelocityRatio(const glm::vec3& ratio) { ParticleTemplateAsset->InheritVelocityRatio = ratio; }
+		ParticleColor& GetColorBegin() { return ParticleTemplateAsset->ColorBegin; }
+		ParticleColor& GetColorEnd() { return ParticleTemplateAsset->ColorEnd; }
+		ParticleFloat& GetLifetime() { return ParticleTemplateAsset->Lifetime; }
+		const AssetHandle<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
+		void SetTexture(const AssetHandle<Texture2D>& texture) { ParticleTemplateAsset->Texture = texture; }
+		const glm::vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
+		void SetSubImageSize(const glm::vec2& size) { ParticleTemplateAsset->SubImageSize = size; }
+		uint32_t GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
+		void SetMaxParticles(uint32_t count) { ParticleTemplateAsset->MaxParticles = count; }
 
 	};
 
@@ -286,12 +290,13 @@ namespace ZeoEngine {
 	
 	struct MeshRendererComponent : public IComponent
 	{
-		AssetHandle<MeshAsset> Mesh;
-		std::vector<AssetHandle<MaterialAsset>> MaterialsPlaceholder;
+		AssetHandle<Mesh> MeshAsset;
+		Ref<MeshInstance> Instance;
+		std::vector<AssetHandle<Material>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
-		MeshRendererComponent(const AssetHandle<MeshAsset>& meshAsset)
-			: Mesh(meshAsset) {}
+		MeshRendererComponent(const AssetHandle<Mesh>& mesh)
+			: MeshAsset(mesh) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
 		virtual void CreateHelper(Entity* entity) override
@@ -299,7 +304,7 @@ namespace ZeoEngine {
 			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
 		}
 
-		auto& GetMaterials() { return Mesh ? Mesh->GetMesh()->GetMaterials() : MaterialsPlaceholder; }
+		auto& GetMaterials() { return Instance ? Instance->GetMaterials() : MaterialsPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
@@ -318,7 +323,7 @@ namespace ZeoEngine {
 		LightComponent() = default;
 		LightComponent(LightType type)
 			: Type(type) {}
-		LightComponent(const LightComponent& rhs) = default;
+		LightComponent(const LightComponent&) = default;
 
 		virtual void CreateHelper(Entity* entity) override
 		{
@@ -341,24 +346,44 @@ namespace ZeoEngine {
 		void SetRange(float range) { LightSource->SetRange(range); }
 		float GetCutoffAsDegrees() const { return glm::degrees(LightSource->GetCutoff()); }
 		void SetCutoffToRadians(float cutoffInDegrees) { LightSource->SetCutoff(glm::radians(cutoffInDegrees)); }
+		bool IsCastShadow() const { return LightSource->IsCastShadow(); }
+		void SetCastShadow(bool bCast) { LightSource->SetCastShadow(bCast); }
+		Light::ShadowType GetShadowType() const { return LightSource->GetShadowType(); }
+		void SetShadowType(Light::ShadowType type) { LightSource->SetShadowType(type); }
+		float GetDepthBias() const { return LightSource->GetDepthBias(); }
+		void SetDepthBias(float bias) { LightSource->SetDepthBias(bias); }
+		float GetNormalBias() const { return LightSource->GetNormalBias(); }
+		void SetNormalBias(float bias) { LightSource->SetNormalBias(bias); }
+		float GetLightSize() const { return LightSource->GetLightSize(); }
+		void SetLightSize(float size) { LightSource->SetLightSize(size); }
+		float GetFilterSize() const { return LightSource->GetFilterSize(); }
+		void SetFilterSize(float size) { LightSource->SetFilterSize(size); }
+		uint32_t GetCascadeCount() const { return LightSource->GetCascadeCount(); }
+		void SetCascadeCount(uint32_t count) { LightSource->SetCascadeCount(count); }
+		float GetCascadeBlendThreshold() const { return LightSource->GetCascadeBlendThreshold(); }
+		void SetCascadeBlendThreshold(float threshold) { LightSource->SetCascadeBlendThreshold(threshold); }
+		float GetMaxShadowDistance() { return LightSource->GetMaxShadowDistance(); }
+		void SetMaxShadowDistance(float distance) { LightSource->SetMaxShadowDistance(distance); }
+		float GetCascadeSplitLambda() { return LightSource->GetCascadeSplitLambda(); }
+		void SetCascadeSplitLambda(float lambda) { LightSource->SetGetCascadeSplitLambda(lambda); }
 	};
 
 	struct MaterialPreviewComponent : public IComponent
 	{
-		AssetHandle<MaterialAsset> Template;
+		AssetHandle<Material> MaterialAsset;
 
 		MaterialPreviewComponent() = default;
-		explicit MaterialPreviewComponent(const AssetHandle<MaterialAsset>& material)
-			: Template(material) {}
+		MaterialPreviewComponent(const AssetHandle<Material>& material)
+			: MaterialAsset(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		const AssetHandle<ShaderAsset>& GetShader() const { return Template->GetMaterial()->GetShaderAsset(); }
-		void SetShader(const AssetHandle<ShaderAsset>& shader) { Template->GetMaterial()->SetShaderAsset(shader); } 
+		const AssetHandle<Shader>& GetShader() const { return MaterialAsset->GetShader(); }
+		void SetShader(const AssetHandle<Shader>& shader) { MaterialAsset->SetShader(shader); }
 	};
 
 	struct BillboardComponent : public IComponent
 	{
-		AssetHandle<Texture2DAsset> Texture;
+		AssetHandle<Texture2D> TextureAsset;
 		glm::vec2 Size{ 0.5f, 0.5f };
 
 		BillboardComponent() = default;

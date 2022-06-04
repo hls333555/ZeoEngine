@@ -17,6 +17,7 @@ namespace ZeoEngine {
 		const char* message,
 		const void* userParam)
 	{
+		// NOTE: Add a breakpoint below to see where the error was generated
 		switch (severity)
 		{
 			case GL_DEBUG_SEVERITY_HIGH:         ZE_CORE_CRITICAL(message); return;
@@ -36,21 +37,15 @@ namespace ZeoEngine {
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(OpenGLMessageCallback, nullptr);
-
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
-		glEnable(GL_BLEND);
+
+		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		if (RendererAPI::Is2D())
+		if (Is2D())
 		{
-			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_LINE_SMOOTH);
 		}
-		else
-		{
-			glEnable(GL_DEPTH_TEST);
-		}
-
 	}
 
 	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -63,9 +58,22 @@ namespace ZeoEngine {
 		glClearColor(color.r, color.g, color.b, color.a);
 	}
 
-	void OpenGLRendererAPI::Clear()
+	void OpenGLRendererAPI::Clear(ClearType type)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		switch (type)
+		{
+			case ClearType::Color_Depth_Stencil:
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				break;
+			case ClearType::Depth:
+				glClear(GL_DEPTH_BUFFER_BIT);
+				break;
+		}
+	}
+
+	void OpenGLRendererAPI::DrawArrays(uint32_t vertexCount)
+	{
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount, int32_t baseIndex)
@@ -76,12 +84,10 @@ namespace ZeoEngine {
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, int32_t baseVertex, uint32_t indexCount, int32_t baseIndex)
+	void OpenGLRendererAPI::DrawIndexed(int32_t baseVertex, uint32_t indexCount, int32_t baseIndex)
 	{
-		vertexArray->Bind();
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		void* offset = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
-		glDrawElementsBaseVertex(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset, baseVertex);
+		void* indices = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
+		glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indices, baseVertex);
 	}
 
 	void OpenGLRendererAPI::DrawInstanced(uint32_t instanceCount)
@@ -107,7 +113,19 @@ namespace ZeoEngine {
 		glLineWidth(thickness);
 	}
 
-	void OpenGLRendererAPI::ToggleFaceCulling(bool bEnable)
+	void OpenGLRendererAPI::ToggleBlend(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_BLEND);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
+	}
+
+	void OpenGLRendererAPI::ToggleCullFace(bool bEnable)
 	{
 		if (bEnable)
 		{
@@ -119,9 +137,38 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::ToggleDepthWriting(bool bEnable)
+	void OpenGLRendererAPI::SetCullFaceMode(bool bIsBack)
+	{
+		glCullFace(bIsBack ? GL_BACK : GL_FRONT);
+	}
+
+	void OpenGLRendererAPI::ToggleDepthTest(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_DEPTH_TEST);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+		}
+	}
+
+	void OpenGLRendererAPI::ToggleDepthWrite(bool bEnable)
 	{
 		glDepthMask(bEnable ? GL_TRUE : GL_FALSE);
+	}
+
+	void OpenGLRendererAPI::ToggleDepthClamp(bool bEnable)
+	{
+		if (bEnable)
+		{
+			glEnable(GL_DEPTH_CLAMP);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_CLAMP);
+		}
 	}
 
 }
