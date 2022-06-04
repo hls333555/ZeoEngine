@@ -25,7 +25,7 @@ namespace ZeoEngine {
 			}
 
 			TestEnum EnumVar;
-			int32_t I32Var;
+			I32 I32Var;
 		};
 
 		struct TestNestedStruct
@@ -45,20 +45,20 @@ namespace ZeoEngine {
 		auto& GetTestNestedStructVecGetterVar() { return TestNestedStructVecGetterVar; }
 
 		bool BoolVar;
-		uint8_t Ui8Var;
-		uint32_t Ui32Var;
-		uint64_t Ui64Var;
-		int8_t I8Var;
-		int32_t I32Var;
-		int64_t I64Var;
+		U8 Ui8Var;
+		U32 Ui32Var;
+		U64 Ui64Var;
+		I8 I8Var;
+		I32 I32Var;
+		I64 I64Var;
 		float FloatVar;
 		double DoubleVar;
 		TestEnum EnumVar;
 		TestEnumClass EnumClassVar;
 		std::string StringVar;
-		glm::vec2 Vec2Var;
-		glm::vec3 Vec3Var;
-		glm::vec4 ColorVar;
+		Vec2 Vec2Var;
+		Vec3 Vec3Var;
+		Vec4 ColorVar;
 		AssetHandle<Texture2D> Texture2DVar;
 		AssetHandle<ParticleTemplate> ParticleTemplateVar;
 		TestStruct TestStructVar;
@@ -67,20 +67,20 @@ namespace ZeoEngine {
 		bool bShowSequenceContainers;
 
 		std::vector<bool> BoolVecVar;
-		std::vector<uint8_t> Ui8VecVar;
-		std::vector<uint32_t> Ui32VecVar;
-		std::vector<uint64_t> Ui64VecVar;
-		std::vector<int8_t> I8VecVar;
-		std::vector<int32_t> I32VecVar;
-		std::vector<int64_t> I64VecVar;
+		std::vector<U8> Ui8VecVar;
+		std::vector<U32> Ui32VecVar;
+		std::vector<U64> Ui64VecVar;
+		std::vector<I8> I8VecVar;
+		std::vector<I32> I32VecVar;
+		std::vector<I64> I64VecVar;
 		std::vector<float> FloatVecVar;
 		std::vector<double> DoubleVecVar;
 		std::vector<TestEnum> EnumVecVar;
 		std::vector<TestEnumClass> EnumClassVecVar;
 		std::vector<std::string> StringVecVar;
-		std::vector<glm::vec2> Vec2VecVar;
-		std::vector<glm::vec3> Vec3VecVar;
-		std::vector<glm::vec4> ColorVecVar;
+		std::vector<Vec2> Vec2VecVar;
+		std::vector<Vec3> Vec3VecVar;
+		std::vector<Vec4> ColorVecVar;
 		std::vector<AssetHandle<Texture2D>> Texture2DVecVar;
 		std::vector<AssetHandle<ParticleTemplate>> ParticleTemplateVecVar;
 		std::vector<TestStruct> TestStructVecVar;

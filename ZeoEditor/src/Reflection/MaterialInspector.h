@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	public:
 		using ComponentInspector::ComponentInspector;
 
-		virtual int32_t ProcessComponent() override;
+		virtual I32 ProcessComponent() override;
 
 	private:
 		void DrawUniformData(const Ref<DynamicUniformDataBase>& uniform) const;

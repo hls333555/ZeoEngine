@@ -10,13 +10,13 @@ namespace ZeoEngine {
 
     static GLuint HandleToGL(dd::GlyphTextureHandle handle)
     {
-        const std::size_t temp = reinterpret_cast<std::size_t>(handle);
+        const SizeT temp = reinterpret_cast<SizeT>(handle);
         return static_cast<GLuint>(temp);
     }
 
     static dd::GlyphTextureHandle GLToHandle(const GLuint id)
     {
-        const std::size_t temp = static_cast<std::size_t>(id);
+        const SizeT temp = static_cast<SizeT>(id);
         return reinterpret_cast<dd::GlyphTextureHandle>(temp);
     }
 
@@ -356,7 +356,7 @@ namespace ZeoEngine {
             CheckGLError(__FILE__, __LINE__);
 
             // Set the vertex format expected by 3D points and lines
-            std::size_t offset = 0;
+            SizeT offset = 0;
 
             glEnableVertexAttribArray(0); // a_Position (vec3)
             glVertexAttribPointer(
@@ -399,7 +399,7 @@ namespace ZeoEngine {
             CheckGLError(__FILE__, __LINE__);
 
             // Set the vertex format expected by the 2D text
-            std::size_t offset = 0;
+            SizeT offset = 0;
 
             glEnableVertexAttribArray(0); // a_Position (vec2)
             glVertexAttribPointer(
@@ -438,7 +438,7 @@ namespace ZeoEngine {
         }
     }
 
-    void OpenGLDDRenderInterface::CompileShader(const uint32_t shader)
+    void OpenGLDDRenderInterface::CompileShader(const U32 shader)
     {
         glCompileShader(shader);
         CheckGLError(__FILE__, __LINE__);
@@ -455,7 +455,7 @@ namespace ZeoEngine {
         }
     }
 
-    void OpenGLDDRenderInterface::linkProgram(const uint32_t program)
+    void OpenGLDDRenderInterface::linkProgram(const U32 program)
     {
         glLinkProgram(program);
         CheckGLError(__FILE__, __LINE__);

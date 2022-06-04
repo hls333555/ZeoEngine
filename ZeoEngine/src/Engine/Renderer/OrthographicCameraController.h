@@ -38,11 +38,11 @@ namespace ZeoEngine {
 		bool m_bRotation;
 
 		/** Whenever you change camera position via m_Camera.SetPosition(), you should update this either */
-		glm::vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
+		Vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
 		/** In degrees, in the anti-clockwise direction */
 		float m_CameraRotation = 0.0f;
 
-		glm::vec2 m_LastPressedMousePosition{ 0.0f, 0.0f };
+		Vec2 m_LastPressedMousePosition{ 0.0f, 0.0f };
 		bool m_bMiddleMouseButtonFirstPressed = true;
 		
 	};

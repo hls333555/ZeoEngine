@@ -6,7 +6,7 @@
 
 namespace ZeoEngine::Math {
 
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
+	bool DecomposeTransform(const Mat4& transform, Vec3& translation, Vec3& rotation, Vec3& scale)
 	{
 		// From glm::decompose in matrix_decompose.inl
 
@@ -82,9 +82,9 @@ namespace ZeoEngine::Math {
 		return true;
 	}
 
-	glm::vec3 GetTranslationFromTransform(const glm::mat4& transfrom)
+	Vec3 GetTranslationFromTransform(const Mat4& transfrom)
 	{
-		return glm::vec3(transfrom[3]);
+		return Vec3(transfrom[3]);
 	}
 
 	float FInterpTo(float current, float target, DeltaTime dt, float interpSpeed)
@@ -110,7 +110,7 @@ namespace ZeoEngine::Math {
 		return current + deltaMove;
 	}
 
-	glm::vec3 VInterpTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed)
+	Vec3 VInterpTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
 	{
 		// If no interp speed, jump to target value
 		if (interpSpeed <= 0.0f)
@@ -119,7 +119,7 @@ namespace ZeoEngine::Math {
 		}
 
 		// Distance to reach
-		const glm::vec3 dist = target - current;
+		const Vec3 dist = target - current;
 
 		// If distance is too small, just set the desired location
 		if (glm::length(dist) < KINDA_SMALL_NUMBER)
@@ -128,14 +128,14 @@ namespace ZeoEngine::Math {
 		}
 
 		// Delta Move, clamp so we do not over shoot
-		const glm::vec3 deltaMove = dist * glm::clamp<float>(dt * interpSpeed, 0.0f, 1.0f);
+		const Vec3 deltaMove = dist * glm::clamp<float>(dt * interpSpeed, 0.0f, 1.0f);
 
 		return current + deltaMove;
 	}
 
-	glm::vec3 InterpConstantTo(const glm::vec3& current, const glm::vec3& target, DeltaTime dt, float interpSpeed)
+	Vec3 InterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
 	{
-		const glm::vec3 delta = target - current;
+		const Vec3 delta = target - current;
 		const float deltaM = glm::length(delta);
 		const float maxStep = interpSpeed * dt;
 
@@ -143,7 +143,7 @@ namespace ZeoEngine::Math {
 		{
 			if (maxStep > 0.f)
 			{
-				const glm::vec3 deltaN = delta / deltaM;
+				const Vec3 deltaN = delta / deltaM;
 				return current + deltaN * maxStep;
 			}
 			else

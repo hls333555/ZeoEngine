@@ -6,13 +6,13 @@
 
 namespace ZeoEngine {
 
-	ComponentInspector::ComponentInspector(uint32_t compId, Entity entity)
+	ComponentInspector::ComponentInspector(U32 compId, Entity entity)
 		: m_ComponentId(compId)
 		, m_OwnerEntity(entity)
 	{
 	}
 
-	int32_t ComponentInspector::ProcessComponent()
+	I32 ComponentInspector::ProcessComponent()
 	{
 		bool bWillRemove = false;
 
@@ -102,7 +102,7 @@ namespace ZeoEngine {
 							m_TableID = ImGui::GetItemID();
 							ImGui::TableNextColumn();
 							// Re-push entity id
-							ImGui::PushID(static_cast<uint32_t>(m_OwnerEntity));
+							ImGui::PushID(static_cast<U32>(m_OwnerEntity));
 							// Re-push component id
 							ImGui::PushID(m_ComponentId);
 
@@ -124,7 +124,7 @@ namespace ZeoEngine {
 							ImGui::EndTable();
 						}
 						// Re-push entity id
-						ImGui::PushID(static_cast<uint32_t>(m_OwnerEntity));
+						ImGui::PushID(static_cast<U32>(m_OwnerEntity));
 						// Re-push component id
 						ImGui::PushID(m_ComponentId);
 					}
@@ -154,7 +154,7 @@ namespace ZeoEngine {
 
 	void ComponentInspector::DrawDataWidget(entt::meta_data data, entt::meta_any& compInstance)
 	{
-		uint32_t aggregatedDataId = GetAggregatedDataID(data);
+		U32 aggregatedDataId = GetAggregatedDataID(data);
 		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
 		{
 			if (m_DataWidgets[aggregatedDataId])

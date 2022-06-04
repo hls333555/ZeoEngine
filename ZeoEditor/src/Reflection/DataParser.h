@@ -5,6 +5,8 @@
 #include <optional>
 #include <entt.hpp>
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
 	struct DataParser
@@ -24,7 +26,7 @@ namespace ZeoEngine {
 			bool bHasShownWarning = false;
 		};
 		/** Map from data id to HideConditionInfo */
-		std::unordered_map<uint32_t, HideConditionInfo> m_HideConditionBuffers;
+		std::unordered_map<U32, HideConditionInfo> m_HideConditionBuffers;
 	};
 
 }

@@ -5,7 +5,6 @@
 #include "Engine/Renderer/RenderPassInput.h"
 #include "Engine/Renderer/RenderPassOutput.h"
 #include "Engine/Utils/EngineUtils.h"
-#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
@@ -30,16 +29,12 @@ namespace ZeoEngine {
 
 	void RenderGraph::Execute() const
 	{
-		BEGIN_BENCHMARK()
-
 		ZE_CORE_ASSERT(m_bFinalized);
 
 		for (const auto& pass : m_Passes)
 		{
 			pass->Execute();
 		}
-
-		END_BENCHMARK()
 	}
 
 	void RenderGraph::Stop() const

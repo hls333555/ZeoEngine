@@ -18,7 +18,7 @@ namespace ZeoEngine {
 			if (ImGui::TreeNode("DepthMap"))
 			{
 				// TODO: Retrieve from setting
-				static int32_t count = 4;
+				static I32 count = 4;
 				static const float previewWidth = 300.0f;
 				static const float previewHeight = 200.0f;
 				float windowWidth = ImGui::GetContentRegionAvail().x;

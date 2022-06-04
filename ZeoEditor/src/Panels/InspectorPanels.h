@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		void DrawComponents(Entity entity)
 		{
 			// Push entity id
-			ImGui::PushID(static_cast<uint32_t>(entity));
+			ImGui::PushID(static_cast<U32>(entity));
 			{
 				if (m_bIsComponentInspectorsDirty)
 				{
@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		void DrawComponent(Entity entity)
 		{
 			// Push entity id
-			ImGui::PushID(static_cast<uint32_t>(entity));
+			ImGui::PushID(static_cast<U32>(entity));
 			{
 				if (m_bIsComponentInspectorsDirty)
 				{
@@ -91,7 +91,7 @@ namespace ZeoEngine {
 
 	private:
 		template<typename IComponent>
-		bool ShouldIgnoreComponent(uint32_t compId)
+		bool ShouldIgnoreComponent(U32 compId)
 		{
 			return entt::type_hash<IComponent>::value() == compId;
 		}
@@ -106,7 +106,7 @@ namespace ZeoEngine {
 		bool m_bIsComponentInspectorsDirty = true;
 
 		/** Map from category to list of component ids, used to draw categorized components in AddComponent popup */
-		std::map<std::string, std::vector<uint32_t>> m_CategorizedComponents;
+		std::map<std::string, std::vector<U32>> m_CategorizedComponents;
 		bool m_bIsCategorizedComponentsDirty = true;
 
 	};

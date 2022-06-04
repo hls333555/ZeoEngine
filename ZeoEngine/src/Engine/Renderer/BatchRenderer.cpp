@@ -38,9 +38,9 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
 			m_PrimitiveBuffer.QuadVertexBufferBase = new QuadVertex[m_PrimitiveBuffer.MaxVertices];
 
-			uint32_t* quadIndices = new uint32_t[m_PrimitiveBuffer.MaxIndices];
-			uint32_t offset = 0;
-			for (uint32_t i = 0; i < m_PrimitiveBuffer.MaxIndices; i += 6)
+			U32* quadIndices = new U32[m_PrimitiveBuffer.MaxIndices];
+			U32 offset = 0;
+			for (U32 i = 0; i < m_PrimitiveBuffer.MaxIndices; i += 6)
 			{
 				quadIndices[i + 0] = offset + 0;
 				quadIndices[i + 1] = offset + 1;
@@ -82,10 +82,10 @@ namespace ZeoEngine {
 		if (m_PrimitiveBuffer.QuadIndexCount)
 		{
 			m_PrimitiveBuffer.QuadVBO->Bind();
-			const auto dataSize = reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<uint8_t*>(m_PrimitiveBuffer.QuadVertexBufferBase);
-			m_PrimitiveBuffer.QuadVBO->SetData(m_PrimitiveBuffer.QuadVertexBufferBase, static_cast<uint32_t>(dataSize));
+			const auto dataSize = reinterpret_cast<U8*>(m_PrimitiveBuffer.QuadVertexBufferPtr) - reinterpret_cast<U8*>(m_PrimitiveBuffer.QuadVertexBufferBase);
+			m_PrimitiveBuffer.QuadVBO->SetData(m_PrimitiveBuffer.QuadVertexBufferBase, static_cast<U32>(dataSize));
 
-			for (uint32_t i = 0; i < m_PrimitiveBuffer.TextureSlotIndex; i++)
+			for (U32 i = 0; i < m_PrimitiveBuffer.TextureSlotIndex; i++)
 			{
 				m_PrimitiveBuffer.TextureSlots[i]->Bind(i);
 			}
@@ -95,7 +95,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void BatchRenderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
+	void BatchRenderer::DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -104,14 +104,14 @@ namespace ZeoEngine {
 			NextBatch();
 		}
 
-		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		constexpr SizeT quadVertexCount = 4;
+		constexpr Vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 		// White texture
 		constexpr float textureIndex = 0.0f;
-		constexpr glm::vec2 tilingFactor = { 1.0f, 1.0f };
-		constexpr glm::vec2 uvOffset = { 0.0f, 0.0f };
+		constexpr Vec2 tilingFactor = { 1.0f, 1.0f };
+		constexpr Vec2 uvOffset = { 0.0f, 0.0f };
 
-		for (size_t i = 0; i < quadVertexCount; ++i)
+		for (SizeT i = 0; i < quadVertexCount; ++i)
 		{
 			m_PrimitiveBuffer.QuadVertexBufferPtr->Position = transform * m_PrimitiveBuffer.QuadVertexPositions[i];
 			m_PrimitiveBuffer.QuadVertexBufferPtr->Color = color;
@@ -128,7 +128,7 @@ namespace ZeoEngine {
 		++Renderer::GetStats().QuadCount;
 	}
 
-	void BatchRenderer::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void BatchRenderer::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -138,7 +138,7 @@ namespace ZeoEngine {
 		}
 
 		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < m_PrimitiveBuffer.TextureSlotIndex; ++i)
+		for (U32 i = 1; i < m_PrimitiveBuffer.TextureSlotIndex; ++i)
 		{
 			if (m_PrimitiveBuffer.TextureSlots[i] == texture)
 			{
@@ -157,10 +157,10 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.TextureSlots[m_PrimitiveBuffer.TextureSlotIndex++] = texture;
 		}
 
-		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		constexpr SizeT quadVertexCount = 4;
+		constexpr Vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
-		for (size_t i = 0; i < quadVertexCount; i++)
+		for (SizeT i = 0; i < quadVertexCount; i++)
 		{
 			m_PrimitiveBuffer.QuadVertexBufferPtr->Position = transform * m_PrimitiveBuffer.QuadVertexPositions[i];
 			m_PrimitiveBuffer.QuadVertexBufferPtr->Color = tintColor;

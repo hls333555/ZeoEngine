@@ -51,7 +51,7 @@ namespace ZeoEngine {
 				UpdateBounds();
 				return m_Scene.lock()->m_Registry.remove<T>(m_EntityHandle);
 			}
-			return static_cast<size_t>(0);
+			return static_cast<SizeT>(0);
 		}
 
 		template<typename T>
@@ -76,8 +76,8 @@ namespace ZeoEngine {
 
 		UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
 		const std::string& GetName() const { return GetComponent<CoreComponent>().Name; }
-		const glm::mat4& GetTransform() const { return GetComponent<TransformComponent>().GetTransform(); }
-		void SetTransform(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
+		const Mat4& GetTransform() const { return GetComponent<TransformComponent>().GetTransform(); }
+		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
 		{
 			auto& transformComp = GetComponent<TransformComponent>();
 			transformComp.Translation = translation;
@@ -85,9 +85,9 @@ namespace ZeoEngine {
 			transformComp.Scale = scale;
 			UpdateBounds();
 		}
-		const glm::vec3& GetTranslation() const { return GetComponent<TransformComponent>().Translation; }
-		const glm::vec3& GetRotation() const { return GetComponent<TransformComponent>().Rotation; }
-		const glm::vec3& GetScale() const { return GetComponent<TransformComponent>().Scale; }
+		const Vec3& GetTranslation() const { return GetComponent<TransformComponent>().Translation; }
+		const Vec3& GetRotation() const { return GetComponent<TransformComponent>().Rotation; }
+		const Vec3& GetScale() const { return GetComponent<TransformComponent>().Scale; }
 		const BoxSphereBounds& GetBounds() const { return GetComponent<BoundsComponent>().Bounds; }
 
 		void UpdateBounds();
@@ -97,12 +97,12 @@ namespace ZeoEngine {
 
 		// TODO:
 		/** Returns the entity identifier without the version. */
-		uint32_t GetEntityId() const { return entt::to_entity(m_EntityHandle); }
+		U32 GetEntityId() const { return entt::to_entity(m_EntityHandle); }
 
 		/** This only checks if this entity is a null-entity while IsValid() checks if this entity is still alive. */
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }
-		operator uint32_t() const { return static_cast<uint32_t>(m_EntityHandle); }
+		operator U32() const { return static_cast<U32>(m_EntityHandle); }
 
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene.lock() == other.m_Scene.lock(); }
 		bool operator!=(const Entity& other) const { return !(*this == other); }
@@ -113,12 +113,12 @@ namespace ZeoEngine {
 		entt::meta_any GetComponentById(entt::id_type compId) const;
 		bool HasComponentById(entt::id_type compId) const;
 		entt::meta_any GetOrAddComponentById(entt::id_type compId, bool bIsDeserialize = false);
-		void CopyAllComponents(Entity srcEntity, const std::vector<uint32_t>& ignoredCompIds = {});
+		void CopyAllComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIds = {});
 		void CopyComponentById(entt::id_type compId, Entity srcEntity);
 
-		const std::vector<uint32_t>& GetOrderedComponentIds() const;
-		void AddComponentId(uint32_t Id);
-		void RemoveComponentId(uint32_t Id);
+		const std::vector<U32>& GetOrderedComponentIds() const;
+		void AddComponentId(U32 Id);
+		void RemoveComponentId(U32 Id);
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };

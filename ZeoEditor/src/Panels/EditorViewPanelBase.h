@@ -23,10 +23,10 @@ namespace ZeoEngine {
 		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
 		 * @param bOverwriteThumbnail - If true, it will always do a capture no matter the existance of local cache
 		 */
-		void Snapshot(const std::string& assetPath, uint32_t imageWidth = 0, bool bOverwriteThumbnail = true);
+		void Snapshot(const std::string& assetPath, U32 imageWidth = 0, bool bOverwriteThumbnail = true);
 
-		const glm::vec2* GetViewportBounds() const { return m_ViewportBounds; }
-		glm::vec2 GetViewportSize() const;
+		const Vec2* GetViewportBounds() const { return m_ViewportBounds; }
+		Vec2 GetViewportSize() const;
 
 		std::pair<float, float> GetMouseViewportPosition();
 
@@ -44,7 +44,7 @@ namespace ZeoEngine {
 		bool OnMouseScroll(MouseScrolledEvent& e);
 		bool OnKeyPressed(KeyPressedEvent& e);
 
-		void OnViewportResize(const glm::vec2& size);
+		void OnViewportResize(const Vec2& size);
 
 		void PostSceneCreate(const Ref<Scene>& scene);
 
@@ -52,16 +52,16 @@ namespace ZeoEngine {
 
 	protected:
 		EditorCamera m_EditorCamera;
-		glm::vec2 m_ViewportBounds[2];
+		Vec2 m_ViewportBounds[2];
 
 	private:
-		glm::vec2 m_LastViewportSize{ 0.0f };
+		Vec2 m_LastViewportSize{ 0.0f };
 
 		struct SnapshotSpec
 		{
 			std::string AssetPath;
 			std::string ThumbnailPath;
-			uint32_t ImageWidth;
+			U32 ImageWidth;
 		}m_SnapshotSpec;
 	};
 

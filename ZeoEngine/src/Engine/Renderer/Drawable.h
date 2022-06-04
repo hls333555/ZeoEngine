@@ -16,12 +16,12 @@ namespace ZeoEngine {
 		Drawable(Drawable&&) = default;
 		virtual ~Drawable() = default;
 
-		virtual uint32_t GetBaseVertex() const { return 0; }
-		virtual uint32_t GetBaseIndex() const { return 0; }
-		virtual uint32_t GetIndexCount() const = 0;
+		virtual U32 GetBaseVertex() const { return 0; }
+		virtual U32 GetBaseIndex() const { return 0; }
+		virtual U32 GetIndexCount() const = 0;
 
 		void AddTechnique(RenderTechnique technique);
-		void PrepareTechniques(size_t size);
+		void PrepareTechniques(SizeT size);
 		void Bind() const;
 		void Submit();
 

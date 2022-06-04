@@ -39,12 +39,12 @@ namespace ZeoEngine {
 		other->m_OnSceneCopiedDel.publish(shared_from_this());
 	}
 
-	Entity Scene::CreateEntity(const std::string& name, const glm::vec3& translation)
+	Entity Scene::CreateEntity(const std::string& name, const Vec3& translation)
 	{
 		return CreateEntityWithUUID(UUID(), name, translation);
 	}
 
-	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const glm::vec3& translation)
+	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const Vec3& translation)
 	{
 		Entity entity{ m_Registry.create(), shared_from_this() };
 

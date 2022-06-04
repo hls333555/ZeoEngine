@@ -201,16 +201,16 @@ namespace ZeoEngine {
 				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, GetAssetHandle()));
 				break;
 			case ShaderReflectionType::Int:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<int32_t>>(*reflectionData, GetAssetHandle(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, GetAssetHandle(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
 				break;
 			case ShaderReflectionType::Float:
 				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec2:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec2, 2, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<glm::vec3, 3, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec4:
 				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, GetAssetHandle()));
@@ -237,7 +237,7 @@ namespace ZeoEngine {
 			memset(bufferData, 0, uniformBlockSize);
 			m_DynamicUniformBufferDatas[binding] = bufferData;
 
-			auto uniformBuffer = UniformBuffer::Create(static_cast<uint32_t>(uniformBlockSize), binding);
+			auto uniformBuffer = UniformBuffer::Create(static_cast<U32>(uniformBlockSize), binding);
 			// Upload default 0 values
 			uniformBuffer->SetData(bufferData);
 			m_DynamicUniformBuffers[binding] = std::move(uniformBuffer);

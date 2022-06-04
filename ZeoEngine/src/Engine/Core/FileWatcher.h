@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	class FileWatcher
 	{
 	public:
-		FileWatcher(const std::string& directoryToWatch, std::chrono::duration<int32_t, std::milli> delay)
+		FileWatcher(const std::string& directoryToWatch, std::chrono::duration<I32, std::milli> delay)
 			: m_DirectoryToWatch(directoryToWatch), m_Delay(delay)
 		{
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
@@ -104,7 +104,7 @@ namespace ZeoEngine {
 	private:
 		std::string m_DirectoryToWatch;
 		/** Time interval at which we check the base folder for changes */
-		std::chrono::duration<int32_t, std::milli> m_Delay;
+		std::chrono::duration<I32, std::milli> m_Delay;
 
 		/** A record of files from the base directory and their last modification time */
 		std::unordered_map<std::string, std::filesystem::file_time_type> m_WatchedFiles;

@@ -8,12 +8,12 @@ namespace ZeoEngine {
 	struct WindowProps
 	{
 		std::string Title;
-		uint32_t Width;
-		uint32_t Height;
+		U32 Width;
+		U32 Height;
 
 		WindowProps(const std::string& title = "Zeo Engine",
-			uint32_t width = 1920,
-			uint32_t height = 1080)
+			U32 width = 1920,
+			U32 height = 1080)
 			: Title(title), Width(width), Height(height) {}
 	};
 
@@ -27,8 +27,8 @@ namespace ZeoEngine {
 
 		virtual void OnUpdate() = 0;
 
-		virtual uint32_t GetWidth() const = 0;
-		virtual uint32_t GetHeight() const = 0;
+		virtual U32 GetWidth() const = 0;
+		virtual U32 GetHeight() const = 0;
 
 		virtual float GetTimeInSeconds() const = 0;
 

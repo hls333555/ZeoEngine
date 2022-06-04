@@ -12,7 +12,7 @@ namespace ZeoEngine {
 
 	void DDRenderInterface::Flush(const Ref<SceneContext>& sceneContext, float timeInMs)
 	{
-		dd::flush(sceneContext->DebugDrawContext, static_cast<int64_t>(timeInMs));
+		dd::flush(sceneContext->DebugDrawContext, static_cast<I64>(timeInMs));
 	}
 
 	void DDRenderInterface::Shutdown(const Ref<SceneContext>& sceneContext)

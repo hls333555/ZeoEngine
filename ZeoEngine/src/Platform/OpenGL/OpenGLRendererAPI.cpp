@@ -48,12 +48,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+	void OpenGLRendererAPI::SetViewport(U32 x, U32 y, U32 width, U32 height)
 	{
 		glViewport(x, y, width, height);
 	}
 
-	void OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
+	void OpenGLRendererAPI::SetClearColor(const Vec4& color)
 	{
 		glClearColor(color.r, color.g, color.b, color.a);
 	}
@@ -71,40 +71,40 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLRendererAPI::DrawArrays(uint32_t vertexCount)
+	void OpenGLRendererAPI::DrawArrays(U32 vertexCount)
 	{
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount, int32_t baseIndex)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount, I32 baseIndex)
 	{
 		vertexArray->Bind();
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		void* offset = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
+		U32 count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		void* offset = reinterpret_cast<void*>(sizeof(U32) * baseIndex);
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, offset);
 	}
 
-	void OpenGLRendererAPI::DrawIndexed(int32_t baseVertex, uint32_t indexCount, int32_t baseIndex)
+	void OpenGLRendererAPI::DrawIndexed(I32 baseVertex, U32 indexCount, I32 baseIndex)
 	{
-		void* indices = reinterpret_cast<void*>(sizeof(uint32_t) * baseIndex);
+		void* indices = reinterpret_cast<void*>(sizeof(U32) * baseIndex);
 		glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, indices, baseVertex);
 	}
 
-	void OpenGLRendererAPI::DrawInstanced(uint32_t instanceCount)
+	void OpenGLRendererAPI::DrawInstanced(U32 instanceCount)
 	{
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceCount);
 	}
 
-	void OpenGLRendererAPI::DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+	void OpenGLRendererAPI::DrawLine(const Ref<VertexArray>& vertexArray, U32 vertexCount)
 	{
 		vertexArray->Bind();
 		glDrawArrays(GL_LINES, 0, vertexCount);
 	}
 
-	void OpenGLRendererAPI::DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+	void OpenGLRendererAPI::DrawLineIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount)
 	{
 		vertexArray->Bind();
-		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+		U32 count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_LINES, count, GL_UNSIGNED_INT, 0);
 	}
 

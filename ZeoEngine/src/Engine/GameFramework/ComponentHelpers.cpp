@@ -28,12 +28,12 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
-	void TransformComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void TransformComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
 
-	void TransformComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void TransformComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
@@ -64,13 +64,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		ParticleSystemInstance::Create(particleComp);
 	}
 
-	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		if (dataId == GetDataIdByName<ParticleSystemComponent>("ParticleTemplateAsset"))
@@ -92,13 +92,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 	 
-	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 		MeshInstance::Copy(meshComp, dynamic_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
-	void MeshRendererComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void MeshRendererComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
@@ -138,7 +138,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MeshRendererComponentHelper::PostDataDeserialize(uint32_t dataId)
+	void MeshRendererComponentHelper::PostDataDeserialize(U32 dataId)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
@@ -184,7 +184,7 @@ namespace ZeoEngine {
 		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 
-	void LightComponentHelper::OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void LightComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		if (dataId == GetDataIdByName<LightComponent>("Range"))
 		{
@@ -192,7 +192,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LightComponentHelper::PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex)
+	void LightComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		if (dataId == GetDataIdByName<LightComponent>("Type"))
 		{
@@ -204,7 +204,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LightComponentHelper::PostDataDeserialize(uint32_t dataId)
+	void LightComponentHelper::PostDataDeserialize(U32 dataId)
 	{
 		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();

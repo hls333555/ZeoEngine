@@ -10,11 +10,11 @@ namespace ZeoEngine {
 		OpenGLSampler(SamplerType type);
 		virtual ~OpenGLSampler();
 
-		virtual void Bind(uint32_t slot) const override;
-		virtual void Unbind(uint32_t slot) const override;
+		virtual void Bind(U32 slot) const override;
+		virtual void Unbind(U32 slot) const override;
 
 	private:
-		uint32_t m_RendererID = 0;
+		U32 m_RendererID = 0;
 	};
 
 }

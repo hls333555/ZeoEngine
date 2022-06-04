@@ -39,28 +39,28 @@ namespace ZeoEngine {
 
 		void UpdateSceneContext(const Ref<Scene>& scene);
 
-		void SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight);
-		void AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight);
-		void AddSpotLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<SpotLight>& spotLight);
+		void SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight);
+		void AddPointLight(const Vec3& position, const Ref<PointLight>& pointLight);
+		void AddSpotLight(const Vec3& position, const Vec3& rotation, const Ref<SpotLight>& spotLight);
 
-		void DrawMesh(const glm::mat4& transform, const Ref<MeshInstance>& mesh, int32_t entityID = -1);
+		void DrawMesh(const Mat4& transform, const Ref<MeshInstance>& mesh, I32 entityID = -1);
 
-		void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-		void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
-		void DrawBillboard(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		void DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID = -1);
+		void DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		void DrawBillboard(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_RenderGraph->GetBackFrameBuffer(); }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }
 		RenderGraph& GetRenderGraph() { return *m_RenderGraph; }
 		const Scope<RenderSystemBase>& GetRenderSystem() const { return m_RenderSystem; }
 
-		glm::mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
+		Mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
 
 	protected:
 		/** Begin scene for editor. */
 		void BeginScene(const EditorCamera& camera);
 		/** Begin scene for runtime. */
-		void BeginScene(const Camera& camera, const glm::mat4& transform);
+		void BeginScene(const Camera& camera, const Mat4& transform);
 		void EndScene();
 
 	private:
@@ -71,10 +71,10 @@ namespace ZeoEngine {
 		virtual void OnRenderScene() = 0;
 		void FlushScene() const;
 
-		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction);
+		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction);
 		void UploadLightData();
 
-		void OnViewportResize(uint32_t width, uint32_t height);
+		void OnViewportResize(U32 width, U32 height);
 
 	private:
 		EditorCamera* m_EditorCamera = nullptr;
@@ -93,18 +93,18 @@ namespace ZeoEngine {
 
 		struct GlobalData
 		{
-			glm::vec2 ScreenSize;
+			Vec2 ScreenSize;
 		};
 		GlobalData m_GlobalBuffer;
 		Ref<UniformBuffer> m_GlobalUniformBuffer;
 
 		struct CameraData
 		{
-			glm::mat4 View;
-			glm::mat4 Projection;
-			glm::vec3 Position;
+			Mat4 View;
+			Mat4 Projection;
+			Vec3 Position;
 
-			glm::mat4 GetViewProjection() const { return Projection * View; }
+			Mat4 GetViewProjection() const { return Projection * View; }
 		};
 		CameraData m_CameraBuffer;
 		Ref<UniformBuffer> m_CameraUniformBuffer;
@@ -112,11 +112,11 @@ namespace ZeoEngine {
 
 		struct LightDataBase
 		{
-			glm::vec4 Color;
+			Vec4 Color;
 
 			float Intensity;
-			int32_t bCastShadow;
-			int32_t ShadowType;
+			I32 bCastShadow;
+			I32 ShadowType;
 			float DepthBias;
 
 			float NormalBias;
@@ -126,38 +126,38 @@ namespace ZeoEngine {
 
 			void Reset()
 			{
-				Color = glm::vec4{ 0.0f };
+				Color = Vec4{ 0.0f };
 				Intensity = 0.0f;
 			}
 		};
 
 		struct DirectionalLightData : public LightDataBase
 		{
-			glm::vec3 Direction;
-			int32_t CascadeCount;
+			Vec3 Direction;
+			I32 CascadeCount;
 			float CascadeSplits[SceneSettings::MaxCascades];
-			glm::mat4 CascadeReferenceMatrix;
-			glm::vec4 CascadeOffsets[SceneSettings::MaxCascades];
-			glm::vec4 CascadeScales[SceneSettings::MaxCascades];
+			Mat4 CascadeReferenceMatrix;
+			Vec4 CascadeOffsets[SceneSettings::MaxCascades];
+			Vec4 CascadeScales[SceneSettings::MaxCascades];
 			float CascadeBlendThreshold;
 			float _Padding, _Padding2, _Padding3;
 
 			void Reset()
 			{
 				LightDataBase::Reset();
-				Direction = glm::vec3{ 0.0f };
+				Direction = Vec3{ 0.0f };
 			}
 		};
 
 		struct PointLightData : public LightDataBase
 		{
-			glm::vec3 Position;
+			Vec3 Position;
 			float Radius;
 		};
 
 		struct SpotLightData : public PointLightData
 		{
-			glm::vec3 Direction;
+			Vec3 Direction;
 			float Cutoff;
 		};
 
@@ -166,8 +166,8 @@ namespace ZeoEngine {
 			DirectionalLightData DirectionalLightBuffer;
 			PointLightData PointLightBuffer[SceneSettings::MaxPointLights];
 			SpotLightData SpotLightBuffer[SceneSettings::MaxSpotLights];
-			int32_t NumPointLights = 0;
-			int32_t NumSpotLights = 0;
+			I32 NumPointLights = 0;
+			I32 NumSpotLights = 0;
 
 			void Reset()
 			{
@@ -181,7 +181,7 @@ namespace ZeoEngine {
 
 		struct ShadowCameraData
 		{
-			glm::mat4 ViewProjection[SceneSettings::MaxCascades];
+			Mat4 ViewProjection[SceneSettings::MaxCascades];
 		};
 		ShadowCameraData m_ShadowCameraBuffer;
 		Ref<UniformBuffer> m_ShadowCameraUniformBuffer;

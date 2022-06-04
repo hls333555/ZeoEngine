@@ -25,17 +25,17 @@ namespace ZeoEngine {
 	public:
 		virtual void Init() = 0;
 
-		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
+		virtual void SetViewport(U32 x, U32 y, U32 width, U32 height) = 0;
 
-		virtual void SetClearColor(const glm::vec4& color) = 0;
+		virtual void SetClearColor(const Vec4& color) = 0;
 		virtual void Clear(ClearType type) = 0;
 
-		virtual void DrawArrays(uint32_t vertexCount) = 0;
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
-		virtual void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0) = 0;
-		virtual void DrawInstanced(uint32_t instanceCount) = 0;
-		virtual void DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
-		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+		virtual void DrawArrays(U32 vertexCount) = 0;
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount = 0, I32 baseIndex = 0) = 0;
+		virtual void DrawIndexed(I32 baseVertex, U32 indexCount = 0, I32 baseIndex = 0) = 0;
+		virtual void DrawInstanced(U32 instanceCount) = 0;
+		virtual void DrawLine(const Ref<VertexArray>& vertexArray, U32 vertexCount) = 0;
+		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount = 0) = 0;
 		virtual void SetLineThickness(float thickness) = 0;
 
 		virtual void ToggleBlend(bool bEnable) = 0;

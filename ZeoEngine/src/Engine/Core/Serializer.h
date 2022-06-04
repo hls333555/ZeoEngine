@@ -36,9 +36,9 @@ namespace ZeoEngine {
 			if (bIsSeqElement)
 			{
 				const auto elementValue = instance.cast<T>();
-				if constexpr (std::is_same<T, uint8_t>::value)
+				if constexpr (std::is_same<T, U8>::value)
 				{
-					// This '+' can force output uint8_t as number
+					// This '+' can force output U8 as number
 					out << +elementValue;
 				}
 				else
@@ -50,7 +50,7 @@ namespace ZeoEngine {
 			{
 				const auto dataName = GetMetaObjectDisplayName(data);
 				const auto dataValue = data.get(instance).cast<T>();
-				if constexpr (std::is_same<T, uint8_t>::value)
+				if constexpr (std::is_same<T, U8>::value)
 				{
 					out << YAML::Key << *dataName << YAML::Value << +dataValue;
 				}

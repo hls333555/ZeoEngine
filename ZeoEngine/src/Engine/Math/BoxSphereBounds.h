@@ -11,26 +11,26 @@ namespace ZeoEngine {
 	/** An axis-aligned box */
 	struct Box
 	{
-		glm::vec3 Min{ 0.0f };
-		glm::vec3 Max{ 0.0f };
+		Vec3 Min{ 0.0f };
+		Vec3 Max{ 0.0f };
 		bool bIsValid = false;
 		
 		Box() = default;
-		Box(const glm::vec3& min, const glm::vec3& max)
+		Box(const Vec3& min, const Vec3& max)
 			: Min(min), Max(max), bIsValid(true) {}
 
-		glm::vec3 GetExtent() const
+		Vec3 GetExtent() const
 		{
 			return 0.5f * (Max - Min);
 		}
 
-		void GetCenterAndExtents(glm::vec3& center, glm::vec3& extents) const
+		void GetCenterAndExtents(Vec3& center, Vec3& extents) const
 		{
 			extents = GetExtent();
 			center = Min + extents;
 		}
 
-		Box& operator+=(const glm::vec3& Other)
+		Box& operator+=(const Vec3& Other)
 		{
 			if (bIsValid)
 			{
@@ -51,7 +51,7 @@ namespace ZeoEngine {
 			return *this;
 		}
 
-		Box operator+(const glm::vec3& Other) const
+		Box operator+(const Vec3& Other) const
 		{
 			return Box(*this) += Other;
 		}
@@ -85,20 +85,20 @@ namespace ZeoEngine {
 
 	struct Sphere
 	{
-		glm::vec3 Center;
+		Vec3 Center;
 		float Radius;
 	};
 
 	/** A combined axis aligned bounding box and bounding sphere with the same origin */
 	struct BoxSphereBounds
 	{
-		glm::vec3 Origin{ 0.0f };
-		glm::vec3 BoxExtent{ 0.0f };
+		Vec3 Origin{ 0.0f };
+		Vec3 BoxExtent{ 0.0f };
 		float SphereRadius = 0.0f;
 
 		BoxSphereBounds() = default;
 
-		BoxSphereBounds(const glm::vec3& origin, const glm::vec3& boxExtent, float sphereRadius)
+		BoxSphereBounds(const Vec3& origin, const Vec3& boxExtent, float sphereRadius)
 			: Origin(origin), BoxExtent(boxExtent), SphereRadius(sphereRadius) {}
 
 		BoxSphereBounds(const Box& box)
@@ -110,11 +110,11 @@ namespace ZeoEngine {
 		BoxSphereBounds(const Sphere& Sphere)
 		{
 			Origin = Sphere.Center;
-			BoxExtent = glm::vec3(Sphere.Radius);
+			BoxExtent = Vec3(Sphere.Radius);
 			SphereRadius = Sphere.Radius;
 		}
 
-		BoxSphereBounds(const std::vector<glm::vec3>& points)
+		BoxSphereBounds(const std::vector<Vec3>& points)
 		{
 			Box boundingBox;
 			for (const auto& point : points)
@@ -144,17 +144,17 @@ namespace ZeoEngine {
 			return result;
 		}
 
-		[[nodiscard]]BoxSphereBounds TransformBy(const glm::mat4& transform) const
+		[[nodiscard]]BoxSphereBounds TransformBy(const Mat4& transform) const
 		{
 			BoxSphereBounds result;
 
-			glm::vec3 translation, rotation, scale;
+			Vec3 translation, rotation, scale;
 			Math::DecomposeTransform(transform, translation, rotation, scale);
-			glm::mat4 rotationMatrix = glm::toMat4(glm::quat(rotation));
-			glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
+			Mat4 rotationMatrix = glm::toMat4(glm::quat(rotation));
+			Mat4 scaleMatrix = glm::scale(Mat4(1.0f), scale);
 
-			result.Origin = transform * glm::vec4(Origin, 1.0f);
-			result.BoxExtent = rotationMatrix * scaleMatrix * glm::vec4(BoxExtent, 1.0f);
+			result.Origin = transform * Vec4(Origin, 1.0f);
+			result.BoxExtent = rotationMatrix * scaleMatrix * Vec4(BoxExtent, 1.0f);
 			result.SphereRadius = glm::length(result.BoxExtent);
 
 			return result;
@@ -162,7 +162,7 @@ namespace ZeoEngine {
 
 		bool IsValid() const
 		{
-			return BoxExtent != glm::vec3(0.0f) && SphereRadius != 0.0f;
+			return BoxExtent != Vec3(0.0f) && SphereRadius != 0.0f;
 		}
 
 		Box GetBox() const

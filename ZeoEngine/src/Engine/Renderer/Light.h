@@ -18,8 +18,8 @@ namespace ZeoEngine {
 			PCSS,
 		};
 
-		const glm::vec4& GetColor() const { return m_Color; }
-		void SetColor(const glm::vec4& color) { m_Color = color; }
+		const Vec4& GetColor() const { return m_Color; }
+		void SetColor(const Vec4& color) { m_Color = color; }
 		float GetIntensity() const { return m_Intensity; }
 		void SetIntensity(float intensity) { m_Intensity = intensity; }
 		float GetRange() const { return m_Range; }
@@ -38,8 +38,8 @@ namespace ZeoEngine {
 		void SetLightSize(float size) { m_LightSize = size; }
 		float GetFilterSize() const { return m_FilterSize; }
 		void SetFilterSize(float size) { m_FilterSize = size; }
-		virtual uint32_t GetCascadeCount() const { return 0; }
-		virtual void SetCascadeCount(uint32_t count) {}
+		virtual U32 GetCascadeCount() const { return 0; }
+		virtual void SetCascadeCount(U32 count) {}
 		virtual float GetCascadeBlendThreshold() const { return 0.0f; }
 		virtual void SetCascadeBlendThreshold(float threshold) {}
 		virtual float GetMaxShadowDistance() { return 0.0f; }
@@ -47,10 +47,10 @@ namespace ZeoEngine {
 		virtual float GetCascadeSplitLambda() { return 0.0f; }
 		virtual void SetGetCascadeSplitLambda(float lambda) {}
 
-		glm::vec3 CalculateDirection(const glm::vec3& rotation) const;
+		Vec3 CalculateDirection(const Vec3& rotation) const;
 
 	private:
-		glm::vec4 m_Color{ 1.0f };
+		Vec4 m_Color{ 1.0f };
 		float m_Intensity = 1.0f;
 		float m_Range = 1.0f;
 		bool m_bCastShadow = false;
@@ -64,8 +64,8 @@ namespace ZeoEngine {
 	class DirectionalLight : public Light
 	{
 	public:
-		virtual uint32_t GetCascadeCount() const override { return m_CascadeCount; }
-		virtual void SetCascadeCount(uint32_t count) override { m_CascadeCount = count; }
+		virtual U32 GetCascadeCount() const override { return m_CascadeCount; }
+		virtual void SetCascadeCount(U32 count) override { m_CascadeCount = count; }
 		virtual float GetCascadeBlendThreshold() const { return m_CascadeBlendThreshold; }
 		virtual void SetCascadeBlendThreshold(float threshold) { m_CascadeBlendThreshold = threshold; }
 		virtual float GetMaxShadowDistance() override { return m_MaxShadowDistance; }
@@ -74,7 +74,7 @@ namespace ZeoEngine {
 		virtual void SetGetCascadeSplitLambda(float lambda) override { m_CascadeSplitLambda = lambda; }
 
 	private:
-		uint32_t m_CascadeCount = 4;
+		U32 m_CascadeCount = 4;
 		float m_CascadeBlendThreshold = 0.5f;
 		float m_MaxShadowDistance =100.0f;
 		float m_CascadeSplitLambda = 0.85f;

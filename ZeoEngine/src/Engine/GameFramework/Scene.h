@@ -54,12 +54,12 @@ namespace ZeoEngine {
 			return newScene;
 		}
 
-		Entity CreateEntity(const std::string& name = "Entity", const glm::vec3& translation = glm::vec3(0.0f));
-		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const glm::vec3& translation = glm::vec3(0.0f));
+		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 
-		size_t GetEntityCount() const { return m_Registry.alive(); }
+		SizeT GetEntityCount() const { return m_Registry.alive(); }
 
 		/** Only implemented for the level editor. */
 		virtual Entity GetSelectedEntity() const;
@@ -90,7 +90,7 @@ namespace ZeoEngine {
 		std::vector<Ref<SystemBase>> m_Systems;
 		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
 
-		uint32_t m_CurrentEntityIndex = 0;
+		U32 m_CurrentEntityIndex = 0;
 		entt::sigh<void(const Ref<Scene>&)> m_OnSceneCopiedDel;
 	};
 

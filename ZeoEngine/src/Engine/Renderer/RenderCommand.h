@@ -13,12 +13,12 @@ namespace ZeoEngine {
 			s_RendererAPI->Init();
 		}
 
-		static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+		static void SetViewport(U32 x, U32 y, U32 width, U32 height)
 		{
 			s_RendererAPI->SetViewport(x, y, width, height);
 		}
 
-		static void SetClearColor(const glm::vec4& color)
+		static void SetClearColor(const Vec4& color)
 		{
 			s_RendererAPI->SetClearColor(color);
 		}
@@ -30,41 +30,41 @@ namespace ZeoEngine {
 		}
 
 		/** Issue a draw call. */
-		static void DrawArrays(uint32_t vertexCount)
+		static void DrawArrays(U32 vertexCount)
 		{
 			s_RendererAPI->DrawArrays(vertexCount);
 			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
-		static void DrawInstanced(uint32_t instanceCount)
+		static void DrawInstanced(U32 instanceCount)
 		{
 			s_RendererAPI->DrawInstanced(instanceCount);
 			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
-		static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0, int32_t baseIndex = 0)
+		static void DrawIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount = 0, I32 baseIndex = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount, baseIndex);
 			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
-		static void DrawIndexed(int32_t baseVertex, uint32_t indexCount = 0, int32_t baseIndex = 0)
+		static void DrawIndexed(I32 baseVertex, U32 indexCount = 0, I32 baseIndex = 0)
 		{
 			s_RendererAPI->DrawIndexed(baseVertex, indexCount, baseIndex);
 			++Renderer::GetStats().DrawCalls;
 		}
 
 		/** Issue a draw call. */
-		static void DrawLine(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+		static void DrawLine(const Ref<VertexArray>& vertexArray, U32 vertexCount)
 		{
 			s_RendererAPI->DrawLine(vertexArray, vertexCount);
 		}
 
 		/** Issue a draw call. */
-		static void DrawLineIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
+		static void DrawLineIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount = 0)
 		{
 			s_RendererAPI->DrawLineIndexed(vertexArray, indexCount);
 		}

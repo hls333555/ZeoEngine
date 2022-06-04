@@ -8,13 +8,13 @@ namespace ZeoEngine {
 	{
 	public:
 		UUID();
-		UUID(uint64_t uuid);
+		UUID(U64 uuid);
 		UUID(const UUID&) = default;
 
-		operator uint64_t() const { return m_UUID; }
+		operator U64() const { return m_UUID; }
 
 	private:
-		uint64_t m_UUID;
+		U64 m_UUID;
 	};
 
 }
@@ -24,9 +24,9 @@ namespace std {
 	template<>
 	struct hash<ZeoEngine::UUID>
 	{
-		std::size_t operator()(const ZeoEngine::UUID& uuid) const
+		ZeoEngine::SizeT operator()(const ZeoEngine::UUID& uuid) const
 		{
-			return hash<uint64_t>()(static_cast<uint64_t>(uuid));
+			return hash<ZeoEngine::U64>()(uuid);
 		}
 	};
 

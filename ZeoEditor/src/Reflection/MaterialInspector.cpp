@@ -8,9 +8,9 @@
 
 namespace ZeoEngine {
 
-	int32_t MaterialInspector::ProcessComponent()
+	I32 MaterialInspector::ProcessComponent()
 	{
-		int32_t result = ComponentInspector::ProcessComponent();
+		I32 result = ComponentInspector::ProcessComponent();
 
 		ImGui::Separator();
 
@@ -23,7 +23,7 @@ namespace ZeoEngine {
 
 		// Draw resources
 		// Resources do not belong to uniform blocks so they do not need to draw tree header
-		for (size_t i = 0; i < shader->GetResourceCount(); ++i)
+		for (SizeT i = 0; i < shader->GetResourceCount(); ++i)
 		{
 			// Sync table column separator with the component inspector
 			ImGui::PushOverrideID(GetTableID());
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 				ImGui::PushOverrideID(GetTableID());
 				if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 				{
-					for (size_t i = uniformBlockData.BeginIndex; i < uniformBlockData.EndIndex; ++i)
+					for (SizeT i = uniformBlockData.BeginIndex; i < uniformBlockData.EndIndex; ++i)
 					{
 						DrawUniformData(uniforms[i]);
 					}

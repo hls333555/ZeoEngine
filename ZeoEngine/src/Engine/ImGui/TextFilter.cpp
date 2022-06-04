@@ -7,7 +7,7 @@
 
 namespace ZeoEngine {
 
-	void ImStrncpy(char* dst, const char* src, size_t count)
+	void ImStrncpy(char* dst, const char* src, SizeT count)
 	{
 		if (count < 1) return;
 

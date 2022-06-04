@@ -44,12 +44,12 @@ namespace ZeoEngine {
 		glDeleteSamplers(1, &m_RendererID);
 	}
 
-	void OpenGLSampler::Bind(uint32_t slot) const
+	void OpenGLSampler::Bind(U32 slot) const
 	{
 		glBindSampler(slot, m_RendererID);
 	}
 
-	void OpenGLSampler::Unbind(uint32_t slot) const
+	void OpenGLSampler::Unbind(U32 slot) const
 	{
 		glBindSampler(slot, 0);
 	}

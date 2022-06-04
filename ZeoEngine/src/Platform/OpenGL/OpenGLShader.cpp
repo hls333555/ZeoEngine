@@ -70,7 +70,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		static const char* GLShaderStageCachedOpenGLFileExtension(uint32_t stage)
+		static const char* GLShaderStageCachedOpenGLFileExtension(U32 stage)
 		{
 			switch (stage)
 			{
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 			return "";
 		}
 
-		static const char* GLShaderStageCachedVulkanFileExtension(uint32_t stage)
+		static const char* GLShaderStageCachedVulkanFileExtension(U32 stage)
 		{
 			switch (stage)
 			{
@@ -148,7 +148,7 @@ namespace ZeoEngine {
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
-			size_t size = in.tellg();
+			SizeT size = in.tellg();
 			if (size == -1)
 			{
 				ZE_CORE_ERROR("Could not read from file '{0}'!", path);
@@ -175,22 +175,22 @@ namespace ZeoEngine {
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 
 		const char* typeToken = "#type";
-		size_t typeTokenLength = strlen(typeToken);
+		SizeT typeTokenLength = strlen(typeToken);
 		// Location of shader type
-		size_t typeTokenPos = src.find(typeToken, 0);
+		SizeT typeTokenPos = src.find(typeToken, 0);
 		while (typeTokenPos != std::string::npos)
 		{
 			// End of line
-			size_t eol = src.find_first_of("\r\n", typeTokenPos);
+			SizeT eol = src.find_first_of("\r\n", typeTokenPos);
 			ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
 
-			size_t typePos = typeTokenPos + typeTokenLength + 1;
+			SizeT typePos = typeTokenPos + typeTokenLength + 1;
 			// Get shader type
 			std::string type = src.substr(typePos, eol - typePos);
 			ZE_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type token!");
 
 			// Beginning of shader source: "#version..."
-			size_t shaderSrcPos = src.find_first_not_of("\r\n", eol);
+			SizeT shaderSrcPos = src.find_first_not_of("\r\n", eol);
 			// Locate the next shader type
 			typeTokenPos = src.find(typeToken, shaderSrcPos);
 			// Get shader source code
@@ -234,7 +234,7 @@ namespace ZeoEngine {
 				in.seekg(0, std::ios::beg);
 
 				auto& data = shaderData[stage];
-				data.resize(size / sizeof(uint32_t));
+				data.resize(size / sizeof(U32));
 				in.read((char*)data.data(), size);
 			}
 			else
@@ -246,13 +246,13 @@ namespace ZeoEngine {
 					ZE_CORE_ASSERT(false);
 				}
 
-				shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
+				shaderData[stage] = std::vector<U32>(module.cbegin(), module.cend());
 
 				std::ofstream out(cachedPath, std::ios::out | std::ios::binary);
 				if (out.is_open())
 				{
 					auto& data = shaderData[stage];
-					out.write((char*)data.data(), data.size() * sizeof(uint32_t));
+					out.write((char*)data.data(), data.size() * sizeof(U32));
 					out.flush();
 					out.close();
 				}
@@ -298,7 +298,7 @@ namespace ZeoEngine {
 				in.seekg(0, std::ios::beg);
 
 				auto& data = shaderData[stage];
-				data.resize(size / sizeof(uint32_t));
+				data.resize(size / sizeof(U32));
 				in.read((char*)data.data(), size);
 			}
 			else
@@ -314,13 +314,13 @@ namespace ZeoEngine {
 					ZE_CORE_ASSERT(false);
 				}
 
-				shaderData[stage] = std::vector<uint32_t>(module.cbegin(), module.cend());
+				shaderData[stage] = std::vector<U32>(module.cbegin(), module.cend());
 
 				std::ofstream out(cachedPath, std::ios::out | std::ios::binary);
 				if (out.is_open())
 				{
 					auto& data = shaderData[stage];
-					out.write((char*)data.data(), data.size() * sizeof(uint32_t));
+					out.write((char*)data.data(), data.size() * sizeof(U32));
 					out.flush();
 					out.close();
 				}
@@ -336,7 +336,7 @@ namespace ZeoEngine {
 		for (auto&& [stage, spirv] : m_OpenGLSPIRV)
 		{
 			GLuint shaderID = shaderIDs.emplace_back(glCreateShader(stage));
-			glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), (int)spirv.size() * sizeof(uint32_t));
+			glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), (int)spirv.size() * sizeof(U32));
 			glSpecializeShader(shaderID, "main", 0, nullptr, nullptr);
 			glAttachShader(program, shaderID);
 		}
@@ -372,7 +372,7 @@ namespace ZeoEngine {
 		m_RendererID = program;
 	}
 
-	void OpenGLShader::Reflect(GLenum stage, const std::vector<uint32_t>& shaderData)
+	void OpenGLShader::Reflect(GLenum stage, const std::vector<U32>& shaderData)
 	{
 		spirv_cross::Compiler compiler(shaderData);
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
@@ -385,7 +385,7 @@ namespace ZeoEngine {
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			if (binding < static_cast<uint32_t>(TextureBinding::Material)) continue;
+			if (binding < static_cast<U32>(TextureBinding::Material)) continue;
 
 			const auto& name = resource.name;
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
@@ -402,7 +402,7 @@ namespace ZeoEngine {
 		{
 			const auto& bufferType = compiler.get_type(resource.base_type_id);
 			auto bufferSize = compiler.get_declared_struct_size(bufferType);
-			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			U32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
 			auto memberCount = bufferType.member_types.size();
 
 			ZE_CORE_TRACE("  {0}", resource.name);
@@ -410,7 +410,7 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
 
-			if (binding < static_cast<uint32_t>(UniformBufferBinding::Material)) continue;
+			if (binding < static_cast<U32>(UniformBufferBinding::Material)) continue;
 
 			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector
@@ -419,19 +419,19 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLShader::ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, uint32_t binding)
+	void OpenGLShader::ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, U32 binding)
 	{
-		for (size_t i = 0; i < type.member_types.size(); ++i)
+		for (SizeT i = 0; i < type.member_types.size(); ++i)
 		{
 			const auto& memberType = compiler.get_type(type.member_types[i]);
-			const std::string& memberName = compiler.get_member_name(type.self, static_cast<uint32_t>(i));
-			const auto memberOffset = compiler.type_struct_member_offset(type, static_cast<uint32_t>(i));
-			const auto memberSize = compiler.get_declared_struct_member_size(type, static_cast<uint32_t>(i));
+			const std::string& memberName = compiler.get_member_name(type.self, static_cast<U32>(i));
+			const auto memberOffset = compiler.type_struct_member_offset(type, static_cast<U32>(i));
+			const auto memberSize = compiler.get_declared_struct_member_size(type, static_cast<U32>(i));
 			ReflectType(compiler, memberType, memberName, binding, memberOffset, memberSize);
 		}
 	}
 
-	void OpenGLShader::ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, uint32_t binding, uint32_t offset, size_t size)
+	void OpenGLShader::ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, U32 binding, U32 offset, SizeT size)
 	{
 		switch (type.basetype)
 		{
@@ -489,7 +489,7 @@ namespace ZeoEngine {
 		UploadUniformInt(name, value);
 	}
 
-	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count)
+	void OpenGLShader::SetIntArray(const std::string& name, int* values, U32 count)
 	{
 		UploadUniformIntArray(name, values, count);
 	}
@@ -501,28 +501,28 @@ namespace ZeoEngine {
 		UploadUniformFloat(name, value);
 	}
 
-	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
+	void OpenGLShader::SetFloat2(const std::string& name, const Vec2& value)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		UploadUniformFloat2(name, value);
 	}
 
-	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
+	void OpenGLShader::SetFloat3(const std::string& name, const Vec3& value)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		UploadUniformFloat3(name, value);
 	}
 
-	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
+	void OpenGLShader::SetFloat4(const std::string& name, const Vec4& value)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		UploadUniformFloat4(name, value);
 	}
 
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::SetMat4(const std::string& name, const Mat4& value)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -535,7 +535,7 @@ namespace ZeoEngine {
 		glUniform1i(location, value);
 	}
 
-	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
+	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, U32 count)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform1iv(location, count, values);
@@ -547,31 +547,31 @@ namespace ZeoEngine {
 		glUniform1f(location, value);
 	}
 
-	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
+	void OpenGLShader::UploadUniformFloat2(const std::string& name, const Vec2& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform2f(location, values.x, values.y);
 	}
 
-	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
+	void OpenGLShader::UploadUniformFloat3(const std::string& name, const Vec3& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform3f(location, values.x, values.y, values.z);
 	}
 
-	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
+	void OpenGLShader::UploadUniformFloat4(const std::string& name, const Vec4& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform4f(location, values.x, values.y, values.z, values.w);
 	}
 
-	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
+	void OpenGLShader::UploadUniformMat3(const std::string& name, const Mat3& matrix)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const Mat4& matrix)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));

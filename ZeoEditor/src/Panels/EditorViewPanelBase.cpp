@@ -111,7 +111,7 @@ namespace ZeoEngine {
 		return assetName + "###" + GetPanelName();
 	}
 
-	void EditorViewPanelBase::Snapshot(const std::string& assetPath, uint32_t imageWidth, bool bOverwriteThumbnail)
+	void EditorViewPanelBase::Snapshot(const std::string& assetPath, U32 imageWidth, bool bOverwriteThumbnail)
 	{
 		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});
 		if (!bOverwriteThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
@@ -123,7 +123,7 @@ namespace ZeoEngine {
 		AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
 	}
 
-	glm::vec2 EditorViewPanelBase::GetViewportSize() const
+	Vec2 EditorViewPanelBase::GetViewportSize() const
 	{
 		return { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
 	}
@@ -136,13 +136,13 @@ namespace ZeoEngine {
 		return { mx, my };
 	}
 
-	void EditorViewPanelBase::OnViewportResize(const glm::vec2& size)
+	void EditorViewPanelBase::OnViewportResize(const Vec2& size)
 	{
 		// Broadcast changes
-		GetContextEditor()->m_OnViewportResizeDel.publish(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+		GetContextEditor()->m_OnViewportResizeDel.publish(static_cast<U32>(size.x), static_cast<U32>(size.y));
 
 		// Resize FrameBuffer
-		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
+		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<U32>(size.x), static_cast<U32>(size.y));
 
 		// Resize editor camera
 		m_EditorCamera.SetViewportSize(size.x, size.y);

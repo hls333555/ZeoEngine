@@ -20,30 +20,30 @@ namespace ZeoEngine {
 		virtual void Unbind() const override;
 
 		virtual void SetInt(const std::string& name, int value) override;
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
+		virtual void SetIntArray(const std::string& name, int* values, U32 count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
-		virtual void SetFloat2(const std::string& name, const glm::vec2& value) override;
-		virtual void SetFloat3(const std::string& name, const glm::vec3& value) override;
-		virtual void SetFloat4(const std::string& name, const glm::vec4& value) override;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
+		virtual void SetFloat2(const std::string& name, const Vec2& value) override;
+		virtual void SetFloat3(const std::string& name, const Vec3& value) override;
+		virtual void SetFloat4(const std::string& name, const Vec4& value) override;
+		virtual void SetMat4(const std::string& name, const Mat4& value) override;
 
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
-		virtual size_t GetResourceCount() const override { return m_ResourceCount; }
-		virtual const std::unordered_map<uint32_t, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
+		virtual SizeT GetResourceCount() const override { return m_ResourceCount; }
+		virtual const std::unordered_map<U32, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
 
 		static const char* GetCacheDirectory() { return "cache/shader/opengl"; }
 		static std::array<const char*, 6> GetCacheFileExtensions() { return { ".cached_opengl.vert", ".cached_opengl.frag", ".cached_opengl.geom", ".cached_vulkan.vert", ".cached_vulkan.frag", ".cached_vulkan.geom" }; }
 
 		void UploadUniformInt(const std::string& name, int value);
-		void UploadUniformIntArray(const std::string& name, int* values , uint32_t count);
+		void UploadUniformIntArray(const std::string& name, int* values , U32 count);
 
 		void UploadUniformFloat(const std::string& name, float value);
-		void UploadUniformFloat2(const std::string& name, const glm::vec2& values);
-		void UploadUniformFloat3(const std::string& name, const glm::vec3& values);
-		void UploadUniformFloat4(const std::string& name, const glm::vec4& values);
+		void UploadUniformFloat2(const std::string& name, const Vec2& values);
+		void UploadUniformFloat3(const std::string& name, const Vec3& values);
+		void UploadUniformFloat4(const std::string& name, const Vec4& values);
 		
-		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
-		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+		void UploadUniformMat3(const std::string& name, const Mat3& matrix);
+		void UploadUniformMat4(const std::string& name, const Mat4& matrix);
 
 	private:
 		std::string ReadFile(const std::string& path);
@@ -52,23 +52,23 @@ namespace ZeoEngine {
 		void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
 		void CompileOrGetOpenGLBinaries();
 		void CreateProgram();
-		void Reflect(GLenum stage, const std::vector<uint32_t>& shaderData);
-		void ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, uint32_t binding);
-		void ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, uint32_t binding, uint32_t offset, size_t size);
+		void Reflect(GLenum stage, const std::vector<U32>& shaderData);
+		void ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, U32 binding);
+		void ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, U32 binding, U32 offset, SizeT size);
 
 	private:
-		uint32_t m_RendererID;
+		U32 m_RendererID;
 		std::string m_ShaderResourcePath;
 
-		std::unordered_map<GLenum, std::vector<uint32_t>> m_VulkanSPIRV;
-		std::unordered_map<GLenum, std::vector<uint32_t>> m_OpenGLSPIRV;
+		std::unordered_map<GLenum, std::vector<U32>> m_VulkanSPIRV;
+		std::unordered_map<GLenum, std::vector<U32>> m_OpenGLSPIRV;
 
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 
 		std::vector<Scope<ShaderReflectionDataBase>> m_ShaderReflectionData;
-		size_t m_ResourceCount = 0;
+		SizeT m_ResourceCount = 0;
 		/** Map from uniform block binding to uniform buffer data */
-		std::unordered_map<uint32_t, UniformBlockData> m_UniformBlockDatas;
+		std::unordered_map<U32, UniformBlockData> m_UniformBlockDatas;
 
 	};
 

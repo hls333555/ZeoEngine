@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	Entity EditorSceneUtils::CreateAndPlaceEntity(const Ref<Scene>& scene, const std::string& name)
 	{
 		EditorCamera* editorCamera = GetEditorCamera();
-		const glm::vec3 position = editorCamera->GetPosition() + editorCamera->GetForwardVector() * 2.0f;
+		const Vec3 position = editorCamera->GetPosition() + editorCamera->GetForwardVector() * 2.0f;
 		return scene->CreateEntity(name, position);
 	}
 

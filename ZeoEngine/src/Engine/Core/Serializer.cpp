@@ -15,9 +15,9 @@ namespace YAML {
 	using namespace ZeoEngine;
 
 	template<>
-	struct convert<glm::vec2>
+	struct convert<Vec2>
 	{
-		static Node encode(const glm::vec2& rhs)
+		static Node encode(const Vec2& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -25,7 +25,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec2& rhs)
+		static bool decode(const Node& node, Vec2& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 2)
 				return false;
@@ -37,9 +37,9 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<glm::vec3>
+	struct convert<Vec3>
 	{
-		static Node encode(const glm::vec3& rhs)
+		static Node encode(const Vec3& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -48,7 +48,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec3& rhs)
+		static bool decode(const Node& node, Vec3& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 				return false;
@@ -61,9 +61,9 @@ namespace YAML {
 	};
 
 	template<>
-	struct convert<glm::vec4>
+	struct convert<Vec4>
 	{
-		static Node encode(const glm::vec4& rhs)
+		static Node encode(const Vec4& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -73,7 +73,7 @@ namespace YAML {
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec4& rhs)
+		static bool decode(const Node& node, Vec4& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
@@ -92,21 +92,21 @@ namespace YAML {
 		return out;
 	}
 
-	Emitter& operator<<(Emitter& out, const glm::vec2& v)
+	Emitter& operator<<(Emitter& out, const Vec2& v)
 	{
 		out << Flow;
 		out << BeginSeq << v.x << v.y << EndSeq;
 		return out;
 	}
 
-	Emitter& operator<<(Emitter& out, const glm::vec3& v)
+	Emitter& operator<<(Emitter& out, const Vec3& v)
 	{
 		out << Flow;
 		out << BeginSeq << v.x << v.y << v.z << EndSeq;
 		return out;
 	}
 
-	Emitter& operator<<(Emitter& out, const glm::vec4& v)
+	Emitter& operator<<(Emitter& out, const Vec4& v)
 	{
 		out << Flow;
 		out << BeginSeq << v.x << v.y << v.z << v.w << EndSeq;
@@ -207,22 +207,22 @@ namespace ZeoEngine {
 				SerializeData<bool>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I8:
-				SerializeData<int8_t>(out, data, instance, bIsSeqElement);
+				SerializeData<I8>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I32:
-				SerializeData<int32_t>(out, data, instance, bIsSeqElement);
+				SerializeData<I32>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I64:
-				SerializeData<int64_t>(out, data, instance, bIsSeqElement);
+				SerializeData<I64>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI8:
-				SerializeData<uint8_t>(out, data, instance, bIsSeqElement);
+				SerializeData<U8>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI32:
-				SerializeData<uint32_t>(out, data, instance, bIsSeqElement);
+				SerializeData<U32>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI64:
-				SerializeData<uint64_t>(out, data, instance, bIsSeqElement);
+				SerializeData<U64>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::FLOAT:
 				SerializeData<float>(out, data, instance, bIsSeqElement);
@@ -237,13 +237,13 @@ namespace ZeoEngine {
 				SerializeData<std::string>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC2:
-				SerializeData<glm::vec2>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec2>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC3:
-				SerializeData<glm::vec3>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec3>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC4:
-				SerializeData<glm::vec4>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec4>(out, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
 				SerializeData<AssetHandle<Texture2D>>(out, data, instance, bIsSeqElement);
@@ -378,22 +378,22 @@ namespace ZeoEngine {
 				DeserializeData<bool>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::I8:
-				DeserializeData<int8_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<I8>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::I32:
-				DeserializeData<int32_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<I32>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::I64:
-				DeserializeData<int64_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<I64>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::UI8:
-				DeserializeData<uint8_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<U8>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::UI32:
-				DeserializeData<uint32_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<U32>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::UI64:
-				DeserializeData<uint64_t>(data, instance, value, bIsSeqElement);
+				DeserializeData<U64>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::FLOAT:
 				DeserializeData<float>(data, instance, value, bIsSeqElement);
@@ -408,13 +408,13 @@ namespace ZeoEngine {
 				DeserializeData<std::string>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC2:
-				DeserializeData<glm::vec2>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec2>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC3:
-				DeserializeData<glm::vec3>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec3>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC4:
-				DeserializeData<glm::vec4>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec4>(data, instance, value, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
 				DeserializeData<AssetHandle<Texture2D>>(data, instance, value, bIsSeqElement);
@@ -471,7 +471,7 @@ namespace ZeoEngine {
 	{
 		const auto type = bIsSeqElement ? instance.type() : data.type();
 		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
-		uint32_t i = 0;
+		U32 i = 0;
 		for (const auto subData : type.data())
 		{
 			auto subDataName = GetMetaObjectDisplayName(subData);
@@ -537,19 +537,19 @@ namespace ZeoEngine {
 				SerializeData<bool>(out, uniform);
 				break;
 			case ShaderReflectionType::Int:
-				SerializeData<int32_t>(out, uniform);
+				SerializeData<I32>(out, uniform);
 				break;
 			case ShaderReflectionType::Float:
 				SerializeData<float>(out, uniform);
 				break;
 			case ShaderReflectionType::Vec2:
-				SerializeData<glm::vec2>(out, uniform);
+				SerializeData<Vec2>(out, uniform);
 				break;
 			case ShaderReflectionType::Vec3:
-				SerializeData<glm::vec3>(out, uniform);
+				SerializeData<Vec3>(out, uniform);
 				break;
 			case ShaderReflectionType::Vec4:
-				SerializeData<glm::vec4>(out, uniform);
+				SerializeData<Vec4>(out, uniform);
 				break;
 			case ShaderReflectionType::Texture2D:
 				SerializeData<AssetHandle<Texture2D>>(out, uniform);
@@ -593,19 +593,19 @@ namespace ZeoEngine {
 				DeserializeData<bool>(value, uniform);
 				break;
 			case ShaderReflectionType::Int:
-				DeserializeData<int32_t>(value, uniform);
+				DeserializeData<I32>(value, uniform);
 				break;
 			case ShaderReflectionType::Float:
 				DeserializeData<float>(value, uniform);
 				break;
 			case ShaderReflectionType::Vec2:
-				DeserializeData<glm::vec2>(value, uniform);
+				DeserializeData<Vec2>(value, uniform);
 				break;
 			case ShaderReflectionType::Vec3:
-				DeserializeData<glm::vec3>(value, uniform);
+				DeserializeData<Vec3>(value, uniform);
 				break;
 			case ShaderReflectionType::Vec4:
-				DeserializeData<glm::vec4>(value, uniform);
+				DeserializeData<Vec4>(value, uniform);
 				break;
 			case ShaderReflectionType::Texture2D:
 				DeserializeData<AssetHandle<Texture2D>>(value, uniform);
@@ -741,14 +741,14 @@ namespace ZeoEngine {
 
 	static void DeserializeEntity(const YAML::Node& entity, const Ref<Scene>& scene)
 	{
-		uint64_t uuid = entity["Entity"].as<uint64_t>();
+		U64 uuid = entity["Entity"].as<U64>();
 		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
 
 		if (auto components = entity["Components"])
 		{
 			for (auto component : components)
 			{
-				auto compId = component["Component"].as<uint32_t>();
+				auto compId = component["Component"].as<U32>();
 				// TODO: NativeScriptComponent deserialization
 				if (compId == entt::type_hash<NativeScriptComponent>::value()) continue;
 

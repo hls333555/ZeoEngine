@@ -106,11 +106,11 @@ namespace ZeoEngine {
 		static_assert(std::is_base_of_v<Bindable, T>, "RenderPassContainerBindableInput target type must be a Bindable type!");
 
 	public:
-		RenderPassContainerBindableInput(std::string name, std::vector<Ref<Bindable>>& container, size_t index)
+		RenderPassContainerBindableInput(std::string name, std::vector<Ref<Bindable>>& container, SizeT index)
 			: RenderPassInput(std::move(name))
 			, m_BindTargetContainer(container), m_Index(index) {}
 
-		static Scope<RenderPassInput> Create(std::string name, std::vector<Ref<Bindable>>& container, size_t index)
+		static Scope<RenderPassInput> Create(std::string name, std::vector<Ref<Bindable>>& container, SizeT index)
 		{
 			return CreateScope<RenderPassContainerBindableInput>(std::move(name), container, index);
 		}
@@ -133,7 +133,7 @@ namespace ZeoEngine {
 
 	private:
 		std::vector<Ref<Bindable>>& m_BindTargetContainer;
-		size_t m_Index;
+		SizeT m_Index;
 	};
 
 }

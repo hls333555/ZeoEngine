@@ -15,44 +15,44 @@ namespace ZeoEngine {
 
 	struct QuadVertex
 	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-		glm::vec2 TexCoord;
-		glm::vec2 TilingFactor;
-		glm::vec2 UvOffset;
+		Vec3 Position;
+		Vec4 Color;
+		Vec2 TexCoord;
+		Vec2 TilingFactor;
+		Vec2 UvOffset;
 		float TexIndex;
 
 		// Editor-only
-		int32_t EntityID;
+		I32 EntityID;
 	};
 
 	struct LineVertex
 	{
-		glm::vec3 Position;
-		glm::vec4 Color;
+		Vec3 Position;
+		Vec4 Color;
 
 		// Editor-only
-		int32_t EntityID;
+		I32 EntityID;
 	};
 
 	struct CircleVertex
 	{
-		glm::vec3 WorldPosition;
-		glm::vec3 LocalPosition;
-		glm::vec4 Color;
+		Vec3 WorldPosition;
+		Vec3 LocalPosition;
+		Vec4 Color;
 		float Thickness;
 		float Fade;
 
 		// Editor-only
-		int32_t EntityID;
+		I32 EntityID;
 	};
 
 	struct Renderer2DData
 	{
-		const uint32_t MaxQuads = 10000;
-		const uint32_t MaxVertices = MaxQuads * 4;
-		const uint32_t MaxIndices = MaxQuads * 6;
-		static const uint32_t MaxTextureSlots = 32;
+		const U32 MaxQuads = 10000;
+		const U32 MaxVertices = MaxQuads * 4;
+		const U32 MaxIndices = MaxQuads * 6;
+		static const U32 MaxTextureSlots = 32;
 
 		Ref<VertexArray> QuadVAO;
 		Ref<VertexBuffer> QuadVBO;
@@ -66,27 +66,27 @@ namespace ZeoEngine {
 		Ref<VertexBuffer> LineVBO;
 		Ref<Shader> LineShader;
 
-		uint32_t QuadIndexCount = 0;
+		U32 QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
 
-		uint32_t CircleIndexCount = 0;
+		U32 CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
 
-		uint32_t LineVertexCount = 0;
+		U32 LineVertexCount = 0;
 		LineVertex* LineVertexBufferBase = nullptr;
 		LineVertex* LineVertexBufferPtr = nullptr;
 		float LineThickness = 2.0f;
 
-		glm::vec4 QuadVertexPositions[4];
+		Vec4 QuadVertexPositions[4];
 
 		std::array<AssetHandle<Texture2D>, MaxTextureSlots> TextureSlots;
-		uint32_t TextureSlotIndex = 1; // 0 = white texture
+		U32 TextureSlotIndex = 1; // 0 = white texture
 
 		struct CameraData
 		{
-			glm::mat4 ViewProjection;
+			Mat4 ViewProjection;
 		};
 		CameraData CameraBuffer;
 		Ref<UniformBuffer> CameraUniformBuffer;
@@ -100,7 +100,7 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const Camera& camera, const Mat4& transform);
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera); // TODO: Remove
 		static void EndScene();
@@ -111,35 +111,35 @@ namespace ZeoEngine {
 
 	public:
 		// Primitives
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawQuad(const Vec2& position, const Vec2& size, const Vec4& color);
+		static void DrawQuad(const Vec3& position, const Vec2& size, const Vec4& color);
+		static void DrawQuad(const Vec2& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawQuad(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawQuad(const Vec2& position, const Vec2& size, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawQuad(const Vec3& position, const Vec2& size, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 
-		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
-		static void DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
-		static void DrawQuad(const glm::mat4& transform, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f), int32_t entityID = -1);
+		static void DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID = -1);
+		static void DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		static void DrawQuad(const Mat4& transform, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 
-		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f, int32_t entityID = -1);
+		static void DrawCircle(const Mat4& transform, const Vec4& color, float thickness = 1.0f, float fade = 0.005f, I32 entityID = -1);
 
-		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int entityID = -1);
+		static void DrawLine(const Vec3& p0, const Vec3& p1, const Vec4& color, int entityID = -1);
 		static float GetLineThickness();
 		static void SetLineThickness(float thickness);
 
-		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int32_t entityID = -1);
-		static void DrawRect(const glm::mat4& transform, const glm::vec4& color, int32_t entityID = -1);
+		static void DrawRect(const Vec3& position, const Vec2& size, const Vec4& color, I32 entityID = -1);
+		static void DrawRect(const Mat4& transform, const Vec4& color, I32 entityID = -1);
 
 		/** Rotation should be in radians. */
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec2& tilingFactor = { 1.0f, 1.0f }, const glm::vec2& uvOffset = { 0.0f, 0.0f }, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Vec4& color);
+		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Vec4& color);
+		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 	
-		static void DrawSprite(const glm::mat4& transform, const SpriteRendererComponent& spriteComp, int32_t entityID);
+		static void DrawSprite(const Mat4& transform, const SpriteRendererComponent& spriteComp, I32 entityID);
 
 		static const Renderer2DData& GetRenderer2DData() { return s_Data; }
 

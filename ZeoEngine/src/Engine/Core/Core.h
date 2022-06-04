@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "Engine/Core/EngineTypes.h"
 #include "Engine/Core/PlatformDetection.h"
 
 #ifdef ZE_DEBUG
@@ -48,9 +49,9 @@ namespace ZeoEngine {
 	{
 		struct Hash
 		{
-			std::size_t operator() (std::string str) const
+			SizeT operator() (std::string str) const
 			{
-				for (std::size_t index = 0; index < str.size(); ++index)
+				for (SizeT index = 0; index < str.size(); ++index)
 				{
 					auto ch = static_cast<unsigned char>(str[index]);
 					str[index] = static_cast<unsigned char>(std::tolower(ch));

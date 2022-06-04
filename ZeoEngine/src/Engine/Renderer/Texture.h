@@ -49,19 +49,19 @@ namespace ZeoEngine {
 	public:
 		virtual ~Texture() = default;
 
-		virtual uint32_t GetWidth() const = 0;
-		virtual uint32_t GetHeight() const = 0;
+		virtual U32 GetWidth() const = 0;
+		virtual U32 GetHeight() const = 0;
 		virtual bool HasAlpha() const = 0;
 		virtual void* GetTextureID() const = 0;
-		virtual void* GetTextureViewID(uint32_t index) const = 0;
+		virtual void* GetTextureViewID(U32 index) const = 0;
 
 		/** Upload a block of memory with texture data to GPU. */
-		virtual void SetData(void* data, uint32_t size) = 0;
+		virtual void SetData(void* data, U32 size) = 0;
 		virtual void ChangeSampler(SamplerType type) = 0;
 
 		// TODO: Let slot to be a member variable? And inherit from Bindable?
-		virtual void Bind(uint32_t slot) const = 0;
-		virtual void Unbind(uint32_t slot) const = 0;
+		virtual void Bind(U32 slot) const = 0;
+		virtual void Unbind(U32 slot) const = 0;
 
 		virtual bool operator==(const Texture& other) const = 0;
 	};
@@ -73,9 +73,9 @@ namespace ZeoEngine {
 			: AssetBase(std::move(ID)) {}
 
 		/** Construct a texture from memory. */
-		static Ref<Texture2D> Create(std::string ID, uint32_t width, uint32_t height, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
+		static Ref<Texture2D> Create(std::string ID, U32 width, U32 height, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
 		/** Construct a 1x1 solid-color-texture from memory.  */
-		static Ref<Texture2D> Create(std::string ID, uint32_t hexColor);
+		static Ref<Texture2D> Create(std::string ID, U32 hexColor);
 		/** Load a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false);
 
@@ -84,7 +84,7 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Texture2D,
-	Ref<Texture2D> operator()(std::string ID, bool bIsReload, uint32_t hexColor) const
+	Ref<Texture2D> operator()(std::string ID, bool bIsReload, U32 hexColor) const
 	{
 		return Texture2D::Create(std::move(ID), hexColor);
 	}
@@ -109,7 +109,7 @@ namespace ZeoEngine {
 	{
 	public:
 		/** Used for constructing a texture from memory. */
-		static Ref<Texture2DArray> Create(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
+		static Ref<Texture2DArray> Create(U32 width, U32 height, U32 arraySize, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
 	};
 
 }

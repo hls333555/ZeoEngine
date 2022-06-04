@@ -109,7 +109,7 @@ namespace ImGui {
 		BeginGroup();
 		PushID(label);
 		PushMultiItemsWidthsWithLabels(components, CalcTextSize("X").x, CalcItemWidth());
-		size_t type_size = GDataTypeInfo[data_type].Size;
+		ZeoEngine::SizeT type_size = GDataTypeInfo[data_type].Size;
 		for (int i = 0; i < components; ++i)
 		{
 			PushID(i);
@@ -203,7 +203,7 @@ namespace ImGui {
 			return false;
 
 		// Limit the wrapped text up to 2 lines
-		const int32_t maxTextLine = 2;
+		const ZeoEngine::I32 maxTextLine = 2;
 		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (4 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
 		ItemSize(bb);
 

@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
+	Ref<Texture2D> Texture2D::Create(std::string ID, U32 width, U32 height, TextureFormat format, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -23,7 +23,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, uint32_t hexColor)
+	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor)
 	{
 		auto texture = Create(std::move(ID), 1, 1, TextureFormat::RGB8);
 		texture->SetData(&hexColor, 3);
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);
 	}
 
-	Ref<Texture2DArray> Texture2DArray::Create(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type)
+	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{

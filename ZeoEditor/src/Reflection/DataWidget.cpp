@@ -11,7 +11,7 @@
 
 namespace ZeoEngine {
 
-	uint32_t GetAggregatedDataID(entt::meta_data data)
+	U32 GetAggregatedDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
@@ -40,17 +40,17 @@ namespace ZeoEngine {
 			case BasicMetaType::BOOL:
 				return CreateRef<BoolDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::I8:
-				return CreateRef<ScalarNDataWidget<int8_t>>(dataSpec, bIsTest, ImGuiDataType_S8, static_cast<int8_t>(INT8_MIN), static_cast<int8_t>(INT8_MAX), "%hhd");
+				return CreateRef<ScalarNDataWidget<I8>>(dataSpec, bIsTest, ImGuiDataType_S8, static_cast<I8>(INT8_MIN), static_cast<I8>(INT8_MAX), "%hhd");
 			case BasicMetaType::I32:
-				return CreateRef<ScalarNDataWidget<int32_t>>(dataSpec, bIsTest, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
+				return CreateRef<ScalarNDataWidget<I32>>(dataSpec, bIsTest, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
 			case BasicMetaType::I64:
-				return CreateRef<ScalarNDataWidget<int64_t>>(dataSpec, bIsTest, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
+				return CreateRef<ScalarNDataWidget<I64>>(dataSpec, bIsTest, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
 			case BasicMetaType::UI8:
-				return CreateRef<ScalarNDataWidget<uint8_t>>(dataSpec, bIsTest, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
+				return CreateRef<ScalarNDataWidget<U8>>(dataSpec, bIsTest, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
 			case BasicMetaType::UI32:
-				return CreateRef<ScalarNDataWidget<uint32_t>>(dataSpec, bIsTest, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
+				return CreateRef<ScalarNDataWidget<U32>>(dataSpec, bIsTest, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
 			case BasicMetaType::UI64:
-				return CreateRef<ScalarNDataWidget<uint64_t>>(dataSpec, bIsTest, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
+				return CreateRef<ScalarNDataWidget<U64>>(dataSpec, bIsTest, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
 			case BasicMetaType::FLOAT:
 				return CreateRef<ScalarNDataWidget<float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::DOUBLE:
@@ -60,9 +60,9 @@ namespace ZeoEngine {
 			case BasicMetaType::STRING:
 				return CreateRef<StringDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::VEC2:
-				return CreateRef<ScalarNDataWidget<glm::vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
+				return CreateRef<ScalarNDataWidget<Vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::VEC3:
-				return CreateRef<ScalarNDataWidget<glm::vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
+				return CreateRef<ScalarNDataWidget<Vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
 			case BasicMetaType::VEC4:
 				return CreateRef<ColorDataWidget>(dataSpec, bIsTest);
 			case BasicMetaType::TEXTURE:
@@ -81,7 +81,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void DataWidget::Test(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void DataWidget::Test(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		char dataStr[64];
 		strcpy_s(dataStr, m_DataSpec.DataName);
@@ -105,7 +105,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex)
+	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex)
 	{
 		if (m_bIsTest) return;
 
@@ -118,7 +118,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex)
+	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex)
 	{
 		if (m_bIsTest) return;
 
@@ -136,7 +136,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void BoolDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -149,7 +149,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void BoolDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void BoolDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		m_Buffer = true;
 		SetValueToData();
@@ -162,7 +162,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void EnumDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -223,7 +223,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void EnumDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void EnumDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
 		if (m_EnumDatas.empty())
 		{
@@ -231,7 +231,7 @@ namespace ZeoEngine {
 		}
 
 		REQUIRE(m_EnumDatas.size() > 1);
-		uint32_t i = 0;
+		U32 i = 0;
 		for (const auto enumData : m_EnumDatas)
 		{
 			if (i == 1)
@@ -258,7 +258,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void StringDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -284,7 +284,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void StringDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void StringDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
 		m_Buffer = std::string("Test");
 		SetValueToData();
@@ -297,7 +297,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void ColorDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -332,9 +332,9 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void ColorDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void ColorDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
-		m_Buffer = glm::vec4(10.0f);
+		m_Buffer = Vec4(10.0f);
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -350,7 +350,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void Texture2DDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -368,7 +368,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
 		m_Buffer = Texture2DLibrary::Get().LoadAsset("assets/textures/Ship.png.zasset");
 		SetValueToData();
@@ -381,7 +381,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void ParticleTemplateDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -405,7 +405,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
 		m_Buffer = ParticleTemplateLibrary::Get().LoadAsset("assets/particles/Test.zasset");
 		SetValueToData();
@@ -418,7 +418,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void MeshDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void MeshDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -436,7 +436,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		m_Buffer = MeshLibrary::GetDefaultSphereMesh();
 		SetValueToData();
@@ -449,7 +449,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void MaterialDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void MaterialDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -467,7 +467,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void MaterialDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void MaterialDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		m_Buffer = MaterialLibrary::GetDefaultMaterial();
 		SetValueToData();
@@ -480,7 +480,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	void ShaderDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void ShaderDataWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -498,7 +498,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void ShaderDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void ShaderDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		m_Buffer = ShaderLibrary::GetDefaultShader();
 		SetValueToData();
@@ -506,7 +506,7 @@ namespace ZeoEngine {
 	}
 #endif
 
-	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	bool ContainerWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		m_DataSpec.Update(compInstance, instance, elementIndex);
 
@@ -546,14 +546,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void SequenceContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!m_ElementWidgetTemplate) return;
 
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
-		uint32_t i = 0;
+		U32 i = 0;
 		for (auto it = seqView.begin(); it != seqView.end();)
 		{
 			auto elementInstance = *it;
@@ -573,12 +573,12 @@ namespace ZeoEngine {
 					ImGui::SetTooltipWithPadding("Drag to re-arrange elements");
 				}
 
-				uint32_t id = GetAggregatedDataID(m_DataSpec.Data);
+				U32 id = GetAggregatedDataID(m_DataSpec.Data);
 				char dragTypeBuffer[DRAG_DROP_PAYLOAD_TYPE_SIZE];
 				_itoa_s(id, dragTypeBuffer, 10);
 				if (ImGui::BeginDragDropSource())
 				{
-					ImGui::SetDragDropPayload(dragTypeBuffer, &i, sizeof(uint32_t));
+					ImGui::SetDragDropPayload(dragTypeBuffer, &i, sizeof(U32));
 					ImGui::Text("Place it here");
 
 					ImGui::EndDragDropSource();
@@ -588,9 +588,9 @@ namespace ZeoEngine {
 				{
 					if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(dragTypeBuffer))
 					{
-						ZE_CORE_ASSERT(payload->DataSize == sizeof(uint32_t));
+						ZE_CORE_ASSERT(payload->DataSize == sizeof(U32));
 
-						auto sourceIndex = *(const uint32_t*)payload->Data;
+						auto sourceIndex = *(const U32*)payload->Data;
 						auto targetIndex = i;
 						bool bMoveDownward = targetIndex >= sourceIndex;
 
@@ -605,7 +605,7 @@ namespace ZeoEngine {
 						// Erase from source location
 						{
 							auto sourceIt = seqView.begin();
-							for (uint32_t j = 0; j < sourceIndex; ++j)
+							for (U32 j = 0; j < sourceIndex; ++j)
 							{
 								++sourceIt;
 							}
@@ -616,7 +616,7 @@ namespace ZeoEngine {
 						// Update iterator to last draw location
 						{
 							it = seqView.begin();
-							for (uint32_t j = 0; j < i; ++j)
+							for (U32 j = 0; j < i; ++j)
 							{
 								++it;
 							}
@@ -678,7 +678,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void SequenceContainerWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void SequenceContainerWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		auto seqView = m_DataSpec.GetValue().as_sequence_container();
 		auto retIt = InsertValue(seqView, seqView.end());
@@ -802,7 +802,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void AssociativeContainerWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -856,7 +856,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 	}
 
-	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	bool StructWidget::PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		m_DataSpec.Update(compInstance, instance, elementIndex);
 
@@ -872,7 +872,7 @@ namespace ZeoEngine {
 		return bIsDataTreeExpanded;
 	}
 
-	void StructWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+	void StructWidget::Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 	{
 		if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -913,7 +913,7 @@ namespace ZeoEngine {
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-	void StructWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+	void StructWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
 		const auto structType = m_DataSpec.GetType();
 		auto structInstance = m_DataSpec.GetValue();
@@ -953,7 +953,7 @@ namespace ZeoEngine {
 
 	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, entt::meta_any& structInstance)
 	{
-		uint32_t aggregatedSubdataId = GetAggregatedDataID(subdata);
+		U32 aggregatedSubdataId = GetAggregatedDataID(subdata);
 		if (m_SubdataWidgets.find(aggregatedSubdataId) != m_SubdataWidgets.cend())
 		{
 			if (m_SubdataWidgets[aggregatedSubdataId])

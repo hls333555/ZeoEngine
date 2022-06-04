@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		void SetPerspective(float verticalFOV, float nearClip, float farClip);
 		void SetOrthographic(float size, float nearClip, float farClip);
 
-		void SetViewportSize(const glm::vec2& size);
+		void SetViewportSize(const Vec2& size);
 
 		ProjectionType GetProjectionType() const { return m_ProjectionType; }
 		void SetProjectionType(ProjectionType type) { m_ProjectionType = type; RecalculateProjection(); }

@@ -17,9 +17,9 @@ namespace ZeoEngine {
 	struct DynamicUniformDataBase
 	{
 		std::string Name;
-		uint32_t Binding = 0;
-		uint32_t Offset = 0;
-		size_t Size = 0;
+		U32 Binding = 0;
+		U32 Offset = 0;
+		SizeT Size = 0;
 
 		AssetHandle<Material> OwnerMaterial;
 
@@ -45,7 +45,7 @@ namespace ZeoEngine {
 		virtual void* GetValuePtr() override { return &Value; }
 	};
 
-	template<typename T, uint32_t N = 1, typename CT = T>
+	template<typename T, U32 N = 1, typename CT = T>
 	struct DynamicUniformScalarNData : public DynamicUniformDataBase
 	{
 		T Value = T();
@@ -66,7 +66,7 @@ namespace ZeoEngine {
 
 		virtual ShaderReflectionType GetDataType() const override
 		{
-			if constexpr (std::is_same<T, int32_t>::value)
+			if constexpr (std::is_same<T, I32>::value)
 			{
 				return ShaderReflectionType::Int;
 			}
@@ -74,11 +74,11 @@ namespace ZeoEngine {
 			{
 				return ShaderReflectionType::Float;
 			}
-			else if constexpr (std::is_same<T, glm::vec2>::value)
+			else if constexpr (std::is_same<T, Vec2>::value)
 			{
 				return ShaderReflectionType::Vec2;
 			}
-			else if constexpr (std::is_same<T, glm::vec3>::value)
+			else if constexpr (std::is_same<T, Vec3>::value)
 			{
 				return ShaderReflectionType::Vec3;
 			}
@@ -138,8 +138,8 @@ namespace ZeoEngine {
 	{
 		using DynamicUniformDataBase::DynamicUniformDataBase;
 
-		glm::vec4 Value{ 0.0f };
-		glm::vec4 LastValue{ 0.0f };
+		Vec4 Value{ 0.0f };
+		Vec4 LastValue{ 0.0f };
 
 		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Vec4; }
 		virtual void Draw() override;
@@ -199,9 +199,9 @@ namespace ZeoEngine {
 		std::vector<Ref<DynamicUniformDataBase>> m_DynamicUniforms;
 		std::vector<Ref<DynamicUniformTexture2DData>> m_DynamicBindableUniforms;
 		/** Map from uniform block binding to uniform buffers */
-		std::unordered_map<uint32_t, Ref<UniformBuffer>> m_DynamicUniformBuffers;
+		std::unordered_map<U32, Ref<UniformBuffer>> m_DynamicUniformBuffers;
 		/** Map from uniform block binding to uniform buffer datas */
-		std::unordered_map<uint32_t, char*> m_DynamicUniformBufferDatas;
+		std::unordered_map<U32, char*> m_DynamicUniformBufferDatas;
 
 		std::vector<RenderTechnique> m_Techniques;
 

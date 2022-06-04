@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 	class Texture2D;
 
-	enum EPathFlag : uint8_t
+	enum EPathFlag : U8
 	{
 		PathFlag_None = 0,
 		PathFlag_HasResource = ZE_BIT(0),
@@ -32,7 +32,7 @@ namespace ZeoEngine {
 
 		std::string Path;
 		std::string PathName;
-		uint8_t Flags = 0;
+		U8 Flags = 0;
 		Ref<Texture2D> ThumbnailTexture;
 	};
 
@@ -47,7 +47,7 @@ namespace ZeoEngine {
 		virtual std::string GetSourcePath() const override { return {}; }
 
 		bool bIsTreeExpanded = false;
-		uint32_t TreeNodeId = 0;
+		U32 TreeNodeId = 0;
 		bool bHasAnySubDirectory = false;
 	};
 

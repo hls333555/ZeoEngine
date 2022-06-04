@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		
 		static bool IsMouseButtonPressed(const MouseCode button);
 		static bool IsMouseButtonReleased(const MouseCode button);
-		static glm::vec2 GetMousePosition();
+		static Vec2 GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
 	

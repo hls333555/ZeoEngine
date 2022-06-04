@@ -12,7 +12,7 @@ namespace ZeoEngine {
         explicit OpenGLDDRenderInterface(const Ref<SceneRenderer>& sceneRenderer);
         virtual ~OpenGLDDRenderInterface();
 
-        virtual void UpdateViewportSize(uint32_t width, uint32_t height) override { m_ViewportWidth = width; m_ViewportHeight = height; }
+        virtual void UpdateViewportSize(U32 width, U32 height) override { m_ViewportWidth = width; m_ViewportHeight = height; }
 
         virtual void beginDraw() override;
 
@@ -25,26 +25,26 @@ namespace ZeoEngine {
     private:
         void SetupShaderPrograms();
         void SetupVertexBuffers();
-        void CompileShader(const uint32_t shader);
-        void linkProgram(const uint32_t program);
+        void CompileShader(const U32 shader);
+        void linkProgram(const U32 program);
 
     private:
         Weak<SceneRenderer> m_SceneRenderer;
 
-        uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+        U32 m_ViewportWidth = 0, m_ViewportHeight = 0;
 
-        uint32_t m_LinePointShader;
-        int32_t  m_LinePointShader_MvpMatrixLocation;
+        U32 m_LinePointShader;
+        I32  m_LinePointShader_MvpMatrixLocation;
 
-        uint32_t m_TextShader;
-        int32_t  m_TextShader_GlyphTextureLocation;
-        int32_t  m_TextShader_ScreenDimensions;
+        U32 m_TextShader;
+        I32  m_TextShader_GlyphTextureLocation;
+        I32  m_TextShader_ScreenDimensions;
 
-        uint32_t m_LinePointVAO;
-        uint32_t m_LinePointVBO;
+        U32 m_LinePointVAO;
+        U32 m_LinePointVBO;
 
-        uint32_t m_TextVAO;
-        uint32_t m_TextVBO;
+        U32 m_TextVAO;
+        U32 m_TextVBO;
 
         static const char* s_LinePointVertShaderSrc;
         static const char* s_LinePointFragShaderSrc;

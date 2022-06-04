@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	const char* GetComponentDisplayNameFull(uint32_t compId);
+	const char* GetComponentDisplayNameFull(U32 compId);
 
 	BasicMetaType EvaluateMetaType(const entt::meta_type type);
 
@@ -53,7 +53,7 @@ namespace ZeoEngine {
 
 		bool bIsStructSubdata = false;
 		bool bIsSeqElement = false;
-		int32_t ElementIndex = -1;
+		I32 ElementIndex = -1;
 
 		DataSpec() = default;
 		// NOTE: Instances should not be const otherwise const version of as_ref() will be invoked, then they will become const references and cannot get modified directly
@@ -89,7 +89,7 @@ namespace ZeoEngine {
 			return *this;
 		}
 
-		void Update(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex)
+		void Update(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
 		{
 			ComponentInstance = compInstance.as_ref();
 			Instance = instance.as_ref();
@@ -147,9 +147,9 @@ namespace ZeoEngine {
 	{
 		entt::meta_data Data;
 		bool bIsSeqElement = false;
-		int32_t ElementIndex = -1;
+		I32 ElementIndex = -1;
 
-		DataStackSpec(entt::meta_data data, bool isSeqElement, int32_t elementIndex)
+		DataStackSpec(entt::meta_data data, bool isSeqElement, I32 elementIndex)
 			: Data(data)
 			, bIsSeqElement(isSeqElement)
 			, ElementIndex(elementIndex)
@@ -226,7 +226,7 @@ namespace ZeoEngine {
 		if (prop)
 		{
 			const auto value = prop.value();
-			// As int32_t conversions are already registered, the system can convert to all registered integral types seamlessly
+			// As I32 conversions are already registered, the system can convert to all registered integral types seamlessly
 			return value.allow_cast<Ret>().cast<Ret>();
 		}
 		return {};

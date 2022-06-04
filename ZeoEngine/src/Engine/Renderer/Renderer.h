@@ -7,13 +7,13 @@ namespace ZeoEngine {
 
 	struct RendererStats
 	{
-		uint32_t DrawCalls = 0;
-		uint32_t QuadCount = 0;
-		uint32_t MeshVertexCount = 0;
+		U32 DrawCalls = 0;
+		U32 QuadCount = 0;
+		U32 MeshVertexCount = 0;
 
 		Entity HoveredEntity;
 
-		uint32_t GetTotalVertexCount() const { return QuadCount * 4 + MeshVertexCount; }
+		U32 GetTotalVertexCount() const { return QuadCount * 4 + MeshVertexCount; }
 
 		void Reset()
 		{
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
-		static void OnWindowResize(uint32_t width, uint32_t height);
+		static void OnWindowResize(U32 width, U32 height);
 
 		static RendererStats& GetStats();
 		static void ResetStats();

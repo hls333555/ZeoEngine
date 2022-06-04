@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	uint32_t GetAggregatedDataID(entt::meta_data data);
+	U32 GetAggregatedDataID(entt::meta_data data);
 
 	Ref<class DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, bool bIsTest = false);
 
@@ -51,24 +51,24 @@ namespace ZeoEngine {
 	class DataWidget
 	{
 	public:
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) = 0;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) = 0;
 
 #ifndef DOCTEST_CONFIG_DISABLE
-		void Test(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex = -1);
+		void Test(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex = -1);
 	private:
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) {}
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) {}
 #endif
 
 	protected:
 		// Call this at the beginning of drawing!
-		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex) = 0;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex) = 0;
 		// Call this in the end of drawing!
 		virtual void PostDraw() = 0;
 
 		void Init(DataSpec& dataSpec, bool bIsTest);
 
-		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex);
-		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, int32_t elementIndex);
+		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex);
+		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex);
 
 	protected:
 		DataSpec m_DataSpec;
@@ -79,7 +79,7 @@ namespace ZeoEngine {
 	class BasicDataWidgetT : public DataWidget
 	{
 	protected:
-		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex) override
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex) override
 		{
 			m_DataSpec.Update(compInstance, instance, elementIndex);
 			UpdateBuffer();
@@ -120,7 +120,7 @@ namespace ZeoEngine {
 		}
 
 #ifndef DOCTEST_CONFIG_DISABLE
-		T GetTestDataValue(entt::registry& reg, entt::entity entity, const std::vector<DataStackSpec>& dataStack, int32_t elementIndex)
+		T GetTestDataValue(entt::registry& reg, entt::entity entity, const std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 		{
 			auto compInstance = Reflection::GetComponent(entt::resolve(entt::type_hash<TestComponent>::value()), reg, entity);
 			entt::meta_any instance = compInstance.as_ref();
@@ -165,15 +165,15 @@ namespace ZeoEngine {
 	public:
 		BoolDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 	};
 
-	template<typename T, uint32_t N = 1, typename CT = T>
+	template<typename T, U32 N = 1, typename CT = T>
 	class ScalarNDataWidget : public BasicDataWidgetT<T>
 	{
 	public:
@@ -187,7 +187,7 @@ namespace ZeoEngine {
 			Init(dataSpec, bIsTest);
 		}
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override
 		{
 			if (!PreDraw(compInstance, instance, elementIndex)) return;
 
@@ -241,7 +241,7 @@ namespace ZeoEngine {
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override
 		{
 			m_Buffer = T(10.0);
 			SetValueToData();
@@ -260,7 +260,7 @@ namespace ZeoEngine {
 	public:
 		EnumDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	protected:
 		void InitEnumDatas();
@@ -269,7 +269,7 @@ namespace ZeoEngine {
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -282,24 +282,24 @@ namespace ZeoEngine {
 	public:
 		StringDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 	};
 
-	class ColorDataWidget : public BasicDataWidgetT<glm::vec4>
+	class ColorDataWidget : public BasicDataWidgetT<Vec4>
 	{
 	public:
 		ColorDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 	};
 
@@ -308,11 +308,11 @@ namespace ZeoEngine {
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -324,11 +324,11 @@ namespace ZeoEngine {
 	public:
 		ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -340,11 +340,11 @@ namespace ZeoEngine {
 	public:
 		MeshDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -356,11 +356,11 @@ namespace ZeoEngine {
 	public:
 		MaterialDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -372,11 +372,11 @@ namespace ZeoEngine {
 	public:
 		ShaderDataWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -386,7 +386,7 @@ namespace ZeoEngine {
 	class ContainerWidget : public DataWidget
 	{
 	protected:
-		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex) override;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex) override;
 		virtual void PostDraw() override;
 
 	private:
@@ -402,11 +402,11 @@ namespace ZeoEngine {
 	public:
 		SequenceContainerWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	private:
@@ -424,7 +424,7 @@ namespace ZeoEngine {
 	public:
 		AssociativeContainerWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 		virtual void DrawContainerOperationWidget() override;
@@ -439,15 +439,15 @@ namespace ZeoEngine {
 	public:
 		StructWidget(DataSpec& dataSpec, bool bIsTest);
 
-		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex = -1) override;
+		virtual void Draw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex = -1) override;
 
 	private:
 #ifndef DOCTEST_CONFIG_DISABLE
-		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, int32_t elementIndex) override;
+		virtual void TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex) override;
 #endif
 
 	protected:
-		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, int32_t elementIndex) override;
+		virtual bool PreDraw(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex) override;
 		virtual void PostDraw() override;
 
 	private:
@@ -459,10 +459,10 @@ namespace ZeoEngine {
 		DataParser m_SubdataParser;
 
 		/** Map from aggregated subdata id to DataWidget instance */
-		std::unordered_map<uint32_t, Ref<DataWidget>> m_SubdataWidgets;
+		std::unordered_map<U32, Ref<DataWidget>> m_SubdataWidgets;
 
 		/** List of all its subdata, used to draw ordered registered subdatas */
-		std::deque<uint32_t> m_PreprocessedSubdatas;
+		std::deque<U32> m_PreprocessedSubdatas;
 		bool m_bIsPreprocessedSubdatasDirty = true;
 	};
 

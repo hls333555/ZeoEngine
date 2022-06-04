@@ -87,7 +87,7 @@ namespace ZeoEngine {
 		LoadMeshEntries(meshScene);
 
 		auto* vertexBuffer = new MeshVertex[m_VertexCount];
-		auto* indexBuffer = new uint32_t[m_IndexCount];
+		auto* indexBuffer = new U32[m_IndexCount];
 
 		// Load datas before submitting buffers
 		LoadDatas(meshScene, vertexBuffer, indexBuffer);
@@ -112,14 +112,14 @@ namespace ZeoEngine {
 	{
 		// Init material slots with default materials
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
-		for (uint32_t i = 0; i < meshScene->mNumMaterials; ++i)
+		for (U32 i = 0; i < meshScene->mNumMaterials; ++i)
 		{
 			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterial());
 		}
 
-		const uint32_t meshCount = meshScene->mNumMeshes;
+		const U32 meshCount = meshScene->mNumMeshes;
 		m_Entries.resize(meshCount);
-		for (uint32_t i = 0; i < meshCount; ++i)
+		for (U32 i = 0; i < meshCount; ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
 			m_Entries[i].Name = mesh->mName.C_Str();
@@ -133,9 +133,9 @@ namespace ZeoEngine {
 		}		
 	}
 
-	void Mesh::LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, uint32_t* indexBuffer)
+	void Mesh::LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, U32* indexBuffer)
 	{
-		for (size_t i = 0; i < m_Entries.size(); ++i)
+		for (SizeT i = 0; i < m_Entries.size(); ++i)
 		{
 			const aiMesh* mesh = meshScene->mMeshes[i];
 			LoadVertexData(mesh, vertexBuffer, m_Entries[i].BaseVertex);
@@ -143,15 +143,15 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Mesh::LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, uint32_t baseIndex)
+	void Mesh::LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, U32 baseIndex)
 	{
 		Box box;
-		for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
+		for (U32 i = 0; i < mesh->mNumVertices; ++i)
 		{
 			const aiVector3D& position = mesh->mVertices[i];
 			const aiVector3D& normal = mesh->mNormals[i];
 			const aiVector3D& texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D();
-			const glm::vec3 pos = { position.x, position.y, position.z };
+			const Vec3 pos = { position.x, position.y, position.z };
 			box += pos;
 			vertexBuffer[baseIndex + i].Position = pos;
 			vertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
@@ -160,9 +160,9 @@ namespace ZeoEngine {
 		m_Bounds = m_Bounds + box;
 	}
 
-	void Mesh::LoadIndexData(const aiMesh* mesh, uint32_t* indexBuffer, uint32_t baseIndex)
+	void Mesh::LoadIndexData(const aiMesh* mesh, U32* indexBuffer, U32 baseIndex)
 	{
-		for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
+		for (U32 i = 0; i < mesh->mNumFaces; ++i)
 		{
 			const aiFace& face = mesh->mFaces[i];
 			ZE_CORE_ASSERT(face.mNumIndices == 3);
@@ -176,7 +176,7 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const Ref<Scene>& sceneContext, const AssetHandle<Mesh>& mesh, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
 		// Copy default materials
 		m_Materials = mesh->GetDefaultMaterials();
 		const auto& entries = m_MeshPtr->GetMeshEntries();
@@ -191,12 +191,12 @@ namespace ZeoEngine {
 	MeshInstance::MeshInstance(const MeshInstance& other)
 		: m_MeshPtr(other.m_MeshPtr), m_Materials(other.m_Materials)
 	{
-		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<uint32_t>(UniformBufferBinding::Model));
+		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
 		const auto& entries = m_MeshPtr->GetMeshEntries();
 		const auto size = entries.size();
 		// Allocate space first so that every element's address remains unchanged
 		m_EntryInstances.reserve(size);
-		for (size_t i = 0; i < size; ++i)
+		for (SizeT i = 0; i < size; ++i)
 		{
 			const auto& entry = entries[i];
 			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
@@ -217,7 +217,7 @@ namespace ZeoEngine {
 		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 	}
 
-	void MeshInstance::SetMaterial(uint32_t index, const AssetHandle<Material>& material)
+	void MeshInstance::SetMaterial(U32 index, const AssetHandle<Material>& material)
 	{
 		if (index < 0 || index >= m_Materials.size()) return;
 
@@ -226,7 +226,7 @@ namespace ZeoEngine {
 		OnMaterialChanged(index, oldMaterial);
 	}
 
-	void MeshInstance::OnMaterialChanged(uint32_t index, AssetHandle<Material>& oldMaterial)
+	void MeshInstance::OnMaterialChanged(U32 index, AssetHandle<Material>& oldMaterial)
 	{
 		for (auto& entryInstance : m_EntryInstances)
 		{
@@ -258,7 +258,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MeshInstance::Submit(const glm::mat4& transform, int32_t entityID)
+	void MeshInstance::Submit(const Mat4& transform, I32 entityID)
 	{
 		m_ModelBuffer.Transform = transform;
 		m_ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));

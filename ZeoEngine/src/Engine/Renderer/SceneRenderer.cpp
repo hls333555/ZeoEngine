@@ -29,10 +29,10 @@ namespace ZeoEngine {
 		m_RenderGraph->Init();
 		m_RenderSystem = CreateRenderSystem(scene);
 
-		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<uint32_t>(UniformBufferBinding::Global));
-		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), static_cast<uint32_t>(UniformBufferBinding::Camera));
-		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), static_cast<uint32_t>(UniformBufferBinding::Light));
-		m_ShadowCameraUniformBuffer = UniformBuffer::Create(sizeof(ShadowCameraData), static_cast<uint32_t>(UniformBufferBinding::ShadowCamera));
+		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<U32>(UniformBufferBinding::Global));
+		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), static_cast<U32>(UniformBufferBinding::Camera));
+		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), static_cast<U32>(UniformBufferBinding::Light));
+		m_ShadowCameraUniformBuffer = UniformBuffer::Create(sizeof(ShadowCameraData), static_cast<U32>(UniformBufferBinding::ShadowCamera));
 	}
 
 	void SceneRenderer::OnRender()
@@ -83,7 +83,7 @@ namespace ZeoEngine {
 		m_ActiveCamera = &camera;
 	}
 
-	void SceneRenderer::BeginScene(const Camera& camera, const glm::mat4& transform)
+	void SceneRenderer::BeginScene(const Camera& camera, const Mat4& transform)
 	{
 		m_CameraBuffer.View = glm::inverse(transform);
 		m_CameraBuffer.Projection = camera.GetProjection();
@@ -105,19 +105,19 @@ namespace ZeoEngine {
 		DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
 	}
 
-	void SceneRenderer::OnViewportResize(uint32_t width, uint32_t height)
+	void SceneRenderer::OnViewportResize(U32 width, U32 height)
 	{
 		m_Ddri->UpdateViewportSize(width, height);
 	}
 
-	void SceneRenderer::SetupDirectionalLight(const glm::vec3& rotation, const Ref<DirectionalLight>& directionalLight)
+	void SceneRenderer::SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight)
 	{
 		m_LightBuffer.DirectionalLightBuffer.Color = directionalLight->GetColor();
 		m_LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
 		const auto direction = directionalLight->CalculateDirection(rotation);
 		m_LightBuffer.DirectionalLightBuffer.Direction = direction;
 		m_LightBuffer.DirectionalLightBuffer.bCastShadow = directionalLight->IsCastShadow();
-		m_LightBuffer.DirectionalLightBuffer.ShadowType = static_cast<int32_t>(directionalLight->GetShadowType());
+		m_LightBuffer.DirectionalLightBuffer.ShadowType = static_cast<I32>(directionalLight->GetShadowType());
 		m_LightBuffer.DirectionalLightBuffer.DepthBias = directionalLight->GetDepthBias();
 		m_LightBuffer.DirectionalLightBuffer.NormalBias = directionalLight->GetNormalBias();
 		m_LightBuffer.DirectionalLightBuffer.FilterSize = directionalLight->GetFilterSize();
@@ -129,21 +129,21 @@ namespace ZeoEngine {
 		UpdateCascadeData(directionalLight, direction);
 	}
 
-	void SceneRenderer::AddPointLight(const glm::vec3& position, const Ref<PointLight>& pointLight)
+	void SceneRenderer::AddPointLight(const Vec3& position, const Ref<PointLight>& pointLight)
 	{
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Color = pointLight->GetColor();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Intensity = pointLight->GetIntensity();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Position = position;
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = pointLight->GetRange();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = pointLight->IsCastShadow();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].ShadowType = static_cast<int32_t>(pointLight->GetShadowType());
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].ShadowType = static_cast<I32>(pointLight->GetShadowType());
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = pointLight->GetDepthBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = pointLight->GetNormalBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].LightSize = pointLight->GetLightSize();
 		++m_LightBuffer.NumPointLights;
 	}
 
-	void SceneRenderer::AddSpotLight(const glm::vec3& position, const glm::vec3& rotation, const Ref<SpotLight>& spotLight)
+	void SceneRenderer::AddSpotLight(const Vec3& position, const Vec3& rotation, const Ref<SpotLight>& spotLight)
 	{
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Color = spotLight->GetColor();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Intensity = spotLight->GetIntensity();
@@ -152,13 +152,13 @@ namespace ZeoEngine {
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].ShadowType = static_cast<int32_t>(spotLight->GetShadowType());
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].ShadowType = static_cast<I32>(spotLight->GetShadowType());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = spotLight->GetLightSize();
 		++m_LightBuffer.NumSpotLights;
 	}
 
-	void SceneRenderer::UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const glm::vec3& direction)
+	void SceneRenderer::UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction)
 	{
 		float shadowMapSize = SceneSettings::ShadowMapResolution;
 
@@ -175,11 +175,11 @@ namespace ZeoEngine {
 			float ratio = maxZ / minZ;
 
 			float cascadeSplitLambda = directionalLight->GetCascadeSplitLambda();
-			uint32_t cascadeCount = directionalLight->GetCascadeCount();
+			U32 cascadeCount = directionalLight->GetCascadeCount();
 
 			// Calculate split depths based on view camera frustum
 			// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
-			for (uint32_t cascadeIndex = 0; cascadeIndex < cascadeCount; ++cascadeIndex)
+			for (U32 cascadeIndex = 0; cascadeIndex < cascadeCount; ++cascadeIndex)
 			{
 				float p = (cascadeIndex + 1) / static_cast<float>(cascadeCount);
 				float log = minZ * std::pow(ratio, p);
@@ -195,43 +195,43 @@ namespace ZeoEngine {
 			// cascadeSplits[3] = 1.0f;
 		}
 
-		glm::mat4 invCameraMatrix = glm::inverse(m_CameraBuffer.GetViewProjection());
+		Mat4 invCameraMatrix = glm::inverse(m_CameraBuffer.GetViewProjection());
 
 		// Calculate orthographic projection matrix for each cascade
-		for (uint32_t i = 0; i < directionalLight->GetCascadeCount(); ++i)
+		for (U32 i = 0; i < directionalLight->GetCascadeCount(); ++i)
 		{
 			float lastSplitDist = i == 0 ? 0.0f : cascadeSplits[i - 1];
 			float splitDist = cascadeSplits[i];
 
 			// Get the 8 points of the view frustum in world space
-			glm::vec3 frustumCorners[8] = {
-				glm::vec3(-1.0f,  1.0f, -1.0f),
-				glm::vec3(1.0f,  1.0f, -1.0f),
-				glm::vec3(1.0f, -1.0f, -1.0f),
-				glm::vec3(-1.0f, -1.0f, -1.0f),
-				glm::vec3(-1.0f,  1.0f,  1.0f),
-				glm::vec3(1.0f,  1.0f,  1.0f),
-				glm::vec3(1.0f, -1.0f,  1.0f),
-				glm::vec3(-1.0f, -1.0f,  1.0f),
+			Vec3 frustumCorners[8] = {
+				Vec3(-1.0f,  1.0f, -1.0f),
+				Vec3(1.0f,  1.0f, -1.0f),
+				Vec3(1.0f, -1.0f, -1.0f),
+				Vec3(-1.0f, -1.0f, -1.0f),
+				Vec3(-1.0f,  1.0f,  1.0f),
+				Vec3(1.0f,  1.0f,  1.0f),
+				Vec3(1.0f, -1.0f,  1.0f),
+				Vec3(-1.0f, -1.0f,  1.0f),
 			};
 
 			// Project frustum corners into world space
 			for (auto& corner : frustumCorners)
 			{
-				glm::vec4 invCorner = invCameraMatrix * glm::vec4(corner, 1.0f);
+				Vec4 invCorner = invCameraMatrix * Vec4(corner, 1.0f);
 				corner = invCorner / invCorner.w;
 			}
 
 			// Get the corners of the current cascade slice of the view frustum
-			for (uint32_t i = 0; i < 4; ++i)
+			for (U32 i = 0; i < 4; ++i)
 			{
-				glm::vec3 cornerRay = frustumCorners[i + 4] - frustumCorners[i];
+				Vec3 cornerRay = frustumCorners[i + 4] - frustumCorners[i];
 				frustumCorners[i + 4] = frustumCorners[i] + (cornerRay * splitDist);
 				frustumCorners[i] = frustumCorners[i] + (cornerRay * lastSplitDist);
 			}
 
 			// Get frustum center
-			glm::vec3 frustumCenter = glm::vec3(0.0f);
+			Vec3 frustumCenter = Vec3(0.0f);
 			for (const auto& corner : frustumCorners)
 			{
 				frustumCenter += corner;
@@ -247,24 +247,24 @@ namespace ZeoEngine {
 			}
 			radius = std::ceil(radius * 16.0f) / 16.0f;
 
-			glm::vec3 maxExtents = glm::vec3(radius);
-			glm::vec3 minExtents = -maxExtents;
+			Vec3 maxExtents = Vec3(radius);
+			Vec3 minExtents = -maxExtents;
 
-			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - direction * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+			Mat4 lightViewMatrix = glm::lookAt(frustumCenter - direction * -minExtents.z, frustumCenter, Vec3(0.0f, 1.0f, 0.0f));
 			float zNear = 0.0f;
 			float zFar = maxExtents.z - minExtents.z;
-			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, zNear, zFar);
+			Mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, zNear, zFar);
 
 			// Create the rounding matrix, by projecting the world-space origin and determining the fractional offset in texel space,
 			// which ensures that shadow edges do not shimmer
-			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
-			glm::vec4 shadowOrigin(0.0f, 0.0f, 0.0f, 1.0f);
+			Mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
+			Vec4 shadowOrigin(0.0f, 0.0f, 0.0f, 1.0f);
 			shadowOrigin = shadowMatrix * shadowOrigin;
 			shadowOrigin = shadowOrigin * shadowMapSize / 2.0f;
 
-			glm::vec4 roundedOrigin = glm::round(shadowOrigin);
-			glm::vec4 offset = roundedOrigin - shadowOrigin;
-			offset = glm::vec4(glm::vec2(offset * 2.0f / shadowMapSize), 0.0f, 0.0f);
+			Vec4 roundedOrigin = glm::round(shadowOrigin);
+			Vec4 offset = roundedOrigin - shadowOrigin;
+			offset = Vec4(Vec2(offset * 2.0f / shadowMapSize), 0.0f, 0.0f);
 
 			lightOrthoMatrix[3] += offset;
 
@@ -272,7 +272,7 @@ namespace ZeoEngine {
 			m_LightBuffer.DirectionalLightBuffer.CascadeSplits[i] = (nearClip + splitDist * clipRange) * -1.0f;
 			m_ShadowCameraBuffer.ViewProjection[i] = lightOrthoMatrix * lightViewMatrix;
 
-			const glm::mat4 texScaleBias(
+			const Mat4 texScaleBias(
 				0.5f, 0.0f, 0.0f, 0.0f,
 				0.0f, 0.5f, 0.0f, 0.0f,
 				0.0f, 0.0f, 0.5f, 0.0f,
@@ -282,12 +282,12 @@ namespace ZeoEngine {
 			// Create reference matrix from 1st cascade
 			m_LightBuffer.DirectionalLightBuffer.CascadeReferenceMatrix = texScaleBias * m_ShadowCameraBuffer.ViewProjection[0];
 			// Determine scale and offset for each cascade
-			const glm::mat4 invShadowMatrix = glm::inverse(texScaleBias * m_ShadowCameraBuffer.ViewProjection[i]);
-			glm::vec4 zeroCorner = m_LightBuffer.DirectionalLightBuffer.CascadeReferenceMatrix * invShadowMatrix * glm::vec4(0, 0, 0, 1);
-			glm::vec4 oneCorner = m_LightBuffer.DirectionalLightBuffer.CascadeReferenceMatrix * invShadowMatrix * glm::vec4(1, 1, 1, 1);
+			const Mat4 invShadowMatrix = glm::inverse(texScaleBias * m_ShadowCameraBuffer.ViewProjection[i]);
+			Vec4 zeroCorner = m_LightBuffer.DirectionalLightBuffer.CascadeReferenceMatrix * invShadowMatrix * Vec4(0, 0, 0, 1);
+			Vec4 oneCorner = m_LightBuffer.DirectionalLightBuffer.CascadeReferenceMatrix * invShadowMatrix * Vec4(1, 1, 1, 1);
 
-			m_LightBuffer.DirectionalLightBuffer.CascadeOffsets[i] = glm::vec4(glm::vec3(-zeroCorner), 0.0f);
-			m_LightBuffer.DirectionalLightBuffer.CascadeScales[i] = glm::vec4(glm::vec3(1.0f) / glm::vec3(oneCorner - zeroCorner), 1.0f);
+			m_LightBuffer.DirectionalLightBuffer.CascadeOffsets[i] = Vec4(Vec3(-zeroCorner), 0.0f);
+			m_LightBuffer.DirectionalLightBuffer.CascadeScales[i] = Vec4(Vec3(1.0f) / Vec3(oneCorner - zeroCorner), 1.0f);
 		}
 	}
 
@@ -297,7 +297,7 @@ namespace ZeoEngine {
 		m_ShadowCameraUniformBuffer->SetData(&m_ShadowCameraBuffer);
 	}
 
-	void SceneRenderer::DrawMesh(const glm::mat4& transform, const Ref<MeshInstance>& mesh, int32_t entityID)
+	void SceneRenderer::DrawMesh(const Mat4& transform, const Ref<MeshInstance>& mesh, I32 entityID)
 	{
 		if (!mesh) return;
 
@@ -305,22 +305,22 @@ namespace ZeoEngine {
 		Renderer::GetStats().MeshVertexCount += mesh->GetMesh()->GetVertexCount();
 	}
 
-	void SceneRenderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int32_t entityID)
+	void SceneRenderer::DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID)
 	{
 		m_QuadBatcher.DrawQuad(transform, color, entityID);
 	}
 
-	void SceneRenderer::DrawQuad(const glm::mat4& transform, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void SceneRenderer::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		m_QuadBatcher.DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
 	}
 
-	void SceneRenderer::DrawBillboard(const glm::vec3& position, const glm::vec2& size, const AssetHandle<Texture2D>& texture, const glm::vec2& tilingFactor, const glm::vec2& uvOffset, const glm::vec4& tintColor, int32_t entityID)
+	void SceneRenderer::DrawBillboard(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
-		glm::mat4 lookAtMatrix = glm::lookAt(position, m_CameraBuffer.Position, { 0.0f, 1.0f, 0.0f });
-		glm::mat4 transform = glm::inverse(lookAtMatrix) *
-			glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-		glm::vec4 color = tintColor;
+		Mat4 lookAtMatrix = glm::lookAt(position, m_CameraBuffer.Position, { 0.0f, 1.0f, 0.0f });
+		Mat4 transform = glm::inverse(lookAtMatrix) *
+			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
+		Vec4 color = tintColor;
 		color.a = 1.0f;
 		m_QuadBatcher.DrawQuad(transform, texture, tilingFactor, uvOffset, color, entityID);
 	}

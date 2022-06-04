@@ -127,7 +127,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Entity::CopyAllComponents(Entity srcEntity, const std::vector<uint32_t>& ignoredCompIds)
+	void Entity::CopyAllComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIds)
 	{
 		for (const auto compId : srcEntity.GetOrderedComponentIds())
 		{
@@ -160,25 +160,25 @@ namespace ZeoEngine {
 		}
 	}
 
-	const std::vector<glm::uint32_t>& Entity::GetOrderedComponentIds() const
+	const std::vector<U32>& Entity::GetOrderedComponentIds() const
 	{
 		return GetComponent<CoreComponent>().OrderedComponents;
 	}
 
-	void Entity::AddComponentId(uint32_t Id)
+	void Entity::AddComponentId(U32 Id)
 	{
 		CoreComponent& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.push_back(Id);
 	}
 
-	void Entity::RemoveComponentId(uint32_t Id)
+	void Entity::RemoveComponentId(U32 Id)
 	{
 		if (!HasComponent<CoreComponent>()) return;
 
 		CoreComponent& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.erase(
 			std::remove_if(coreComp.OrderedComponents.begin(), coreComp.OrderedComponents.end(),
-				[Id](uint32_t componentId) { return componentId == Id; }),
+				[Id](U32 componentId) { return componentId == Id; }),
 			coreComp.OrderedComponents.end());
 	}
 

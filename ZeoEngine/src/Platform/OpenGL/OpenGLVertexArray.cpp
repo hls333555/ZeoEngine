@@ -90,8 +90,8 @@ namespace ZeoEngine {
 			case ShaderDataType::Mat3:
 			case ShaderDataType::Mat4:
 			{
-				uint8_t count = element.GetComponentCount();
-				for (uint8_t i = 0; i < count; i++)
+				U8 count = element.GetComponentCount();
+				for (U8 i = 0; i < count; i++)
 				{
 					glEnableVertexAttribArray(m_VertexBufferIndex);
 					glVertexAttribPointer(m_VertexBufferIndex,
@@ -137,7 +137,7 @@ namespace ZeoEngine {
 		m_IBO = indexBuffer;
 	}
 
-	void OpenGLVertexArray::SetIndexBufferData(const void* data, uint32_t size) const
+	void OpenGLVertexArray::SetIndexBufferData(const void* data, U32 size) const
 	{
 		ZE_PROFILE_FUNCTION();
 

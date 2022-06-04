@@ -24,8 +24,8 @@ namespace ZeoEngine {
 		virtual ~Sampler() = default;
 
 	public:
-		virtual void Bind(uint32_t slot) const = 0;
-		virtual void Unbind(uint32_t slot) const = 0;
+		virtual void Bind(U32 slot) const = 0;
+		virtual void Unbind(U32 slot) const = 0;
 
 	private:
 		static Ref<Sampler> Create(SamplerType type);

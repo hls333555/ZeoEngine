@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		static void Flush(const Ref<SceneContext>& sceneContext, float timeInMs);
 		static void Shutdown(const Ref<SceneContext>& sceneContext);
 
-		virtual void UpdateViewportSize(uint32_t width, uint32_t height) = 0;
+		virtual void UpdateViewportSize(U32 width, U32 height) = 0;
 
 		static Ref<DDRenderInterface> Create(const Ref<SceneRenderer>& sceneRenderer);
 	};

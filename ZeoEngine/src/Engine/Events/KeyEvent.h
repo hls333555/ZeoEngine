@@ -25,10 +25,10 @@ namespace ZeoEngine {
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(const KeyCode keycode, const uint16_t repeatCount)
+		KeyPressedEvent(const KeyCode keycode, const U16 repeatCount)
 			: KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
-		uint16_t GetRepeatCount() const { return m_RepeatCount; }
+		U16 GetRepeatCount() const { return m_RepeatCount; }
 
 		std::string ToString() const override
 		{
@@ -45,7 +45,7 @@ namespace ZeoEngine {
 		 *
 		 * Imagine you press and hold the "A" key in Visual Studio, then what happens...
 		 */
-		uint16_t m_RepeatCount;
+		U16 m_RepeatCount;
 
 	};
 

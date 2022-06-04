@@ -23,18 +23,18 @@ namespace ZeoEngine {
 
 	struct MeshVertex
 	{
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec2 TexCoord;
+		Vec3 Position;
+		Vec3 Normal;
+		Vec2 TexCoord;
 	};
 
 	struct MeshEntry
 	{
 		const char* Name = nullptr; // TODO
-		uint32_t BaseVertex = 0;
-		uint32_t BaseIndex = 0;
-		uint32_t IndexCount = 0;
-		uint32_t MaterialIndex;
+		U32 BaseVertex = 0;
+		U32 BaseIndex = 0;
+		U32 IndexCount = 0;
+		U32 MaterialIndex;
 	};
 
 	struct MeshEntryInstance : public Drawable
@@ -44,9 +44,9 @@ namespace ZeoEngine {
 
 		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
 
-		virtual uint32_t GetBaseVertex() const override { return EntryPtr->BaseVertex; }
-		virtual uint32_t GetBaseIndex() const override { return EntryPtr->BaseIndex; }
-		virtual uint32_t GetIndexCount() const override { return EntryPtr->IndexCount; }
+		virtual U32 GetBaseVertex() const override { return EntryPtr->BaseVertex; }
+		virtual U32 GetBaseIndex() const override { return EntryPtr->BaseIndex; }
+		virtual U32 GetIndexCount() const override { return EntryPtr->IndexCount; }
 
 		void BindAndSubmitTechniques(const AssetHandle<Material>& material);
 		void SubmitTechniques(const AssetHandle<Material>& material);
@@ -63,27 +63,27 @@ namespace ZeoEngine {
 
 		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 		const auto& GetMeshEntries() const { return m_Entries; }
-		uint32_t GetMeshCount() const { return static_cast<uint32_t>(m_Entries.size()); }
+		U32 GetMeshCount() const { return static_cast<U32>(m_Entries.size()); }
 
 		auto& GetDefaultMaterials() { return m_MaterialSlots; }
-		uint32_t GetMaterialCount() const { return static_cast<uint32_t>(m_MaterialSlots.size()); }
+		U32 GetMaterialCount() const { return static_cast<U32>(m_MaterialSlots.size()); }
 
-		uint32_t GetVertexCount() const { return m_VertexCount; }
-		uint32_t GetIndexCount() const { return m_IndexCount; }
+		U32 GetVertexCount() const { return m_VertexCount; }
+		U32 GetIndexCount() const { return m_IndexCount; }
 		const BoxSphereBounds& GetBounds() const { return m_Bounds; }
 
 	private:
 		void LoadFromMeshScene(const aiScene* meshScene);
 		void LoadMeshEntries(const aiScene* meshScene);
-		void LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, uint32_t* indexBuffer);
-		void LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, uint32_t baseIndex);
-		void LoadIndexData(const aiMesh* mesh, uint32_t* indexBuffer, uint32_t baseIndex);
+		void LoadDatas(const aiScene* meshScene, MeshVertex* vertexBuffer, U32* indexBuffer);
+		void LoadVertexData(const aiMesh* mesh, MeshVertex* vertexBuffer, U32 baseIndex);
+		void LoadIndexData(const aiMesh* mesh, U32* indexBuffer, U32 baseIndex);
 
 	private:
 		std::string m_MeshResourcePath;
 
 		Ref<VertexArray> m_VAO;
-		uint32_t m_VertexCount = 0, m_IndexCount = 0;
+		U32 m_VertexCount = 0, m_IndexCount = 0;
 		std::vector<MeshEntry> m_Entries;
 		std::vector<AssetHandle<Material>> m_MaterialSlots;
 		BoxSphereBounds m_Bounds;
@@ -122,24 +122,24 @@ namespace ZeoEngine {
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
 		auto& GetMaterials() { return m_Materials; }
-		void SetMaterial(uint32_t index, const AssetHandle<Material>& material);
-		void OnMaterialChanged(uint32_t index, AssetHandle<Material>& oldMaterial);
+		void SetMaterial(U32 index, const AssetHandle<Material>& material);
+		void OnMaterialChanged(U32 index, AssetHandle<Material>& oldMaterial);
 
 		void SubmitTechniques(MeshEntryInstance& entryInstance);
 		void SubmitAllTechniques();
 
-		void Submit(const glm::mat4& transform, int32_t entityID);
+		void Submit(const Mat4& transform, I32 entityID);
 
 	private:
 		AssetHandle<Mesh> m_MeshPtr;
 
 		struct ModelData
 		{
-			glm::mat4 Transform;
-			glm::mat4 NormalMatrix;
+			Mat4 Transform;
+			Mat4 NormalMatrix;
 
 			// Editor-only
-			int32_t EntityID;
+			I32 EntityID;
 		};
 		ModelData m_ModelBuffer;
 		Ref<UniformBuffer> m_ModelUniformBuffer;

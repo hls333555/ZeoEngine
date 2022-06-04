@@ -31,12 +31,12 @@ namespace ZeoEngine {
 		virtual void OnComponentDestroy() {}
 
 		/** Called every time this data is changed in the editor. (e.g. DURING dragging a slider to tweak the value) */
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex) {}
+		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex) {}
 		/** Called only when this data is changed and deactivated in the editor. (e.g. AFTER dragging a slider to tweak the value) */
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex) {}
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex) {}
 
 		/** Called after certain data has been deserialized. */
-		virtual void PostDataDeserialize(uint32_t dataId) {}
+		virtual void PostDataDeserialize(U32 dataId) {}
 
 		/** Calculate component bounds or return an invalid one. */
 		virtual BoxSphereBounds GetBounds() { return {}; }
@@ -45,9 +45,9 @@ namespace ZeoEngine {
 
 	protected:
 		template<typename Component>
-		uint32_t GetDataIdByName(const char* dataName) const
+		U32 GetDataIdByName(const char* dataName) const
 		{
-			const uint32_t dataId = entt::hashed_string(dataName);
+			const U32 dataId = entt::hashed_string(dataName);
 			const auto data = entt::resolve<Component>().data(dataId);
 			if (!data)
 			{
@@ -67,8 +67,8 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 	};
 
 	class CameraComponentHelper : public IComponentHelper
@@ -87,8 +87,8 @@ namespace ZeoEngine {
 
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void OnComponentDestroy() override;
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 	};
 
 	class ParticleSystemPreviewComponentHelper : public IComponentHelper
@@ -96,8 +96,8 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
+		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 	};
 
 	class MeshRendererComponentHelper : public IComponentHelper
@@ -107,8 +107,8 @@ namespace ZeoEngine {
 
 		virtual void OnComponentAdded(bool bIsDeserialize) override;
 		virtual void OnComponentCopied(IComponent* otherComp) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostDataDeserialize(uint32_t dataId) override;
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostDataDeserialize(U32 dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 	};
 
@@ -120,9 +120,9 @@ namespace ZeoEngine {
 		virtual void OnComponentAdded(bool bIsDeserialize) override;
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void OnComponentDestroy() override;
-		virtual void OnComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostComponentDataValueEditChange(uint32_t dataId, std::any oldValue, int32_t elementIndex = -1) override;
-		virtual void PostDataDeserialize(uint32_t dataId) override;
+		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostDataDeserialize(U32 dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
 		void InitLight();

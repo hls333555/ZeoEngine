@@ -18,7 +18,7 @@ namespace ZeoEngine {
 		Bool
 	};
 
-	static uint32_t ShaderDataTypeSize(ShaderDataType type)
+	static U32 ShaderDataTypeSize(ShaderDataType type)
 	{
 		switch (type)
 		{
@@ -43,8 +43,8 @@ namespace ZeoEngine {
 	{
 		std::string Name;
 		ShaderDataType Type;
-		uint32_t Size;
-		size_t Offset;
+		U32 Size;
+		SizeT Offset;
 		bool bNormalized;
 
 		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		{
 		}
 
-		uint32_t GetComponentCount() const
+		U32 GetComponentCount() const
 		{
 			switch (Type)
 			{
@@ -86,7 +86,7 @@ namespace ZeoEngine {
 		}
 
 		const std::vector<BufferElement>& GetElements() const { return m_Elements; }
-		uint32_t GetStride() const { return m_Stride; }
+		U32 GetStride() const { return m_Stride; }
 
 		std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
 		std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 	private:
 		void CalculateOffsetAndStride()
 		{
-			size_t offset = 0;
+			SizeT offset = 0;
 			for (auto& element : m_Elements)
 			{
 				element.Offset = offset;
@@ -107,7 +107,7 @@ namespace ZeoEngine {
 
 	private:
 		std::vector<BufferElement> m_Elements;
-		uint32_t m_Stride = 0;
+		U32 m_Stride = 0;
 
 	};
 
@@ -119,12 +119,12 @@ namespace ZeoEngine {
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
-		virtual void SetData(const void* data, uint32_t size) = 0;
+		virtual void SetData(const void* data, U32 size) = 0;
 
 		// Instead of constructor, passing variables to static create fucntion can prevent from casting to different types on class instantiation
 
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(U32 size);
+		static Ref<VertexBuffer> Create(void* vertices, U32 size);
 
 	};
 
@@ -134,22 +134,22 @@ namespace ZeoEngine {
 	public:
 		virtual ~IndexBuffer() = default;
 
-		virtual uint32_t GetCount() const = 0;
+		virtual U32 GetCount() const = 0;
 
-		static Ref<IndexBuffer> Create(uint32_t count);
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+		static Ref<IndexBuffer> Create(U32 count);
+		static Ref<IndexBuffer> Create(U32* indices, U32 count);
 
 	};
 
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(TextureFormat format, const std::vector<SamplerType>& samplers, uint32_t textureArraySize = 1)
+		FrameBufferTextureSpec(TextureFormat format, const std::vector<SamplerType>& samplers, U32 textureArraySize = 1)
 			: TextureFormat(format), TextureSamplers(samplers), TextureArraySize(textureArraySize) {}
 
 		TextureFormat TextureFormat = TextureFormat::None;
 		std::vector<SamplerType> TextureSamplers;
-		uint32_t TextureArraySize = 1;
+		U32 TextureArraySize = 1;
 	};
 
 	struct FrameBufferAttachmentSpec
@@ -163,9 +163,9 @@ namespace ZeoEngine {
 
 	struct FrameBufferSpec
 	{
-		uint32_t Width = 1280, Height = 720;
+		U32 Width = 1280, Height = 720;
 		FrameBufferAttachmentSpec Attachments;
-		uint32_t Samples = 1;
+		U32 Samples = 1;
 
 		bool bSwapChainTarget = false;
 	};
@@ -177,22 +177,22 @@ namespace ZeoEngine {
 
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
-		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
-		virtual void* GetDepthAttachment(uint32_t index = 0) const = 0;
+		virtual void* GetColorAttachment(U32 index = 0) const = 0;
+		virtual void* GetDepthAttachment(U32 index = 0) const = 0;
 
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual void Resize(U32 width, U32 height) = 0;
 
-		virtual void ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y, void* outPixelData) = 0;
+		virtual void ReadPixel(U32 attachmentIndex, I32 x, I32 y, void* outPixelData) = 0;
 
-		virtual void ClearColorAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
-		virtual void ClearColorAttachment(uint32_t attachmentIndex, const glm::vec4& clearValue) = 0;
+		virtual void ClearColorAttachment(U32 attachmentIndex, I32 clearValue) = 0;
+		virtual void ClearColorAttachment(U32 attachmentIndex, const Vec4& clearValue) = 0;
 
-		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
+		virtual void Snapshot(const std::string& imagePath, U32 captureWidth) = 0;
 
 		virtual void BindAsBuffer() const = 0;
 		virtual void UnbindAsBuffer() const = 0;
 
-		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, int32_t textureBindingAttachmentIndex = -1, uint32_t textureBindingSlot = 0);
+		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex = -1, U32 textureBindingSlot = 0);
 	};
 
 	enum class UniformBufferBinding
@@ -213,9 +213,9 @@ namespace ZeoEngine {
 	public:
 		virtual ~UniformBuffer() = default;
 
-		virtual void SetData(const void* data, uint32_t size = 0, uint32_t offset = 0) = 0;
+		virtual void SetData(const void* data, U32 size = 0, U32 offset = 0) = 0;
 
-		static Ref<UniformBuffer> Create(uint32_t size, uint32_t binding);
+		static Ref<UniformBuffer> Create(U32 size, U32 binding);
 	};
 
 }

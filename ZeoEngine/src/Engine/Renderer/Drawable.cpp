@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		m_Techniques.emplace_back(std::move(technique));
 	}
 
-	void Drawable::PrepareTechniques(size_t size)
+	void Drawable::PrepareTechniques(SizeT size)
 	{
 		m_Techniques.clear();
 		m_Techniques.reserve(size);

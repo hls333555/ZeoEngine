@@ -102,7 +102,7 @@ namespace ZeoEngine {
 			auto selectedEntity = sceneEditor->GetContextEntity();
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, entityName);
+			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(U64)(U32)entity, flags, entityName);
 			// Display UUID when hovered
 			if (ImGui::IsItemHovered())
 			{

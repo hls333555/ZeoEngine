@@ -41,8 +41,8 @@ namespace ZeoEngine {
 	{
 		std::string Name;
 
-		uint32_t EntityIndex;
-		std::vector<uint32_t> OrderedComponents;
+		U32 EntityIndex;
+		std::vector<U32> OrderedComponents;
 
 		CoreComponent() = default;
 		CoreComponent(const CoreComponent&) = default;
@@ -60,13 +60,13 @@ namespace ZeoEngine {
 
 	struct TransformComponent : public IComponent
 	{
-		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
-		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
+		Vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
+		Vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& translation)
+		TransformComponent(const Vec3& translation)
 			: Translation(translation) {}
 
 		virtual void CreateHelper(Entity* entity) override
@@ -76,32 +76,32 @@ namespace ZeoEngine {
 
 		static const char* GetIcon() { return ICON_FA_MAP_MARKER_ALT; }
 
-		glm::vec3 GetRotationAsDegrees() const { return glm::degrees(Rotation); }
-		void SetRotationToRadians(const glm::vec3& rotationInDegrees) { Rotation = glm::radians(rotationInDegrees); }
+		Vec3 GetRotationAsDegrees() const { return glm::degrees(Rotation); }
+		void SetRotationToRadians(const Vec3& rotationInDegrees) { Rotation = glm::radians(rotationInDegrees); }
 
-		glm::mat4 GetTransform() const
+		Mat4 GetTransform() const
 		{
-			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
+			Mat4 rotation = glm::toMat4(glm::quat(Rotation));
 
-			return glm::translate(glm::mat4(1.0f), Translation) *
+			return glm::translate(Mat4(1.0f), Translation) *
 				rotation *
-				glm::scale(glm::mat4(1.0f), Scale);
+				glm::scale(Mat4(1.0f), Scale);
 		}
 
 	};
 
 	struct SpriteRendererComponent : public IComponent
 	{
-		glm::vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+		Vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 		AssetHandle<Texture2D> TextureAsset;
-		glm::vec2 TextureTiling{ 1.0f };
-		int32_t SortingOrder = 0;
+		Vec2 TextureTiling{ 1.0f };
+		I32 SortingOrder = 0;
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
-		SpriteRendererComponent(const glm::vec4& color)
+		SpriteRendererComponent(const Vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const AssetHandle<Texture2D>& texture, const glm::vec4& tintColor = glm::vec4(1.0f), const glm::vec2& textureTiling = { 1.0f, 1.0f })
+		SpriteRendererComponent(const AssetHandle<Texture2D>& texture, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
 			: TextureAsset(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
@@ -110,10 +110,10 @@ namespace ZeoEngine {
 
 	struct CircleRendererComponent : public IComponent
 	{
-		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		Vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		float Thickness = 1.0f;
 		float Fade = 0.005f;
-		int32_t SortingOrder = 0;
+		I32 SortingOrder = 0;
 
 		CircleRendererComponent() = default;
 		CircleRendererComponent(const CircleRendererComponent&) = default;
@@ -178,7 +178,7 @@ namespace ZeoEngine {
 	struct ParticleSystemComponent : public IComponent
 	{
 		AssetHandle<ParticleTemplate> ParticleTemplateAsset;
-		glm::vec3 PositionOffset{ 0.0f };
+		Vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
 
@@ -212,8 +212,8 @@ namespace ZeoEngine {
 
 		bool IsLocalSpace() const { return ParticleTemplateAsset->bIsLocalSpace; }
 		void SetLocalSpace(bool bValue) { ParticleTemplateAsset->bIsLocalSpace = bValue; }
-		int32_t GetLoopCount() const { return ParticleTemplateAsset->LoopCount; }
-		void SetLoopCount(int32_t count) { ParticleTemplateAsset->LoopCount = count; }
+		I32 GetLoopCount() const { return ParticleTemplateAsset->LoopCount; }
+		void SetLoopCount(I32 count) { ParticleTemplateAsset->LoopCount = count; }
 		float GetLoopDuration() const { return ParticleTemplateAsset->LoopDuration; }
 		void SetLoopDuration(float duration) { ParticleTemplateAsset->LoopDuration = duration; }
 		ParticleFloat& GetSpawnRate() { return ParticleTemplateAsset->SpawnRate; }
@@ -224,17 +224,17 @@ namespace ZeoEngine {
 		ParticleVec3& GetSizeBegin() { return ParticleTemplateAsset->SizeBegin; }
 		ParticleVec3& GetSizeEnd() { return ParticleTemplateAsset->SizeEnd; }
 		ParticleVec3& GetInitialVelocity() { return ParticleTemplateAsset->InitialVelocity; }
-		const glm::vec3& GetInheritVelocityRatio() const { return ParticleTemplateAsset->InheritVelocityRatio; }
-		void SetInheritVelocityRatio(const glm::vec3& ratio) { ParticleTemplateAsset->InheritVelocityRatio = ratio; }
+		const Vec3& GetInheritVelocityRatio() const { return ParticleTemplateAsset->InheritVelocityRatio; }
+		void SetInheritVelocityRatio(const Vec3& ratio) { ParticleTemplateAsset->InheritVelocityRatio = ratio; }
 		ParticleColor& GetColorBegin() { return ParticleTemplateAsset->ColorBegin; }
 		ParticleColor& GetColorEnd() { return ParticleTemplateAsset->ColorEnd; }
 		ParticleFloat& GetLifetime() { return ParticleTemplateAsset->Lifetime; }
 		const AssetHandle<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
 		void SetTexture(const AssetHandle<Texture2D>& texture) { ParticleTemplateAsset->Texture = texture; }
-		const glm::vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
-		void SetSubImageSize(const glm::vec2& size) { ParticleTemplateAsset->SubImageSize = size; }
-		uint32_t GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
-		void SetMaxParticles(uint32_t count) { ParticleTemplateAsset->MaxParticles = count; }
+		const Vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
+		void SetSubImageSize(const Vec2& size) { ParticleTemplateAsset->SubImageSize = size; }
+		U32 GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
+		void SetMaxParticles(U32 count) { ParticleTemplateAsset->MaxParticles = count; }
 
 	};
 
@@ -256,8 +256,8 @@ namespace ZeoEngine {
 
 	struct BoxCollider2DComponent : public IComponent
 	{
-		glm::vec2 Offset = { 0.0f, 0.0f };
-		glm::vec2 Size = { 0.5f, 0.5f }; // Half width and half height
+		Vec2 Offset = { 0.0f, 0.0f };
+		Vec2 Size = { 0.5f, 0.5f }; // Half width and half height
 
 		// TODO: Move into physics material
 		float Density = 1.0f;
@@ -273,7 +273,7 @@ namespace ZeoEngine {
 
 	struct CircleCollider2DComponent : public IComponent
 	{
-		glm::vec2 Offset = { 0.0f, 0.0f };
+		Vec2 Offset = { 0.0f, 0.0f };
 		float Radius = 0.5f;
 
 		// TODO: Move into physics material
@@ -338,8 +338,8 @@ namespace ZeoEngine {
 			return std::dynamic_pointer_cast<T>(LightSource);
 		}
 
-		const glm::vec4& GetColor() const { return LightSource->GetColor(); }
-		void SetColor(const glm::vec4& color) { LightSource->SetColor(color); }
+		const Vec4& GetColor() const { return LightSource->GetColor(); }
+		void SetColor(const Vec4& color) { LightSource->SetColor(color); }
 		float GetIntensity() const { return LightSource->GetIntensity(); }
 		void SetIntensity(float intensity) { return LightSource->SetIntensity(intensity); }
 		float GetRange() const { return LightSource->GetRange(); }
@@ -358,8 +358,8 @@ namespace ZeoEngine {
 		void SetLightSize(float size) { LightSource->SetLightSize(size); }
 		float GetFilterSize() const { return LightSource->GetFilterSize(); }
 		void SetFilterSize(float size) { LightSource->SetFilterSize(size); }
-		uint32_t GetCascadeCount() const { return LightSource->GetCascadeCount(); }
-		void SetCascadeCount(uint32_t count) { LightSource->SetCascadeCount(count); }
+		U32 GetCascadeCount() const { return LightSource->GetCascadeCount(); }
+		void SetCascadeCount(U32 count) { LightSource->SetCascadeCount(count); }
 		float GetCascadeBlendThreshold() const { return LightSource->GetCascadeBlendThreshold(); }
 		void SetCascadeBlendThreshold(float threshold) { LightSource->SetCascadeBlendThreshold(threshold); }
 		float GetMaxShadowDistance() { return LightSource->GetMaxShadowDistance(); }
@@ -384,7 +384,7 @@ namespace ZeoEngine {
 	struct BillboardComponent : public IComponent
 	{
 		AssetHandle<Texture2D> TextureAsset;
-		glm::vec2 Size{ 0.5f, 0.5f };
+		Vec2 Size{ 0.5f, 0.5f };
 
 		BillboardComponent() = default;
 		BillboardComponent(const BillboardComponent&) = default;

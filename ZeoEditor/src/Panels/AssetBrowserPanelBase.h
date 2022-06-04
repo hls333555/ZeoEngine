@@ -86,7 +86,7 @@ namespace ZeoEngine {
 
 	private:
 		float m_LeftColumnWidth = 200.0f;
-		uint32_t m_LeftColumnWindowId;
+		U32 m_LeftColumnWindowId;
 
 		enum class AssetBrowserViewType
 		{

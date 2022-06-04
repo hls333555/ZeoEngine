@@ -34,7 +34,7 @@ namespace ZeoEngine {
 		return state == GLFW_RELEASE;
 	}
 
-	glm::vec2 Input::GetMousePosition()
+	Vec2 Input::GetMousePosition()
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xpos, ypos;

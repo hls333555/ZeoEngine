@@ -97,17 +97,17 @@ namespace ZeoEngine {
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
-			const glm::vec2* viewportBounds = GetViewportBounds();
-			const glm::vec2 viewportSize = GetViewportSize();
+			const Vec2* viewportBounds = GetViewportBounds();
+			const Vec2 viewportSize = GetViewportSize();
 			ImGuizmo::SetRect(viewportBounds[0].x, viewportBounds[0].y, viewportSize.x, viewportSize.y);
 
 			// Editor camera
-			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
-			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+			const Mat4& cameraProjection = m_EditorCamera.GetProjection();
+			Mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
 			// Selected entity
 			auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
-			glm::mat4 entityTransform = transformComp.GetTransform();
+			Mat4 entityTransform = transformComp.GetTransform();
 
 			// Snapping
 			bool bSnap = Input::IsKeyPressed(Key::LeftControl);
@@ -127,11 +127,11 @@ namespace ZeoEngine {
 
 			if (ImGuizmo::IsUsing())
 			{
-				glm::vec3 outTranslation, outRotation, outScale;
+				Vec3 outTranslation, outRotation, outScale;
 				Math::DecomposeTransform(entityTransform, outTranslation, outRotation, outScale);
 
 				// This delta rotation prevents gimbal lock situation
-				glm::vec3 deltaRotation = outRotation - transformComp.Rotation;
+				Vec3 deltaRotation = outRotation - transformComp.Rotation;
 				selectedEntity.SetTransform(outTranslation, transformComp.Rotation + deltaRotation, outScale);
 			}
 		}
@@ -255,13 +255,13 @@ namespace ZeoEngine {
 	void LevelEditorViewPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
 	{
 		auto [mx, my] = GetMouseViewportPosition();
-		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		Vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		// Y coordinate for framebuffer texture is from bottom to up
 		my = viewportSize.y - my;
 		if (mx >= 0.0f && my >= 0.0f && mx < viewportSize.x && my < viewportSize.y)
 		{
-			glm::vec4 pixel;
-			frameBuffer->ReadPixel(1, static_cast<int32_t>(mx), static_cast<int32_t>(my), glm::value_ptr(pixel));
+			Vec4 pixel;
+			frameBuffer->ReadPixel(1, static_cast<I32>(mx), static_cast<I32>(my), glm::value_ptr(pixel));
 			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel.x), GetContextEditor()->GetScene());
 
 			auto& Stats = Renderer::GetStats();

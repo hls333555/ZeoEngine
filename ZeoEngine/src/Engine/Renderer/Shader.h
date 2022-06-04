@@ -16,11 +16,11 @@ namespace ZeoEngine {
 	struct ShaderReflectionDataBase
 	{
 		std::string Name;
-		uint32_t Binding = 0;
-		uint32_t Offset = 0;
-		size_t Size = 0;
+		U32 Binding = 0;
+		U32 Offset = 0;
+		SizeT Size = 0;
 
-		ShaderReflectionDataBase(std::string name, uint32_t binding, uint32_t offset = 0, size_t size = 0)
+		ShaderReflectionDataBase(std::string name, U32 binding, U32 offset = 0, SizeT size = 0)
 			: Name(std::move(name)), Binding(binding), Offset(offset), Size(size) {}
 		virtual ~ShaderReflectionDataBase() = default;
 
@@ -40,7 +40,7 @@ namespace ZeoEngine {
 	{
 		using ShaderReflectionDataBase::ShaderReflectionDataBase;
 
-		int32_t Value = 0;
+		I32 Value = 0;
 
 		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Int; }
 	};
@@ -58,7 +58,7 @@ namespace ZeoEngine {
 	{
 		using ShaderReflectionDataBase::ShaderReflectionDataBase;
 
-		glm::vec2 Value{ 0.0f };
+		Vec2 Value{ 0.0f };
 
 		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec2; }
 	};
@@ -67,7 +67,7 @@ namespace ZeoEngine {
 	{
 		using ShaderReflectionDataBase::ShaderReflectionDataBase;
 
-		glm::vec3 Value{ 0.0f };
+		Vec3 Value{ 0.0f };
 
 		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec3; }
 	};
@@ -76,7 +76,7 @@ namespace ZeoEngine {
 	{
 		using ShaderReflectionDataBase::ShaderReflectionDataBase;
 
-		glm::vec4 Value{ 0.0f };
+		Vec4 Value{ 0.0f };
 
 		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec4; }
 	};
@@ -93,9 +93,9 @@ namespace ZeoEngine {
 		/** Name of the buffer */
 		std::string Name;
 		/** Size of the buffer */
-		size_t Size;
+		SizeT Size;
 		/** Map to begin and end index of Material::m_DynamicUniforms */
-		size_t BeginIndex, EndIndex;
+		SizeT BeginIndex, EndIndex;
 	};
 
 	class Shader : public Bindable, public AssetBase<Shader>
@@ -115,16 +115,16 @@ namespace ZeoEngine {
 		virtual void Deserialize() override;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
+		virtual void SetIntArray(const std::string& name, int* values, U32 count) = 0;
 		virtual void SetFloat(const std::string& name, float value) = 0;
-		virtual void SetFloat2(const std::string& name, const glm::vec2& value) = 0;
-		virtual void SetFloat3(const std::string& name, const glm::vec3& value) = 0;
-		virtual void SetFloat4(const std::string& name, const glm::vec4& value) = 0;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
+		virtual void SetFloat2(const std::string& name, const Vec2& value) = 0;
+		virtual void SetFloat3(const std::string& name, const Vec3& value) = 0;
+		virtual void SetFloat4(const std::string& name, const Vec4& value) = 0;
+		virtual void SetMat4(const std::string& name, const Mat4& value) = 0;
 
 		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const = 0;
-		virtual size_t GetResourceCount() const = 0;
-		virtual const std::unordered_map <uint32_t, UniformBlockData>& GetUniformBlockDatas() const = 0;
+		virtual SizeT GetResourceCount() const = 0;
+		virtual const std::unordered_map <U32, UniformBlockData>& GetUniformBlockDatas() const = 0;
 
 		static void ClearCache(const std::string& path);
 

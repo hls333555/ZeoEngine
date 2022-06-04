@@ -223,14 +223,14 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::DrawDirectoryNavigator()
 	{
-		int32_t i = 0;
+		I32 i = 0;
 		PathUtils::ForEachParentPathInPath(m_SelectedDirectory, [this, &i](const std::string& name)
 		{
 			ImGui::SameLine(0.0f, 0.0f);
 			if (ImGui::TransparentSmallButton(name.c_str()))
 			{
 				std::string jumpToDirectory;
-				int32_t j = 0;
+				I32 j = 0;
 				PathUtils::ForEachParentPathInPath(m_SelectedDirectory, [&jumpToDirectory, i, &j](const std::string& name)
 				{
 					jumpToDirectory = PathUtils::AppendPath(jumpToDirectory, name);
@@ -259,7 +259,7 @@ namespace ZeoEngine {
 				static const float thumbnailWidth = GetTileThumbnailWidth();
 				const float cellSize = thumbnailWidth + padding;
 				const float panelWidth = ImGui::GetContentRegionAvail().x;
-				int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
+				I32 columnCount = static_cast<I32>(panelWidth / cellSize);
 				if (columnCount < 1)
 				{
 					columnCount = 1;
@@ -285,7 +285,7 @@ namespace ZeoEngine {
 			else
 			{
 				ImGuiListClipper clipper;
-				clipper.Begin(static_cast<int32_t>(paths.size()), GetSelectableThumbnailWidth());
+				clipper.Begin(static_cast<I32>(paths.size()), GetSelectableThumbnailWidth());
 				auto it = paths.begin();
 				while (clipper.Step())
 				{
@@ -344,7 +344,7 @@ namespace ZeoEngine {
 			static const float thumbnailWidth = GetTileThumbnailWidth();
 			const float cellSize = thumbnailWidth + padding;
 			const float panelWidth = ImGui::GetContentRegionAvail().x;
-			int32_t columnCount = static_cast<int32_t>(panelWidth / cellSize);
+			I32 columnCount = static_cast<I32>(panelWidth / cellSize);
 			if (columnCount < 1)
 			{
 				columnCount = 1;
@@ -367,7 +367,7 @@ namespace ZeoEngine {
 		else
 		{
 			ImGuiListClipper clipper;
-			clipper.Begin(static_cast<int32_t>(m_FilteredPaths.size()), GetSelectableThumbnailWidth());
+			clipper.Begin(static_cast<I32>(m_FilteredPaths.size()), GetSelectableThumbnailWidth());
 			auto it = m_FilteredPaths.begin();
 			while (clipper.Step())
 			{
@@ -434,7 +434,7 @@ namespace ZeoEngine {
 
 		// Format certain letters to be upper case
 		typeNameStr[0] = std::toupper(typeNameStr[0]);
-		for (size_t i = 0; i < typeNameStr.size(); ++i)
+		for (SizeT i = 0; i < typeNameStr.size(); ++i)
 		{
 			if (typeNameStr[i] == ' ' && i + 1 < typeNameStr.size())
 			{
@@ -452,7 +452,7 @@ namespace ZeoEngine {
 
 	std::string AssetBrowserPanelBase::GetAvailableNewPathName(const char* baseName, bool bIsAsset)
 	{
-		int32_t i = 0;
+		I32 i = 0;
 		char suffix[10];
 		char newName[MAX_PATH_SIZE];
 		strcpy_s(newName, baseName);

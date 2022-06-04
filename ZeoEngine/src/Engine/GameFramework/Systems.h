@@ -84,7 +84,7 @@ namespace ZeoEngine {
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}
 
-		std::pair<SceneCamera*, glm::mat4> GetActiveSceneCamera();
+		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera();
 
 	protected:
 		Ref<SceneRenderer> GetSceneRenderer() const { return m_SceneRenderer.lock(); }

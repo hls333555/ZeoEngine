@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string ID, uint32_t width, uint32_t height, TextureFormat format, SamplerType type)
+	OpenGLTexture2D::OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, SamplerType type)
 		: Texture2D(std::move(ID)), m_Width(width), m_Height(height)
 	{
 		ZE_PROFILE_FUNCTION();
@@ -74,7 +74,7 @@ namespace ZeoEngine {
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
-		m_MipmapLevels = static_cast<uint32_t>(floor(log2(std::max(width, height))));
+		m_MipmapLevels = static_cast<U32>(floor(log2(std::max(width, height))));
 		if (!bAutoGenerateMipmaps || m_MipmapLevels == 0)
 		{
 			m_MipmapLevels = 1;
@@ -105,12 +105,12 @@ namespace ZeoEngine {
 		glDeleteTextures(1, &m_RendererID);
 	}
 
-	void OpenGLTexture2D::SetData(void* data, uint32_t size)
+	void OpenGLTexture2D::SetData(void* data, U32 size)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		// Bytes per pixel
-		uint32_t bpp = 0;
+		U32 bpp = 0;
 		switch (m_DataFormat)
 		{
 			case GL_RGB:	bpp = 3; break;
@@ -126,7 +126,7 @@ namespace ZeoEngine {
 		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
 	}
 
-	void OpenGLTexture2D::Bind(uint32_t slot) const
+	void OpenGLTexture2D::Bind(U32 slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -137,7 +137,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLTexture2D::Unbind(uint32_t slot) const
+	void OpenGLTexture2D::Unbind(U32 slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -148,7 +148,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLTexture2DArray::OpenGLTexture2DArray(uint32_t width, uint32_t height, uint32_t arraySize, TextureFormat format, SamplerType type)
+	OpenGLTexture2DArray::OpenGLTexture2DArray(U32 width, U32 height, U32 arraySize, TextureFormat format, SamplerType type)
 		: m_ArraySize(arraySize)
 	{
 		ZE_PROFILE_FUNCTION();
@@ -175,7 +175,7 @@ namespace ZeoEngine {
 
 		m_TextureViews.resize(arraySize);
 		glGenTextures(arraySize, m_TextureViews.data());
-		for (uint32_t i = 0; i < arraySize; ++i)
+		for (U32 i = 0; i < arraySize; ++i)
 		{
 			glTextureView(m_TextureViews[i], GL_TEXTURE_2D, m_RendererID, m_InternalFormat, 0, 1, i, 1);
 		}
@@ -190,12 +190,12 @@ namespace ZeoEngine {
 	}
 
 	// TODO:
-	void OpenGLTexture2DArray::SetData(void* data, uint32_t size)
+	void OpenGLTexture2DArray::SetData(void* data, U32 size)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		// Bytes per pixel
-		uint32_t bpp = 0;
+		U32 bpp = 0;
 		switch (m_DataFormat)
 		{
 			case GL_RGB:	bpp = 3; break;
@@ -211,7 +211,7 @@ namespace ZeoEngine {
 		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
 	}
 
-	void OpenGLTexture2DArray::Bind(uint32_t slot) const
+	void OpenGLTexture2DArray::Bind(U32 slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -222,7 +222,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void OpenGLTexture2DArray::Unbind(uint32_t slot) const
+	void OpenGLTexture2DArray::Unbind(U32 slot) const
 	{
 		ZE_PROFILE_FUNCTION();
 

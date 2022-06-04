@@ -48,10 +48,10 @@ namespace ZeoEngine {
 	{
 	}
 
-	std::pair<SceneCamera*, glm::mat4> RenderSystemBase::GetActiveSceneCamera()
+	std::pair<SceneCamera*, Mat4> RenderSystemBase::GetActiveSceneCamera()
 	{
 		SceneCamera* camera = nullptr;
-		glm::mat4 transform;
+		Mat4 transform;
 		ForEachComponentView<TransformComponent, CameraComponent>([&camera, &transform](auto entity, auto& transformComp, auto& cameraComp)
 		{
 			if (cameraComp.bIsPrimary)
@@ -75,20 +75,20 @@ namespace ZeoEngine {
 			if (billboardComp.TextureAsset)
 			{
 				const Entity entity = { e, GetScene() };
-				const glm::vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : glm::vec4(1.0f);
-				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<int32_t>(e));
+				const Vec4 tintColor = entity.HasComponent<LightComponent>() ? entity.GetComponent<LightComponent>().GetColor() : Vec4(1.0f);
+				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
 			}
 		});
 
 		// Render camera frustums
 		ForEachComponentView<TransformComponent, CameraComponent>([this](auto entity, auto& transformComp, auto& cameraComp)
 		{
-			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
+			static const Vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			// TODO: Replace this with FrameBuffer texture
 			// Draw frustum visualizer when selected
 			if (GetSceneRaw()->GetSelectedEntity() == entity)
 			{
-				const glm::mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
+				const Mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
 				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, visualizeColor);
 			}
 		});
@@ -104,7 +104,7 @@ namespace ZeoEngine {
 	{
 		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this, bIsEditor](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
-			static const glm::vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
+			static const Vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			switch (lightComp.Type)
 			{
 				case LightComponent::LightType::DirectionalLight:
@@ -157,7 +157,7 @@ namespace ZeoEngine {
 	{
 		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
-			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<int32_t>(entity));
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<I32>(entity));
 		});
 	}
 
@@ -184,7 +184,7 @@ namespace ZeoEngine {
 		// Render sprites
 		ForEachComponentGroup<TransformComponent>(entt::get<SpriteRendererComponent>, [](auto entity, auto& transformComp, auto& spriteComp)
 		{
-			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
+			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<I32>(entity));
 		},
 		[](std::tuple<TransformComponent&, SpriteRendererComponent&> lhs, std::tuple<TransformComponent&, SpriteRendererComponent&> rhs)
 		{
@@ -196,7 +196,7 @@ namespace ZeoEngine {
 		// Render circles
 		ForEachComponentView<TransformComponent, CircleRendererComponent>([](auto entity, auto& transformComp, auto& circleComp)
 		{
-			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<int32_t>(entity));
+			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<I32>(entity));
 		});
 
 		// Render particle systems
@@ -333,8 +333,8 @@ namespace ZeoEngine {
 
 	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
 	{
-		const int32_t velocityIterations = 6;
-		const int32_t positionIterations = 2;
+		const I32 velocityIterations = 6;
+		const I32 positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
 
 		ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)

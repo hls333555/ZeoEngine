@@ -27,7 +27,7 @@ namespace ZeoEngine {
 			return true;
 		}
 
-		static uint32_t GetIDFromString(const std::string& ID)
+		static U32 GetIDFromString(const std::string& ID)
 		{
 			return entt::hashed_string{ ID.c_str() };
 		}

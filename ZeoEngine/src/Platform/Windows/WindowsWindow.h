@@ -14,8 +14,8 @@ namespace ZeoEngine {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		virtual uint32_t GetWidth() const override { return m_Data.Width; }
-		virtual uint32_t GetHeight() const override { return m_Data.Height; }
+		virtual U32 GetWidth() const override { return m_Data.Width; }
+		virtual U32 GetHeight() const override { return m_Data.Height; }
 
 		virtual float GetTimeInSeconds() const override;
 
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 		struct WindowData
 		{
 			std::string Title;
-			uint32_t Width, Height;
+			U32 Width, Height;
 			bool bVSync;
 
 			EventCallbackFn EventCallback;

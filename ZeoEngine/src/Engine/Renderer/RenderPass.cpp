@@ -227,7 +227,7 @@ namespace ZeoEngine {
 		fbSpec.Attachments = {
 			{ TextureFormat::DEPTH32F, { SamplerType::ShadowDepth, SamplerType::ShadowPCF }, SceneSettings::MaxCascades }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ShadowMap));
 	}
 
 	Ref<FrameBuffer> ScreenSpaceShadowPass::s_FBO = nullptr;
@@ -255,7 +255,7 @@ namespace ZeoEngine {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
 			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
 	Ref<FrameBuffer> HorizontalBlurPass::s_FBO = nullptr;
@@ -279,7 +279,7 @@ namespace ZeoEngine {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
 			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
 	Ref<FrameBuffer> VerticalBlurPass::s_FBO = nullptr;
@@ -303,7 +303,7 @@ namespace ZeoEngine {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
 			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<uint32_t>(TextureBinding::ScreenSpaceShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
 	}
 
 	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bShouldClearIDBuffer, bool bAutoActive)
@@ -332,16 +332,16 @@ namespace ZeoEngine {
 	{
 		struct GridData
 		{
-			glm::mat4 Transform = glm::mat4(1.0f);
-			glm::vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
-			glm::vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
-			glm::vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
-			glm::vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
+			Mat4 Transform = Mat4(1.0f);
+			Vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
+			Vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
+			Vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
+			Vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
 			float Extent = 101.0f;
 			float CellSize = 0.025f;
 		};
 		GridData gridBuffer;
-		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), static_cast<uint32_t>(UniformBufferBinding::Grid));
+		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), static_cast<U32>(UniformBufferBinding::Grid));
 		gridUniformBuffer->SetData(&gridBuffer);
 
 		AddBindable(gridUniformBuffer);
@@ -358,7 +358,7 @@ namespace ZeoEngine {
 		if (!IsActive()) return;
 
 		BindAll();
-		static constexpr int32_t gridInstanceCount = 10;
+		static constexpr I32 gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
 		UnbindBindables();
 	}

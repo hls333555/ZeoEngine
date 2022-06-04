@@ -24,8 +24,8 @@ namespace ZeoEngine {
 	{
 		if (!m_bEnableUpdate) return;
 
-		const glm::vec2 mousePos = Input::GetMousePosition();
-		glm::vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
+		const Vec2 mousePos = Input::GetMousePosition();
+		Vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;
 
 		static const float lerpSpeed = 13.0f;
@@ -76,24 +76,24 @@ namespace ZeoEngine {
 		m_bStartLerpToFocus = true;
 	}
 
-	glm::vec3 EditorCamera::GetForwardVector() const
+	Vec3 EditorCamera::GetForwardVector() const
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f));
+		return glm::rotate(GetOrientation(), Vec3(0.0f, 0.0f, -1.0f));
 	}
 
-	glm::vec3 EditorCamera::GetRightVector() const
+	Vec3 EditorCamera::GetRightVector() const
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(1.0f, 0.0f, 0.0f));
+		return glm::rotate(GetOrientation(), Vec3(1.0f, 0.0f, 0.0f));
 	}
 
-	glm::vec3 EditorCamera::GetUpVector() const
+	Vec3 EditorCamera::GetUpVector() const
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
+		return glm::rotate(GetOrientation(), Vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	glm::quat EditorCamera::GetOrientation() const
 	{
-		return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, 0.0f));
+		return glm::quat(Vec3(-m_Pitch, -m_Yaw, 0.0f));
 	}
 
 	void EditorCamera::UpdateProjection()
@@ -108,11 +108,11 @@ namespace ZeoEngine {
 		m_Position = CalculatePosition();
 
 		glm::quat orientation = GetOrientation();
-		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
+		m_ViewMatrix = glm::translate(Mat4(1.0f), m_Position) * glm::toMat4(orientation);
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
-	void EditorCamera::ProcessOrbitControl(bool bIsViewportHovered, const glm::vec2& delta)
+	void EditorCamera::ProcessOrbitControl(bool bIsViewportHovered, const Vec2& delta)
 	{
 		// Only one control mode can take effect at a time
 		if (!IsControlModeReady(CameraControl_OrbitRotate)) return;
@@ -141,7 +141,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessPanControl(bool bIsViewportHovered, const glm::vec2& delta)
+	void EditorCamera::ProcessPanControl(bool bIsViewportHovered, const Vec2& delta)
 	{
 		if (!IsControlModeReady(CameraControl_Pan)) return;
 
@@ -163,7 +163,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessZoomControl(bool bIsViewportHovered, const glm::vec2& delta)
+	void EditorCamera::ProcessZoomControl(bool bIsViewportHovered, const Vec2& delta)
 	{
 		if (!IsControlModeReady(CameraControl_Zoom)) return;
 
@@ -188,7 +188,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessFpsControl(bool bIsViewportHovered, const glm::vec2& delta, float dt)
+	void EditorCamera::ProcessFpsControl(bool bIsViewportHovered, const Vec2& delta, float dt)
 	{
 		if (!IsControlModeReady(CameraControl_FPS)) return;
 
@@ -253,7 +253,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::MousePan(const glm::vec2& delta)
+	void EditorCamera::MousePan(const Vec2& delta)
 	{
 		// Disable focusing during camera manipulation
 		m_bStartLerpToFocus = false;
@@ -262,7 +262,7 @@ namespace ZeoEngine {
 		m_FocalPoint += GetUpVector() * delta.y * ySpeed * m_Distance;
 	}
 
-	void EditorCamera::MouseRotate(const glm::vec2& delta)
+	void EditorCamera::MouseRotate(const Vec2& delta)
 	{
 		// Disable focusing during camera manipulation
 		m_bStartLerpToFocus = false;
@@ -282,7 +282,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	glm::vec3 EditorCamera::CalculatePosition() const
+	Vec3 EditorCamera::CalculatePosition() const
 	{
 		return m_FocalPoint - GetForwardVector() * m_Distance;
 	}
@@ -312,17 +312,17 @@ namespace ZeoEngine {
 		return speed;
 	}
 
-	bool EditorCamera::IsControlModeReady(uint8_t mode)
+	bool EditorCamera::IsControlModeReady(U8 mode)
 	{
 		return (m_CameraControlModes & ~mode) == 0;
 	}
 
-	void EditorCamera::EnterControlMode(uint8_t mode)
+	void EditorCamera::EnterControlMode(U8 mode)
 	{
 		m_CameraControlModes |= mode;
 	}
 
-	void EditorCamera::LeaveControlMode(uint8_t mode)
+	void EditorCamera::LeaveControlMode(U8 mode)
 	{
 		m_CameraControlModes &= ~mode;
 		SetMouseLock(false);

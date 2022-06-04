@@ -124,7 +124,7 @@ namespace ZeoEngine {
 		/** Called after scene being rendered. */
 		entt::sink<entt::sigh<void(const Ref<FrameBuffer>&)>> m_PostSceneRender{ m_PostSceneRenderDel };
 		/** Called when view panel being resized. */
-		entt::sink<entt::sigh<void(uint32_t, uint32_t)>> m_OnViewportResize{ m_OnViewportResizeDel };
+		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };
 		
 	private:
 		std::string m_EditorName;
@@ -146,7 +146,7 @@ namespace ZeoEngine {
 		entt::sigh<void(const Ref<Scene>&, bool)> m_OnActiveSceneChangedDel;
 		entt::sigh<void()> m_PostSceneLoadDel;
 		entt::sigh<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
-		entt::sigh<void(uint32_t, uint32_t)> m_OnViewportResizeDel;
+		entt::sigh<void(U32, U32)> m_OnViewportResizeDel;
 	};
 
 }

@@ -10,7 +10,7 @@
 
 namespace ZeoEngine {
 
-	const char* GetComponentDisplayNameFull(uint32_t compId)
+	const char* GetComponentDisplayNameFull(U32 compId)
 	{
 		const auto compType = entt::resolve(compId);
 		const char* compIcon = compType.func("get_icon"_hs).invoke({}).cast<const char*>();
@@ -46,20 +46,20 @@ namespace ZeoEngine {
 			{
 				// Integral
 				case entt::type_hash<bool>::value():							return BasicMetaType::BOOL;
-				case entt::type_hash<int8_t>::value():							return BasicMetaType::I8;
-				case entt::type_hash<int32_t>::value():							return BasicMetaType::I32;
-				case entt::type_hash<int64_t>::value():							return BasicMetaType::I64;
-				case entt::type_hash<uint8_t>::value():							return BasicMetaType::UI8;
-				case entt::type_hash<uint32_t>::value():						return BasicMetaType::UI32;
-				case entt::type_hash<uint64_t>::value():						return BasicMetaType::UI64;
+				case entt::type_hash<I8>::value():							return BasicMetaType::I8;
+				case entt::type_hash<I32>::value():							return BasicMetaType::I32;
+				case entt::type_hash<I64>::value():							return BasicMetaType::I64;
+				case entt::type_hash<U8>::value():							return BasicMetaType::UI8;
+				case entt::type_hash<U32>::value():						return BasicMetaType::UI32;
+				case entt::type_hash<U64>::value():						return BasicMetaType::UI64;
 				// Floating point
 				case entt::type_hash<float>::value():							return BasicMetaType::FLOAT;
 				case entt::type_hash<double>::value():							return BasicMetaType::DOUBLE;
 				// Class
 				case entt::type_hash<std::string>::value():						return BasicMetaType::STRING;
-				case entt::type_hash<glm::vec2>::value():						return BasicMetaType::VEC2;
-				case entt::type_hash<glm::vec3>::value():						return BasicMetaType::VEC3;
-				case entt::type_hash<glm::vec4>::value():						return BasicMetaType::VEC4;
+				case entt::type_hash<Vec2>::value():						return BasicMetaType::VEC2;
+				case entt::type_hash<Vec3>::value():						return BasicMetaType::VEC3;
+				case entt::type_hash<Vec4>::value():						return BasicMetaType::VEC4;
 				case entt::type_hash<AssetHandle<Texture2D>>::value():			return BasicMetaType::TEXTURE;
 				case entt::type_hash<AssetHandle<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
 				case entt::type_hash<AssetHandle<Mesh>>::value():				return BasicMetaType::MESH;
@@ -113,15 +113,15 @@ namespace ZeoEngine {
 	ZE_REGISTRATION
 	{
 		// Register common numeric conversions for registration purpose
-		entt::meta<int32_t>()
+		entt::meta<I32>()
 			.type()
 			.prop(PropertyType::Inherent)
-			.conv<uint8_t>()
-			.conv<uint32_t>()
-			.conv<uint64_t>()
-			.conv<int8_t>()
-			.conv<int32_t>()
-			.conv<int64_t>()
+			.conv<U8>()
+			.conv<U32>()
+			.conv<U64>()
+			.conv<I8>()
+			.conv<I32>()
+			.conv<I64>()
 			.conv<float>()
 			.conv<double>();
 
