@@ -177,8 +177,8 @@ namespace ZeoEngine {
 
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
-		virtual void* GetColorAttachment(U32 index = 0) const = 0;
-		virtual void* GetDepthAttachment(U32 index = 0) const = 0;
+		virtual const Ref<Texture>& GetColorAttachment(U32 index = 0) const = 0;
+		virtual const Ref<Texture>& GetDepthAttachment() const = 0;
 
 		virtual void Resize(U32 width, U32 height) = 0;
 
@@ -188,9 +188,6 @@ namespace ZeoEngine {
 		virtual void ClearColorAttachment(U32 attachmentIndex, const Vec4& clearValue) = 0;
 
 		virtual void Snapshot(const std::string& imagePath, U32 captureWidth) = 0;
-
-		virtual void BindAsBuffer() const = 0;
-		virtual void UnbindAsBuffer() const = 0;
 
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex = -1, U32 textureBindingSlot = 0);
 	};

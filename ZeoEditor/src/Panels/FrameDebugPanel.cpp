@@ -29,7 +29,7 @@ namespace ZeoEngine {
 				{
 					for (int i = 0; i < count; ++i)
 					{
-						ImGui::Image(ShadowMappingPass::GetDepthFrameBuffer()->GetDepthAttachment(i),
+						ImGui::Image(ShadowMappingPass::GetDepthFrameBuffer()->GetDepthAttachment()->GetTextureViewID(i),
 							{ previewWidth, previewHeight }, { 0, 1 }, { 1, 0 });
 
 						if (i < count - 1)

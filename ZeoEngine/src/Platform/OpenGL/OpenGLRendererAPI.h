@@ -22,6 +22,9 @@ namespace ZeoEngine {
 		virtual void DrawLineIndexed(const Ref<VertexArray>& vertexArray, U32 indexCount = 0) override;
 		virtual void SetLineThickness(float thickness) override;
 
+		virtual void DispatchCompute(U32 x, U32 y, U32 z) override;
+		virtual void SetImageAccessBarrier() override;
+
 		virtual void ToggleBlend(bool bEnable) override;
 		virtual void ToggleCullFace(bool bEnable) override;
 		virtual void SetCullFaceMode(bool bIsBack) override;

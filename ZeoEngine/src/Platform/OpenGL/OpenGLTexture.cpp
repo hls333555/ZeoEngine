@@ -8,8 +8,10 @@
 
 namespace ZeoEngine {
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, SamplerType type)
-		: Texture2D(std::move(ID)), m_Width(width), m_Height(height)
+	OpenGLTexture2D::OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
+		: Texture2D(std::move(ID))
+		, m_Width(width), m_Height(height)
+		, m_BindingSlot(bindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -31,9 +33,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps)
+	OpenGLTexture2D::OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps, std::optional<U32> bindingSlot)
 		: Texture2D(PathUtils::GetNormalizedAssetPath(path))
 		, m_TextureResourcePath(std::move(path))
+		, m_BindingSlot(bindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -126,30 +129,48 @@ namespace ZeoEngine {
 		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
 	}
 
-	void OpenGLTexture2D::Bind(U32 slot) const
+	void OpenGLTexture2D::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glBindTextureUnit(slot, m_RendererID);
+		if (!m_BindingSlot)
+		{
+			ZE_CORE_ERROR("Failed to bind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
+			return;
+		}
+
+		glBindTextureUnit(*m_BindingSlot, m_RendererID);
 		if (m_Sampler)
 		{
-			m_Sampler->Bind(slot);
+			m_Sampler->Bind(*m_BindingSlot);
 		}
 	}
 
-	void OpenGLTexture2D::Unbind(U32 slot) const
+	void OpenGLTexture2D::BindAsImage(U32 slot, bool bReadOrWrite) const
+	{
+		glBindImageTexture(slot, m_RendererID, 0, GL_FALSE, 0, bReadOrWrite ? GL_READ_ONLY : GL_WRITE_ONLY, m_InternalFormat);
+	}
+
+	void OpenGLTexture2D::Unbind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glBindTextureUnit(slot, 0);
+		if (!m_BindingSlot)
+		{
+			ZE_CORE_ERROR("Failed to unbind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
+			return;
+		}
+
+		glBindTextureUnit(*m_BindingSlot, 0);
 		if (m_Sampler)
 		{
-			m_Sampler->Unbind(slot);
+			m_Sampler->Unbind(*m_BindingSlot);
 		}
 	}
 
-	OpenGLTexture2DArray::OpenGLTexture2DArray(U32 width, U32 height, U32 arraySize, TextureFormat format, SamplerType type)
+	OpenGLTexture2DArray::OpenGLTexture2DArray(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 		: m_ArraySize(arraySize)
+		, m_BindingSlot(bindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
 
@@ -211,25 +232,42 @@ namespace ZeoEngine {
 		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
 	}
 
-	void OpenGLTexture2DArray::Bind(U32 slot) const
+	void OpenGLTexture2DArray::Bind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glBindTextureUnit(slot, m_RendererID);
+		if (!m_BindingSlot)
+		{
+			ZE_CORE_ERROR("Failed to bind Texture2DArray ({0}) with unspecified binding slot!", m_RendererID);
+			return;
+		}
+
+		glBindTextureUnit(*m_BindingSlot, m_RendererID);
 		if (m_Sampler)
 		{
-			m_Sampler->Bind(slot);
+			m_Sampler->Bind(*m_BindingSlot);
 		}
 	}
 
-	void OpenGLTexture2DArray::Unbind(U32 slot) const
+	void OpenGLTexture2DArray::BindAsImage(U32 slot, bool bReadOrWrite) const
+	{
+		glBindImageTexture(slot, m_RendererID, 0, GL_FALSE, 0, bReadOrWrite ? GL_READ_ONLY : GL_WRITE_ONLY, m_InternalFormat);
+	}
+
+	void OpenGLTexture2DArray::Unbind() const
 	{
 		ZE_PROFILE_FUNCTION();
 
-		glBindTextureUnit(slot, 0);
+		if (!m_BindingSlot)
+		{
+			ZE_CORE_ERROR("Failed to unbind Texture2DArray ({0}) with unspecified binding slot!", m_RendererID);
+			return;
+		}
+
+		glBindTextureUnit(*m_BindingSlot, 0);
 		if (m_Sampler)
 		{
-			m_Sampler->Unbind(slot);
+			m_Sampler->Unbind(*m_BindingSlot);
 		}
 	}
 

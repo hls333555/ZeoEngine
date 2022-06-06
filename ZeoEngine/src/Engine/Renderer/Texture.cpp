@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, U32 width, U32 height, TextureFormat format, SamplerType type)
+	Ref<Texture2D> Texture2D::Create(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -16,21 +16,21 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(std::move(ID), width, height, format, type);
+				return CreateRef<OpenGLTexture2D>(std::move(ID), width, height, format, bindingSlot, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor)
+	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor, std::optional<U32> bindingSlot)
 	{
-		auto texture = Create(std::move(ID), 1, 1, TextureFormat::RGB8);
+		auto texture = Create(std::move(ID), 1, 1, TextureFormat::RGB8, bindingSlot);
 		texture->SetData(&hexColor, 3);
 		return texture;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps)
+	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps, std::optional<U32> bindingSlot)
 	{
 		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		if (!PathUtils::DoesPathExist(resourcePath)) return {};
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				texture = CreateRef<OpenGLTexture2D>(std::move(resourcePath), bAutoGenerateMipmaps);
+				texture = CreateRef<OpenGLTexture2D>(std::move(resourcePath), bAutoGenerateMipmaps, bindingSlot);
 				break;
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);
 	}
 
-	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, SamplerType type)
+	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -79,7 +79,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2DArray>(width, height, arraySize, format, type);
+				return CreateRef<OpenGLTexture2DArray>(width, height, arraySize, format, bindingSlot, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;

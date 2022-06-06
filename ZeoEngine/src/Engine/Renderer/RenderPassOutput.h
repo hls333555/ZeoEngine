@@ -24,6 +24,8 @@ namespace ZeoEngine {
 	template<class T>
 	class RenderPassBufferOutput : public RenderPassOutput
 	{
+		static_assert(std::is_base_of_v<BufferResource, T>, "RenderPassBufferOutput target type must be a BufferResource type!");
+
 	public:
 		RenderPassBufferOutput(std::string name, Ref<T>& bufferResource)
 			: RenderPassOutput(std::move(name))
@@ -50,6 +52,8 @@ namespace ZeoEngine {
 	template<class T>
 	class RenderPassBindableOutput : public RenderPassOutput
 	{
+		static_assert(std::is_base_of_v<Bindable, T>, "RenderPassBindableOutput target type must be a Bindable type!");
+
 	public:
 		RenderPassBindableOutput(std::string name, Ref<T>& bindable)
 			: RenderPassOutput(std::move(name))

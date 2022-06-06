@@ -230,8 +230,10 @@ namespace ZeoEngine {
 			const auto& samplers = m_ColorAttachmentSpecs[m_TextureBindingAttachmentIndex].TextureSamplers;
 			for (SizeT i = 0; i < samplers.size(); ++i)
 			{
-				m_ColorAttachments[m_TextureBindingAttachmentIndex]->ChangeSampler(samplers[i]);
-				m_ColorAttachments[m_TextureBindingAttachmentIndex]->Bind(m_TextureBindingSlot + static_cast<U32>(i));
+				const auto& colorAttachment = m_ColorAttachments[m_TextureBindingAttachmentIndex];
+				colorAttachment->ChangeSampler(samplers[i]);
+				colorAttachment->SetBindingSlot(m_TextureBindingSlot + static_cast<U32>(i));
+				colorAttachment->Bind();
 			}
 		}
 		else if (m_TextureBindingAttachmentIndex == colorAttachmentCount)
@@ -240,7 +242,8 @@ namespace ZeoEngine {
 			for (SizeT i = 0; i < samplers.size(); ++i)
 			{
 				m_DepthAttachment->ChangeSampler(samplers[i]);
-				m_DepthAttachment->Bind(m_TextureBindingSlot + static_cast<U32>(i));
+				m_DepthAttachment->SetBindingSlot(m_TextureBindingSlot + static_cast<U32>(i));
+				m_DepthAttachment->Bind();
 			}
 		}
 	}
@@ -249,14 +252,16 @@ namespace ZeoEngine {
 	{
 		if (m_TextureBindingAttachmentIndex < 0) return;
 
-		auto colorAttachmentCount = m_ColorAttachments.size();
+		const auto colorAttachmentCount = m_ColorAttachments.size();
 		if (m_TextureBindingAttachmentIndex < colorAttachmentCount)
 		{
 			const auto& samplers = m_ColorAttachmentSpecs[m_TextureBindingAttachmentIndex].TextureSamplers;
 			for (SizeT i = 0; i < samplers.size(); ++i)
 			{
-				m_ColorAttachments[m_TextureBindingAttachmentIndex]->ChangeSampler(samplers[i]);
-				m_ColorAttachments[m_TextureBindingAttachmentIndex]->Unbind(m_TextureBindingSlot + static_cast<U32>(i));
+				const auto& colorAttachment = m_ColorAttachments[m_TextureBindingAttachmentIndex];
+				colorAttachment->ChangeSampler(samplers[i]);
+				colorAttachment->SetBindingSlot(m_TextureBindingSlot + static_cast<U32>(i));
+				colorAttachment->Unbind();
 			}
 		}
 		else if (m_TextureBindingAttachmentIndex == colorAttachmentCount)
@@ -265,7 +270,8 @@ namespace ZeoEngine {
 			for (SizeT i = 0; i < samplers.size(); ++i)
 			{
 				m_DepthAttachment->ChangeSampler(samplers[i]);
-				m_DepthAttachment->Unbind(m_TextureBindingSlot + static_cast<U32>(i));
+				m_DepthAttachment->SetBindingSlot(m_TextureBindingSlot + static_cast<U32>(i));
+				m_DepthAttachment->Unbind();
 			}
 		}
 	}

@@ -39,16 +39,80 @@ namespace ZeoEngine {
 		std::vector<Scope<RenderPassOutput>> m_Outputs;
 	};
 
+	struct ComputeResource
+	{
+		U32 BindingSlot;
+
+		explicit ComputeResource(U32 bindingSlot) : BindingSlot(bindingSlot) {}
+		virtual ~ComputeResource() = default;
+		virtual Ref<Texture> GetTexture() const = 0;
+	};
+
+	struct ComputeBufferResource : public ComputeResource
+	{
+		const Ref<FrameBuffer>& FrameBufferResource;
+		bool bIsColorAttachment;
+		U32 ColorAttachmentIndex;
+
+		ComputeBufferResource(U32 bindingSlot, const Ref<FrameBuffer>& fbo, bool bIsColorAttachment, U32 colorAttachmentIndex = 0)
+			: ComputeResource(bindingSlot)
+			, FrameBufferResource(fbo), bIsColorAttachment(bIsColorAttachment), ColorAttachmentIndex(colorAttachmentIndex) {}
+
+		virtual Ref<Texture> GetTexture() const override { return bIsColorAttachment ? FrameBufferResource->GetColorAttachment(ColorAttachmentIndex) : FrameBufferResource->GetDepthAttachment(); }
+	};
+
+	struct ComputeTextureResource : public ComputeResource
+	{
+		Ref<Texture> TextureResource;
+
+		ComputeTextureResource(U32 bindingSlot, const Ref<Texture>& texture)
+			: ComputeResource(bindingSlot)
+			, TextureResource(texture) {}
+
+		virtual Ref<Texture> GetTexture() const override { return TextureResource; }
+	};
+
+	struct ComputeStage
+	{
+		Scope<ComputeResource> TextureToRead;
+		Scope<ComputeResource> TextureToWrite;
+		UVec3 DispatchParams;
+	};
+
+	class ComputeSubPass : public RenderPass
+	{
+	public:
+		using RenderPass::RenderPass;
+
+		void SetComputeShader(Ref<Shader> shader) { m_ComputeShader = std::move(shader); }
+
+		virtual void Execute() const override;
+
+	protected:
+		void AddComputeStage(ComputeStage stage);
+		void BindComputeShader() const;
+		void UnbindComputeShader() const;
+
+	private:
+		Ref<Shader> m_ComputeShader;
+		std::vector<ComputeStage> m_ComputeStages;
+	};
+
 	class BindingPass : public RenderPass
 	{
 	public:
 		explicit BindingPass(std::string name, bool bAutoActive = true);
 
+		virtual void Finalize() override;
+
+		const Scope<ComputeSubPass>& GetComputeSubPass() const { return m_ComputeSubPass; }
+
 	protected:
 		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
+		void BindBindables() const;
 		void UnbindBindables() const;
-		virtual void Finalize() override;
+		void AttachComputeSubPass(Scope<ComputeSubPass> subPass);
 
 		/** Register a bindable input and add that to the bindable list. */
 		template<class T>
@@ -65,6 +129,7 @@ namespace ZeoEngine {
 	protected:
 		Ref<FrameBuffer> m_FBO;
 	private:
+		Scope<ComputeSubPass> m_ComputeSubPass;
 		std::vector<Ref<Bindable>> m_Bindables;
 	};
 

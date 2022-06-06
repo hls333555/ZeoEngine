@@ -4,7 +4,7 @@
 namespace ZeoEngine {
 
 	RenderPassOutput::RenderPassOutput(std::string name)
-		: m_Name(name)
+		: m_Name(std::move(name))
 	{
 		if (m_Name.empty())
 		{

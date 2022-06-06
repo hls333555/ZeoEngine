@@ -72,12 +72,15 @@ namespace ZeoEngine {
 	{
 		if (Value)
 		{
-			Value->Bind(Binding);
+			Value->SetBindingSlot(Binding);
+			Value->Bind();
 		}
 		else
 		{
 			// Bind default texture
-			Texture2DLibrary::GetDefaultMaterialTexture()->Bind(Binding);
+			const auto defaultTexture = Texture2DLibrary::GetDefaultMaterialTexture();
+			defaultTexture->SetBindingSlot(Binding);
+			defaultTexture->Bind();
 		}
 	}
 

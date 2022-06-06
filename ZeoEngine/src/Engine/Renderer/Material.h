@@ -157,7 +157,7 @@ namespace ZeoEngine {
 		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Texture2D; }
 		virtual void Draw() override;
 		virtual void* GetValuePtr() override { return &Value; }
-		virtual void Bind() const override;
+		virtual void Bind() const override; // Called from RenderStep::Bind()
 		virtual void Apply() override;
 	};
 

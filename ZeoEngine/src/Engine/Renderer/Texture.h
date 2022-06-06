@@ -18,7 +18,7 @@ namespace ZeoEngine {
 		// Reserved texture binding slots
 		ShadowMap = 0,
 		PcfShadowMap,
-		BlueNoise,
+		VarianceTexture,
 		ScreenSpaceShadowMap,
 
 		DiffuseTexture,
@@ -35,6 +35,7 @@ namespace ZeoEngine {
 		RGB8,
 		RGBA8,
 		RGBA16F, // This format can store negative values
+		RG32F,
 		RED_INTEGER,
 
 		_DEPTH_START_,
@@ -44,11 +45,9 @@ namespace ZeoEngine {
 		DEPTH24STENCIL8,
 	};
 
-	class Texture
+	class Texture : public Bindable
 	{
 	public:
-		virtual ~Texture() = default;
-
 		virtual U32 GetWidth() const = 0;
 		virtual U32 GetHeight() const = 0;
 		virtual bool HasAlpha() const = 0;
@@ -59,9 +58,8 @@ namespace ZeoEngine {
 		virtual void SetData(void* data, U32 size) = 0;
 		virtual void ChangeSampler(SamplerType type) = 0;
 
-		// TODO: Let slot to be a member variable? And inherit from Bindable?
-		virtual void Bind(U32 slot) const = 0;
-		virtual void Unbind(U32 slot) const = 0;
+		virtual void SetBindingSlot(U32 slot) = 0;
+		virtual void BindAsImage(U32 slot, bool bReadOrWrite) const = 0;
 
 		virtual bool operator==(const Texture& other) const = 0;
 	};
@@ -73,11 +71,11 @@ namespace ZeoEngine {
 			: AssetBase(std::move(ID)) {}
 
 		/** Construct a texture from memory. */
-		static Ref<Texture2D> Create(std::string ID, U32 width, U32 height, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
+		static Ref<Texture2D> Create(std::string ID, U32 width, U32 height, TextureFormat format = TextureFormat::RGBA8, std::optional<U32> bindingSlot = {}, SamplerType type = SamplerType::None);
 		/** Construct a 1x1 solid-color-texture from memory.  */
-		static Ref<Texture2D> Create(std::string ID, U32 hexColor);
+		static Ref<Texture2D> Create(std::string ID, U32 hexColor, std::optional<U32> bindingSlot = {});
 		/** Load a texture from disk. */
-		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false);
+		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false, std::optional<U32> bindingSlot = {});
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
@@ -109,7 +107,7 @@ namespace ZeoEngine {
 	{
 	public:
 		/** Used for constructing a texture from memory. */
-		static Ref<Texture2DArray> Create(U32 width, U32 height, U32 arraySize, TextureFormat format = TextureFormat::RGBA8, SamplerType type = SamplerType::None);
+		static Ref<Texture2DArray> Create(U32 width, U32 height, U32 arraySize, TextureFormat format = TextureFormat::RGBA8, std::optional<U32> bindingSlot = {}, SamplerType type = SamplerType::None);
 	};
 
 }

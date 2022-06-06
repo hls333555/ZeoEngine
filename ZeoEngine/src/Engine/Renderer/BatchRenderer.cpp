@@ -87,7 +87,8 @@ namespace ZeoEngine {
 
 			for (U32 i = 0; i < m_PrimitiveBuffer.TextureSlotIndex; i++)
 			{
-				m_PrimitiveBuffer.TextureSlots[i]->Bind(i);
+				m_PrimitiveBuffer.TextureSlots[i]->SetBindingSlot(i);
+				m_PrimitiveBuffer.TextureSlots[i]->Bind();
 			}
 			m_PrimitiveBuffer.QuadShader->Bind();
 			RenderCommand::ToggleDepthWrite(true);

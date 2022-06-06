@@ -74,6 +74,16 @@ namespace ZeoEngine {
 			s_RendererAPI->SetLineThickness(thickness);
 		}
 
+		static void DispatchCompute(U32 x, U32 y, U32 z)
+		{
+			s_RendererAPI->DispatchCompute(x, y, z);
+		}
+
+		static void SetImageAccessBarrier()
+		{
+			s_RendererAPI->SetImageAccessBarrier();
+		}
+
 		static void ToggleBlend(bool bEnable)
 		{
 			s_RendererAPI->ToggleBlend(bEnable);

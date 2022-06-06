@@ -113,6 +113,16 @@ namespace ZeoEngine {
 		glLineWidth(thickness);
 	}
 
+	void OpenGLRendererAPI::DispatchCompute(U32 x, U32 y, U32 z)
+	{
+		glDispatchCompute(x, y, z);
+	}
+
+	void OpenGLRendererAPI::SetImageAccessBarrier()
+	{
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	}
+
 	void OpenGLRendererAPI::ToggleBlend(bool bEnable)
 	{
 		if (bEnable)

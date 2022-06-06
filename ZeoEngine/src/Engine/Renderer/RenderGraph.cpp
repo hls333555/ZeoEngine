@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		m_GlobalOutputs.emplace_back(std::move(output));
 	}
 
-	void RenderGraph::AddRenderPass(Scope<RenderPass> pass)
+	void RenderGraph::AddRenderPass(Scope<BindingPass> pass)
 	{
 		ZE_CORE_ASSERT(!m_bFinalized);
 
@@ -142,18 +142,28 @@ namespace ZeoEngine {
 		m_bFinalized = true;
 	}
 
-	void RenderGraph::LinkInputs(const Scope<RenderPass>& pass)
+	void RenderGraph::LinkInputs(const Scope<BindingPass>& pass) const
+	{
+		LinkInputsImpl(pass.get());
+		if (const auto& subPass = pass->GetComputeSubPass())
+		{
+			LinkInputsImpl(subPass.get(), pass.get());
+		}
+	}
+
+	void RenderGraph::LinkInputsImpl(const RenderPass* pass, const RenderPass* contextPass) const
 	{
 		for (const auto& input : pass->GetInputs())
 		{
 			const auto& inputPassName = input->GetTargetRenderPassName();
+			const auto& inputOutputName = input->GetTargetOutputName();
 
 			if (inputPassName == "$")
 			{
 				bool bHasBound = false;
 				for (const auto& output : m_GlobalOutputs)
 				{
-					if (output->GetName() == input->GetTargetOutputName())
+					if (output->GetName() == inputOutputName)
 					{
 						input->Bind(output.get());
 						bHasBound = true;
@@ -162,20 +172,29 @@ namespace ZeoEngine {
 				}
 				if (!bHasBound)
 				{
-					ZE_CORE_ERROR("Failed to link render pass input {0} to global outputs!", input->GetTargetOutputName());
+					ZE_CORE_ERROR("Failed to link render pass input {0} to global outputs!", inputOutputName);
 				}
 			}
 			else
 			{
 				bool bHasBound = false;
-				for (const auto& pass : m_Passes)
+				for (const auto& p : m_Passes)
 				{
-					if (pass->GetName() == inputPassName)
+					if (p->GetName() == inputPassName)
 					{
-						auto* output = pass->GetOuput(input->GetTargetOutputName());
+						const auto* output = p->GetOuput(inputOutputName);
 						input->Bind(output);
 						bHasBound = true;
 						break;
+					}
+				}
+				if (!bHasBound)
+				{
+					if (contextPass->GetName() == inputPassName)
+					{
+						const auto* output = contextPass->GetOuput(inputOutputName);
+						input->Bind(output);
+						bHasBound = true;
 					}
 				}
 				if (!bHasBound)
@@ -186,7 +205,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderGraph::LinkGlobalInputs()
+	void RenderGraph::LinkGlobalInputs() const
 	{
 		for (const auto& input : m_GlobalInputs)
 		{

@@ -149,7 +149,8 @@ namespace ZeoEngine {
 			// Bind textures
 			for (U32 i = 0; i < s_Data.TextureSlotIndex; i++)
 			{
-				s_Data.TextureSlots[i]->Bind(i);
+				s_Data.TextureSlots[i]->SetBindingSlot(i);
+				s_Data.TextureSlots[i]->Bind();
 			}
 
 			s_Data.QuadShader->Bind();

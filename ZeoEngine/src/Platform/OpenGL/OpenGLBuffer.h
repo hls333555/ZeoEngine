@@ -57,12 +57,12 @@ namespace ZeoEngine {
 
 		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
 
-		virtual void* GetColorAttachment(U32 index = 0) const override
+		virtual const Ref<Texture>& GetColorAttachment(U32 index = 0) const override
 		{
 			ZE_CORE_ASSERT(index < m_ColorAttachments.size());
-			return m_ColorAttachments[index]->GetTextureID();
+			return m_ColorAttachments[index];
 		}
-		virtual void* GetDepthAttachment(U32 index = 0) const override { return m_DepthAttachment->GetTextureViewID(index); }
+		virtual const Ref<Texture>& GetDepthAttachment() const override { return m_DepthAttachment; }
 
 		void Invalidate();
 

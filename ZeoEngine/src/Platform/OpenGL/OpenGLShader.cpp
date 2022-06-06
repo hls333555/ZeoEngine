@@ -30,6 +30,7 @@ namespace ZeoEngine {
 			if (type == "vertex")						return GL_VERTEX_SHADER;
 			if (type == "fragment" || type == "pixel")	return GL_FRAGMENT_SHADER;
 			if (type == "geometry")						return GL_GEOMETRY_SHADER;
+			if (type == "compute")						return GL_COMPUTE_SHADER;
 
 			ZE_CORE_ASSERT(false, "Unknown shader type!");
 			return 0;
@@ -42,6 +43,7 @@ namespace ZeoEngine {
 				case GL_VERTEX_SHADER:		return shaderc_glsl_vertex_shader;
 				case GL_FRAGMENT_SHADER:	return shaderc_glsl_fragment_shader;
 				case GL_GEOMETRY_SHADER:	return shaderc_glsl_geometry_shader;
+				case GL_COMPUTE_SHADER:		return shaderc_glsl_compute_shader;
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -55,6 +57,7 @@ namespace ZeoEngine {
 				case GL_VERTEX_SHADER:		return "GL_VERTEX_SHADER";
 				case GL_FRAGMENT_SHADER:	return "GL_FRAGMENT_SHADER";
 				case GL_GEOMETRY_SHADER:	return "GL_GEOMETRY_SHADER";
+				case GL_COMPUTE_SHADER:		return "GL_COMPUTE_SHADER";
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -77,6 +80,7 @@ namespace ZeoEngine {
 				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[0];
 				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[1];
 				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[2];
+				case GL_COMPUTE_SHADER:		return OpenGLShader::GetCacheFileExtensions()[3];
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -87,9 +91,10 @@ namespace ZeoEngine {
 		{
 			switch (stage)
 			{
-				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[3];
-				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[4];
-				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[5];
+				case GL_VERTEX_SHADER:		return OpenGLShader::GetCacheFileExtensions()[4];
+				case GL_FRAGMENT_SHADER:	return OpenGLShader::GetCacheFileExtensions()[5];
+				case GL_GEOMETRY_SHADER:	return OpenGLShader::GetCacheFileExtensions()[6];
+				case GL_COMPUTE_SHADER:		return OpenGLShader::GetCacheFileExtensions()[7];
 			}
 
 			ZE_CORE_ASSERT(false);

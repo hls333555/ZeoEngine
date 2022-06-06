@@ -47,7 +47,7 @@ namespace ZeoEngine {
 		GetContextEditor()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
-		ImGui::ImageRounded(GetContextEditor()->GetFrameBuffer()->GetColorAttachment(), m_LastViewportSize,
+		ImGui::ImageRounded(GetContextEditor()->GetFrameBuffer()->GetColorAttachment()->GetTextureID(), m_LastViewportSize,
 			ImGui::IsWindowDocked() ? 0.0f : 8.0f,
 			{ 0, 1 }, { 1, 0 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 },
 			ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);

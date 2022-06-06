@@ -94,6 +94,36 @@ namespace ZeoEngine {
 		m_Outputs.emplace_back(std::move(output));
 	}
 
+	void ComputeSubPass::Execute() const
+	{
+		if (!IsActive()) return;
+
+		BindComputeShader();
+		for (const auto& stage : m_ComputeStages)
+		{
+			stage.TextureToRead->GetTexture()->BindAsImage(stage.TextureToRead->BindingSlot, true);
+			stage.TextureToWrite->GetTexture()->BindAsImage(stage.TextureToWrite->BindingSlot, false);
+			RenderCommand::DispatchCompute(stage.DispatchParams.x, stage.DispatchParams.y, stage.DispatchParams.z);
+			RenderCommand::SetImageAccessBarrier();
+		}
+		UnbindComputeShader();
+	}
+
+	void ComputeSubPass::AddComputeStage(ComputeStage stage)
+	{
+		m_ComputeStages.emplace_back(std::move(stage));
+	}
+
+	void ComputeSubPass::BindComputeShader() const
+	{
+		m_ComputeShader->Bind();
+	}
+
+	void ComputeSubPass::UnbindComputeShader() const
+	{
+		m_ComputeShader->Unbind();
+	}
+
 	BindingPass::BindingPass(std::string name, bool bAutoActive)
 		: RenderPass(std::move(name), bAutoActive)
 	{
@@ -125,6 +155,11 @@ namespace ZeoEngine {
 	void BindingPass::BindAll() const
 	{
 		BindBufferResource();
+		BindBindables();
+	}
+
+	void BindingPass::BindBindables() const
+	{
 		for (const auto& bindable : m_Bindables)
 		{
 			bindable->Bind();
@@ -146,6 +181,11 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ERROR("BindingPass {0} needs a FrameBuffer!");
 		}
+	}
+
+	void BindingPass::AttachComputeSubPass(Scope<ComputeSubPass> subPass)
+	{
+		m_ComputeSubPass = std::move(subPass);
 	}
 
 	void BindingPass::BindBufferResource() const
@@ -186,6 +226,11 @@ namespace ZeoEngine {
 		ClearFrameBufferAttachment();
 		ExecuteTasks();
 		UnbindBindables();
+		// TODO:
+		if (GetComputeSubPass())
+		{
+			GetComputeSubPass()->Execute();
+		}
 	}
 
 	void RenderQueuePass::Reset()
@@ -237,7 +282,7 @@ namespace ZeoEngine {
 	{
 		CreateShadowBuffer();
 
-		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		// NOTE: Bind shader after all its required bindings being bound properly!
 		// Or OpenGL warnings will keep poping up
 		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/ScreenSpaceShadow.glsl").to_ref());
@@ -265,7 +310,7 @@ namespace ZeoEngine {
 	{
 		CreateHorizontalBlurBuffer();
 
-		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/HorizontalBlur.glsl").to_ref());
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
@@ -289,7 +334,7 @@ namespace ZeoEngine {
 	{
 		CreateVerticalBlurBuffer();
 
-		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/VerticalBlur.glsl").to_ref());
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
@@ -310,7 +355,7 @@ namespace ZeoEngine {
 		: RenderQueuePass(std::move(name), bAutoActive)
 		, m_bShouldClearIDBuffer(bShouldClearIDBuffer)
 	{
-		RegisterBindableInput<Bindable>("ShadowMap");
+		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
