@@ -14,6 +14,7 @@ namespace ZeoEngine {
 		virtual const std::string& GetID() const = 0;
 		virtual void SetID(std::string ID) = 0;
 
+		virtual void Reload() {}
 		virtual void Serialize(const std::string& path) = 0;
 		virtual void Deserialize() = 0;
 	};
@@ -52,6 +53,10 @@ namespace ZeoEngine {
 
 		virtual const std::string& GetID() const override final { return m_ID; }
 		virtual void SetID(std::string ID) override final { m_ID = std::move(ID); }
+
+	public:
+		entt::sink<entt::sigh<void()>> m_OnAssetReloaded{ m_OnAssetReloadedDel };
+		entt::sigh<void()> m_OnAssetReloadedDel;
 
 	private:
 		/** Asset path or ID */

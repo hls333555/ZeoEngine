@@ -52,16 +52,17 @@ namespace ZeoEngine {
 		{
 			if (!Utils::Validate(ID)) return {};
 
-			auto ret = load(Utils::GetIDFromString(ID), ID, false/* IsReload */, std::forward<Args>(args)...);
+			auto ret = load(Utils::GetIDFromString(ID), ID, std::forward<Args>(args)...);
 			return ret.first->second;
 		}
 
-		AssetHandle<AssetClass> ReloadAsset(std::string ID)
+		void ReloadAsset(std::string ID)
 		{
-			if (!HasAsset(ID)) return {};
+			if (!HasAsset(ID)) return;
 
-			auto ret = force_load(Utils::GetIDFromString(ID), std::move(ID), true/* IsReload */);
-			return ret.first->second;
+			auto asset = LoadAsset(std::move(ID));
+			asset->Reload();
+			asset->m_OnAssetReloadedDel.publish();
 		}
 
 		void UnloadAsset(std::string ID)

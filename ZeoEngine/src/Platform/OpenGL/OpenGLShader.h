@@ -12,13 +12,14 @@ namespace ZeoEngine {
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(std::string path, bool bIsReload);
+		OpenGLShader(std::string path);
 		OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
+		virtual void ParseAndCompile() override;
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, U32 count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -60,10 +61,12 @@ namespace ZeoEngine {
 	private:
 		std::string ReadFile(const std::string& path);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& src);
-		
+
+		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 		void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
 		void CompileOrGetOpenGLBinaries();
 		void CreateProgram();
+		void ClearReflectionCache();
 		void Reflect(GLenum stage, const std::vector<U32>& shaderData);
 		void ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, U32 binding);
 		void ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, U32 binding, U32 offset, SizeT size);

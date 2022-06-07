@@ -93,6 +93,7 @@ namespace ZeoEngine {
 		: AssetBase(path)
 	{
 		m_Shader = ShaderLibrary::GetDefaultShader();
+		m_Shader->m_OnAssetReloaded.connect<&Material::ReloadShaderData>(this);
 	}
 
 	Material::~Material()
@@ -101,25 +102,19 @@ namespace ZeoEngine {
 		{
 			delete[] uniformBufferDatas;
 		}
-		// TODO: Verfy this
-		m_Shader->m_OnShaderReloaded.disconnect(this);
+		m_Shader->m_OnAssetReloaded.disconnect(this);
 	}
 
-	Ref<Material> Material::Create(const std::string& path, bool bIsReload)
+	Ref<Material> Material::Create(const std::string& path)
 	{
 		auto material = CreateRef<Material>(path);
 		material->Reload();
-		if (!bIsReload)
-		{
-			material->GetShader()->m_OnShaderReloaded.connect<&Material::Reload>(material);
-		}
 		return material;
 	}
 
 	void Material::Reload()
 	{
 		InitMaterialData();
-		m_OnMaterialInitializedDel.publish(GetAssetHandle());
 		Deserialize();
 	}
 
@@ -134,9 +129,20 @@ namespace ZeoEngine {
 
 	void Material::Deserialize()
 	{
+		DeserializeImpl(true);
+	}
+
+	void Material::ReloadShaderData()
+	{
+		InitMaterialData();
+		DeserializeImpl(false);
+	}
+
+	void Material::DeserializeImpl(bool bIncludeComponentData)
+	{
 		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		MaterialAssetSerializer::Deserialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle());
+		MaterialAssetSerializer::Deserialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle(), bIncludeComponentData);
 		// Apply uniform datas after loading
 		ApplyUniformDatas();
 	}
@@ -184,6 +190,8 @@ namespace ZeoEngine {
 			}
 			m_Techniques.emplace_back(std::move(shadow));
 		}
+
+		m_OnMaterialInitializedDel.publish(GetAssetHandle());
 	}
 
 	void Material::ApplyUniformDatas() const
@@ -196,7 +204,7 @@ namespace ZeoEngine {
 
 	void Material::ParseReflectionData()
 	{
-		for (const auto& reflectionData : GetShader()->GetShaderReflectionData())
+		for (const auto& reflectionData : m_Shader->GetShaderReflectionData())
 		{
 			switch (reflectionData->GetType())
 			{
@@ -229,7 +237,7 @@ namespace ZeoEngine {
 
 	void Material::InitUniformBuffers()
 	{
-		for (const auto& [binding, uniformBlockData] : GetShader()->GetUniformBlockDatas())
+		for (const auto& [binding, uniformBlockData] : m_Shader->GetUniformBlockDatas())
 		{
 			auto uniformBlockSize = uniformBlockData.Size;
 			if (m_DynamicUniformBufferDatas.find(binding) != m_DynamicUniformBufferDatas.end())

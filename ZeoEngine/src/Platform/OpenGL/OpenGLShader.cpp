@@ -9,7 +9,6 @@
 #include <spirv_cross/spirv_glsl.hpp>
 
 #include "Engine/Utils/PathUtils.h"
-#include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/Texture.h"
 
@@ -103,24 +102,10 @@ namespace ZeoEngine {
 
 	}
 
-	OpenGLShader::OpenGLShader(std::string path, bool bIsReload)
+	OpenGLShader::OpenGLShader(std::string path)
 		: Shader(PathUtils::GetNormalizedAssetPath(path))
 		, m_ShaderResourcePath(std::move(path))
 	{
-		ZE_PROFILE_FUNCTION();
-
-		Utils::CreateCacheDirectoryIfNeeded();
-
-		const std::string src = ReadFile(m_ShaderResourcePath);
-		auto shaderSrcs = PreProcess(src);
-		
-		{
-			BenchmarkTimer timer;
-			CompileOrGetVulkanBinaries(shaderSrcs);
-			CompileOrGetOpenGLBinaries();
-			CreateProgram();
-			ZE_CORE_WARN("Shader {0} took {1} ms", bIsReload ? "reloading" : "creation", timer.ElapsedMillis());
-		}
 	}
 
 	OpenGLShader::OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -131,10 +116,7 @@ namespace ZeoEngine {
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 		shaderSrcs[GL_VERTEX_SHADER] = vertexSrc;
 		shaderSrcs[GL_FRAGMENT_SHADER] = fragmentSrc;
-		
-		CompileOrGetVulkanBinaries(shaderSrcs);
-		CompileOrGetOpenGLBinaries();
-		CreateProgram();
+		Compile(shaderSrcs);
 	}
 
 	OpenGLShader::~OpenGLShader()
@@ -142,6 +124,15 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		glDeleteProgram(m_RendererID);
+	}
+
+	void OpenGLShader::ParseAndCompile()
+	{
+		Utils::CreateCacheDirectoryIfNeeded();
+
+		const std::string src = ReadFile(m_ShaderResourcePath);
+		const auto shaderSrcs = PreProcess(src);
+		Compile(shaderSrcs);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& path)
@@ -206,6 +197,13 @@ namespace ZeoEngine {
 		return shaderSrcs;
 	}
 
+	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	{
+		CompileOrGetVulkanBinaries(shaderSources);
+		CompileOrGetOpenGLBinaries();
+		CreateProgram();
+	}
+
 	void OpenGLShader::CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
 		GLuint program = glCreateProgram();
@@ -264,8 +262,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		m_ShaderReflectionData.clear();
-		m_UniformBlockDatas.clear();
+		ClearReflectionCache();
 		for (auto&& [stage, data] : m_VulkanSPIRV)
 		{
 			Reflect(stage, data);
@@ -375,6 +372,13 @@ namespace ZeoEngine {
 
 		// If shader is hot reloaded, we do not need to delete the old program as this is a newly created one
 		m_RendererID = program;
+	}
+
+	void OpenGLShader::ClearReflectionCache()
+	{
+		m_ShaderReflectionData.clear();
+		m_ResourceCount = 0;
+		m_UniformBlockDatas.clear();
 	}
 
 	void OpenGLShader::Reflect(GLenum stage, const std::vector<U32>& shaderData)

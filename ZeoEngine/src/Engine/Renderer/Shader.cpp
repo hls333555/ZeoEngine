@@ -4,18 +4,14 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Engine/Core/Serializer.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 	
-	Ref<Shader> Shader::Create(const std::string& path, bool bIsReload)
+	Ref<Shader> Shader::Create(const std::string& path)
 	{
 		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		if (!PathUtils::DoesPathExist(resourcePath)) return {};
-
-		if (bIsReload)
-		{
-			ClearCache(resourcePath);
-		}
 
 		Ref<Shader> shader;
 		switch (Renderer::GetAPI())
@@ -24,18 +20,15 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				shader = CreateRef<OpenGLShader>(std::move(resourcePath), bIsReload);
+				shader = CreateRef<OpenGLShader>(std::move(resourcePath));
 				break;
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 
+		shader->ParseAndCompile();
 		shader->Deserialize();
-		if (bIsReload)
-		{
-			shader->m_OnShaderReloadedDel.publish();
-		}
 		return shader;
 	}
 
@@ -80,6 +73,20 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				break;
 		}
+	}
+
+	void Shader::Reload()
+	{
+		const std::string resourcePath = PathUtils::GetResourcePathFromPath(GetID());
+		if (!PathUtils::DoesPathExist(resourcePath)) return;
+
+		ClearCache(resourcePath);
+		{
+			BenchmarkTimer timer;
+			ParseAndCompile();
+			ZE_CORE_WARN("Shader reloading took {0} ms", timer.ElapsedMillis());
+		}
+		Deserialize();
 	}
 
 	void Shader::Serialize(const std::string& path)

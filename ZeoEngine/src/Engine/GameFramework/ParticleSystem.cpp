@@ -149,7 +149,7 @@ namespace ZeoEngine {
 	}
 
 	// TODO:
-	void ParticleTemplate::Reload(bool bIsCreate)
+	void ParticleTemplate::Reload()
 	{
 		Deserialize();
 		ResimulateAllParticleSystemInstances();

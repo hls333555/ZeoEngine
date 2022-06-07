@@ -691,14 +691,17 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material)
+	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material, bool bIncludeComponentData)
 	{
 		const auto data = ReadDataFromAsset(path, typeId);
 		if (!data) return false;
 
 		// Derialize component data
-		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
+		if (bIncludeComponentData)
+		{
+			ComponentSerializer cs;
+			cs.Deserialize(*data, instance);
+		}
 
 		// Derialize shader uniform data
 		MaterialSerializer ms;

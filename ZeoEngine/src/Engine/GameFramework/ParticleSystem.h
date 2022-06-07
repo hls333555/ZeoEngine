@@ -88,7 +88,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		void Reload(bool bIsCreate);
+		void Reload();
 
 	public:
 		bool bIsLocalSpace = false;
@@ -138,7 +138,7 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(ParticleTemplate,
-	Ref<ParticleTemplate> operator()(const std::string& path, bool bIsReload) const
+	Ref<ParticleTemplate> operator()(const std::string& path) const
 	{
 		return ParticleTemplate::Create(path);
 	},

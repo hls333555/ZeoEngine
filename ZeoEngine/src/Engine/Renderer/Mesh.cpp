@@ -30,12 +30,12 @@ namespace ZeoEngine {
 
 	void MeshEntryInstance::SubmitTechniques(const AssetHandle<Material>& material)
 	{
-		auto& techniques = material->GetRenderTechniques();
+		auto techniques = material->GetRenderTechniques();
 		PrepareTechniques(techniques.size());
 		for (auto& technique : techniques)
 		{
 			technique.UpdateContext(SceneContext, material);
-			AddTechnique(technique);
+			AddTechnique(std::move(technique));
 		}
 	}
 
@@ -222,6 +222,8 @@ namespace ZeoEngine {
 		if (index < 0 || index >= m_Materials.size()) return;
 
 		auto& oldMaterial = m_Materials[index];
+		if (material == oldMaterial) return;
+
 		m_Materials[index] = material;
 		OnMaterialChanged(index, oldMaterial);
 	}

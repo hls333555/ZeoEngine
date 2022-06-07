@@ -167,29 +167,30 @@ namespace ZeoEngine {
 		explicit Material(const std::string& path);
 		virtual ~Material();
 
-		static Ref<Material> Create(const std::string& path, bool bIsReload);
+		static Ref<Material> Create(const std::string& path);
 
 		static constexpr const char* GetTemplatePath() { return "assets/editor/materials/NewMaterial.zasset"; }
 
+		virtual void Reload() override;
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
 		const AssetHandle<Shader>& GetShader() const { return m_Shader; }
-		void SetShader(const AssetHandle<Shader>& shader) { m_Shader = shader; }
+		void SetShader(const AssetHandle<Shader>& shader) { m_Shader = shader; ReloadShaderData(); }
 
 		const auto& GetDynamicUniforms() const { return m_DynamicUniforms; }
 		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
 		auto& GetDynamicUniformBuffers() { return m_DynamicUniformBuffers; }
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
-		auto& GetRenderTechniques() { return m_Techniques; }
-
-		void InitMaterialData();
-		void ApplyUniformDatas() const;
+		const auto& GetRenderTechniques() const { return m_Techniques; }
 
 	private:
+		void InitMaterialData();
+		void ApplyUniformDatas() const;
 		void ParseReflectionData();
 		void InitUniformBuffers();
-		void Reload();
+		void ReloadShaderData();
+		void DeserializeImpl(bool bIncludeComponentData);
 
 	public:
 		entt::sink<entt::sigh<void(const AssetHandle<Material>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
@@ -209,9 +210,9 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Material,
-	Ref<Material> operator()(const std::string& path, bool bIsReload) const
+	Ref<Material> operator()(const std::string& path) const
 	{
-		return Material::Create(path, bIsReload);
+		return Material::Create(path);
 	},
 	static AssetHandle<Material> GetDefaultMaterial()
 	{

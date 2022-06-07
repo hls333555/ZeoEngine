@@ -116,7 +116,7 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Level,
-	Ref<Level> operator()(std::string ID, bool bIsReload) const
+	Ref<Level> operator()(std::string ID) const
 	{
 		return Level::Create(std::move(ID));
 	},

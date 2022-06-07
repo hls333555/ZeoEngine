@@ -90,7 +90,7 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Mesh,
-	Ref<Mesh> operator()(const std::string& path, bool bIsReload) const
+	Ref<Mesh> operator()(const std::string& path) const
 	{
 		return Mesh::Create(path);
 	},

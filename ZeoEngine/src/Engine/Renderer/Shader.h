@@ -105,14 +105,17 @@ namespace ZeoEngine {
 			: AssetBase(std::move(ID)) {}
 		virtual ~Shader() = default;
 
-		static Ref<Shader> Create(const std::string& path, bool bIsReload = false);
+		static Ref<Shader> Create(const std::string& path);
 		static Ref<Shader> Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
 
 		static constexpr const char* GetTemplatePath() { return "assets/editor/shaders/NewShader.glsl.zasset"; }
 		static constexpr const char* GetResourceTemplatePath() { return "assets/editor/shaders/NewShader.glsl"; }
 
+		virtual void Reload() override;
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
+
+		virtual void ParseAndCompile() = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, U32 count) = 0;
@@ -128,17 +131,12 @@ namespace ZeoEngine {
 
 		static void ClearCache(const std::string& path);
 
-	public:
-		entt::sink<entt::sigh<void()>> m_OnShaderReloaded{ m_OnShaderReloadedDel };
-
-	private:
-		entt::sigh<void()> m_OnShaderReloadedDel;
 	};
 
 	REGISTER_ASSET(Shader,
-	Ref<Shader> operator()(const std::string& path, bool bIsReload) const
+	Ref<Shader> operator()(const std::string& path) const
 	{
-		return Shader::Create(path, bIsReload);
+		return Shader::Create(path);
 	},
 	// TODO:
 	static AssetHandle<Shader> GetDefaultShader()

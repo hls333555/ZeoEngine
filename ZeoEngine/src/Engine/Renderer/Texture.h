@@ -82,11 +82,11 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Texture2D,
-	Ref<Texture2D> operator()(std::string ID, bool bIsReload, U32 hexColor) const
+	Ref<Texture2D> operator()(std::string ID, U32 hexColor) const
 	{
 		return Texture2D::Create(std::move(ID), hexColor);
 	}
-	Ref<Texture2D> operator()(const std::string& path, bool bIsReload) const
+	Ref<Texture2D> operator()(const std::string& path) const
 	{
 		return Texture2D::Create(path);
 	},

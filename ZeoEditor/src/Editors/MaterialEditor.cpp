@@ -42,6 +42,7 @@ namespace ZeoEngine {
 		return GetContextEntity().GetComponent<MaterialPreviewComponent>().MaterialAsset;
 	}
 
+	// TODO: Should support reloading
 	void MaterialEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)

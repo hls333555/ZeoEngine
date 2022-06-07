@@ -182,7 +182,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material);
-		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material, bool bIncludeComponentData = true);
 	};
 
 	class SceneSerializer : public Serializer
