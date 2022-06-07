@@ -94,7 +94,7 @@ namespace ZeoEngine {
 		m_Outputs.emplace_back(std::move(output));
 	}
 
-	void ComputeSubPass::Execute() const
+	void ComputePass::Execute() const
 	{
 		if (!IsActive()) return;
 
@@ -109,17 +109,17 @@ namespace ZeoEngine {
 		UnbindComputeShader();
 	}
 
-	void ComputeSubPass::AddComputeStage(ComputeStage stage)
+	void ComputePass::AddComputeStage(ComputeStage stage)
 	{
 		m_ComputeStages.emplace_back(std::move(stage));
 	}
 
-	void ComputeSubPass::BindComputeShader() const
+	void ComputePass::BindComputeShader() const
 	{
 		m_ComputeShader->Bind();
 	}
 
-	void ComputeSubPass::UnbindComputeShader() const
+	void ComputePass::UnbindComputeShader() const
 	{
 		m_ComputeShader->Unbind();
 	}
@@ -183,11 +183,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void BindingPass::AttachComputeSubPass(Scope<ComputeSubPass> subPass)
-	{
-		m_ComputeSubPass = std::move(subPass);
-	}
-
 	void BindingPass::BindBufferResource() const
 	{
 		m_FBO->BindAsBuffer();
@@ -226,11 +221,6 @@ namespace ZeoEngine {
 		ClearFrameBufferAttachment();
 		ExecuteTasks();
 		UnbindBindables();
-		// TODO:
-		if (GetComputeSubPass())
-		{
-			GetComputeSubPass()->Execute();
-		}
 	}
 
 	void RenderQueuePass::Reset()

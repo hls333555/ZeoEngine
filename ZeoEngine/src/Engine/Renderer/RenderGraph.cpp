@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		m_GlobalOutputs.emplace_back(std::move(output));
 	}
 
-	void RenderGraph::AddRenderPass(Scope<BindingPass> pass)
+	void RenderGraph::AddRenderPass(Scope<RenderPass> pass)
 	{
 		ZE_CORE_ASSERT(!m_bFinalized);
 
@@ -142,16 +142,7 @@ namespace ZeoEngine {
 		m_bFinalized = true;
 	}
 
-	void RenderGraph::LinkInputs(const Scope<BindingPass>& pass) const
-	{
-		LinkInputsImpl(pass.get());
-		if (const auto& subPass = pass->GetComputeSubPass())
-		{
-			LinkInputsImpl(subPass.get(), pass.get());
-		}
-	}
-
-	void RenderGraph::LinkInputsImpl(const RenderPass* pass, const RenderPass* contextPass) const
+	void RenderGraph::LinkInputs(const Scope<RenderPass>& pass) const
 	{
 		for (const auto& input : pass->GetInputs())
 		{
@@ -190,15 +181,6 @@ namespace ZeoEngine {
 				}
 				if (!bHasBound)
 				{
-					if (contextPass->GetName() == inputPassName)
-					{
-						const auto* output = contextPass->GetOuput(inputOutputName);
-						input->Bind(output);
-						bHasBound = true;
-					}
-				}
-				if (!bHasBound)
-				{
 					ZE_CORE_ERROR("Failed to link render pass input {0}! Target pass {1} not found.", input->GetTargetOutputName(), inputPassName);
 				}
 			}
@@ -214,7 +196,7 @@ namespace ZeoEngine {
 			{
 				if (pass->GetName() == inputPassName)
 				{
-					auto* output = pass->GetOuput(input->GetTargetOutputName());
+					const auto* output = pass->GetOuput(input->GetTargetOutputName());
 					input->Bind(output);
 					break;
 				}

@@ -45,6 +45,7 @@ namespace ZeoEngine {
 
 		explicit ComputeResource(U32 bindingSlot) : BindingSlot(bindingSlot) {}
 		virtual ~ComputeResource() = default;
+
 		virtual Ref<Texture> GetTexture() const = 0;
 	};
 
@@ -79,7 +80,7 @@ namespace ZeoEngine {
 		UVec3 DispatchParams;
 	};
 
-	class ComputeSubPass : public RenderPass
+	class ComputePass : public RenderPass
 	{
 	public:
 		using RenderPass::RenderPass;
@@ -105,14 +106,11 @@ namespace ZeoEngine {
 
 		virtual void Finalize() override;
 
-		const Scope<ComputeSubPass>& GetComputeSubPass() const { return m_ComputeSubPass; }
-
 	protected:
 		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
 		void BindBindables() const;
 		void UnbindBindables() const;
-		void AttachComputeSubPass(Scope<ComputeSubPass> subPass);
 
 		/** Register a bindable input and add that to the bindable list. */
 		template<class T>
@@ -129,7 +127,6 @@ namespace ZeoEngine {
 	protected:
 		Ref<FrameBuffer> m_FBO;
 	private:
-		Scope<ComputeSubPass> m_ComputeSubPass;
 		std::vector<Ref<Bindable>> m_Bindables;
 	};
 

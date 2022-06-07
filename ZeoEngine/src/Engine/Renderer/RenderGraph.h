@@ -31,7 +31,7 @@ namespace ZeoEngine {
 		constexpr const char* GetBackFrameBufferName() const { return "BackFrameBuffer"; }
 		void AddGlobalInput(Scope<RenderPassInput> input);
 		void AddGlobalOutput(Scope<RenderPassOutput> output);
-		void AddRenderPass(Scope<BindingPass> pass);
+		void AddRenderPass(Scope<RenderPass> pass);
 		void SetGlobalInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 		void Finalize();
 
@@ -40,13 +40,12 @@ namespace ZeoEngine {
 		virtual void InitRenderPasses() = 0;
 
 		/** Link pass inputs to outputs from passes (and global outputs). */
-		void LinkInputs(const Scope<BindingPass>& pass) const;
-		void LinkInputsImpl(const RenderPass* pass, const RenderPass* contextPass = nullptr) const;
+		void LinkInputs(const Scope<RenderPass>& pass) const;
 		void LinkGlobalInputs() const;
 		void Reset() const;
 
 	private:
-		std::vector<Scope<BindingPass>> m_Passes;
+		std::vector<Scope<RenderPass>> m_Passes;
 		std::vector<Scope<RenderPassInput>> m_GlobalInputs;
 		std::vector<Scope<RenderPassOutput>> m_GlobalOutputs;
 		Ref<FrameBuffer> m_BackFBO;

@@ -214,8 +214,8 @@ namespace ZeoEngine {
 		// This is required in order for the names being retrieved correctly during reflection
 		options.SetGenerateDebugInfo();
 		// NOTE: Turning on optimization will sometimes cause glsl compiler to crash
-		const bool optimize = false;
-		if (optimize)
+		const bool bOptimize = false;
+		if (bOptimize)
 		{
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
 		}
@@ -277,8 +277,8 @@ namespace ZeoEngine {
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
 		options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
-		const bool optimize = true;
-		if (optimize)
+		const bool bOptimize = true;
+		if (bOptimize)
 		{
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
 		}
@@ -364,7 +364,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		for (auto id : shaderIDs)
+		for (const auto id : shaderIDs)
 		{
 			glDetachShader(program, id);
 			glDeleteShader(id);
