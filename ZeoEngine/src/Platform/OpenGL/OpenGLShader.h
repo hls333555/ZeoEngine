@@ -3,6 +3,7 @@
 #include "Engine/Renderer/Shader.h"
 
 #include <spirv_cross/spirv_cross.hpp>
+#include <shaderc/shaderc.hpp>
 
 // TODO: REMOVE!
 typedef unsigned int GLenum;
@@ -90,6 +91,38 @@ namespace ZeoEngine {
 		/** Map from uniform block binding to uniform buffer data */
 		std::unordered_map<U32, UniformBlockData> m_UniformBlockDatas;
 
+	};
+
+	// https://stackoverflow.com/questions/67393985/shaderc-includerinterface-include-fails
+	class OpenGLShaderIncluder : public shaderc::CompileOptions::IncluderInterface
+	{
+		virtual shaderc_include_result* GetInclude(const char* requested_source, shaderc_include_type type, const char* requesting_source, size_t include_depth) override
+		{
+			std::ifstream ifs(requested_source);
+			std::string contents((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+
+			auto* container = new std::array<std::string, 2>;
+			if (!contents.empty())
+			{
+				(*container)[0] = requested_source;
+				(*container)[1] = std::move(contents);
+			}
+
+			auto* data = new shaderc_include_result;
+			data->user_data = container;
+			data->source_name = (*container)[0].data();
+			data->source_name_length = (*container)[0].size();
+			data->content = (*container)[1].data();
+			data->content_length = (*container)[1].size();
+
+			return data;
+		};
+
+		virtual void ReleaseInclude(shaderc_include_result* data) override
+		{
+			delete static_cast<std::array<std::string, 2>*>(data->user_data);
+			delete data;
+		};
 	};
 
 }

@@ -251,6 +251,7 @@ namespace ZeoEngine {
 		{
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
 		}
+		options.SetIncluder(CreateScope<OpenGLShaderIncluder>());
 
 		std::filesystem::path cacheDirectory = GetCacheDirectory();
 
@@ -274,7 +275,17 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
+				// Process includes
+				shaderc::PreprocessedSourceCompilationResult preprocessedRes = compiler.PreprocessGlsl(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
+				if (preprocessedRes.GetCompilationStatus() != shaderc_compilation_status_success)
+				{
+					ZE_CORE_ERROR("Shader compilation failed:");
+					std::string errorMsg = preprocessedRes.GetErrorMessage();
+					FormatErrorMessage(stage, errorMsg);
+					ZE_CORE_ERROR(errorMsg);
+					return false;
+				}
+				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(preprocessedRes.begin(), Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
 					ZE_CORE_ERROR("Shader compilation failed:");
@@ -354,8 +365,7 @@ namespace ZeoEngine {
 				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
-					ZE_CORE_ERROR("Shader compilation failed:");
-					ZE_CORE_ERROR(module.GetErrorMessage());
+					// This should never fail?
 					ZE_CORE_ASSERT(false);
 					return false;
 				}

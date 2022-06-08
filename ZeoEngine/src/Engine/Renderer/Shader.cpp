@@ -85,7 +85,7 @@ namespace ZeoEngine {
 		if (ParseAndCompile())
 		{
 			Deserialize();
-			ZE_CORE_WARN("Shader reloading took {0} ms", timer.ElapsedMillis());
+			ZE_CORE_WARN("Reloading shader \"{0}\" took {1} ms", GetID(), timer.ElapsedMillis());
 		}
 	}
 
