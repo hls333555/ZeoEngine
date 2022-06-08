@@ -178,16 +178,6 @@ layout (std140, binding = 4) uniform Light
 	int u_NumSpotLights;
 };
 
-layout (std140, binding = 5) uniform ShadowCamera
-{
-    mat4 ViewProjection[MAX_CASCADE_COUNT];
-}u_ShadowCamera;
-
-layout (std140, binding = 6) uniform Material
-{
-	float Shininess;
-}u_Material;
-
 struct VertexInput
 {
 	vec3 PositionWS;

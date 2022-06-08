@@ -126,13 +126,13 @@ namespace ZeoEngine {
 		glDeleteProgram(m_RendererID);
 	}
 
-	void OpenGLShader::ParseAndCompile()
+	bool OpenGLShader::ParseAndCompile()
 	{
 		Utils::CreateCacheDirectoryIfNeeded();
 
 		const std::string src = ReadFile(m_ShaderResourcePath);
 		const auto shaderSrcs = PreProcess(src);
-		Compile(shaderSrcs);
+		return Compile(shaderSrcs);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& path)
@@ -171,40 +171,72 @@ namespace ZeoEngine {
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 
 		const char* typeToken = "#type";
-		SizeT typeTokenLength = strlen(typeToken);
+		const auto typeTokenLength = strlen(typeToken);
 		// Location of shader type
-		SizeT typeTokenPos = src.find(typeToken, 0);
+		auto typeTokenPos = src.find(typeToken, 0);
 		while (typeTokenPos != std::string::npos)
 		{
 			// End of line
-			SizeT eol = src.find_first_of("\r\n", typeTokenPos);
+			const auto eol = src.find_first_of("\r\n", typeTokenPos);
 			ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
 
-			SizeT typePos = typeTokenPos + typeTokenLength + 1;
+			const auto typePos = typeTokenPos + typeTokenLength + 1;
 			// Get shader type
 			std::string type = src.substr(typePos, eol - typePos);
 			ZE_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type token!");
 
 			// Beginning of shader source: "#version..."
-			SizeT shaderSrcPos = src.find_first_not_of("\r\n", eol);
+			const auto shaderSrcPos = src.find_first_not_of("\r\n", eol);
 			// Locate the next shader type
 			typeTokenPos = src.find(typeToken, shaderSrcPos);
+			auto shaderType = Utils::ShaderTypeFromString(type);
+			// Record shader source line number
+			m_ShaderSourceRelativeLineNums[shaderType] = std::count(src.begin(), src.begin() + shaderSrcPos, '\n');
 			// Get shader source code
-			shaderSrcs[Utils::ShaderTypeFromString(type)]
-				= src.substr(shaderSrcPos, typeTokenPos - (shaderSrcPos == std::string::npos ? src.size() - 1 : shaderSrcPos));
+			shaderSrcs[shaderType] = src.substr(shaderSrcPos, typeTokenPos - (shaderSrcPos == std::string::npos ? src.size() - 1 : shaderSrcPos));
 		}
 
 		return shaderSrcs;
 	}
 
-	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	void OpenGLShader::FormatErrorMessage(GLenum stage, std::string& errorMsg)
 	{
-		CompileOrGetVulkanBinaries(shaderSources);
-		CompileOrGetOpenGLBinaries();
-		CreateProgram();
+		constexpr const char* token = ".glsl:";
+		auto tokenPos = errorMsg.find(token);
+		while (tokenPos != std::string::npos)
+		{
+			const auto lineNumBeginPos = tokenPos + strlen(token);
+			const auto lineNumEndPos = errorMsg.find(':', lineNumBeginPos);
+			const auto lineNumCount = lineNumEndPos - lineNumBeginPos;
+			auto lineNumStr = errorMsg.substr(lineNumBeginPos, lineNumCount);
+			const auto lineNum = std::stoi(lineNumStr);
+			const auto finalLineNum = lineNum + m_ShaderSourceRelativeLineNums[stage];
+			auto finalLineNumStr = std::to_string(finalLineNum);
+			errorMsg.replace(lineNumBeginPos, lineNumCount, finalLineNumStr);
+			// Add some tabs to new line
+			const auto lineEndPos = errorMsg.find('\n', lineNumEndPos);
+			errorMsg.replace(lineEndPos, 1, "\n\t\t\t\t\t\t\t\t\t");
+
+			tokenPos = errorMsg.find(token, tokenPos + 1);
+		}
+		// Remove last empty line
+		const auto lastLinePos = errorMsg.rfind('\n');
+		errorMsg.replace(lastLinePos, 1, "");
 	}
 
-	void OpenGLShader::CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
+	bool OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
+	{
+		bool res = CompileOrGetVulkanBinaries(shaderSources);
+		if (!res) return false;
+
+		res = CompileOrGetOpenGLBinaries();
+		if (!res) return false;
+
+		CreateProgram();
+		return true;
+	}
+
+	bool OpenGLShader::CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
 		GLuint program = glCreateProgram();
 
@@ -245,8 +277,11 @@ namespace ZeoEngine {
 				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
-					ZE_CORE_ERROR(module.GetErrorMessage());
-					ZE_CORE_ASSERT(false);
+					ZE_CORE_ERROR("Shader compilation failed:");
+					std::string errorMsg = module.GetErrorMessage();
+					FormatErrorMessage(stage, errorMsg);
+					ZE_CORE_ERROR(errorMsg);
+					return false;
 				}
 
 				shaderData[stage] = std::vector<U32>(module.cbegin(), module.cend());
@@ -265,12 +300,19 @@ namespace ZeoEngine {
 		ClearReflectionCache();
 		for (auto&& [stage, data] : m_VulkanSPIRV)
 		{
+			if (data.empty())
+			{
+				ZE_CORE_ERROR("Failed to parse shader data!");
+				return false;
+			}
 			Reflect(stage, data);
 		}
+
+		return true;
 	}
 
 	// Built-in mappings see: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Cross/+/refs/heads/travis-windows/spirv_glsl.cpp
-	void OpenGLShader::CompileOrGetOpenGLBinaries()
+	bool OpenGLShader::CompileOrGetOpenGLBinaries()
 	{
 		auto& shaderData = m_OpenGLSPIRV;
 
@@ -312,8 +354,10 @@ namespace ZeoEngine {
 				shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_ShaderResourcePath.c_str(), options);
 				if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 				{
+					ZE_CORE_ERROR("Shader compilation failed:");
 					ZE_CORE_ERROR(module.GetErrorMessage());
 					ZE_CORE_ASSERT(false);
+					return false;
 				}
 
 				shaderData[stage] = std::vector<U32>(module.cbegin(), module.cend());
@@ -328,6 +372,8 @@ namespace ZeoEngine {
 				}
 			}
 		}
+
+		return true;
 	}
 
 	void OpenGLShader::CreateProgram()

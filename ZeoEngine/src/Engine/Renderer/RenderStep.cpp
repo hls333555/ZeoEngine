@@ -55,9 +55,11 @@ namespace ZeoEngine {
 		if (!m_RenderQueuePass)
 		{
 			LinkRenderQueuePass();
-			ZE_CORE_ASSERT(m_RenderQueuePass);
 		}
-		m_RenderQueuePass->AddTask(&drawable, this);
+		if (m_RenderQueuePass)
+		{
+			m_RenderQueuePass->AddTask(&drawable, this);
+		}
 	}
 
 }

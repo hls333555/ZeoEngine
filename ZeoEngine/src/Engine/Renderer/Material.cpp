@@ -158,6 +158,16 @@ namespace ZeoEngine {
 		ParseReflectionData();
 
 		{
+			RenderTechnique shadow("Shadow");
+			{
+				RenderStep step1("ShadowMapping");
+				shadow.AddStep(std::move(step1));
+				RenderStep step2("ScreenSpaceShadow");
+				shadow.AddStep(std::move(step2));
+			}
+			m_Techniques.emplace_back(std::move(shadow));
+		}
+		{
 			RenderTechnique shade("Shade");
 			{
 				RenderStep step("Opaque");
@@ -173,22 +183,6 @@ namespace ZeoEngine {
 				shade.AddStep(std::move(step));
 			}
 			m_Techniques.emplace_back(std::move(shade));
-		}
-		{
-			RenderTechnique shadow("Shadow");
-			{
-				RenderStep step("ShadowMapping");
-				shadow.AddStep(std::move(step));
-			}
-			m_Techniques.emplace_back(std::move(shadow));
-		}
-		{
-			RenderTechnique shadow("Shadow");
-			{
-				RenderStep step("ScreenSpaceShadow");
-				shadow.AddStep(std::move(step));
-			}
-			m_Techniques.emplace_back(std::move(shadow));
 		}
 
 		m_OnMaterialInitializedDel.publish(GetAssetHandle());

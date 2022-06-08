@@ -81,12 +81,12 @@ namespace ZeoEngine {
 		if (!PathUtils::DoesPathExist(resourcePath)) return;
 
 		ClearCache(resourcePath);
+		BenchmarkTimer timer;
+		if (ParseAndCompile())
 		{
-			BenchmarkTimer timer;
-			ParseAndCompile();
+			Deserialize();
 			ZE_CORE_WARN("Shader reloading took {0} ms", timer.ElapsedMillis());
 		}
-		Deserialize();
 	}
 
 	void Shader::Serialize(const std::string& path)

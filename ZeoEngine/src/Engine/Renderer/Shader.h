@@ -115,7 +115,7 @@ namespace ZeoEngine {
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
 
-		virtual void ParseAndCompile() = 0;
+		virtual bool ParseAndCompile() = 0;
 
 		virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, U32 count) = 0;
