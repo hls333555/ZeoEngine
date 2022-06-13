@@ -81,8 +81,6 @@ void main()
 #type fragment
 #version 450 core
 
-#include "assets/editor/shaders/Common.glsl"
-
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
@@ -127,7 +125,7 @@ void main()
     vec2 dudv = vec2(length(vec2(dFdx(uv.x), dFdy(uv.x))), length(vec2(dFdx(uv.y), dFdy(uv.y))));        
 
     // Define minimum number of pixels between cell lines before LOD switch should occur
-    float minPixelsBetweenCells = 2.0f;
+    float minPixelsBetweenCells = 1.0f;
 
     // Calc lod-level
     float lodLevel = max(0, log10((length(dudv) * minPixelsBetweenCells) / Input.CellSize) + 1);
@@ -142,7 +140,8 @@ void main()
     uv += Input.CameraGridPos;
 
     // Allow each anti-aliased line to cover up to 4 pixels
-    dudv *= 4;
+    int lineThickness = 3;
+    dudv *= lineThickness;
     // Offset to pixel center.
     uv = abs(uv) + dudv / 2;
 
@@ -176,7 +175,7 @@ void main()
     c.a *= (alphaLod2 > 0 ? alphaLod2 : alphaLod1 > 0 ? alphaLod1 : (alphaLod0 * (1-lodFade))) * op;
     if (c.a == 0.0f) discard;
 
-    o_Color = LinearToSrgb(c);
+    o_Color = c;
 
     // Setting alpha to 0 to ensure that current ID buffer value is not overridden by the grid
     o_EntityID = vec4(-1.0f, 0.0f, 0.0f, 0.0f);

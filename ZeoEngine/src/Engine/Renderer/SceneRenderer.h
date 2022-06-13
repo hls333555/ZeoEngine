@@ -74,7 +74,7 @@ namespace ZeoEngine {
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction);
 		void UploadLightData();
 
-		void OnViewportResize(U32 width, U32 height);
+		void OnViewportResize(U32 width, U32 height) const;
 
 	private:
 		EditorCamera* m_EditorCamera = nullptr;

@@ -56,7 +56,7 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.QuadVAO->SetIndexBuffer(quadIBO);
 			delete[] quadIndices;
 
-			m_PrimitiveBuffer.QuadShader = Shader::Create("assets/editor/shaders/Quad.glsl");
+			m_PrimitiveBuffer.QuadShader = ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Quad.glsl").to_ref();
 		}
 
 		// Generate a 1x1 white texture to be used by flat color
@@ -91,7 +91,8 @@ namespace ZeoEngine {
 				m_PrimitiveBuffer.TextureSlots[i]->Bind();
 			}
 			m_PrimitiveBuffer.QuadShader->Bind();
-			RenderCommand::ToggleDepthWrite(true);
+			//RenderCommand::ToggleDepthWrite(true);
+			RenderCommand::ToggleCullFace(false); // Billboard may face toward camera with back side
 			RenderCommand::DrawIndexed(m_PrimitiveBuffer.QuadVAO, m_PrimitiveBuffer.QuadIndexCount);
 		}
 	}

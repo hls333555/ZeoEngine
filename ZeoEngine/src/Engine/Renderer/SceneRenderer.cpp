@@ -105,9 +105,10 @@ namespace ZeoEngine {
 		DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
 	}
 
-	void SceneRenderer::OnViewportResize(U32 width, U32 height)
+	void SceneRenderer::OnViewportResize(U32 width, U32 height) const
 	{
 		m_Ddri->UpdateViewportSize(width, height);
+		m_RenderGraph->OnViewportResize(width, height);
 	}
 
 	void SceneRenderer::SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight)

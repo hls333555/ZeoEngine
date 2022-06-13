@@ -55,8 +55,6 @@ void main()
 #type fragment
 #version 450 core
 
-#include "assets/editor/shaders/Common.glsl"
-
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
@@ -141,8 +139,8 @@ layout (location = 4) in CameraInput v_CameraInput;
 
 layout (binding = 3) uniform sampler2D u_ScreenSpaceShadowMap;
 
-layout (binding = 4) uniform sampler2D u_DiffuseTexture;
-layout (binding = 5) uniform sampler2D u_SpecularTexture;
+layout (binding = 5) uniform sampler2D u_DiffuseTexture;
+layout (binding = 6) uniform sampler2D u_SpecularTexture; // TODO: Current this texture is also sampled with SRGB enabled
 
 vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 normal)
 {
@@ -232,7 +230,7 @@ void main()
 		totalLight += CalculateSpotLight(u_SpotLights[i], normalWS);
 	}
 
-	o_Color = LinearToSrgb(totalLight);
+	o_Color = totalLight;
 	// Force set opaque mode due to rgb texture's alpha is 0
 	o_Color.a = 1.0f;
 

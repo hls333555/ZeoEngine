@@ -174,6 +174,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	Ref<Bindable> BindingPass::GetBindableByIndex(U32 index)
+	{
+		if (index >= m_Bindables.size()) return nullptr;
+
+		return m_Bindables[index];
+	}
+
 	void BindingPass::Finalize()
 	{
 		RenderPass::Finalize();
@@ -181,6 +188,11 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ERROR("BindingPass {0} needs a FrameBuffer!");
 		}
+	}
+
+	void BindingPass::OnViewportResize(U32 width, U32 height) const
+	{
+		m_FBO->Resize(width, height);
 	}
 
 	void BindingPass::BindBufferResource() const
@@ -259,6 +271,7 @@ namespace ZeoEngine {
 		FrameBufferSpec fbSpec;
 		fbSpec.Width = SceneSettings::ShadowMapResolution;
 		fbSpec.Height = SceneSettings::ShadowMapResolution;
+		fbSpec.bFixedSize = true;
 		fbSpec.Attachments = {
 			{ TextureFormat::DEPTH32F, { SamplerType::ShadowDepth, SamplerType::ShadowPCF }, SceneSettings::MaxCascades }
 		};
@@ -288,55 +301,7 @@ namespace ZeoEngine {
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
-		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
-	}
-
-	Ref<FrameBuffer> HorizontalBlurPass::s_FBO = nullptr;
-
-	HorizontalBlurPass::HorizontalBlurPass(std::string name, bool bAutoActive)
-		: FullscreenPass(std::move(name), bAutoActive)
-	{
-		CreateHorizontalBlurBuffer();
-
-		RegisterBindableInput<FrameBuffer>("ShadowMap");
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/HorizontalBlur.glsl").to_ref());
-		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
-
-		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
-	}
-
-	void HorizontalBlurPass::CreateHorizontalBlurBuffer()
-	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = {
-			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
-		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
-	}
-
-	Ref<FrameBuffer> VerticalBlurPass::s_FBO = nullptr;
-
-	VerticalBlurPass::VerticalBlurPass(std::string name, bool bAutoActive)
-		: FullscreenPass(std::move(name), bAutoActive)
-	{
-		CreateVerticalBlurBuffer();
-
-		RegisterBindableInput<FrameBuffer>("ShadowMap");
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/VerticalBlur.glsl").to_ref());
-		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
-
-		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("ShadowMap", m_FBO));
-	}
-
-	void VerticalBlurPass::CreateVerticalBlurBuffer()
-	{
-		FrameBufferSpec fbSpec;
-		fbSpec.Attachments = {
-			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
+			{ TextureFormat::DEPTH24STENCIL8 }
 		};
 		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
 	}
@@ -345,13 +310,26 @@ namespace ZeoEngine {
 		: RenderQueuePass(std::move(name), bAutoActive)
 		, m_bShouldClearIDBuffer(bShouldClearIDBuffer)
 	{
+		CreateFrameBuffer();
+
 		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
-		
-		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+
 		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("SceneTexture", m_FBO));
+	}
+
+	void OpaqueRenderPass::CreateFrameBuffer()
+	{
+		FrameBufferSpec fbSpec;
+		fbSpec.Attachments = {
+			{ TextureFormat::RGBA16F }, // 16f reduces banding
+			{ TextureFormat::RGBA16F }, // Entity ID buffer
+			{ TextureFormat::DEPTH24STENCIL8 }
+		};
+		m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::SceneTexture));
 	}
 
 	void OpaqueRenderPass::ClearFrameBufferAttachment() const
@@ -368,10 +346,10 @@ namespace ZeoEngine {
 		struct GridData
 		{
 			Mat4 Transform = Mat4(1.0f);
-			Vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.3f };
-			Vec4 ThickLinesColor{ 0.5f, 0.5f, 0.5f, 0.3f };
-			Vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.3f };
-			Vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.3f };
+			Vec4 ThinLinesColor{ 0.2f, 0.2f, 0.2f, 0.1f };
+			Vec4 ThickLinesColor{ 0.3f, 0.3f, 0.3f, 0.5f };
+			Vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.5f };
+			Vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.5f };
 			float Extent = 101.0f;
 			float CellSize = 0.025f;
 		};
@@ -385,7 +363,7 @@ namespace ZeoEngine {
 		AddBindable(TwoSided::Resolve(TwoSided::State::Disable));
 
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("FrameBuffer", m_FBO));
-		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBindableOutput<FrameBuffer>::Create("SceneTexture", m_FBO));
 	}
 
 	void GridRenderPass::Execute() const
@@ -396,6 +374,33 @@ namespace ZeoEngine {
 		static constexpr I32 gridInstanceCount = 10;
 		RenderCommand::DrawInstanced(gridInstanceCount);
 		UnbindBindables();
+	}
+
+	PostProcessingPass::PostProcessingPass(std::string name, bool bAutoActive)
+		: FullscreenPass(std::move(name), bAutoActive)
+	{
+		m_SceneBufferIndex = RegisterBindableInput<FrameBuffer>("SceneTexture");
+		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/PostProcessing.glsl").to_ref());
+		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
+
+		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("BackFrameBuffer", m_FBO));
+		RegisterOutput(RenderPassBufferOutput<FrameBuffer>::Create("FrameBuffer", m_FBO));
+	}
+
+	void PostProcessingPass::Execute() const
+	{
+		FullscreenPass::Execute();
+
+		// Copy ID buffer and depth buffer
+		m_SceneBuffer->BlitColorTo(m_FBO, 1, 1);
+		m_SceneBuffer->BlitDepthTo(m_FBO);
+	}
+
+	void PostProcessingPass::Finalize()
+	{
+		FullscreenPass::Finalize();
+
+		m_SceneBuffer = std::dynamic_pointer_cast<FrameBuffer>(GetBindableByIndex(static_cast<U32>(m_SceneBufferIndex)));
 	}
 
 }

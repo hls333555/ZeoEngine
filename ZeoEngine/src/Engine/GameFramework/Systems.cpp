@@ -64,6 +64,8 @@ namespace ZeoEngine {
 		return std::make_pair(camera, transform);
 	}
 
+	static Vec3 debugDrawColor = { 0.7f, 0.7f, 0.7f };
+
 	void RenderSystem::OnRenderEditor()
 	{
 		RenderLights(true);
@@ -83,13 +85,12 @@ namespace ZeoEngine {
 		// Render camera frustums
 		ForEachComponentView<TransformComponent, CameraComponent>([this](auto entity, auto& transformComp, auto& cameraComp)
 		{
-			static const Vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			// TODO: Replace this with FrameBuffer texture
 			// Draw frustum visualizer when selected
 			if (GetSceneRaw()->GetSelectedEntity() == entity)
 			{
 				const Mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
-				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, visualizeColor);
+				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, debugDrawColor);
 			}
 		});
 	}
@@ -104,7 +105,6 @@ namespace ZeoEngine {
 	{
 		ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this, bIsEditor](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
-			static const Vec3 visualizeColor = { 0.5f, 0.5f, 0.5f };
 			switch (lightComp.Type)
 			{
 				case LightComponent::LightType::DirectionalLight:
@@ -117,7 +117,7 @@ namespace ZeoEngine {
 					{
 						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
-						DebugDrawUtils::DrawArrow(GetScene(), transformComp.Translation, endPosition, visualizeColor, 0.25f);
+						DebugDrawUtils::DrawArrow(GetScene(), transformComp.Translation, endPosition, debugDrawColor, 0.25f);
 					}
 					break;
 				}
@@ -129,7 +129,7 @@ namespace ZeoEngine {
 					// Draw sphere visualizer when selected
 					if (bIsEditor && GetSceneRaw()->GetSelectedEntity() == entity)
 					{
-						DebugDrawUtils::DrawSphereBounds(GetScene(), transformComp.Translation, visualizeColor, pointLight->GetRange());
+						DebugDrawUtils::DrawSphereBounds(GetScene(), transformComp.Translation, debugDrawColor, pointLight->GetRange());
 					}
 					break;
 				}
@@ -143,7 +143,7 @@ namespace ZeoEngine {
 					{
 						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
 						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
-						DebugDrawUtils::DrawCone(GetScene(), transformComp.Translation, direction, visualizeColor, radius, 0.0f);
+						DebugDrawUtils::DrawCone(GetScene(), transformComp.Translation, direction, debugDrawColor, radius, 0.0f);
 					}
 					break;
 				}

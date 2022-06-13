@@ -40,7 +40,8 @@ namespace ZeoEngine {
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
 
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glEnable(GL_FRAMEBUFFER_SRGB);
+		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if (Is2D())
 		{

@@ -144,8 +144,8 @@ namespace ZeoEngine {
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(TextureFormat format, const std::vector<SamplerType>& samplers, U32 textureArraySize = 1)
-			: TextureFormat(format), TextureSamplers(samplers), TextureArraySize(textureArraySize) {}
+		FrameBufferTextureSpec(TextureFormat format, std::vector<SamplerType> samplers = { SamplerType::PointClamp }, U32 textureArraySize = 1)
+			: TextureFormat(format), TextureSamplers(std::move(samplers)), TextureArraySize(textureArraySize) {}
 
 		TextureFormat TextureFormat = TextureFormat::None;
 		std::vector<SamplerType> TextureSamplers;
@@ -164,6 +164,7 @@ namespace ZeoEngine {
 	struct FrameBufferSpec
 	{
 		U32 Width = 1280, Height = 720;
+		bool bFixedSize = false;
 		FrameBufferAttachmentSpec Attachments;
 		U32 Samples = 1;
 
@@ -175,6 +176,7 @@ namespace ZeoEngine {
 	public:
 		virtual ~FrameBuffer() = default;
 
+		virtual U32 GetFrameBufferID() const = 0;
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
 		virtual const Ref<Texture>& GetColorAttachment(U32 index = 0) const = 0;
@@ -186,6 +188,9 @@ namespace ZeoEngine {
 
 		virtual void ClearColorAttachment(U32 attachmentIndex, I32 clearValue) = 0;
 		virtual void ClearColorAttachment(U32 attachmentIndex, const Vec4& clearValue) = 0;
+
+		virtual void BlitColorTo(const Ref<FrameBuffer>& targetFBO, U32 attachmentIndex, U32 targetAttachmentIndex) = 0;
+		virtual void BlitDepthTo(const Ref<FrameBuffer>& targetFBO, bool bIncludeStencil = true) = 0;
 
 		virtual void Snapshot(const std::string& imagePath, U32 captureWidth) = 0;
 

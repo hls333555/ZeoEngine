@@ -22,6 +22,8 @@ namespace ZeoEngine {
 
 	Ref<Sampler> SamplerLibrary::GetOrAddSampler(SamplerType type)
 	{
+		if (type == SamplerType::None) return {};
+
 		auto it = m_Samplers.find(type);
 		if (it != m_Samplers.end())
 		{

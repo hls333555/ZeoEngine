@@ -55,6 +55,7 @@ namespace ZeoEngine {
 		OpenGLFrameBuffer(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex = -1, U32 textureBindingSlot = 0);
 		virtual ~OpenGLFrameBuffer();
 
+		virtual U32 GetFrameBufferID() const override { return m_RendererID; }
 		const FrameBufferSpec& GetSpec() const override { return m_Spec; }
 
 		virtual const Ref<Texture>& GetColorAttachment(U32 index = 0) const override
@@ -77,6 +78,9 @@ namespace ZeoEngine {
 
 		virtual void ClearColorAttachment(U32 attachmentIndex, I32 clearValue) override;
 		virtual void ClearColorAttachment(U32 attachmentIndex, const Vec4& clearValue) override;
+
+		virtual void BlitColorTo(const Ref<FrameBuffer>& targetFBO, U32 attachmentIndex, U32 targetAttachmentIndex) override;
+		virtual void BlitDepthTo(const Ref<FrameBuffer>& targetFBO, bool bIncludeStencil = true) override;
 
 		virtual void Snapshot(const std::string& imagePath, U32 captureWidth) override;
 

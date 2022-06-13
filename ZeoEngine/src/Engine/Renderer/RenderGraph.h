@@ -23,7 +23,9 @@ namespace ZeoEngine {
 		void Start() const;
 		void Execute() const;
 		void Stop() const;
-		
+
+		void OnViewportResize(U32 width, U32 height) const;
+
 		void ToggleRenderPassActive(const std::string& passName, bool bActive);
 		RenderQueuePass* GetRenderQueuePass(const std::string& passName) const;
 

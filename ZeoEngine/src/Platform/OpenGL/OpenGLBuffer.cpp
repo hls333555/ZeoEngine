@@ -156,6 +156,8 @@ namespace ZeoEngine {
 		Cleanup();
 	}
 
+	static constexpr GLenum s_DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+
 	void OpenGLFrameBuffer::Invalidate()
 	{
 		ZE_PROFILE_FUNCTION();
@@ -205,14 +207,13 @@ namespace ZeoEngine {
 
 		if (m_ColorAttachments.size() > 1)
 		{
-			ZE_CORE_ASSERT(m_ColorAttachments.size() <= 4, "Currently we only support up to 4 color attachments!");
-			GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-			glDrawBuffers(static_cast<U32>(m_ColorAttachments.size()), buffers);
+			ZE_CORE_ASSERT(m_ColorAttachments.size() <= sizeof(s_DrawBuffers) / sizeof(s_DrawBuffers[0]), "Currently we only support up to 4 color attachments!");
+			glNamedFramebufferDrawBuffers(m_RendererID, static_cast<GLsizei>(m_ColorAttachments.size()), s_DrawBuffers);
 		}
 		else if (m_ColorAttachments.empty())
 		{
 			// Only depth-pass
-			glDrawBuffer(GL_NONE);
+			glNamedFramebufferDrawBuffer(m_RendererID, GL_NONE);
 		}
 
 		ZE_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
@@ -294,6 +295,8 @@ namespace ZeoEngine {
 
 	void OpenGLFrameBuffer::Resize(U32 width, U32 height)
 	{
+		if (m_Spec.bFixedSize) return;
+
 		if (width == 0 || height == 0 || width > s_MaxFrameBufferSize || height > s_MaxFrameBufferSize)
 		{
 			ZE_CORE_WARN("Attempted to resize framebuffer to {0}, {1}!", width, height);
@@ -330,6 +333,28 @@ namespace ZeoEngine {
 		auto& spec = m_ColorAttachmentSpecs[attachmentIndex];
 		U32 id = (U32)(intptr_t)m_ColorAttachments[attachmentIndex]->GetTextureID();
 		glClearTexImage(id, 0, OpenGLUtils::ToGLTextureFormat(spec.TextureFormat), OpenGLUtils::ToGLDataType(spec.TextureFormat), glm::value_ptr(clearValue));
+	}
+
+	void OpenGLFrameBuffer::BlitColorTo(const Ref<FrameBuffer>& targetFBO, U32 attachmentIndex, U32 targetAttachmentIndex)
+	{
+		const auto targetRendererID = targetFBO->GetFrameBufferID();
+		glNamedFramebufferReadBuffer(m_RendererID, GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glNamedFramebufferDrawBuffer(targetRendererID, GL_COLOR_ATTACHMENT0 + targetAttachmentIndex);
+		glBlitNamedFramebuffer(m_RendererID, targetRendererID,
+			0, 0, m_Spec.Width, m_Spec.Height,
+			0, 0, targetFBO->GetSpec().Width, targetFBO->GetSpec().Height,
+			GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		// Reset
+		glNamedFramebufferDrawBuffers(targetRendererID, static_cast<GLsizei>(m_ColorAttachments.size()), s_DrawBuffers);
+	}
+
+	void OpenGLFrameBuffer::BlitDepthTo(const Ref<FrameBuffer>& targetFBO, bool bIncludeStencil)
+	{
+		const auto targetRendererID = targetFBO->GetFrameBufferID();
+		glBlitNamedFramebuffer(m_RendererID, targetRendererID,
+			0, 0, m_Spec.Width, m_Spec.Height,
+			0, 0, targetFBO->GetSpec().Width, targetFBO->GetSpec().Height,
+			bIncludeStencil ? GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT : GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	}
 
 	void OpenGLFrameBuffer::Snapshot(const std::string& imagePath, U32 captureWidth)

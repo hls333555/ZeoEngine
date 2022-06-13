@@ -60,11 +60,11 @@ namespace ZeoEngine {
 				dataFormat = GL_RED;
 				break;
 			case 3:
-				internalFormat = GL_RGB8;
+				internalFormat = GL_SRGB8; // TODO: Not all texture should be SRGB
 				dataFormat = GL_RGB;
 				break;
 			case 4:
-				internalFormat = GL_RGBA8;
+				internalFormat = GL_SRGB8_ALPHA8; // TODO: Not all texture should be SRGB
 				dataFormat = GL_RGBA;
 				m_bHasAlpha = true;
 				break;

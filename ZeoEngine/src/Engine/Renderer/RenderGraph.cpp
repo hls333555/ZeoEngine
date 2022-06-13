@@ -24,7 +24,7 @@ namespace ZeoEngine {
 
 	void RenderGraph::Start() const
 	{
-		m_BackFBO->BindAsBuffer();
+		
 	}
 
 	void RenderGraph::Execute() const
@@ -41,6 +41,14 @@ namespace ZeoEngine {
 	{
 		Reset();
 		m_BackFBO->UnbindAsBuffer();
+	}
+
+	void RenderGraph::OnViewportResize(U32 width, U32 height) const
+	{
+		for (const auto& pass : m_Passes)
+		{
+			pass->OnViewportResize(width, height);
+		}
 	}
 
 	void RenderGraph::Reset() const
@@ -208,9 +216,9 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::RGBA16F, { SamplerType::BilinearClamp } }, // Entity ID buffer
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
+			{ TextureFormat::SRGBA8 },
+			{ TextureFormat::RGBA16F }, // Entity ID buffer
+			{ TextureFormat::DEPTH24STENCIL8 }
 		};
 		return FrameBuffer::Create(fbSpec);
 	}
@@ -226,20 +234,9 @@ namespace ZeoEngine {
 			pass->SetInputLinkage("ShadowMap", "ShadowMapping.ShadowMap");
 			AddRenderPass(std::move(pass));
 		}
-		//{
-		//	auto pass = CreateScope<HorizontalBlurPass>("HorizontalBlur");
-		//	pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
-		//	AddRenderPass(std::move(pass));
-		//}
-		//{
-		//	auto pass = CreateScope<VerticalBlurPass>("VerticalBlur");
-		//	pass->SetInputLinkage("ShadowMap", "HorizontalBlur.ShadowMap");
-		//	AddRenderPass(std::move(pass));
-		//}
 		{
 			auto pass = CreateScope<OpaqueRenderPass>("Opaque", true);
 			pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
-			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
 		{
@@ -247,7 +244,13 @@ namespace ZeoEngine {
 			pass->SetInputLinkage("FrameBuffer", "Opaque.FrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		SetGlobalInputLinkage(GetBackFrameBufferName(), "Grid.FrameBuffer");
+		{
+			auto pass = CreateScope<PostProcessingPass>("PostProcessing");
+			pass->SetInputLinkage("BackFrameBuffer", "$.BackFrameBuffer");
+			pass->SetInputLinkage("SceneTexture", "Grid.SceneTexture");
+			AddRenderPass(std::move(pass));
+		}
+		SetGlobalInputLinkage(GetBackFrameBufferName(), "PostProcessing.FrameBuffer");
 		Finalize();
 	}
 
@@ -255,8 +258,8 @@ namespace ZeoEngine {
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
-			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
-			{ TextureFormat::DEPTH24STENCIL8, { SamplerType::BilinearClamp } }
+			{ TextureFormat::SRGBA8 },
+			{ TextureFormat::DEPTH24STENCIL8 }
 		};
 		return FrameBuffer::Create(fbSpec);
 	}
@@ -276,10 +279,15 @@ namespace ZeoEngine {
 		{
 			auto pass = CreateScope<OpaqueRenderPass>("Opaque", false);
 			pass->SetInputLinkage("ShadowMap", "ScreenSpaceShadow.ShadowMap");
-			pass->SetInputLinkage("FrameBuffer", "$.BackFrameBuffer");
 			AddRenderPass(std::move(pass));
 		}
-		SetGlobalInputLinkage(GetBackFrameBufferName(), "Opaque.FrameBuffer");
+		{
+			auto pass = CreateScope<PostProcessingPass>("PostProcessing");
+			pass->SetInputLinkage("BackFrameBuffer", "$.BackFrameBuffer");
+			pass->SetInputLinkage("SceneTexture", "Opaque.SceneTexture");
+			AddRenderPass(std::move(pass));
+		}
+		SetGlobalInputLinkage(GetBackFrameBufferName(), "PostProcessing.FrameBuffer");
 		Finalize();
 	}
 

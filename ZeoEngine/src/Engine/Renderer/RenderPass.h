@@ -25,6 +25,7 @@ namespace ZeoEngine {
 		virtual void Execute() const = 0;
 		virtual void Reset() {}
 		virtual void Finalize();
+		virtual void OnViewportResize(U32 width, U32 height) const = 0;
 
 		void SetInputLinkage(const std::string& inputName, const std::string& targetOutputName);
 
@@ -106,19 +107,23 @@ namespace ZeoEngine {
 
 		virtual void Finalize() override;
 
+		virtual void OnViewportResize(U32 width, U32 height) const override;
+
 	protected:
 		void AddBindable(Ref<Bindable> bindable);
 		void BindAll() const;
 		void BindBindables() const;
 		void UnbindBindables() const;
+		Ref<Bindable> GetBindableByIndex(U32 index);
 
 		/** Register a bindable input and add that to the bindable list. */
 		template<class T>
-		void RegisterBindableInput(std::string name)
+		SizeT RegisterBindableInput(std::string name)
 		{
 			const auto index = m_Bindables.size();
-			m_Bindables.emplace_back();
+			auto bindable = m_Bindables.emplace_back();
 			RegisterInput(RenderPassContainerBindableInput<T>::Create(std::move(name), m_Bindables, index));
+			return index;
 		}
 
 	private:
@@ -182,34 +187,6 @@ namespace ZeoEngine {
 		static Ref<FrameBuffer> s_FBO;
 	};
 
-	class HorizontalBlurPass : public FullscreenPass
-	{
-	public:
-		explicit HorizontalBlurPass(std::string name, bool bAutoActive = true);
-
-		static Ref<FrameBuffer> GetHorizontalBlurFrameBuffer() { return s_FBO; }
-
-	private:
-		void CreateHorizontalBlurBuffer();
-
-	private:
-		static Ref<FrameBuffer> s_FBO;
-	};
-
-	class VerticalBlurPass : public FullscreenPass
-	{
-	public:
-		explicit VerticalBlurPass(std::string name, bool bAutoActive = true);
-
-		static Ref<FrameBuffer> GetVerticalBlurFrameBuffer() { return s_FBO; }
-
-	private:
-		void CreateVerticalBlurBuffer();
-
-	private:
-		static Ref<FrameBuffer> s_FBO;
-	};
-
 	class OpaqueRenderPass : public RenderQueuePass
 	{
 	public:
@@ -217,6 +194,8 @@ namespace ZeoEngine {
 
 	private:
 		virtual void ClearFrameBufferAttachment() const override;
+
+		void CreateFrameBuffer();
 
 	private:
 		bool m_bShouldClearIDBuffer;
@@ -228,6 +207,19 @@ namespace ZeoEngine {
 		explicit GridRenderPass(std::string name, bool bAutoActive = true);
 
 		virtual void Execute() const override;
+	};
+
+	class PostProcessingPass : public FullscreenPass
+	{
+	public:
+		explicit PostProcessingPass(std::string name, bool bAutoActive = true);
+
+		virtual void Execute() const override;
+		virtual void Finalize() override;
+
+	private:
+		SizeT m_SceneBufferIndex;
+		Ref<FrameBuffer> m_SceneBuffer;
 	};
 
 }

@@ -23,9 +23,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor, std::optional<U32> bindingSlot)
+	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor, bool bIsSRGB, std::optional<U32> bindingSlot)
 	{
-		auto texture = Create(std::move(ID), 1, 1, TextureFormat::RGB8, bindingSlot);
+		auto texture = Create(std::move(ID), 1, 1, bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8, bindingSlot);
 		texture->SetData(&hexColor, 3);
 		return texture;
 	}

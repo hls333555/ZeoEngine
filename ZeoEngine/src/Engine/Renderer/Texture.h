@@ -20,6 +20,7 @@ namespace ZeoEngine {
 		PcfShadowMap,
 		VarianceTexture,
 		ScreenSpaceShadowMap,
+		SceneTexture,
 
 		DiffuseTexture,
 		SpecularTexture,
@@ -33,7 +34,9 @@ namespace ZeoEngine {
 
 		// Color
 		RGB8,
+		SRGB8,
 		RGBA8,
+		SRGBA8,
 		RGBA16F, // This format can store negative values
 		RG32F,
 		RED_INTEGER,
@@ -73,7 +76,7 @@ namespace ZeoEngine {
 		/** Construct a texture from memory. */
 		static Ref<Texture2D> Create(std::string ID, U32 width, U32 height, TextureFormat format = TextureFormat::RGBA8, std::optional<U32> bindingSlot = {}, SamplerType type = SamplerType::None);
 		/** Construct a 1x1 solid-color-texture from memory.  */
-		static Ref<Texture2D> Create(std::string ID, U32 hexColor, std::optional<U32> bindingSlot = {});
+		static Ref<Texture2D> Create(std::string ID, U32 hexColor, bool bIsSRGB = true, std::optional<U32> bindingSlot = {});
 		/** Load a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false, std::optional<U32> bindingSlot = {});
 
@@ -82,9 +85,9 @@ namespace ZeoEngine {
 	};
 
 	REGISTER_ASSET(Texture2D,
-	Ref<Texture2D> operator()(std::string ID, U32 hexColor) const
+	Ref<Texture2D> operator()(std::string ID, U32 hexColor, bool bIsSRGB = true) const
 	{
-		return Texture2D::Create(std::move(ID), hexColor);
+		return Texture2D::Create(std::move(ID), hexColor, bIsSRGB);
 	}
 	Ref<Texture2D> operator()(const std::string& path) const
 	{
@@ -96,11 +99,11 @@ namespace ZeoEngine {
 	}
 	static AssetHandle<Texture2D> GetDefaultMaterialTexture()
 	{
-		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080);
+		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080); // TODO:
 	}
 	static AssetHandle<Texture2D> GetAssetBackgroundTexture()
 	{
-		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414);
+		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414); // TODO:
 	})
 
 	class Texture2DArray : public Texture

@@ -141,9 +141,6 @@ namespace ZeoEngine {
 		// Broadcast changes
 		GetContextEditor()->m_OnViewportResizeDel.publish(static_cast<U32>(size.x), static_cast<U32>(size.y));
 
-		// Resize FrameBuffer
-		GetContextEditor()->GetFrameBuffer()->Resize(static_cast<U32>(size.x), static_cast<U32>(size.y));
-
 		// Resize editor camera
 		m_EditorCamera.SetViewportSize(size.x, size.y);
 
