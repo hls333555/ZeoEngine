@@ -83,8 +83,8 @@ namespace ZeoEngine {
 
 	private:
 		virtual Scope<EditorUIRendererBase> CreateEditorUIRenderer() = 0;
-		virtual Ref<Scene> CreateScene() = 0;
-		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
+		virtual Ref<Scene> CreateScene() { return CreateRef<Scene>(); }
+		virtual Ref<SceneRenderer> CreateSceneRenderer() { return {}; }
 
 		void PostSceneRender(const Ref<FrameBuffer>& fbo) const;
 
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 	private:
 		virtual void LoadAsset(const std::string& path) = 0;
 		virtual void SaveAsset(const std::string& path);
-		virtual void LoadAndApplyDefaultAsset() = 0;
+		virtual void LoadAndApplyDefaultAsset() {};
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) { return {}; }
 

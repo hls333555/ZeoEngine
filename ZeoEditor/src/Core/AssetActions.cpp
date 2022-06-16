@@ -5,6 +5,7 @@
 #include "Core/EditorTypes.h"
 #include "Editors/ParticleEditor.h"
 #include "Editors/MaterialEditor.h"
+#include "Editors/TextureEditor.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
@@ -117,7 +118,7 @@ namespace ZeoEngine {
 
 	void Texture2DAssetActions::OpenAsset(const std::string& path) const
 	{
-
+		EditorManager::Get().OpenEditor<TextureEditor>(TEXTURE_EDITOR)->LoadScene(path);
 	}
 
 	void Texture2DAssetActions::ReloadAsset(const std::string& path) const

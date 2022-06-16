@@ -166,6 +166,7 @@ namespace ZeoEngine {
 		{
 			assetSpec->TypeId = *optionalAssetTypeId;
 		}
+		// TODO: Optimize: No need to load all textures
 		assetSpec->ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(path, assetSpec->TypeId);
 		m_AssetSpecsById[assetSpec->TypeId].emplace_back(assetSpec);
 		m_PathSpecs[path] = assetSpec;

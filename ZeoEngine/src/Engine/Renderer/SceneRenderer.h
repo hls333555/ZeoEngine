@@ -185,6 +185,7 @@ namespace ZeoEngine {
 		};
 		ShadowCameraData m_ShadowCameraBuffer;
 		Ref<UniformBuffer> m_ShadowCameraUniformBuffer;
+
 	};
 
 }

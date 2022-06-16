@@ -398,4 +398,21 @@ namespace ZeoEngine {
 		BoundsComponent(const BoundsComponent&) = default;
 	};
 
+	struct TexturePreviewComponent : public IComponent
+	{
+		AssetHandle<Texture2D> TextureAsset;
+
+		TexturePreviewComponent() = default;
+		TexturePreviewComponent(const AssetHandle<Texture2D>& texture)
+			: TextureAsset(texture) {}
+		TexturePreviewComponent(const TexturePreviewComponent&) = default;
+
+		bool IsSRGB() const { return TextureAsset->bIsSRGB(); }
+		void SetSRGB(bool bSRGB) { TextureAsset->SetSRGB(bSRGB); }
+		SamplerType GetSamplerType() const { return TextureAsset->GetSamplerType(); }
+		void SetSamplerType(SamplerType type) { TextureAsset->ChangeSampler(type); }
+		bool ShouldGenerateMipmaps() const { return TextureAsset->ShouldGenerateMipmaps(); }
+		void SetGenerateMipmaps(bool bGenerate) { TextureAsset->SetGenerateMipmaps(bGenerate); }
+	};
+
 }

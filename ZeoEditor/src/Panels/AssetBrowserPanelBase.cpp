@@ -673,7 +673,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	// TODO: Draw path tooltip
+	// TODO: Add path tooltip implementation to AssetActions
 	void AssetBrowserPanelBase::DrawPathTooltip(const Ref<PathSpec>& spec)
 	{
 		if (ImGui::IsItemHovered())

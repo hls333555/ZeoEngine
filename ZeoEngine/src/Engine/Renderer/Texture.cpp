@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		return texture;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps, std::optional<U32> bindingSlot)
+	Ref<Texture2D> Texture2D::Create(const std::string& path, std::optional<U32> bindingSlot)
 	{
 		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
 		if (!PathUtils::DoesPathExist(resourcePath)) return {};
@@ -42,7 +42,7 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				texture = CreateRef<OpenGLTexture2D>(std::move(resourcePath), bAutoGenerateMipmaps, bindingSlot);
+				texture = CreateRef<OpenGLTexture2D>(std::move(resourcePath), bindingSlot);
 				break;
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -53,22 +53,20 @@ namespace ZeoEngine {
 		return texture;
 	}
 
-	// TODO:
 	void Texture2D::Serialize(const std::string& path)
 	{
 		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
 		if (!PathUtils::DoesPathExist(assetPath)) return;
 
 		SetID(std::move(assetPath));
-		ImportableAssetSerializer::Serialize(GetID(), TypeId(), {});
+		ImportableAssetSerializer::Serialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() });
 	}
 
-	// TODO:
 	void Texture2D::Deserialize()
 	{
 		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);
+		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() }, this);
 	}
 
 	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)

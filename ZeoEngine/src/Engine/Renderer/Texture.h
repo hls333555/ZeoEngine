@@ -33,6 +33,7 @@ namespace ZeoEngine {
 		None = 0,
 
 		// Color
+		R8,
 		RGB8,
 		SRGB8,
 		RGBA8,
@@ -53,13 +54,21 @@ namespace ZeoEngine {
 	public:
 		virtual U32 GetWidth() const = 0;
 		virtual U32 GetHeight() const = 0;
+		virtual TextureFormat GetFormat() const = 0;
 		virtual bool HasAlpha() const = 0;
+		virtual bool bIsSRGB() const = 0;
+		virtual void SetSRGB(bool bSRGB) = 0;
+		virtual SamplerType GetSamplerType() const = 0;
+		virtual void ChangeSampler(SamplerType type) = 0;
+		virtual bool ShouldGenerateMipmaps() const = 0;
+		virtual void SetGenerateMipmaps(bool bGenerate) = 0;
+		virtual U32 GetMipmapLevels() const = 0;
+
 		virtual void* GetTextureID() const = 0;
 		virtual void* GetTextureViewID(U32 index) const = 0;
 
 		/** Upload a block of memory with texture data to GPU. */
 		virtual void SetData(void* data, U32 size) = 0;
-		virtual void ChangeSampler(SamplerType type) = 0;
 
 		virtual void SetBindingSlot(U32 slot) = 0;
 		virtual void BindAsImage(U32 slot, bool bReadOrWrite) const = 0;
@@ -78,7 +87,7 @@ namespace ZeoEngine {
 		/** Construct a 1x1 solid-color-texture from memory.  */
 		static Ref<Texture2D> Create(std::string ID, U32 hexColor, bool bIsSRGB = true, std::optional<U32> bindingSlot = {});
 		/** Load a texture from disk. */
-		static Ref<Texture2D> Create(const std::string& path, bool bAutoGenerateMipmaps = false, std::optional<U32> bindingSlot = {});
+		static Ref<Texture2D> Create(const std::string& path, std::optional<U32> bindingSlot = {});
 
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
@@ -99,11 +108,15 @@ namespace ZeoEngine {
 	}
 	static AssetHandle<Texture2D> GetDefaultMaterialTexture()
 	{
-		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080); // TODO:
+		return Get().LoadAsset("ZID_DefaultMaterialTexture", 0x808080);
 	}
 	static AssetHandle<Texture2D> GetAssetBackgroundTexture()
 	{
-		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414); // TODO:
+		return Get().LoadAsset("ZID_AssetBackgroundTexture", 0x151414);
+	}
+	static AssetHandle<Texture2D> GetCheckerboardTexture()
+	{
+		return Get().LoadAsset("assets/editor/textures/Checkerboard.png");
 	})
 
 	class Texture2DArray : public Texture

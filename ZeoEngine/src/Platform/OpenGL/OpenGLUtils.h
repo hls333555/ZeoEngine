@@ -13,6 +13,7 @@ namespace ZeoEngine {
 		{
 			switch (format)
 			{
+				case TextureFormat::R8:					return GL_R8;
 				case TextureFormat::RG32F:				return GL_RG32F;
 				case TextureFormat::RGB8:				return GL_RGB8;
 				case TextureFormat::SRGB8:				return GL_SRGB8;
@@ -33,6 +34,7 @@ namespace ZeoEngine {
 		{
 			switch (format)
 			{
+				case TextureFormat::R8:					return GL_RED;
 				case TextureFormat::RG32F:				return GL_RG;
 				case TextureFormat::RGB8:
 				case TextureFormat::SRGB8:				return GL_RGB;
@@ -53,6 +55,7 @@ namespace ZeoEngine {
 		{
 			switch (format)
 			{
+				case TextureFormat::R8:
 				case TextureFormat::RGB8:
 				case TextureFormat::SRGB8:
 				case TextureFormat::RGBA8:

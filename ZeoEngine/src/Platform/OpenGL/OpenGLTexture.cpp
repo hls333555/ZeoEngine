@@ -11,6 +11,7 @@ namespace ZeoEngine {
 	OpenGLTexture2D::OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 		: Texture2D(std::move(ID))
 		, m_Width(width), m_Height(height)
+		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
@@ -33,7 +34,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string path, bool bAutoGenerateMipmaps, std::optional<U32> bindingSlot)
+	OpenGLTexture2D::OpenGLTexture2D(std::string path, std::optional<U32> bindingSlot)
 		: Texture2D(PathUtils::GetNormalizedAssetPath(path))
 		, m_TextureResourcePath(std::move(path))
 		, m_BindingSlot(bindingSlot)
@@ -41,64 +42,7 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNCTION();
 
 		stbi_set_flip_vertically_on_load(1);
-		int width, height, channels;
-		stbi_uc* data = nullptr;
-		{
-			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&, bool)");
-
-			data = stbi_load(m_TextureResourcePath.c_str(), &width, &height, &channels, 0);
-		}
-		ZE_CORE_ASSERT(data, "Failed to load image!");
-		m_Width = width;
-		m_Height = height;
-
-		GLenum internalFormat = 0, dataFormat = 0;
-		switch (channels)
-		{
-			case 1:
-				internalFormat = GL_R8;
-				dataFormat = GL_RED;
-				break;
-			case 3:
-				internalFormat = GL_SRGB8; // TODO: Not all texture should be SRGB
-				dataFormat = GL_RGB;
-				break;
-			case 4:
-				internalFormat = GL_SRGB8_ALPHA8; // TODO: Not all texture should be SRGB
-				dataFormat = GL_RGBA;
-				m_bHasAlpha = true;
-				break;
-			default:
-				ZE_CORE_ASSERT(internalFormat & dataFormat, "Texture format not supported!");
-		}
-
-		m_InternalFormat = internalFormat;
-		m_DataFormat = dataFormat;
-
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-
-		m_MipmapLevels = static_cast<U32>(floor(log2(std::max(width, height))));
-		if (!bAutoGenerateMipmaps || m_MipmapLevels == 0)
-		{
-			m_MipmapLevels = 1;
-		}
-
-		// Allocate memory on the GPU to store the data
-		glTextureStorage2D(m_RendererID, m_MipmapLevels, m_InternalFormat, m_Width, m_Height);
-		
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, m_MipmapLevels == 1 ? GL_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
-
-		if (m_MipmapLevels > 1)
-		{
-			glGenerateTextureMipmap(m_RendererID);
-		}
-
-		stbi_image_free(data);
+		Invalidate();
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()
@@ -124,9 +68,69 @@ namespace ZeoEngine {
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
-	void OpenGLTexture2D::ChangeSampler(SamplerType type)
+	void OpenGLTexture2D::Invalidate()
 	{
-		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+		ZE_PROFILE_FUNCTION();
+
+		if (m_RendererID) // NOTE: Make sure this is initialized to 0!
+		{
+			glDeleteTextures(1, &m_RendererID);
+		}
+
+		int width, height, channels;
+		stbi_uc* data = nullptr;
+		{
+			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&, bool)");
+
+			data = stbi_load(m_TextureResourcePath.c_str(), &width, &height, &channels, 0);
+		}
+		ZE_CORE_ASSERT(data, "Failed to load image!");
+		m_Width = width;
+		m_Height = height;
+
+		switch (channels)
+		{
+		case 1:
+			m_Format = TextureFormat::R8;
+			break;
+		case 3:
+			m_Format = m_bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8;
+			break;
+		case 4:
+			m_Format = m_bIsSRGB ? TextureFormat::SRGBA8 : TextureFormat::RGBA8;
+			m_bHasAlpha = true;
+			break;
+		default:
+			ZE_CORE_ASSERT(m_Format != TextureFormat::None, "Texture format not supported!");
+		}
+
+		m_InternalFormat = OpenGLUtils::ToGLTextureInternalFormat(m_Format);
+		m_DataFormat = OpenGLUtils::ToGLTextureFormat(m_Format);
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+
+		m_MipmapLevels = static_cast<U32>(floor(log2(std::max(width, height))));
+		if (!m_bShouldGenerateMipmaps || m_MipmapLevels == 0)
+		{
+			m_MipmapLevels = 1;
+		}
+
+		// Allocate memory on the GPU to store the data
+		glTextureStorage2D(m_RendererID, m_MipmapLevels, m_InternalFormat, m_Width, m_Height);
+
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, m_MipmapLevels == 1 ? GL_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+
+		if (m_MipmapLevels > 1)
+		{
+			glGenerateTextureMipmap(m_RendererID);
+		}
+
+		stbi_image_free(data);
 	}
 
 	void OpenGLTexture2D::Bind() const
@@ -170,6 +174,7 @@ namespace ZeoEngine {
 
 	OpenGLTexture2DArray::OpenGLTexture2DArray(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 		: m_ArraySize(arraySize)
+		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
 		ZE_PROFILE_FUNCTION();
@@ -182,10 +187,11 @@ namespace ZeoEngine {
 
 		glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_RendererID);
 		// Allocate memory on the GPU to store the data
+		// TODO: Generate mipmaps
 		glTextureStorage3D(m_RendererID, 1, m_InternalFormat, width, height, arraySize);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -225,11 +231,6 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(bpp != 0, "Data format must be RGB or RGBA!");
 		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
-	}
-
-	void OpenGLTexture2DArray::ChangeSampler(SamplerType type)
-	{
-		m_Sampler = SamplerLibrary::GetOrAddSampler(type);
 	}
 
 	void OpenGLTexture2DArray::Bind() const

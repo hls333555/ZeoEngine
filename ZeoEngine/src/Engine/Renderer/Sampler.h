@@ -9,9 +9,9 @@ namespace ZeoEngine {
 		None = 0,
 
 		BilinearRepeat,
-		PointClamp,
-		PointRepeat,
 		BilinearClamp,
+		PointRepeat,
+		PointClamp,
 		ShadowDepth, // PointClamp
 		ShadowPCF,
 	};
@@ -26,6 +26,8 @@ namespace ZeoEngine {
 	public:
 		virtual void Bind(U32 slot) const = 0;
 		virtual void Unbind(U32 slot) const = 0;
+
+		virtual SamplerType GetType() const = 0;
 
 	private:
 		static Ref<Sampler> Create(SamplerType type);

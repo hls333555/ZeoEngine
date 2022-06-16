@@ -148,4 +148,14 @@ namespace ZeoEngine {
 
 	};
 
+	class TextureInspectorPanel : public InspectorPanel
+	{
+	public:
+		using InspectorPanel::InspectorPanel;
+
+	private:
+		virtual void ProcessRender() override;
+
+	};
+
 }

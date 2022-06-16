@@ -16,7 +16,7 @@ namespace ZeoEngine {
 
 		const auto& psInstance = GetContextEditor()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
 
-		// Display particle count at the top right corner of Particle View window
+		// Display particle count at the top right corner
 		{
 			char particleCount[16];
 			_itoa_s(psInstance->m_ActiveParticleCount, particleCount, 10);
@@ -25,7 +25,7 @@ namespace ZeoEngine {
 			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, particleCount);
 		}
 
-		// Display "Completed" text at the bottom center of Particle View window
+		// Display "Completed" text at the bottom center
 		if (psInstance->m_bSystemComplete)
 		{
 			static const char* completedStr = "Completed";

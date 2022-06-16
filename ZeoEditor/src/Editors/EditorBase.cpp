@@ -26,11 +26,17 @@ namespace ZeoEngine {
 		NewDefaultScene();
 		LoadAndApplyDefaultAsset();
 		m_SceneRenderer = CreateSceneRenderer();
-		m_SceneRenderer->OnAttach(m_ActiveScene);
+		if (m_SceneRenderer)
+		{
+			m_SceneRenderer->OnAttach(m_ActiveScene);
+		}
 
 		m_OnActiveSceneChanged.connect<&EditorBase::OnActiveSceneChanged>(this);
-		m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
-		m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
+		if (m_SceneRenderer)
+		{
+			m_SceneRenderer->m_PostSceneRenderDel.connect<&EditorBase::PostSceneRender>(this);
+			m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(m_SceneRenderer);
+		}
 	}
 
 	void EditorBase::OnUpdate(DeltaTime dt) const
@@ -39,7 +45,10 @@ namespace ZeoEngine {
 
 		m_EditorUIRenderer->OnUpdate(dt);
 		m_ActiveScene->OnUpdate(dt);
-		m_SceneRenderer->OnRender();
+		if (m_SceneRenderer)
+		{
+			m_SceneRenderer->OnRender();
+		}
 	}
 
 	void EditorBase::OnImGuiRender() const
@@ -160,8 +169,11 @@ namespace ZeoEngine {
 
 	void EditorBase::OnActiveSceneChanged(const Ref<Scene>& scene, bool bIsCreateDefault)
 	{
-		m_SceneRenderer->GetRenderSystem()->UpdateScene(m_ActiveScene);
-		m_SceneRenderer->UpdateSceneContext(m_ActiveScene);
+		if (m_SceneRenderer)
+		{
+			m_SceneRenderer->GetRenderSystem()->UpdateScene(m_ActiveScene);
+			m_SceneRenderer->UpdateSceneContext(m_ActiveScene);
+		}
 		if (bIsCreateDefault)
 		{
 			LoadAndApplyDefaultAsset();

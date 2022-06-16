@@ -2,7 +2,6 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/MaterialEditorUIRenderer.h"
-#include "Scenes/MaterialEditorScene.h"
 #include "SceneRenderers/MaterialEditorSceneRenderer.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
@@ -20,11 +19,6 @@ namespace ZeoEngine {
 	Scope<EditorUIRendererBase> MaterialEditor::CreateEditorUIRenderer()
 	{
 		return CreateScope<MaterialEditorUIRenderer>(SharedFromBase<MaterialEditor>());
-	}
-
-	Ref<Scene> MaterialEditor::CreateScene()
-	{
-		return CreateRef<MaterialEditorScene>();
 	}
 
 	Ref<SceneRenderer> MaterialEditor::CreateSceneRenderer()

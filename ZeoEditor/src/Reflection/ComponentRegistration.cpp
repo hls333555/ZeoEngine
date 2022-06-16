@@ -3,6 +3,7 @@
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Shader.h"
+#include "Engine/Renderer/Sampler.h"
 
 namespace ZeoEngine {
 
@@ -154,6 +155,17 @@ namespace ZeoEngine {
 		ZCOMPONENT(BillboardComponent, ZPROP(Inherent), ZPROP(Transient));
 
 		ZCOMPONENT(BoundsComponent, ZPROP(Inherent), ZPROP(Transient));
+
+		ZENUM(SamplerType)
+			ZENUM_DATA(SamplerType, BilinearRepeat)
+			ZENUM_DATA(SamplerType, BilinearClamp)
+			ZENUM_DATA(SamplerType, PointRepeat)
+			ZENUM_DATA(SamplerType, PointClamp);
+
+		ZCOMPONENT(TexturePreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
+			ZDATA_SETTER_GETTER(TexturePreviewComponent, SRGB, SetSRGB, IsSRGB)
+			ZDATA_SETTER_GETTER(TexturePreviewComponent, SamplerType, SetSamplerType, GetSamplerType)
+			ZDATA_SETTER_GETTER(TexturePreviewComponent, GenerateMipmaps, SetGenerateMipmaps, ShouldGenerateMipmaps);
 	}
 
 }

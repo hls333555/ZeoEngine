@@ -6,6 +6,7 @@
 namespace ZeoEngine {
 
 	OpenGLSampler::OpenGLSampler(SamplerType type)
+		: m_Type(type)
 	{
 		glCreateSamplers(1, &m_RendererID);
 
@@ -24,6 +25,10 @@ namespace ZeoEngine {
 			case SamplerType::BilinearClamp:
 				filter = GL_LINEAR;
 				wrap = GL_CLAMP_TO_EDGE;
+				break;
+			case SamplerType::BilinearRepeat:
+				filter = GL_LINEAR;
+				wrap = GL_REPEAT;
 				break;
 			case SamplerType::ShadowPCF:
 				filter = GL_LINEAR;

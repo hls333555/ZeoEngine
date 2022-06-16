@@ -126,4 +126,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void TextureInspectorPanel::ProcessRender()
+	{
+		Entity contextEntity = GetContextEditor()->GetContextEntity();
+		if (contextEntity)
+		{
+			DrawComponent<TexturePreviewComponent>(contextEntity);
+		}
+	}
+
 }
