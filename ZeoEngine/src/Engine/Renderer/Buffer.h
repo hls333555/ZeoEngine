@@ -197,18 +197,18 @@ namespace ZeoEngine {
 		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex = -1, U32 textureBindingSlot = 0);
 	};
 
-	enum class UniformBufferBinding
+	// TODO: Refactor when changed to deferred rendering
+	namespace UniformBufferBinding
 	{
-		Global = 0,
-		Camera,
-		Grid,
-		Model,
-		Light,
-		ShadowCamera,
+		static constexpr U32 Global = 0;
+		static constexpr U32 Camera = 1;
+		static constexpr U32 Model = 2;
+		static constexpr U32 Light = 3;
 
-		Material,
+		static constexpr U32 ShadowCamera = 4;
+		static constexpr U32 Grid = 5;
 
-	};
+	}
 
 	class UniformBuffer : public Bindable
 	{

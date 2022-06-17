@@ -3,6 +3,7 @@
 #type vertex
 #version 450 core
 
+#include "assets/editor/shaders/Uniforms.glsl"
 #include "assets/editor/shaders/Common.glsl"
 
 layout (location = 0) in vec3 a_Position;
@@ -12,13 +13,6 @@ layout (location = 3) in vec2 a_TilingFactor;
 layout (location = 4) in vec2 a_UvOffset;
 layout (location = 5) in float a_TexIndex;
 layout (location = 6) in int a_EntityID;
-
-layout (std140, binding = 1) uniform Camera
-{
-    mat4 View;
-    mat4 Projection;
-    vec3 Position;
-}u_Camera;
 
 struct VertexOutput
 {

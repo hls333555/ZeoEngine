@@ -3,23 +3,11 @@
 #type vertex
 #version 450 core
 
+#include "assets/editor/shaders/Uniforms.glsl"
+
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
 layout (location = 2) in vec2 a_TexCoord;
-
-layout (std140, binding = 1) uniform Camera
-{
-    mat4 View;
-    mat4 Projection;
-    vec3 Position;
-}u_Camera;
-
-layout (std140, binding = 3) uniform Model
-{
-	mat4 Transform;
-	mat4 NormalMatrix;
-	int EntityID;
-}u_Model;
 
 struct VertexOutput
 {
@@ -169,7 +157,7 @@ struct SpotLight
 	float Cutoff;
 };
 
-layout (std140, binding = 4) uniform Light
+layout (std140, binding = 3) uniform Light
 {
 	DirectionalLight u_DirectionalLight;
 	PointLight u_PointLights[MAX_POINT_LIGHTS];

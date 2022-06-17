@@ -17,15 +17,12 @@ void main()
 #type fragment
 #version 450 core
 
+#include "assets/editor/shaders/Uniforms.glsl"
+
 layout(location = 0) in vec2 v_Uv;
-layout (binding = 3) uniform sampler2D u_ScreenSpaceShadowMap;
+layout (binding = 0) uniform sampler2D u_ScreenSpaceShadowMap;
 
 layout(location = 0) out vec4 o_Color;
-
-layout (std140, binding = 0) uniform Global
-{
-    vec2 ScreenSize;
-}u_Global;
 
 void main()
 {

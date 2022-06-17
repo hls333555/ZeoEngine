@@ -3,14 +3,9 @@
 #type vertex
 #version 450 core
 
-layout (location = 0) in vec3 a_Position;
+#include "assets/editor/shaders/Uniforms.glsl"
 
-layout (std140, binding = 3) uniform Model
-{
-	mat4 Transform;
-	mat4 NormalMatrix;
-	int EntityID;
-}u_Model;
+layout (location = 0) in vec3 a_Position;
 
 void main()
 {
@@ -26,7 +21,7 @@ void main()
 layout(triangles, invocations = MAX_CASCADE_COUNT) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout (std140, binding = 5) uniform ShadowCamera
+layout (std140, binding = 4) uniform ShadowCamera
 {
     mat4 ViewProjection[MAX_CASCADE_COUNT];
 }u_ShadowCamera;

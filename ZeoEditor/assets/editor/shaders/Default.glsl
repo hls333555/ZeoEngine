@@ -3,23 +3,11 @@
 #type vertex
 #version 450 core
 
+#include "assets/editor/shaders/Uniforms.glsl"
+
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
 layout (location = 2) in vec2 a_TexCoord;
-
-layout (std140, binding = 1) uniform Camera
-{
-    mat4 View;
-    mat4 Projection;
-    vec3 Position;
-}u_Camera;
-
-layout (std140, binding = 3) uniform Model
-{
-	mat4 Transform;
-	mat4 NormalMatrix;
-	int EntityID;
-}u_Model;
 
 struct VertexOutput
 {
@@ -55,6 +43,8 @@ void main()
 #type fragment
 #version 450 core
 
+#include "assets/editor/shaders/Uniforms.glsl"
+
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
@@ -62,11 +52,6 @@ layout(location = 1) out vec4 o_EntityID;
 #define MAX_SPOT_LIGHTS 32
 
 #define MAX_CASCADE_COUNT 4
-
-layout (std140, binding = 0) uniform Global
-{
-    vec2 ScreenSize;
-}u_Global;
 
 struct LightBase
 {
@@ -106,7 +91,7 @@ struct SpotLight
 	float Cutoff;
 };
 
-layout (std140, binding = 4) uniform Light
+layout (std140, binding = 3) uniform Light
 {
 	DirectionalLight u_DirectionalLight;
 	PointLight u_PointLights[MAX_POINT_LIGHTS];
@@ -115,7 +100,7 @@ layout (std140, binding = 4) uniform Light
 	int u_NumSpotLights;
 };
 
-[Property]layout (std140, binding = 6) uniform Material
+[Property]layout (std140, binding = 4) uniform Material
 {
 	float Shininess;
 }u_Material;

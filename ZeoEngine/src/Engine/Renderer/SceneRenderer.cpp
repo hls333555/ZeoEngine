@@ -29,10 +29,10 @@ namespace ZeoEngine {
 		m_RenderGraph->Init();
 		m_RenderSystem = CreateRenderSystem(scene);
 
-		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), static_cast<U32>(UniformBufferBinding::Global));
-		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), static_cast<U32>(UniformBufferBinding::Camera));
-		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), static_cast<U32>(UniformBufferBinding::Light));
-		m_ShadowCameraUniformBuffer = UniformBuffer::Create(sizeof(ShadowCameraData), static_cast<U32>(UniformBufferBinding::ShadowCamera));
+		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), UniformBufferBinding::Global);
+		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), UniformBufferBinding::Camera);
+		m_LightUniformBuffer = UniformBuffer::Create(sizeof(LightData), UniformBufferBinding::Light);
+		m_ShadowCameraUniformBuffer = UniformBuffer::Create(sizeof(ShadowCameraData), UniformBufferBinding::ShadowCamera);
 	}
 
 	void SceneRenderer::OnRender()

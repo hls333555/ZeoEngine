@@ -3,14 +3,9 @@
 #type vertex
 #version 450 core
 
-layout (std140, binding = 1) uniform Camera
-{
-    mat4 View;
-    mat4 Projection;
-    vec3 Position;
-}u_Camera;
+#include "assets/editor/shaders/Uniforms.glsl"
 
-layout (std140, binding = 2) uniform Grid
+layout (std140, binding = 5) uniform Grid
 {
 	mat4 Transform;
 	vec4 ThinLinesColor;
