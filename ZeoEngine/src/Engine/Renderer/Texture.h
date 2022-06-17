@@ -12,21 +12,18 @@
 
 namespace ZeoEngine {
 
-	enum class TextureBinding
+	namespace TextureBinding
 	{
-		// TODO:
-		// Reserved texture binding slots
-		ShadowMap = 0,
-		PcfShadowMap,
-		VarianceTexture,
-		ScreenSpaceShadowMap,
-		SceneTexture,
+		static constexpr U32 ShadowMap = 0;
+		static constexpr U32 ShadowMapPcf = 1;
 
-		DiffuseTexture,
-		SpecularTexture,
+		static constexpr U32 ScreenSpaceShadowMap = 0;
+		static constexpr U32 DiffuseTexture = 1;
+		static constexpr U32 SpecularTexture = 2;
 
-		Material = DiffuseTexture,
-	};
+		static constexpr U32 SceneTexture = 0;
+
+	}
 
 	enum class TextureFormat
 	{

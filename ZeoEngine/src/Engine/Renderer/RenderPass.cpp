@@ -275,7 +275,7 @@ namespace ZeoEngine {
 		fbSpec.Attachments = {
 			{ TextureFormat::DEPTH32F, { SamplerType::ShadowDepth, SamplerType::ShadowPCF }, SceneSettings::MaxCascades }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, TextureBinding::ShadowMap);
 	}
 
 	Ref<FrameBuffer> ScreenSpaceShadowPass::s_FBO = nullptr;
@@ -303,7 +303,7 @@ namespace ZeoEngine {
 			{ TextureFormat::RGBA8, { SamplerType::BilinearClamp } },
 			{ TextureFormat::DEPTH24STENCIL8 }
 		};
-		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::ScreenSpaceShadowMap));
+		s_FBO = m_FBO = FrameBuffer::Create(fbSpec, 0, TextureBinding::ScreenSpaceShadowMap);
 	}
 
 	OpaqueRenderPass::OpaqueRenderPass(std::string name, bool bShouldClearIDBuffer, bool bAutoActive)
@@ -329,7 +329,7 @@ namespace ZeoEngine {
 			{ TextureFormat::RGBA16F }, // Entity ID buffer
 			{ TextureFormat::DEPTH24STENCIL8 }
 		};
-		m_FBO = FrameBuffer::Create(fbSpec, 0, static_cast<U32>(TextureBinding::SceneTexture));
+		m_FBO = FrameBuffer::Create(fbSpec, 0, TextureBinding::SceneTexture);
 	}
 
 	void OpaqueRenderPass::ClearFrameBufferAttachment() const

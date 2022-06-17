@@ -18,7 +18,8 @@ void main()
 #version 450 core
 
 layout(location = 0) in vec2 v_Uv;
-layout (binding = 4) uniform sampler2D u_SceneTexture;
+
+layout (binding = 0) uniform sampler2D u_SceneTexture;
 
 layout(location = 0) out vec4 o_Color;
 

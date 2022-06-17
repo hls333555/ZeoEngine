@@ -62,6 +62,7 @@ namespace ZeoEngine {
 	private:
 		std::string ReadFile(const std::string& path);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& src);
+		bool ParseProperties(GLenum stage, std::string& src);
 
 		bool Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 		bool CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
@@ -79,6 +80,10 @@ namespace ZeoEngine {
 		U32 m_RendererID;
 		std::string m_ShaderResourcePath;
 
+		/** Texture bindings used for reflection filtering */
+		std::set<U32> m_ReflectTexturePropertyBindings;
+		/** Uniform buffer bindings used for reflection filtering */
+		std::set<U32> m_ReflectUniformBufferPropertyBindings;
 		std::unordered_map<GLenum, SizeT> m_ShaderSourceRelativeLineNums;
 
 		std::unordered_map<GLenum, std::vector<U32>> m_VulkanSPIRV;

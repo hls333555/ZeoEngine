@@ -132,6 +132,8 @@ namespace ZeoEngine {
 
 		const std::string src = ReadFile(m_ShaderResourcePath);
 		const auto shaderSrcs = PreProcess(src);
+		if(shaderSrcs.empty()) return false;
+
 		return Compile(shaderSrcs);
 	}
 
@@ -168,6 +170,8 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		m_ReflectTexturePropertyBindings.clear();
+		m_ReflectUniformBufferPropertyBindings.clear();
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 
 		const char* typeToken = "#type";
@@ -178,25 +182,106 @@ namespace ZeoEngine {
 		{
 			// End of line
 			const auto eol = src.find_first_of("\r\n", typeTokenPos);
-			ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
+			//ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
 
 			const auto typePos = typeTokenPos + typeTokenLength + 1;
 			// Get shader type
 			std::string type = src.substr(typePos, eol - typePos);
-			ZE_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type token!");
+			const auto shaderType = Utils::ShaderTypeFromString(type);
+			if (!shaderType)
+			{
+				const auto line = std::count(src.begin(), src.begin() + eol, '\n');
+				ZE_CORE_ERROR("Shader parsing failed:");
+				ZE_CORE_ERROR("{0}:{1}: Syntax error! Invalid shader type token \"{2}\"!", m_ShaderResourcePath, line + 1, type);
+				return {};
+			}
 
 			// Beginning of shader source: "#version..."
 			const auto shaderSrcPos = src.find_first_not_of("\r\n", eol);
 			// Locate the next shader type
 			typeTokenPos = src.find(typeToken, shaderSrcPos);
-			auto shaderType = Utils::ShaderTypeFromString(type);
+			
 			// Record shader source line number
 			m_ShaderSourceRelativeLineNums[shaderType] = std::count(src.begin(), src.begin() + shaderSrcPos, '\n');
 			// Get shader source code
-			shaderSrcs[shaderType] = src.substr(shaderSrcPos, typeTokenPos - (shaderSrcPos == std::string::npos ? src.size() - 1 : shaderSrcPos));
+			auto shaderSrc = src.substr(shaderSrcPos, typeTokenPos - (shaderSrcPos == std::string::npos ? src.size() - 1 : shaderSrcPos));
+			// Parse properties
+			if (!ParseProperties(shaderType, shaderSrc))
+			{
+				return {};
+			}
+			shaderSrcs[shaderType] = shaderSrc;
 		}
 
 		return shaderSrcs;
+	}
+
+	bool OpenGLShader::ParseProperties(GLenum stage, std::string& src)
+	{
+		const char* propertyToken = "[Property]";
+		const auto propertyTokenLength = strlen(propertyToken);
+		auto propertyTokenPos = src.find(propertyToken, 0);
+		while (propertyTokenPos != std::string::npos)
+		{
+			const auto propertyTokenEndPos = propertyTokenPos + propertyTokenLength;
+			const auto eol = src.find_first_of("\r\n", propertyTokenEndPos);
+			//ZE_CORE_ASSERT(eol != std::string::npos, "Syntax error!");
+
+			// Statement including property token
+			const auto propertyStatement = src.substr(propertyTokenEndPos, eol - propertyTokenEndPos);
+			// Uniform buffer
+			if (propertyStatement.find("uniform") != std::string::npos)
+			{
+				const auto line = std::count(src.begin(), src.begin() + eol, '\n') + m_ShaderSourceRelativeLineNums[stage] + 1;
+				auto bindingPos = propertyStatement.find('=');
+				if (bindingPos == std::string::npos)
+				{
+					ZE_CORE_ERROR("Shader parsing failed:");
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no binding '=' found!", m_ShaderResourcePath, line);
+					return false;
+				}
+
+				++bindingPos;
+				const auto bindingEndPos = propertyStatement.find(')');
+				if (bindingEndPos == std::string::npos)
+				{
+					ZE_CORE_ERROR("Shader parsing failed:");
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no ')' found!", m_ShaderResourcePath, line);
+					return false;
+				}
+
+				const auto bindingStr = propertyStatement.substr(bindingPos, bindingEndPos - bindingPos);
+				U32 binding = 0;
+				try
+				{
+					binding = std::stoi(bindingStr);
+				}
+				catch (const std::exception&)
+				{
+					
+					ZE_CORE_ERROR("Shader parsing failed:");
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with invalid binding slot!", m_ShaderResourcePath, line);
+					return false;
+				}
+				
+				// Texture
+				if (propertyStatement.find("sampler2D") != std::string::npos)
+				{
+					m_ReflectTexturePropertyBindings.emplace(binding);
+				}
+				else
+				{
+					m_ReflectUniformBufferPropertyBindings.emplace(binding);
+				}
+			}
+
+			// Remove property token (Replace with same-length-spaces)
+			src.replace(propertyTokenPos, propertyTokenLength, "          ");
+
+			propertyTokenPos = src.find(propertyToken, eol);
+		}
+
+		return true;
 	}
 
 	void OpenGLShader::FormatErrorMessage(GLenum stage, std::string& errorMsg)
@@ -450,7 +535,7 @@ namespace ZeoEngine {
 		for (const auto& resource : resources.sampled_images)
 		{
 			auto binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			if (binding < static_cast<U32>(TextureBinding::Material)) continue;
+			if (m_ReflectTexturePropertyBindings.find(binding) == m_ReflectTexturePropertyBindings.end()) continue;
 
 			const auto& name = resource.name;
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>(name, binding));
@@ -475,7 +560,7 @@ namespace ZeoEngine {
 			ZE_CORE_TRACE("    Binding = {0}", binding);
 			ZE_CORE_TRACE("    Members = {0}", memberCount);
 
-			if (binding < static_cast<U32>(UniformBufferBinding::Material)) continue;
+			if (m_ReflectUniformBufferPropertyBindings.find(binding) == m_ReflectUniformBufferPropertyBindings.end()) continue;
 
 			const auto dataCount = m_ShaderReflectionData.size() - m_ResourceCount;
 			// We assume all members are added to the vector

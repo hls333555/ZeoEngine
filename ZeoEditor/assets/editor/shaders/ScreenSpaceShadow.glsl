@@ -195,7 +195,7 @@ layout (location = 0) in VertexInput v_VertexInput;
 layout (location = 3) in CameraInput v_CameraInput;
 
 layout (binding = 0) uniform sampler2DArray u_ShadowMap;
-layout (binding = 1) uniform sampler2DArrayShadow u_PcfShadowMap;
+layout (binding = 1) uniform sampler2DArrayShadow u_ShadowMapPcf;
 
 float Random(vec4 seed)
 {
@@ -206,7 +206,7 @@ float Random(vec4 seed)
 vec3 GetShadowPosNormalOffset(vec3 normal)
 {
     float nDotL = clamp(dot(normal, -u_DirectionalLight.Direction), 0.0f, 1.0f);
-    float texelSize = 2.0f / textureSize(u_PcfShadowMap, 0).x;
+    float texelSize = 2.0f / textureSize(u_ShadowMapPcf, 0).x;
     float nmlOffsetScale = 1.0f - nDotL;
     return texelSize * u_DirectionalLight.Base.NormalBias * nmlOffsetScale * normal;
 }
@@ -268,7 +268,7 @@ float SampleShadowMapPCFInternal_DirectionalLight(vec3 shadowCoords, float filte
         #else
             float biasedZ = shadowCoords.z;
         #endif
-        float z = texture(u_PcfShadowMap, vec4(uv, cascadeIndex, biasedZ));
+        float z = texture(u_ShadowMapPcf, vec4(uv, cascadeIndex, biasedZ));
         sum += z;
     }
     return sum / POISSON_SAMPLE_COUNT;
@@ -276,7 +276,7 @@ float SampleShadowMapPCFInternal_DirectionalLight(vec3 shadowCoords, float filte
 
 float SampleShadowMapHardShadow_DirectionalLight(vec3 shadowCoords, int cascadeIndex)
 {
-	return texture(u_PcfShadowMap, vec4(shadowCoords.xy, cascadeIndex, shadowCoords.z));
+	return texture(u_ShadowMapPcf, vec4(shadowCoords.xy, cascadeIndex, shadowCoords.z));
 }
 
 #if USE_OPTIMIZED_PCF
@@ -290,7 +290,7 @@ float SampleShadowMap_DirectionalLight(vec2 baseUV, float u, float v, vec2 texel
         float z = depth;
     #endif
 
-    return texture(u_PcfShadowMap, vec4(uv, cascadeIndex, z));
+    return texture(u_ShadowMapPcf, vec4(uv, cascadeIndex, z));
 }
 
 float SampleShadowMapOptimizedPCF_DirectionalLight(vec3 shadowCoords, int cascadeIndex, const vec2 texelSize, vec2 receiverPlaneDepthBias)
@@ -382,7 +382,7 @@ float SampleShadowCascade(vec3 shadowCoords, vec3 texCoordDX, vec3 texCoordDY, i
     texCoordDX *= u_DirectionalLight.CascadeScales[cascadeIndex].xyz;
     texCoordDY *= u_DirectionalLight.CascadeScales[cascadeIndex].xyz;
 
-    const vec2 texelSize = textureSize(u_PcfShadowMap, 0).xy;
+    const vec2 texelSize = textureSize(u_ShadowMapPcf, 0).xy;
 
     #if USE_RECEIVER_PLANE_DEPTH_BIAS
         vec2 receiverPlaneDepthBias = ComputeReceiverPlaneDepthBias(texCoordDX, texCoordDY);

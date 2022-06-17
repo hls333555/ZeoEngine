@@ -115,7 +115,7 @@ layout (std140, binding = 4) uniform Light
 	int u_NumSpotLights;
 };
 
-layout (std140, binding = 6) uniform Material
+[Property]layout (std140, binding = 6) uniform Material
 {
 	float Shininess;
 }u_Material;
@@ -137,10 +137,9 @@ layout (location = 0) in flat int v_EntityID;
 layout (location = 1) in VertexInput v_VertexInput;
 layout (location = 4) in CameraInput v_CameraInput;
 
-layout (binding = 3) uniform sampler2D u_ScreenSpaceShadowMap;
-
-layout (binding = 5) uniform sampler2D u_DiffuseTexture;
-layout (binding = 6) uniform sampler2D u_SpecularTexture; // TODO: Current this texture is also sampled with SRGB enabled
+layout (binding = 0) uniform sampler2D u_ScreenSpaceShadowMap;
+[Property]layout (binding = 1) uniform sampler2D u_DiffuseTexture;
+[Property]layout (binding = 2) uniform sampler2D u_SpecularTexture;
 
 vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 normal)
 {
