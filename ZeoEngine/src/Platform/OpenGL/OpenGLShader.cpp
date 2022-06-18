@@ -172,6 +172,7 @@ namespace ZeoEngine {
 
 		m_ReflectTexturePropertyBindings.clear();
 		m_ReflectUniformBufferPropertyBindings.clear();
+		m_UniformBufferBoolVars.clear();
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 
 		const char* typeToken = "#type";
@@ -232,12 +233,12 @@ namespace ZeoEngine {
 			// Uniform buffer
 			if (propertyStatement.find("uniform") != std::string::npos)
 			{
-				const auto line = std::count(src.begin(), src.begin() + eol, '\n') + m_ShaderSourceRelativeLineNums[stage] + 1;
+				const auto lineNum = std::count(src.begin(), src.begin() + eol, '\n') + m_ShaderSourceRelativeLineNums[stage] + 1;
 				auto bindingPos = propertyStatement.find('=');
 				if (bindingPos == std::string::npos)
 				{
 					ZE_CORE_ERROR("Shader parsing failed:");
-					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no binding '=' found!", m_ShaderResourcePath, line);
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no binding '=' found!", m_ShaderResourcePath, lineNum);
 					return false;
 				}
 
@@ -246,7 +247,7 @@ namespace ZeoEngine {
 				if (bindingEndPos == std::string::npos)
 				{
 					ZE_CORE_ERROR("Shader parsing failed:");
-					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no ')' found!", m_ShaderResourcePath, line);
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with no ')' found!", m_ShaderResourcePath, lineNum);
 					return false;
 				}
 
@@ -258,10 +259,33 @@ namespace ZeoEngine {
 				}
 				catch (const std::exception&)
 				{
-					
 					ZE_CORE_ERROR("Shader parsing failed:");
-					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with invalid binding slot!", m_ShaderResourcePath, line);
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Property token with invalid binding slot!", m_ShaderResourcePath, lineNum);
 					return false;
+				}
+
+				const auto uniformEndPos = src.find('}', eol);
+				if (uniformEndPos == std::string::npos)
+				{
+					ZE_CORE_ERROR("Shader parsing failed:");
+					ZE_CORE_ERROR("{0}:{1}: Syntax error! Uniform end with no closing braces found!", m_ShaderResourcePath, lineNum);
+					return false;
+				}
+
+				const char* boolToken = "bool ";
+				const auto boolTokenLength = strlen(boolToken);
+				const auto uniformBlock = src.substr(eol, uniformEndPos - eol);
+				auto uniformBoolVarPos = uniformBlock.find(boolToken);
+				while (uniformBoolVarPos != std::string::npos)
+				{
+					const auto boolVarNamePos = uniformBoolVarPos + boolTokenLength;
+					const auto boolVarEndPos = uniformBlock.find(';', uniformBoolVarPos);
+					auto boolVarName = uniformBlock.substr(boolVarNamePos, boolVarEndPos - boolVarNamePos);
+					// Store bool uniform name
+					// This name may be outside uniform buffer block due to missing corresponding closing braces
+					m_UniformBufferBoolVars[binding].emplace(std::move(boolVarName));
+
+					uniformBoolVarPos = uniformBlock.find(boolToken, boolVarEndPos);
 				}
 				
 				// Texture
@@ -585,6 +609,13 @@ namespace ZeoEngine {
 	{
 		switch (type.basetype)
 		{
+		case spirv_cross::SPIRType::UInt:
+			// We have to do this extra check as bool is recoginized as UInt
+			if (m_UniformBufferBoolVars[binding].find(name) != m_UniformBufferBoolVars[binding].end())
+			{
+				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionBoolData>(name, binding, offset, size));
+			}
+			break;
 		case spirv_cross::SPIRType::Int:
 			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionIntData>(name, binding, offset, size));
 			break;

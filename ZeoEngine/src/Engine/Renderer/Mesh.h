@@ -25,6 +25,7 @@ namespace ZeoEngine {
 	{
 		Vec3 Position;
 		Vec3 Normal;
+		Vec3 Tangent;
 		Vec2 TexCoord;
 	};
 

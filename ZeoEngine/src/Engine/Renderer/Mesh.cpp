@@ -44,7 +44,8 @@ namespace ZeoEngine {
 		, m_MeshResourcePath(path)
 	{
 		Assimp::Importer Importer;
-		const aiScene* meshScene = Importer.ReadFile(m_MeshResourcePath.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
+		const aiScene* meshScene = Importer.ReadFile(m_MeshResourcePath.c_str(),
+		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
 		{
 			ZE_CORE_ERROR("Failed to load mesh! {0}", Importer.GetErrorString());
@@ -96,6 +97,7 @@ namespace ZeoEngine {
 		const BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal"   },
+			{ ShaderDataType::Float3, "a_Tangent"  },
 			{ ShaderDataType::Float2, "a_TexCoord" },
 		};
 		vbo->SetLayout(layout);
@@ -150,11 +152,13 @@ namespace ZeoEngine {
 		{
 			const aiVector3D& position = mesh->mVertices[i];
 			const aiVector3D& normal = mesh->mNormals[i];
+			const aiVector3D& tangent = mesh->mTangents[i];
 			const aiVector3D& texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D();
 			const Vec3 pos = { position.x, position.y, position.z };
 			box += pos;
 			vertexBuffer[baseIndex + i].Position = pos;
 			vertexBuffer[baseIndex + i].Normal = { normal.x, normal.y, normal.z };
+			vertexBuffer[baseIndex + i].Tangent = { tangent.x, tangent.y, tangent.z };
 			vertexBuffer[baseIndex + i].TexCoord = { texCoord.x, texCoord.y };
 		}
 		m_Bounds = m_Bounds + box;

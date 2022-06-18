@@ -18,8 +18,10 @@ namespace ZeoEngine {
 
 	void DynamicUniformBoolData::Draw()
 	{
-		if (ImGui::Checkbox("##Bool", &Value))
+		bValue = Value;
+		if (ImGui::Checkbox("##Bool", &bValue))
 		{
+			Value = bValue;
 			Apply();
 		}
 	}
@@ -75,10 +77,10 @@ namespace ZeoEngine {
 			Value->SetBindingSlot(Binding);
 			Value->Bind();
 		}
-		else
+		else // Bind default texture
 		{
-			// Bind default texture
-			const auto defaultTexture = Texture2DLibrary::GetDefaultMaterialTexture();
+			// For diffuse color, we use grey texture, and for others, we use white texture so that most calculations will not be affected
+			const auto defaultTexture = Name == "u_DiffuseTexture" ? Texture2DLibrary::GetDefaultMaterialTexture() : Texture2DLibrary::GetWhiteTexture();
 			defaultTexture->SetBindingSlot(Binding);
 			defaultTexture->Bind();
 		}

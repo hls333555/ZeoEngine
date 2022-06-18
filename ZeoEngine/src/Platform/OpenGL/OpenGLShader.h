@@ -81,9 +81,11 @@ namespace ZeoEngine {
 		std::string m_ShaderResourcePath;
 
 		/** Texture bindings used for reflection filtering */
-		std::set<U32> m_ReflectTexturePropertyBindings;
+		std::unordered_set<U32> m_ReflectTexturePropertyBindings;
 		/** Uniform buffer bindings used for reflection filtering */
-		std::set<U32> m_ReflectUniformBufferPropertyBindings;
+		std::unordered_set<U32> m_ReflectUniformBufferPropertyBindings;
+		/** Map from uniform buffer binding to uniform buffer bool variable names. Used for bool reflection */
+		std::unordered_map<U32, std::unordered_set<std::string>> m_UniformBufferBoolVars;
 		std::unordered_map<GLenum, SizeT> m_ShaderSourceRelativeLineNums;
 
 		std::unordered_map<GLenum, std::vector<U32>> m_VulkanSPIRV;

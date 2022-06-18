@@ -38,7 +38,8 @@ namespace ZeoEngine {
 	{
 		using DynamicUniformDataBase::DynamicUniformDataBase;
 
-		bool Value = false;
+		bool bValue = false;
+		U32 Value = 0; // SpirV reflects bool as UInt
 
 		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Bool; }
 		virtual void Draw() override;

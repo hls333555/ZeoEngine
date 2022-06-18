@@ -7,12 +7,14 @@
 
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
-layout (location = 2) in vec2 a_TexCoord;
+layout (location = 2) in vec3 a_Tangent;
+layout (location = 3) in vec2 a_TexCoord;
 
 struct VertexOutput
 {
 	vec3 PositionWS;
 	vec3 NormalWS;
+	vec3 TangentWS;
 	vec2 TexCoord;
 };
 
@@ -24,12 +26,13 @@ struct CameraOutput
 
 layout (location = 0) out flat int v_EntityID;
 layout (location = 1) out VertexOutput v_VertexOutput;
-layout (location = 4) out CameraOutput v_CameraOutput;
+layout (location = 5) out CameraOutput v_CameraOutput;
 
 void main()
 {
 	v_VertexOutput.PositionWS = vec3(u_Model.Transform * vec4(a_Position, 1.0f));
 	v_VertexOutput.NormalWS = mat3(u_Model.NormalMatrix) * a_Normal;
+	v_VertexOutput.TangentWS = mat3(u_Model.NormalMatrix) * a_Tangent;
 	v_VertexOutput.TexCoord = a_TexCoord;
 
 	v_CameraOutput.Position = u_Camera.Position;
@@ -102,6 +105,7 @@ layout (std140, binding = 3) uniform Light
 
 [Property]layout (std140, binding = 4) uniform Material
 {
+	bool bUseNormalMapping;
 	float Shininess;
 }u_Material;
 
@@ -109,6 +113,7 @@ struct VertexInput
 {
 	vec3 PositionWS;
 	vec3 NormalWS;
+	vec3 TangentWS;
 	vec2 TexCoord;
 };
 
@@ -120,11 +125,12 @@ struct CameraInput
 
 layout (location = 0) in flat int v_EntityID;
 layout (location = 1) in VertexInput v_VertexInput;
-layout (location = 4) in CameraInput v_CameraInput;
+layout (location = 5) in CameraInput v_CameraInput;
 
 layout (binding = 0) uniform sampler2D u_ScreenSpaceShadowMap;
 [Property]layout (binding = 1) uniform sampler2D u_DiffuseTexture;
 [Property]layout (binding = 2) uniform sampler2D u_SpecularTexture;
+[Property]layout (binding = 3) uniform sampler2D u_NormalTexture;
 
 vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 normal)
 {
@@ -199,10 +205,21 @@ vec4 CalculateSpotLight(SpotLight spotLight, vec3 normal)
 	}
 }
 
+vec3 GetFinalNormalWS(vec3 vertexNormal, vec3 vertexTangent, vec3 textureNormal)
+{
+	const vec3 N = normalize(vertexNormal);
+	vec3 T = normalize(vertexTangent);
+	T = normalize(T - dot(T, N) * N); // Re-orthogonalize T with respect to N
+	const vec3 B = cross(N,T);
+	
+	const mat3 TBN = mat3(T, B, N);
+	return u_Material.bUseNormalMapping ? TBN * normalize(textureNormal * 2.0f - 1.0f) : N;
+}
+
 void main()
 {
-	// Normalize after interpolation
-	vec3 normalWS = normalize(v_VertexInput.NormalWS);
+	vec3 textureNormal = texture(u_NormalTexture, v_VertexInput.TexCoord).rgb;
+	vec3 normalWS = GetFinalNormalWS(v_VertexInput.NormalWS, v_VertexInput.TangentWS, textureNormal);
 
 	vec4 totalLight = CalculateDirectionalLight(normalWS);
 	for (int i = 0; i < u_NumPointLights; ++i)
