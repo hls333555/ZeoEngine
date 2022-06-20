@@ -15,8 +15,8 @@ namespace ZeoEngine {
 		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(const KeyCode keycode)
-			: m_KeyCode(keycode) {}
+		KeyEvent(GLFWwindow* window, const KeyCode keycode)
+			: Event(window), m_KeyCode(keycode) {}
 
 		KeyCode m_KeyCode;
 
@@ -25,8 +25,8 @@ namespace ZeoEngine {
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(const KeyCode keycode, const U16 repeatCount)
-			: KeyEvent(keycode), m_RepeatCount(repeatCount) {}
+		KeyPressedEvent(GLFWwindow* window, const KeyCode keycode, const U16 repeatCount)
+			: KeyEvent(window, keycode), m_RepeatCount(repeatCount) {}
 
 		U16 GetRepeatCount() const { return m_RepeatCount; }
 
@@ -52,8 +52,8 @@ namespace ZeoEngine {
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(const KeyCode keycode)
-			: KeyEvent(keycode) {}
+		KeyReleasedEvent(GLFWwindow* window, const KeyCode keycode)
+			: KeyEvent(window, keycode) {}
 
 		std::string ToString() const override
 		{
@@ -70,8 +70,8 @@ namespace ZeoEngine {
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(const KeyCode keycode)
-			: KeyEvent(keycode) {}
+		KeyTypedEvent(GLFWwindow* window, const KeyCode keycode)
+			: KeyEvent(window, keycode) {}
 
 		std::string ToString() const override
 		{

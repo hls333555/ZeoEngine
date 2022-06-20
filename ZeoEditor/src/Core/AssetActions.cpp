@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		auto& srcPath = assetSpec->SourcePath;
 		if (srcPath.empty() || !PathUtils::DoesPathExist(srcPath))
 		{
-			const auto filePath = FileDialogs::OpenFile();
+			const auto filePath = FileDialogs::Open();
 			if (!filePath) return;
 
 			srcPath = PathUtils::GetRelativePath(*filePath);

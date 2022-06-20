@@ -6,6 +6,8 @@
 
 #include "Engine/Core/CoreMacros.h"
 
+struct GLFWwindow;
+
 namespace ZeoEngine {
 
 	// Events in ZeoEngine are currently blocking, meaning when an event occurs it
@@ -44,6 +46,11 @@ namespace ZeoEngine {
 	class Event
 	{
 	public:
+		explicit Event(GLFWwindow* window)
+			: m_Window(window) {}
+
+		GLFWwindow* GetWindow() const { return m_Window; }
+
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
@@ -64,6 +71,8 @@ namespace ZeoEngine {
 		 */
 		bool m_bHandled = false;
 
+	private:
+		GLFWwindow* m_Window = nullptr;
 	};
 
 	class EventDispatcher

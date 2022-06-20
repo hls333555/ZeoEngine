@@ -11,8 +11,8 @@ namespace ZeoEngine {
 	{
 	public:
 		// These return empty strings if cancelled
-		static std::optional<std::string> OpenFile();
-		static std::optional<std::string> SaveFile();
+		static std::optional<std::string> Open();
+		static std::optional<std::string> Save();
 
 	private:
 		static std::string GetSupportedFileFilter();

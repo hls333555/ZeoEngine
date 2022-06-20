@@ -13,7 +13,7 @@
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::OpenFile()
+	std::optional<std::string> FileDialogs::Open()
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		return {};
 	}
 
-	std::optional<std::string> FileDialogs::SaveFile()
+	std::optional<std::string> FileDialogs::Save()
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };

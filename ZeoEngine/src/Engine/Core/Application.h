@@ -39,7 +39,10 @@ namespace ZeoEngine {
 		static Application& Get() { return *s_Instance; }
 		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 		Window& GetWindow() { return *m_Window; }
+		GLFWwindow* GetActiveNativeWindow() const { return m_ActiveWindow; }
 		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
+		void AddViewportWindow(GLFWwindow* window) { m_ViewportWindows.emplace_back(window); }
+		void RemoveViewportWindow(GLFWwindow* window) { m_ViewportWindows.erase(std::find(m_ViewportWindows.begin(), m_ViewportWindows.end(), window)); }
 
 		float GetTimeInSeconds() const { return m_Window->GetTimeInSeconds(); }
 
@@ -50,7 +53,7 @@ namespace ZeoEngine {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
 
 		template<typename T>
 		T* FindLayer()
@@ -67,6 +70,7 @@ namespace ZeoEngine {
 
 	private:
 		void Run();
+		void PropagateEvent(Event& e);
 
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -74,12 +78,16 @@ namespace ZeoEngine {
 
 	private:
 		ApplicationCommandLineArgs m_CommandLineArgs;
+
 		Scope<Window> m_Window;
+		std::vector<GLFWwindow*> m_ViewportWindows; // TODO: Abstract GLFWwindow
+		GLFWwindow* m_ActiveWindow = nullptr;
+
+		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer;
+
 		bool m_bRunning = true;
 		bool m_bMinimized = false;
-		bool m_bFocused = true;
-		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
 
 		// TODO: Move to ToolsManager

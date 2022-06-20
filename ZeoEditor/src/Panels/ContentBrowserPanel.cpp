@@ -33,7 +33,7 @@ namespace ZeoEngine {
 		// Import an asset via file dialog
 		if (ImGui::Button(ICON_FA_FILE_IMPORT " Import"))
 		{
-			auto filePath = FileDialogs::OpenFile();
+			auto filePath = FileDialogs::Open();
 			if (filePath)
 			{
 				std::string extension = PathUtils::GetExtensionFromPath(*filePath);

@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "WindowsWindow.h"
 
+#include <GLFW/glfw3.h>
 #include <stb_image.h>
 #include <imgui.h>
 
@@ -21,6 +22,35 @@ namespace ZeoEngine {
 	Scope<Window> Window::Create(const WindowProps& props)
 	{
 		return CreateScope<WindowsWindow>(props);
+	}
+
+	void Window::SetIcon(GLFWwindow* window)
+	{
+		stbi_set_flip_vertically_on_load(0);
+		GLFWimage images[4];
+		images[0].pixels = stbi_load("resources/textures/Logo_16x.png", &images[0].width, &images[0].height, 0, 4); // rgba channels
+		images[1].pixels = stbi_load("resources/textures/Logo_24x.png", &images[1].width, &images[1].height, 0, 4);
+		images[2].pixels = stbi_load("resources/textures/Logo_32x.png", &images[2].width, &images[2].height, 0, 4);
+		images[3].pixels = stbi_load("resources/textures/Logo_48x.png", &images[3].width, &images[3].height, 0, 4);
+		glfwSetWindowIcon(window, 4, images);
+		stbi_image_free(images[0].pixels);
+		stbi_image_free(images[1].pixels);
+		stbi_image_free(images[2].pixels);
+		stbi_image_free(images[3].pixels);
+	}
+
+	void Window::LockMouse(GLFWwindow* window, bool bLock)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, bLock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		ImGuiIO& io = ImGui::GetIO();
+		if (bLock)
+		{
+			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		}
+		else
+		{
+			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		}
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
@@ -62,22 +92,11 @@ namespace ZeoEngine {
 		{
 			ZE_PROFILE_SCOPE("glfwCreateWindow");
 
+			// TODO: Hide default windows decoration
+			//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 			// Create window
 			m_Window = glfwCreateWindow(static_cast<int>(props.Width), static_cast<int>(props.Height), props.Title.c_str(), nullptr, nullptr);
-			
-			// Set window icon
-			{
-				GLFWimage images[4];
-				images[0].pixels = stbi_load("resources/textures/Logo_16x.png", &images[0].width, &images[0].height, 0, 4); // rgba channels
-				images[1].pixels = stbi_load("resources/textures/Logo_24x.png", &images[1].width, &images[1].height, 0, 4);
-				images[2].pixels = stbi_load("resources/textures/Logo_32x.png", &images[2].width, &images[2].height, 0, 4);
-				images[3].pixels = stbi_load("resources/textures/Logo_48x.png", &images[3].width, &images[3].height, 0, 4);
-				glfwSetWindowIcon(m_Window, 4, images);
-				stbi_image_free(images[0].pixels);
-				stbi_image_free(images[1].pixels);
-				stbi_image_free(images[2].pixels);
-				stbi_image_free(images[3].pixels);
-			}
+			SetIcon(m_Window);
 
 			// Maximize window by default
 			glfwMaximizeWindow(m_Window);
@@ -98,26 +117,26 @@ namespace ZeoEngine {
 			glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		}
 
-		// ---Set GLFW callbacks------------------------------------------------------------------------------------
+		// ---Set GLFW callbacks (Multi-viewport settings see ImGuiLayer.cpp --------------------------------------------------
 
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			data.Width = width;
 			data.Height = height;
 
-			WindowResizeEvent event(width, height);
+			WindowResizeEvent event(window, width, height);
 			data.EventCallback(event);
 		});
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-			WindowCloseEvent event;
+			WindowCloseEvent event(window);
 			data.EventCallback(event);
 		});
 
 		glfwSetWindowFocusCallback(m_Window, [](GLFWwindow* window, int bFocused) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-			WindowFocusChangedEvent event(bFocused == GLFW_TRUE);
+			WindowFocusChangedEvent event(window, bFocused == GLFW_TRUE);
 			data.EventCallback(event);
 		});
 
@@ -127,19 +146,19 @@ namespace ZeoEngine {
 			{
 			case GLFW_PRESS:
 			{
-				KeyPressedEvent event(key, 0);
+				KeyPressedEvent event(window, key, 0);
 				data.EventCallback(event);
 				break;
 			}
 			case GLFW_RELEASE:
 			{
-				KeyReleasedEvent event(key);
+				KeyReleasedEvent event(window, key);
 				data.EventCallback(event);
 				break;
 			}
 			case GLFW_REPEAT:
 			{
-				KeyPressedEvent event(key, 1);
+				KeyPressedEvent event(window, key, 1);
 				data.EventCallback(event);
 				break;
 			}
@@ -150,7 +169,7 @@ namespace ZeoEngine {
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int key) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-			KeyTypedEvent event(key);
+			KeyTypedEvent event(window, key);
 			data.EventCallback(event);
 		});
 
@@ -160,13 +179,13 @@ namespace ZeoEngine {
 			{
 			case GLFW_PRESS:
 			{
-				MouseButtonPressedEvent event(button);
+				MouseButtonPressedEvent event(window, button);
 				data.EventCallback(event);
 				break;
 			}
 			case GLFW_RELEASE:
 			{
-				MouseButtonReleasedEvent event(button);
+				MouseButtonReleasedEvent event(window, button);
 				data.EventCallback(event);
 				break;
 			}
@@ -177,13 +196,13 @@ namespace ZeoEngine {
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-			MouseScrolledEvent event(static_cast<float>(xoffset), static_cast<float>(yoffset));
+			MouseScrolledEvent event(window, static_cast<float>(xoffset), static_cast<float>(yoffset));
 			data.EventCallback(event);
 		});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-			MouseMovedEvent event(static_cast<float>(xpos), static_cast<float>(ypos));
+			MouseMovedEvent event(window, static_cast<float>(xpos), static_cast<float>(ypos));
 			data.EventCallback(event);
 		});
 	}
@@ -229,20 +248,6 @@ namespace ZeoEngine {
 	bool WindowsWindow::IsVSync() const
 	{
 		return m_Data.bVSync;
-	}
-
-	void WindowsWindow::LockMouse(bool bLock)
-	{
-		glfwSetInputMode(m_Window, GLFW_CURSOR, bLock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
-		ImGuiIO& io = ImGui::GetIO();
-		if (bLock)
-		{
-			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
-		}
-		else
-		{
-			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-		}
 	}
 
 }

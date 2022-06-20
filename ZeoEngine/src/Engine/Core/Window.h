@@ -3,6 +3,8 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Events/Event.h"
 
+struct GLFWwindow;
+
 namespace ZeoEngine {
 
 	struct WindowProps
@@ -37,12 +39,13 @@ namespace ZeoEngine {
 		virtual void SetVSync(bool bEnabled) = 0;
 		virtual bool IsVSync() const = 0;
 
-		virtual void LockMouse(bool bLock) = 0;
-
 		/** Returns the actual window based on the platform. */
 		virtual void* GetNativeWindow() const = 0;
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
+
+		static void SetIcon(GLFWwindow* window);
+		static void LockMouse(GLFWwindow* window, bool bLock);
 	
 	};
 

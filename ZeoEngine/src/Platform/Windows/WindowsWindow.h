@@ -4,8 +4,6 @@
 
 #include "Engine/Renderer/GraphicsContext.h"
 
-#include <GLFW/glfw3.h>
-
 namespace ZeoEngine {
 
 	class WindowsWindow : public Window
@@ -26,8 +24,6 @@ namespace ZeoEngine {
 		virtual void SetVSync(bool bEnabled) override;
 		virtual bool IsVSync() const override;
 
-		virtual void LockMouse(bool bLock) override;
-
 		virtual void* GetNativeWindow() const override { return m_Window; }
 
 	private:
@@ -35,7 +31,7 @@ namespace ZeoEngine {
 		virtual void Shutdown();
 
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_Window = nullptr;
 		Scope<GraphicsContext> m_Context;
 
 		struct WindowData

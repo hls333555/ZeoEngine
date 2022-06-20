@@ -9,8 +9,8 @@ namespace ZeoEngine {
 	class WindowResizeEvent : public Event
 	{
 	public:
-		WindowResizeEvent(unsigned int width, unsigned int height)
-			: m_Width(width), m_Height(height) {}
+		WindowResizeEvent(GLFWwindow* window, unsigned int width, unsigned int height)
+			: Event(window), m_Width(width), m_Height(height) {}
 
 		unsigned int GetWidth() const { return m_Width; }
 		unsigned int GetHeight() const { return m_Height; }
@@ -33,7 +33,7 @@ namespace ZeoEngine {
 	class WindowCloseEvent : public Event
 	{
 	public:
-		WindowCloseEvent() = default;
+		using Event::Event;
 
 		EVENT_CLASS_TYPE(WindowClose)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
@@ -43,8 +43,8 @@ namespace ZeoEngine {
 	class WindowFocusChangedEvent : public Event
 	{
 	public:
-		explicit WindowFocusChangedEvent(bool bFocused)
-			: m_bFocused(bFocused) {}
+		WindowFocusChangedEvent(GLFWwindow* window, bool bFocused)
+			: Event(window), m_bFocused(bFocused) {}
 
 		bool IsFocused() const { return m_bFocused; }
 
@@ -58,7 +58,7 @@ namespace ZeoEngine {
 	class AppTickEvent : public Event
 	{
 	public:
-		AppTickEvent() = default;
+		using Event::Event;
 
 		EVENT_CLASS_TYPE(AppTick)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
@@ -68,7 +68,7 @@ namespace ZeoEngine {
 	class AppUpdateEvent : public Event
 	{
 	public:
-		AppUpdateEvent() = default;
+		using Event::Event;
 
 		EVENT_CLASS_TYPE(AppUpdate)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
@@ -78,7 +78,7 @@ namespace ZeoEngine {
 	class AppRenderEvent : public Event
 	{
 	public:
-		AppRenderEvent() = default;
+		using Event::Event;
 
 		EVENT_CLASS_TYPE(AppRender)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)

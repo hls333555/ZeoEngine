@@ -348,7 +348,7 @@ namespace ZeoEngine {
 
 	void EditorCamera::SetMouseLock(bool bLock)
 	{
-		Application::Get().GetWindow().LockMouse(bLock);
+		Window::LockMouse(Application::Get().GetActiveNativeWindow(), bLock);
 	}
 
 }

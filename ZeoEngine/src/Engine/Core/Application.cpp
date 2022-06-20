@@ -1,6 +1,8 @@
 #include "ZEpch.h"
 #include "Engine/Core/Application.h"
 
+#include <GLFW/glfw3.h>
+
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 
@@ -22,6 +24,7 @@ namespace ZeoEngine {
 		s_Instance = this;
 		m_Window = Window::Create(WindowProps(name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
+		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
 		Renderer::Init();
 		
@@ -48,6 +51,11 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
 		dispatcher.Dispatch<WindowFocusChangedEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowFocusChanged));
 
+		PropagateEvent(e);
+	}
+
+	void Application::PropagateEvent(Event& e)
+	{
 		// Iterate through the layer stack in a reverse order (from top to bottom) and break if current event is handled
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
@@ -91,7 +99,6 @@ namespace ZeoEngine {
 			// Stop updating layers if window is minimized
 			if (!m_bMinimized)
 			{
-				if (m_bFocused)
 				{
 					ZE_PROFILE_SCOPE("LayerStack OnUpdate");
 
@@ -127,6 +134,8 @@ namespace ZeoEngine {
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
+		if (e.GetWindow() != m_Window->GetNativeWindow()) return false;
+
 		m_bRunning = false;
 		return true;
 	}
@@ -135,14 +144,26 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
+		if (e.GetWindow() != m_Window->GetNativeWindow()) return false;
+
 		// When window is minimized...
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_bMinimized = true;
+			// Hide other owned windows
+			for (auto* window : m_ViewportWindows)
+			{
+				glfwHideWindow(window);
+			}
 			return false;
 		}
 
 		m_bMinimized = false;
+		// Show other owned windows
+		for (auto* window : m_ViewportWindows)
+		{
+			glfwShowWindow(window);
+		}
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
@@ -150,7 +171,10 @@ namespace ZeoEngine {
 
 	bool Application::OnWindowFocusChanged(WindowFocusChangedEvent& e)
 	{
-		m_bFocused = e.IsFocused();
+		if (e.IsFocused())
+		{
+			m_ActiveWindow = e.GetWindow();
+		}
 		return false;
 	}
 
