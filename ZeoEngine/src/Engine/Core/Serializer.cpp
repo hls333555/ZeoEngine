@@ -655,7 +655,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset)
+	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
 	{
 		const std::string& assetPath = path;
 		auto data = ReadDataFromAsset(assetPath, typeId);

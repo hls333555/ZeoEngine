@@ -78,7 +78,7 @@ namespace ZeoEngine {
 	{
 		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {}, this);  // TODO: Update component instance here
+		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {});  // TODO: Update component instance here
 	}
 
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene)

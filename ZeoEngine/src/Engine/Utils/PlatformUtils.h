@@ -3,15 +3,12 @@
 #include <optional>
 #include <string>
 
-#include "Engine/Core/EngineTypes.h"
-
 namespace ZeoEngine {
 
 	class FileDialogs
 	{
 	public:
-		// These return empty strings if cancelled
-		static std::optional<std::string> Open();
+		static std::vector<std::string> Open(bool bAllowMultiSelect);
 		static std::optional<std::string> Save();
 
 	private:

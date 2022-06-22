@@ -86,8 +86,11 @@ namespace ZeoEngine {
 		/** Load a texture from disk. */
 		static Ref<Texture2D> Create(const std::string& path, std::optional<U32> bindingSlot = {});
 
+		virtual void Reload() override;
 		virtual void Serialize(const std::string& path) override;
 		virtual void Deserialize() override;
+
+		virtual void Invalidate() = 0;
 	};
 
 	REGISTER_ASSET(Texture2D,

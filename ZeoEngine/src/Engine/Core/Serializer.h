@@ -175,7 +175,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath = {});
-		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, IAsset* asset);
+		static bool Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance);
 	};
 
 	class MaterialAssetSerializer : public AssetSerializer

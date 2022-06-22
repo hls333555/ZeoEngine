@@ -61,7 +61,6 @@ namespace ZeoEngine {
 		virtual AssetTypeId GetAssetTypeId() const override { return TypeId; }
 		virtual std::string GetSourcePath() const override { return SourcePath; }
 
-		void UpdateAll(const std::string& sourcePath);
 		void UpdateThumbnail();
 		
 		AssetTypeId TypeId;

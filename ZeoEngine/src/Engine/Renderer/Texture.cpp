@@ -53,6 +53,12 @@ namespace ZeoEngine {
 		return texture;
 	}
 
+	void Texture2D::Reload()
+	{
+		Invalidate();
+		Deserialize();
+	}
+
 	void Texture2D::Serialize(const std::string& path)
 	{
 		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
@@ -66,7 +72,7 @@ namespace ZeoEngine {
 	{
 		if (!PathUtils::DoesPathExist(GetID())) return;
 
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() }, this);
+		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() });
 	}
 
 	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)

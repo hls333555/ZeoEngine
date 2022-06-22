@@ -39,7 +39,7 @@ namespace ZeoEngine {
 	void ImportableAssetFactoryBase::ImportAsset(const std::string& srcPath, const std::string& destPath) const
 	{
 		// No need to copy self
-		if (destPath != srcPath)
+		if (PathUtils::GetCanonicalPath(srcPath) != PathUtils::GetCanonicalPath(destPath))
 		{
 			// Copy resource file
 			const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
@@ -49,6 +49,7 @@ namespace ZeoEngine {
 				return;
 			}
 		}
+
 		const std::string assetPath = destPath + AssetRegistry::GetEngineAssetExtension();
 		if (!PathUtils::DoesPathExist(assetPath))
 		{
@@ -59,6 +60,17 @@ namespace ZeoEngine {
 			// Record source path
 			std::dynamic_pointer_cast<AssetSpec>(spec)->SourcePath = srcPath;
 		}
+		else // Asset already exist, just reload and update
+		{
+			// TODO: Should be marked modified instead of saving directly
+			//SaveAsset(path);
+			AssetManager::Get().ReloadAsset(assetPath);
+			const auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(assetPath);
+			// Update assetspecs after reloading
+			assetSpec->UpdateThumbnail();
+			assetSpec->SourcePath = srcPath;
+		}
+
 		ZE_CORE_INFO("Successfully imported \"{0}\" from \"{1}\"", destPath, srcPath);
 	}
 

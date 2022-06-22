@@ -30,17 +30,17 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::DrawTopBar()
 	{
-		// Import an asset via file dialog
+		// Import assets via file dialog
 		if (ImGui::Button(ICON_FA_FILE_IMPORT " Import"))
 		{
-			auto filePath = FileDialogs::Open();
-			if (filePath)
+			const auto filePaths = FileDialogs::Open(true);
+			for (const auto& filePath : filePaths)
 			{
-				std::string extension = PathUtils::GetExtensionFromPath(*filePath);
-				std::string assetName = PathUtils::GetFileNameFromPath(*filePath);
+				std::string extension = PathUtils::GetExtensionFromPath(filePath);
+				std::string assetName = PathUtils::GetFileNameFromPath(filePath);
 				std::string destPath = PathUtils::AppendPath(GetSelectedDirectory(), assetName);
 				auto& am = AssetManager::Get();
-				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(*filePath), destPath);
+				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(filePath), destPath);
 				SetForceUpdateFilterCache(true);
 			}
 		}

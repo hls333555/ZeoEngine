@@ -50,33 +50,36 @@ namespace ZeoEngine {
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		const auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-		auto& srcPath = assetSpec->SourcePath;
+		std::string srcPath = assetSpec->SourcePath;
 		if (srcPath.empty() || !PathUtils::DoesPathExist(srcPath))
 		{
-			const auto filePath = FileDialogs::Open();
-			if (!filePath) return;
+			// Open file dialog to select another source to reimport
+			const auto filePaths = FileDialogs::Open(false);
+			if (filePaths.size() != 1) return;
 
-			srcPath = PathUtils::GetRelativePath(*filePath);
+			srcPath = PathUtils::GetRelativePath(filePaths[0]);
 		}
 
 		const auto destPath = PathUtils::GetResourcePathFromPath(path);
-		if (destPath != srcPath)
+		// Copy self is not allowed
+		if (PathUtils::GetCanonicalPath(srcPath) == PathUtils::GetCanonicalPath(destPath)) return;
+
+		// Copy and overwrite existing resource
+		const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
+		if (!bSuccess)
 		{
-			// Copy and overwrite existing resource
-			const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
-			if (!bSuccess)
-			{
-				ZE_CORE_ERROR("Failed to reimport asset!");
-				return;
-			}
+			ZE_CORE_ERROR("Failed to reimport asset!");
+			return;
 		}
-		assetSpec->UpdateAll(srcPath);
+
 		// TODO: Should be marked modified instead of saving directly
-		// Save asset
-		SaveAsset(path);
-		// Reload asset
+		//SaveAsset(path);
 		ReloadAsset(path);
-		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, srcPath);
+		// Update assetspecs after reloading
+		assetSpec->UpdateThumbnail();
+		assetSpec->SourcePath = std::move(srcPath);
+
+		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, assetSpec->SourcePath);
 	}
 
 	void LevelAssetActions::OpenAsset(const std::string& path) const

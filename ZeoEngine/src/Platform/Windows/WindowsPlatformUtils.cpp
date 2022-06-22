@@ -13,8 +13,10 @@
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::Open()
+	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect)
 	{
+		std::vector<std::string> outPaths;
+
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
 		ZeroMemory(&ofn, sizeof(OPENFILENAME));
@@ -22,15 +24,32 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedFileFilter();
+		const std::string filterStr = GetSupportedFileFilter();
 		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
 		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER | (bAllowMultiSelect ? OFN_ALLOWMULTISELECT : 0);
 		if (GetOpenFileNameA(&ofn) == TRUE)
 		{
-			return ofn.lpstrFile;
+			auto p = ofn.lpstrFile;
+			const std::string basePath = p;
+			p += basePath.size() + 1;
+			if (*p == 0)
+			{
+				// There is only one string, being the full path to the file
+				outPaths.emplace_back(basePath.c_str());
+			}
+			else
+			{
+				// Multiple files follow the directory
+				while (*p != 0)
+				{
+					std::string fileName = p;
+					outPaths.emplace_back((basePath + "\\" + fileName).c_str());
+					p += fileName.size() + 1;
+				}
+			}
 		}
-		return {};
+		return outPaths;
 	}
 
 	std::optional<std::string> FileDialogs::Save()

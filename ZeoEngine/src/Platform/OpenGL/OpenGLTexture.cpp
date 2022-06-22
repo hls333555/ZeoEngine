@@ -41,7 +41,6 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNCTION();
 
-		stbi_set_flip_vertically_on_load(1);
 		Invalidate();
 	}
 
@@ -77,6 +76,7 @@ namespace ZeoEngine {
 			glDeleteTextures(1, &m_RendererID);
 		}
 
+		stbi_set_flip_vertically_on_load(1);
 		int width, height, channels;
 		stbi_uc* data = nullptr;
 		{
@@ -84,7 +84,7 @@ namespace ZeoEngine {
 
 			data = stbi_load(m_TextureResourcePath.c_str(), &width, &height, &channels, 0);
 		}
-		ZE_CORE_ASSERT(data, "Failed to load image!");
+		ZE_CORE_ASSERT(data, "Failed to load image: {0}!", m_TextureResourcePath);
 		m_Width = width;
 		m_Height = height;
 

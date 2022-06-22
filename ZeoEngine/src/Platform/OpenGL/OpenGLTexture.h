@@ -30,7 +30,7 @@ namespace ZeoEngine {
 
 		virtual void SetData(void* data, U32 size) override;
 
-		void Invalidate();
+		virtual void Invalidate() override;
 
 		virtual void SetBindingSlot(U32 slot) override { m_BindingSlot = slot; }
 		virtual void Bind() const override;

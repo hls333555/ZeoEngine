@@ -54,12 +54,6 @@ namespace ZeoEngine {
 
 	}
 
-	void AssetSpec::UpdateAll(const std::string& sourcePath)
-	{
-		UpdateThumbnail();
-		SourcePath = sourcePath;
-	}
-
 	void AssetSpec::UpdateThumbnail()
 	{
 		ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(Path, TypeId);
@@ -167,7 +161,7 @@ namespace ZeoEngine {
 			assetSpec->TypeId = *optionalAssetTypeId;
 		}
 		// TODO: Optimize: No need to load all textures
-		assetSpec->ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(path, assetSpec->TypeId);
+		assetSpec->UpdateThumbnail();
 		m_AssetSpecsById[assetSpec->TypeId].emplace_back(assetSpec);
 		m_PathSpecs[path] = assetSpec;
 
