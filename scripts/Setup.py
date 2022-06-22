@@ -1,27 +1,25 @@
 import os
 import subprocess
+import platform
 import ssl
-import CheckPython
-
-# Make sure everything we need is installed
-CheckPython.ValidatePackages()
-
-import Vulkan
-
-# Change from Scripts directory to root
-os.chdir('../')
 
 # Prevent [SSL: CERTIFICATE_VERIFY_FAILED] issue
-ssl._create_default_https_context = ssl._create_unverified_context
+#ssl._create_default_https_context = ssl._create_unverified_context
 
-if (not Vulkan.CheckVulkanSDK()):
-    print("Vulkan SDK not installed.")
+from SetupPython import PythonConfiguration as PythonRequirements
 
-if (not Vulkan.CheckVulkanSDKDebugLibs()):
-    print("Vulkan SDK debug libs not found.")
+# Make sure everything we need for the setup is installed
+PythonRequirements.Validate()
 
-print("Updating submodules...")
+from SetupVulkan import VulkanConfiguration as VulkanRequirements
+# Change from devtools/scripts directory to root
+os.chdir('./../')
+
+VulkanRequirements.Validate()
+
+print("\nUpdating submodules...")
 subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
 
-print("Running premake...")
-subprocess.call(["vendor/premake/premake5.exe", "vs2022"])
+if platform.system() == "Windows":
+    print("\nRunning premake...")
+    subprocess.call([os.path.abspath("./scripts/Win-GenProjects.bat"), "nopause"])
