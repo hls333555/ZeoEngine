@@ -81,6 +81,7 @@ namespace ZeoEngine {
 
 		static constexpr const char* GetAssetRootDirectory() { return "assets"; }
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
+		static constexpr const char* GetEditorRootDirectory() { return "assets/editor"; } // TODO:
 
 		void OnUpdate(DeltaTime dt);
 

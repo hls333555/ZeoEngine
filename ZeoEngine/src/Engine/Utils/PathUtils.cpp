@@ -106,4 +106,12 @@ namespace ZeoEngine {
 		return normalizedPath + extension;
 	}
 
+	// https://stackoverflow.com/questions/67144806/c-check-if-path-is-outside-a-given-directory
+	bool PathUtils::IsEditorPath(const std::string& p)
+	{
+		const std::string relativePath = std::filesystem::relative(p, AssetRegistry::GetEditorRootDirectory()).string();
+		// Size check for "." result
+		// If path starts with ".." it's not subdir
+		return relativePath.size() == 1 || relativePath[0] != '.' && relativePath[1] != '.';
+	}
 }

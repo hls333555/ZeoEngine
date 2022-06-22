@@ -130,7 +130,7 @@ namespace ZeoEngine {
 	void EditorBase::SaveScene()
 	{
 		const std::string& assetPath = GetAsset()->GetID();
-		if (assetPath.empty())
+		if (assetPath.empty() || GetAsset()->IsTemplate())
 		{
 			SaveSceneAs();
 		}

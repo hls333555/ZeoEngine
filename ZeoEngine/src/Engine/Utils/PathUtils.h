@@ -67,6 +67,8 @@ namespace ZeoEngine {
 		static std::string GetResourcePathFromPath(const std::string& path);
 		/** Get asset path by appending asset extension if necessary. */
 		static std::string GetNormalizedAssetPath(const std::string& path);
+		/** Returns true if provided path is in the editor directory. */
+		static bool IsEditorPath(const std::string& path);
 
 	};
 
