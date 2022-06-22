@@ -19,7 +19,7 @@ namespace ZeoEngine {
 	{
 		None = 0,
 		// Application events
-		WindowClose, WindowResize, WindowFocusChanged, WindowMoved,
+		WindowClose, WindowResize, WindowFocusChanged, WindowMoved, WindowFileDropped,
 		AppTick, AppUpdate, AppRender,
 		// Keyboard events
 		KeyPressed, KeyReleased, KeyTyped,

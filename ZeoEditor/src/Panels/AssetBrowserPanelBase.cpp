@@ -835,7 +835,7 @@ namespace ZeoEngine {
 		static ImVec2 buttonSize{ 120.0f, 0.0f };
 		ImGui::OpenPopup("Delete?");
 		// Deletion request dialog
-		if (ImGui::BeginPopupModal("Delete?", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+		if (ImGui::BeginPopupModal("Delete?", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 		{
 			ImGui::Text("The selected folder/asset will be permanently deleted.\nThis operation cannot be undone!\n\n");
 

@@ -20,6 +20,26 @@ namespace ZeoEngine {
 		InitAssetTypeFilters();
 	}
 
+	void ContentBrowserPanel::ProcessEvent(Event& e)
+	{
+		AssetBrowserPanelBase::ProcessEvent(e);
+
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowFileDroppedEvent>(ZE_BIND_EVENT_FUNC(ContentBrowserPanel::OnFileDropped));
+	}
+
+	bool ContentBrowserPanel::OnFileDropped(WindowFileDroppedEvent& e)
+	{
+		if (!IsPanelHovered()) return false;
+
+		for (const auto& filePath : e.GetPaths())
+		{
+			ImportAsset(filePath);
+		}
+
+		return true;
+	}
+
 	void ContentBrowserPanel::InitAssetTypeFilters()
 	{
 		AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
@@ -36,12 +56,7 @@ namespace ZeoEngine {
 			const auto filePaths = FileDialogs::Open(true);
 			for (const auto& filePath : filePaths)
 			{
-				std::string extension = PathUtils::GetExtensionFromPath(filePath);
-				std::string assetName = PathUtils::GetFileNameFromPath(filePath);
-				std::string destPath = PathUtils::AppendPath(GetSelectedDirectory(), assetName);
-				auto& am = AssetManager::Get();
-				am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(filePath), destPath);
-				SetForceUpdateFilterCache(true);
+				ImportAsset(filePath);
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -215,6 +230,16 @@ namespace ZeoEngine {
 		}
 
 		ImGui::Separator();
+	}
+
+	void ContentBrowserPanel::ImportAsset(const std::string& filePath)
+	{
+		const std::string extension = PathUtils::GetExtensionFromPath(filePath);
+		const std::string assetName = PathUtils::GetFileNameFromPath(filePath);
+		const std::string destPath = PathUtils::AppendPath(GetSelectedDirectory(), assetName);
+		auto& am = AssetManager::Get();
+		am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(filePath), destPath);
+		SetForceUpdateFilterCache(true);
 	}
 
 	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding)

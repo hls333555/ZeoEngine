@@ -55,6 +55,29 @@ namespace ZeoEngine {
 		bool m_bFocused;
 	};
 
+	class WindowFileDroppedEvent : public Event
+	{
+	public:
+		WindowFileDroppedEvent(GLFWwindow* window, I32 count, const char** paths)
+			: Event(window)
+		{
+			m_Paths.reserve(count);
+			for (I32 i = 0; i < count; ++i)
+			{
+				m_Paths.emplace_back(paths[i]);
+			}
+		}
+
+		const auto& GetPaths() const { return m_Paths; }
+
+		EVENT_CLASS_TYPE(WindowFileDropped)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+
+	private:
+		std::vector<std::string> m_Paths;
+
+	};
+
 	class AppTickEvent : public Event
 	{
 	public:

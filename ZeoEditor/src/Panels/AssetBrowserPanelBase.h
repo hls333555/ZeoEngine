@@ -41,9 +41,9 @@ namespace ZeoEngine {
 		void RequestPathRenaming(const std::string& path);
 		void RequestPathOpen(const std::string& path);
 
+		virtual void ProcessEvent(Event& e) override;
 	private:
 		virtual void ProcessRender() override;
-		virtual void ProcessEvent(Event& e);
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 		

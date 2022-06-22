@@ -140,6 +140,12 @@ namespace ZeoEngine {
 			data.EventCallback(event);
 		});
 
+		glfwSetDropCallback(m_Window, [](GLFWwindow* window, int count, const char** paths) {
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			WindowFileDroppedEvent event(window, count, paths);
+			data.EventCallback(event);
+		});
+
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 			switch (action)
@@ -205,6 +211,7 @@ namespace ZeoEngine {
 			MouseMovedEvent event(window, static_cast<float>(xpos), static_cast<float>(ypos));
 			data.EventCallback(event);
 		});
+
 	}
 
 	void WindowsWindow::Shutdown()

@@ -29,6 +29,7 @@ namespace ZeoEngine {
 		GLFWwindowsizefun       PrevUserCallbackWindowSize;
 		GLFWwindowclosefun      PrevUserCallbackWindowClose;
 		GLFWwindowfocusfun      PrevUserCallbackWindowFocus;
+		GLFWdropfun				PrevUserCallbackWindowFileDrop;
 		GLFWkeyfun              PrevUserCallbackKey;
 		GLFWcharfun             PrevUserCallbackChar;
 		GLFWmousebuttonfun      PrevUserCallbackMousebutton;
@@ -62,28 +63,50 @@ namespace ZeoEngine {
 
 		data->PrevUserCallbackWindowSize = glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackWindowSize(window, width, height);
+			if (data->PrevUserCallbackWindowSize)
+			{
+				data->PrevUserCallbackWindowSize(window, width, height);
+			}
 			WindowResizeEvent event(window, width, height);
 			Application::Get().OnEvent(event);
 		});
 
 		data->PrevUserCallbackWindowClose = glfwSetWindowCloseCallback(window, [](GLFWwindow* window) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackWindowClose(window);
+			if (data->PrevUserCallbackWindowClose)
+			{
+				data->PrevUserCallbackWindowClose(window);
+			}
 			WindowCloseEvent event(window);
 			Application::Get().OnEvent(event);
 		});
 
 		data->PrevUserCallbackWindowFocus = glfwSetWindowFocusCallback(window, [](GLFWwindow* window, int bFocused) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackWindowFocus(window, bFocused);
+			if (data->PrevUserCallbackWindowFocus)
+			{
+				data->PrevUserCallbackWindowFocus(window, bFocused);
+			}
 			WindowFocusChangedEvent event(window, bFocused == GLFW_TRUE);
+			Application::Get().OnEvent(event);
+		});
+
+		data->PrevUserCallbackWindowFileDrop = glfwSetDropCallback(window, [](GLFWwindow* window, int count, const char** paths) {
+			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
+			if (data->PrevUserCallbackWindowFileDrop)
+			{
+				data->PrevUserCallbackWindowFileDrop(window, count, paths);
+			}
+			WindowFileDroppedEvent event(window, count, paths);
 			Application::Get().OnEvent(event);
 		});
 
 		data->PrevUserCallbackKey = glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackKey(window, key, scancode, action, mods);
+			if (data->PrevUserCallbackKey)
+			{
+				data->PrevUserCallbackKey(window, key, scancode, action, mods);
+			}
 			switch (action)
 			{
 			case GLFW_PRESS:
@@ -111,14 +134,20 @@ namespace ZeoEngine {
 
 		data->PrevUserCallbackChar = glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int key) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackChar(window, key);
+			if (data->PrevUserCallbackChar)
+			{
+				data->PrevUserCallbackChar(window, key);
+			}
 			KeyTypedEvent event(window, key);
 			Application::Get().OnEvent(event);
 		});
 
 		data->PrevUserCallbackMousebutton = glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackMousebutton(window, button, action, mods);
+			if (data->PrevUserCallbackMousebutton)
+			{
+				data->PrevUserCallbackMousebutton(window, button, action, mods);
+			}
 			switch (action)
 			{
 			case GLFW_PRESS:
@@ -140,14 +169,20 @@ namespace ZeoEngine {
 
 		data->PrevUserCallbackScroll = glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackScroll(window, xoffset, yoffset);
+			if (data->PrevUserCallbackScroll)
+			{
+				data->PrevUserCallbackScroll(window, xoffset, yoffset);
+			}
 			MouseScrolledEvent event(window, static_cast<float>(xoffset), static_cast<float>(yoffset));
 			Application::Get().OnEvent(event);
 		});
 
 		data->PrevUserCallbackCursorPos = glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
 			const auto* data = static_cast<PreCallbackData*>(glfwGetWindowUserPointer(window));
-			data->PrevUserCallbackCursorPos(window, xpos, ypos);
+			if (data->PrevUserCallbackCursorPos)
+			{
+				data->PrevUserCallbackCursorPos(window, xpos, ypos);
+			}
 			MouseMovedEvent event(window, static_cast<float>(xpos), static_cast<float>(ypos));
 			Application::Get().OnEvent(event);
 		});

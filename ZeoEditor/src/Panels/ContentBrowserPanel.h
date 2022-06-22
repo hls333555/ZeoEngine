@@ -2,6 +2,8 @@
 
 #include "Panels/AssetBrowserPanelBase.h"
 
+#include "Engine/Events/ApplicationEvent.h"
+
 namespace ZeoEngine {
 
 	class ContentBrowserPanel : public AssetBrowserPanelBase
@@ -12,6 +14,8 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
+		virtual void ProcessEvent(Event& e) override;
+
 		void InitAssetTypeFilters();
 
 		virtual void DrawTopBar() override;
@@ -23,6 +27,8 @@ namespace ZeoEngine {
 		virtual void DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset) override;
 		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const Ref<PathSpec>& spec) override;
 
+		bool OnFileDropped(WindowFileDroppedEvent& e);
+		void ImportAsset(const std::string& filePath);
 		virtual void ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding) override;
 
 		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
