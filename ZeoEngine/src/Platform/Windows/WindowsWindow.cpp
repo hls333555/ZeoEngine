@@ -45,11 +45,11 @@ namespace ZeoEngine {
 		ImGuiIO& io = ImGui::GetIO();
 		if (bLock)
 		{
-			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+			io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 		}
 		else
 		{
-			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
 		}
 	}
 
