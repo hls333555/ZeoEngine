@@ -5,7 +5,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #if ZE_WITH_EDITOR
-#include "Engine/ImGui/EditorLog.h"
+#include "Engine/ImGui/EditorConsole.h"
 #endif // WITH_EDITOR
 
 namespace ZeoEngine {

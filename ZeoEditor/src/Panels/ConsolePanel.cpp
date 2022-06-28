@@ -1,6 +1,6 @@
 #include "Panels/ConsolePanel.h"
 
-#include "Engine/ImGui/EditorLog.h"
+#include "Engine/ImGui/EditorConsole.h"
 
 namespace ZeoEngine {
 
@@ -13,9 +13,7 @@ namespace ZeoEngine {
 
 	void ConsolePanel::ProcessRender()
 	{
-		EditorLog::s_EditorLog.Draw();
-
-		// TODO: Console command
+		EditorConsole::s_EditorLog.Draw();
 	}
 
 }
