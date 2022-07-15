@@ -1,7 +1,5 @@
 #pragma once
 
-#include <xhash>
-
 namespace ZeoEngine {
 
 	class UUID
@@ -24,9 +22,9 @@ namespace std {
 	template<>
 	struct hash<ZeoEngine::UUID>
 	{
-		ZeoEngine::SizeT operator()(const ZeoEngine::UUID& uuid) const
+		ZeoEngine::SizeT operator()(const ZeoEngine::UUID& uuid) const noexcept
 		{
-			return hash<ZeoEngine::U64>()(uuid);
+			return uuid;
 		}
 	};
 

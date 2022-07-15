@@ -15,14 +15,21 @@ namespace ZeoEngine {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const std::string& name, ApplicationCommandLineArgs args)
-		: m_CommandLineArgs(args)
+	Application::Application(const ApplicationSpecification& spec)
+		: m_Spec(spec)
 	{
 		ZE_PROFILE_FUNCTION();
 
 		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
-		m_Window = Window::Create(WindowProps(name));
+
+		// Set working directory
+		if (!m_Spec.WorkingDirectory.empty())
+		{
+			std::filesystem::current_path(m_Spec.WorkingDirectory);
+		}
+
+		m_Window = Window::Create(WindowProps(spec.Name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 

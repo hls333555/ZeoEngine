@@ -28,16 +28,23 @@ namespace ZeoEngine {
 		}
 	};
 
+	struct ApplicationSpecification
+	{
+		std::string Name = "ZeoEngine";
+		std::string WorkingDirectory;
+		ApplicationCommandLineArgs CommandLineArgs;
+	};
+
 	class Application
 	{
 		friend int ::main(int argc, char** argv);
 
 	public:
-		Application(const std::string& name = "Zeo App", ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
+		Application(const ApplicationSpecification& spec);
 		virtual ~Application();
 
 		static Application& Get() { return *s_Instance; }
-		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
+		const auto& GetSpecification() const { return m_Spec; }
 		Window& GetWindow() { return *m_Window; }
 		GLFWwindow* GetActiveNativeWindow() const { return m_ActiveWindow; }
 		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
@@ -77,7 +84,7 @@ namespace ZeoEngine {
 		bool OnWindowFocusChanged(WindowFocusChangedEvent& e);
 
 	private:
-		ApplicationCommandLineArgs m_CommandLineArgs;
+		ApplicationSpecification m_Spec;
 
 		Scope<Window> m_Window;
 		std::vector<GLFWwindow*> m_ViewportWindows; // TODO: Abstract GLFWwindow

@@ -10,8 +10,8 @@ namespace ZeoEngine {
 	class ZeoEditor : public Application
 	{
 	public:
-		ZeoEditor(ApplicationCommandLineArgs args)
-			: Application("Zeo Editor", args)
+		ZeoEditor(const ApplicationSpecification& spec)
+			: Application(spec)
 		{
 			PushLayer(new EditorLayer());
 			PushLayer(new TestLayer());
@@ -25,6 +25,9 @@ namespace ZeoEngine {
 
 	Application* CreateApplication(ApplicationCommandLineArgs args)
 	{
-		return new ZeoEditor(args);
+		ApplicationSpecification spec;
+		spec.Name = "ZeoEditor";
+		spec.CommandLineArgs = args;
+		return new ZeoEditor(spec);
 	}
 }

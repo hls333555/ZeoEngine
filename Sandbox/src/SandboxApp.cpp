@@ -7,8 +7,8 @@
 class SandBox : public ZeoEngine::Application
 {
 public:
-	SandBox(ZeoEngine::ApplicationCommandLineArgs args)
-		: Application("Sandbox", args)
+	SandBox(const ZeoEngine::ApplicationSpecification& spec)
+		: Application(spec)
 	{
 		PushLayer(new ZeoEngine::GameLayer());
 	}
@@ -21,5 +21,9 @@ public:
 
 ZeoEngine::Application* ZeoEngine::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new SandBox(args);
+	ApplicationSpecification spec;
+	spec.Name = "Sandbox";
+	spec.WorkingDirectory = "../ZeoEditor";
+	spec.CommandLineArgs = args;
+	return new SandBox(spec);
 }
