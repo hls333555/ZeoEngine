@@ -13,7 +13,7 @@ namespace ZeoEngine {
 
 	void ConsolePanel::ProcessRender()
 	{
-		EditorConsole::s_EditorLog.Draw();
+		EditorConsole::s_Instance.Draw();
 	}
 
 }

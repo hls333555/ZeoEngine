@@ -9,7 +9,7 @@ namespace ZeoEngine {
 
 	struct EditorConsole
 	{
-		static EditorConsole s_EditorLog;
+		static EditorConsole s_Instance;
 
 		ImGuiTextBuffer     LogBuffer;
 		TextFilter			LogFilter;
@@ -28,7 +28,7 @@ namespace ZeoEngine {
 			int  ClickedIdx = -1;			// Index of popup command clicked with the mouse. Ranges from [0, FilteredCommandLines.Size)
 			bool bIsAutoCompletion = false; // Flag set when a popup command is tabbed or clicked
 			bool bSelectionChanged = false;	// Flag to help focus the correct item when selecting active item
-			ImGuiTextBuffer CommandBuffer;
+			ImGuiTextBuffer CommandBuffer; // TODO: Redundant? See Console::m_Commands
 			ImVector<int> CommandLineOffsets; // Stores line offset of command
 			ImVector<int> FilteredCommandLines; // Stores line number of filtered command
 		}					CommandCallbackData;
@@ -62,7 +62,7 @@ namespace spdlog {
 			// If needed (very likely but not mandatory), the sink formats the message before sending it to its final destination:
 			spdlog::memory_buf_t formatted;
 			sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
-			ZeoEngine::EditorConsole::s_EditorLog.AddLog(msg.level, fmt::to_string(formatted).c_str());
+			ZeoEngine::EditorConsole::s_Instance.AddLog(msg.level, fmt::to_string(formatted).c_str());
 		}
 
 		void flush_() override

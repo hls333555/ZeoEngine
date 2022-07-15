@@ -4,10 +4,12 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/ImGui/MyImGui.h"
+#include "Engine/Core/Console.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
-	EditorConsole EditorConsole::s_EditorLog;
+	EditorConsole EditorConsole::s_Instance;
 
 	EditorConsole::EditorConsole()
 	{
@@ -358,10 +360,46 @@ namespace ZeoEngine {
 				{
 					const char* lineStart = buf + CommandCallbackData.CommandLineOffsets[lineNum];
 					const char* lineEnd = (lineNum + 1 < CommandCallbackData.CommandLineOffsets.Size) ? (buf + CommandCallbackData.CommandLineOffsets[lineNum + 1] - 1) : bufEnd;
-					std::string command(lineStart, lineEnd - lineStart);
-					if (command == CommandFilter.InputBuf)
+					std::string registeredCommand(lineStart, lineEnd - lineStart);
+					std::string inputCommand(CommandFilter.InputBuf);
+					auto& console = Console::Get();
+					auto splitStr = EngineUtils::SplitString(inputCommand, ' ', true);
+					const std::string commandKey = splitStr[0];
+					if (commandKey == registeredCommand)
 					{
-						ZE_CORE_INFO("Executing command: {0}", CommandFilter.InputBuf);
+						if (console.IsConsoleVariable(commandKey))
+						{
+							if (splitStr.size() == 1)
+							{
+								if (console.SetVariableValue(commandKey, {}))
+								{
+									ZE_CORE_INFO("Set console variable: {0} {1}", commandKey, *console.GetVariableDefaultValue(commandKey));
+								}
+							}
+							else
+							{
+								if (const auto commandValue = EngineUtils::StringToFloat(splitStr[1]))
+								{
+									if (console.SetVariableValue(commandKey, *commandValue))
+									{
+										ZE_CORE_INFO("Set console variable: {0} {1}", commandKey, *commandValue);
+									}
+								}
+								else
+								{
+									ZE_CORE_WARN("Invalid command: {0}", inputCommand);
+								}
+							}
+						}
+						else
+						{
+							splitStr.erase(splitStr.begin());
+							if (console.ExecuteCommand(commandKey, splitStr))
+							{
+								ZE_CORE_INFO("Executed command: {0}", commandKey);
+							}
+						}
+
 						bCommandExist = true;
 						break;
 					}
@@ -407,7 +445,7 @@ namespace ZeoEngine {
 		if (!CommandCallbackData.FilteredCommandLines.empty() && (CommandFilter.bIsInputBufferChanged || CommandCallbackData.bIsPopupOpen))
 		{
 			const float maxWidth = ImGui::GetItemRectMax().x - ImGui::GetItemRectMin().x;
-			const float width = glm::min(maxWidth, MaxCommandLineWidth + ImGui::GetFramePadding().x * 6);
+			const float width = glm::min(maxWidth, MaxCommandLineWidth + ImGui::GetFramePadding().x * 7);
 			const int maxLine = 10;
 			const float height = glm::min(maxLine, CommandCallbackData.FilteredCommandLines.Size) * ImGui::GetFontSize() + ImGui::GetFramePadding().y * 6;
 			const ImVec2 commandListSize = { width , height };
@@ -434,9 +472,9 @@ namespace ZeoEngine {
 						// can scroll to it if it has changed
 						bool bIsIndexActive = CommandCallbackData.ActiveIdx == idx;
 
+						std::string command(lineStart, lineEnd - lineStart);
 						ImGui::PushID(lineNum);
 						{
-							std::string command(lineStart, lineEnd - lineStart);
 							if (ImGui::Selectable(command.c_str(), bIsIndexActive))
 							{
 								// And item was clicked, notify the input
@@ -448,6 +486,16 @@ namespace ZeoEngine {
 
 						if (bIsIndexActive)
 						{
+							// Draw command tooltip if provided
+							const std::string tooltip = Console::Get().GetCommandTooltip(command);
+							if (!tooltip.empty())
+							{
+								ImGui::SetNextWindowPos({ ImGui::GetWindowPos().x + ImGui::GetWindowWidth(), ImGui::GetItemRectMin().y - ImGui::GetFramePadding().y * 2 });
+								ImGui::BeginTooltipWithPadding();
+								ImGui::Text(tooltip.c_str());
+								ImGui::EndTooltipWithPadding();
+							}
+
 							if (CommandCallbackData.bSelectionChanged)
 							{
 								// Make sure we bring the currently 'active' item into view

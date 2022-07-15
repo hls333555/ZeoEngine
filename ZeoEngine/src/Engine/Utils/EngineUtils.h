@@ -24,16 +24,32 @@ namespace ZeoEngine {
 			return Application::Get().GetTimeInSeconds();
 		}
 
-		static std::vector<std::string> SplitString(const std::string& str, char delimiter)
+		// https://stackoverflow.com/a/16749483/13756224
+		static std::vector<std::string> SplitString(const std::string& str, char delimiter, bool bFuzzyMatch = false)
 		{
 			std::vector<std::string> tokens;
 			std::string token;
 			std::istringstream tokenStream(str);
 			while (std::getline(tokenStream, token, delimiter))
 			{
-				tokens.emplace_back(std::move(token));
+				if (!bFuzzyMatch || token.length() > 0)
+				{
+					tokens.emplace_back(std::move(token));
+				}
 			}
 			return tokens;
+		}
+
+		static std::optional<float> StringToFloat(const std::string& str)
+		{
+			try
+			{
+				return std::stof(str);
+			}
+			catch (const std::exception&)
+			{
+				return {};
+			}
 		}
 
 		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& sceneContext);
