@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/Profile/Profiler.h"
 
@@ -35,6 +36,7 @@ namespace ZeoEngine {
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
 		Renderer::Init();
+		ScriptEngine::Init();
 		
 		// m_ImGuiLayer does not need to be unique pointer
 		// since it is going to be part of the layer stack who will control its lifecycle
@@ -45,6 +47,7 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
+		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 
 		delete m_Profiler;
