@@ -157,7 +157,7 @@ vec4 CalculateDirectionalLight(vec3 normal)
 	vec4 shadow = texture(u_ScreenSpaceShadowMap, screenUV);
 
 	// Ambient
-	vec4 ambientColor = texture(u_DiffuseTexture, v_VertexInput.TexCoord) * 0.3f;
+	vec4 ambientColor = texture(u_DiffuseTexture, v_VertexInput.TexCoord) * 0.1f;
 
 	return ambientColor + shadow * color;
 }

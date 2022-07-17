@@ -114,9 +114,11 @@ namespace ZeoEngine {
 	{
 		// Init material slots with default materials
 		m_MaterialSlots.reserve(meshScene->mNumMaterials);
+		m_MaterialNames.reserve(meshScene->mNumMaterials);
 		for (U32 i = 0; i < meshScene->mNumMaterials; ++i)
 		{
 			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterial());
+			m_MaterialNames.emplace_back(meshScene->mMaterials[i]->GetName().C_Str());
 		}
 
 		const U32 meshCount = meshScene->mNumMeshes;

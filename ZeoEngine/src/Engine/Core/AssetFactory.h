@@ -64,6 +64,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Mesh"; }
+		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
 	};
 
 	class MaterialAssetFactory : public AssetFactoryBase

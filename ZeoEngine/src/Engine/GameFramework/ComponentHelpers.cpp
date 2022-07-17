@@ -159,6 +159,12 @@ namespace ZeoEngine {
 		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
+	std::string MeshRendererComponentHelper::GetCustomSequenceContainerElementName(U32 index) const
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		return meshComp.MeshAsset->GetMaterialNames()[index];
+	}
+
 	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		GetOwnerEntity()->AddComponent<BillboardComponent>();

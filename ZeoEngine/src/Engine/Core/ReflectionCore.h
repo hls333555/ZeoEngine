@@ -94,6 +94,7 @@ enum class PropertyType
 	ClampMax,					// [value_type: type_dependent] Max value.
 	ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, inputted value will not get clamped.
 	FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
+	CustomElementName,			// [key_only] Container's element name are retrieved from ComponentHelper.
 
 };
 

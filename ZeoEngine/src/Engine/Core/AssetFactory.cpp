@@ -88,6 +88,29 @@ namespace ZeoEngine {
 		return Level::GetTemplatePath();
 	}
 
+	void MeshAssetFactory::ImportAsset(const std::string& srcPath, const std::string& destPath) const
+	{
+		ImportableAssetFactoryBase::ImportAsset(srcPath, destPath);
+
+		const std::string assetPath = destPath + AssetRegistry::GetEngineAssetExtension();
+		const auto mesh = MeshLibrary::Get().LoadAsset(assetPath);
+		if (!mesh) return;
+
+		// Create dummy materials automatically
+		for (const auto& materialName : mesh->GetMaterialNames())
+		{
+			const std::string materialPath = PathUtils::GetParentPath(destPath) + "/Mat_" + materialName + AssetRegistry::GetEngineAssetExtension();
+			if (!PathUtils::DoesPathExist(materialPath))
+			{
+				auto constexpr materialTypeId = Material::TypeId();
+				if (AssetManager::Get().CreateAsset(materialTypeId, materialPath))
+				{
+					AssetRegistry::Get().OnPathCreated(materialPath, materialTypeId);
+				}
+			}
+		}
+	}
+
 	const char* MaterialAssetFactory::GetAssetTemplatePath() const
 	{
 		return  Material::GetTemplatePath();

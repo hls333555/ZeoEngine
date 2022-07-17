@@ -38,6 +38,8 @@ namespace ZeoEngine {
 		/** Called after certain data has been deserialized. */
 		virtual void PostDataDeserialize(U32 dataId) {}
 
+		virtual std::string GetCustomSequenceContainerElementName(U32 index) const { return {}; }
+
 		/** Calculate component bounds or return an invalid one. */
 		virtual BoxSphereBounds GetBounds() { return {}; }
 
@@ -110,6 +112,7 @@ namespace ZeoEngine {
 		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 		virtual void PostDataDeserialize(U32 dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
+		virtual std::string GetCustomSequenceContainerElementName(U32 index) const override;
 	};
 
 	class LightComponentHelper : public IComponentHelper

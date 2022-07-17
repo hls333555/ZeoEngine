@@ -559,18 +559,37 @@ namespace ZeoEngine {
 			auto elementInstance = *it;
 
 			ImGui::AlignTextToFramePadding();
-			char indexNameBuffer[16];
-			_itoa_s(i, indexNameBuffer, 10);
+
+			std::string elementName;
+			if (DoesPropExist(PropertyType::CustomElementName, m_DataSpec.Data))
+			{
+				auto& comp = m_DataSpec.ComponentInstance.cast<IComponent&>();
+				if (comp.ComponentHelper)
+				{
+					elementName = comp.ComponentHelper->GetCustomSequenceContainerElementName(i);
+				}
+			}
+			else
+			{
+				char indexNameBuffer[16];
+				_itoa_s(i, indexNameBuffer, 10);
+				elementName = indexNameBuffer;
+			}
+			
 			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, seqView.value_type());
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
-			// Data index
-			bool bIsTreeExpanded = ImGui::TreeNodeEx(indexNameBuffer, flags);
+			// Element name
+			bool bIsTreeExpanded = ImGui::TreeNodeEx(elementName.c_str(), flags);
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("[%d]", i);
+			}
 			// Drag to re-arrange sequence container elements
 			if (!m_bIsFixedSize)
 			{
 				if (ImGui::IsItemHovered())
 				{
-					ImGui::SetTooltipWithPadding("Drag to re-arrange elements");
+					ImGui::SetTooltipWithPadding("[%d] Drag to re-arrange elements", i);
 				}
 
 				U32 id = GetAggregatedDataID(m_DataSpec.Data);

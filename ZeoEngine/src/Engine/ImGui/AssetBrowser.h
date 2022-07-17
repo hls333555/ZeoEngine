@@ -92,8 +92,6 @@ namespace ZeoEngine {
 
 				if (ImGui::BeginCombo("##AssetBrowser", retSpec ? retSpec->PathName.c_str() : nullptr))
 				{
-					bool bIsBufferChanged = false;
-
 					// Clear current selection
 					if (ImGui::Selectable("Clear"))
 					{
@@ -103,6 +101,13 @@ namespace ZeoEngine {
 
 					ImGui::Separator();
 
+					// Auto-focus search box at startup
+					// https://github.com/ocornut/imgui/issues/455#issuecomment-167440172
+					if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
+					{
+						ImGui::SetKeyboardFocusHere();
+						ImGui::SetScrollHereY();
+					}
 					Filter.Draw("##AssetFilter", "Search assets");
 
 					bool bIsListEmpty = true;

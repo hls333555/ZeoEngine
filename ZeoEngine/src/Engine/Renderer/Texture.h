@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		SRGB8,
 		RGBA8,
 		SRGBA8,
-		RGBA16F, // This format can store negative values
+		RGBA16F, // This format can store negative values, [-65504, 65504]
 		RG32F,
 		RED_INTEGER,
 

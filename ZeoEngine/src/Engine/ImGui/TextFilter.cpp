@@ -43,7 +43,7 @@ namespace ZeoEngine {
 		ImGuiInputTextFlags flags = inputCallback
 			? ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory
 			: 0;
-		bIsInputBufferChanged = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf), flags, inputCallback, callbackData);
+		bIsInputBufferChanged = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf), flags | ImGuiInputTextFlags_AutoSelectAll, inputCallback, callbackData);
 
 		//ImGui::SameLine();
 

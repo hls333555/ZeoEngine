@@ -120,7 +120,7 @@ namespace ZeoEngine {
 
 		ZCOMPONENT(MeshRendererComponent, ZPROP(DisplayName, ZTEXT("Mesh Renderer")), ZPROP(Tooltip, ZTEXT("网格渲染组件")), ZPROP(Category, ZTEXT("Rendering")))
 			ZDATA(MeshRendererComponent, MeshAsset)
-			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer));
+			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer), ZPROP(CustomElementName));
 
 		ZENUM(LightComponent::LightType)
 			ZENUM_DATA(LightComponent::LightType, DirectionalLight, ZPROP(Tooltip, ZTEXT("平行光")))

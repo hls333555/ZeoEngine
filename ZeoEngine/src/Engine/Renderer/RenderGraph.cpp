@@ -217,6 +217,7 @@ namespace ZeoEngine {
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
 			{ TextureFormat::SRGBA8 },
+			// TODO: will crash on selection when delete an entity and create again, change to RGBA32F or refactor entity selection strategy?
 			{ TextureFormat::RGBA16F }, // Entity ID buffer
 			{ TextureFormat::DEPTH24STENCIL8 }
 		};

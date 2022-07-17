@@ -31,7 +31,7 @@ namespace ZeoEngine {
 
 	struct MeshEntry
 	{
-		const char* Name = nullptr; // TODO
+		std::string Name;
 		U32 BaseVertex = 0;
 		U32 BaseIndex = 0;
 		U32 IndexCount = 0;
@@ -67,6 +67,7 @@ namespace ZeoEngine {
 		U32 GetMeshCount() const { return static_cast<U32>(m_Entries.size()); }
 
 		auto& GetDefaultMaterials() { return m_MaterialSlots; }
+		const auto& GetMaterialNames() const { return m_MaterialNames; }
 		U32 GetMaterialCount() const { return static_cast<U32>(m_MaterialSlots.size()); }
 
 		U32 GetVertexCount() const { return m_VertexCount; }
@@ -87,6 +88,7 @@ namespace ZeoEngine {
 		U32 m_VertexCount = 0, m_IndexCount = 0;
 		std::vector<MeshEntry> m_Entries;
 		std::vector<AssetHandle<Material>> m_MaterialSlots;
+		std::vector<std::string> m_MaterialNames;
 		BoxSphereBounds m_Bounds;
 	};
 
