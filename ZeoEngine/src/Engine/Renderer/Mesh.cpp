@@ -12,13 +12,18 @@
 namespace ZeoEngine {
 
 	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
-		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext)
+		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext), MaterialRef(material)
 	{
 		// This will be done after deserialization if bIsDeserialize is false
 		if (!bIsDeserialize)
 		{
 			BindAndSubmitTechniques(material);
 		}
+	}
+
+	MeshEntryInstance::~MeshEntryInstance()
+	{
+		MaterialRef->m_OnMaterialInitialized.disconnect(this);
 	}
 
 	void MeshEntryInstance::BindAndSubmitTechniques(const AssetHandle<Material>& material)

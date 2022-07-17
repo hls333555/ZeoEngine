@@ -42,8 +42,11 @@ namespace ZeoEngine {
 	{
 		const MeshEntry* EntryPtr;
 		const Weak<Scene> SceneContext;
+		const AssetHandle<Material> MaterialRef;
 
 		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
+		MeshEntryInstance(MeshEntryInstance&&) = default; // Once destructor is defined, we must also define a move constructor in order for it to be used instead of the copy constructor (which is deleted in the base class)
+		virtual ~MeshEntryInstance();
 
 		virtual U32 GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual U32 GetBaseIndex() const override { return EntryPtr->BaseIndex; }
