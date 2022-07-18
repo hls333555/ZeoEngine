@@ -338,7 +338,7 @@ namespace ZeoEngine {
 			// so that callback will be invoked next frame
 			ImGui::SetKeyboardFocusHere(-1);
 		}
-		if (ImGui::IsItemDeactivatedAfterEdit() && ImGui::IsKeyPressed(ImGuiKey_Enter))
+		if (ImGui::IsItemDeactivated() && ImGui::IsKeyPressed(ImGuiKey_Enter))
 		{
 			if (CommandCallbackData.bIsPopupOpen && CommandCallbackData.ActiveIdx != -1)
 			{
