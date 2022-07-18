@@ -111,8 +111,6 @@ namespace ZeoEngine {
 	OpenGLShader::OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: Shader(std::move(ID))
 	{
-		ZE_PROFILE_FUNCTION();
-
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 		shaderSrcs[GL_VERTEX_SHADER] = vertexSrc;
 		shaderSrcs[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -121,8 +119,6 @@ namespace ZeoEngine {
 
 	OpenGLShader::~OpenGLShader()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteProgram(m_RendererID);
 	}
 
@@ -139,8 +135,6 @@ namespace ZeoEngine {
 
 	std::string OpenGLShader::ReadFile(const std::string& path)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		std::string result;
 		std::ifstream in(path, std::ios::in | std::ios::binary);
 		if (in)
@@ -168,8 +162,6 @@ namespace ZeoEngine {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& src)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_ReflectTexturePropertyBindings.clear();
 		m_ReflectUniformBufferPropertyBindings.clear();
 		m_UniformBufferBoolVars.clear();
@@ -651,22 +643,16 @@ namespace ZeoEngine {
 
 	void OpenGLShader::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glUseProgram(m_RendererID);
 	}
 
 	void OpenGLShader::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glUseProgram(0);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformInt(name, value);
 	}
 
@@ -677,36 +663,26 @@ namespace ZeoEngine {
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformFloat(name, value);
 	}
 
 	void OpenGLShader::SetFloat2(const std::string& name, const Vec2& value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformFloat2(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const Vec3& value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformFloat3(name, value);
 	}
 
 	void OpenGLShader::SetFloat4(const std::string& name, const Vec4& value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformFloat4(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const Mat4& value)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		UploadUniformMat4(name, value);
 	}
 

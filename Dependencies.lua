@@ -16,6 +16,7 @@ IncludeDir["IconFontCppHeaders"] = "%{wks.location}/ZeoEngine/vendor/IconFontCpp
 IncludeDir["ImGui"] = "%{wks.location}/ZeoEngine/vendor/ImGui"
 IncludeDir["ImGuizmo"] = "%{wks.location}/ZeoEngine/vendor/ImGuizmo"
 IncludeDir["magic_enum"] = "%{wks.location}/ZeoEngine/vendor/magic_enum/include"
+IncludeDir["optick"] = "%{wks.location}/ZeoEngine/vendor/optick/src"
 IncludeDir["renderdoc"] = "%{wks.location}/ZeoEngine/vendor/renderdoc"
 IncludeDir["shaderc"] = "%{wks.location}/ZeoEngine/vendor/shaderc/include"
 IncludeDir["spdlog"] = "%{wks.location}/ZeoEngine/vendor/spdlog/include"

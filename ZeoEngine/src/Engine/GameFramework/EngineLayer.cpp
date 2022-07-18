@@ -14,7 +14,6 @@ namespace ZeoEngine {
 
 	void EngineLayer::OnAttach()
 	{
-		ZE_PROFILE_FUNCTION();
 
 
 	}

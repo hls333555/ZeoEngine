@@ -55,22 +55,16 @@ namespace ZeoEngine {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
@@ -79,8 +73,6 @@ namespace ZeoEngine {
 
 		if (!s_bGLFWInitialized)
 		{
-			ZE_PROFILE_SCOPE("glfwInit");
-
 			int success = glfwInit();
 			ZE_CORE_ASSERT(success, "Failed to initialize GLFW!");
 			// Set the GLFW error callback
@@ -90,8 +82,6 @@ namespace ZeoEngine {
 		}
 
 		{
-			ZE_PROFILE_SCOPE("glfwCreateWindow");
-
 			// TODO: Hide default windows decoration
 			//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 			// Create window
@@ -216,8 +206,6 @@ namespace ZeoEngine {
 
 	void WindowsWindow::Shutdown()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glfwDestroyWindow(m_Window);
 		glfwTerminate();
 	}
@@ -229,16 +217,12 @@ namespace ZeoEngine {
 
 	void WindowsWindow::OnUpdate()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool bEnabled)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (bEnabled)
 		{
 			glfwSwapInterval(1);

@@ -2,6 +2,7 @@
 
 #include "Engine/Renderer/Shader.h"
 
+#include <fstream>
 #include <spirv_cross/spirv_cross.hpp>
 #include <shaderc/shaderc.hpp>
 

@@ -225,8 +225,6 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::OnAttach()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -267,8 +265,6 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::OnDetach()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
@@ -287,8 +283,6 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::Begin()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -297,8 +291,6 @@ namespace ZeoEngine {
 
 	void ImGuiLayer::End()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		ImGuiIO& io = ImGui::GetIO();
 		const auto& window = Application::Get().GetWindow();
 		io.DisplaySize = ImVec2(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));

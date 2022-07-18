@@ -32,6 +32,7 @@ group "Dependencies"
 	include "ZeoEngine/vendor/GLFW"
 	include "ZeoEngine/vendor/Glad"
 	include "ZeoEngine/vendor/ImGui"
+	include "ZeoEngine/vendor/optick"
 	include "ZeoEngine/vendor/yaml-cpp"
 group ""
 

@@ -16,38 +16,28 @@ namespace ZeoEngine {
 
 	OpenGLVertexBuffer::OpenGLVertexBuffer(U32 size)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glCreateBuffers(1, &m_RendererID);
 		glNamedBufferData(m_RendererID, size, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, U32 size)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glCreateBuffers(1, &m_RendererID);
 		glNamedBufferData(m_RendererID, size, vertices, GL_STATIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	void OpenGLVertexBuffer::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 	}
 
 	void OpenGLVertexBuffer::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -63,8 +53,6 @@ namespace ZeoEngine {
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(U32 count)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		// Call glCreateBuffers() instead of glGenBuffers() just for consistency
 		glCreateBuffers(1, &m_RendererID);
 		// Since index buffer state is managed by vao, index buffer data is manipulated in VertexArray::SetIndexBufferData
@@ -74,30 +62,22 @@ namespace ZeoEngine {
 	OpenGLIndexBuffer::OpenGLIndexBuffer(U32* indices, U32 count)
 		: m_Count(count)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glCreateBuffers(1, &m_RendererID);
 		glNamedBufferData(m_RendererID, count * sizeof(U32), indices, GL_STATIC_DRAW);
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
 	void OpenGLIndexBuffer::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 	}
 
 	void OpenGLIndexBuffer::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
@@ -132,8 +112,6 @@ namespace ZeoEngine {
 	OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex, U32 textureBindingSlot)
 		: m_Spec(spec), m_TextureBindingAttachmentIndex(textureBindingAttachmentIndex), m_TextureBindingSlot(textureBindingSlot)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		for (auto spec : m_Spec.Attachments.TextureSpecs)
 		{
 			if (!Utils::IsDepthFormat(spec.TextureFormat))
@@ -151,8 +129,6 @@ namespace ZeoEngine {
 
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Cleanup();
 	}
 
@@ -160,8 +136,6 @@ namespace ZeoEngine {
 
 	void OpenGLFrameBuffer::Invalidate()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (m_RendererID)
 		{
 			Cleanup();
@@ -279,8 +253,6 @@ namespace ZeoEngine {
 
 	void OpenGLFrameBuffer::BindAsBuffer() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		// Update viewport to framebuffer texture's resolution
 		glViewport(0, 0, m_Spec.Width, m_Spec.Height);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
@@ -288,8 +260,6 @@ namespace ZeoEngine {
 
 	void OpenGLFrameBuffer::UnbindAsBuffer() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 

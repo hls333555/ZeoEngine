@@ -16,7 +16,6 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/Log.h"
-#include "Engine/Profile/Instrumentor.h"
 
 #ifdef ZE_PLATFORM_WINDOWS
 	#include <Windows.h>

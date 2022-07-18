@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 
+#include "Engine/Core/Application.h"
 #include "Engine/Renderer/Renderer2D.h"
 
 namespace ZeoEngine {
@@ -17,6 +18,19 @@ namespace ZeoEngine {
 
 	void StatsPanel::ProcessRender()
 	{
+		if (ImGui::TreeNodeEx("Performance", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+		{
+			auto* profiler = Application::Get().GetPerformanceProfiler();
+			const auto& perFrameData = profiler->GetPerFrameData();
+			for (auto&& [name, time] : perFrameData)
+			{
+				ImGui::Text("%s: %.3fms\n", name, time);
+			}
+			profiler->Clear();
+
+			ImGui::TreePop();
+		}
+
 		// TODO:
 		auto& Stats = Renderer::GetStats();
 		if (ImGui::TreeNodeEx("Renderer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))

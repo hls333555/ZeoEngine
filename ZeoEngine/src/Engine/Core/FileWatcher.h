@@ -28,6 +28,11 @@ namespace ZeoEngine {
 
 			Start();
 		}
+
+		~FileWatcher()
+		{
+			Stop();
+		}
 		
 		void Start()
 		{

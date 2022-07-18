@@ -6,7 +6,7 @@
 #include "Engine/Events/Event.h"
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Core/LayerStack.h"
-#include "Engine/Core/DeltaTime.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/GameFramework/EngineLayer.h"
 #include "Tools/RenderDoc/RenderDoc.h"
 
@@ -47,7 +47,10 @@ namespace ZeoEngine {
 		const auto& GetSpecification() const { return m_Spec; }
 		Window& GetWindow() { return *m_Window; }
 		GLFWwindow* GetActiveNativeWindow() const { return m_ActiveWindow; }
+
 		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
+		PerformanceProfiler* GetPerformanceProfiler() const { return m_Profiler; }
+
 		void AddViewportWindow(GLFWwindow* window) { m_ViewportWindows.emplace_back(window); }
 		void RemoveViewportWindow(GLFWwindow* window) { m_ViewportWindows.erase(std::find(m_ViewportWindows.begin(), m_ViewportWindows.end(), window)); }
 
@@ -99,6 +102,8 @@ namespace ZeoEngine {
 
 		// TODO: Move to ToolsManager
 		RenderDoc m_RenderDoc;
+		// TODO: Should be null in Dist
+		PerformanceProfiler* m_Profiler = nullptr;
 
 		static Application* s_Instance;
 

@@ -9,8 +9,6 @@ namespace ZeoEngine {
 
 	void Renderer::Init()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		RenderCommand::Init();
 	}
 

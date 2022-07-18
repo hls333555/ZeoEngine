@@ -81,7 +81,7 @@ namespace ZeoEngine {
 		if (!PathUtils::DoesPathExist(resourcePath)) return;
 
 		ClearCache(resourcePath);
-		BenchmarkTimer timer;
+		Timer timer;
 		if (ParseAndCompile())
 		{
 			Deserialize();

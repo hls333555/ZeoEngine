@@ -5,6 +5,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/ImGui/ImGuiLayer.h"
+#include "Engine/Profile/Profiler.h"
 
 extern "C"
 {
@@ -18,8 +19,6 @@ namespace ZeoEngine {
 	Application::Application(const ApplicationSpecification& spec)
 		: m_Spec(spec)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
@@ -28,6 +27,8 @@ namespace ZeoEngine {
 		{
 			std::filesystem::current_path(m_Spec.WorkingDirectory);
 		}
+
+		m_Profiler = new PerformanceProfiler();
 
 		m_Window = Window::Create(WindowProps(spec.Name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
@@ -44,15 +45,14 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Renderer::Shutdown();
+
+		delete m_Profiler;
+		m_Profiler = nullptr;
 	}
 
 	void Application::OnEvent(Event& e)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
@@ -76,27 +76,21 @@ namespace ZeoEngine {
 
 	void Application::PushLayer(Layer* layer)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_LayerStack.PushOverlay(layer);
 		layer->OnAttach();
 	}
 
 	void Application::Run()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		while (m_bRunning)
 		{
-			ZE_PROFILE_SCOPE("RunLoop");
+			ZE_PROFILE_FRAME("MainThread");
 
 			// Platform::GetTime();
 			float time = m_Window->GetTimeInSeconds();
@@ -107,7 +101,8 @@ namespace ZeoEngine {
 			if (!m_bMinimized)
 			{
 				{
-					ZE_PROFILE_SCOPE("LayerStack OnUpdate");
+					ZE_PROFILE_FUNC("Application Layer::OnUpdate");
+					ZE_SCOPE_PERF("Application Layer::OnUpdate");
 
 					for (auto* layer : m_LayerStack)
 					{
@@ -117,16 +112,19 @@ namespace ZeoEngine {
 
 				// TODO: This will eventually be in render thread
 				// Render ImGui
-				m_ImGuiLayer->Begin();
 				{
-					ZE_PROFILE_SCOPE("LayerStack OnImGuiRender");
+					ZE_PROFILE_FUNC("Application Layer::OnImGuiRender");
+					ZE_SCOPE_PERF("Application Layer::OnImGuiRender");
 
-					for (auto* layer : m_LayerStack)
+					m_ImGuiLayer->Begin();
 					{
-						layer->OnImGuiRender();
+						for (auto* layer : m_LayerStack)
+						{
+							layer->OnImGuiRender();
+						}
 					}
+					m_ImGuiLayer->End();
 				}
-				m_ImGuiLayer->End();
 			}
 
 			// Do swap buffers and other stuff
@@ -149,8 +147,6 @@ namespace ZeoEngine {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (e.GetWindow() != m_Window->GetNativeWindow()) return false;
 
 		// When window is minimized...

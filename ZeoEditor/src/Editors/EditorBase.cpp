@@ -3,7 +3,6 @@
 #include "EditorUIRenderers/EditorUIRendererBase.h"
 #include "Panels/OpenAssetPanel.h"
 #include "Panels/SaveAssetPanel.h"
-#include "Engine/Profile/Instrumentor.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Renderer/EditorCamera.h"
@@ -118,7 +117,7 @@ namespace ZeoEngine {
 
 	void EditorBase::LoadScene(const std::string& path)
 	{
-		BenchmarkTimer timer;
+		Timer timer;
 
 		LoadAsset(path);
 		m_ActiveScene->PostLoad();
@@ -142,7 +141,7 @@ namespace ZeoEngine {
 
 	void EditorBase::SaveScene(const std::string& path)
 	{
-		BenchmarkTimer timer;
+		Timer timer;
 
 		SaveAsset(path);
 

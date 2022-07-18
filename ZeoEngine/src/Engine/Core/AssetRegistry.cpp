@@ -68,7 +68,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::ConstructPathTree()
 	{
-		BenchmarkTimer timer;
+		Timer timer;
 
 		m_PathTree.emplace_back(std::make_pair(GetAssetRootDirectory(), std::vector<std::string>{}));
 		m_PathSpecs[GetAssetRootDirectory()] = CreateRef<DirectorySpec>(GetAssetRootDirectory(), GetAssetRootDirectory());
@@ -325,11 +325,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnPathRemoved(const std::string& path)
 	{
-		BenchmarkTimer timer;
-
 		RemovePathFromTree(path);
-
-		ZE_CORE_WARN("Path removal took {0} ms", timer.ElapsedMillis());
 	}
 
 	void AssetRegistry::OnPathRenamed(const std::string oldPath, const std::string newPath, bool bIsAsset)

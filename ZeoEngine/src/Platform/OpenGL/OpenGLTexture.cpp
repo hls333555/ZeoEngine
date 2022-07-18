@@ -14,8 +14,6 @@ namespace ZeoEngine {
 		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_InternalFormat = OpenGLUtils::ToGLTextureInternalFormat(format);
 		m_DataFormat = OpenGLUtils::ToGLTextureFormat(format);
 
@@ -39,22 +37,16 @@ namespace ZeoEngine {
 		, m_TextureResourcePath(std::move(path))
 		, m_BindingSlot(bindingSlot)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Invalidate();
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteTextures(1, &m_RendererID);
 	}
 
 	void OpenGLTexture2D::SetData(void* data, U32 size)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		// Bytes per pixel
 		U32 bpp = 0;
 		switch (m_DataFormat)
@@ -69,8 +61,6 @@ namespace ZeoEngine {
 
 	void OpenGLTexture2D::Invalidate()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (m_RendererID) // NOTE: Make sure this is initialized to 0!
 		{
 			glDeleteTextures(1, &m_RendererID);
@@ -80,8 +70,6 @@ namespace ZeoEngine {
 		int width, height, channels;
 		stbi_uc* data = nullptr;
 		{
-			ZE_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&, bool)");
-
 			data = stbi_load(m_TextureResourcePath.c_str(), &width, &height, &channels, 0);
 		}
 		ZE_CORE_ASSERT(data, "Failed to load image: {0}!", m_TextureResourcePath);
@@ -135,8 +123,6 @@ namespace ZeoEngine {
 
 	void OpenGLTexture2D::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (!m_BindingSlot)
 		{
 			ZE_CORE_ERROR("Failed to bind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
@@ -157,8 +143,6 @@ namespace ZeoEngine {
 
 	void OpenGLTexture2D::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (!m_BindingSlot)
 		{
 			ZE_CORE_ERROR("Failed to unbind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
@@ -177,8 +161,6 @@ namespace ZeoEngine {
 		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		m_Width = width;
 		m_Height = height;
 
@@ -210,8 +192,6 @@ namespace ZeoEngine {
 
 	OpenGLTexture2DArray::~OpenGLTexture2DArray()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteTextures(1, &m_RendererID);
 		glDeleteTextures(m_ArraySize, m_TextureViews.data());
 	}
@@ -219,8 +199,6 @@ namespace ZeoEngine {
 	// TODO:
 	void OpenGLTexture2DArray::SetData(void* data, U32 size)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		// Bytes per pixel
 		U32 bpp = 0;
 		switch (m_DataFormat)
@@ -235,8 +213,6 @@ namespace ZeoEngine {
 
 	void OpenGLTexture2DArray::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (!m_BindingSlot)
 		{
 			ZE_CORE_ERROR("Failed to bind Texture2DArray ({0}) with unspecified binding slot!", m_RendererID);
@@ -257,8 +233,6 @@ namespace ZeoEngine {
 
 	void OpenGLTexture2DArray::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (!m_BindingSlot)
 		{
 			ZE_CORE_ERROR("Failed to unbind Texture2DArray ({0}) with unspecified binding slot!", m_RendererID);

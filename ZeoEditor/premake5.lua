@@ -31,6 +31,7 @@ project "ZeoEditor"
 		"%{IncludeDir.IconFontCppHeaders}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.optick}",
 		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.yaml_cpp}",

@@ -31,36 +31,26 @@ namespace ZeoEngine {
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindVertexArray(m_RendererID);
 	}
 
 	void OpenGLVertexArray::Unbind() const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindVertexArray(0);
 	}
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		ZE_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
@@ -129,8 +119,6 @@ namespace ZeoEngine {
 
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindVertexArray(m_RendererID);
 		indexBuffer->Bind();
 
@@ -139,8 +127,6 @@ namespace ZeoEngine {
 
 	void OpenGLVertexArray::SetIndexBufferData(const void* data, U32 size) const
 	{
-		ZE_PROFILE_FUNCTION();
-
 		glBindVertexArray(m_RendererID);
 		// Do not need to bind index buffer as its binding state is saved in vao
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, data);

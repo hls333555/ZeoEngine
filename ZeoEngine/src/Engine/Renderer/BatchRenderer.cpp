@@ -99,8 +99,6 @@ namespace ZeoEngine {
 
 	void BatchRenderer::DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (m_PrimitiveBuffer.QuadIndexCount >= m_PrimitiveBuffer.MaxIndices)
 		{
 			NextBatch();
@@ -132,8 +130,6 @@ namespace ZeoEngine {
 
 	void BatchRenderer::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (m_PrimitiveBuffer.QuadIndexCount >= m_PrimitiveBuffer.MaxIndices)
 		{
 			NextBatch();

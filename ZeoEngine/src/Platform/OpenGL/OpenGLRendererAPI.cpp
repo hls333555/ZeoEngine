@@ -31,8 +31,6 @@ namespace ZeoEngine {
 
 	void OpenGLRendererAPI::Init()
 	{
-		ZE_PROFILE_FUNCTION();
-
 #ifdef ZE_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

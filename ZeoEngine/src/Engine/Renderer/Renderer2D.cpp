@@ -13,8 +13,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::Init()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
@@ -98,15 +96,11 @@ namespace ZeoEngine {
 
 	void Renderer2D::Shutdown()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
 	void Renderer2D::BeginScene(const Camera& camera, const Mat4& transform)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		s_Data.CameraBuffer.ViewProjection = camera.GetProjection() * glm::inverse(transform);
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 
@@ -115,8 +109,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::BeginScene(const EditorCamera& camera)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
 		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2DData::CameraData));
 		StartBatch();
@@ -124,8 +116,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
 
 		StartBatch();
@@ -133,8 +123,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::EndScene()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Flush();
 	}
 
@@ -211,8 +199,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Vec3& position, const Vec2& size, const Vec4& color)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
 
@@ -221,8 +207,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			NextBatch();
@@ -259,8 +243,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
 
@@ -269,8 +251,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			NextBatch();
@@ -323,8 +303,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Vec3& position, const Vec2& size, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
 
@@ -333,8 +311,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawQuad(const Mat4& transform, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
 			NextBatch();
@@ -382,8 +358,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawCircle(const Mat4& transform, const Vec4& color, float thickness, float fade, I32 entityID)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		//if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		//{
 		//	NextBatch();
@@ -462,8 +436,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Vec4& color)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::rotate(Mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
@@ -478,8 +450,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::rotate(Mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
@@ -494,8 +464,6 @@ namespace ZeoEngine {
 
 	void Renderer2D::DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
-		ZE_PROFILE_FUNCTION();
-
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::rotate(Mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });

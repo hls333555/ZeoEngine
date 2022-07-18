@@ -46,6 +46,7 @@ project "ZeoEngine"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.optick}",
 		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.stb_image}",
@@ -62,6 +63,7 @@ project "ZeoEngine"
 		"Glad",
 		"GLFW",
 		"ImGui",
+		"optick",
 		"yaml-cpp",
 	}
 
