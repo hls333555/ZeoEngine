@@ -148,7 +148,7 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		LogFilter.Draw("##LogTextFilter", "Search log", -1.0f);
+		LogFilter.Draw("##LogTextFilter", "Search log");
 
 		ImGui::Separator();
 
@@ -328,7 +328,7 @@ namespace ZeoEngine {
 		const char* buf = CommandCallbackData.CommandBuffer.begin();
 		const char* bufEnd = CommandCallbackData.CommandBuffer.end();
 
-		CommandFilter.Draw("##CommandTextFilter", "Input Console Command", -1.0f, CommandInputCallback, &CommandCallbackData);
+		CommandFilter.Draw("##CommandTextFilter", "Input Console Command", 0, CommandInputCallback, &CommandCallbackData);
 		// Restore focus to the input box if we just clicked an item
 		if (CommandCallbackData.ClickedIdx > -1)
 		{

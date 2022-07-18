@@ -12,83 +12,90 @@ namespace ZeoEngine {
 
 	void SceneOutlinePanel::ProcessRender()
 	{
-		m_Filter.Draw("##SceneOutlineAssetFilter", "Search entities", -1.0f);
+		m_Filter.Draw("##SceneOutlineAssetFilter", "Search entities");
 		
 		ImGui::Separator();
 
 		auto sceneEditor = GetContextEditor();
 		const auto& scene = sceneEditor->GetScene();
 
-		// Display entities in creation order, the order is updated when a new entity is created or destroyed
-		scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& coreComp)
+		const auto availRegion = ImGui::GetContentRegionAvail();
+		const ImVec2 entityListSize = { availRegion.x, availRegion.y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetFramePadding().y * 2 /* separator */ };
+		if (ImGui::BeginChild("SceneOutlineEntityList", entityListSize))
 		{
-			Entity entity{ entityId, GetContextEditor()->GetScene() };
-			DrawEntityNode(entity);
-		});
+			// Display entities in creation order, the order is updated when a new entity is created or destroyed
+			scene->m_Registry.view<CoreComponent>().each([this](auto entityId, auto& coreComp)
+			{
+				Entity entity{ entityId, GetContextEditor()->GetScene() };
+				DrawEntityNode(entity);
+			});
 
-		// Deselect entity when blank space is clicked
-		// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
-		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
-		{
-			sceneEditor->SetContextEntity({});
+			// Deselect entity when blank space is clicked
+			// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
+			{
+				sceneEditor->SetContextEntity({});
+			}
+
+			// Right-click on blank space
+			if (ImGui::BeginPopupContextWindowWithPadding(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+			{
+				Entity newEntity;
+
+				if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
+				{
+					newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
+				}
+
+				if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Shapes"))
+				{
+					if (ImGui::MenuItem(ICON_FA_CUBE "  Cube"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlaceCube(scene);
+					}
+
+					if (ImGui::MenuItem(ICON_FA_CIRCLE "  Sphere"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlaceSphere(scene);
+					}
+
+					if (ImGui::MenuItem(ICON_FA_SQUARE "  Plane"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlacePlane(scene);
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Lights"))
+				{
+					if (ImGui::MenuItem(ICON_FA_SUN "  Directional Light"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlaceDirectionalLight(scene);
+					}
+
+					if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Point Light"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlacePointLight(scene);
+					}
+
+					if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Spot Light"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlaceSpotLight(scene);
+					}
+
+					ImGui::EndMenu();
+				}
+
+				sceneEditor->SetContextEntity(newEntity);
+
+				ImGui::EndPopup();
+			}
 		}
+		ImGui::EndChild();
 
-		// Right-click on blank space
-		if (ImGui::BeginPopupContextWindowWithPadding(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-		{
-			Entity newEntity;
+		ImGui::Separator();
 
-			if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
-			{
-				newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
-			}
-
-			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Shapes"))
-			{
-				if (ImGui::MenuItem(ICON_FA_CUBE "  Cube"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlaceCube(scene);
-				}
-
-				if (ImGui::MenuItem(ICON_FA_CIRCLE "  Sphere"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlaceSphere(scene);
-				}
-
-				if (ImGui::MenuItem(ICON_FA_SQUARE "  Plane"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlacePlane(scene);
-				}
-
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu(ICON_FA_LIGHTBULB "  Lights"))
-			{
-				if (ImGui::MenuItem(ICON_FA_SUN "  Directional Light"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlaceDirectionalLight(scene);
-				}
-
-				if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Point Light"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlacePointLight(scene);
-				}
-
-				if (ImGui::MenuItem(ICON_FA_LIGHTBULB "  Spot Light"))
-				{
-					newEntity = EditorSceneUtils::CreateAndPlaceSpotLight(scene);
-				}
-
-				ImGui::EndMenu();
-			}
-
-			sceneEditor->SetContextEntity(newEntity);
-
-			ImGui::EndPopup();
-		}
-
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text(" %d entitie(s)", scene->GetEntityCount());
 	}
 

@@ -13,6 +13,12 @@ namespace ZeoEngine {
 	};
 
 	// Helper: Parse and apply text filters.
+	//	Filter usage:
+	//	""			display all lines
+	//	"xxx"		display lines containing "xxx"
+	//	"-xxx"		hide lines containing "xxx"
+	//	"xxx yyy"	display lines containing "xxx" and "yyy"
+	//	"xxx -yyy"	display lines containing "xxx" but not "yyy")"
 	struct TextFilter
 	{
 		// [Internal]
