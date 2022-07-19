@@ -13,12 +13,13 @@ namespace ZeoEngine {
 		void ToggleEnableCapture();
 
 		void StartFrameCapture() const;
-		void StopFrameCapture() const;
+		void StopFrameCapture();
 
 	private:
 		dylib m_Lib;
 		RENDERDOC_API_1_5_0* m_API = nullptr;
 		bool m_bEnableCapture = false;
+		bool m_bCaptureOneFrameOnly = false;
 	};
 
 }

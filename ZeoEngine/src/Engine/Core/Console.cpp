@@ -45,7 +45,9 @@ namespace ZeoEngine {
 	{
 		if (m_Commands.find(key) != m_Commands.end())
 		{
-			m_Commands[key].CurrentValue = value ? *value : m_Commands[key].DefaultValue;
+			const float newValue = value ? *value : m_Commands[key].DefaultValue;
+			ZE_CORE_INFO("Setting console variable: {0} {1}", key, newValue);
+			m_Commands[key].CurrentValue = newValue;
 			return true;
 		}
 		return false;
@@ -57,6 +59,7 @@ namespace ZeoEngine {
 		{
 			if (const auto& command = m_Commands[key].CommandFunc)
 			{
+				ZE_CORE_INFO("Executing command: {0}", key);
 				command(params);
 				return true;
 			}

@@ -24,6 +24,18 @@ namespace ZeoEngine {
 			return Application::Get().GetTimeInSeconds();
 		}
 
+		static std::string GetCurrentTimeAndDate()
+		{
+		    const auto now = std::chrono::system_clock::now();
+		    const auto time = std::chrono::system_clock::to_time_t(now);
+
+		    std::stringstream ss;
+			tm newTime;
+			localtime_s(&newTime, &time);
+		    ss << std::put_time(&newTime, "%Y.%m.%d-%H.%M.%S");
+		    return ss.str();
+		}
+
 		// https://stackoverflow.com/a/16749483/13756224
 		static std::vector<std::string> SplitString(const std::string& str, char delimiter, bool bFuzzyMatch = false)
 		{

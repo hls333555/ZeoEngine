@@ -20,13 +20,13 @@ namespace ZeoEngine {
 	{
 		if (ImGui::TreeNodeEx("Performance", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			auto* profiler = Application::Get().GetPerformanceProfiler();
-			const auto& perFrameData = profiler->GetPerFrameData();
+			auto& profiler = Application::Get().GetPerformanceProfiler();
+			const auto& perFrameData = profiler.GetPerFrameData();
 			for (auto&& [name, time] : perFrameData)
 			{
 				ImGui::Text("%s: %.3fms\n", name, time);
 			}
-			profiler->Clear();
+			profiler.Clear();
 
 			ImGui::TreePop();
 		}

@@ -28,7 +28,7 @@ namespace ZeoEngine {
 			std::filesystem::current_path(m_Spec.WorkingDirectory);
 		}
 
-		m_Profiler = new PerformanceProfiler();
+		m_Profiler = new Profiler();
 
 		m_Window = Window::Create(WindowProps(spec.Name));
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));

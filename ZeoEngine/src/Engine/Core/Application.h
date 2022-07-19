@@ -8,7 +8,7 @@
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/GameFramework/EngineLayer.h"
-#include "Tools/RenderDoc/RenderDoc.h"
+#include "Engine/Profile/Profiler.h"
 
 int main(int argc, char** argv);
 
@@ -48,8 +48,8 @@ namespace ZeoEngine {
 		Window& GetWindow() { return *m_Window; }
 		GLFWwindow* GetActiveNativeWindow() const { return m_ActiveWindow; }
 
-		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
-		PerformanceProfiler* GetPerformanceProfiler() const { return m_Profiler; }
+		RenderDoc& GetRenderDoc() const { return m_Profiler->GetRenderDoc(); }
+		PerformanceProfiler& GetPerformanceProfiler() const { return m_Profiler->GetPerformanceProfiler(); }
 
 		void AddViewportWindow(GLFWwindow* window) { m_ViewportWindows.emplace_back(window); }
 		void RemoveViewportWindow(GLFWwindow* window) { m_ViewportWindows.erase(std::find(m_ViewportWindows.begin(), m_ViewportWindows.end(), window)); }
@@ -100,10 +100,8 @@ namespace ZeoEngine {
 		bool m_bMinimized = false;
 		float m_LastFrameTime = 0.0f;
 
-		// TODO: Move to ToolsManager
-		RenderDoc m_RenderDoc;
 		// TODO: Should be null in Dist
-		PerformanceProfiler* m_Profiler = nullptr;
+		Profiler* m_Profiler = nullptr;
 
 		static Application* s_Instance;
 

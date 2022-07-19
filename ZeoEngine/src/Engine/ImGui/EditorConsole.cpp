@@ -371,19 +371,13 @@ namespace ZeoEngine {
 						{
 							if (splitStr.size() == 1)
 							{
-								if (console.SetVariableValue(commandKey, {}))
-								{
-									ZE_CORE_INFO("Set console variable: {0} {1}", commandKey, *console.GetVariableDefaultValue(commandKey));
-								}
+								console.SetVariableValue(commandKey, {});
 							}
 							else
 							{
 								if (const auto commandValue = EngineUtils::StringToFloat(splitStr[1]))
 								{
-									if (console.SetVariableValue(commandKey, *commandValue))
-									{
-										ZE_CORE_INFO("Set console variable: {0} {1}", commandKey, *commandValue);
-									}
+									console.SetVariableValue(commandKey, *commandValue);
 								}
 								else
 								{
@@ -394,10 +388,7 @@ namespace ZeoEngine {
 						else
 						{
 							splitStr.erase(splitStr.begin());
-							if (console.ExecuteCommand(commandKey, splitStr))
-							{
-								ZE_CORE_INFO("Executed command: {0}", commandKey);
-							}
+							console.ExecuteCommand(commandKey, splitStr);
 						}
 
 						bCommandExist = true;

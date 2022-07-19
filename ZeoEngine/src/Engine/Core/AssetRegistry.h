@@ -79,9 +79,12 @@ namespace ZeoEngine {
 			return instance;
 		}
 
+		// TODO: Move to other file
 		static constexpr const char* GetAssetRootDirectory() { return "assets"; }
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
 		static constexpr const char* GetEditorRootDirectory() { return "assets/editor"; } // TODO:
+		static constexpr const char* GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
+		static constexpr const char* GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
 
 		void OnUpdate(DeltaTime dt);
 
