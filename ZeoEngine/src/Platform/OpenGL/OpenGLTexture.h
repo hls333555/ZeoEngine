@@ -9,8 +9,8 @@ namespace ZeoEngine {
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type);
-		OpenGLTexture2D(std::string path, std::optional<U32> bindingSlot);
+		OpenGLTexture2D(U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type);
+		OpenGLTexture2D(std::string resourcePath, std::optional<U32> bindingSlot);
 		virtual ~OpenGLTexture2D() override;
 
 		virtual U32 GetWidth() const override { return m_Width; }
@@ -36,11 +36,6 @@ namespace ZeoEngine {
 		virtual void Bind() const override;
 		virtual void BindAsImage(U32 slot, bool bReadOrWrite) const override;
 		virtual void Unbind() const override;
-
-		virtual bool operator==(const Texture& other) const override
-		{
-			return m_RendererID == dynamic_cast<const OpenGLTexture2D&>(other).m_RendererID;
-		}
 
 	private:
 		U32 m_RendererID = 0;
@@ -85,11 +80,6 @@ namespace ZeoEngine {
 		virtual void Bind() const override;
 		virtual void BindAsImage(U32 slot, bool bReadOrWrite) const override;
 		virtual void Unbind() const override;
-
-		virtual bool operator==(const Texture& other) const override
-		{
-			return m_RendererID == dynamic_cast<const OpenGLTexture2DArray&>(other).m_RendererID;
-		}
 
 	private:
 		U32 m_RendererID = 0;

@@ -1,141 +1,34 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
-#include <glm/glm.hpp>
-
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Shader.h"
+#include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace YAML {
 
-	using namespace ZeoEngine;
-
-	template<>
-	struct convert<Vec2>
-	{
-		static Node encode(const Vec2& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vec2& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 2)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<Vec3>
-	{
-		static Node encode(const Vec3& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vec3& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 3)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<Vec4>
-	{
-		static Node encode(const Vec4& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.push_back(rhs.w);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vec4& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			rhs.w = node[3].as<float>();
-			return true;
-		}
-	};
-
-	Emitter& operator<<(Emitter& out, const Entity& e)
-	{
-		out << e.GetEntityId();
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Vec2& v)
-	{
-		out << Flow;
-		out << BeginSeq << v.x << v.y << EndSeq;
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Vec3& v)
-	{
-		out << Flow;
-		out << BeginSeq << v.x << v.y << v.z << EndSeq;
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Vec4& v)
-	{
-		out << Flow;
-		out << BeginSeq << v.x << v.y << v.z << v.w << EndSeq;
-		return out;
-	}
-
 #define DEFINE_ASSET_CONVERTOR(assetClass)									\
 	template<>																\
-	struct convert<AssetHandle<assetClass>>									\
+	struct convert<Ref<assetClass>>											\
 	{																		\
-		static Node encode(const AssetHandle<assetClass>& rhs)				\
+		static Node encode(const Ref<assetClass>& rhs)						\
 		{																	\
 			Node node;														\
-			node.push_back(rhs ? rhs->GetID() : "");						\
+			node = rhs ? rhs->GetHandle() : 0;								\
 			return node;													\
 		}																	\
-		static bool decode(const Node& node, AssetHandle<assetClass>& rhs)	\
+		static bool decode(const Node& node, Ref<assetClass>& rhs)			\
 		{																	\
-			const auto& path = node.as<std::string>();						\
-			if (path.empty()) return true;									\
-			rhs = ZE_CAT(assetClass, Library)::Get().LoadAsset(path);		\
+			const auto handle = node.as<AssetHandle>();						\
+			if (!handle) return true;										\
+			rhs = AssetLibrary::LoadAsset<assetClass>(handle);				\
 			return true;													\
 		}																	\
-	};																		\
-	Emitter& operator<<(Emitter& out, const AssetHandle<assetClass>& asset)	\
-	{																		\
-		out << (asset ? asset->GetID() : "");								\
-		return out;															\
-	}
+	};
 
 	DEFINE_ASSET_CONVERTOR(Texture2D);
 	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
@@ -147,14 +40,11 @@ namespace YAML {
 
 namespace ZeoEngine {
 
-	const char* g_AssetTypeToken = "AssetType";
-	const char* g_SourceToken = "SourcePath";
-
 	//////////////////////////////////////////////////////////////////////////
 	// ComponentSerializer ///////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void ComponentSerializer::Serialize(YAML::Emitter& out, entt::meta_any& instance)
+	void ComponentSerializer::Serialize(YAML::Node& node, entt::meta_any instance)
 	{
 		if (!instance) return;
 
@@ -166,7 +56,7 @@ namespace ZeoEngine {
 			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
 			if (bDiscardSerialize) continue;
 
-			EvaluateSerializeData(out, data, instance, false);
+			EvaluateSerializeData(node, data, instance, false);
 		}
 	}
 
@@ -179,13 +69,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::EvaluateSerializeData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateSerializeData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 	{
 		const auto type = bIsSeqElement ? instance.type() : data.type();
 		switch (EvaluateMetaType(type))
 		{
 			case BasicMetaType::STRUCT:
-				EvaluateSerializeStructData(out, data, instance, bIsSeqElement);
+				EvaluateSerializeStructData(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::SEQCON:
 				if (bIsSeqElement)
@@ -193,7 +83,7 @@ namespace ZeoEngine {
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return;
 				}
-				EvaluateSerializeSequenceContainerData(out, data, instance);
+				EvaluateSerializeSequenceContainerData(node, data, instance);
 				break;
 			case BasicMetaType::ASSCON:
 				if (bIsSeqElement)
@@ -201,133 +91,129 @@ namespace ZeoEngine {
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return;
 				}
-				EvaluateSerializeAssociativeContainerData(out, data, instance);
+				EvaluateSerializeAssociativeContainerData(node, data, instance);
 				break;
 			case BasicMetaType::BOOL:
-				SerializeData<bool>(out, data, instance, bIsSeqElement);
+				SerializeData<bool>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I8:
-				SerializeData<I8>(out, data, instance, bIsSeqElement);
+				SerializeData<I8>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I32:
-				SerializeData<I32>(out, data, instance, bIsSeqElement);
+				SerializeData<I32>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::I64:
-				SerializeData<I64>(out, data, instance, bIsSeqElement);
+				SerializeData<I64>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI8:
-				SerializeData<U8>(out, data, instance, bIsSeqElement);
+				SerializeData<U8>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI32:
-				SerializeData<U32>(out, data, instance, bIsSeqElement);
+				SerializeData<U32>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::UI64:
-				SerializeData<U64>(out, data, instance, bIsSeqElement);
+				SerializeData<U64>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::FLOAT:
-				SerializeData<float>(out, data, instance, bIsSeqElement);
+				SerializeData<float>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::DOUBLE:
-				SerializeData<double>(out, data, instance, bIsSeqElement);
+				SerializeData<double>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::ENUM:
-				SerializeEnumData(out, data, instance, bIsSeqElement);
+				SerializeEnumData(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::STRING:
-				SerializeData<std::string>(out, data, instance, bIsSeqElement);
+				SerializeData<std::string>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC2:
-				SerializeData<Vec2>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec2>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC3:
-				SerializeData<Vec3>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec3>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC4:
-				SerializeData<Vec4>(out, data, instance, bIsSeqElement);
+				SerializeData<Vec4>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
-				SerializeData<AssetHandle<Texture2D>>(out, data, instance, bIsSeqElement);
+				SerializeData<Ref<Texture2D>>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				SerializeData<AssetHandle<ParticleTemplate>>(out, data, instance, bIsSeqElement);
+				SerializeData<Ref<ParticleTemplate>>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
-				SerializeData<AssetHandle<Mesh>>(out, data, instance, bIsSeqElement);
+				SerializeData<Ref<Mesh>>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
-				SerializeData<AssetHandle<Material>>(out, data, instance, bIsSeqElement);
+				SerializeData<Ref<Material>>(node, data, instance, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
-				SerializeData<AssetHandle<Shader>>(out, data, instance, bIsSeqElement);
+				SerializeData<Ref<Shader>>(node, data, instance, bIsSeqElement);
 				break;
 			default:
-				auto dataName = GetMetaObjectDisplayName(data);
+				const auto dataName = GetMetaObjectDisplayName(data);
 				ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", *dataName);
 				break;
 		}
 	}
 
-	void ComponentSerializer::EvaluateSerializeSequenceContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance)
+	void ComponentSerializer::EvaluateSerializeSequenceContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance)
 	{
 		auto seqView = data.get(instance).as_sequence_container();
 		const auto dataName = GetMetaObjectDisplayName(data);
-		out << YAML::Key << *dataName << YAML::Value;
+		YAML::Node seqNode;
+		seqNode.SetStyle(YAML::EmitterStyle::Flow);
+		for (auto it = seqView.begin(); it != seqView.end(); ++it)
 		{
-			out << YAML::Flow;
-			out << YAML::BeginSeq;
-			{
-				for (auto it = seqView.begin(); it != seqView.end(); ++it)
-				{
-					auto elementInstance = *it;
-					EvaluateSerializeData(out, data, elementInstance, true);
-				}
-			}
-			out << YAML::EndSeq;
+			auto elementInstance = *it;
+			EvaluateSerializeData(seqNode, data, elementInstance, true);
 		}
+		node[*dataName] = seqNode;
 	}
 
-	void ComponentSerializer::EvaluateSerializeAssociativeContainerData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance)
+	void ComponentSerializer::EvaluateSerializeAssociativeContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance)
 	{
 		// Not implemented
 		ZE_CORE_ASSERT(false);
 	}
 
-	void ComponentSerializer::EvaluateSerializeStructData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateSerializeStructData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 	{
-		const auto dataName = GetMetaObjectDisplayName(data);
-		bIsSeqElement ? out << YAML::BeginSeq : out << YAML::Key << *dataName << YAML::Value << YAML::BeginSeq;
+		YAML::Node subNode;
+		const auto structType = bIsSeqElement ? instance.type() : data.type();
+		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
+		for (const auto subData : structType.data())
 		{
-			const auto structType = bIsSeqElement ? instance.type() : data.type();
-			auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
-			for (const auto subData : structType.data())
-			{
-				out << YAML::BeginMap;
-				{
-					EvaluateSerializeData(out, subData, structInstance, false);
-				}
-				out << YAML::EndMap;
-			}
+			EvaluateSerializeData(subNode, subData, structInstance, false);
 		}
-		out << YAML::EndSeq;
+		if (bIsSeqElement)
+		{
+			node.push_back(subNode);
+		}
+		else
+		{
+			const auto dataName = GetMetaObjectDisplayName(data);
+			node[*dataName] = subNode;
+		}
 	}
 
-	void ComponentSerializer::SerializeEnumData(YAML::Emitter& out, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+	void ComponentSerializer::SerializeEnumData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
 	{
 		if (bIsSeqElement)
 		{
 			const char* enumValueName = GetEnumDisplayName(instance);
-			out << enumValueName;
+			node.push_back(enumValueName);
 		}
 		else
 		{
 			const auto dataName = GetMetaObjectDisplayName(data);
 			const auto enumValue = data.get(instance);
 			const char* enumValueName = GetEnumDisplayName(enumValue);
-			out << YAML::Key << *dataName << YAML::Value << enumValueName;
+			node[*dataName] = enumValueName;
 		}
 	}
 
-	void ComponentSerializer::Deserialize(const YAML::Node& value, entt::meta_any& instance)
+	void ComponentSerializer::Deserialize(const YAML::Node& node, entt::meta_any instance)
 	{
 		if (!instance) return;
 
@@ -336,12 +222,12 @@ namespace ZeoEngine {
 		for (const auto data : m_PreprocessedDatas)
 		{
 			auto dataName = GetMetaObjectDisplayName(data);
-			const auto& dataValue = value[*dataName];
+			const auto& dataValue = node[*dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
 				EvaluateDeserializeData(data, instance, dataValue, false);
-				IComponent* comp = instance.try_cast<IComponent>();
+				const auto* comp = instance.try_cast<IComponent>();
 				if (comp->ComponentHelper)
 				{
 					comp->ComponentHelper->PostDataDeserialize(data.id());
@@ -350,13 +236,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
 	{
 		const auto type = bIsSeqElement ? instance.type() : data.type();
 		switch (EvaluateMetaType(type))
 		{
 			case BasicMetaType::STRUCT:
-				EvaluateDeserializeStructData(data, instance, value, bIsSeqElement);
+				EvaluateDeserializeStructData(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::SEQCON:
 				if (bIsSeqElement)
@@ -364,7 +250,7 @@ namespace ZeoEngine {
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return;
 				}
-				EvaluateDeserializeSequenceContainerData(data, instance, value);
+				EvaluateDeserializeSequenceContainerData(data, instance, node);
 				break;
 			case BasicMetaType::ASSCON:
 				if (bIsSeqElement)
@@ -372,64 +258,64 @@ namespace ZeoEngine {
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return;
 				}
-				EvaluateDeserializeAssociativeContainerData(data, instance, value);
+				EvaluateDeserializeAssociativeContainerData(data, instance, node);
 				break;
 			case BasicMetaType::BOOL:
-				DeserializeData<bool>(data, instance, value, bIsSeqElement);
+				DeserializeData<bool>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::I8:
-				DeserializeData<I8>(data, instance, value, bIsSeqElement);
+				DeserializeData<I8>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::I32:
-				DeserializeData<I32>(data, instance, value, bIsSeqElement);
+				DeserializeData<I32>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::I64:
-				DeserializeData<I64>(data, instance, value, bIsSeqElement);
+				DeserializeData<I64>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::UI8:
-				DeserializeData<U8>(data, instance, value, bIsSeqElement);
+				DeserializeData<U8>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::UI32:
-				DeserializeData<U32>(data, instance, value, bIsSeqElement);
+				DeserializeData<U32>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::UI64:
-				DeserializeData<U64>(data, instance, value, bIsSeqElement);
+				DeserializeData<U64>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::FLOAT:
-				DeserializeData<float>(data, instance, value, bIsSeqElement);
+				DeserializeData<float>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::DOUBLE:
-				DeserializeData<double>(data, instance, value, bIsSeqElement);
+				DeserializeData<double>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::ENUM:
-				DeserializeEnumData(data, instance, value, bIsSeqElement);
+				DeserializeEnumData(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::STRING:
-				DeserializeData<std::string>(data, instance, value, bIsSeqElement);
+				DeserializeData<std::string>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC2:
-				DeserializeData<Vec2>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec2>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC3:
-				DeserializeData<Vec3>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec3>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::VEC4:
-				DeserializeData<Vec4>(data, instance, value, bIsSeqElement);
+				DeserializeData<Vec4>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::TEXTURE:
-				DeserializeData<AssetHandle<Texture2D>>(data, instance, value, bIsSeqElement);
+				DeserializeData<Ref<Texture2D>>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::PARTICLE:
-				DeserializeData<AssetHandle<ParticleTemplate>>(data, instance, value, bIsSeqElement);
+				DeserializeData<Ref<ParticleTemplate>>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::MESH:
-				DeserializeData<AssetHandle<Mesh>>(data, instance, value, bIsSeqElement);
+				DeserializeData<Ref<Mesh>>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::MATERIAL:
-				DeserializeData<AssetHandle<Material>>(data, instance, value, bIsSeqElement);
+				DeserializeData<Ref<Material>>(data, instance, node, bIsSeqElement);
 				break;
 			case BasicMetaType::SHADER:
-				DeserializeData<AssetHandle<Shader>>(data, instance, value, bIsSeqElement);
+				DeserializeData<Ref<Shader>>(data, instance, node, bIsSeqElement);
 				break;
 			default:
 				auto dataName = GetMetaObjectDisplayName(data);
@@ -449,12 +335,12 @@ namespace ZeoEngine {
 		return retIt;
 	}
 
-	void ComponentSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
+	void ComponentSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node)
 	{
 		auto seqView = data.get(instance).as_sequence_container();
 		// Clear elements first
 		seqView.clear();
-		for (const auto& elementValue : value)
+		for (const auto& elementValue : node)
 		{
 			auto it = InsertDefaultValueForSeq(data, seqView);
 			auto elementInstance = *it;
@@ -462,12 +348,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value)
+	void ComponentSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node)
 	{
 
 	}
 
-	void ComponentSerializer::EvaluateDeserializeStructData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateDeserializeStructData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
 	{
 		const auto type = bIsSeqElement ? instance.type() : data.type();
 		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
@@ -476,9 +362,9 @@ namespace ZeoEngine {
 		{
 			auto subDataName = GetMetaObjectDisplayName(subData);
 			// Evaluate serialized subdata only
-			if (value[i])
+			if (node[i])
 			{
-				const auto& subValue = value[i][*subDataName];
+				const auto& subValue = node[i][*subDataName];
 				// Evaluate serialized subdata only
 				if (subValue)
 				{
@@ -489,9 +375,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& value, bool bIsSeqElement)
+	void ComponentSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
 	{
-		const auto currentValueName = value.as<std::string>();
+		const auto currentValueName = node.as<std::string>();
 		const auto& datas = bIsSeqElement ? instance.type().data() : data.type().data();
 		for (const auto enumData : datas)
 		{
@@ -515,58 +401,58 @@ namespace ZeoEngine {
 	// MaterialSerializer ////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void MaterialSerializer::Serialize(YAML::Emitter& out, const AssetHandle<Material>& material)
+	void MaterialSerializer::Serialize(YAML::Node& node, const Ref<Material>& material)
 	{
 		if (!material) return;
 
 		for (const auto& uniform : material->GetDynamicBindableUniforms())
 		{
-			EvaluateSerializeData(out, uniform);
+			EvaluateSerializeData(node, uniform);
 		}
 		for (const auto& uniform : material->GetDynamicUniforms())
 		{
-			EvaluateSerializeData(out, uniform);
+			EvaluateSerializeData(node, uniform);
 		}
 	}
 
-	void MaterialSerializer::EvaluateSerializeData(YAML::Emitter& out, const Ref<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform)
 	{
 		switch (uniform->GetDataType())
 		{
 			case ShaderReflectionType::Bool:
-				SerializeData<bool>(out, uniform);
+				SerializeData<bool>(node, uniform);
 				break;
 			case ShaderReflectionType::Int:
-				SerializeData<I32>(out, uniform);
+				SerializeData<I32>(node, uniform);
 				break;
 			case ShaderReflectionType::Float:
-				SerializeData<float>(out, uniform);
+				SerializeData<float>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec2:
-				SerializeData<Vec2>(out, uniform);
+				SerializeData<Vec2>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec3:
-				SerializeData<Vec3>(out, uniform);
+				SerializeData<Vec3>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec4:
-				SerializeData<Vec4>(out, uniform);
+				SerializeData<Vec4>(node, uniform);
 				break;
 			case ShaderReflectionType::Texture2D:
-				SerializeData<AssetHandle<Texture2D>>(out, uniform);
+				SerializeData<Ref<Texture2D>>(node, uniform);
 				break;
 			default:
 				break;
 		}
 	}
 
-	void MaterialSerializer::Deserialize(const YAML::Node& value, const AssetHandle<Material>& material)
+	void MaterialSerializer::Deserialize(const YAML::Node& node, const Ref<Material>& material)
 	{
 		if (!material) return;
 
 		for (const auto& uniform : material->GetDynamicBindableUniforms())
 		{
 			const auto& dataName = uniform->Name;
-			const auto& dataValue = value[dataName];
+			const auto& dataValue = node[dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
@@ -576,7 +462,7 @@ namespace ZeoEngine {
 		for (const auto& uniform : material->GetDynamicUniforms())
 		{
 			const auto& dataName = uniform->Name;
-			const auto& dataValue = value[dataName];
+			const auto& dataValue = node[dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
@@ -585,202 +471,48 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& value, const Ref<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform)
 	{
 		switch (uniform->GetDataType())
 		{
 			case ShaderReflectionType::Bool:
-				DeserializeData<bool>(value, uniform);
+				DeserializeData<bool>(node, uniform);
 				break;
 			case ShaderReflectionType::Int:
-				DeserializeData<I32>(value, uniform);
+				DeserializeData<I32>(node, uniform);
 				break;
 			case ShaderReflectionType::Float:
-				DeserializeData<float>(value, uniform);
+				DeserializeData<float>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec2:
-				DeserializeData<Vec2>(value, uniform);
+				DeserializeData<Vec2>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec3:
-				DeserializeData<Vec3>(value, uniform);
+				DeserializeData<Vec3>(node, uniform);
 				break;
 			case ShaderReflectionType::Vec4:
-				DeserializeData<Vec4>(value, uniform);
+				DeserializeData<Vec4>(node, uniform);
 				break;
 			case ShaderReflectionType::Texture2D:
-				DeserializeData<AssetHandle<Texture2D>>(value, uniform);
+				DeserializeData<Ref<Texture2D>>(node, uniform);
 				break;
 			default:
 				break;
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	// AssetSerializer ///////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-	
-	void AssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
+	void SceneSerializer::Serialize(YAML::Node& node, const Ref<Scene>& scene)
 	{
-		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
+		if (!scene) return;
+
+		scene->m_Registry.view<CoreComponent>().each([&](auto entityID, auto& cc)
 		{
-			ComponentSerializer cs;
-			cs.Serialize(out, instance);
-		});
-	}
+			const Entity entity = { entityID, scene };
+			if (!entity) return;
 
-	bool AssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
-	{
-		const auto data = ReadDataFromAsset(path, typeId);
-		if (!data) return false;
-
-		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
-		return true;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// ImportableAssetSerializer /////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	void ImportableAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const std::string& resourcePath)
-	{
-		const std::string& assetPath = path;
-		WriteDataToAsset(assetPath, typeId, [&](YAML::Emitter& out)
-		{
-			out << YAML::Key << g_SourceToken << YAML::Value <<
-				(resourcePath.empty() ? AssetRegistry::Get().GetPathSpec(assetPath)->GetSourcePath() : resourcePath);
-
-			ComponentSerializer cs;
-			cs.Serialize(out, instance);
-		});
-	}
-
-	bool ImportableAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance)
-	{
-		const std::string& assetPath = path;
-		auto data = ReadDataFromAsset(assetPath, typeId);
-		if (!data) return false;
-
-		if (const auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(assetPath))
-		{
-			if (const auto sourceData = (*data)[g_SourceToken])
-			{
-				assetSpec->SourcePath = sourceData.as<std::string>();
-			}
-		}
-		ComponentSerializer cs;
-		cs.Deserialize(*data, instance);
-		return true;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// MaterialAssetSerializer ///////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	void MaterialAssetSerializer::Serialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material)
-	{
-		WriteDataToAsset(path, typeId, [&](YAML::Emitter& out)
-		{
-			// Serialize component data
-			ComponentSerializer cs;
-			cs.Serialize(out, instance);
-
-			// Serialize shader uniform data
-			MaterialSerializer ms;
-			ms.Serialize(out, material);
-		});
-	}
-
-	bool MaterialAssetSerializer::Deserialize(const std::string& path, AssetTypeId typeId, entt::meta_any instance, const AssetHandle<Material>& material, bool bIncludeComponentData)
-	{
-		const auto data = ReadDataFromAsset(path, typeId);
-		if (!data) return false;
-
-		// Derialize component data
-		if (bIncludeComponentData)
-		{
-			ComponentSerializer cs;
-			cs.Deserialize(*data, instance);
-		}
-
-		// Derialize shader uniform data
-		MaterialSerializer ms;
-		ms.Deserialize(*data, material);
-		return true;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// SceneSerializer ///////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-
-	static void SerializeEntity(YAML::Emitter& out, const Entity entity)
-	{
-		out << YAML::BeginMap;
-		{
-			out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
-			out << YAML::Key << "Components" << YAML::Value << YAML::BeginSeq;
-			{
-				// Do not call entt::registry::visit() as the order is reversed
-				for (const auto compId : entity.GetOrderedComponentIds())
-				{
-					auto compInstance = entity.GetComponentById(compId);
-					// Do not serialize transient component
-					auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, compInstance.type());
-					if (bDiscardSerialize) continue;
-
-					out << YAML::BeginMap;
-					{
-						out << YAML::Key << "Component" << YAML::Value << compId; // TODO: Component ID goes here
-						ComponentSerializer cs;
-						cs.Serialize(out, compInstance);
-					}
-					out << YAML::EndMap;
-				}
-			}
-			out << YAML::EndSeq;
-		}
-		out << YAML::EndMap;
-	}
-
-	static void DeserializeEntity(const YAML::Node& entity, const Ref<Scene>& scene)
-	{
-		U64 uuid = entity["Entity"].as<U64>();
-		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
-
-		if (auto components = entity["Components"])
-		{
-			for (auto component : components)
-			{
-				auto compId = component["Component"].as<U32>();
-				// TODO: NativeScriptComponent deserialization
-				if (compId == entt::type_hash<NativeScriptComponent>::value()) continue;
-
-				entt::meta_any compInstance = deserializedEntity.GetOrAddComponentById(compId, true);
-				// Instance may be null as compId is invalid
-				if (compInstance)
-				{
-					ComponentSerializer cs;
-					cs.Deserialize(component, compInstance);
-				}
-			}
-		}
-	}
-
-	void SceneSerializer::Serialize(const std::string& path, const Ref<Scene>& scene)
-	{
-		WriteDataToAsset(path, Level::TypeId(), [&](YAML::Emitter& out)
-		{
-			out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
-			{
-				scene->m_Registry.view<CoreComponent>().each([&](auto entityId, auto& cc)
-				{
-					const Entity entity = { entityId, scene };
-					if (!entity) return;
-
-					SerializeEntity(out, entity);
-				});
-			}
-			out << YAML::EndSeq;
+			YAML::Node entityNode;
+			SerializeEntity(entityNode, entity);
+			node["Entities"].push_back(entityNode);
 		});
 	}
 
@@ -790,26 +522,67 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& path, const Ref<Scene>& scene)
+	void SceneSerializer::Deserialize(const YAML::Node& node, const Ref<Scene>& scene)
 	{
-		auto data = ReadDataFromAsset(path, Level::TypeId());
-		if (!data) return false;
-
-		if (auto entities = (*data)["Entities"])
+		if (auto entities = node["Entities"])
 		{
 			for (auto entity : entities)
 			{
 				DeserializeEntity(entity, scene);
 			}
 		}
-		return true;
 	}
 
-	bool SceneSerializer::DeserializeRuntime()
+	void SceneSerializer::DeserializeRuntime()
 	{
 		// Not implemented
 		ZE_CORE_ASSERT(false);
-		return false;
+	}
+
+	void SceneSerializer::SerializeEntity(YAML::Node& node, const Entity entity)
+	{
+		node["Entity"] = entity.GetUUID();
+		// Do not call entt::registry::visit() as the order is reversed
+		for (const auto compID : entity.GetOrderedComponentIds())
+		{
+			auto compInstance = entity.GetComponentById(compID);
+			// Do not serialize transient component
+			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, compInstance.type());
+			if (bDiscardSerialize) continue;
+
+			// Serialize component
+			YAML::Node compNode;
+			compNode["Component"] = compID;
+			ComponentSerializer cs;
+			cs.Serialize(compNode, compInstance);
+			node["Components"].push_back(compNode);
+		}
+	}
+
+	void SceneSerializer::DeserializeEntity(const YAML::Node& node, const Ref<Scene>& scene)
+	{
+		const UUID uuid = node["Entity"].as<UUID>();
+		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
+
+		if (auto components = node["Components"])
+		{
+			for (auto component : components)
+			{
+				const auto compID = component["Component"].as<U32>();
+				// TODO: NativeScriptComponent deserialization
+				if (compID == entt::type_hash<NativeScriptComponent>::value()) continue;
+
+				auto compInstance = deserializedEntity.GetOrAddComponentById(compID, true);
+				// Instance may be null as compID is invalid
+				if (compInstance)
+				{
+					// Deserialize component
+					ComponentSerializer cs;
+					// We must pass by reference here for component to be deserialized property
+					cs.Deserialize(component, compInstance.as_ref());
+				}
+			}
+		}
 	}
 
 }

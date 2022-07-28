@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <entt.hpp>
 
 namespace ZeoEngine {
 
@@ -25,10 +24,5 @@ namespace ZeoEngine {
 	using Mat2 = glm::mat2;
 	using Mat3 = glm::mat3;
 	using Mat4 = glm::mat4;
-
-	using AssetTypeId = U32;
-
-	template<typename AssetClass>
-	using AssetHandle = entt::resource<AssetClass>;
 
 }

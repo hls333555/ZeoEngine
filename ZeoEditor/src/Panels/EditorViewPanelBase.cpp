@@ -7,8 +7,8 @@
 #include "Editors/EditorBase.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Core/ThumbnailManager.h"
-#include "Engine/Core/AssetRegistry.h"
-#include "Engine/Renderer/RenderPass.h"
+#include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
@@ -56,10 +56,10 @@ namespace ZeoEngine {
 		if (ImGui::BeginDragDropTarget())
 		{
 			char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
-			_itoa_s(GetContextEditor()->GetAssetTypeId(), typeStr, 10);
+			_itoa_s(GetContextEditor()->GetAsset()->GetTypeID(), typeStr, 10);
 			if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr))
 			{
-				auto spec = *(const Ref<AssetSpec>*)payload->Data;
+				auto spec = *(const Ref<AssetMetadata>*)payload->Data;
 				GetContextEditor()->LoadScene(spec->Path);
 			}
 			ImGui::EndDragDropTarget();
@@ -103,7 +103,7 @@ namespace ZeoEngine {
 
 	std::string EditorViewPanelBase::GetPanelTitle() const
 	{
-		std::string assetName = PathUtils::GetNameFromPath(GetContextEditor()->GetAsset()->GetID());
+		auto assetName = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle())->PathName;
 		if (assetName.empty())
 		{
 			assetName = "Untitled";
@@ -111,16 +111,13 @@ namespace ZeoEngine {
 		return assetName + "###" + GetPanelName();
 	}
 
-	void EditorViewPanelBase::Snapshot(const std::string& assetPath, U32 imageWidth, bool bOverwriteThumbnail)
+	void EditorViewPanelBase::Snapshot(const Ref<AssetMetadata>& metadata, U32 imageWidth, bool bOverwriteThumbnail) const
 	{
-		std::string thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(assetPath, {});
-		if (!bOverwriteThumbnail && PathUtils::DoesPathExist(thumbnailPath)) return;
+		const auto thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(metadata);
+		if (!bOverwriteThumbnail && PathUtils::Exists(thumbnailPath)) return;
 
-		m_SnapshotSpec.AssetPath = assetPath;
-		m_SnapshotSpec.ThumbnailPath = thumbnailPath;
-		m_SnapshotSpec.ImageWidth = imageWidth;
-		GetContextEditor()->GetFrameBuffer()->Snapshot(m_SnapshotSpec.ThumbnailPath, m_SnapshotSpec.ImageWidth);
-		AssetRegistry::Get().GetPathSpec<AssetSpec>(m_SnapshotSpec.AssetPath)->UpdateThumbnail();
+		GetContextEditor()->GetFrameBuffer()->Snapshot(thumbnailPath.string(), imageWidth);
+		metadata->UpdateThumbnail();
 	}
 
 	Vec2 EditorViewPanelBase::GetViewportSize() const
@@ -128,7 +125,7 @@ namespace ZeoEngine {
 		return { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
 	}
 
-	std::pair<float, float> EditorViewPanelBase::GetMouseViewportPosition()
+	std::pair<float, float> EditorViewPanelBase::GetMouseViewportPosition() const
 	{
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;

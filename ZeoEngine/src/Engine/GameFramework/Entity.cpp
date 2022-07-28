@@ -20,7 +20,51 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void Entity::UpdateBounds()
+	UUID Entity::GetUUID() const
+	{
+		return GetComponent<IDComponent>().ID;
+	}
+
+	const std::string& Entity::GetName() const
+	{
+		return GetComponent<CoreComponent>().Name;
+	}
+
+	Mat4 Entity::GetTransform() const
+	{
+		return GetComponent<TransformComponent>().GetTransform();
+	}
+
+	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		auto& transformComp = GetComponent<TransformComponent>();
+		transformComp.Translation = translation;
+		transformComp.Rotation = rotation;
+		transformComp.Scale = scale;
+		UpdateBounds();
+	}
+
+	const Vec3& Entity::GetTranslation() const
+	{
+		return GetComponent<TransformComponent>().Translation;
+	}
+
+	const Vec3& Entity::GetRotation() const
+	{
+		return GetComponent<TransformComponent>().Rotation;
+	}
+
+	const Vec3& Entity::GetScale() const
+	{
+		return GetComponent<TransformComponent>().Scale;
+	}
+
+	const BoxSphereBounds& Entity::GetBounds() const
+	{
+		return GetComponent<BoundsComponent>().Bounds;
+	}
+
+	void Entity::UpdateBounds() const
 	{
 		if (!HasComponent<TransformComponent>()) return;
 

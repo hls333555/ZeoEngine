@@ -3,8 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "Engine/Renderer/Bindable.h"
-#include "Engine/Core/Asset.h"
-#include "Engine/Core/AssetLibrary.h"
+#include "Engine/Asset/Asset.h"
 
 namespace ZeoEngine {
 
@@ -101,19 +100,17 @@ namespace ZeoEngine {
 	class Shader : public Bindable, public AssetBase<Shader>
 	{
 	public:
-		explicit Shader(std::string ID)
-			: AssetBase(std::move(ID)) {}
 		virtual ~Shader() = default;
 
-		static Ref<Shader> Create(const std::string& path);
-		static Ref<Shader> Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
+		static Ref<Shader> Create(std::string resourcePath);
+		static Ref<Shader> Create(const std::string& vertexSrc, const std::string& fragmentSrc);
 
 		static constexpr const char* GetTemplatePath() { return "assets/editor/shaders/NewShader.glsl.zasset"; }
 		static constexpr const char* GetResourceTemplatePath() { return "assets/editor/shaders/NewShader.glsl"; }
+		// TODO:
+		static Ref<Shader> GetDefaultShader();
 
-		virtual void Reload() override;
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
+		void Reload();
 
 		virtual bool ParseAndCompile() = 0;
 
@@ -129,19 +126,8 @@ namespace ZeoEngine {
 		virtual SizeT GetResourceCount() const = 0;
 		virtual const std::unordered_map <U32, UniformBlockData>& GetUniformBlockDatas() const = 0;
 
-		static void ClearCache(const std::string& path);
+		static void ClearCache(const std::filesystem::path& path);
 
 	};
-
-	REGISTER_ASSET(Shader,
-	Ref<Shader> operator()(const std::string& path) const
-	{
-		return Shader::Create(path);
-	},
-	// TODO:
-	static AssetHandle<Shader> GetDefaultShader()
-	{
-		return ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Default.glsl.zasset");
-	})
 
 }

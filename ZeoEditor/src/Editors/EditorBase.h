@@ -19,7 +19,7 @@ namespace ZeoEngine {
 
 	public:
 		EditorBase() = delete;
-		explicit EditorBase(const char* editorName);
+		explicit EditorBase(std::string editorName);
 		virtual ~EditorBase();
 
 	protected:
@@ -70,12 +70,12 @@ namespace ZeoEngine {
 
 		void NewDefaultScene();
 		void NewScene(bool bIsCreateDefault);
-		void LoadScene();
+		void LoadScene() const;
 		/** Create an empty scene and load asset from disk. */
-		void LoadScene(const std::string& path);
+		void LoadScene(const std::filesystem::path& path);
 		void SaveScene();
-		void SaveScene(const std::string& path);
-		void SaveSceneAs();
+		void SaveScene(const std::filesystem::path& path);
+		void SaveSceneAs() const;
 
 		void Open();
 
@@ -91,12 +91,11 @@ namespace ZeoEngine {
 		void OnActiveSceneChanged(const Ref<Scene>& scene, bool bIsCreateDefault);
 
 	public:
-		virtual AssetHandle<IAsset> GetAsset() const = 0;
-		virtual AssetTypeId GetAssetTypeId() const = 0;
+		virtual Ref<IAsset> GetAsset() const = 0;
 	private:
-		virtual void LoadAsset(const std::string& path) = 0;
-		virtual void SaveAsset(const std::string& path);
-		virtual void LoadAndApplyDefaultAsset() {};
+		virtual void LoadAsset(const std::filesystem::path& path) = 0;
+		virtual void SaveAsset(const std::filesystem::path& path);
+		virtual void LoadAndApplyDefaultAsset() {}
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) { return {}; }
 

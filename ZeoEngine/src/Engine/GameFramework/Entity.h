@@ -4,6 +4,7 @@
 
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Core/ReflectionCore.h"
+#include "Engine/Math/BoxSphereBounds.h"
 
 namespace ZeoEngine {
 
@@ -74,23 +75,15 @@ namespace ZeoEngine {
 			m_Scene.lock()->m_Registry.patch<T>(m_EntityHandle, std::forward<Func>(func)...);
 		}
 
-		UUID GetUUID() const { return GetComponent<IDComponent>().ID; }
-		const std::string& GetName() const { return GetComponent<CoreComponent>().Name; }
-		const Mat4& GetTransform() const { return GetComponent<TransformComponent>().GetTransform(); }
-		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
-		{
-			auto& transformComp = GetComponent<TransformComponent>();
-			transformComp.Translation = translation;
-			transformComp.Rotation = rotation;
-			transformComp.Scale = scale;
-			UpdateBounds();
-		}
-		const Vec3& GetTranslation() const { return GetComponent<TransformComponent>().Translation; }
-		const Vec3& GetRotation() const { return GetComponent<TransformComponent>().Rotation; }
-		const Vec3& GetScale() const { return GetComponent<TransformComponent>().Scale; }
-		const BoxSphereBounds& GetBounds() const { return GetComponent<BoundsComponent>().Bounds; }
-
-		void UpdateBounds();
+		UUID GetUUID() const;
+		const std::string& GetName() const;
+		Mat4 GetTransform() const;
+		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
+		const Vec3& GetTranslation() const;
+		const Vec3& GetRotation() const;
+		const Vec3& GetScale() const;
+		const BoxSphereBounds& GetBounds() const;
+		void UpdateBounds() const;
 		BoxSphereBounds GetDefaultBounds() const;
 
 		Ref<Scene> GetScene() const { return m_Scene.lock(); }

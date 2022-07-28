@@ -10,6 +10,7 @@
 #include "Engine/Core/UUID.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Light.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
@@ -93,7 +94,7 @@ namespace ZeoEngine {
 	struct SpriteRendererComponent : public IComponent
 	{
 		Vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		AssetHandle<Texture2D> TextureAsset;
+		Ref<Texture2D> TextureAsset;
 		Vec2 TextureTiling{ 1.0f };
 		I32 SortingOrder = 0;
 
@@ -101,7 +102,7 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const Vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const AssetHandle<Texture2D>& texture, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
+		SpriteRendererComponent(const Ref<Texture2D>& texture, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
 			: TextureAsset(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
@@ -177,13 +178,14 @@ namespace ZeoEngine {
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		AssetHandle<ParticleTemplate> ParticleTemplateAsset;
+		Ref<ParticleTemplate> ParticleTemplateAsset;
 		Vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
+		virtual ~ParticleSystemComponent() = default;
 
 		virtual void CreateHelper(Entity* entity) override
 		{
@@ -195,12 +197,8 @@ namespace ZeoEngine {
 
 	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
 	{
-		ParticleSystemPreviewComponent()
-		{
-			ParticleTemplateAsset = ParticleTemplateLibrary::GetDefaultParticleTemplate();
-		}
-		ParticleSystemPreviewComponent(const ParticleSystemPreviewComponent&) = default;
-		ParticleSystemPreviewComponent(const AssetHandle<ParticleTemplate>& particleTemplate)
+		ParticleSystemPreviewComponent() = default;
+		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& particleTemplate)
 		{
 			ParticleTemplateAsset = particleTemplate;
 		}
@@ -229,8 +227,8 @@ namespace ZeoEngine {
 		ParticleColor& GetColorBegin() { return ParticleTemplateAsset->ColorBegin; }
 		ParticleColor& GetColorEnd() { return ParticleTemplateAsset->ColorEnd; }
 		ParticleFloat& GetLifetime() { return ParticleTemplateAsset->Lifetime; }
-		const AssetHandle<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
-		void SetTexture(const AssetHandle<Texture2D>& texture) { ParticleTemplateAsset->Texture = texture; }
+		const Ref<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
+		void SetTexture(const Ref<Texture2D>& texture) { ParticleTemplateAsset->Texture = texture; }
 		const Vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
 		void SetSubImageSize(const Vec2& size) { ParticleTemplateAsset->SubImageSize = size; }
 		U32 GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
@@ -290,12 +288,12 @@ namespace ZeoEngine {
 	
 	struct MeshRendererComponent : public IComponent
 	{
-		AssetHandle<Mesh> MeshAsset;
+		Ref<Mesh> MeshAsset;
 		Ref<MeshInstance> Instance;
-		std::vector<AssetHandle<Material>> MaterialsPlaceholder;
+		std::vector<Ref<Material>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
-		MeshRendererComponent(const AssetHandle<Mesh>& mesh)
+		MeshRendererComponent(const Ref<Mesh>& mesh)
 			: MeshAsset(mesh) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
@@ -370,20 +368,20 @@ namespace ZeoEngine {
 
 	struct MaterialPreviewComponent : public IComponent
 	{
-		AssetHandle<Material> MaterialAsset;
+		Ref<Material> MaterialAsset;
 
 		MaterialPreviewComponent() = default;
-		MaterialPreviewComponent(const AssetHandle<Material>& material)
+		MaterialPreviewComponent(const Ref<Material>& material)
 			: MaterialAsset(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		const AssetHandle<Shader>& GetShader() const { return MaterialAsset->GetShader(); }
-		void SetShader(const AssetHandle<Shader>& shader) { MaterialAsset->SetShader(shader); }
+		const Ref<Shader>& GetShader() const { return MaterialAsset->GetShader(); }
+		void SetShader(const Ref<Shader>& shader) { MaterialAsset->SetShader(shader); }
 	};
 
 	struct BillboardComponent : public IComponent
 	{
-		AssetHandle<Texture2D> TextureAsset;
+		Ref<Texture2D> TextureAsset;
 		Vec2 Size{ 0.5f, 0.5f };
 
 		BillboardComponent() = default;
@@ -400,10 +398,10 @@ namespace ZeoEngine {
 
 	struct TexturePreviewComponent : public IComponent
 	{
-		AssetHandle<Texture2D> TextureAsset;
+		Ref<Texture2D> TextureAsset;
 
 		TexturePreviewComponent() = default;
-		TexturePreviewComponent(const AssetHandle<Texture2D>& texture)
+		TexturePreviewComponent(const Ref<Texture2D>& texture)
 			: TextureAsset(texture) {}
 		TexturePreviewComponent(const TexturePreviewComponent&) = default;
 

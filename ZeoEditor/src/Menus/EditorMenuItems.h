@@ -66,7 +66,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				if (auto editor = EditorManager::Get().GetEditor(m_EditorName.c_str()))
+				if (auto editor = EditorManager::Get().GetEditor(m_EditorName))
 				{
 					m_bSelected = editor->GetShowPtr();
 				}
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				EditorManager::Get().OpenEditor<EditorClass>(m_EditorName.c_str());
+				EditorManager::Get().OpenEditor<EditorClass>(m_EditorName);
 			}
 		}
 

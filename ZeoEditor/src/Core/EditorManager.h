@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#include "Editors/EditorBase.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
@@ -32,7 +33,7 @@ namespace ZeoEngine {
 		void OnEvent(Event& e);
 
 		template<typename T>
-		Ref<T> CreateEditor(const char* editorName)
+		Ref<T> CreateEditor(std::string editorName)
 		{
 			if (GetEditor(editorName))
 			{
@@ -43,33 +44,37 @@ namespace ZeoEngine {
 			ZE_CORE_INFO("Creating editor: {0}", editorName);
 
 			Ref<T> editor = CreateRef<T>(editorName);
-			m_Editors.emplace(editorName, editor);
+			m_Editors.emplace(std::move(editorName), editor);
 			editor->OnAttach();
 			editor->Open();
 			return editor;
 		}
 
 		template<typename T>
-		Ref<EditorBase> OpenEditor(const char* editorName)
+		Ref<EditorBase> OpenEditor(std::string editorName, const std::filesystem::path& assetPath = {})
 		{
-			auto editor = GetEditor(editorName);
+			Ref<EditorBase> editor = GetEditor(editorName);
 			if (!editor)
 			{
-				editor = CreateEditor<T>(editorName);
+				editor = CreateEditor<T>(std::move(editorName));
 			}
 
 			editor->Open();
+			if (!assetPath.empty())
+			{
+				editor->LoadScene(assetPath);
+			}
 			return editor;
 		}
 
 		template<typename T = EditorBase>
-		Ref<T> GetEditor(const char* editorName) const
+		Ref<T> GetEditor(const std::string& editorName) const
 		{
-			auto it = m_Editors.find(editorName);
+			const auto it = m_Editors.find(editorName);
 			if (it == m_Editors.end()) return {};
 
 			Ref<EditorBase> editor = it->second;
-			if constexpr (std::is_same<T, EditorBase>::value)
+			if constexpr (std::is_same_v<T, EditorBase>)
 			{
 				return editor;
 			}

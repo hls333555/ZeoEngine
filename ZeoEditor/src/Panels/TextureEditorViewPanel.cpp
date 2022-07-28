@@ -3,6 +3,7 @@
 #include <magic_enum.hpp>
 
 #include "Editors/EditorBase.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -23,13 +24,13 @@ namespace ZeoEngine {
 		}
 
 		// Checkerboard background
-		ImGui::GetWindowDrawList()->AddImage(Texture2DLibrary::GetCheckerboardTexture()->GetTextureID(),
+		ImGui::GetWindowDrawList()->AddImage(Texture2D::GetCheckerboardTexture()->GetTextureID(),
 		ImGui::GetCursorScreenPos(), ImGui::GetCursorScreenPos() + displaySize,
 		{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 		ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 0.1f }));
 
 		// Texture
-		const auto texture = std::dynamic_pointer_cast<Texture2D>(GetContextEditor()->GetAsset().to_ref());
+		const auto texture = std::dynamic_pointer_cast<Texture2D>(GetContextEditor()->GetAsset());
 		ImGui::Image(texture->GetTextureID(), displaySize, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 		// Display texture info at the bottom center

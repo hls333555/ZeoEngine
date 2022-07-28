@@ -1,6 +1,8 @@
 #include "Editors/EditorBase.h"
 
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Panels/OpenAssetPanel.h"
 #include "Panels/SaveAssetPanel.h"
 #include "Engine/Profile/BenchmarkTimer.h"
@@ -10,8 +12,8 @@
 
 namespace ZeoEngine {
 
-	EditorBase::EditorBase(const char* editorName)
-		: m_EditorName(editorName)
+	EditorBase::EditorBase(std::string editorName)
+		: m_EditorName(std::move(editorName))
 	{
 	}
 
@@ -102,12 +104,12 @@ namespace ZeoEngine {
 		SetActiveScene(scene, bIsCreateDefault);
 	}
 
-	void EditorBase::LoadScene()
+	void EditorBase::LoadScene() const
 	{
 		auto openAssetPanel = m_EditorUIRenderer->GetPanel<OpenAssetPanel>(OPEN_ASSET);
 		if (!openAssetPanel)
 		{
-			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, GetAssetTypeId());
+			openAssetPanel = m_EditorUIRenderer->CreatePanel<OpenAssetPanel>(OPEN_ASSET, GetAsset()->GetTypeID());
 		}
 		else
 		{
@@ -115,7 +117,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::LoadScene(const std::string& path)
+	void EditorBase::LoadScene(const std::filesystem::path& path)
 	{
 		Timer timer;
 
@@ -123,13 +125,14 @@ namespace ZeoEngine {
 		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
-		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
+		ZE_CORE_WARN("Loading {0} took {1} ms", path, timer.ElapsedMillis());
 	}
 
 	void EditorBase::SaveScene()
 	{
-		const std::string& assetPath = GetAsset()->GetID();
-		if (assetPath.empty() || GetAsset()->IsTemplate())
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetAsset()->GetHandle());
+		const auto& assetPath = metadata->Path;
+		if (assetPath.empty() || metadata->IsTemplateAsset())
 		{
 			SaveSceneAs();
 		}
@@ -139,7 +142,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::SaveScene(const std::string& path)
+	void EditorBase::SaveScene(const std::filesystem::path& path)
 	{
 		Timer timer;
 
@@ -148,12 +151,12 @@ namespace ZeoEngine {
 		ZE_CORE_WARN("Saving {0} took {1} ms", path, timer.ElapsedMillis());
 	}
 
-	void EditorBase::SaveSceneAs()
+	void EditorBase::SaveSceneAs() const
 	{
 		auto saveAssetPanel = m_EditorUIRenderer->GetPanel<SaveAssetPanel>(SAVE_ASSET);
 		if (!saveAssetPanel)
 		{
-			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAssetTypeId());
+			saveAssetPanel = m_EditorUIRenderer->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAsset()->GetTypeID());
 		}
 		else
 		{
@@ -184,8 +187,8 @@ namespace ZeoEngine {
 		m_PostSceneRenderDel.publish(fbo);
 	}
 
-	void EditorBase::SaveAsset(const std::string& path)
+	void EditorBase::SaveAsset(const std::filesystem::path& path)
 	{
-		GetAsset()->Serialize(path);
+		AssetManager::Get().SaveAsset(path);
 	}
 }

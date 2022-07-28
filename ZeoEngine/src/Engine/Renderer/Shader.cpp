@@ -1,18 +1,16 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Shader.h"
 
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
-#include "Engine/Core/Serializer.h"
 #include "Engine/Profile/BenchmarkTimer.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 	
-	Ref<Shader> Shader::Create(const std::string& path)
+	Ref<Shader> Shader::Create(std::string resourcePath)
 	{
-		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
-		if (!PathUtils::DoesPathExist(resourcePath)) return {};
-
 		Ref<Shader> shader;
 		switch (Renderer::GetAPI())
 		{
@@ -28,11 +26,10 @@ namespace ZeoEngine {
 		}
 
 		shader->ParseAndCompile();
-		shader->Deserialize();
 		return shader;
 	}
 
-	Ref<Shader> Shader::Create(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
+	Ref<Shader> Shader::Create(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -40,14 +37,14 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLShader>(std::move(ID), vertexSrc, fragmentSrc);
+				return CreateRef<OpenGLShader>(vertexSrc, fragmentSrc);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 	}
 
-	void Shader::ClearCache(const std::string& path)
+	void Shader::ClearCache(const std::filesystem::path& path)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -57,12 +54,13 @@ namespace ZeoEngine {
 			case RendererAPI::API::OpenGL:
 			{
 				const std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
-				const std::filesystem::path shaderFilePath = path;
 				const auto& extensions = OpenGLShader::GetCacheFileExtensions();
 				for (const char* extension : extensions)
 				{
-					const std::string cachePath = (cacheDirectory / (shaderFilePath.filename().string() + extension)).string();
-					if (PathUtils::DoesPathExist(cachePath))
+					auto filename = path.filename();
+					filename += extension;
+					const auto cachePath = cacheDirectory / filename;
+					if (PathUtils::Exists(cachePath))
 					{
 						PathUtils::DeletePath(cachePath);
 					}
@@ -75,34 +73,20 @@ namespace ZeoEngine {
 		}
 	}
 
+	Ref<Shader> Shader::GetDefaultShader()
+	{
+		return AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/Default.glsl.zasset");
+	}
+
 	void Shader::Reload()
 	{
-		const std::string resourcePath = PathUtils::GetResourcePathFromPath(GetID());
-		if (!PathUtils::DoesPathExist(resourcePath)) return;
-
-		ClearCache(resourcePath);
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
+		ClearCache(metadata->GetResourcePath());
 		Timer timer;
 		if (ParseAndCompile())
 		{
-			Deserialize();
-			ZE_CORE_WARN("Reloading shader \"{0}\" took {1} ms", GetID(), timer.ElapsedMillis());
+			ZE_CORE_WARN("Reloading shader {0} took {1} ms", metadata->Path, timer.ElapsedMillis());
 		}
-	}
-
-	void Shader::Serialize(const std::string& path)
-	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		AssetSerializer::Serialize(GetID(), TypeId(), {});
-	}
-
-	void Shader::Deserialize()
-	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		AssetSerializer::Deserialize(GetID(), TypeId(), {});
 	}
 
 }

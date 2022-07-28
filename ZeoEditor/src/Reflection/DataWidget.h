@@ -67,8 +67,8 @@ namespace ZeoEngine {
 
 		void Init(DataSpec& dataSpec, bool bIsTest);
 
-		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex);
-		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex);
+		void InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex) const;
+		void InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex) const;
 
 	protected:
 		DataSpec m_DataSpec;
@@ -303,7 +303,7 @@ namespace ZeoEngine {
 #endif
 	};
 
-	class Texture2DDataWidget : public BasicDataWidgetT<AssetHandle<Texture2D>>
+	class Texture2DDataWidget : public BasicDataWidgetT<Ref<Texture2D>>
 	{
 	public:
 		Texture2DDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -316,10 +316,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ Texture2D::TypeId() };
+		AssetBrowser m_Browser{ Texture2D::TypeID() };
 	};
 
-	class ParticleTemplateDataWidget : public BasicDataWidgetT<AssetHandle<ParticleTemplate>>
+	class ParticleTemplateDataWidget : public BasicDataWidgetT<Ref<ParticleTemplate>>
 	{
 	public:
 		ParticleTemplateDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -332,10 +332,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ ParticleTemplate::TypeId() };
+		AssetBrowser m_Browser{ ParticleTemplate::TypeID() };
 	};
 
-	class MeshDataWidget : public BasicDataWidgetT<AssetHandle<Mesh>>
+	class MeshDataWidget : public BasicDataWidgetT<Ref<Mesh>>
 	{
 	public:
 		MeshDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -348,10 +348,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ Mesh::TypeId() };
+		AssetBrowser m_Browser{ Mesh::TypeID() };
 	};
 
-	class MaterialDataWidget : public BasicDataWidgetT<AssetHandle<Material>>
+	class MaterialDataWidget : public BasicDataWidgetT<Ref<Material>>
 	{
 	public:
 		MaterialDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -364,10 +364,10 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ Material::TypeId() };
+		AssetBrowser m_Browser{ Material::TypeID() };
 	};
 
-	class ShaderDataWidget : public BasicDataWidgetT<AssetHandle<Shader>>
+	class ShaderDataWidget : public BasicDataWidgetT<Ref<Shader>>
 	{
 	public:
 		ShaderDataWidget(DataSpec& dataSpec, bool bIsTest);
@@ -380,7 +380,7 @@ namespace ZeoEngine {
 #endif
 
 	private:
-		AssetBrowser m_Browser{ Shader::TypeId() };
+		AssetBrowser m_Browser{ Shader::TypeID() };
 	};
 
 	class ContainerWidget : public DataWidget

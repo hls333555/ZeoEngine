@@ -1,13 +1,13 @@
 #include "Panels/OpenAssetPanel.h"
 
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Editors/EditorBase.h"
 
 namespace ZeoEngine {
 
-	OpenAssetPanel::OpenAssetPanel(const char* panelName, const Weak<EditorBase>& contextEditor, AssetTypeId assetTypeId)
+	OpenAssetPanel::OpenAssetPanel(const char* panelName, const Weak<EditorBase>& contextEditor, AssetTypeID assetTypeID)
 		: AssetBrowserPanelBase(panelName, contextEditor)
-		, m_AssetTypeId(assetTypeId)
+		, m_AssetTypeID(assetTypeID)
 	{
 	}
 
@@ -38,14 +38,14 @@ namespace ZeoEngine {
 		ImGui::EndDisabled();
 	}
 
-	bool OpenAssetPanel::ShouldDrawPath(const Ref<PathSpec>& spec)
+	bool OpenAssetPanel::ShouldDrawPath(const Ref<PathMetadata>& metadata)
 	{
-		auto assetTypeId = spec->GetAssetTypeId();
+		const auto assetTypeID = metadata->GetAssetTypeID();
 		// Directory or specific asset
-		return assetTypeId == AssetTypeId{} || assetTypeId == m_AssetTypeId;
+		return assetTypeID == AssetTypeID{} || assetTypeID == m_AssetTypeID;
 	}
 
-	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::string& path)
+	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::filesystem::path& path)
 	{
 		GetContextEditor()->LoadScene(path);
 		Close();

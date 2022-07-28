@@ -1,6 +1,7 @@
 #include "Editors/LevelEditor.h"
 
 #include "EditorUIRenderers/LevelEditorUIRenderer.h"
+#include "Engine/Asset/AssetLibrary.h"
 #include "Scenes/LevelEditorScene.h"
 #include "SceneRenderers/LevelEditorSceneRenderer.h"
 #include "Engine/GameFramework/Systems.h"
@@ -95,27 +96,20 @@ namespace ZeoEngine {
 		}
 	}
 
-	AssetTypeId LevelEditor::GetAssetTypeId() const
-	{
-		return Level::TypeId();
-	}
-
-	void LevelEditor::LoadAsset(const std::string& path)
+	void LevelEditor::LoadAsset(const std::filesystem::path& path)
 	{
 		// Stop current playing scene
 		if (m_SceneState != SceneState::Edit)
 		{
 			OnSceneStop();
 		}
-		m_LevelAsset = LevelLibrary::Get().LoadAsset(path);
 		NewScene(false);
-		m_LevelAsset->UpdateScene(GetScene());
+		m_LevelAsset = AssetLibrary::LoadAsset<Level>(path);
 	}
 
 	void LevelEditor::LoadAndApplyDefaultAsset()
 	{
-		m_LevelAsset = LevelLibrary::GetDefaultEmptyLevel();
-		m_LevelAsset->UpdateScene(GetScene());
+		m_LevelAsset = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath());
 	}
 
 	void LevelEditor::ClearSelectedEntity()

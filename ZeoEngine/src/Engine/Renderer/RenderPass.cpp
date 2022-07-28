@@ -5,6 +5,7 @@
 #include "Engine/Renderer/BindableStates.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/SceneSettings.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -256,7 +257,7 @@ namespace ZeoEngine {
 	{
 		CreateDepthBuffer();
 
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/ShadowMap.glsl").to_ref());
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/ShadowMap.glsl.zasset"));
 		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
@@ -288,7 +289,7 @@ namespace ZeoEngine {
 		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		// NOTE: Bind shader after all its required bindings being bound properly!
 		// Or OpenGL warnings will keep poping up
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/ScreenSpaceShadow.glsl").to_ref());
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/ScreenSpaceShadow.glsl.zasset"));
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
@@ -358,7 +359,7 @@ namespace ZeoEngine {
 		gridUniformBuffer->SetData(&gridBuffer);
 
 		AddBindable(gridUniformBuffer);
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Grid.glsl").to_ref());
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/Grid.glsl.zasset"));
 		AddBindable(Depth::Resolve(Depth::State::ReadOnly));
 		AddBindable(TwoSided::Resolve(TwoSided::State::Disable));
 
@@ -380,7 +381,7 @@ namespace ZeoEngine {
 		: FullscreenPass(std::move(name), bAutoActive)
 	{
 		m_SceneBufferIndex = RegisterBindableInput<FrameBuffer>("SceneTexture");
-		AddBindable(ShaderLibrary::Get().LoadAsset("assets/editor/shaders/PostProcessing.glsl").to_ref());
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/PostProcessing.glsl.zasset"));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("BackFrameBuffer", m_FBO));

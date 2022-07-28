@@ -1,68 +1,70 @@
-#include "Engine/Core/AssetActions.h"
+#include "Engine/Asset/AssetActions.h"
 
-#include "Engine/GameFramework/ParticleSystem.h"
 #include "Core/EditorManager.h"
 #include "Core/EditorTypes.h"
+#include "Editors/LevelEditor.h"
 #include "Editors/ParticleEditor.h"
 #include "Editors/MaterialEditor.h"
 #include "Editors/TextureEditor.h"
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
-#include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
-#include "Engine/Renderer/Shader.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
-	void AssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
+	void AssetActionsBase::RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const
 	{
 		PathUtils::RenamePath(oldPath, newPath);
 		// TODO: Fixup references
 
 	}
 
-	void AssetActionsBase::DeleteAsset(const std::string& path) const
+	void AssetActionsBase::DeleteAsset(const std::filesystem::path& path) const
 	{
 		PathUtils::DeletePath(path);
 		AssetRegistry::Get().OnPathRemoved(path);
 	}
 
-	void ResourceAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
+	void ResourceAssetActionsBase::RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const
 	{
-		const auto resourcePath = PathUtils::GetResourcePathFromPath(oldPath);
-		const auto newResourcePath = PathUtils::GetResourcePathFromPath(newPath);
+		const auto& ar = AssetRegistry::Get();
+		const auto resourcePath = ar.GetAssetMetadata(oldPath)->GetResourcePath();
+		const auto newResourcePath = ar.GetAssetMetadata(newPath)->GetResourcePath();
 		// Rename resource
 		PathUtils::RenamePath(resourcePath, newResourcePath);
 		// Rename asset
 		AssetActionsBase::RenameAsset(oldPath, newPath);
 	}
 
-	void ResourceAssetActionsBase::DeleteAsset(const std::string& path) const
+	void ResourceAssetActionsBase::DeleteAsset(const std::filesystem::path& path) const
 	{
-		const auto resourcePath = PathUtils::GetResourcePathFromPath(path);
+		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourcePath();
 		// Delete resource
 		PathUtils::DeletePath(resourcePath);
 		// Delete asset
 		AssetActionsBase::DeleteAsset(path);
 	}
 
-	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
+	void ImportableAssetActionsBase::ReimportAsset(const std::filesystem::path& path) const
 	{
-		const auto assetSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(path);
-		std::string srcPath = assetSpec->SourcePath;
-		if (srcPath.empty() || !PathUtils::DoesPathExist(srcPath))
+		const auto& ar = AssetRegistry::Get();
+		const auto metadata = ar.GetAssetMetadata(path);
+		auto srcPath = metadata->SourcePath;
+		if (srcPath.empty() || !PathUtils::Exists(srcPath))
 		{
 			// Open file dialog to select another source to reimport
 			const auto filePaths = FileDialogs::Open(false);
 			if (filePaths.size() != 1) return;
 
-			srcPath = PathUtils::GetRelativePath(filePaths[0]);
+			srcPath = filePaths[0];
 		}
 
-		const auto destPath = PathUtils::GetResourcePathFromPath(path);
+		const auto destPath = metadata->GetResourcePath();
 		// Copy self is not allowed
-		if (PathUtils::GetCanonicalPath(srcPath) == PathUtils::GetCanonicalPath(destPath)) return;
+		if (PathUtils::Equivalent(srcPath, destPath)) return;
 
 		// Copy and overwrite existing resource
 		const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
@@ -74,127 +76,43 @@ namespace ZeoEngine {
 
 		// TODO: Should be marked modified instead of saving directly
 		//SaveAsset(path);
-		ReloadAsset(path);
-		// Update assetspecs after reloading
-		assetSpec->UpdateThumbnail();
-		assetSpec->SourcePath = std::move(srcPath);
+		AssetLibrary::ReloadAsset(path);
+		// Update asset metadata after reloading
+		metadata->UpdateThumbnail();
+		metadata->SourcePath = std::move(srcPath);
 
-		ZE_CORE_INFO("Successfully reimported \"{0}\" from \"{1}\"", path, assetSpec->SourcePath);
+		ZE_CORE_INFO("Successfully reimported {0} from {1}", path, metadata->SourcePath);
 	}
 
-	void LevelAssetActions::OpenAsset(const std::string& path) const
+	void LevelAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		EditorManager::Get().GetEditor(LEVEL_EDITOR)->LoadScene(path);
+		EditorManager::Get().OpenEditor<LevelEditor>(LEVEL_EDITOR, path);
 	}
 
-	void LevelAssetActions::ReloadAsset(const std::string& path) const
+	void ParticleTemplateAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		OpenAsset(path);
+		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR, path);
 	}
 
-	// TODO: Only to save those which are marked modified
-	void LevelAssetActions::SaveAsset(const std::string& path) const
+	void Texture2DAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		if (const auto level = LevelLibrary::Get().LoadAsset(path))
-		{
-			level->Serialize(path);
-		}
+		EditorManager::Get().OpenEditor<TextureEditor>(TEXTURE_EDITOR, path);
 	}
 
-	void ParticleTemplateAssetActions::OpenAsset(const std::string& path) const
-	{
-		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR)->LoadScene(path);
-	}
-
-	void ParticleTemplateAssetActions::ReloadAsset(const std::string& path) const
-	{
-		ParticleTemplateLibrary::Get().ReloadAsset(path);
-	}
-
-	void ParticleTemplateAssetActions::SaveAsset(const std::string& path) const
-	{
-		if (const auto particleTemplate = ParticleTemplateLibrary::Get().LoadAsset(path))
-		{
-			particleTemplate->Serialize(path);
-		}
-	}
-
-	void Texture2DAssetActions::OpenAsset(const std::string& path) const
-	{
-		EditorManager::Get().OpenEditor<TextureEditor>(TEXTURE_EDITOR)->LoadScene(path);
-	}
-
-	void Texture2DAssetActions::ReloadAsset(const std::string& path) const
-	{
-		Texture2DLibrary::Get().ReloadAsset(path);
-	}
-
-	void Texture2DAssetActions::SaveAsset(const std::string& path) const
-	{
-		if (const auto texture = Texture2DLibrary::Get().LoadAsset(path))
-		{
-			texture->Serialize(path);
-		}
-	}
-
-	void MeshAssetActions::OpenAsset(const std::string& path) const
+	void MeshAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
 		
 	}
 
-	void MeshAssetActions::ReloadAsset(const std::string& path) const
+	void MaterialAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		MeshLibrary::Get().ReloadAsset(path);
+		EditorManager::Get().OpenEditor<MaterialEditor>(MATERIAL_EDITOR, path);
 	}
 
-	void MeshAssetActions::SaveAsset(const std::string& path) const
+	void ShaderAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		if (const auto mesh = MeshLibrary::Get().LoadAsset(path))
-		{
-			mesh->Serialize(path);
-		}
-	}
-
-	void MaterialAssetActions::OpenAsset(const std::string& path) const
-	{
-		EditorManager::Get().OpenEditor<MaterialEditor>(MATERIAL_EDITOR)->LoadScene(path);
-	}
-
-	void MaterialAssetActions::ReloadAsset(const std::string& path) const
-	{
-		MaterialLibrary::Get().ReloadAsset(path);
-	}
-
-	void MaterialAssetActions::SaveAsset(const std::string& path) const
-	{
-		if (const auto material = MaterialLibrary::Get().LoadAsset(path))
-		{
-			material->Serialize(path);
-		}
-	}
-
-	void ShaderAssetActions::OpenAsset(const std::string& path) const
-	{
-		const std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
+		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourcePath();
 		PlatformUtils::OpenFile(resourcePath);
-	}
-
-	void ShaderAssetActions::ReloadAsset(const std::string& path) const
-	{
-		ShaderLibrary::Get().ReloadAsset(path);
-	}
-
-	void ShaderAssetActions::HotReloadAsset(const std::string& path) const
-	{
-		ReloadAsset(path);
-	}
-
-	void ShaderAssetActions::SaveAsset(const std::string& path) const
-	{
-		if (const auto shader = ShaderLibrary::Get().LoadAsset(path))
-		{
-			shader->Serialize(path);
-		}
 	}
 
 }

@@ -45,26 +45,26 @@ namespace ZeoEngine {
 			switch (type.info().hash())
 			{
 				// Integral
-				case entt::type_hash<bool>::value():							return BasicMetaType::BOOL;
-				case entt::type_hash<I8>::value():							return BasicMetaType::I8;
-				case entt::type_hash<I32>::value():							return BasicMetaType::I32;
-				case entt::type_hash<I64>::value():							return BasicMetaType::I64;
-				case entt::type_hash<U8>::value():							return BasicMetaType::UI8;
+				case entt::type_hash<bool>::value():					return BasicMetaType::BOOL;
+				case entt::type_hash<I8>::value():						return BasicMetaType::I8;
+				case entt::type_hash<I32>::value():						return BasicMetaType::I32;
+				case entt::type_hash<I64>::value():						return BasicMetaType::I64;
+				case entt::type_hash<U8>::value():						return BasicMetaType::UI8;
 				case entt::type_hash<U32>::value():						return BasicMetaType::UI32;
 				case entt::type_hash<U64>::value():						return BasicMetaType::UI64;
 				// Floating point
-				case entt::type_hash<float>::value():							return BasicMetaType::FLOAT;
-				case entt::type_hash<double>::value():							return BasicMetaType::DOUBLE;
+				case entt::type_hash<float>::value():					return BasicMetaType::FLOAT;
+				case entt::type_hash<double>::value():					return BasicMetaType::DOUBLE;
 				// Class
-				case entt::type_hash<std::string>::value():						return BasicMetaType::STRING;
-				case entt::type_hash<Vec2>::value():						return BasicMetaType::VEC2;
-				case entt::type_hash<Vec3>::value():						return BasicMetaType::VEC3;
-				case entt::type_hash<Vec4>::value():						return BasicMetaType::VEC4;
-				case entt::type_hash<AssetHandle<Texture2D>>::value():			return BasicMetaType::TEXTURE;
-				case entt::type_hash<AssetHandle<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
-				case entt::type_hash<AssetHandle<Mesh>>::value():				return BasicMetaType::MESH;
-				case entt::type_hash<AssetHandle<Material>>::value():			return BasicMetaType::MATERIAL;
-				case entt::type_hash<AssetHandle<Shader>>::value():				return BasicMetaType::SHADER;
+				case entt::type_hash<std::string>::value():				return BasicMetaType::STRING;
+				case entt::type_hash<Vec2>::value():					return BasicMetaType::VEC2;
+				case entt::type_hash<Vec3>::value():					return BasicMetaType::VEC3;
+				case entt::type_hash<Vec4>::value():					return BasicMetaType::VEC4;
+				case entt::type_hash<Ref<Texture2D>>::value():			return BasicMetaType::TEXTURE;
+				case entt::type_hash<Ref<ParticleTemplate>>::value():	return BasicMetaType::PARTICLE;
+				case entt::type_hash<Ref<Mesh>>::value():				return BasicMetaType::MESH;
+				case entt::type_hash<Ref<Material>>::value():			return BasicMetaType::MATERIAL;
+				case entt::type_hash<Ref<Shader>>::value():				return BasicMetaType::SHADER;
 			}
 		}
 

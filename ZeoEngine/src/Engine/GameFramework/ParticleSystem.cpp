@@ -6,7 +6,6 @@
 
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Entity.h"
 
@@ -126,8 +125,7 @@ namespace ZeoEngine {
 	template struct ParticleVariation<Vec3>;
 	template struct ParticleVariation<Vec4>;
 
-	ParticleTemplate::ParticleTemplate(const std::string& path)
-		: AssetBase(path.empty() ? "ZID_DefaultParticleTemplate" : path)
+	ParticleTemplate::ParticleTemplate()
 	{
 		// Default data
 		Lifetime.SetRandom(0.75f, 1.5f);
@@ -139,36 +137,6 @@ namespace ZeoEngine {
 		SizeEnd.SetConstant(Vec3{ 0.0f });
 		ColorBegin.SetConstant(Vec4{ 1.0f });
 		ColorEnd.SetConstant(Vec4{ 0.0f });
-	}
-
-	Ref<ParticleTemplate> ParticleTemplate::Create(const std::string& path)
-	{
-		auto particleTemplate = CreateRef<ParticleTemplate>(path);
-		particleTemplate->Deserialize(); // NOTE: Do not call it in constructor as it contains shared_from_this()!
-		return particleTemplate;
-	}
-
-	// TODO:
-	void ParticleTemplate::Reload()
-	{
-		Deserialize();
-		ResimulateAllParticleSystemInstances();
-	}
-
-	void ParticleTemplate::Serialize(const std::string& path)
-	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		AssetSerializer::Serialize(GetID(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
-	}
-
-	void ParticleTemplate::Deserialize()
-	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		AssetSerializer::Deserialize(GetID(), TypeId(), ParticleSystemPreviewComponent{ GetAssetHandle() });
 	}
 
 	void ParticleTemplate::ResimulateAllParticleSystemInstances() const
@@ -188,7 +156,7 @@ namespace ZeoEngine {
 			: OwnerEntity(ownerEntity) {}
 	};
 
-	ParticleSystemInstance::ParticleSystemInstance(const AssetHandle<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const Vec3& positionOffset)
+	ParticleSystemInstance::ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const Vec3& positionOffset)
 		: m_Impl(CreateScope<Impl>(*ownerEntity))
 		, m_ParticleTemplate(particleTemplate)
 		, m_PositionOffset(positionOffset)
@@ -203,7 +171,7 @@ namespace ZeoEngine {
 		class ParticleSystemEnableShared : public ParticleSystemInstance
 		{
 		public:
-			ParticleSystemEnableShared(const AssetHandle<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const Vec3& positionOffset)
+			ParticleSystemEnableShared(const Ref<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const Vec3& positionOffset)
 				: ParticleSystemInstance(particleTemplate, ownerEntity, positionOffset) {}
 		};
 

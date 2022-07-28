@@ -3,7 +3,6 @@
 
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/Serializer.h"
 #include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
@@ -93,30 +92,6 @@ namespace ZeoEngine {
 		{
 			return lhs.EntityIndex < rhs.EntityIndex;
 		});
-	}
-
-	Ref<Level> Level::Create(std::string ID)
-	{
-		return CreateRef<Level>(std::move(ID));
-	}
-
-	void Level::Serialize(const std::string& path)
-	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-
-		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Serialize(GetID(), m_Scene);
-	}
-
-	void Level::Deserialize()
-	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetID(), m_Scene);
 	}
 
 }

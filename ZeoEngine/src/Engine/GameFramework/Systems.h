@@ -8,6 +8,7 @@ class b2World;
 namespace ZeoEngine {
 
 	class SceneRenderer;
+	class SceneCamera;
 
 	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};

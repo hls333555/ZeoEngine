@@ -66,6 +66,16 @@ namespace ZeoEngine {
 
 		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& sceneContext);
 
+		static const Ref<Scene>& GetActiveGameScene()
+		{
+			return Application::Get().FindLayer<EngineLayer>()->GetActiveGameScene();
+		}
+
+		static void OpenLevel(const std::filesystem::path& path)
+		{
+			Application::Get().FindLayer<EngineLayer>()->OpenLevel(path);
+		}
+
 	};
 
 }

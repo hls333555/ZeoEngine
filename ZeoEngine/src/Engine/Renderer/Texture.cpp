@@ -3,12 +3,11 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
-#include "Engine/Utils/PathUtils.h"
-#include "Engine/Core/Serializer.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
+	Ref<Texture2D> Texture2D::Create(U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -16,25 +15,22 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(std::move(ID), width, height, format, bindingSlot, type);
+				return CreateRef<OpenGLTexture2D>(width, height, format, bindingSlot, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(std::string ID, U32 hexColor, bool bIsSRGB, std::optional<U32> bindingSlot)
+	Ref<Texture2D> Texture2D::Create(U32 hexColor, bool bIsSRGB, std::optional<U32> bindingSlot)
 	{
-		auto texture = Create(std::move(ID), 1, 1, bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8, bindingSlot);
+		auto texture = Create(1, 1, bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8, bindingSlot);
 		texture->SetData(&hexColor, 3);
 		return texture;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path, std::optional<U32> bindingSlot)
+	Ref<Texture2D> Texture2D::Create(std::string resourcePath, std::optional<U32> bindingSlot)
 	{
-		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
-		if (!PathUtils::DoesPathExist(resourcePath)) return {};
-
 		Ref<Texture2D> texture;
 		switch (Renderer::GetAPI())
 		{
@@ -49,30 +45,30 @@ namespace ZeoEngine {
 				return nullptr;
 		}
 
-		texture->Deserialize();
 		return texture;
 	}
 
-	void Texture2D::Reload()
+	Ref<Texture2D> Texture2D::GetWhiteTexture()
 	{
-		Invalidate();
-		Deserialize();
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0xffffff);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
 	}
 
-	void Texture2D::Serialize(const std::string& path)
+	Ref<Texture2D> Texture2D::GetDefaultMaterialTexture()
 	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		ImportableAssetSerializer::Serialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() });
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0x808080);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
 	}
 
-	void Texture2D::Deserialize()
+	Ref<Texture2D> Texture2D::GetAssetBackgroundTexture()
 	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0x151414);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
+	}
 
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), TexturePreviewComponent{ GetAssetHandle() });
+	Ref<Texture2D> Texture2D::GetCheckerboardTexture()
+	{
+		return AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/Checkerboard.png.zasset");
 	}
 
 	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)

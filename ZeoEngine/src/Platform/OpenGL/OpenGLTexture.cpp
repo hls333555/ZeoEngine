@@ -8,9 +8,8 @@
 
 namespace ZeoEngine {
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string ID, U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
-		: Texture2D(std::move(ID))
-		, m_Width(width), m_Height(height)
+	OpenGLTexture2D::OpenGLTexture2D(U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
+		: m_Width(width), m_Height(height)
 		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
@@ -32,9 +31,8 @@ namespace ZeoEngine {
 		}
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(std::string path, std::optional<U32> bindingSlot)
-		: Texture2D(PathUtils::GetNormalizedAssetPath(path))
-		, m_TextureResourcePath(std::move(path))
+	OpenGLTexture2D::OpenGLTexture2D(std::string resourcePath, std::optional<U32> bindingSlot)
+		: m_TextureResourcePath(std::move(resourcePath))
 		, m_BindingSlot(bindingSlot)
 	{
 		Invalidate();
@@ -125,7 +123,7 @@ namespace ZeoEngine {
 	{
 		if (!m_BindingSlot)
 		{
-			ZE_CORE_ERROR("Failed to bind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
+			ZE_CORE_ERROR("Failed to bind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, m_TextureResourcePath);
 			return;
 		}
 
@@ -145,7 +143,7 @@ namespace ZeoEngine {
 	{
 		if (!m_BindingSlot)
 		{
-			ZE_CORE_ERROR("Failed to unbind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, GetID());
+			ZE_CORE_ERROR("Failed to unbind Texture2D ({0}, {1}) with unspecified binding slot!", m_RendererID, m_TextureResourcePath);
 			return;
 		}
 

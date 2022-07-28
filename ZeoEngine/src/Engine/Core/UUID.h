@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
 	class UUID
@@ -12,7 +14,7 @@ namespace ZeoEngine {
 		operator U64() const { return m_UUID; }
 
 	private:
-		U64 m_UUID;
+		U64 m_UUID = 0;
 	};
 
 }

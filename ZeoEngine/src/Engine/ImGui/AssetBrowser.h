@@ -2,37 +2,36 @@
 #include <imgui.h>
 #include <IconsFontAwesome5.h>
 
-#include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
-#include "Engine/Core/AssetManager.h"
-#include "Engine/Core/AssetFactory.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetFactory.h"
 
 namespace ZeoEngine {
 
 	struct AssetBrowser
 	{
-		AssetTypeId TypeId;
+		AssetTypeID TypeId;
 		TextFilter Filter;
 
-		explicit AssetBrowser(AssetTypeId typeId)
+		explicit AssetBrowser(AssetTypeID typeId)
 			: TypeId(typeId) {}
 
 		/**
-		 * Draw the complete asset browing widget.
+		 * Draw the complete asset browsing widget.
 		 *
-		 * @param assetPath - Path of the selected asset
+		 * @param handle - Handle of the selected asset
 		 * @param rightPadding - How much space to remain after drawing the combobox widget
 		 * @param rightClickFunc - Function to execute when right clicking on the asset preview (should be a series of ImGui::MenuItem() calls)
-		 * @return A pair, the key indicates if the selection changed, the value is the specification of the selected asset
+		 * @return A pair, the key indicates if the selection changed, the value is the asset metadata
 		 */
 		template<typename AssetRightClickFunc>
-		std::pair<bool, Ref<AssetSpec>> Draw(const std::string& assetPath, float rightPadding, AssetRightClickFunc rightClickFunc)
+		std::pair<bool, Ref<AssetMetadata>> Draw(const AssetHandle handle, float rightPadding, AssetRightClickFunc rightClickFunc)
 		{
 			bool bIsValueChanged = false;
-			auto retSpec = AssetRegistry::Get().GetPathSpec<AssetSpec>(assetPath);
+			auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 
 			ImGui::PushID(TypeId);
 			{
@@ -42,19 +41,19 @@ namespace ZeoEngine {
 					static const float previewRounding = 5.0f;
 
 					// Draw asset thumbnail or default background
-					auto textureID = Texture2DLibrary::GetAssetBackgroundTexture()->GetTextureID();
-					ImGui::AssetThumbnail(retSpec ? retSpec->ThumbnailTexture->GetTextureID() : textureID,
+					const auto textureID = Texture2D::GetAssetBackgroundTexture()->GetTextureID();
+					ImGui::AssetThumbnail(metadata ? metadata->ThumbnailTexture->GetTextureID() : textureID,
 						assetPreviewWidth, previewRounding, true, textureID);
 
 					// If asset is set...
-					if (retSpec)
+					if (metadata)
 					{
 						if (ImGui::IsItemHovered())
 						{
 							// Double-click on the preview thumbnail to open the asset editor
 							if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 							{
-								AssetManager::Get().OpenAsset(retSpec->Path);
+								AssetManager::Get().OpenAsset(metadata->Path);
 							}
 						}
 
@@ -63,7 +62,7 @@ namespace ZeoEngine {
 						{
 							if (ImGui::MenuItem(ICON_FA_EDIT "  Edit"))
 							{
-								AssetManager::Get().OpenAsset(retSpec->Path);
+								AssetManager::Get().OpenAsset(metadata->Path);
 							}
 
 							rightClickFunc();
@@ -79,9 +78,9 @@ namespace ZeoEngine {
 						_itoa_s(TypeId, typeStr, 10);
 						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr, previewRounding))
 						{
-							auto spec = *(const Ref<AssetSpec>*)payload->Data;
-							bIsValueChanged = spec != retSpec;
-							retSpec = spec;
+							const auto md = *(const Ref<AssetMetadata>*)payload->Data;
+							bIsValueChanged = metadata != md;
+							metadata = md;
 						}
 					}
 				}
@@ -90,13 +89,13 @@ namespace ZeoEngine {
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
-				if (ImGui::BeginCombo("##AssetBrowser", retSpec ? retSpec->PathName.c_str() : nullptr))
+				if (ImGui::BeginCombo("##AssetBrowser", metadata ? metadata->PathName.c_str() : nullptr, ImGuiComboFlags_HeightLarge))
 				{
 					// Clear current selection
 					if (ImGui::Selectable("Clear"))
 					{
-						bIsValueChanged = static_cast<bool>(retSpec);
-						retSpec = {};
+						bIsValueChanged = static_cast<bool>(metadata);
+						metadata = {};
 					}
 
 					ImGui::Separator();
@@ -112,14 +111,14 @@ namespace ZeoEngine {
 
 					bool bIsListEmpty = true;
 					// List all registered assets from AssetRegistry
-					AssetRegistry::Get().ForEachAssetByTypeId(TypeId, [&](const Ref<AssetSpec>& spec)
+					AssetRegistry::Get().ForEachAssetByTypeID(TypeId, [&](const Ref<AssetMetadata>& md)
 					{
-						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(spec->PathName.c_str()))
+						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(md->PathName.c_str()))
 						{
 							bIsListEmpty = false;
 
 							// Push asset path as id
-							ImGui::PushID(spec->Path.c_str());
+							ImGui::PushID(md->Path.string().c_str());
 							{
 								static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
 								static const float thumbnailRounding = 4.0f;
@@ -128,12 +127,12 @@ namespace ZeoEngine {
 								// Display asset path tooltip for drop-down asset
 								if (ImGui::IsItemHovered())
 								{
-									ImGui::SetTooltipWithPadding("%s", spec->Path.c_str());
+									ImGui::SetTooltipWithPadding("%s", md->Path.string().c_str());
 								}
 
 								ImGui::SameLine();
 
-								ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+								ImGui::AssetThumbnail(md->ThumbnailTexture->GetTextureID(),
 									assetThumbnailWidth, thumbnailRounding, false);
 
 								ImGui::SameLine();
@@ -144,7 +143,7 @@ namespace ZeoEngine {
 									// Make two lines of text more compact
 									ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
 									// Display asset name
-									ImGui::Text(spec->PathName.c_str());
+									ImGui::Text(md->PathName.c_str());
 									// Display asset type name
 									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(TypeId)->GetAssetTypeName());
 									ImGui::PopStyleVar();
@@ -153,8 +152,8 @@ namespace ZeoEngine {
 
 								if (bIsSelected)
 								{
-									bIsValueChanged = spec != retSpec;
-									retSpec = spec;
+									bIsValueChanged = md != metadata;
+									metadata = md;
 								}
 							}
 							ImGui::PopID();
@@ -172,12 +171,12 @@ namespace ZeoEngine {
 			ImGui::PopID();
 
 			// Display path tooltip for current selection
-			if (retSpec && ImGui::IsItemHovered())
+			if (metadata && ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding("%s", retSpec->Path.c_str());
+				ImGui::SetTooltipWithPadding("%s", metadata->Path.string().c_str());
 			}
 
-			return std::make_pair(bIsValueChanged, retSpec);
+			return std::make_pair(bIsValueChanged, metadata);
 		}
 	};
 

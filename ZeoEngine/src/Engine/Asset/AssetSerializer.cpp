@@ -1,0 +1,230 @@
+#include "ZEpch.h"
+#include "Engine/Asset/AssetSerializer.h"
+
+#include "Engine/Utils/EngineUtils.h"
+#include "Engine/GameFramework/Scene.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/GameFramework/Components.h"
+
+namespace ZeoEngine {
+
+	void AssetSerializerBase::Serialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		SerializeEmptyAsset(metadata->Path, metadata->TypeID, metadata->Handle, true, [&](YAML::Node& node)
+		{
+			SerializeImpl(metadata, asset, node);
+		});
+	}
+
+	bool AssetSerializerBase::Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		const auto res = DeserializeAsset(metadata->Path);
+		if (!res) return false;
+
+		const auto node = *res;
+		const auto typeID = node["AssetType"].as<AssetTypeID>();
+		const auto handle = node["AssetHandle"].as<AssetHandle>();
+		ZE_CORE_ASSERT(typeID == metadata->TypeID && handle == metadata->Handle);
+
+		return DeserializeImpl(metadata, asset, node);
+	}
+
+	std::optional<YAML::Node> AssetSerializerBase::DeserializeAsset(const std::filesystem::path& path)
+	{
+		YAML::Node node;
+		try
+		{
+			node = YAML::LoadFile(path.string());
+		}
+		catch (YAML::BadFile&)
+		{
+			ZE_CORE_ERROR("Failed to load asset: {0}!", path);
+			return {};
+		}
+
+		const auto assetTypeData = node["AssetType"];
+		const auto assetHandleData = node["AssetHandle"];
+		if (!assetTypeData || !assetHandleData)
+		{
+			ZE_CORE_ERROR("Failed to load asset: {0} with invalid data!", path);
+			return {};
+		}
+		return node;
+	}
+
+	void ImportableAssetSerializerBase::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		SerializeSourcePath(metadata->SourcePath, node);
+	}
+
+	bool ImportableAssetSerializerBase::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		if (const auto sourceData = node["SourcePath"])
+		{
+			metadata->SourcePath = sourceData.as<std::string>();
+		}
+		return true;
+	}
+
+	void ImportableAssetSerializerBase::SerializeSourcePath(const std::filesystem::path& resourcePath, YAML::Node& node)
+	{
+		node["SourcePath"] = resourcePath;
+	}
+
+	void LevelAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		const Ref<Level> level = std::dynamic_pointer_cast<Level>(asset);
+		const auto& scene = level->GetScene();
+		SceneSerializer::Serialize(node, scene);
+	}
+
+	bool LevelAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		const Ref<Level> level = std::dynamic_pointer_cast<Level>(asset);
+		SceneSerializer::Deserialize(node, level->GetScene());
+		return true;
+	}
+
+	void LevelAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		EngineUtils::OpenLevel(metadata->Path);
+	}
+
+	void ParticleTemplateAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		const auto particleTemplate = std::dynamic_pointer_cast<ParticleTemplate>(asset);
+		ComponentSerializer cs;
+		cs.Serialize(node, ParticleSystemPreviewComponent(particleTemplate));
+	}
+
+	bool ParticleTemplateAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		const auto particleTemplate = std::dynamic_pointer_cast<ParticleTemplate>(asset);
+		ComponentSerializer cs;
+		cs.Deserialize(node, ParticleSystemPreviewComponent(particleTemplate));
+		return true;
+	}
+
+	void ParticleTemplateAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		const auto particleTemplate = std::dynamic_pointer_cast<ParticleTemplate>(asset);
+		Deserialize(metadata, asset);
+		particleTemplate->ResimulateAllParticleSystemInstances();
+	}
+
+	void Texture2DAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
+
+		const auto texture = std::dynamic_pointer_cast<Texture2D>(asset);
+		ComponentSerializer cs;
+		cs.Serialize(node, TexturePreviewComponent(texture));
+	}
+
+	bool Texture2DAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		ImportableAssetSerializerBase::DeserializeImpl(metadata, asset, node);
+
+		const auto texture = std::dynamic_pointer_cast<Texture2D>(asset);
+		ComponentSerializer cs;
+		cs.Deserialize(node, TexturePreviewComponent(texture));
+		return true;
+	}
+
+	void Texture2DAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		const auto texture = std::dynamic_pointer_cast<Texture2D>(asset);
+		texture->Invalidate();
+		Deserialize(metadata, asset);
+	}
+
+	void MeshAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
+
+		const auto mesh = std::dynamic_pointer_cast<Mesh>(asset);
+		ComponentSerializer cs;
+		cs.Serialize(node, {}); // TODO:
+	}
+
+	bool MeshAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		ImportableAssetSerializerBase::DeserializeImpl(metadata, asset, node);
+
+		const auto mesh = std::dynamic_pointer_cast<Mesh>(asset);
+		ComponentSerializer cs;
+		cs.Deserialize(node, {}); // TODO:
+		return true;
+	}
+
+	void MeshAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+
+	}
+
+	void ShaderAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		
+	}
+
+	bool ShaderAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		return true;
+	}
+
+	void ShaderAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		const auto shader = std::dynamic_pointer_cast<Shader>(asset);
+		shader->Reload();
+	}
+
+	void MaterialAssetSerializer::ReloadShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const
+	{
+		const auto res = DeserializeAsset(metadata->Path);
+		if (!res) return;
+
+		const auto node = *res;
+		material->InitMaterialData();
+		DeserializeImplInternal(metadata, material, node, false);
+	}
+
+	void MaterialAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		const auto material = std::dynamic_pointer_cast<Material>(asset);
+		// Serialize component data
+		ComponentSerializer cs;
+		cs.Serialize(node, MaterialPreviewComponent(material));
+		// Serialize shader uniform data
+		MaterialSerializer ms;
+		ms.Serialize(node, material);
+	}
+
+	bool MaterialAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const
+	{
+		const auto material = std::dynamic_pointer_cast<Material>(asset);
+		return DeserializeImplInternal(metadata, material, node, true);
+	}
+
+	void MaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+		const auto material = std::dynamic_pointer_cast<Material>(asset);
+		material->InitMaterialData();
+		Deserialize(metadata, material);
+	}
+
+	bool MaterialAssetSerializer::DeserializeImplInternal(const Ref<AssetMetadata>& metadata, const Ref<Material>& material, const YAML::Node& node, bool bIncludeComponentData) const
+	{
+		// Deserialize component data
+		if (bIncludeComponentData)
+		{
+			ComponentSerializer cs;
+			cs.Deserialize(node, MaterialPreviewComponent(material));
+		}
+		// Deserialize shader uniform data
+		MaterialSerializer ms;
+		ms.Deserialize(node, material);
+		material->ApplyUniformDatas();
+		return true;
+	}
+}

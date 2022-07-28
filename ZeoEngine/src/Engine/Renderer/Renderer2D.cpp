@@ -85,7 +85,7 @@ namespace ZeoEngine {
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
 
 		// Generate a 1x1 white texture to be used by flat color
-		s_Data.TextureSlots[0] = Texture2DLibrary::GetWhiteTexture();
+		s_Data.TextureSlots[0] = Texture2D::GetWhiteTexture();
 
 		s_Data.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
 		s_Data.CircleShader = Shader::Create("assets/editor/shaders/Renderer2D_Circle.glsl");
@@ -236,12 +236,12 @@ namespace ZeoEngine {
 		++s_Data.Stats.QuadCount;
 	}
 
-	void Renderer2D::DrawQuad(const Vec2& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
+	void Renderer2D::DrawQuad(const Vec2& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
+	void Renderer2D::DrawQuad(const Vec3& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::scale(Mat4(1.0f), { size.x, size.y, 1.0f });
@@ -249,7 +249,7 @@ namespace ZeoEngine {
 		DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
+	void Renderer2D::DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		if (s_Data.QuadIndexCount >= s_Data.MaxIndices)
 		{
@@ -322,7 +322,7 @@ namespace ZeoEngine {
 		float textureIndex = 0.0f;
 		for (U32 i = 1; i < s_Data.TextureSlotIndex; ++i)
 		{
-			if (*s_Data.TextureSlots[i] == *texture)
+			if (s_Data.TextureSlots[i] == texture)
 			{
 				textureIndex = static_cast<float>(i);
 				break;
@@ -336,7 +336,7 @@ namespace ZeoEngine {
 			}
 
 			textureIndex = static_cast<float>(s_Data.TextureSlotIndex);
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = AssetHandle<Texture2D>(texture); // TODO:
+			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = Ref<Texture2D>(texture); // TODO:
 		}
 
 		for (SizeT i = 0; i < quadVertexCount; i++)
@@ -443,12 +443,12 @@ namespace ZeoEngine {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, uvOffset, tintColor);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor)
 	{
 		Mat4 transform = glm::translate(Mat4(1.0f), position) *
 			glm::rotate(Mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f }) *

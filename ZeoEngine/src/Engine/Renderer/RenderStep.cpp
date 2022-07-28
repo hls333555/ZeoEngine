@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		m_Bindables.emplace_back(bindable);
 	}
 
-	void RenderStep::SetContext(const Weak<Scene>& sceneContext, const AssetHandle<Material>& material)
+	void RenderStep::SetContext(const Weak<Scene>& sceneContext, const Ref<Material>& material)
 	{
 		m_SceneContext = sceneContext;
 		m_MaterialRef = material;

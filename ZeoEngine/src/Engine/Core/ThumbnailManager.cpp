@@ -3,7 +3,8 @@
 
 #include "Engine/Utils/PathUtils.h"
 #include "Engine/Renderer/Texture.h"
-#include "Engine/Core/AssetManager.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -14,28 +15,28 @@ namespace ZeoEngine {
 			return "resources/textures/icons/Folder.png";
 		}
 
-		static const char* GetAssetTypeIconDirectory()
+		static std::filesystem::path GetAssetTypeIconDirectory()
 		{
 			return "resources/textures/icons";
 		}
 
-		static std::string GetAssetTypeIconPath(AssetTypeId typeId)
+		static std::filesystem::path GetAssetTypeIconPath(AssetTypeID typeID)
 		{
-			std::string pathName = std::to_string(typeId) + ".png";
-			return PathUtils::AppendPath(GetAssetTypeIconDirectory(), pathName);
+			const std::string pathName = std::to_string(typeID) + ".png";
+			return GetAssetTypeIconDirectory() / pathName;
 		}
 
-		static const char* GetThumbnailCacheDirectory()
+		static std::filesystem::path GetThumbnailCacheDirectory()
 		{
 			return "cache/thumbnails";
 		}
 
 		static void CreateCacheDirectoryIfNeeded()
 		{
-			std::string cacheDirectory = GetThumbnailCacheDirectory();
-			if (!PathUtils::DoesPathExist(cacheDirectory))
+			const auto cacheDirectory = GetThumbnailCacheDirectory();
+			if (!PathUtils::Exists(cacheDirectory))
 			{
-				PathUtils::CreateDirectories(cacheDirectory);
+				PathUtils::CreateDirectory(cacheDirectory);
 			}
 		}
 
@@ -50,37 +51,36 @@ namespace ZeoEngine {
 
 	void ThumbnailManager::LoadAssetTypeIcons()
 	{
-		AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId)
+		AssetManager::Get().ForEachAssetType([this](AssetTypeID typeID)
 		{
-			const std::string thumbnailPath = Utils::GetAssetTypeIconPath(typeId);
-			ZE_CORE_ASSERT(PathUtils::DoesPathExist(thumbnailPath));
+			const auto thumbnailPath = Utils::GetAssetTypeIconPath(typeID);
+			ZE_CORE_ASSERT(PathUtils::Exists(thumbnailPath));
 
-			m_AssetTypeIcons[typeId] = Texture2D::Create(thumbnailPath);
+			m_AssetTypeIcons[typeID] = Texture2D::Create(thumbnailPath.string());
 		});
 
 		m_DirectoryIcon = Texture2D::Create(Utils::GetDirectoryIconPath());
 	}
 
-	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const std::string& path, AssetTypeId typeId)
+	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const Ref<AssetMetadata>& metadata)
 	{
-		const std::string thumbnailPath = GetAssetThumbnailPath(path, typeId);
-		return PathUtils::DoesPathExist(thumbnailPath) ? Texture2DLibrary::Get().LoadAsset(thumbnailPath).to_ref() : m_AssetTypeIcons[typeId];
+		const auto thumbnailPath = GetAssetThumbnailPath(metadata);
+		return PathUtils::Exists(thumbnailPath) ? Texture2D::Create(thumbnailPath.string()) : m_AssetTypeIcons[metadata->TypeID];
 	}
 
-	std::string ThumbnailManager::GetAssetThumbnailPath(const std::string& assetPath, AssetTypeId typeId) const
+	std::filesystem::path ThumbnailManager::GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const
 	{
-		if (typeId == Texture2D::TypeId())
+		if (metadata->TypeID == Texture2D::TypeID())
 		{
-			return PathUtils::GetResourcePathFromPath(assetPath);
+			return metadata->GetResourcePath();
 		}
 
-		const auto pathId = entt::hashed_string{ assetPath.c_str() }.value();
-		return PathUtils::AppendPath(Utils::GetThumbnailCacheDirectory(), std::to_string(pathId));
+		return Utils::GetThumbnailCacheDirectory() / std::to_string(metadata->Handle);
 	}
 
-	Ref<Texture2D> ThumbnailManager::GetAssetTypeIcon(AssetTypeId typeId) const
+	Ref<Texture2D> ThumbnailManager::GetAssetTypeIcon(AssetTypeID typeID) const
 	{
-		if (auto it = m_AssetTypeIcons.find(typeId); it != m_AssetTypeIcons.cend())
+		if (const auto it = m_AssetTypeIcons.find(typeID); it != m_AssetTypeIcons.cend())
 		{
 			return it->second;
 		}

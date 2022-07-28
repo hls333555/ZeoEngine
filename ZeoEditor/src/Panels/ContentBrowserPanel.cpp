@@ -1,12 +1,11 @@
 #include "Panels/ContentBrowserPanel.h"
 
 #include "Engine/Profile/BenchmarkTimer.h"
-#include "Engine/Core/Assert.h"
-#include "Engine/Utils/PathUtils.h"
-#include "Engine/Core/AssetManager.h"
-#include "Engine/Core/AssetFactory.h"
-#include "Engine/Core/AssetActions.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetFactory.h"
+#include "Engine/Asset/AssetActions.h"
+#include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Texture.h"
@@ -42,9 +41,9 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::InitAssetTypeFilters()
 	{
-		AssetManager::Get().ForEachAssetFactory([this](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
+		AssetManager::Get().ForEachAssetFactory([this](AssetTypeID typeID, const Ref<AssetFactoryBase>& factory)
 		{
-			m_AssetTypeFilters.emplace_back(AssetTypeFilterSpec{ typeId, factory->GetAssetTypeName(), false });
+			m_AssetTypeInfos.emplace_back(AssetTypeFilterInfo{ typeID, factory->GetAssetTypeName(), false });
 		});
 	}
 
@@ -61,7 +60,7 @@ namespace ZeoEngine {
 		}
 		if (ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltipWithPadding("Import to %s", GetSelectedDirectory().c_str());
+			ImGui::SetTooltipWithPadding("Import to %s", GetSelectedDirectory().string().c_str());
 		}
 
 		ImGui::SameLine();
@@ -71,10 +70,10 @@ namespace ZeoEngine {
 		if (ImGui::BeginPopupWithPadding("Filters"))
 		{
 			m_bIsAnyTypeFilterActive = false;
-			for (auto& filterSpec : m_AssetTypeFilters)
+			for (auto& filterInfo : m_AssetTypeInfos)
 			{
-				bool bIsCheckChanged = ImGui::Checkbox(filterSpec.TypeName, &filterSpec.bIsFilterActive);
-				if (filterSpec.bIsFilterActive)
+				const bool bIsCheckChanged = ImGui::Checkbox(filterInfo.TypeName, &filterInfo.bIsFilterActive);
+				if (filterInfo.bIsFilterActive)
 				{
 					m_bIsAnyTypeFilterActive = true;
 				}
@@ -96,14 +95,14 @@ namespace ZeoEngine {
 		AssetBrowserPanelBase::DrawTopBar();
 	}
 
-	bool ContentBrowserPanel::PassFilter(const Ref<PathSpec>& spec) const
+	bool ContentBrowserPanel::PassFilter(const Ref<PathMetadata>& metadata) const
 	{
 		if (m_bIsAnyTypeFilterActive)
 		{
-			auto typeId = spec->GetAssetTypeId();
-			auto it = std::find_if(m_AssetTypeFilters.begin(), m_AssetTypeFilters.end(), [typeId](const auto& filterSpec)
+			const auto typeID = metadata->GetAssetTypeID();
+			const auto it = std::find_if(m_AssetTypeInfos.begin(), m_AssetTypeInfos.end(), [typeID](const auto& filterInfo)
 			{
-				return filterSpec.TypeId == typeId;
+				return filterInfo.TypeID == typeID;
 			});
 			return it->bIsFilterActive;
 		}
@@ -115,7 +114,7 @@ namespace ZeoEngine {
 	{
 		AssetBrowserPanelBase::ClearAllFilters();
 
-		for (auto& typeFilter : m_AssetTypeFilters)
+		for (auto& typeFilter : m_AssetTypeInfos)
 		{
 			typeFilter.bIsFilterActive = false;
 		}
@@ -127,19 +126,19 @@ namespace ZeoEngine {
 	{
 		ImGui::Separator();
 
-		AssetManager::Get().ForEachAssetFactory([this, thumbnailWidth](AssetTypeId typeId, const Ref<IAssetFactory>& factory)
+		AssetManager::Get().ForEachAssetFactory([this, thumbnailWidth](AssetTypeID typeID, const Ref<AssetFactoryBase>& factory)
 		{
 			if (!factory->ShouldShowInContextMenu()) return;
 
 			// Push asset type id
-			ImGui::PushID(typeId);
+			ImGui::PushID(typeID);
 			{
-				bool bIsAssetCreationSelected = ImGui::Selectable("##AssetCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
+				const bool bIsAssetCreationSelected = ImGui::Selectable("##AssetCreationSelectable", false, 0, ImVec2(0.0f, thumbnailWidth));
 
 				ImGui::SameLine();
 
 				// Draw asset type icon
-				ImGui::Image(ThumbnailManager::Get().GetAssetTypeIcon(typeId)->GetTextureID(),
+				ImGui::Image(ThumbnailManager::Get().GetAssetTypeIcon(typeID)->GetTextureID(),
 					{ thumbnailWidth, thumbnailWidth },
 					{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
@@ -154,16 +153,16 @@ namespace ZeoEngine {
 					char baseName[MAX_PATH_SIZE] = "New";
 					strcat_s(baseName, assetTypeName);
 					strcat_s(baseName, factory->GetResourceExtension());
-					std::string formattedName = GetFormatedAssetTypeName(baseName);
-					std::string newPath = GetAvailableNewPathName(formattedName.c_str(), true);
-					RequestPathCreation(newPath, typeId, true);
+					const std::string formattedName = GetFormattedAssetTypeName(baseName);
+					const auto newPath = GetAvailableNewPathName(formattedName.c_str(), true);
+					RequestPathCreation(newPath, typeID, true);
 				}
 			}
 			ImGui::PopID();
 		});
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Save(const std::filesystem::path& path, bool bIsAsset)
 	{
 		if (bIsAsset)
 		{
@@ -180,10 +179,9 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem("Save All", "CTRL+S"))
 			{
-				AssetRegistry::Get().ForEachPathInDirectoryRecursively(path, [](const std::string& inPath)
+				AssetRegistry::Get().ForEachPathInDirectoryRecursively(path, [](const std::filesystem::path& inPath)
 				{
-					auto spec = AssetRegistry::Get().GetPathSpec(inPath);
-					if (spec->IsAsset())
+					if (AssetRegistry::Get().GetAssetMetadata(inPath))
 					{
 						AssetManager::Get().SaveAsset(inPath);
 					}
@@ -196,13 +194,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const Ref<PathSpec>& spec)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::filesystem::path& path, const Ref<AssetMetadata>& metadata)
 	{
-		AssetManager& AM = AssetManager::Get();
+		const auto& am = AssetManager::Get();
 
 		if (ImGui::MenuItem("Edit"))
 		{
-			AM.OpenAsset(path);
+			am.OpenAsset(path);
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -211,17 +209,17 @@ namespace ZeoEngine {
 
 		if (ImGui::MenuItem("Reload"))
 		{
-			AM.ReloadAsset(path);
+			AssetLibrary::ReloadAsset(path);
 		}
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::SetTooltipWithPadding("Discard changes and reload from disk");
 		}
-		if (spec->IsImportableAsset())
+		if (metadata->IsImportableAsset())
 		{
 			if (ImGui::MenuItem("Reimport"))
 			{
-				AM.ReimportAsset(path);
+				am.ReimportAsset(path);
 			}
 			if (ImGui::IsItemHovered())
 			{
@@ -232,36 +230,37 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	void ContentBrowserPanel::ImportAsset(const std::string& filePath)
+	void ContentBrowserPanel::ImportAsset(const std::filesystem::path& path)
 	{
-		const std::string extension = PathUtils::GetExtensionFromPath(filePath);
-		const std::string assetName = PathUtils::GetFileNameFromPath(filePath);
-		const std::string destPath = PathUtils::AppendPath(GetSelectedDirectory(), assetName);
-		auto& am = AssetManager::Get();
-		am.ImportAsset(*am.GetTypdIdFromFileExtension(extension), PathUtils::GetRelativePath(filePath), destPath);
-		SetForceUpdateFilterCache(true);
+		const auto destPath = GetSelectedDirectory() / path.filename();
+		const auto& am = AssetManager::Get();
+		if (const auto typeID = am.GetAssetTypeFromFileExtension(path.extension().string()))
+		{
+			am.ImportAsset(typeID, path, destPath);
+			SetForceUpdateFilterCache(true);
+		}
 	}
 
-	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding)
+	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding)
 	{
 		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-		if (spec->IsAsset() && ImGui::BeginDragDropSource())
+		if (metadata->IsAsset() && ImGui::BeginDragDropSource())
 		{
 			char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
-			_itoa_s(spec->GetAssetTypeId(), typeStr, 10);
-			ImGui::SetDragDropPayload(typeStr, &spec, sizeof(spec));
+			_itoa_s(metadata->GetAssetTypeID(), typeStr, 10);
+			ImGui::SetDragDropPayload(typeStr, &metadata, sizeof(metadata));
 
 			// Draw tooltip thumbnail
-			ImGui::AssetThumbnail(spec->ThumbnailTexture->GetTextureID(),
+			ImGui::AssetThumbnail(metadata->ThumbnailTexture->GetTextureID(),
 				GetTileThumbnailWidth(), thumbnailRounding,
-				true, Texture2DLibrary::GetAssetBackgroundTexture()->GetTextureID());
+				true, Texture2D::GetAssetBackgroundTexture()->GetTextureID());
 
 			ImGui::EndDragDropSource();
 		}
 		ImGui::PopStyleColor();
 	}
 
-	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::string& path)
+	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::filesystem::path& path)
 	{
 		AssetManager::Get().OpenAsset(path);
 	}

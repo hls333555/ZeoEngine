@@ -4,6 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <ImGuizmo.h>
 
 #include "Engine/Core/Input.h"

@@ -21,9 +21,9 @@ namespace ZeoEngine {
 		U32 Offset = 0;
 		SizeT Size = 0;
 
-		AssetHandle<Material> OwnerMaterial;
+		Ref<Material> OwnerMaterial;
 
-		DynamicUniformDataBase(const ShaderReflectionDataBase& reflectionData, const AssetHandle<Material>& material)
+		DynamicUniformDataBase(const ShaderReflectionDataBase& reflectionData, const Ref<Material>& material)
 			: Name(reflectionData.Name), Binding(reflectionData.Binding), Offset(reflectionData.Offset), Size(reflectionData.Size)
 			, OwnerMaterial(material) {}
 
@@ -56,7 +56,7 @@ namespace ZeoEngine {
 		CT DefaultMin, DefaultMax;
 		const char* Format = nullptr;
 
-		DynamicUniformScalarNData(const ShaderReflectionDataBase& reflectionData, const AssetHandle<Material>& material, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
+		DynamicUniformScalarNData(const ShaderReflectionDataBase& reflectionData, const Ref<Material>& material, ImGuiDataType scalarType, CT defaultMin, CT defaultMax, const char* format)
 			: DynamicUniformDataBase(reflectionData, material)
 			, ScalarType(scalarType)
 			, DefaultMin(defaultMin), DefaultMax(defaultMax)
@@ -149,10 +149,10 @@ namespace ZeoEngine {
 
 	struct DynamicUniformTexture2DData : public DynamicUniformDataBase, public Bindable
 	{
-		AssetBrowser Browser{ Texture2D::TypeId() };
-		AssetHandle<Texture2D> Value;
+		AssetBrowser Browser{ Texture2D::TypeID() };
+		Ref<Texture2D> Value;
 
-		DynamicUniformTexture2DData(const ShaderReflectionDataBase& reflectionData, const AssetHandle<Material>& material)
+		DynamicUniformTexture2DData(const ShaderReflectionDataBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformDataBase(reflectionData, material) {}
 
 		virtual ShaderReflectionType GetDataType() const override { return ShaderReflectionType::Texture2D; }
@@ -165,19 +165,15 @@ namespace ZeoEngine {
 	class Material : public AssetBase<Material>
 	{
 	public:
-		explicit Material(const std::string& path);
+		Material();
+		Material(Material&&) = default; // Defined as RenderTechnique cannot be copied
 		virtual ~Material();
 
-		static Ref<Material> Create(const std::string& path);
-
 		static constexpr const char* GetTemplatePath() { return "assets/editor/materials/NewMaterial.zasset"; }
+		static Ref<Material> GetDefaultMaterial();
 
-		virtual void Reload() override;
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		const AssetHandle<Shader>& GetShader() const { return m_Shader; }
-		void SetShader(const AssetHandle<Shader>& shader) { m_Shader = shader; ReloadShaderData(); }
+		const Ref<Shader>& GetShader() const { return m_Shader; }
+		void SetShader(const Ref<Shader>& shader) { m_Shader = shader; ReloadShaderData(); }
 
 		const auto& GetDynamicUniforms() const { return m_DynamicUniforms; }
 		const auto& GetDynamicBindableUniforms() const { return m_DynamicBindableUniforms; }
@@ -185,19 +181,19 @@ namespace ZeoEngine {
 		auto& GetDynamicUniformBufferDatas() { return m_DynamicUniformBufferDatas; }
 		const auto& GetRenderTechniques() const { return m_Techniques; }
 
-	private:
 		void InitMaterialData();
 		void ApplyUniformDatas() const;
+
+	private:
 		void ParseReflectionData();
 		void InitUniformBuffers();
 		void ReloadShaderData();
-		void DeserializeImpl(bool bIncludeComponentData);
 
 	public:
-		entt::sink<entt::sigh<void(const AssetHandle<Material>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
+		entt::sink<entt::sigh<void(const Ref<Material>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
 
 	private:
-		AssetHandle<Shader> m_DefaultShader, m_Shader;
+		Ref<Shader> m_DefaultShader, m_Shader;
 		std::vector<Ref<DynamicUniformDataBase>> m_DynamicUniforms;
 		std::vector<Ref<DynamicUniformTexture2DData>> m_DynamicBindableUniforms;
 		/** Map from uniform block binding to uniform buffers */
@@ -207,17 +203,7 @@ namespace ZeoEngine {
 
 		std::vector<RenderTechnique> m_Techniques;
 
-		entt::sigh<void(const AssetHandle<Material>&)> m_OnMaterialInitializedDel;
+		entt::sigh<void(const Ref<Material>&)> m_OnMaterialInitializedDel;
 	};
-
-	REGISTER_ASSET(Material,
-	Ref<Material> operator()(const std::string& path) const
-	{
-		return Material::Create(path);
-	},
-	static AssetHandle<Material> GetDefaultMaterial()
-	{
-		return Get().LoadAsset(Material::GetTemplatePath());
-	})
 
 }

@@ -3,6 +3,7 @@
 #include "Editors/LevelEditor.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Engine/Renderer/RenderGraph.h"
+#include "Engine/GameFramework/SceneCamera.h"
 
 namespace ZeoEngine {
 
@@ -32,10 +33,10 @@ namespace ZeoEngine {
 				break;
 			case SceneState::Play:
 			case SceneState::Pause:
-				auto [sceneDamera, transform] = GetRenderSystem()->GetActiveSceneCamera();
-				if (sceneDamera)
+				auto [sceneCamera, transform] = GetRenderSystem()->GetActiveSceneCamera();
+				if (sceneCamera)
 				{
-					BeginScene(*sceneDamera, transform);
+					BeginScene(*sceneCamera, transform);
 				}
 				else
 				{

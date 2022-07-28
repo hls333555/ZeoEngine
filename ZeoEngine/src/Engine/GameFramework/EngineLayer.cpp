@@ -12,10 +12,4 @@ namespace ZeoEngine {
 		RandomEngine::Init();
 	}
 
-	void EngineLayer::OnAttach()
-	{
-
-
-	}
-
 }

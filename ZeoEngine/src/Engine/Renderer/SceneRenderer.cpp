@@ -8,6 +8,8 @@
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/Light.h"
+#include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
 	
@@ -311,12 +313,12 @@ namespace ZeoEngine {
 		m_QuadBatcher.DrawQuad(transform, color, entityID);
 	}
 
-	void SceneRenderer::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
+	void SceneRenderer::DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		m_QuadBatcher.DrawQuad(transform, texture, tilingFactor, uvOffset, tintColor, entityID);
 	}
 
-	void SceneRenderer::DrawBillboard(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
+	void SceneRenderer::DrawBillboard(const Vec3& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		Mat4 lookAtMatrix = glm::lookAt(position, m_CameraBuffer.Position, { 0.0f, 1.0f, 0.0f });
 		Mat4 transform = glm::inverse(lookAtMatrix) *

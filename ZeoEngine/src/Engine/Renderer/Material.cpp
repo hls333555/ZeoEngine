@@ -1,7 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Material.h"
 
-#include "Engine/Core/Serializer.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -62,10 +62,10 @@ namespace ZeoEngine {
 	void DynamicUniformTexture2DData::Draw()
 	{
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = Browser.Draw(Value ? Value->GetID() : std::string{}, -1.0f, []() {});
+		auto [bIsBufferChanged, metadata] = Browser.Draw(Value ? Value->GetHandle() : 0, -1.0f, []() {});
 		if (bIsBufferChanged)
 		{
-			Value = retSpec ? Texture2DLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2D>{};
+			Value = metadata ? AssetLibrary::LoadAsset<Texture2D>(metadata->Path) : nullptr;
 			Apply();
 		}
 	}
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		else // Bind default texture
 		{
 			// For diffuse color, we use grey texture, and for others, we use white texture so that most calculations will not be affected
-			const auto defaultTexture = Name == "u_DiffuseTexture" ? Texture2DLibrary::GetDefaultMaterialTexture() : Texture2DLibrary::GetWhiteTexture();
+			const auto defaultTexture = Name == "u_DiffuseTexture" ? Texture2D::GetDefaultMaterialTexture() : Texture2D::GetWhiteTexture();
 			defaultTexture->SetBindingSlot(Binding);
 			defaultTexture->Bind();
 		}
@@ -91,10 +91,9 @@ namespace ZeoEngine {
 		Bind();
 	}
 
-	Material::Material(const std::string& path)
-		: AssetBase(path)
+	Material::Material()
 	{
-		m_Shader = ShaderLibrary::GetDefaultShader();
+		m_Shader = Shader::GetDefaultShader();
 		m_Shader->m_OnAssetReloaded.connect<&Material::ReloadShaderData>(this);
 	}
 
@@ -107,46 +106,17 @@ namespace ZeoEngine {
 		m_Shader->m_OnAssetReloaded.disconnect(this);
 	}
 
-	Ref<Material> Material::Create(const std::string& path)
+	Ref<Material> Material::GetDefaultMaterial()
 	{
-		auto material = CreateRef<Material>(path);
-		material->Reload();
-		return material;
-	}
-
-	void Material::Reload()
-	{
-		InitMaterialData();
-		Deserialize();
-	}
-
-	void Material::Serialize(const std::string& path)
-	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		MaterialAssetSerializer::Serialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle());
-	}
-
-	void Material::Deserialize()
-	{
-		DeserializeImpl(true);
+		return AssetLibrary::LoadAsset<Material>(GetTemplatePath());
 	}
 
 	void Material::ReloadShaderData()
 	{
-		InitMaterialData();
-		DeserializeImpl(false);
-	}
-
-	void Material::DeserializeImpl(bool bIncludeComponentData)
-	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		MaterialAssetSerializer::Deserialize(GetID(), TypeId(), MaterialPreviewComponent{ GetAssetHandle() }, GetAssetHandle(), bIncludeComponentData);
-		// Apply uniform datas after loading
-		ApplyUniformDatas();
+		const auto serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
+		const auto materialSerializer = std::dynamic_pointer_cast<MaterialAssetSerializer>(serializer);
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
+		materialSerializer->ReloadShaderData(metadata, SharedFromThis());
 	}
 
 	void Material::InitMaterialData()
@@ -181,13 +151,13 @@ namespace ZeoEngine {
 				{
 					step.AddBindable(uniformBindableData);
 				}
-				step.AddBindable(m_Shader.to_ref());
+				step.AddBindable(m_Shader);
 				shade.AddStep(std::move(step));
 			}
 			m_Techniques.emplace_back(std::move(shade));
 		}
 
-		m_OnMaterialInitializedDel.publish(GetAssetHandle());
+		m_OnMaterialInitializedDel.publish(SharedFromThis());
 	}
 
 	void Material::ApplyUniformDatas() const
@@ -205,25 +175,25 @@ namespace ZeoEngine {
 			switch (reflectionData->GetType())
 			{
 			case ShaderReflectionType::Bool:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, GetAssetHandle()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, SharedFromThis()));
 				break;
 			case ShaderReflectionType::Int:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, GetAssetHandle(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, SharedFromThis(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
 				break;
 			case ShaderReflectionType::Float:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec2:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, GetAssetHandle(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
 				break;
 			case ShaderReflectionType::Vec4:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, GetAssetHandle()));
+				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, SharedFromThis()));
 				break;
 			case ShaderReflectionType::Texture2D:
-				m_DynamicBindableUniforms.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, GetAssetHandle()));
+				m_DynamicBindableUniforms.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, SharedFromThis()));
 				break;
 			default:
 				break;

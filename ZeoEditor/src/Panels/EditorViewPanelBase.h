@@ -9,6 +9,8 @@
 
 namespace ZeoEngine {
 
+	struct AssetMetadata;
+
 	class EditorViewPanelBase : public PanelBase
 	{
 	public:
@@ -19,16 +21,16 @@ namespace ZeoEngine {
 		/**
 		 * Snapshot current viewport and save as thumbnail cache.
 		 * 
-		 * @param assetPath - Path of asset
+		 * @param metadata - Metadata of asset
 		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
 		 * @param bOverwriteThumbnail - If true, it will always do a capture no matter the existance of local cache
 		 */
-		void Snapshot(const std::string& assetPath, U32 imageWidth = 0, bool bOverwriteThumbnail = true);
+		void Snapshot(const Ref<AssetMetadata>& metadata, U32 imageWidth = 0, bool bOverwriteThumbnail = true) const;
 
 		const Vec2* GetViewportBounds() const { return m_ViewportBounds; }
 		Vec2 GetViewportSize() const;
 
-		std::pair<float, float> GetMouseViewportPosition();
+		std::pair<float, float> GetMouseViewportPosition() const;
 
 	protected:
 		virtual void ProcessRender() override;
@@ -57,12 +59,6 @@ namespace ZeoEngine {
 	private:
 		Vec2 m_LastViewportSize{ 0.0f };
 
-		struct SnapshotSpec
-		{
-			std::string AssetPath;
-			std::string ThumbnailPath;
-			U32 ImageWidth;
-		}m_SnapshotSpec;
 	};
 
 }

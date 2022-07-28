@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Engine/Core/EngineTypes.h"
+#include "Engine/Asset/Asset.h"
 
 namespace ZeoEngine {
 
+	struct AssetMetadata;
 	class Texture2D;
 
 	class ThumbnailManager
@@ -18,10 +19,10 @@ namespace ZeoEngine {
 		}
 
 		/** Try to get asset thumbnail from disk or return the default type icon. */
-		Ref<Texture2D> GetAssetThumbnail(const std::string& path, AssetTypeId typeId);
-		std::string GetAssetThumbnailPath(const std::string& assetPath, AssetTypeId typeId) const;
+		Ref<Texture2D> GetAssetThumbnail(const Ref<AssetMetadata>& metadata);
+		std::filesystem::path GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const;
 
-		Ref<Texture2D> GetAssetTypeIcon(AssetTypeId typeId) const;
+		Ref<Texture2D> GetAssetTypeIcon(AssetTypeID typeId) const;
 		const Ref<Texture2D>& GetDirectoryIcon() const { return m_DirectoryIcon; }
 
 	private:
@@ -35,7 +36,7 @@ namespace ZeoEngine {
 
 	private:
 		/** Map from asset type id to its type icon texture */
-		std::unordered_map<AssetTypeId, Ref<Texture2D>> m_AssetTypeIcons;
+		std::unordered_map<AssetTypeID, Ref<Texture2D>> m_AssetTypeIcons;
 		Ref<Texture2D> m_DirectoryIcon;
 	};
 

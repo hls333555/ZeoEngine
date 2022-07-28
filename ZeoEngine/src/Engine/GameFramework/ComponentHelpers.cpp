@@ -1,9 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/ComponentHelpers.h"
 
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/ReflectionCore.h"
 #include "Engine/Renderer/SceneRenderer.h"
 
 namespace ZeoEngine {
@@ -41,7 +41,7 @@ namespace ZeoEngine {
 	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/Camera.png.zasset");
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraComponentHelper::OnComponentDestroy()
@@ -75,7 +75,7 @@ namespace ZeoEngine {
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		if (dataId == GetDataIdByName<ParticleSystemComponent>("ParticleTemplateAsset"))
 		{
-			AssetHandle<ParticleTemplate> oldTemplate = (*oldValue._Cast<AssetHandle<ParticleTemplate>>());
+			Ref<ParticleTemplate> oldTemplate = (*oldValue._Cast<Ref<ParticleTemplate>>());
 			if (oldTemplate)
 			{
 				oldTemplate->RemoveParticleSystemInstance(particleComp.Instance);
@@ -133,7 +133,7 @@ namespace ZeoEngine {
 		}
 		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
 		{
-			auto oldMaterial = (*oldValue._Cast<AssetHandle<Material>>());
+			auto oldMaterial = (*oldValue._Cast<Ref<Material>>());
 			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
 		}
 	}
@@ -236,15 +236,15 @@ namespace ZeoEngine {
 		{
 			case LightComponent::LightType::DirectionalLight:
 				lightComp.LightSource = CreateRef<DirectionalLight>();
-				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/DirectionalLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
 				lightComp.LightSource = CreateRef<PointLight>();
-				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/PointLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
 				lightComp.LightSource = CreateRef<SpotLight>();
-				billboardComp.TextureAsset = Texture2DLibrary::Get().LoadAsset("assets/editor/textures/icons/SpotLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

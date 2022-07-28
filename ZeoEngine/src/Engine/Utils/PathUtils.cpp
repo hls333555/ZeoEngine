@@ -3,91 +3,49 @@
 
 #include <filesystem>
 
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetRegistry.h"
 
 namespace ZeoEngine {
 
-	std::string PathUtils::GetCanonicalPath(const std::string& path)
-	{
-		return std::filesystem::weakly_canonical(path).string(); // This version will not throw if path does not exist
-	}
-
-	std::string PathUtils::GetRelativePath(const std::string& path)
-	{
-		return std::filesystem::relative(path).string();
-	}
-
-	std::string PathUtils::GetParentPath(const std::string& path)
-	{
-		return std::filesystem::path{ path }.parent_path().string();
-	}
-
-	bool PathUtils::ArePathsEquivalent(const std::string& lPath, const std::string& rPath)
-	{
-		return std::filesystem::equivalent(lPath, rPath);
-	}
-
-	std::string PathUtils::GetFileNameFromPath(const std::string& path)
-	{
-		return std::filesystem::path{ path }.filename().string();
-	}
-
-	std::string PathUtils::GetNameFromPath(const std::string& path)
-	{
-		return std::filesystem::path{ path }.stem().string();
-	}
-
-	std::string PathUtils::GetExtensionFromPath(const std::string& path)
-	{
-		return std::filesystem::path{ path }.extension().string();
-	}
-
-	std::string PathUtils::AppendPath(const std::string& basePath, const std::string& appendPath)
-	{
-		const auto path = std::filesystem::path{ basePath };
-		return (path / appendPath).string();
-	}
-
-	bool PathUtils::DoesPathExist(const std::string& path)
+	bool PathUtils::Exists(const std::filesystem::path& path)
 	{
 		return std::filesystem::exists(path);
 	}
 
-	bool PathUtils::CreateDirectory(const std::string& directory)
+	bool PathUtils::IsDirectory(const std::filesystem::path& path)
 	{
-		return std::filesystem::create_directory(directory);
+		return std::filesystem::is_directory(path);
 	}
 
-	bool PathUtils::CreateDirectories(const std::string& directory)
+	bool PathUtils::Equivalent(const std::filesystem::path& lPath, const std::filesystem::path& rPath)
+	{
+		return std::filesystem::equivalent(lPath, rPath);
+	}
+
+	bool PathUtils::CreateDirectory(const std::filesystem::path& directory)
 	{
 		return std::filesystem::create_directories(directory);
 	}
 
-	void PathUtils::RenamePath(const std::string& oldPath, const std::string& newPath)
+	void PathUtils::RenamePath(const std::filesystem::path& oldPath, const std::filesystem::path& newPath)
 	{
 		std::filesystem::rename(oldPath, newPath);
 	}
 
-	uintmax_t PathUtils::DeletePath(const std::string& path, bool bRecursively)
+	bool PathUtils::DeletePath(const std::filesystem::path& path)
 	{
-		if (bRecursively)
+		if (!Exists(path)) return false;
+
+		if (IsDirectory(path))
 		{
-			return std::filesystem::remove_all(path);
+			return std::filesystem::remove_all(path) > 0;
 		}
-		else
-		{
-			return std::filesystem::remove(path) ? 1 : 0;
-		}
+		return std::filesystem::remove(path);
 	}
 
-	bool PathUtils::CopyFile(const std::string& srcPath, const std::string& destPath, bool bShouldOverwrite)
+	bool PathUtils::CopyFile(const std::filesystem::path& srcPath, const std::filesystem::path& destPath, bool bShouldOverwrite)
 	{
 		return std::filesystem::copy_file(srcPath, destPath, bShouldOverwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none);
-	}
-
-	std::string PathUtils::GetResourcePathFromPath(const std::string& path)
-	{
-		return path.substr(0, path.rfind(AssetRegistry::GetEngineAssetExtension()));
 	}
 
 	static std::string NormalizePathSeparator(const std::string& path)
@@ -95,23 +53,4 @@ namespace ZeoEngine {
 		return std::filesystem::path(path).make_preferred().string();
 	}
 
-	std::string PathUtils::GetNormalizedAssetPath(const std::string& path)
-	{
-		std::string normalizedPath = NormalizePathSeparator(path);
-		const char* extension = AssetRegistry::GetEngineAssetExtension();
-		if (normalizedPath.rfind(AssetRegistry::GetEngineAssetExtension()) == normalizedPath.size() - strlen(extension))
-		{
-			return normalizedPath;
-		}
-		return normalizedPath + extension;
-	}
-
-	// https://stackoverflow.com/questions/67144806/c-check-if-path-is-outside-a-given-directory
-	bool PathUtils::IsEditorPath(const std::string& p)
-	{
-		const std::string relativePath = std::filesystem::relative(p, AssetRegistry::GetEditorRootDirectory()).string();
-		// Size check for "." result
-		// If path starts with ".." it's not subdir
-		return relativePath.size() == 1 || relativePath[0] != '.' && relativePath[1] != '.';
-	}
 }

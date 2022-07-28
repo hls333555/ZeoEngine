@@ -6,6 +6,7 @@
 #include "Engine/Core/Input.h"
 #include "Panels/EditorViewPanelBase.h"
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Engine/Asset/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -160,12 +161,9 @@ namespace ZeoEngine {
 
 	void MenuItem_Snapshot::OnMenuItemActivated()
 	{
-		const std::string assetPath = GetContextEditor()->GetAsset()->GetID();
-		// This may be null e.g. default particle system
-		if (assetPath.empty()) return;
-
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
 		const auto viewPanel = GetContextEditorUIRenderer().GetViewPanel();
-		viewPanel->Snapshot(assetPath, 256);
+		viewPanel->Snapshot(metadata, 256);
 	}
 
 }

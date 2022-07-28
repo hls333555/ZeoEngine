@@ -2,6 +2,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/TextureEditorUIRenderer.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -10,22 +11,17 @@ namespace ZeoEngine {
 		return CreateScope<TextureEditorUIRenderer>(SharedFromBase<TextureEditor>());
 	}
 
-	AssetTypeId TextureEditor::GetAssetTypeId() const
-	{
-		return Texture2D::TypeId();
-	}
-
-	AssetHandle<IAsset> TextureEditor::GetAsset() const
+	Ref<IAsset> TextureEditor::GetAsset() const
 	{
 		return GetContextEntity().GetComponent<TexturePreviewComponent>().TextureAsset;
 	}
 
 	// TODO: Should support reloading
-	void TextureEditor::LoadAsset(const std::string& path)
+	void TextureEditor::LoadAsset(const std::filesystem::path& path)
 	{
 		GetContextEntity().PatchComponent<TexturePreviewComponent>([&path, this](auto& texturePreviewComp)
 		{
-			texturePreviewComp.TextureAsset = Texture2DLibrary::Get().LoadAsset(path);
+			texturePreviewComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>(path);
 		});
 	}
 

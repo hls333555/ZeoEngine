@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <filesystem>
 #include <unordered_map>
 #include <thread>
@@ -14,14 +13,14 @@ namespace ZeoEngine {
 	class FileWatcher
 	{
 	public:
-		FileWatcher(const std::string& directoryToWatch, std::chrono::duration<I32, std::milli> delay)
-			: m_DirectoryToWatch(directoryToWatch), m_Delay(delay)
+		FileWatcher(const std::filesystem::path& directoryToWatch, std::chrono::duration<I32, std::milli> interval)
+			: m_DirectoryToWatch(directoryToWatch), m_Interval(interval)
 		{
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
 			{
 				if (entry.is_directory()) continue;
 
-				m_WatchedFiles[entry.path().string()] = std::filesystem::last_write_time(entry);
+				m_WatchedFiles[entry.path()] = std::filesystem::last_write_time(entry);
 			}
 
 			ZE_CORE_TRACE("File watcher initialized");
@@ -52,8 +51,8 @@ namespace ZeoEngine {
 		{
 			while (m_bIsRunning)
 			{
-				// Wait for "m_Delay" milliseconds
-				std::this_thread::sleep_for(m_Delay);
+				// Wait for several milliseconds
+				std::this_thread::sleep_for(m_Interval);
 
 				auto it = m_WatchedFiles.begin();
 				while (it != m_WatchedFiles.end())
@@ -70,17 +69,16 @@ namespace ZeoEngine {
 					}
 				}
 
-				std::filesystem::path watchedPath(m_DirectoryToWatch);
-				if (std::filesystem::exists(watchedPath))
+				if (std::filesystem::exists(m_DirectoryToWatch))
 				{
 					// Check if a file was created or modified
-					for (const auto& entry : std::filesystem::recursive_directory_iterator(watchedPath))
+					for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
 					{
 						if (entry.is_directory()) continue;
 
 						auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
 
-						std::string filePath = entry.path().string();
+						auto filePath = entry.path();
 						// File creation
 						if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
 						{
@@ -102,22 +100,22 @@ namespace ZeoEngine {
 		}
 
 	public:
-		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileAdded{ m_OnFileAddedDel };
-		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileModified{ m_OnFileModifiedDel };
-		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
+		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileAdded{ m_OnFileAddedDel };
+		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileModified{ m_OnFileModifiedDel };
+		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
 
 	private:
-		std::string m_DirectoryToWatch;
+		std::filesystem::path m_DirectoryToWatch;
 		/** Time interval at which we check the base folder for changes */
-		std::chrono::duration<I32, std::milli> m_Delay;
+		std::chrono::duration<I32, std::milli> m_Interval;
 
-		/** A record of files from the base directory and their last modification time */
-		std::unordered_map<std::string, std::filesystem::file_time_type> m_WatchedFiles;
+		/** A record of files from the base directory to their last modification time */
+		std::unordered_map<std::filesystem::path, std::filesystem::file_time_type> m_WatchedFiles;
 
 		bool m_bIsRunning = true;
 		Scope<std::thread> m_FileWatcherThread;
 
-		entt::sigh<void(const std::string&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;
+		entt::sigh<void(const std::filesystem::path&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;
 	};
 
 }

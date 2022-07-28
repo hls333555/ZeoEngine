@@ -9,7 +9,7 @@
 #include <shellapi.h> // NOTE: Include required windows.h before it
 
 #include "Engine/Core/Application.h"
-#include "Engine/Core/AssetManager.h"
+#include "Engine/Asset/AssetManager.h"
 
 namespace ZeoEngine {
 
@@ -94,18 +94,16 @@ namespace ZeoEngine {
 		return ss.str();
 	}
 
-	void PlatformUtils::ShowInExplorer(const std::string& path)
+	void PlatformUtils::ShowInExplorer(const std::filesystem::path& path)
 	{
 		std::wstringstream params;
 		params << "/select," << path.c_str();
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 
-	void PlatformUtils::OpenFile(const std::string& path)
+	void PlatformUtils::OpenFile(const std::filesystem::path& path)
 	{
-		std::wstring wPath = std::wstring(path.begin(), path.end());
-		LPCWSTR wPathStr = wPath.c_str();
-		ShellExecute(0, 0, wPathStr, 0, 0, SW_SHOW);
+		ShellExecute(0, 0, path.wstring().c_str(), 0, 0, SW_SHOW);
 	}
 
 }

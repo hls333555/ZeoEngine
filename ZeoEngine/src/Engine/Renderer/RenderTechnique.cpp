@@ -13,7 +13,7 @@ namespace ZeoEngine {
 		m_Steps.emplace_back(std::move(step));
 	}
 
-	void RenderTechnique::UpdateContext(const Weak<Scene>& sceneContext, const AssetHandle<Material>& material)
+	void RenderTechnique::UpdateContext(const Weak<Scene>& sceneContext, const Ref<Material>& material)
 	{
 		for (auto& step : m_Steps)
 		{

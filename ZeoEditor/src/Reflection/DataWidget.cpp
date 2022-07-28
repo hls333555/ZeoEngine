@@ -6,8 +6,8 @@
 #include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Core/EditorManager.h"
-#include "Editors/EditorBase.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Asset/AssetRegistry.h"
 
 namespace ZeoEngine {
 
@@ -105,12 +105,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex)
+	void DataWidget::InvokeOnDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex) const
 	{
 		if (m_bIsTest) return;
 
 		ZE_TRACE("Value changed during edit!");
-		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
+		const auto* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		if (comp->ComponentHelper)
 		{
@@ -118,12 +118,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex)
+	void DataWidget::InvokePostDataValueEditChangeCallback(entt::meta_data data, std::any oldValue, I32 elementIndex) const
 	{
 		if (m_bIsTest) return;
 
 		ZE_TRACE("Value changed after edit!");
-		IComponent* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
+		const auto* comp = m_DataSpec.ComponentInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		if (comp->ComponentHelper)
 		{
@@ -357,10 +357,10 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Texture2D asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, [](){});
+		auto [bIsBufferChanged, metadata] = m_Browser.Draw(m_Buffer ? m_Buffer->GetHandle() : 0, rightPadding, [](){});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? Texture2DLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Texture2D>{};
+			m_Buffer = metadata ? AssetLibrary::LoadAsset<Texture2D>(metadata->Path) : Ref<Texture2D>{};
 			SetValueToData();
 		}
 
@@ -370,7 +370,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void Texture2DDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
-		m_Buffer = Texture2DLibrary::Get().LoadAsset("assets/textures/Ship.png.zasset");
+		m_Buffer = AssetLibrary::LoadAsset<Texture2D>("assets/textures/Ship.png.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -388,7 +388,7 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Particle template asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, [this]()
+		auto [bIsBufferChanged, metadata] = m_Browser.Draw(m_Buffer ? m_Buffer->GetHandle() : 0, rightPadding, [this]()
 		{
 			if (ImGui::MenuItem(ICON_FA_REDO "  Resimulate"))
 			{
@@ -397,7 +397,7 @@ namespace ZeoEngine {
 		});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? ParticleTemplateLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<ParticleTemplate>{};
+			m_Buffer = metadata ? AssetLibrary::LoadAsset<ParticleTemplate>(metadata->Path) : Ref<ParticleTemplate>{};
 			SetValueToData();
 		}
 
@@ -407,7 +407,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ParticleTemplateDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 {
-		m_Buffer = ParticleTemplateLibrary::Get().LoadAsset("assets/particles/Test.zasset");
+		m_Buffer = AssetLibrary::LoadAsset<ParticleTemplate>("assets/particles/Test.zasset");
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -425,10 +425,10 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Mesh asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, metadata] = m_Browser.Draw(m_Buffer ? m_Buffer->GetHandle() : 0, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? MeshLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Mesh>{};
+			m_Buffer = metadata ? AssetLibrary::LoadAsset<Mesh>(metadata->Path) : Ref<Mesh>{};
 			SetValueToData();
 		}
 
@@ -438,7 +438,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void MeshDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
-		m_Buffer = MeshLibrary::GetDefaultSphereMesh();
+		m_Buffer = Mesh::GetDefaultSphereMesh();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -456,10 +456,10 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Material asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, metadata] = m_Browser.Draw(m_Buffer ? m_Buffer->GetHandle() : 0, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? MaterialLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Material>{};
+			m_Buffer = metadata ? AssetLibrary::LoadAsset<Material>(metadata->Path) : Ref<Material>{};
 			SetValueToData();
 		}
 
@@ -469,7 +469,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void MaterialDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
-		m_Buffer = MaterialLibrary::GetDefaultMaterial();
+		m_Buffer = Material::GetDefaultMaterial();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}
@@ -487,10 +487,10 @@ namespace ZeoEngine {
 		// Make sure browser widget + dropdown button can reach desired size
 		float rightPadding = m_DataSpec.bIsSeqElement ? GetDropdownWidth() : -1.0f;
 		// Shader asset browser
-		auto [bIsBufferChanged, retSpec] = m_Browser.Draw(m_Buffer ? m_Buffer->GetID() : std::string{}, rightPadding, []() {});
+		auto [bIsBufferChanged, metadata] = m_Browser.Draw(m_Buffer ? m_Buffer->GetHandle() : 0, rightPadding, []() {});
 		if (bIsBufferChanged)
 		{
-			m_Buffer = retSpec ? ShaderLibrary::Get().LoadAsset(retSpec->Path) : AssetHandle<Shader>{};
+			m_Buffer = metadata ? AssetLibrary::LoadAsset<Shader>(metadata->Path) : Ref<Shader>{};
 			SetValueToData();
 		}
 
@@ -500,7 +500,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 	void ShaderDataWidget::TestImpl(entt::registry& reg, entt::entity entity, std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 	{
-		m_Buffer = ShaderLibrary::GetDefaultShader();
+		m_Buffer = Shader::GetDefaultShader();
 		SetValueToData();
 		CHECK(GetTestDataValue(reg, entity, dataStack, elementIndex) == m_Buffer);
 	}

@@ -4,12 +4,21 @@
 
 namespace ZeoEngine {
 
+	class Scene;
+
 	class EngineLayer : public Layer
 	{
 	public:
-		EngineLayer(const std::string& name = "Layer");
+		EngineLayer(const std::string& name = "Engine");
 
-		virtual void OnAttach() override;
+		const Ref<Scene>& GetActiveGameScene() const { return m_ActiveGameScene; }
+		void SetActiveGameScene(const Ref<Scene>& scene) { m_ActiveGameScene = scene; }
+
+		// TODO:
+		virtual void OpenLevel(const std::filesystem::path& path) const {}
+
+	private:
+		Ref<Scene> m_ActiveGameScene;
 
 	};
 

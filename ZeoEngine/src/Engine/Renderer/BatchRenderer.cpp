@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 	
@@ -56,11 +57,11 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.QuadVAO->SetIndexBuffer(quadIBO);
 			delete[] quadIndices;
 
-			m_PrimitiveBuffer.QuadShader = ShaderLibrary::Get().LoadAsset("assets/editor/shaders/Quad.glsl").to_ref();
+			m_PrimitiveBuffer.QuadShader = AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/Quad.glsl.zasset");
 		}
 
 		// Generate a 1x1 white texture to be used by flat color
-		m_PrimitiveBuffer.TextureSlots[0] = Texture2DLibrary::GetWhiteTexture();
+		m_PrimitiveBuffer.TextureSlots[0] = Texture2D::GetWhiteTexture();
 	}
 
 	void BatchRenderer::StartBatch()
@@ -128,7 +129,7 @@ namespace ZeoEngine {
 		++Renderer::GetStats().QuadCount;
 	}
 
-	void BatchRenderer::DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
+	void BatchRenderer::DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor, const Vec2& uvOffset, const Vec4& tintColor, I32 entityID)
 	{
 		if (m_PrimitiveBuffer.QuadIndexCount >= m_PrimitiveBuffer.MaxIndices)
 		{

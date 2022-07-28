@@ -4,6 +4,8 @@
 
 namespace ZeoEngine {
 
+	struct DynamicUniformDataBase;
+
 	class MaterialInspector : public ComponentInspector
 	{
 	public:

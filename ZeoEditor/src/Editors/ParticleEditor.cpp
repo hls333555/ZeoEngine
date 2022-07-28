@@ -4,6 +4,7 @@
 #include "EditorUIRenderers/ParticleEditorUIRenderer.h"
 #include "SceneRenderers/ParticleEditorSceneRenderer.h"
 #include "Scenes/ParticleEditorScene.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -31,21 +32,16 @@ namespace ZeoEngine {
 		return CreateScope<ParticleEditorSceneRenderer>(SharedFromBase<ParticleEditor>());
 	}
 
-	AssetTypeId ParticleEditor::GetAssetTypeId() const
-	{
-		return ParticleTemplate::TypeId();
-	}
-
-	AssetHandle<IAsset> ParticleEditor::GetAsset() const
+	Ref<IAsset> ParticleEditor::GetAsset() const
 	{
 		return GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().ParticleTemplateAsset;
 	}
 
-	void ParticleEditor::LoadAsset(const std::string& path)
+	void ParticleEditor::LoadAsset(const std::filesystem::path& path)
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path](auto& particlePreviewComp)
 		{
-			particlePreviewComp.ParticleTemplateAsset = ParticleTemplateLibrary::Get().LoadAsset(path);
+			particlePreviewComp.ParticleTemplateAsset = AssetLibrary::LoadAsset<ParticleTemplate>(path);
 		});
 	}
 
@@ -53,7 +49,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			particlePreviewComp.ParticleTemplateAsset = ParticleTemplateLibrary::GetDefaultParticleTemplate();
+			particlePreviewComp.ParticleTemplateAsset = AssetLibrary::LoadAsset<ParticleTemplate>(ParticleTemplate::GetTemplatePath());
 		});
 	}
 
@@ -67,14 +63,14 @@ namespace ZeoEngine {
 		return previewParticleEntity;
 	}
 
-	void ParticleEditor::ReloadParticleTemplateData()
+	void ParticleEditor::ReloadParticleTemplateData() const
 	{
 		auto previewParticleEntity = GetContextEntity();
 		if (!previewParticleEntity) return;
 		
 		previewParticleEntity.PatchComponent<ParticleSystemPreviewComponent>([](auto& particlePreviewComp)
 		{
-			ParticleTemplateLibrary::Get().ReloadAsset(particlePreviewComp.ParticleTemplateAsset->GetID());
+			AssetLibrary::ReloadAsset(particlePreviewComp.ParticleTemplateAsset->GetHandle());
 		});
 	}
 

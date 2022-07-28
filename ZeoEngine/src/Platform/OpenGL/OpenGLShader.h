@@ -14,8 +14,8 @@ namespace ZeoEngine {
 	class OpenGLShader : public Shader
 	{
 	public:
-		OpenGLShader(std::string path);
-		OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc);
+		explicit OpenGLShader(std::string resourcePath);
+		OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
 
 		virtual void Bind() const override;

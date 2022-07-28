@@ -154,7 +154,7 @@ namespace ZeoEngine {
 			// TODO: Add texture array support?
 			for (U32 i = 0; i < colorCount; ++i)
 			{
-				auto texture = Texture2D::Create("ZID_ColorAttachment" + std::to_string(i), m_Spec.Width, m_Spec.Height, m_ColorAttachmentSpecs[i].TextureFormat);
+				auto texture = Texture2D::Create(m_Spec.Width, m_Spec.Height, m_ColorAttachmentSpecs[i].TextureFormat);
 				U32 id = (U32)(intptr_t)texture->GetTextureID();
 				glNamedFramebufferTexture(m_RendererID, GL_COLOR_ATTACHMENT0 + i, id, 0);
 				m_ColorAttachments.emplace_back(std::move(texture));
@@ -173,7 +173,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				m_DepthAttachment = Texture2D::Create("ZID_DepthAttachment", m_Spec.Width, m_Spec.Height, format);
+				m_DepthAttachment = Texture2D::Create(m_Spec.Width, m_Spec.Height, format);
 			}
 			U32 id = (U32)(intptr_t)m_DepthAttachment->GetTextureID();
 			glNamedFramebufferTexture(m_RendererID, attachmentType, id, 0);

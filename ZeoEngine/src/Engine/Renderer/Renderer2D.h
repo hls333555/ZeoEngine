@@ -81,7 +81,7 @@ namespace ZeoEngine {
 
 		Vec4 QuadVertexPositions[4];
 
-		std::array<AssetHandle<Texture2D>, MaxTextureSlots> TextureSlots;
+		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		U32 TextureSlotIndex = 1; // 0 = white texture
 
 		struct CameraData
@@ -113,13 +113,13 @@ namespace ZeoEngine {
 		// Primitives
 		static void DrawQuad(const Vec2& position, const Vec2& size, const Vec4& color);
 		static void DrawQuad(const Vec3& position, const Vec2& size, const Vec4& color);
-		static void DrawQuad(const Vec2& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
-		static void DrawQuad(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawQuad(const Vec2& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawQuad(const Vec3& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 		static void DrawQuad(const Vec2& position, const Vec2& size, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 		static void DrawQuad(const Vec3& position, const Vec2& size, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 
 		static void DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID = -1);
-		static void DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		static void DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 		static void DrawQuad(const Mat4& transform, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 
 		static void DrawCircle(const Mat4& transform, const Vec4& color, float thickness = 1.0f, float fade = 0.005f, I32 entityID = -1);
@@ -134,8 +134,8 @@ namespace ZeoEngine {
 		/** Rotation should be in radians. */
 		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Vec4& color);
 		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Vec4& color);
-		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
-		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
+		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 		static void DrawRotatedQuad(const Vec2& position, const Vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 		static void DrawRotatedQuad(const Vec3& position, const Vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f));
 	

@@ -4,6 +4,7 @@
 #include "Core/EditorTypes.h"
 #include "Editors/EditorBase.h"
 #include "Engine/Renderer/EditorCamera.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -22,21 +23,21 @@ namespace ZeoEngine {
 	Entity EditorSceneUtils::CreateAndPlaceCube(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Cube");
-		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultCubeMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCubeMesh());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlaceSphere(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
-		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultSphereMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlacePlane(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Plane");
-		entity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultPlaneMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultPlaneMesh());
 		return entity;
 	}
 

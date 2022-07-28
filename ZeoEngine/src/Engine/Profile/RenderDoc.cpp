@@ -1,7 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Profile/RenderDoc.h"
 
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/Console.h"
 #include "Engine/Utils/EngineUtils.h"
 

@@ -6,12 +6,13 @@
 #include <assimp/postprocess.h>
 
 #include "Engine/Renderer/VertexArray.h"
-#include "Engine/Utils/PathUtils.h"
-#include "Engine/Core/Serializer.h"
+#include "Engine/Renderer/Material.h"
+#include "Engine/GameFramework/Components.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
+	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const Ref<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
 		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext), MaterialRef(material)
 	{
 		// This will be done after deserialization if bIsDeserialize is false
@@ -26,14 +27,14 @@ namespace ZeoEngine {
 		MaterialRef->m_OnMaterialInitialized.disconnect(this);
 	}
 
-	void MeshEntryInstance::BindAndSubmitTechniques(const AssetHandle<Material>& material)
+	void MeshEntryInstance::BindAndSubmitTechniques(const Ref<Material>& material)
 	{
 		SubmitTechniques(material);
 		// Connect callback on new material for this instance
 		material->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(this);
 	}
 
-	void MeshEntryInstance::SubmitTechniques(const AssetHandle<Material>& material)
+	void MeshEntryInstance::SubmitTechniques(const Ref<Material>& material)
 	{
 		auto techniques = material->GetRenderTechniques();
 		PrepareTechniques(techniques.size());
@@ -44,13 +45,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	Mesh::Mesh(const std::string& path)
-		: AssetBase(PathUtils::GetNormalizedAssetPath(path))
-		, m_MeshResourcePath(path)
+	Mesh::Mesh(std::string resourcePath)
+		: m_MeshResourcePath(std::move(resourcePath))
 	{
 		Assimp::Importer Importer;
 		const aiScene* meshScene = Importer.ReadFile(m_MeshResourcePath.c_str(),
-		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
+			aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_GlobalScale);
 		if (!meshScene)
 		{
 			ZE_CORE_ERROR("Failed to load mesh! {0}", Importer.GetErrorString());
@@ -60,30 +60,19 @@ namespace ZeoEngine {
 		LoadFromMeshScene(meshScene);
 	}
 
-	Ref<Mesh> Mesh::Create(const std::string& path)
+	Ref<Mesh> Mesh::GetDefaultCubeMesh()
 	{
-		std::string resourcePath = PathUtils::GetResourcePathFromPath(path);
-		if (!PathUtils::DoesPathExist(resourcePath)) return {};
-
-		auto mesh = CreateRef<Mesh>(std::move(resourcePath));
-		mesh->Deserialize();
-		return mesh;
+		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Cube.fbx.zasset");
 	}
 
-	void Mesh::Serialize(const std::string& path)
+	Ref<Mesh> Mesh::GetDefaultSphereMesh()
 	{
-		std::string assetPath = PathUtils::GetNormalizedAssetPath(path);
-		if (!PathUtils::DoesPathExist(assetPath)) return;
-
-		SetID(std::move(assetPath));
-		ImportableAssetSerializer::Serialize(GetID(), TypeId(), {}); // TODO: Update component instance here
+		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Sphere.fbx.zasset");
 	}
 
-	void Mesh::Deserialize()
+	Ref<Mesh> Mesh::GetDefaultPlaneMesh()
 	{
-		if (!PathUtils::DoesPathExist(GetID())) return;
-
-		ImportableAssetSerializer::Deserialize(GetID(), TypeId(), {});  // TODO: Update component instance here
+		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Plane.fbx.zasset");
 	}
 
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene)
@@ -122,7 +111,7 @@ namespace ZeoEngine {
 		m_MaterialNames.reserve(meshScene->mNumMaterials);
 		for (U32 i = 0; i < meshScene->mNumMaterials; ++i)
 		{
-			m_MaterialSlots.emplace_back(MaterialLibrary::GetDefaultMaterial());
+			m_MaterialSlots.emplace_back(Material::GetDefaultMaterial());
 			m_MaterialNames.emplace_back(meshScene->mMaterials[i]->GetName().C_Str());
 		}
 
@@ -184,7 +173,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const Ref<Scene>& sceneContext, const AssetHandle<Mesh>& mesh, bool bIsDeserialize)
+	MeshInstance::MeshInstance(const Ref<Scene>& sceneContext, const Ref<Mesh>& mesh, bool bIsDeserialize)
 		: m_MeshPtr(mesh)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
@@ -228,7 +217,7 @@ namespace ZeoEngine {
 		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 	}
 
-	void MeshInstance::SetMaterial(U32 index, const AssetHandle<Material>& material)
+	void MeshInstance::SetMaterial(U32 index, const Ref<Material>& material)
 	{
 		if (index < 0 || index >= m_Materials.size()) return;
 
@@ -239,7 +228,7 @@ namespace ZeoEngine {
 		OnMaterialChanged(index, oldMaterial);
 	}
 
-	void MeshInstance::OnMaterialChanged(U32 index, AssetHandle<Material>& oldMaterial)
+	void MeshInstance::OnMaterialChanged(U32 index, Ref<Material>& oldMaterial)
 	{
 		for (auto& entryInstance : m_EntryInstances)
 		{

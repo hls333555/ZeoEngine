@@ -4,12 +4,10 @@
 #define DEBUG_DRAW_EXPLICIT_CONTEXT
 #include <debug_draw.hpp>
 
-#include "Engine/Core/Asset.h"
+#include "Engine/Asset/Asset.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
-#include "Engine/Core/AssetLibrary.h"
-#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -24,6 +22,7 @@ namespace ZeoEngine {
 
 	class Scene : public std::enable_shared_from_this<Scene>
 	{
+		// TODO: make public interface for m_Registry
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class EditorViewPanelBase;
@@ -97,32 +96,15 @@ namespace ZeoEngine {
 	class Level : public AssetBase<Level>
 	{
 	public:
-		explicit Level(std::string ID)
-			: AssetBase(std::move(ID)) {}
-
-		static Ref<Level> Create(std::string ID);
+		explicit Level(const Ref<Scene>& scene)
+			: m_Scene(scene) {}
 
 		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewLevel.zasset"; }
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
-		/** Update scene reference and deserialize scene data. */
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
 
 	private:
 		Ref<Scene> m_Scene;
 	};
-
-	REGISTER_ASSET(Level,
-	Ref<Level> operator()(std::string ID) const
-	{
-		return Level::Create(std::move(ID));
-	},
-	static AssetHandle<Level> GetDefaultEmptyLevel()
-	{
-		return Get().LoadAsset(Level::GetTemplatePath());
-	})
 
 }

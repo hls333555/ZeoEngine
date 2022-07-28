@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/EditorCamera.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
@@ -26,22 +27,17 @@ namespace ZeoEngine {
 		return CreateRef<MaterialEditorSceneRenderer>(SharedFromBase<MaterialEditor>());
 	}
 
-	AssetTypeId MaterialEditor::GetAssetTypeId() const
-	{
-		return Material::TypeId();
-	}
-
-	AssetHandle<IAsset> MaterialEditor::GetAsset() const
+	Ref<IAsset> MaterialEditor::GetAsset() const
 	{
 		return GetContextEntity().GetComponent<MaterialPreviewComponent>().MaterialAsset;
 	}
 
 	// TODO: Should support reloading
-	void MaterialEditor::LoadAsset(const std::string& path)
+	void MaterialEditor::LoadAsset(const std::filesystem::path& path)
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.MaterialAsset = MaterialLibrary::Get().LoadAsset(path);
+			materialPreviewComp.MaterialAsset = AssetLibrary::LoadAsset<Material>(path);
 			const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
 			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
 		});
@@ -51,7 +47,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.MaterialAsset = MaterialLibrary::GetDefaultMaterial();
+			materialPreviewComp.MaterialAsset = Material::GetDefaultMaterial();
 			const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
 			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
 		});
@@ -61,7 +57,7 @@ namespace ZeoEngine {
 	{
 		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
 		previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
-		previewMaterialEntity.AddComponent<MeshRendererComponent>(MeshLibrary::GetDefaultSphereMesh());
+		previewMaterialEntity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh());
 		previewMaterialEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
 		return previewMaterialEntity;
 	}

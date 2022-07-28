@@ -21,26 +21,26 @@ namespace ZeoEngine {
 		virtual void DrawTopBar() override;
 		virtual bool IsAnyFilterActive() const override { return AssetBrowserPanelBase::IsAnyFilterActive() || m_bIsAnyTypeFilterActive; }
 		virtual bool ShouldUpdateFilterCache() const override { return AssetBrowserPanelBase::ShouldUpdateFilterCache() || m_bIsTypeFilterChanged; }
-		virtual bool PassFilter(const Ref<PathSpec>& spec) const override;
+		virtual bool PassFilter(const Ref<PathMetadata>& metadata) const override;
 		virtual void ClearAllFilters() override;
 		virtual void DrawWindowContextMenuImpl(float thumbnailWidth) override;
-		virtual void DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset) override;
-		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const Ref<PathSpec>& spec) override;
+		virtual void DrawPathContextMenuItem_Save(const std::filesystem::path& path, bool bIsAsset) override;
+		virtual void DrawPathContextMenuItem_Asset(const std::filesystem::path& path, const Ref<AssetMetadata>& metadata) override;
 
 		bool OnFileDropped(WindowFileDroppedEvent& e);
-		void ImportAsset(const std::string& filePath);
-		virtual void ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding) override;
+		void ImportAsset(const std::filesystem::path& path);
+		virtual void ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding) override;
 
-		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
+		virtual void HandleRightColumnAssetOpen(const std::filesystem::path& path) override;
 
 	private:
-		struct AssetTypeFilterSpec
+		struct AssetTypeFilterInfo
 		{
-			AssetTypeId TypeId;
+			AssetTypeID TypeID;
 			const char* TypeName;
 			bool bIsFilterActive = false;
 		};
-		std::vector<AssetTypeFilterSpec> m_AssetTypeFilters;
+		std::vector<AssetTypeFilterInfo> m_AssetTypeInfos;
 		bool m_bIsAnyTypeFilterActive = false;
 		bool m_bIsTypeFilterChanged = false;
 	};

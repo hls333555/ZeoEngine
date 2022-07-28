@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		void FlushBatch() const;
 
 		void DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID = -1);
-		void DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		void DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 
 	private:
 		void NextBatch();
@@ -55,7 +55,7 @@ namespace ZeoEngine {
 			QuadVertex* QuadVertexBufferBase = nullptr;
 			QuadVertex* QuadVertexBufferPtr = nullptr;
 
-			std::array<AssetHandle<Texture2D>, MaxTextureSlots> TextureSlots;
+			std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 			U32 TextureSlotIndex = 1; // 0 = white texture
 		};
 		PrimitiveData m_PrimitiveBuffer;

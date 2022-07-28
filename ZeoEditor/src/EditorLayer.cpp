@@ -3,8 +3,8 @@
 #include "Core/EditorManager.h"
 #include "Editors/LevelEditor.h"
 #include "Core/EditorTypes.h"
-#include "Engine/Core/AssetManager.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Renderer/Renderer.h"
 
@@ -23,7 +23,9 @@ namespace ZeoEngine {
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
+		const Ref<LevelEditor> levelEditor = EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
+		// TODO: Disconnect?
+		levelEditor->m_OnActiveSceneChanged.connect<&EditorLayer::SetActiveGameScene>(this);
 		
 	}
 
@@ -49,6 +51,11 @@ namespace ZeoEngine {
 	void EditorLayer::OnEvent(Event& event)
 	{
 		EditorManager::Get().OnEvent(event);
+	}
+
+	void EditorLayer::OpenLevel(const std::filesystem::path& path) const
+	{
+		EditorManager::Get().GetEditor<LevelEditor>(LEVEL_EDITOR)->LoadScene(path);
 	}
 
 }

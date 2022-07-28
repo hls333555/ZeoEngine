@@ -4,8 +4,7 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Renderer/Drawable.h"
-#include "Engine/Core/Asset.h"
-#include "Engine/Core/AssetLibrary.h"
+#include "Engine/Asset/Asset.h"
 #include "Engine/Math/BoxSphereBounds.h"
 
 struct aiScene;
@@ -42,9 +41,9 @@ namespace ZeoEngine {
 	{
 		const MeshEntry* EntryPtr;
 		const Weak<Scene> SceneContext;
-		const AssetHandle<Material> MaterialRef;
+		const Ref<Material> MaterialRef;
 
-		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const AssetHandle<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
+		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const Ref<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
 		MeshEntryInstance(MeshEntryInstance&&) = default; // Once destructor is defined, we must also define a move constructor in order for it to be used instead of the copy constructor (which is deleted in the base class)
 		virtual ~MeshEntryInstance();
 
@@ -52,18 +51,18 @@ namespace ZeoEngine {
 		virtual U32 GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual U32 GetIndexCount() const override { return EntryPtr->IndexCount; }
 
-		void BindAndSubmitTechniques(const AssetHandle<Material>& material);
-		void SubmitTechniques(const AssetHandle<Material>& material);
+		void BindAndSubmitTechniques(const Ref<Material>& material);
+		void SubmitTechniques(const Ref<Material>& material);
 	};
 
 	class Mesh : public AssetBase<Mesh>
 	{
 	public:
-		explicit Mesh(const std::string& path);
-		static Ref<Mesh> Create(const std::string& path);
+		explicit Mesh(std::string resourcePath);
 
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
+		static Ref<Mesh> GetDefaultCubeMesh();
+		static Ref<Mesh> GetDefaultSphereMesh();
+		static Ref<Mesh> GetDefaultPlaneMesh();
 
 		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 		const auto& GetMeshEntries() const { return m_Entries; }
@@ -90,46 +89,26 @@ namespace ZeoEngine {
 		Ref<VertexArray> m_VAO;
 		U32 m_VertexCount = 0, m_IndexCount = 0;
 		std::vector<MeshEntry> m_Entries;
-		std::vector<AssetHandle<Material>> m_MaterialSlots;
+		std::vector<Ref<Material>> m_MaterialSlots;
 		std::vector<std::string> m_MaterialNames;
 		BoxSphereBounds m_Bounds;
 	};
 
-	REGISTER_ASSET(Mesh,
-	Ref<Mesh> operator()(const std::string& path) const
-	{
-		return Mesh::Create(path);
-	},
-	static AssetHandle<Mesh> GetDefaultCubeMesh()
-	{
-		return Get().LoadAsset("assets/editor/meshes/Cube.fbx.zasset");
-	}
-
-	static AssetHandle<Mesh> GetDefaultSphereMesh()
-	{
-		return Get().LoadAsset("assets/editor/meshes/Sphere.fbx.zasset");
-	}
-
-	static AssetHandle<Mesh> GetDefaultPlaneMesh()
-	{
-		return Get().LoadAsset("assets/editor/meshes/Plane.fbx.zasset");
-	})
-
 	class MeshInstance
 	{
 	public:
-		MeshInstance(const Ref<Scene>& sceneContext, const AssetHandle<Mesh>& mesh, bool bIsDeserialize);
+		MeshInstance(const Ref<Scene>& sceneContext, const Ref<Mesh>& mesh, bool bIsDeserialize);
 		MeshInstance(const MeshInstance& other);
 
 		static void Create(const Ref<Scene>& sceneContext, MeshRendererComponent& meshComp, bool bIsDeserialize = false);
 		static void Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy);
 
-		const AssetHandle<Mesh>& GetMesh() const { return m_MeshPtr; }
+		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
 		auto& GetMaterials() { return m_Materials; }
-		void SetMaterial(U32 index, const AssetHandle<Material>& material);
-		void OnMaterialChanged(U32 index, AssetHandle<Material>& oldMaterial);
+		void SetMaterial(U32 index, const Ref<Material>& material);
+		void OnMaterialChanged(U32 index, Ref<Material>& oldMaterial);
 
 		void SubmitTechniques(MeshEntryInstance& entryInstance);
 		void SubmitAllTechniques();
@@ -137,7 +116,7 @@ namespace ZeoEngine {
 		void Submit(const Mat4& transform, I32 entityID);
 
 	private:
-		AssetHandle<Mesh> m_MeshPtr;
+		Ref<Mesh> m_MeshPtr;
 
 		struct ModelData
 		{
@@ -150,6 +129,6 @@ namespace ZeoEngine {
 		ModelData m_ModelBuffer;
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 		std::vector<MeshEntryInstance> m_EntryInstances;
-		std::vector<AssetHandle<Material>> m_Materials;
+		std::vector<Ref<Material>> m_Materials;
 	};
 }

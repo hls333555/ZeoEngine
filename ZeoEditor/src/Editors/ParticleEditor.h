@@ -17,15 +17,14 @@ namespace ZeoEngine {
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
 	public:
-		virtual AssetHandle<IAsset> GetAsset() const override;
-		virtual AssetTypeId GetAssetTypeId() const override;
+		virtual Ref<IAsset> GetAsset() const override;
 	private:
-		virtual void LoadAsset(const std::string& path) override;
+		virtual void LoadAsset(const std::filesystem::path& path) override;
 		virtual void LoadAndApplyDefaultAsset() override;
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) override;
 
-		void ReloadParticleTemplateData();
+		void ReloadParticleTemplateData() const;
 	};
 
 }

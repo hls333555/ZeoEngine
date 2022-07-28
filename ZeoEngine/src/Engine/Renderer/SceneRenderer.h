@@ -46,8 +46,8 @@ namespace ZeoEngine {
 		void DrawMesh(const Mat4& transform, const Ref<MeshInstance>& mesh, I32 entityID = -1);
 
 		void DrawQuad(const Mat4& transform, const Vec4& color, I32 entityID = -1);
-		void DrawQuad(const Mat4& transform, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
-		void DrawBillboard(const Vec3& position, const Vec2& size, const AssetHandle<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		void DrawQuad(const Mat4& transform, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
+		void DrawBillboard(const Vec3& position, const Vec2& size, const Ref<Texture2D>& texture, const Vec2& tilingFactor = { 1.0f, 1.0f }, const Vec2& uvOffset = { 0.0f, 0.0f }, const Vec4& tintColor = Vec4(1.0f), I32 entityID = -1);
 
 		const Ref<FrameBuffer>& GetFrameBuffer() const { return m_RenderGraph->GetBackFrameBuffer(); }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }

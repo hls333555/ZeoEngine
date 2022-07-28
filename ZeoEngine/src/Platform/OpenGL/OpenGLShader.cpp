@@ -65,10 +65,10 @@ namespace ZeoEngine {
 
 		static void CreateCacheDirectoryIfNeeded()
 		{
-			std::string cacheDirectory = OpenGLShader::GetCacheDirectory();
-			if (!PathUtils::DoesPathExist(cacheDirectory))
+			const std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
+			if (!PathUtils::Exists(cacheDirectory))
 			{
-				PathUtils::CreateDirectories(cacheDirectory);
+				PathUtils::CreateDirectory(cacheDirectory);
 			}
 		}
 
@@ -102,14 +102,12 @@ namespace ZeoEngine {
 
 	}
 
-	OpenGLShader::OpenGLShader(std::string path)
-		: Shader(PathUtils::GetNormalizedAssetPath(path))
-		, m_ShaderResourcePath(std::move(path))
+	OpenGLShader::OpenGLShader(std::string resourcePath)
+		: m_ShaderResourcePath(std::move(resourcePath))
 	{
 	}
 
-	OpenGLShader::OpenGLShader(std::string ID, const std::string& vertexSrc, const std::string& fragmentSrc)
-		: Shader(std::move(ID))
+	OpenGLShader::OpenGLShader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		std::unordered_map<GLenum, std::string> shaderSrcs;
 		shaderSrcs[GL_VERTEX_SHADER] = vertexSrc;
