@@ -14,8 +14,8 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 		virtual void OnEvent(Event& e) override;
 
-		void OnRuntimeStart();
-		void OnRuntimeStop();
+		void OnRuntimeStart() const;
+		void OnRuntimeStop() const;
 
 		virtual void PostLoad() override;
 

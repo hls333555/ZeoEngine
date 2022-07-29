@@ -49,14 +49,29 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().Translation;
 	}
 
+	void Entity::SetTranslation(const Vec3& translation)
+	{
+		GetComponent<TransformComponent>().Translation = translation;
+	}
+
 	const Vec3& Entity::GetRotation() const
 	{
 		return GetComponent<TransformComponent>().Rotation;
 	}
 
+	void Entity::SetRotation(const Vec3& rotation)
+	{
+		GetComponent<TransformComponent>().Rotation = rotation;
+	}
+
 	const Vec3& Entity::GetScale() const
 	{
 		return GetComponent<TransformComponent>().Scale;
+	}
+
+	void Entity::SetScale(const Vec3& scale)
+	{
+		GetComponent<TransformComponent>().Scale = scale;
 	}
 
 	const BoxSphereBounds& Entity::GetBounds() const

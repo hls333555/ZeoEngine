@@ -53,6 +53,15 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
+	void ScriptComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	{
+		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
+		{
+			auto& scriptComp = GetOwnerEntity()->GetComponent<ScriptComponent>();
+			// TODO:
+		}
+	}
+
 #pragma region ParticleSystemComponentHelper
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{

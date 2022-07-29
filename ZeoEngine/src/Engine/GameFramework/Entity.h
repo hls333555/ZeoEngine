@@ -80,8 +80,11 @@ namespace ZeoEngine {
 		Mat4 GetTransform() const;
 		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
 		const Vec3& GetTranslation() const;
+		void SetTranslation(const Vec3& translation);
 		const Vec3& GetRotation() const;
+		void SetRotation(const Vec3& rotation);
 		const Vec3& GetScale() const;
+		void SetScale(const Vec3& scale);
 		const BoxSphereBounds& GetBounds() const;
 		void UpdateBounds() const;
 		BoxSphereBounds GetDefaultBounds() const;

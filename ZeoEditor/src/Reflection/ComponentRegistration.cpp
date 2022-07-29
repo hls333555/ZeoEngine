@@ -44,6 +44,9 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(CameraComponent, OrthographicNear, SetOrthographicNearClip, GetOrthographicNearClip, ZPROP(Category, ZTEXT("Orthographic")), ZPROP(HideCondition, "ProjectionType != Orthographic"))
 			ZDATA_SETTER_GETTER(CameraComponent, OrthographicFar, SetOrthographicFarClip, GetOrthographicFarClip, ZPROP(Category, ZTEXT("Orthographic")), ZPROP(HideCondition, "ProjectionType != Orthographic"));
 
+		ZCOMPONENT(ScriptComponent, ZPROP(DisplayName, ZTEXT("Script")), ZPROP(Tooltip, ZTEXT("C#脚本组件")), ZPROP(Category, ZTEXT("Scripts")))
+			ZDATA(ScriptComponent, ClassName);
+
 		ZCOMPONENT(NativeScriptComponent, ZPROP(DisplayName, ZTEXT("Native Script")), ZPROP(Tooltip, ZTEXT("C++脚本组件")), ZPROP(Category, ZTEXT("Scripts")));
 
 		ZCOMPONENT(ParticleSystemComponent, ZPROP(DisplayName, ZTEXT("Particle System")), ZPROP(Tooltip, ZTEXT("粒子系统组件")), ZPROP(Category, ZTEXT("Effects")))

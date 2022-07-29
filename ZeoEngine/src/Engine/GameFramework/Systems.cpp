@@ -11,6 +11,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/GameFramework/ScriptableEntity.h"
+#include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Utils/DebugDrawUtils.h"
 
 namespace ZeoEngine {
@@ -299,6 +300,30 @@ namespace ZeoEngine {
 		{
 			RemoveParticleSystemInstance(particlePreviewComp);
 		});
+	}
+
+	void ScriptSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
+		{
+			const Entity entity = { e, GetScene() };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		});
+	}
+
+	void ScriptSystem::OnRuntimeStart()
+	{
+		ScriptEngine::OnRuntimeStart(GetScene());
+		ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
+		{
+			const Entity entity = { e, GetScene() };
+			ScriptEngine::OnCreateEntity(entity);
+		});
+	}
+
+	void ScriptSystem::OnRuntimeStop()
+	{
+		ScriptEngine::OnRuntimeStop();
 	}
 
 	void NativeScriptSystem::OnUpdateRuntime(DeltaTime dt)

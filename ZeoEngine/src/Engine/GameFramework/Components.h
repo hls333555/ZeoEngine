@@ -159,6 +159,21 @@ namespace ZeoEngine {
 
 	};
 
+	struct ScriptComponent : public IComponent
+	{
+		std::string ClassName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent&) = default;
+
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<ScriptComponentHelper>(entity);
+		}
+
+		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
+	};
+
 	struct NativeScriptComponent : public IComponent
 	{
 		using InstantiateScriptDef = ScriptableEntity*(*)();

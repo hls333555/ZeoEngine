@@ -17,6 +17,7 @@ namespace ZeoEngine {
 	{
 	public:
 		explicit ISystem(const Ref<Scene>& scene);
+		virtual ~ISystem() = default;
 
 		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; m_SceneRaw = scene.get(); }
 
@@ -167,6 +168,17 @@ namespace ZeoEngine {
 
 	private:
 		void OnUpdateImpl(DeltaTime dt);
+	};
+
+	class ScriptSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
+
+		virtual void OnRuntimeStart() override;
+		virtual void OnRuntimeStop() override;
 	};
 
 	class NativeScriptSystem : public SystemBase
