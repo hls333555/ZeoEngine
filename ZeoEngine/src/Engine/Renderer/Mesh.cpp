@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const Ref<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
 		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext), MaterialRef(material)
 	{
-		// This will be done after deserialization if bIsDeserialize is false
+		// The following will be done after mesh asset deserialization if bIsDeserialize is true
 		if (!bIsDeserialize)
 		{
 			BindAndSubmitTechniques(material);
@@ -58,6 +58,11 @@ namespace ZeoEngine {
 		}
 
 		LoadFromMeshScene(meshScene);
+	}
+
+	Ref<MeshInstance> Mesh::CreateInstance(const Ref<Scene>& sceneContext, bool bIsDeserialize)
+	{
+		return CreateRef<MeshInstance>(sceneContext, SharedFromThis(), bIsDeserialize);
 	}
 
 	Ref<Mesh> Mesh::GetDefaultCubeMesh()
@@ -200,14 +205,6 @@ namespace ZeoEngine {
 		{
 			const auto& entry = entries[i];
 			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
-		}
-	}
-
-	void MeshInstance::Create(const Ref<Scene>& sceneContext, MeshRendererComponent& meshComp, bool bIsDeserialize)
-	{
-		if (meshComp.MeshAsset)
-		{
-			meshComp.Instance = CreateRef<MeshInstance>(sceneContext, meshComp.MeshAsset, bIsDeserialize);
 		}
 	}
 

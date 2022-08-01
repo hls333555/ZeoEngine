@@ -102,6 +102,7 @@ namespace ZeoEngine {
 		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewLevel.zasset"; }
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
+		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
 
 	private:
 		Ref<Scene> m_Scene;

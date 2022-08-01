@@ -578,7 +578,7 @@ namespace ZeoEngine {
 				{
 					// Deserialize component
 					ComponentSerializer cs;
-					// We must pass by reference here for component to be deserialized property
+					// We must pass by reference here for component to be deserialized properly
 					cs.Deserialize(component, compInstance.as_ref());
 				}
 			}

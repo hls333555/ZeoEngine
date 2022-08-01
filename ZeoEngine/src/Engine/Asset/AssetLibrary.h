@@ -12,7 +12,7 @@ namespace ZeoEngine {
 	{
 	public:
 		template<typename T>
-		static Ref<T> LoadAsset(AssetHandle handle)
+		static Ref<T> LoadAsset(AssetHandle handle, void* payload = nullptr)
 		{
 			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T is not derived from 'AssetBase'!");
 
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 				if (asset)
 				{
 					asset->SetHandle(handle);
-					const bool res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset);
+					const bool res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
 					if (res)
 					{
 						s_LoadedAssets[handle] = asset;
@@ -47,9 +47,9 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		static Ref<T> LoadAsset(const std::filesystem::path& path)
+		static Ref<T> LoadAsset(const std::filesystem::path& path, void* payload = nullptr)
 		{
-			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path));
+			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), payload);
 		}
 
 		template<typename T, typename... Args>

@@ -1,21 +1,14 @@
 #include "Editors/MaterialEditor.h"
 
+#include "Engine/Renderer/EditorCamera.h"
 #include "Engine/GameFramework/Components.h"
 #include "EditorUIRenderers/MaterialEditorUIRenderer.h"
 #include "SceneRenderers/MaterialEditorSceneRenderer.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
-#include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
-
-	void MaterialEditor::OnAttach()
-	{
-		EditorBase::OnAttach();
-
-		GetEditorCamera()->SetDistance(2.0f);
-	}
 
 	Scope<EditorUIRendererBase> MaterialEditor::CreateEditorUIRenderer()
 	{
@@ -51,6 +44,7 @@ namespace ZeoEngine {
 			const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
 			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
 		});
+		FocusContextEntity();
 	}
 
 	Entity MaterialEditor::CreatePreviewEntity(const Ref<Scene>& scene)

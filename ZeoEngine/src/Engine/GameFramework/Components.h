@@ -27,8 +27,9 @@ namespace ZeoEngine {
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
+		virtual ~IComponent() = default;
 
-		virtual void CreateHelper(Entity* entity) {}
+		virtual void CreateHelper(const Entity* entity) {}
 		template<typename T>
 		Ref<T> GetHelper()
 		{
@@ -70,7 +71,7 @@ namespace ZeoEngine {
 		TransformComponent(const Vec3& translation)
 			: Translation(translation) {}
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<TransformComponentHelper>(entity);
 		}
@@ -132,7 +133,7 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<CameraComponentHelper>(entity);
 		}
@@ -185,9 +186,8 @@ namespace ZeoEngine {
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
-		virtual ~ParticleSystemComponent() = default;
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(entity);
 		}
@@ -203,7 +203,7 @@ namespace ZeoEngine {
 			ParticleTemplateAsset = particleTemplate;
 		}
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(entity);
 		}
@@ -289,6 +289,7 @@ namespace ZeoEngine {
 	struct MeshRendererComponent : public IComponent
 	{
 		Ref<Mesh> MeshAsset;
+
 		Ref<MeshInstance> Instance;
 		std::vector<Ref<Material>> MaterialsPlaceholder;
 
@@ -297,14 +298,26 @@ namespace ZeoEngine {
 			: MeshAsset(mesh) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
 		}
 
-		auto& GetMaterials() { return Instance ? Instance->GetMaterials() : MaterialsPlaceholder; }
+		virtual std::vector<Ref<Material>>& GetMaterials() { return Instance ? Instance->GetMaterials() : MaterialsPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
+	};
+
+	struct MeshPreviewComponent : public MeshRendererComponent
+	{
+		using MeshRendererComponent::MeshRendererComponent;
+
+		virtual void CreateHelper(const Entity* entity) override
+		{
+			ComponentHelper = CreateRef<MeshPreviewComponentHelper>(entity);
+		}
+
+		virtual std::vector<Ref<Material>>& GetMaterials() override { return MeshAsset ? MeshAsset->GetDefaultMaterials() : MaterialsPlaceholder; }
 	};
 
 	struct LightComponent : public IComponent
@@ -323,7 +336,7 @@ namespace ZeoEngine {
 			: Type(type) {}
 		LightComponent(const LightComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
+		virtual void CreateHelper(const Entity* entity) override
 		{
 			ComponentHelper = CreateRef<LightComponentHelper>(entity);
 		}

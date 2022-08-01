@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	class IComponentHelper
 	{
 	public:
-		explicit IComponentHelper(Entity* entity);
+		explicit IComponentHelper(const Entity* entity);
 		virtual ~IComponentHelper();
 
 		/** Called after component being added to the owner entity. If bIsDeserialize is true, the component is added during deserialization. */
@@ -111,6 +111,16 @@ namespace ZeoEngine {
 		virtual void OnComponentCopied(IComponent* otherComp) override;
 		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 		virtual void PostDataDeserialize(U32 dataId) override;
+		virtual BoxSphereBounds GetBounds() override;
+		virtual std::string GetCustomSequenceContainerElementName(U32 index) const override;
+	};
+
+	class MeshPreviewComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 		virtual BoxSphereBounds GetBounds() override;
 		virtual std::string GetCustomSequenceContainerElementName(U32 index) const override;
 	};

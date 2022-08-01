@@ -60,6 +60,8 @@ namespace ZeoEngine {
 	public:
 		explicit Mesh(std::string resourcePath);
 
+		[[nodiscard]] Ref<class MeshInstance> CreateInstance(const Ref<Scene>& sceneContext, bool bIsDeserialize = false);
+
 		static Ref<Mesh> GetDefaultCubeMesh();
 		static Ref<Mesh> GetDefaultSphereMesh();
 		static Ref<Mesh> GetDefaultPlaneMesh();
@@ -100,7 +102,6 @@ namespace ZeoEngine {
 		MeshInstance(const Ref<Scene>& sceneContext, const Ref<Mesh>& mesh, bool bIsDeserialize);
 		MeshInstance(const MeshInstance& other);
 
-		static void Create(const Ref<Scene>& sceneContext, MeshRendererComponent& meshComp, bool bIsDeserialize = false);
 		static void Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy);
 
 		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }

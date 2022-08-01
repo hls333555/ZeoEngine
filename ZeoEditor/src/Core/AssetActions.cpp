@@ -5,6 +5,7 @@
 #include "Editors/LevelEditor.h"
 #include "Editors/ParticleEditor.h"
 #include "Editors/MaterialEditor.h"
+#include "Editors/MeshEditor.h"
 #include "Editors/TextureEditor.h"
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Components.h"
@@ -101,7 +102,7 @@ namespace ZeoEngine {
 
 	void MeshAssetActions::OpenAsset(const std::filesystem::path& path) const
 	{
-		
+		EditorManager::Get().OpenEditor<MeshEditor>(MESH_EDITOR, path);
 	}
 
 	void MaterialAssetActions::OpenAsset(const std::filesystem::path& path) const

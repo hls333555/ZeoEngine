@@ -135,4 +135,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void MeshInspectorPanel::ProcessRender()
+	{
+		Entity contextEntity = GetContextEditor()->GetContextEntity();
+		if (contextEntity)
+		{
+			DrawComponent<MeshPreviewComponent>(contextEntity);
+		}
+	}
+
 }

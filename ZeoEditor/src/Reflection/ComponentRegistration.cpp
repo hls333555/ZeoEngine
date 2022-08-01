@@ -122,6 +122,9 @@ namespace ZeoEngine {
 			ZDATA(MeshRendererComponent, MeshAsset)
 			ZDATA_GETTER_REF(MeshRendererComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer), ZPROP(CustomElementName));
 
+		ZCOMPONENT(MeshPreviewComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
+			ZDATA_GETTER_REF(MeshPreviewComponent, MaterialSlots, GetMaterials, ZPROP(FixedSizeContainer), ZPROP(CustomElementName));
+
 		ZENUM(LightComponent::LightType)
 			ZENUM_DATA(LightComponent::LightType, DirectionalLight, ZPROP(Tooltip, ZTEXT("平行光")))
 			ZENUM_DATA(LightComponent::LightType, PointLight, ZPROP(Tooltip, ZTEXT("点光源")))
@@ -166,6 +169,7 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, SRGB, SetSRGB, IsSRGB)
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, SamplerType, SetSamplerType, GetSamplerType)
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, GenerateMipmaps, SetGenerateMipmaps, ShouldGenerateMipmaps);
+
 	}
 
 }

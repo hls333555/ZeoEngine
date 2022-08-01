@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	class MaterialEditor : public EditorBase
+	class MeshEditor : public EditorBase
 	{
 	public:
 		using EditorBase::EditorBase;
@@ -17,7 +17,6 @@ namespace ZeoEngine {
 		virtual Ref<IAsset> GetAsset() const override;
 	private:
 		virtual void LoadAsset(const std::filesystem::path& path) override;
-		virtual void LoadAndApplyDefaultAsset() override;
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) override;
 

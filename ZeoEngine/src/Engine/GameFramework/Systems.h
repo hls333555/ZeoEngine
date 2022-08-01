@@ -135,6 +135,14 @@ namespace ZeoEngine {
 		virtual void OnRenderEditor() override;
 	};
 
+	class MeshPreviewRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
+	};
+
 	class ParticleUpdateSystem : public SystemBase
 	{
 	public:

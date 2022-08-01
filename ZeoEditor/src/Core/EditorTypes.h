@@ -10,6 +10,7 @@ namespace ZeoEngine {
 #define PARTICLE_EDITOR			ICON_FA_FIRE "  Particle Editor"
 #define MATERIAL_EDITOR			ICON_FA_CIRCLE "  Material Editor"
 #define TEXTURE_EDITOR			ICON_FA_CHESS_BOARD "  Texture Editor"
+#define MESH_EDITOR				ICON_FA_CUBES "  Mesh Editor"
 
 #define LEVEL_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Level Editor View"
 #define SCENE_OUTLINE			ICON_FA_SITEMAP "  Scene Outline"
@@ -28,6 +29,8 @@ namespace ZeoEngine {
 #define MATERIAL_INSPECTOR		ICON_FA_INFO_CIRCLE "  Material Inspector"
 #define TEXTURE_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Texture Editor View"
 #define TEXTURE_INSPECTOR		ICON_FA_INFO_CIRCLE "  Texture Inspector"
+#define MESH_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Mesh Editor View"
+#define MESH_INSPECTOR			ICON_FA_INFO_CIRCLE "  Mesh Inspector"
 
 	struct DockspaceSpec
 	{

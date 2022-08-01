@@ -223,7 +223,19 @@ namespace ZeoEngine {
 		{
 			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 		});
-		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, MaterialPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& materialPreviewComp)
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
+		{
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
+		});
+	}
+
+	void MeshPreviewRenderSystem::OnRenderEditor()
+	{
+		ForEachComponentView<TransformComponent, LightComponent>([this](auto entity, auto& transformComp, auto& lightComp)
+		{
+			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+		});
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
 		});

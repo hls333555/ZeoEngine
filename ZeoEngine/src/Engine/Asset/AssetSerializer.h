@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		virtual ~IAssetSerializer() = default;
 
 		virtual void Serialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const = 0;
-		virtual bool Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const = 0;
+		virtual bool Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, void* payload) const = 0;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const = 0;
 	};
 
@@ -28,7 +28,7 @@ namespace ZeoEngine {
 	{
 	public:
 		virtual void Serialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
-		virtual bool Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
+		virtual bool Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, void* payload) const override;
 
 		template<typename Func>
 		static void SerializeEmptyAsset(const std::filesystem::path& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
@@ -62,7 +62,7 @@ namespace ZeoEngine {
 
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const = 0;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const = 0;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const = 0;
 	};
 
 	class ImportableAssetSerializerBase : public AssetSerializerBase
@@ -84,7 +84,7 @@ namespace ZeoEngine {
 
 	protected:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		static void SerializeSourcePath(const std::filesystem::path& resourcePath, YAML::Node& node);
 	};
 
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 	{
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
 
@@ -100,7 +100,7 @@ namespace ZeoEngine {
 	{
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
 
@@ -108,7 +108,7 @@ namespace ZeoEngine {
 	{
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
 
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 	{
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
 
@@ -124,7 +124,7 @@ namespace ZeoEngine {
 	{
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
 
@@ -135,7 +135,7 @@ namespace ZeoEngine {
 
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
-		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 
 		bool DeserializeImplInternal(const Ref<AssetMetadata>& metadata, const Ref<Material>& material, const YAML::Node& node, bool bIncludeComponentData) const;

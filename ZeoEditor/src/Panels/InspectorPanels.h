@@ -158,4 +158,14 @@ namespace ZeoEngine {
 
 	};
 
+	class MeshInspectorPanel : public InspectorPanel
+	{
+	public:
+		using InspectorPanel::InspectorPanel;
+
+	private:
+		virtual void ProcessRender() override;
+
+	};
+
 }

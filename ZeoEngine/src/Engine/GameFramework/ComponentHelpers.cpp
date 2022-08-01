@@ -16,7 +16,7 @@ namespace ZeoEngine {
 			: OwnerEntity(entity) {}
 	};
 
-	IComponentHelper::IComponentHelper(Entity* entity)
+	IComponentHelper::IComponentHelper(const Entity* entity)
 		: m_Impl(CreateScope<Impl>(*entity))
 	{
 	}
@@ -107,7 +107,10 @@ namespace ZeoEngine {
 	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp, bIsDeserialize);
+		if (meshComp.MeshAsset)
+		{
+			meshComp.Instance = meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene(), bIsDeserialize);
+		}
 	}
 
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -122,14 +125,7 @@ namespace ZeoEngine {
 		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
 		{
 			GetOwnerEntity()->UpdateBounds();
-			if (meshComp.MeshAsset)
-			{
-				MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
-			}
-			else
-			{
-				meshComp.Instance = nullptr;
-			}
+			meshComp.Instance = meshComp.MeshAsset ? meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene()) : nullptr;
 		}
 		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
 		{
@@ -143,8 +139,11 @@ namespace ZeoEngine {
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
 		{
-			// Create mesh instance when mesh asset is loaded so that material data can be deserizlized properly
-			MeshInstance::Create(GetOwnerEntity()->GetScene(), meshComp);
+			// Create mesh instance when mesh asset is loaded so that material data can be deserialized into mesh instance properly
+			if (meshComp.MeshAsset)
+			{
+				meshComp.Instance = meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene());
+			}
 		}
 		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
 		{
@@ -162,6 +161,30 @@ namespace ZeoEngine {
 	std::string MeshRendererComponentHelper::GetCustomSequenceContainerElementName(U32 index) const
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
+		return meshComp.MeshAsset->GetMaterialNames()[index];
+	}
+
+	void MeshPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
+		if (dataId == GetDataIdByName<MeshPreviewComponent>("MaterialSlots"))
+		{
+			meshComp.Instance->SetMaterial(elementIndex, meshComp.GetMaterials()[elementIndex]);
+			auto oldMaterial = (*oldValue._Cast<Ref<Material>>());
+			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
+		}
+	}
+
+	BoxSphereBounds MeshPreviewComponentHelper::GetBounds()
+	{
+		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
+		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+	}
+
+	std::string MeshPreviewComponentHelper::GetCustomSequenceContainerElementName(U32 index) const
+	{
+		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
 		return meshComp.MeshAsset->GetMaterialNames()[index];
 	}
 
