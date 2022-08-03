@@ -11,7 +11,6 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Application.h"
-#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
 
@@ -29,11 +28,11 @@ namespace ZeoEngine {
 		Vec2 delta = (mousePos - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mousePos;
 
-		static const float lerpSpeed = 13.0f;
 		if (m_bStartLerpToFocus)
 		{
-			m_FocalPoint = Math::VInterpTo(m_FocalPoint, m_FocusTargetFocalPoint, dt, lerpSpeed);
-			m_Distance = Math::FInterpTo(m_Distance, m_FocusTargetDistance, dt, lerpSpeed);
+			static constexpr float focusSpeed = 13.0f;
+			m_FocalPoint = Math::VInterpTo(m_FocalPoint, m_FocusTargetFocalPoint, dt, focusSpeed);
+			m_Distance = Math::FInterpTo(m_Distance, m_FocusTargetDistance, dt, focusSpeed);
 			if (m_FocalPoint == m_FocusTargetFocalPoint && m_Distance == m_FocusTargetDistance)
 			{
 				m_bStartLerpToFocus = false;
@@ -46,12 +45,10 @@ namespace ZeoEngine {
 		// WORKAROUND: Disable alt toggle behavior
 		ImGui::GetCurrentContext()->NavWindowingToggleLayer = false;
 
-		//BEGIN_BENCHMARK()
-		ProcessOrbitControl(m_bLastIsViewportHovered, delta);
-		ProcessPanControl(m_bLastIsViewportHovered, delta);
-		ProcessZoomControl(m_bLastIsViewportHovered, delta);
-		ProcessFpsControl(m_bLastIsViewportHovered, delta, dt);
-		//END_BENCHMARK()
+		ProcessOrbitControl(delta);
+		ProcessPanControl(delta);
+		ProcessZoomControl(delta);
+		ProcessFpsControl(delta, dt);
 
 		UpdateView();
 
@@ -68,13 +65,22 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void EditorCamera::StartFocusEntity(Entity entity)
+	void EditorCamera::StartFocusEntity(Entity entity, bool bIsTeleport)
 	{
 		if (!entity) return;
 
 		m_FocusTargetFocalPoint = entity.GetBounds().Origin;
 		m_FocusTargetDistance = entity.GetBounds().SphereRadius * 1.2f / sin(glm::radians(m_FOVy / 2.0f));
-		m_bStartLerpToFocus = true;
+		if (bIsTeleport)
+		{
+			m_FocalPoint = m_FocusTargetFocalPoint;
+			m_Distance = m_FocusTargetDistance;
+			UpdateView();
+		}
+		else
+		{
+			m_bStartLerpToFocus = true;
+		}
 	}
 
 	Vec3 EditorCamera::GetForwardVector() const
@@ -113,7 +119,7 @@ namespace ZeoEngine {
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
-	void EditorCamera::ProcessOrbitControl(bool bIsViewportHovered, const Vec2& delta)
+	void EditorCamera::ProcessOrbitControl(const Vec2& delta)
 	{
 		// Only one control mode can take effect at a time
 		if (!IsControlModeReady(CameraControl_OrbitRotate)) return;
@@ -126,7 +132,7 @@ namespace ZeoEngine {
 				// Set control mode once we are trying to manipulate
 				EnterControlMode(CameraControl_OrbitRotate);
 				// We detect first press hovering state so that the subsequent manipulation won't happen if we first press mouse in another panel
-				bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+				bEnableControl = m_bIsFirstPress ? m_bLastIsViewportHovered : bEnableControl;
 				m_bIsFirstPress = false;
 				if (bEnableControl)
 				{
@@ -142,7 +148,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessPanControl(bool bIsViewportHovered, const Vec2& delta)
+	void EditorCamera::ProcessPanControl(const Vec2& delta)
 	{
 		if (!IsControlModeReady(CameraControl_Pan)) return;
 
@@ -150,7 +156,7 @@ namespace ZeoEngine {
 		if (ImGui::IsMouseDragging(Mouse::ButtonMiddle))
 		{
 			EnterControlMode(CameraControl_Pan);
-			bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+			bEnableControl = m_bIsFirstPress ? m_bLastIsViewportHovered : bEnableControl;
 			m_bIsFirstPress = false;
 			if (bEnableControl)
 			{
@@ -164,7 +170,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessZoomControl(bool bIsViewportHovered, const Vec2& delta)
+	void EditorCamera::ProcessZoomControl(const Vec2& delta)
 	{
 		if (!IsControlModeReady(CameraControl_Zoom)) return;
 
@@ -174,7 +180,7 @@ namespace ZeoEngine {
 			if (Input::IsKeyPressed(Key::CameraControl))
 			{
 				EnterControlMode(CameraControl_Zoom);
-				bEnableControl = m_bIsFirstPress ? bIsViewportHovered : bEnableControl;
+				bEnableControl = m_bIsFirstPress ? m_bLastIsViewportHovered : bEnableControl;
 				m_bIsFirstPress = false;
 				if (bEnableControl)
 				{
@@ -189,7 +195,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorCamera::ProcessFpsControl(bool bIsViewportHovered, const Vec2& delta, float dt)
+	void EditorCamera::ProcessFpsControl(const Vec2& delta, float dt)
 	{
 		if (!IsControlModeReady(CameraControl_FPS)) return;
 
@@ -197,7 +203,7 @@ namespace ZeoEngine {
 		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
 			// Due to IsDragging evaluation being later than IsPressed, we need to add a separate check here
-			bEnableControl = m_bIsFirstPress ? bIsViewportHovered && !Input::IsKeyPressed(Key::CameraControl) : bEnableControl;
+			bEnableControl = m_bIsFirstPress ? m_bLastIsViewportHovered && !Input::IsKeyPressed(Key::CameraControl) : bEnableControl;
 			// Clear first press only when Alt is not pressed, otherwise Alt-RightMouse control will fail
 			if (!Input::IsKeyPressed(Key::CameraControl))
 			{

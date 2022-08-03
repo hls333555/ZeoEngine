@@ -67,4 +67,5 @@ namespace ZeoEngine {
 		const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
 		meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
 	}
+
 }

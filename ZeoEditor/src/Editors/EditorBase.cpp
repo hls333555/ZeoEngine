@@ -77,9 +77,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::FocusContextEntity() const
+	void EditorBase::FocusContextEntity(bool bIsTeleport) const
 	{
-		m_EditorCamera->StartFocusEntity(m_ContextEntity);
+		m_EditorCamera->StartFocusEntity(m_ContextEntity, bIsTeleport);
 	}
 
 	const Ref<FrameBuffer>& EditorBase::GetFrameBuffer() const

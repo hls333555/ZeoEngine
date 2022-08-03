@@ -3,10 +3,7 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Core/EditorManager.h"
-#include "Core/EditorTypes.h"
 #include "Editors/LevelEditor.h"
-#include "Engine/Renderer/RendererAPI.h"
-#include "Engine/Core/ReflectionCore.h"
 
 namespace ZeoEngine {
 

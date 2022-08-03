@@ -8,6 +8,13 @@
 
 namespace ZeoEngine {
 
+	void MeshEditor::OnAttach()
+	{
+		EditorBase::OnAttach();
+
+		GetEditorCamera()->SetFarClip(10000.0f);
+	}
+
 	Scope<EditorUIRendererBase> MeshEditor::CreateEditorUIRenderer()
 	{
 		return CreateScope<MeshEditorUIRenderer>(SharedFromBase<MeshEditor>());
@@ -33,7 +40,7 @@ namespace ZeoEngine {
 			SetMeshAsset(meshPreviewComp, std::move(mesh));
 		});
 		GetContextEntity().UpdateBounds();
-		FocusContextEntity();
+		FocusContextEntity(true);
 	}
 
 	void MeshEditor::SaveAsset(const std::filesystem::path& path)
@@ -58,4 +65,5 @@ namespace ZeoEngine {
 		meshPreviewComp.Instance = meshPreviewComp.MeshAsset->CreateInstance(GetContextEntity().GetScene());
 		meshPreviewComp.Instance->SubmitAllTechniques();
 	}
+
 }

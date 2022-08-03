@@ -12,6 +12,8 @@ namespace ZeoEngine {
 	public:
 		using EditorBase::EditorBase;
 
+		virtual void OnAttach() override;
+
 	private:
 		virtual Scope<EditorUIRendererBase> CreateEditorUIRenderer() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;

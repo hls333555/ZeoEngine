@@ -258,7 +258,8 @@ namespace ZeoEngine {
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
-		Sphere sphere{ transformComp.Translation, lightComp.LightSource->GetRange() * (lightComp.Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
+		const float range = lightComp.Type == LightComponent::LightType::DirectionalLight ? 0.0f : lightComp.LightSource->GetRange();
+		const Sphere sphere{ transformComp.Translation, range * (lightComp.Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
 		return sphere;
 	}
 

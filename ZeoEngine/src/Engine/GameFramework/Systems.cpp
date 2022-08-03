@@ -155,9 +155,10 @@ namespace ZeoEngine {
 
 	void RenderSystem::RenderMeshes()
 	{
-		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent, BoundsComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& boundsComp)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, static_cast<I32>(entity));
+			//DebugDrawUtils::DrawSphereBounds(GetScene(), boundsComp.Bounds.Origin, debugDrawColor, boundsComp.Bounds.SphereRadius);
 		});
 	}
 
@@ -235,9 +236,10 @@ namespace ZeoEngine {
 		{
 			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
 		});
-		ForEachComponentGroup<TransformComponent>(entt::get<MeshPreviewComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
+		ForEachComponentGroup<TransformComponent>(entt::get<MeshPreviewComponent, BoundsComponent>, [this](auto entity, auto& transformComp, auto& meshComp, auto& boundsComp)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
+			//DebugDrawUtils::DrawSphereBounds(GetScene(), boundsComp.Bounds.Origin, debugDrawColor, boundsComp.Bounds.SphereRadius);
 		});
 	}
 

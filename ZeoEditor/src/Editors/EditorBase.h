@@ -50,7 +50,8 @@ namespace ZeoEngine {
 
 		Entity GetContextEntity() const { return m_ContextEntity; }
 		void SetContextEntity(Entity entity) { m_ContextEntity = entity; }
-		void FocusContextEntity() const;
+		/** If bIsTeleport is true, the camera will trigger an immediately focus instead of interpolating several frames. */
+		void FocusContextEntity(bool bIsTeleport = false) const;
 
 		EditorCamera* GetEditorCamera() const { return m_EditorCamera; }
 		void SetEditorCamera(EditorCamera* camera) { m_EditorCamera = camera; }

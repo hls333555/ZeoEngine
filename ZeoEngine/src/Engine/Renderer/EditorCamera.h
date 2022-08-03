@@ -22,7 +22,7 @@ namespace ZeoEngine {
 
 		void OnUpdate(DeltaTime dt, bool bIsViewportHovered);
 
-		void StartFocusEntity(Entity entity);
+		void StartFocusEntity(Entity entity, bool bIsTeleport);
 
 		bool OnMouseScroll(MouseScrolledEvent& e);
 
@@ -39,6 +39,7 @@ namespace ZeoEngine {
 		Mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
 		virtual float GetNearClip() const override { return m_NearClip; }
 		virtual float GetFarClip() const override { return m_FarClip; }
+		void SetFarClip(float farClip) { m_FarClip = farClip; UpdateProjection(); }
 
 		Vec3 GetForwardVector() const;
 		Vec3 GetRightVector() const;
@@ -50,10 +51,10 @@ namespace ZeoEngine {
 		void UpdateProjection();
 		void UpdateView();
 
-		void ProcessOrbitControl(bool bIsViewportHovered, const Vec2& delta);
-		void ProcessPanControl(bool bIsViewportHovered, const Vec2& delta);
-		void ProcessZoomControl(bool bIsViewportHovered, const Vec2& delta);
-		void ProcessFpsControl(bool bIsViewportHovered, const Vec2& delta, float dt);
+		void ProcessOrbitControl(const Vec2& delta);
+		void ProcessPanControl(const Vec2& delta);
+		void ProcessZoomControl(const Vec2& delta);
+		void ProcessFpsControl(const Vec2& delta, float dt);
 
 		void MousePan(const Vec2& delta);
 		void MouseRotate(const Vec2& delta);
