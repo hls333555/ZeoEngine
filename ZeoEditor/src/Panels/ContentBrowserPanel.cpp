@@ -41,7 +41,7 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::InitAssetTypeFilters()
 	{
-		AssetManager::Get().ForEachAssetFactory([this](AssetTypeID typeID, const Ref<AssetFactoryBase>& factory)
+		AssetManager::Get().ForEachAssetFactory([this](AssetTypeID typeID, AssetFactoryBase* factory)
 		{
 			m_AssetTypeInfos.emplace_back(AssetTypeFilterInfo{ typeID, factory->GetAssetTypeName(), false });
 		});
@@ -126,7 +126,7 @@ namespace ZeoEngine {
 	{
 		ImGui::Separator();
 
-		AssetManager::Get().ForEachAssetFactory([this, thumbnailWidth](AssetTypeID typeID, const Ref<AssetFactoryBase>& factory)
+		AssetManager::Get().ForEachAssetFactory([this, thumbnailWidth](AssetTypeID typeID, AssetFactoryBase* factory)
 		{
 			if (!factory->ShouldShowInContextMenu()) return;
 

@@ -72,6 +72,7 @@ namespace ZeoEngine {
 		node["SourcePath"] = resourcePath;
 	}
 
+#pragma region LevelAssetSerializer
 	void LevelAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const Ref<Level> level = std::dynamic_pointer_cast<Level>(asset);
@@ -92,7 +93,9 @@ namespace ZeoEngine {
 	{
 		SceneUtils::OpenLevel(metadata->Path);
 	}
+#pragma endregion
 
+#pragma region ParticleTemplateAssetSerializer
 	void ParticleTemplateAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const auto particleTemplate = std::dynamic_pointer_cast<ParticleTemplate>(asset);
@@ -114,7 +117,9 @@ namespace ZeoEngine {
 		Deserialize(metadata, asset, nullptr);
 		particleTemplate->ResimulateAllParticleSystemInstances();
 	}
+#pragma endregion
 
+#pragma region Texture2DAssetSerializer
 	void Texture2DAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
@@ -140,7 +145,9 @@ namespace ZeoEngine {
 		texture->Invalidate();
 		Deserialize(metadata, asset, nullptr);
 	}
+#pragma endregion
 
+#pragma region MeshAssetSerializer
 	void MeshAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
@@ -175,7 +182,9 @@ namespace ZeoEngine {
 	{
 
 	}
+#pragma endregion
 
+#pragma region ShaderAssetSerializer
 	void ShaderAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		
@@ -191,7 +200,9 @@ namespace ZeoEngine {
 		const auto shader = std::dynamic_pointer_cast<Shader>(asset);
 		shader->Reload();
 	}
+#pragma endregion
 
+#pragma region MaterialAssetSerializer
 	void MaterialAssetSerializer::ReloadShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const
 	{
 		const auto res = DeserializeAsset(metadata->Path);
@@ -240,5 +251,6 @@ namespace ZeoEngine {
 		material->ApplyUniformDatas();
 		return true;
 	}
+#pragma endregion
 
 }

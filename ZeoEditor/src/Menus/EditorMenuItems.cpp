@@ -10,9 +10,9 @@
 
 namespace ZeoEngine {
 
-	MenuItemBase::MenuItemBase(const Weak<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName)
+	MenuItemBase::MenuItemBase(const Weak<EditorBase>& contextEditor, std::string menuItemName, std::string shortcutName)
 		: m_ContextEditor(contextEditor)
-		, m_MenuItemName(menuItemName), m_ShortcutName(shortcutName)
+		, m_MenuItemName(std::move(menuItemName)), m_ShortcutName(std::move(shortcutName))
 	{
 	}
 
@@ -42,12 +42,12 @@ namespace ZeoEngine {
 		return OnKeyPressedImpl(e);
 	}
 
-	MenuItem_Seperator::MenuItem_Seperator(const Weak<EditorBase>& contextEditor, const char* menuItemName)
-		: MenuItemBase(contextEditor, menuItemName)
+	MenuItem_Separator::MenuItem_Separator(const Weak<EditorBase>& contextEditor, std::string menuItemName)
+		: MenuItemBase(contextEditor, std::move(menuItemName))
 	{
 	}
 
-	void MenuItem_Seperator::OnImGuiRender()
+	void MenuItem_Separator::OnImGuiRender()
 	{
 		ImGui::Separator();
 	}

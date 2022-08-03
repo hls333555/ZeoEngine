@@ -40,10 +40,10 @@ namespace ZeoEngine {
 		bool IsEditorHovered() const { return m_bIsEditorHovered; }
 
 	protected:
-		EditorMenu& CreateMenu(const char* menuName);
+		EditorMenu& CreateMenu(std::string menuName);
 
 		template<typename T, typename ... Args>
-		Ref<T> CreatePanel(const char* panelName, Args&& ... args)
+		Ref<T> CreatePanel(std::string panelName, Args&& ... args)
 		{
 			if (GetPanel(panelName))
 			{
@@ -52,7 +52,7 @@ namespace ZeoEngine {
 			}
 
 			Ref<T> panel = CreateRef<T>(panelName, m_ContextEditor, std::forward<Args>(args)...);
-			m_Panels.emplace(panelName, panel);
+			m_Panels.emplace(std::move(panelName), panel);
 			panel->OnAttach();
 			panel->Open();
 			return panel;
@@ -60,12 +60,12 @@ namespace ZeoEngine {
 
 	public:
 		template<typename T>
-		Ref<PanelBase> OpenPanel(const char* panelName)
+		Ref<PanelBase> OpenPanel(std::string panelName)
 		{
-			auto panel = GetPanel(panelName);
+			Ref<PanelBase> panel = GetPanel(panelName);
 			if (!panel)
 			{
-				panel = CreatePanel<T>(panelName);
+				panel = CreatePanel<T>(std::move(panelName));
 			}
 
 			panel->Open();
@@ -73,9 +73,9 @@ namespace ZeoEngine {
 		}
 
 		template<typename T = PanelBase>
-		Ref<T> GetPanel(const char* panelName) const
+		Ref<T> GetPanel(const std::string& panelName) const
 		{
-			auto it = m_Panels.find(panelName);
+			const auto it = m_Panels.find(panelName);
 			if (it == m_Panels.end()) return {};
 
 			Ref<PanelBase> panel = it->second;

@@ -97,7 +97,7 @@ namespace ZeoEngine {
 	void PlatformUtils::ShowInExplorer(const std::filesystem::path& path)
 	{
 		std::wstringstream params;
-		params << "/select," << path.string().c_str();
+		params << "/select," << std::filesystem::canonical(path).string().c_str(); // Use absolute path here
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 

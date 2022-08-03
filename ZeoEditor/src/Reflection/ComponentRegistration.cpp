@@ -1,8 +1,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
-#include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
-#include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/Sampler.h"
 
 namespace ZeoEngine {

@@ -113,8 +113,8 @@ namespace ZeoEngine {
 
 	void Material::ReloadShaderData()
 	{
-		const auto serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
-		const auto materialSerializer = std::dynamic_pointer_cast<MaterialAssetSerializer>(serializer);
+		auto* serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
+		const auto* materialSerializer = dynamic_cast<MaterialAssetSerializer*>(serializer);
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
 		materialSerializer->ReloadShaderData(metadata, SharedFromThis());
 	}

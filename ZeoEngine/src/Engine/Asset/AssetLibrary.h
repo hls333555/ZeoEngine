@@ -103,6 +103,14 @@ namespace ZeoEngine {
 			return ReloadAsset(AssetRegistry::Get().GetAssetHandleFromPath(path));
 		}
 
+		static bool UnloadAsset(AssetHandle handle)
+		{
+			if (!HasAsset(handle)) return false;
+
+			s_LoadedAssets.erase(handle);
+			return true;
+		}
+
 		static bool HasAsset(AssetHandle handle)
 		{
 			return s_LoadedAssets.find(handle) != s_LoadedAssets.end();

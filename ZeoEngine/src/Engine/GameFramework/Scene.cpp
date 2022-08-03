@@ -4,6 +4,7 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
+#include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
 
@@ -17,6 +18,8 @@ namespace ZeoEngine {
 
 	void Scene::OnUpdate(DeltaTime dt) const
 	{
+		ZE_PROFILE_FUNC();
+
 		for (const auto& system : m_Systems)
 		{
 			system->OnUpdate(dt);

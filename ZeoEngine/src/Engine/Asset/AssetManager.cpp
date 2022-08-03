@@ -17,44 +17,48 @@ namespace ZeoEngine {
 	std::unordered_map<AssetHandle, Ref<IAsset>> AssetLibrary::s_LoadedAssets;
 	std::unordered_map<AssetHandle, Ref<IAsset>> AssetLibrary::s_MemoryAssets;
 
+	// https://stackoverflow.com/questions/28386185/cant-use-stdunique-ptrt-with-t-being-a-forward-declaration
+	AssetManager::AssetManager() = default;
+	AssetManager::~AssetManager() = default;
+
 	void AssetManager::Init()
 	{
-		RegisterAssetFactory(Level::TypeID(), CreateRef<LevelAssetFactory>());
-		RegisterAssetFactory(ParticleTemplate::TypeID(), CreateRef<ParticleTemplateAssetFactory>());
-		RegisterAssetFactory(Texture2D::TypeID(), CreateRef<Texture2DAssetFactory>());
-		RegisterAssetFactory(Mesh::TypeID(), CreateRef<MeshAssetFactory>());
-		RegisterAssetFactory(Material::TypeID(), CreateRef<MaterialAssetFactory>());
-		RegisterAssetFactory(Shader::TypeID(), CreateRef<ShaderAssetFactory>());
+		RegisterAssetFactory(Level::TypeID(), CreateScope<LevelAssetFactory>());
+		RegisterAssetFactory(ParticleTemplate::TypeID(), CreateScope<ParticleTemplateAssetFactory>());
+		RegisterAssetFactory(Texture2D::TypeID(), CreateScope<Texture2DAssetFactory>());
+		RegisterAssetFactory(Mesh::TypeID(), CreateScope<MeshAssetFactory>());
+		RegisterAssetFactory(Material::TypeID(), CreateScope<MaterialAssetFactory>());
+		RegisterAssetFactory(Shader::TypeID(), CreateScope<ShaderAssetFactory>());
 
-		RegisterAssetActions(Level::TypeID(), CreateRef<LevelAssetActions>());
-		RegisterAssetActions(ParticleTemplate::TypeID(), CreateRef<ParticleTemplateAssetActions>());
-		RegisterAssetActions(Texture2D::TypeID(), CreateRef<Texture2DAssetActions>());
-		RegisterAssetActions(Mesh::TypeID(), CreateRef<MeshAssetActions>());
-		RegisterAssetActions(Material::TypeID(), CreateRef<MaterialAssetActions>());
-		RegisterAssetActions(Shader::TypeID(), CreateRef<ShaderAssetActions>());
+		RegisterAssetActions(Level::TypeID(), CreateScope<LevelAssetActions>());
+		RegisterAssetActions(ParticleTemplate::TypeID(), CreateScope<ParticleTemplateAssetActions>());
+		RegisterAssetActions(Texture2D::TypeID(), CreateScope<Texture2DAssetActions>());
+		RegisterAssetActions(Mesh::TypeID(), CreateScope<MeshAssetActions>());
+		RegisterAssetActions(Material::TypeID(), CreateScope<MaterialAssetActions>());
+		RegisterAssetActions(Shader::TypeID(), CreateScope<ShaderAssetActions>());
 
-		RegisterAssetSerializer(Level::TypeID(), CreateRef<LevelAssetSerializer>());
-		RegisterAssetSerializer(ParticleTemplate::TypeID(), CreateRef<ParticleTemplateAssetSerializer>());
-		RegisterAssetSerializer(Texture2D::TypeID(), CreateRef<Texture2DAssetSerializer>());
-		RegisterAssetSerializer(Mesh::TypeID(), CreateRef<MeshAssetSerializer>());
-		RegisterAssetSerializer(Material::TypeID(), CreateRef<MaterialAssetSerializer>());
-		RegisterAssetSerializer(Shader::TypeID(), CreateRef<ShaderAssetSerializer>());
+		RegisterAssetSerializer(Level::TypeID(), CreateScope<LevelAssetSerializer>());
+		RegisterAssetSerializer(ParticleTemplate::TypeID(), CreateScope<ParticleTemplateAssetSerializer>());
+		RegisterAssetSerializer(Texture2D::TypeID(), CreateScope<Texture2DAssetSerializer>());
+		RegisterAssetSerializer(Mesh::TypeID(), CreateScope<MeshAssetSerializer>());
+		RegisterAssetSerializer(Material::TypeID(), CreateScope<MaterialAssetSerializer>());
+		RegisterAssetSerializer(Shader::TypeID(), CreateScope<ShaderAssetSerializer>());
 
 		InitSupportedFileExtensions();
 	}
 
-	bool AssetManager::RegisterAssetFactory(AssetTypeID typeID, Ref<AssetFactoryBase> factory)
+	bool AssetManager::RegisterAssetFactory(AssetTypeID typeID, Scope<AssetFactoryBase> factory)
 	{
 		factory->m_TypeID = typeID;
 		return m_AssetFactories.insert(std::make_pair(typeID, std::move(factory))).second;
 	}
 
-	bool AssetManager::RegisterAssetActions(AssetTypeID typeID, Ref<AssetActionsBase> actions)
+	bool AssetManager::RegisterAssetActions(AssetTypeID typeID, Scope<AssetActionsBase> actions)
 	{
 		return m_AssetActions.insert(std::make_pair(typeID, std::move(actions))).second;
 	}
 
-	bool AssetManager::RegisterAssetSerializer(AssetTypeID typeID, Ref<AssetSerializerBase> serializer)
+	bool AssetManager::RegisterAssetSerializer(AssetTypeID typeID, Scope<AssetSerializerBase> serializer)
 	{
 		return m_AssetSerializers.insert(std::make_pair(typeID, std::move(serializer))).second;
 	}
@@ -66,10 +70,9 @@ namespace ZeoEngine {
 
 	bool AssetManager::CreateAssetFile(AssetTypeID typeID, const std::filesystem::path& path) const
 	{
-		const auto it = m_AssetFactories.find(typeID);
-		if (it != m_AssetFactories.end())
+		if (const auto* factory = GetAssetFactoryByAssetType(typeID))
 		{
-			it->second->CreateAssetFile(path);
+			factory->CreateAssetFile(path);
 			return true;
 		}
 
@@ -79,10 +82,9 @@ namespace ZeoEngine {
 
 	bool AssetManager::ImportAsset(AssetTypeID typeID, const std::filesystem::path& srcPath, const std::filesystem::path& destPath) const
 	{
-		const auto it = m_AssetFactories.find(typeID);
-		if (it != m_AssetFactories.end())
+		if (const auto* factory = GetAssetFactoryByAssetType(typeID))
 		{
-			it->second->ImportAsset(srcPath, destPath);
+			factory->ImportAsset(srcPath, destPath);
 			return true;
 		}
 
@@ -92,17 +94,13 @@ namespace ZeoEngine {
 
 	Ref<IAsset> AssetManager::CreateAsset(const Ref<AssetMetadata>& metadata) const
 	{
-		const auto it = m_AssetFactories.find(metadata->TypeID);
-		Ref<IAsset> asset;
-		if (it != m_AssetFactories.end())
+		if (const auto* factory = GetAssetFactoryByAssetType(metadata->TypeID))
 		{
-			asset = it->second->CreateAsset(metadata);
+			return factory->CreateAsset(metadata);
 		}
-		if (!asset)
-		{
-			UnknownAssetTypeWarning("create", metadata->Path, metadata->TypeID);
-		}
-		return asset;
+
+		UnknownAssetTypeWarning("create", metadata->Path, metadata->TypeID);
+		return nullptr;
 	}
 
 	bool AssetManager::OpenAsset(const std::filesystem::path& path) const
@@ -111,10 +109,9 @@ namespace ZeoEngine {
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
-		const auto it = m_AssetActions.find(typeID);
-		if (it != m_AssetActions.end())
+		if (const auto* actions = GetAssetActionsByAssetType(typeID))
 		{
-			it->second->OpenAsset(path);
+			actions->OpenAsset(path);
 			return true;
 		}
 
@@ -128,10 +125,9 @@ namespace ZeoEngine {
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
-		const auto it = m_AssetActions.find(typeID);
-		if (it != m_AssetActions.end())
+		if (const auto* actions = GetAssetActionsByAssetType(typeID))
 		{
-			it->second->RenameAsset(oldPath, newPath);
+			actions->RenameAsset(oldPath, newPath);
 			return true;
 		}
 
@@ -145,10 +141,9 @@ namespace ZeoEngine {
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
-		const auto it = m_AssetActions.find(typeID);
-		if (it != m_AssetActions.end())
+		if (const auto* actions = GetAssetActionsByAssetType(typeID))
 		{
-			it->second->DeleteAsset(path);
+			actions->DeleteAsset(path);
 			return true;
 		}
 
@@ -162,10 +157,9 @@ namespace ZeoEngine {
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
-		const auto it = m_AssetSerializers.find(typeID);
-		if (it != m_AssetSerializers.end())
+		if (const auto* serializer = GetAssetSerializerByAssetType(typeID))
 		{
-			it->second->Serialize(metadata, asset);
+			serializer->Serialize(metadata, asset);
 			return true;
 		}
 
@@ -179,10 +173,9 @@ namespace ZeoEngine {
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
-		const auto it = m_AssetActions.find(typeID);
-		if (it != m_AssetActions.end())
+		if (const auto* actions = GetAssetActionsByAssetType(typeID))
 		{
-			it->second->ReimportAsset(path);
+			actions->ReimportAsset(path);
 			return true;
 		}
 
@@ -190,34 +183,34 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	Ref<AssetFactoryBase> AssetManager::GetAssetFactoryByAssetType(AssetTypeID typeID)
+	AssetFactoryBase* AssetManager::GetAssetFactoryByAssetType(AssetTypeID typeID) const
 	{
 		if (const auto it = m_AssetFactories.find(typeID); it != m_AssetFactories.cend())
 		{
-			return it->second;
+			return it->second.get();
 		}
 
-		return {};
+		return nullptr;
 	}
 
-	Ref<AssetActionsBase> AssetManager::GetAssetActionsByAssetType(AssetTypeID typeID)
+	AssetActionsBase* AssetManager::GetAssetActionsByAssetType(AssetTypeID typeID) const
 	{
 		if (const auto it = m_AssetActions.find(typeID); it != m_AssetActions.cend())
 		{
-			return it->second;
+			return it->second.get();
 		}
 
-		return {};
+		return nullptr;
 	}
 
-	Ref<AssetSerializerBase> AssetManager::GetAssetSerializerByAssetType(AssetTypeID typeID)
+	AssetSerializerBase* AssetManager::GetAssetSerializerByAssetType(AssetTypeID typeID) const
 	{
 		if (const auto it = m_AssetSerializers.find(typeID); it != m_AssetSerializers.cend())
 		{
-			return it->second;
+			return it->second.get();
 		}
 
-		return {};
+		return nullptr;
 	}
 
 	AssetTypeID AssetManager::GetAssetTypeFromFileExtension(const std::string& extension) const

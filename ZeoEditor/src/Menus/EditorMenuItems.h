@@ -15,7 +15,7 @@ namespace ZeoEngine {
 	{
 	public:
 		MenuItemBase() = delete;
-		MenuItemBase(const Weak<EditorBase>& contextEditor, const char* menuItemName, const char* shortcutName = "");
+		MenuItemBase(const Weak<EditorBase>& contextEditor, std::string menuItemName, std::string shortcutName = "");
 	protected:
 		virtual ~MenuItemBase() = default;
 	
@@ -44,10 +44,10 @@ namespace ZeoEngine {
 		bool m_bEnabled = true;
 	};
 
-	class MenuItem_Seperator : public MenuItemBase
+	class MenuItem_Separator : public MenuItemBase
 	{
 	public:
-		explicit MenuItem_Seperator(const Weak<EditorBase>& contextEditor, const char* menuItemName = "Seperator");
+		explicit MenuItem_Separator(const Weak<EditorBase>& contextEditor, std::string menuItemName = "Separator");
 
 		virtual void OnImGuiRender() override;
 	};
@@ -56,9 +56,8 @@ namespace ZeoEngine {
 	class MenuItem_ToggleEditor : public MenuItemBase
 	{
 	public:
-		MenuItem_ToggleEditor(const Weak<EditorBase>& contextEditor, const char* editorName, const char* shortcutName = "")
-			: MenuItemBase(contextEditor, editorName, shortcutName)
-			, m_EditorName(editorName)
+		MenuItem_ToggleEditor(const Weak<EditorBase>& contextEditor, std::string editorName, std::string shortcutName = "")
+			: MenuItemBase(contextEditor, std::move(editorName), std::move(shortcutName))
 		{
 		}
 
@@ -66,7 +65,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				if (auto editor = EditorManager::Get().GetEditor(m_EditorName))
+				if (auto editor = EditorManager::Get().GetEditor(m_MenuItemName))
 				{
 					m_bSelected = editor->GetShowPtr();
 				}
@@ -80,21 +79,17 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				EditorManager::Get().OpenEditor<EditorClass>(m_EditorName);
+				EditorManager::Get().OpenEditor<EditorClass>(m_MenuItemName);
 			}
 		}
-
-	private:
-		std::string m_EditorName;
 	};
 
 	template<typename PanelClass>
 	class MenuItem_TogglePanel : public MenuItemBase
 	{
 	public:
-		MenuItem_TogglePanel(const Weak<EditorBase>& contextEditor, const char* panelName, const char* shortcutName = "")
-			: MenuItemBase(contextEditor, panelName, shortcutName)
-			, m_PanelName(panelName)
+		MenuItem_TogglePanel(const Weak<EditorBase>& contextEditor, std::string panelName, std::string shortcutName = "")
+			: MenuItemBase(contextEditor, std::move(panelName), std::move(shortcutName))
 		{
 		}
 
@@ -102,7 +97,7 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				if (auto panel = GetContextEditorUIRenderer().GetPanel(m_PanelName.c_str()))
+				if (auto panel = GetContextEditorUIRenderer().GetPanel(m_MenuItemName.c_str()))
 				{
 					m_bSelected = panel->GetShowPtr();
 				}
@@ -116,12 +111,9 @@ namespace ZeoEngine {
 		{
 			if (!m_bSelected)
 			{
-				GetContextEditorUIRenderer().OpenPanel<PanelClass>(m_PanelName.c_str());
+				GetContextEditorUIRenderer().OpenPanel<PanelClass>(m_MenuItemName.c_str());
 			}
 		}
-
-	private:
-		std::string m_PanelName;
 	};
 
 	class MenuItem_NewAsset : public MenuItemBase

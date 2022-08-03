@@ -10,6 +10,7 @@
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/GameFramework/Systems.h"
+#include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
 
@@ -43,6 +44,8 @@ namespace ZeoEngine {
 
 	void EditorBase::OnUpdate(DeltaTime dt) const
 	{
+		ZE_PROFILE_FUNC();
+
 		if (!m_bShow) return;
 
 		m_EditorUIRenderer->OnUpdate(dt);
@@ -55,6 +58,8 @@ namespace ZeoEngine {
 
 	void EditorBase::OnImGuiRender() const
 	{
+		ZE_PROFILE_FUNC();
+
 		if (!m_bShow) return;
 
 		m_EditorUIRenderer->OnImGuiRender();

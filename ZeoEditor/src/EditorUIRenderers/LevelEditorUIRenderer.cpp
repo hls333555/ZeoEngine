@@ -51,7 +51,7 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_TogglePanel<StatsPanel>>(STATS)
 			.MenuItem<MenuItem_TogglePanel<FrameDebugPanel>>(FRAME_DEBUGGER)
 			.MenuItem<MenuItem_TogglePanel<PreferencesPanel>>(PREFERENCES)
-			.MenuItem<MenuItem_Seperator>()
+			.MenuItem<MenuItem_Separator>()
 			.MenuItem<MenuItem_ResetLayout>(ICON_FA_WINDOW_RESTORE "  Reset layout");
 
 		CreateMenu("Help")

@@ -8,6 +8,7 @@
 #include "Engine/Asset/AssetActions.h"
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
 
@@ -37,12 +38,12 @@ namespace ZeoEngine {
 			metadata->Handle = assetHandleData.as<AssetHandle>();
 
 			// Possibly mark certain flags
-			const auto assetActions = AssetManager::Get().GetAssetActionsByAssetType(metadata->TypeID);
-			if (std::dynamic_pointer_cast<ResourceAssetActionsBase>(assetActions))
+			auto* assetActions = AssetManager::Get().GetAssetActionsByAssetType(metadata->TypeID);
+			if (dynamic_cast<ResourceAssetActionsBase*>(assetActions))
 			{
 				metadata->Flags |= PathFlag_HasResource;
 			}
-			if (std::dynamic_pointer_cast<ImportableAssetActionsBase>(assetActions))
+			if (dynamic_cast<ImportableAssetActionsBase*>(assetActions))
 			{
 				metadata->Flags |= PathFlag_Importable;
 			}
@@ -340,6 +341,8 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		std::unique_lock<std::mutex> lock(m_Mutex);
 		for (auto it = m_PendingModifiedAssets.begin(); it != m_PendingModifiedAssets.end();)
 		{
@@ -404,6 +407,8 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnPathRemoved(const std::filesystem::path& path)
 	{
+		// Possibly unload asset
+		AssetLibrary::UnloadAsset(GetAssetHandleFromPath(path));
 		RemovePathFromTree(path);
 	}
 

@@ -28,6 +28,7 @@ namespace ZeoEngine {
 		return &m_Impl->OwnerEntity;
 	}
 
+#pragma region TransformComponentHelper
 	void TransformComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		GetOwnerEntity()->UpdateBounds();
@@ -37,7 +38,9 @@ namespace ZeoEngine {
 	{
 		GetOwnerEntity()->UpdateBounds();
 	}
+#pragma endregion
 
+#pragma region CameraComponentHelper
 	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
@@ -48,7 +51,9 @@ namespace ZeoEngine {
 	{
 		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
+#pragma endregion
 
+#pragma region ParticleSystemComponentHelper
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
@@ -103,7 +108,9 @@ namespace ZeoEngine {
 		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
+#pragma endregion
 
+#pragma region MeshRendererComponentHelper
 	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
@@ -163,7 +170,9 @@ namespace ZeoEngine {
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
 		return meshComp.MeshAsset->GetMaterialNames()[index];
 	}
+#pragma endregion
 
+#pragma region MeshPreviewComponentHelper
 	void MeshPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
@@ -187,7 +196,9 @@ namespace ZeoEngine {
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
 		return meshComp.MeshAsset->GetMaterialNames()[index];
 	}
+#pragma endregion
 
+#pragma region LightComponentHelper
 	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		GetOwnerEntity()->AddComponent<BillboardComponent>();
@@ -273,5 +284,6 @@ namespace ZeoEngine {
 				break;
 		}
 	}
+#pragma endregion
 
 }

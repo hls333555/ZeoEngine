@@ -39,6 +39,8 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnRender()
 	{
+		ZE_PROFILE_FUNC();
+
 		m_RenderDocRef->StartFrameCapture();
 		m_RenderGraph->Start();
 		{

@@ -3,6 +3,7 @@
 #include <imgui_internal.h>
 
 #include "Editors/EditorBase.h"
+#include "Engine/Profile/Profiler.h"
 #include "Panels/EditorViewPanelBase.h"
 #include "Menus/EditorMenu.h"
 
@@ -15,11 +16,15 @@ namespace ZeoEngine {
 
 	void EditorUIRendererBase::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		UpdatePanels(dt);
 	}
 
 	void EditorUIRendererBase::OnImGuiRender()
 	{
+		ZE_PROFILE_FUNC();
+
 		// Render dockspace
 		RenderDockspace();
 		// Render panels
@@ -34,6 +39,8 @@ namespace ZeoEngine {
 
 	void EditorUIRendererBase::RenderDockspace()
 	{
+		ZE_PROFILE_FUNC();
+
 		const std::string& editorName = GetContextEditor()->GetEditorName();
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		bool bIsSceneEditor = editorName == LEVEL_EDITOR;
@@ -137,6 +144,8 @@ namespace ZeoEngine {
 
 	void EditorUIRendererBase::UpdatePanels(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		for (auto& [type, panel] : m_Panels)
 		{
 			panel->OnUpdate(dt);
@@ -145,6 +154,8 @@ namespace ZeoEngine {
 
 	void EditorUIRendererBase::RenderPanels()
 	{
+		ZE_PROFILE_FUNC();
+
 		for (auto& [type, panel] : m_Panels)
 		{
 			panel->OnImGuiRender();
@@ -159,9 +170,9 @@ namespace ZeoEngine {
 		}
 	}
 
-	EditorMenu& EditorUIRendererBase::CreateMenu(const char* menuName)
+	EditorMenu& EditorUIRendererBase::CreateMenu(std::string menuName)
 	{
-		Ref<EditorMenu> menu = CreateRef<EditorMenu>(menuName, m_ContextEditor);
+		Ref<EditorMenu> menu = CreateRef<EditorMenu>(std::move(menuName), m_ContextEditor);
 		m_Menus.emplace_back(menu);
 		return *menu;
 	}

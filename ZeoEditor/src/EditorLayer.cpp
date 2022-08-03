@@ -6,6 +6,7 @@
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
+#include "Engine/Profile/Profiler.h"
 #include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
@@ -29,6 +30,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		EngineLayer::OnUpdate(dt);
 
 		Renderer::ResetStats();
@@ -38,6 +41,8 @@ namespace ZeoEngine {
 
 	void EditorLayer::OnImGuiRender()
 	{
+		ZE_PROFILE_FUNC();
+
 #if ZE_SHOW_IMGUI_DEMO
 		static bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);

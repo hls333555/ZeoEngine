@@ -13,7 +13,7 @@ namespace ZeoEngine {
 	{
 	public:
 		PanelBase() = delete;
-		PanelBase(const char* panelName, const Weak<EditorBase>& contextEditor);
+		PanelBase(std::string panelName, const Weak<EditorBase>& contextEditor);
 	protected:
 		virtual ~PanelBase() = default;
 

@@ -2,6 +2,7 @@
 
 #include "Editors/EditorBase.h"
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
 
@@ -15,6 +16,8 @@ namespace ZeoEngine {
 
 	void EditorManager::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		for (auto& [type, editor] : m_Editors)
 		{
 			editor->OnUpdate(dt);
@@ -23,6 +26,8 @@ namespace ZeoEngine {
 
 	void EditorManager::OnImGuiRender()
 	{
+		ZE_PROFILE_FUNC();
+
 		for (auto& [type, editor] : m_Editors)
 		{
 			editor->OnImGuiRender();

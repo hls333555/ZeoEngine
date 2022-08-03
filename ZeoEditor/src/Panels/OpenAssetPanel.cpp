@@ -5,8 +5,8 @@
 
 namespace ZeoEngine {
 
-	OpenAssetPanel::OpenAssetPanel(const char* panelName, const Weak<EditorBase>& contextEditor, AssetTypeID assetTypeID)
-		: AssetBrowserPanelBase(panelName, contextEditor)
+	OpenAssetPanel::OpenAssetPanel(std::string panelName, const Weak<EditorBase>& contextEditor, AssetTypeID assetTypeID)
+		: AssetBrowserPanelBase(std::move(panelName), contextEditor)
 		, m_AssetTypeID(assetTypeID)
 	{
 	}

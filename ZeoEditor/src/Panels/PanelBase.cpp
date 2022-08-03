@@ -4,8 +4,8 @@
 
 namespace ZeoEngine {
 
-	PanelBase::PanelBase(const char* panelName, const Weak<EditorBase>& contextEditor)
-		: m_PanelName(panelName)
+	PanelBase::PanelBase(std::string panelName, const Weak<EditorBase>& contextEditor)
+		: m_PanelName(std::move(panelName))
 		, m_ContextEditor(contextEditor)
 	{
 	}

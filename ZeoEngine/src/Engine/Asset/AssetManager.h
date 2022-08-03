@@ -18,6 +18,10 @@ namespace ZeoEngine {
 		friend class FileDialogs;
 
 	public:
+		AssetManager(const AssetManager&) = delete;
+		AssetManager& operator=(const AssetManager&) = delete;
+		~AssetManager();
+
 		static AssetManager& Get()
 		{
 			static AssetManager instance;
@@ -25,11 +29,11 @@ namespace ZeoEngine {
 		}
 
 		/** Register asset factory. Returns true if the registration succeeded, false otherwise. */
-		bool RegisterAssetFactory(AssetTypeID typeID, Ref<AssetFactoryBase> factory);
+		bool RegisterAssetFactory(AssetTypeID typeID, Scope<AssetFactoryBase> factory);
 		/** Register asset actions. Returns true if the registration succeeded, false otherwise. */
-		bool RegisterAssetActions(AssetTypeID typeID, Ref<AssetActionsBase> actions);
+		bool RegisterAssetActions(AssetTypeID typeID, Scope<AssetActionsBase> actions);
 		/** Register asset serializer. Returns true if the registration succeeded, false otherwise. */
-		bool RegisterAssetSerializer(AssetTypeID typeID, Ref<AssetSerializerBase> serializer);
+		bool RegisterAssetSerializer(AssetTypeID typeID, Scope<AssetSerializerBase> serializer);
 
 		/** Create a new empty asset file. */
 		bool CreateAssetFile(AssetTypeID typeID, const std::filesystem::path& path) const;
@@ -48,14 +52,14 @@ namespace ZeoEngine {
 		/** Reimport an existing asset from its source place. */
 		bool ReimportAsset(const std::filesystem::path& path) const;
 
-		Ref<AssetFactoryBase> GetAssetFactoryByAssetType(AssetTypeID typeID);
-		Ref<AssetActionsBase> GetAssetActionsByAssetType(AssetTypeID typeID);
-		Ref<AssetSerializerBase> GetAssetSerializerByAssetType(AssetTypeID typeID);
+		AssetFactoryBase* GetAssetFactoryByAssetType(AssetTypeID typeID) const;
+		AssetActionsBase* GetAssetActionsByAssetType(AssetTypeID typeID) const;
+		AssetSerializerBase* GetAssetSerializerByAssetType(AssetTypeID typeID) const;
 
 		template <typename Func>
 		void ForEachAssetFactory(Func func) const
 		{
-			static_assert(std::is_invocable_v<Func, Ref<AssetFactoryBase>> || std::is_invocable_v<Func, AssetTypeID, Ref<AssetFactoryBase>>, "Failed to find the matching func for call: ForEachAssetFactory!");
+			static_assert(std::is_invocable_v<Func, AssetFactoryBase*> || std::is_invocable_v<Func, AssetTypeID, AssetFactoryBase*>, "Failed to find the matching func for call: ForEachAssetFactory!");
 
 			auto begin = m_AssetFactories.begin();
 			auto end = m_AssetFactories.end();
@@ -64,13 +68,13 @@ namespace ZeoEngine {
 			{
 				auto curr = begin++;
 
-				if constexpr (std::is_invocable_v<Func, Ref<AssetFactoryBase>>)
+				if constexpr (std::is_invocable_v<Func, AssetFactoryBase*>)
 				{
-					func(curr->second);
+					func(curr->second.get());
 				}
-				else if constexpr (std::is_invocable_v<Func, AssetTypeID, Ref<AssetFactoryBase>>)
+				else if constexpr (std::is_invocable_v<Func, AssetTypeID, AssetFactoryBase*>)
 				{
-					func(curr->first, curr->second);
+					func(curr->first, curr->second.get());
 				}
 			}
 		}
@@ -96,17 +100,15 @@ namespace ZeoEngine {
 		void InitSupportedFileExtensions();
 
 	protected:
-		AssetManager() = default;
-		AssetManager(const AssetManager&) = delete;
-		AssetManager& operator=(const AssetManager&) = delete;
+		AssetManager();
 
 	private:
 		/** Map from asset type ID to asset factory */
-		std::unordered_map<AssetTypeID, Ref<AssetFactoryBase>> m_AssetFactories;
+		std::unordered_map<AssetTypeID, Scope<AssetFactoryBase>> m_AssetFactories;
 		/** Map from asset type ID to asset actions */
-		std::unordered_map<AssetTypeID, Ref<AssetActionsBase>> m_AssetActions;
+		std::unordered_map<AssetTypeID, Scope<AssetActionsBase>> m_AssetActions;
 		/** Map from asset type ID to asset serializers */
-		std::unordered_map<AssetTypeID, Ref<AssetSerializerBase>> m_AssetSerializers;
+		std::unordered_map<AssetTypeID, Scope<AssetSerializerBase>> m_AssetSerializers;
 
 		/** Map from supported file extension to asset type ID */
 		std::unordered_map<std::string, AssetTypeID, CaseInsensitiveUnorderedMap::Hash, CaseInsensitiveUnorderedMap::Comp> m_SupportedFileExtensions;
