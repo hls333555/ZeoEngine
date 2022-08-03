@@ -115,8 +115,7 @@ namespace ZeoEngine {
 
 	Ref<IAsset> LevelAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
 	{
-		const auto& scene = EngineUtils::GetActiveGameScene();
-		return CreateRef<Level>(scene);
+		return CreateRef<Level>();
 	}
 
 	Ref<IAsset> ParticleTemplateAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const

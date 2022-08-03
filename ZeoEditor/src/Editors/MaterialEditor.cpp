@@ -30,19 +30,24 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.MaterialAsset = AssetLibrary::LoadAsset<Material>(path);
-			const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
+			SetMaterialAsset(materialPreviewComp, AssetLibrary::LoadAsset<Material>(path));
 		});
+	}
+
+	void MaterialEditor::SaveAsset(const std::filesystem::path& path)
+	{
+		AssetManager::Get().SaveAsset(path, GetAsset());
+		auto& materialPreviewComp = GetContextEntity().GetComponent<MaterialPreviewComponent>();
+		// When saving material to an already loaded material asset, we have to force deserialize to reflect the difference
+		auto material = AssetLibrary::LoadAsset<Material>(path, AssetLibrary::DeserializeMode::Force);
+		SetMaterialAsset(materialPreviewComp, std::move(material));
 	}
 
 	void MaterialEditor::LoadAndApplyDefaultAsset()
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([this](auto& materialPreviewComp)
 		{
-			materialPreviewComp.MaterialAsset = Material::GetDefaultMaterial();
-			const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-			meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
+			SetMaterialAsset(materialPreviewComp, Material::GetDefaultMaterial());
 		});
 		FocusContextEntity();
 	}
@@ -56,4 +61,10 @@ namespace ZeoEngine {
 		return previewMaterialEntity;
 	}
 
+	void MaterialEditor::SetMaterialAsset(MaterialPreviewComponent& materialPreviewComp, Ref<Material> material) const
+	{
+		materialPreviewComp.MaterialAsset = std::move(material);
+		const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
+		meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
+	}
 }

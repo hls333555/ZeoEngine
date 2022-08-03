@@ -20,8 +20,10 @@ namespace ZeoEngine {
 
 		void DrawReplaceDialog(const std::filesystem::path& path);
 
+		void SaveAndClose(const std::filesystem::path& path);
+
 	private:
-		char m_NameBuffer[MAX_PATH_SIZE] = "New";
+		char m_NameBuffer[MAX_PATH_SIZE];
 		bool m_bHasKeyboardFocused = false;
 		std::filesystem::path m_ToReplacePath;
 	};

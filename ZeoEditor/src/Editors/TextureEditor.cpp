@@ -25,6 +25,12 @@ namespace ZeoEngine {
 		});
 	}
 
+	void TextureEditor::SaveAsset(const std::filesystem::path& path)
+	{
+		AssetManager::Get().SaveAsset(path, GetAsset());
+		GetContextEntity().GetComponent<TexturePreviewComponent>().TextureAsset = AssetLibrary::LoadAsset<Texture2D>(path, AssetLibrary::DeserializeMode::Force);
+	}
+
 	Entity TextureEditor::CreatePreviewEntity(const Ref<Scene>& scene)
 	{
 		Entity previewTextureEntity = scene->CreateEntity("Preview Texture");

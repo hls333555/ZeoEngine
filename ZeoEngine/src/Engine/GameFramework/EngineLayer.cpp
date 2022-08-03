@@ -2,7 +2,6 @@
 #include "Engine/GameFramework/EngineLayer.h"
 
 #include "Engine/Core/RandomEngine.h"
-#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 

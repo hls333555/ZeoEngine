@@ -19,7 +19,9 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 		const auto& GetSelectedDirectory() const { return m_SelectedDirectory; }
+		void SetSelectedDirectory(std::filesystem::path directory) { m_SelectedDirectory = std::move(directory); }
 		const auto& GetSelectedPath() const { return m_SelectedPath; }
+		void SetSelectedPath(const std::filesystem::path& path) { m_SelectedPath = path; SetSelectedDirectory(path.parent_path()); m_bFocusSelectedPath = true; }
 
 	protected:
 		constexpr float GetSelectableThumbnailWidth() const { return 32.0f; }
@@ -39,6 +41,7 @@ namespace ZeoEngine {
 		std::filesystem::path GetAvailableNewPathName(const char* baseName, bool bIsAsset) const;
 
 		void RequestPathCreation(const std::filesystem::path& path, AssetTypeID typeID, bool bNeedsRenaming);
+		void RequestPathCreationForResourceAsset(const std::filesystem::path& srcPath, const std::filesystem::path& destPath);
 		void RequestPathDeletion(const std::filesystem::path& path);
 		void RequestPathRenaming(const std::filesystem::path& path);
 		void RequestPathOpen(const std::filesystem::path& path);
@@ -68,8 +71,8 @@ namespace ZeoEngine {
 		virtual void DrawWindowContextMenuImpl(float thumbnailWidth) {}
 
 		virtual bool ShouldDrawPath(const Ref<PathMetadata>& metadata) { return true; }
-		bool DrawSelectablePath(const std::filesystem::path& path);
-		bool DrawTilePath(const std::filesystem::path& path);
+		void DrawSelectablePath(const Ref<PathMetadata>& metadata);
+		void DrawTilePath(const Ref<PathMetadata>& metadata);
 		virtual void OnPathSelected(const std::filesystem::path& path) {}
 
 		void DrawPathTooltip(const Ref<PathMetadata>& metadata) const;
@@ -101,6 +104,8 @@ namespace ZeoEngine {
 		std::filesystem::path m_SelectedDirectory;
 		/** Selected directory/asset in the right column */
 		std::filesystem::path m_SelectedPath;
+		/** Flag used to scroll to the selected path once */
+		bool m_bFocusSelectedPath = false;
 
 		/** Directory waiting for opening */
 		std::filesystem::path m_DirectoryToOpen;

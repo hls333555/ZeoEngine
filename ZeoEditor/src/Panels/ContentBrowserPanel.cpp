@@ -168,7 +168,11 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				AssetManager::Get().SaveAsset(path);
+				if (AssetLibrary::HasAsset(path))
+				{
+					const auto asset = AssetLibrary::LoadAsset<IAsset>(path);
+					AssetManager::Get().SaveAsset(path, asset);
+				}
 			}
 			if (ImGui::IsItemHovered())
 			{
@@ -183,7 +187,11 @@ namespace ZeoEngine {
 				{
 					if (AssetRegistry::Get().GetAssetMetadata(inPath))
 					{
-						AssetManager::Get().SaveAsset(inPath);
+						if (AssetLibrary::HasAsset(inPath))
+						{
+							const auto asset = AssetLibrary::LoadAsset<IAsset>(inPath);
+						   AssetManager::Get().SaveAsset(inPath, asset);
+						}
 					}
 				});
 			}

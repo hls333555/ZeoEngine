@@ -4,6 +4,9 @@
 
 namespace ZeoEngine {
 
+	class Mesh;
+	struct MeshPreviewComponent;
+
 	class MeshEditor : public EditorBase
 	{
 	public:
@@ -17,8 +20,10 @@ namespace ZeoEngine {
 		virtual Ref<IAsset> GetAsset() const override;
 	private:
 		virtual void LoadAsset(const std::filesystem::path& path) override;
+		virtual void SaveAsset(const std::filesystem::path& path) override;
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) override;
+		void SetMeshAsset(MeshPreviewComponent& meshPreviewComp, Ref<Mesh> mesh) const;
 
 	};
 

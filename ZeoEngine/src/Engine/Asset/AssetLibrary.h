@@ -11,8 +11,15 @@ namespace ZeoEngine {
 	class AssetLibrary
 	{
 	public:
+		enum class DeserializeMode
+		{
+			Normal, // The asset will be deserialized only the first time LoadAsset is called
+			Ignore, // The asset will not be deserialized every time LoadAsset is called
+			Force // The asset will be deserialized every time LoadAsset is called
+		};
+
 		template<typename T>
-		static Ref<T> LoadAsset(AssetHandle handle, void* payload = nullptr)
+		static Ref<T> LoadAsset(AssetHandle handle, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
 		{
 			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T is not derived from 'AssetBase'!");
 
@@ -21,21 +28,29 @@ namespace ZeoEngine {
 				return std::dynamic_pointer_cast<T>(s_MemoryAssets[handle]);
 			}
 
+			const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+			if (!metadata) return nullptr;
+
 			Ref<IAsset> asset = nullptr;
 			if (HasAsset(handle))
 			{
 				asset = s_LoadedAssets[handle];
+				if (deserializeMode == DeserializeMode::Force)
+				{
+					AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
+				}
 			}
 			else
 			{
-				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
-				if (!metadata) return nullptr;
-
 				asset = AssetManager::Get().CreateAsset(metadata);
 				if (asset)
 				{
 					asset->SetHandle(handle);
-					const bool res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
+					bool res = true;
+					if (deserializeMode != DeserializeMode::Ignore)
+					{
+						res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
+					}
 					if (res)
 					{
 						s_LoadedAssets[handle] = asset;
@@ -47,9 +62,9 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		static Ref<T> LoadAsset(const std::filesystem::path& path, void* payload = nullptr)
+		static Ref<T> LoadAsset(const std::filesystem::path& path, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
 		{
-			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), payload);
+			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), deserializeMode, payload);
 		}
 
 		template<typename T, typename... Args>
@@ -91,6 +106,11 @@ namespace ZeoEngine {
 		static bool HasAsset(AssetHandle handle)
 		{
 			return s_LoadedAssets.find(handle) != s_LoadedAssets.end();
+		}
+
+		static bool HasAsset(const std::filesystem::path& path)
+		{
+			return HasAsset(AssetRegistry::Get().GetAssetHandleFromPath(path));
 		}
 
 	private:

@@ -1,11 +1,11 @@
 #include "ZEpch.h"
 #include "Engine/Asset/AssetSerializer.h"
 
-#include "Engine/Utils/EngineUtils.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -82,13 +82,15 @@ namespace ZeoEngine {
 	bool LevelAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const Ref<Level> level = std::dynamic_pointer_cast<Level>(asset);
-		SceneSerializer::Deserialize(node, level->GetScene());
+		const auto& scene = *static_cast<Ref<Scene>*>(payload);
+		level->SetScene(scene);
+		SceneSerializer::Deserialize(node, scene);
 		return true;
 	}
 
 	void LevelAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
 	{
-		EngineUtils::OpenLevel(metadata->Path);
+		SceneUtils::OpenLevel(metadata->Path);
 	}
 
 	void ParticleTemplateAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const

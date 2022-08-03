@@ -1,5 +1,6 @@
 #include "Utils/EditorSceneUtils.h"
 
+#include "Engine/Utils/SceneUtils.h"
 #include "Core/EditorManager.h"
 #include "Core/EditorTypes.h"
 #include "Editors/EditorBase.h"
@@ -7,6 +8,16 @@
 #include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
+
+	Ref<Scene> SceneUtils::GetActiveGameScene()
+	{
+		return EditorManager::Get().GetEditor(LEVEL_EDITOR)->GetScene();
+	}
+
+	void SceneUtils::OpenLevel(const std::filesystem::path& path)
+	{
+		EditorManager::Get().GetEditor(LEVEL_EDITOR)->LoadScene(path);
+	}
 
 	EditorCamera* EditorSceneUtils::GetEditorCamera()
 	{

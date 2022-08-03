@@ -24,6 +24,8 @@ namespace ZeoEngine {
 		/** Copy a file to another place. Returns true if succeeded. */
 		static bool CopyFile(const std::filesystem::path& srcPath, const std::filesystem::path& destPath, bool bShouldOverwrite);
 
+		static bool CopyAsset(const std::filesystem::path& srcPath, const std::filesystem::path& destPath);
+
 	};
 
 }

@@ -24,8 +24,6 @@ namespace ZeoEngine {
 		AssetRegistry::Get().Init();
 
 		const Ref<LevelEditor> levelEditor = EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
-		// TODO: Disconnect?
-		levelEditor->m_OnActiveSceneChanged.connect<&EditorLayer::SetActiveGameScene>(this);
 		
 	}
 
@@ -51,11 +49,6 @@ namespace ZeoEngine {
 	void EditorLayer::OnEvent(Event& event)
 	{
 		EditorManager::Get().OnEvent(event);
-	}
-
-	void EditorLayer::OpenLevel(const std::filesystem::path& path) const
-	{
-		EditorManager::Get().GetEditor<LevelEditor>(LEVEL_EDITOR)->LoadScene(path);
 	}
 
 }

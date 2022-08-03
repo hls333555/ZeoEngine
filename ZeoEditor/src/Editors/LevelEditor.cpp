@@ -104,12 +104,26 @@ namespace ZeoEngine {
 			OnSceneStop();
 		}
 		NewScene(false);
-		m_LevelAsset = AssetLibrary::LoadAsset<Level>(path);
+		auto scene = GetScene();
+		m_LevelAsset = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Force, &scene);
+	}
+
+	void LevelEditor::SaveAsset(const std::filesystem::path& path)
+	{
+		AssetManager::Get().SaveAsset(path, m_LevelAsset);
+		// There are mainly four situations:
+		// Save to current level asset, no need to deserialize at all
+		// Save to a new level asset, we share current scene with new asset so we do not need to deserialize again
+		// Save to an existing unloaded level asset, we share current scene with new asset so we do not need to deserialize again
+		// Save to an existing loaded level asset, just update scene and it's done
+		m_LevelAsset = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Ignore);
+		m_LevelAsset->SetScene(GetScene());
 	}
 
 	void LevelEditor::LoadAndApplyDefaultAsset()
 	{
-		m_LevelAsset = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath());
+		auto scene = GetScene();
+		m_LevelAsset = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath(), AssetLibrary::DeserializeMode::Force, &scene);
 	}
 
 	void LevelEditor::ClearSelectedEntity()

@@ -96,9 +96,6 @@ namespace ZeoEngine {
 	class Level : public AssetBase<Level>
 	{
 	public:
-		explicit Level(const Ref<Scene>& scene)
-			: m_Scene(scene) {}
-
 		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewLevel.zasset"; }
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }

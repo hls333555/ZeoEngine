@@ -186,6 +186,16 @@ namespace ZeoEngine {
 				ZE_CORE_WARN("Invalid asset detected! Asset path: {0}", path);
 				return {};
 			}
+			// Ignore asset with existing handle
+			const auto it = std::find_if(m_PathMetadatas.begin(), m_PathMetadatas.end(), [&metadata](const auto& pair)
+			{
+				return pair.second->IsAsset() && std::dynamic_pointer_cast<AssetMetadata>(pair.second)->Handle == metadata->Handle;
+			});
+			if (it != m_PathMetadatas.end())
+			{
+				ZE_CORE_WARN("Duplicated asset detected! Asset path: {0}", path);
+				return {};
+			}
 		}
 		else
 		{

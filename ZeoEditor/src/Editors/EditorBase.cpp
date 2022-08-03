@@ -1,6 +1,7 @@
 #include "Editors/EditorBase.h"
 
 #include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Panels/OpenAssetPanel.h"
@@ -187,8 +188,4 @@ namespace ZeoEngine {
 		m_PostSceneRenderDel.publish(fbo);
 	}
 
-	void EditorBase::SaveAsset(const std::filesystem::path& path)
-	{
-		AssetManager::Get().SaveAsset(path);
-	}
 }

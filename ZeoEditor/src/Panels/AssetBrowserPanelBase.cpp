@@ -264,10 +264,12 @@ namespace ZeoEngine {
 					ImGui::Indent(tableOffset);
 					for (const auto& path : paths)
 					{
-						ImGui::TableNextColumn();
-
-						if (DrawTilePath(path))
+						const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+						if (ShouldDrawPath(metadata))
 						{
+							ImGui::TableNextColumn();
+
+							DrawTilePath(metadata);
 							bHasDrawnAnyPath = true;
 						}
 					}
@@ -281,12 +283,27 @@ namespace ZeoEngine {
 				ImGuiListClipper clipper;
 				clipper.Begin(static_cast<I32>(paths.size()), GetSelectableThumbnailWidth());
 				const auto it = paths.begin();
+				if (m_bFocusSelectedPath)
+				{
+					for (SizeT i = 0; i < paths.size(); ++i)
+					{
+						if (paths[i] == m_SelectedPath)
+						{
+							// First bring selected path into view, later it will get focused
+							// BUG: For now if selected path is the last one in the current directory, it will not get focused properly
+							clipper.ForceDisplayRangeByIndices(static_cast<int>(i), static_cast<int>(i + 1));
+							break;
+						}
+					}
+				}
 				while (clipper.Step())
 				{
 					for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
 					{
-						if (DrawSelectablePath(*(it + index)))
+						const auto metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
+						if (ShouldDrawPath(metadata))
 						{
+							DrawSelectablePath(metadata);
 							bHasDrawnAnyPath = true;
 						}
 					}
@@ -347,9 +364,13 @@ namespace ZeoEngine {
 				ImGui::Indent(tableOffset);
 				for (const auto& filteredPath : m_FilteredPaths)
 				{
-					ImGui::TableNextColumn();
+					const auto metadata = AssetRegistry::Get().GetPathMetadata(filteredPath);
+					if (ShouldDrawPath(metadata))
+					{
+						ImGui::TableNextColumn();
 
-					DrawTilePath(filteredPath);
+						DrawTilePath(metadata);
+					}
 				}
 				ImGui::Unindent(tableOffset);
 
@@ -365,7 +386,11 @@ namespace ZeoEngine {
 			{
 				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
 				{
-					DrawSelectablePath(*(it + index));
+					const auto metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
+					if (ShouldDrawPath(metadata))
+					{
+						DrawSelectablePath(metadata);
+					}
 				}
 			}
 		}
@@ -465,11 +490,9 @@ namespace ZeoEngine {
 		return newPath;
 	}
 
-	bool AssetBrowserPanelBase::DrawSelectablePath(const std::filesystem::path& path)
+	void AssetBrowserPanelBase::DrawSelectablePath(const Ref<PathMetadata>& metadata)
 	{
-		const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
-		if (!ShouldDrawPath(metadata)) return false;
-
+		const auto& path = metadata->Path;
 		// Push path as id
 		ImGui::PushID(path.string().c_str());
 		{
@@ -481,7 +504,14 @@ namespace ZeoEngine {
 
 			ImGuiSelectableFlags flags = bPathNeedsRenaming ? ImGuiSelectableFlags_Disabled : 0; // Disable selectable during renaming so that text can be selected
 			flags |= ImGuiSelectableFlags_AllowItemOverlap;
-			bool bIsSelected = ImGui::Selectable("##PathSelectable", m_SelectedPath == path, flags, { 0.0f, thumbnailWidth });
+			const bool bIsSelectedPath = m_SelectedPath == path;
+			const bool bIsSelected = ImGui::Selectable("##PathSelectable", bIsSelectedPath, flags, { 0.0f, thumbnailWidth });
+
+			if (bIsSelectedPath && m_bFocusSelectedPath)
+			{
+				ImGui::SetScrollHereY(1.0f);
+				m_bFocusSelectedPath = false;
+			}
 
 			// Draw path tooltip on hover
 			DrawPathTooltip(metadata);
@@ -508,7 +538,7 @@ namespace ZeoEngine {
 
 			ImGui::SameLine();
 
-			// Draw seletable thumbnail
+			// Draw selectable thumbnail
 			ImGui::AssetThumbnail(metadata->ThumbnailTexture->GetTextureID(),
 				thumbnailWidth, thumbnailRounding, false);
 
@@ -555,15 +585,11 @@ namespace ZeoEngine {
 			}
 		}
 		ImGui::PopID();
-
-		return true;
 	}
 
-	bool AssetBrowserPanelBase::DrawTilePath(const std::filesystem::path& path)
+	void AssetBrowserPanelBase::DrawTilePath(const Ref<PathMetadata>& metadata)
 	{
-		const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
-		if (!ShouldDrawPath(metadata)) return false;
-
+		const auto& path = metadata->Path;
 		// Push path as id
 		ImGui::PushID(path.string().c_str());
 		{
@@ -573,8 +599,9 @@ namespace ZeoEngine {
 			static constexpr float thumbnailRounding = 4.0f;
 			const auto pathName = metadata->PathName.c_str();
 
+			const bool bIsSelectedPath = m_SelectedPath == path;
 			ImGui::TileImageButton(metadata->ThumbnailTexture->GetTextureID(), bIsAsset, bPathNeedsRenaming, // Disable button during renaming so that text can be selected
-				m_SelectedPath == path,
+				bIsSelectedPath,
 				{ thumbnailWidth, thumbnailWidth }, thumbnailRounding,
 				{ 0.0f, 1.0f }, { 1.0f, 0.0f });
 
@@ -657,10 +684,14 @@ namespace ZeoEngine {
 				}
 				SubmitPathRenaming(renameBuffer, metadata, bHasKeyboardFocused);
 			}
+
+			if (bIsSelectedPath && m_bFocusSelectedPath)
+			{
+				ImGui::SetScrollHereY(1.0f);
+				m_bFocusSelectedPath = false;
+			}
 		}
 		ImGui::PopID();
-
-		return true;
 	}
 
 	// TODO: Add path tooltip implementation to AssetActions
@@ -783,9 +814,18 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			AssetManager::Get().CreateAssetFile(typeID, path);
-			AssetRegistry::Get().OnPathCreated(path, typeID);
+			if (AssetManager::Get().CreateAssetFile(typeID, path))
+			{
+				AssetRegistry::Get().OnPathCreated(path, typeID);
+			}
 		}
+		ClearAllFilters(); // Keep filters active during path creation is meaningless
+	}
+
+	void AssetBrowserPanelBase::RequestPathCreationForResourceAsset(const std::filesystem::path& srcPath, const std::filesystem::path& destPath)
+	{
+		PathUtils::CopyAsset(srcPath, destPath);
+		AssetRegistry::Get().OnPathCreated(destPath, true);
 		ClearAllFilters(); // Keep filters active during path creation is meaningless
 	}
 

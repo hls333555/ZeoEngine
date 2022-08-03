@@ -156,7 +156,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::SaveAsset(const std::filesystem::path& path) const
+	bool AssetManager::SaveAsset(const std::filesystem::path& path, const Ref<IAsset>& asset) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
@@ -165,7 +165,6 @@ namespace ZeoEngine {
 		const auto it = m_AssetSerializers.find(typeID);
 		if (it != m_AssetSerializers.end())
 		{
-			const auto asset = AssetLibrary::LoadAsset<IAsset>(path);
 			it->second->Serialize(metadata, asset);
 			return true;
 		}

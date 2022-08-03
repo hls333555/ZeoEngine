@@ -92,11 +92,12 @@ namespace ZeoEngine {
 
 	public:
 		virtual Ref<IAsset> GetAsset() const = 0;
-	private:
+	protected:
 		virtual void LoadAsset(const std::filesystem::path& path) = 0;
-		virtual void SaveAsset(const std::filesystem::path& path);
+		virtual void SaveAsset(const std::filesystem::path& path) = 0;
 		virtual void LoadAndApplyDefaultAsset() {}
 
+	private:
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) { return {}; }
 
 	public:

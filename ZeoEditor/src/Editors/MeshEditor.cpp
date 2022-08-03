@@ -29,12 +29,19 @@ namespace ZeoEngine {
 		GetContextEntity().PatchComponent<MeshPreviewComponent>([&path, this](auto& meshPreviewComp)
 		{
 			// When load asset the second time, the deserialization will never happen, so we have to update mesh asset here
-			meshPreviewComp.MeshAsset = AssetLibrary::LoadAsset<Mesh>(path, &meshPreviewComp);
-			meshPreviewComp.Instance = meshPreviewComp.MeshAsset->CreateInstance(GetContextEntity().GetScene());
-			meshPreviewComp.Instance->SubmitAllTechniques();
+			auto mesh = AssetLibrary::LoadAsset<Mesh>(path, AssetLibrary::DeserializeMode::Normal, &meshPreviewComp);
+			SetMeshAsset(meshPreviewComp, std::move(mesh));
 		});
 		GetContextEntity().UpdateBounds();
 		FocusContextEntity();
+	}
+
+	void MeshEditor::SaveAsset(const std::filesystem::path& path)
+	{
+		AssetManager::Get().SaveAsset(path, GetAsset());
+		auto& meshPreviewComp = GetContextEntity().GetComponent<MeshPreviewComponent>();
+		auto mesh = AssetLibrary::LoadAsset<Mesh>(path, AssetLibrary::DeserializeMode::Force);
+		SetMeshAsset(meshPreviewComp, std::move(mesh));
 	}
 
 	Entity MeshEditor::CreatePreviewEntity(const Ref<Scene>& scene)
@@ -44,5 +51,11 @@ namespace ZeoEngine {
 		previewMeshEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
 		return previewMeshEntity;
 	}
-	
+
+	void MeshEditor::SetMeshAsset(MeshPreviewComponent& meshPreviewComp, Ref<Mesh> mesh) const
+	{
+		meshPreviewComp.MeshAsset = std::move(mesh);
+		meshPreviewComp.Instance = meshPreviewComp.MeshAsset->CreateInstance(GetContextEntity().GetScene());
+		meshPreviewComp.Instance->SubmitAllTechniques();
+	}
 }

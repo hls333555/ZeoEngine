@@ -56,7 +56,7 @@ namespace ZeoEngine {
 	{
 		if (m_ShortcutName != "CTRL+N" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
-		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::N && bIsCtrlPressed)
 		{
 			GetContextEditor()->NewDefaultScene();
@@ -75,7 +75,7 @@ namespace ZeoEngine {
 	{
 		if (m_ShortcutName != "CTRL+O" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
-		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		if (e.GetKeyCode() == Key::O && bIsCtrlPressed)
 		{
 			GetContextEditor()->LoadScene();
@@ -94,8 +94,9 @@ namespace ZeoEngine {
 	{
 		if (m_ShortcutName != "CTRL+S" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
-		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		if (e.GetKeyCode() == Key::S && bIsCtrlPressed)
+		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		const bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		if (e.GetKeyCode() == Key::S && bIsCtrlPressed && !bIsAltPressed)
 		{
 			GetContextEditor()->SaveScene();
 			return true;
@@ -113,8 +114,8 @@ namespace ZeoEngine {
 	{
 		if (m_ShortcutName != "CTRL+ALT+S" || !GetContextEditorUIRenderer().IsEditorFocused()) return false;
 
-		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		const bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 		if (e.GetKeyCode() == Key::S && bIsCtrlPressed && bIsAltPressed)
 		{
 			GetContextEditor()->SaveSceneAs();

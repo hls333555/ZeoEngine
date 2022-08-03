@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Asset/AssetSerializer.h"
 
 namespace ZeoEngine {
 
@@ -48,9 +49,37 @@ namespace ZeoEngine {
 		return std::filesystem::copy_file(srcPath, destPath, bShouldOverwrite ? std::filesystem::copy_options::overwrite_existing : std::filesystem::copy_options::none);
 	}
 
-	static std::string NormalizePathSeparator(const std::string& path)
+	bool PathUtils::CopyAsset(const std::filesystem::path& srcPath, const std::filesystem::path& destPath)
 	{
-		return std::filesystem::path(path).make_preferred().string();
+		// No need to copy self
+		if (Exists(destPath) && Equivalent(srcPath, destPath)) return false;
+
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(srcPath);
+		if (!metadata) return false;
+
+		if (metadata->IsResourceAsset())
+		{
+			// Copy resource
+			const bool bSuccess = CopyFile(metadata->GetResourcePath(), destPath.parent_path() / destPath.stem(), true);
+			if (!bSuccess)
+			{
+				ZE_CORE_ERROR("Failed to copy resource file!");
+				return false;
+			}
+		}
+
+		// Copy asset
+		const bool bSuccess = CopyFile(srcPath, destPath, true);
+		if (!bSuccess)
+		{
+			ZE_CORE_ERROR("Failed to copy asset file!");
+			return false;
+		}
+
+		// Assign new asset handle to the copied asset
+		AssetSerializerBase::SerializeEmptyAsset(destPath, metadata->TypeID, AssetHandle(), false);
+
+		return true;
 	}
 
 }

@@ -1,20 +1,19 @@
 #include "Panels/SaveAssetPanel.h"
 
+#include "Core/EditorManager.h"
+#include "Panels/ContentBrowserPanel.h"
 #include "Engine/Asset/AssetRegistry.h"
-#include "Engine/Asset/AssetManager.h"
-#include "Engine/Asset/AssetFactory.h"
-#include "Engine/Utils/PathUtils.h"
 #include "Editors/EditorBase.h"
+#include "EditorUIRenderers/EditorUIRendererBase.h"
 
 namespace ZeoEngine {
 
 	void SaveAssetPanel::OnPanelOpen()
 	{
 		m_bHasKeyboardFocused = false;
-		strcpy_s(m_NameBuffer, "New");
-		const auto typeName = AssetManager::Get().GetAssetFactoryByAssetType(GetAssetTypeID())->GetAssetTypeName();
-		const std::string formattedName = GetFormattedAssetTypeName(typeName);
-		strcat_s(m_NameBuffer, formattedName.c_str());
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
+		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
+		SetSelectedDirectory(metadata->Path.parent_path());
 	}
 
 	void SaveAssetPanel::OnPathSelected(const std::filesystem::path& path)
@@ -50,19 +49,35 @@ namespace ZeoEngine {
 		{
 			if (ImGui::Button("Save"))
 			{
-				strcat_s(m_NameBuffer, AssetRegistry::GetEngineAssetExtension());
-				auto newPath = GetSelectedDirectory() / m_NameBuffer;
+				const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
+				auto name = std::filesystem::path(m_NameBuffer);
+				const auto originalExtension = std::filesystem::path(metadata->PathName).extension();
+				if (name.extension() != originalExtension)
+				{
+					// Force add resource extension if not exist
+					// For non-resource asset, this should never happen
+					name += originalExtension;
+				}
+				auto newPath = GetSelectedDirectory() / name;
+				newPath += AssetRegistry::GetEngineAssetExtension();
 				if (AssetRegistry::Get().ContainsPathInDirectory(GetSelectedDirectory(), newPath))
 				{
 					m_ToReplacePath = std::move(newPath);
 				}
 				else
 				{
-					// Create an empty asset
-					RequestPathCreation(newPath, GetAssetTypeID(), false);
+					if (metadata->IsResourceAsset())
+					{
+						// Copy resource and asset
+						RequestPathCreationForResourceAsset(metadata->Path, newPath);
+					}
+					else
+					{
+						// Create an empty asset
+						RequestPathCreation(newPath, GetAssetTypeID(), false);
+					}
 					// Serialize data
-					GetContextEditor()->SaveScene(newPath);
-					Close();
+					SaveAndClose(newPath);
 				}
 			}
 		}
@@ -89,9 +104,7 @@ namespace ZeoEngine {
 
 			if (ImGui::Button("OK", buttonSize))
 			{
-				GetContextEditor()->SaveScene(path);
-				Close();
-
+				SaveAndClose(path);
 				m_ToReplacePath.clear();
 				ImGui::CloseCurrentPopup();
 			}
@@ -109,4 +122,13 @@ namespace ZeoEngine {
 		}
 	}
 
+	void SaveAssetPanel::SaveAndClose(const std::filesystem::path& path)
+	{
+		GetContextEditor()->SaveScene(path);
+		Close();
+		const auto levelEditor = EditorManager::Get().GetEditor(LEVEL_EDITOR);
+		const auto contentBrowser = levelEditor->GetEditorUIRenderer()->GetPanel<ContentBrowserPanel>(CONTENT_BROWSER);
+		// Jump and focus new saved asset
+		contentBrowser->SetSelectedPath(path);
+	}
 }

@@ -15,8 +15,6 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
-
-		virtual void OpenLevel(const std::filesystem::path& path) const override;
 	};
 
 }

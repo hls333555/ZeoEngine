@@ -33,7 +33,7 @@ namespace ZeoEngine {
 
 		/** Create a new empty asset file. */
 		bool CreateAssetFile(AssetTypeID typeID, const std::filesystem::path& path) const;
-		/** Import a new asset from file dialog or dragging by copying it from srcPath to destPath. */
+		/** Import a new resource from file dialog or dragging by copying it from srcPath to destPath. */
 		bool ImportAsset(AssetTypeID typeID, const std::filesystem::path& srcPath, const std::filesystem::path& destPath) const;
 		/** Construct a new asset. */
 		Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const;
@@ -44,7 +44,7 @@ namespace ZeoEngine {
 		/** Delete an existing asset. */
 		bool DeleteAsset(const std::filesystem::path& path) const;
 		/** Save an existing asset. */
-		bool SaveAsset(const std::filesystem::path& path) const;
+		bool SaveAsset(const std::filesystem::path& path, const Ref<IAsset>& asset) const;
 		/** Reimport an existing asset from its source place. */
 		bool ReimportAsset(const std::filesystem::path& path) const;
 
