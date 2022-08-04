@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	class IComponentHelper
 	{
 	public:
-		explicit IComponentHelper(const Entity* entity);
+		explicit IComponentHelper(Entity* entity);
 		virtual ~IComponentHelper();
 
 		/** Called after component being added to the owner entity. If bIsDeserialize is true, the component is added during deserialization. */

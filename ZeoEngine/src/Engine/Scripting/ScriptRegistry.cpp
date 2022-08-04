@@ -2,6 +2,7 @@
 #include "Engine/Scripting/ScriptRegistry.h"
 
 #include <mono/metadata/object.h>
+#include <mono/metadata/reflection.h>
 
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Core/Input.h"
@@ -9,66 +10,88 @@
 
 namespace ZeoEngine {
 
+	namespace Utils {
+
+		static U32 ComponentTypeToID(MonoReflectionType* compType)
+		{
+			MonoType* monoCompType = mono_reflection_type_get_type(compType);
+			ZE_CORE_ASSERT(ScriptRegistry::s_RegisteredMonoComponents.find(monoCompType) != ScriptRegistry::s_RegisteredMonoComponents.end());
+			return ScriptRegistry::s_RegisteredMonoComponents[monoCompType];
+		}
+
+		static MonoString* StringToMonoString(const std::string& str)
+		{
+			return mono_string_new(ScriptEngine::GetAppDomain(), str.c_str());
+		}
+
+		static Entity GetEntityByID(UUID entityID)
+		{
+			const auto& scene = ScriptEngine::GetSceneContext();
+			ZE_CORE_ASSERT(scene);
+			const Entity entity = scene->GetEntityByUUID(entityID);
+			ZE_CORE_ASSERT(entity);
+			return entity;
+		}
+		
+	}
+
 #define ZE_ADD_INTERNAL_CALL(Name) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name, Name)
 
-	static void NativeLog(MonoString* str, int param)
+	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
+
+	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* compType)
 	{
-		auto* cStr = mono_string_to_utf8(str);
-		ZE_CORE_INFO("{0} {1}", cStr, param);
-		mono_free(cStr);
+		return Utils::GetEntityByID(entityID).HasComponentById(Utils::ComponentTypeToID(compType));
 	}
 
-	static void NativeLog_Vector(Vec3* param, Vec3* outResult)
+	static MonoString* Entity_GetName(UUID entityID)
 	{
-		ZE_CORE_INFO("Pos: {0}, {1}, {2}", param->x, param->y, param->z);
-		*outResult = glm::cross(*param, Vec3(param->x, param->y, -param->z));
+		return Utils::StringToMonoString(Utils::GetEntityByID(entityID).GetName());
 	}
 
-	static float NativeLog_VectorDot(Vec3* param)
+	static void Entity_GetForwardVector(UUID entityID, Vec3* outForwardVector)
 	{
-		return glm::dot(*param, Vec3(param->x, param->y, -param->z));
+		*outForwardVector = Utils::GetEntityByID(entityID).GetForwardVector();
 	}
 
-	static void Entity_GetTranslation(UUID entityID, Vec3* outTranslation)
+	static void Entity_GetRightVector(UUID entityID, Vec3* outForwardVector)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		const Entity entity = scene->GetEntityByUUID(entityID);
-		*outTranslation = entity.GetTranslation();
+		*outForwardVector = Utils::GetEntityByID(entityID).GetRightVector();
 	}
 
-	static void Entity_SetTranslation(UUID entityID, Vec3* translation)
+	static void Entity_GetUpVector(UUID entityID, Vec3* outUpVector)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		Entity entity = scene->GetEntityByUUID(entityID);
-		entity.SetTranslation(*translation);
+		*outUpVector = Utils::GetEntityByID(entityID).GetUpVector();
 	}
 
-	static void Entity_GetRotation(UUID entityID, Vec3* outRotation)
+	static void TransformComponent_GetTranslation(UUID entityID, Vec3* outTranslation)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		const Entity entity = scene->GetEntityByUUID(entityID);
-		*outRotation = entity.GetRotation();
+		*outTranslation = Utils::GetEntityByID(entityID).GetTranslation();
 	}
 
-	static void Entity_SetRotation(UUID entityID, Vec3* rotation)
+	static void TransformComponent_SetTranslation(UUID entityID, Vec3* translation)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		Entity entity = scene->GetEntityByUUID(entityID);
-		entity.SetRotation(*rotation);
+		Utils::GetEntityByID(entityID).SetTranslation(*translation);
 	}
 
-	static void Entity_GetScale(UUID entityID, Vec3* outScale)
+	static void TransformComponent_GetRotation(UUID entityID, Vec3* outRotation)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		const Entity entity = scene->GetEntityByUUID(entityID);
-		*outScale = entity.GetScale();
+		*outRotation = Utils::GetEntityByID(entityID).GetRotation();
 	}
 
-	static void Entity_SetScale(UUID entityID, Vec3* scale)
+	static void TransformComponent_SetRotation(UUID entityID, Vec3* rotation)
 	{
-		const Ref<Scene>& scene = ScriptEngine::GetSceneContext();
-		Entity entity = scene->GetEntityByUUID(entityID);
-		entity.SetScale(*scale);
+		Utils::GetEntityByID(entityID).SetRotation(*rotation);
+	}
+
+	static void TransformComponent_GetScale(UUID entityID, Vec3* outScale)
+	{
+		*outScale = Utils::GetEntityByID(entityID).GetScale();
+	}
+
+	static void TransformComponent_SetScale(UUID entityID, Vec3* scale)
+	{
+		Utils::GetEntityByID(entityID).SetScale(*scale);
 	}
 
 	static bool Input_IsKeyPressed(KeyCode keycode)
@@ -93,17 +116,21 @@ namespace ZeoEngine {
 
 	void ScriptRegistry::RegisterFunctions()
 	{
-		ZE_ADD_INTERNAL_CALL(NativeLog);
-		ZE_ADD_INTERNAL_CALL(NativeLog_Vector);
-		ZE_ADD_INTERNAL_CALL(NativeLog_VectorDot);
+#pragma region Name
+		ZE_ADD_INTERNAL_CALL(Entity_GetName);
+		ZE_ADD_INTERNAL_CALL(Entity_GetForwardVector);
+		ZE_ADD_INTERNAL_CALL(Entity_GetRightVector);
+		ZE_ADD_INTERNAL_CALL(Entity_GetUpVector);
+		ZE_ADD_INTERNAL_CALL(Entity_HasComponent);
+#pragma endregion
 
-#pragma region Entity
-		ZE_ADD_INTERNAL_CALL(Entity_GetTranslation);
-		ZE_ADD_INTERNAL_CALL(Entity_SetTranslation);
-		ZE_ADD_INTERNAL_CALL(Entity_GetRotation);
-		ZE_ADD_INTERNAL_CALL(Entity_SetRotation);
-		ZE_ADD_INTERNAL_CALL(Entity_GetScale);
-		ZE_ADD_INTERNAL_CALL(Entity_SetScale);
+#pragma region TransformComponent
+		ZE_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
+		ZE_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+		ZE_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
+		ZE_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
+		ZE_ADD_INTERNAL_CALL(TransformComponent_GetScale);
+		ZE_ADD_INTERNAL_CALL(TransformComponent_SetScale);
 #pragma endregion
 
 #pragma region Input

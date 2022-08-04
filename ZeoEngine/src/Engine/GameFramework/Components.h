@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		IComponent(const IComponent&) = default;
 		virtual ~IComponent() = default;
 
-		virtual void CreateHelper(const Entity* entity) {}
+		virtual void CreateHelper(Entity* entity) {}
 		template<typename T>
 		Ref<T> GetHelper()
 		{
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		TransformComponent(const Vec3& translation)
 			: Translation(translation) {}
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<TransformComponentHelper>(entity);
 		}
@@ -133,7 +133,7 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<CameraComponentHelper>(entity);
 		}
@@ -159,21 +159,6 @@ namespace ZeoEngine {
 
 	};
 
-	struct ScriptComponent : public IComponent
-	{
-		std::string ClassName;
-
-		ScriptComponent() = default;
-		ScriptComponent(const ScriptComponent&) = default;
-
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<ScriptComponentHelper>(entity);
-		}
-
-		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
-	};
-
 	struct NativeScriptComponent : public IComponent
 	{
 		using InstantiateScriptDef = ScriptableEntity*(*)();
@@ -192,6 +177,21 @@ namespace ZeoEngine {
 		}
 	};
 
+	struct ScriptComponent : public IComponent
+	{
+		std::string ClassName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent&) = default;
+
+		virtual void CreateHelper(Entity* entity) override
+		{
+			ComponentHelper = CreateRef<ScriptComponentHelper>(entity);
+		}
+
+		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
+	};
+
 	struct ParticleSystemComponent : public IComponent
 	{
 		Ref<ParticleTemplate> ParticleTemplateAsset;
@@ -202,7 +202,7 @@ namespace ZeoEngine {
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(entity);
 		}
@@ -218,7 +218,7 @@ namespace ZeoEngine {
 			ParticleTemplateAsset = particleTemplate;
 		}
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(entity);
 		}
@@ -313,7 +313,7 @@ namespace ZeoEngine {
 			: MeshAsset(mesh) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
 		}
@@ -327,7 +327,7 @@ namespace ZeoEngine {
 	{
 		using MeshRendererComponent::MeshRendererComponent;
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<MeshPreviewComponentHelper>(entity);
 		}
@@ -351,7 +351,7 @@ namespace ZeoEngine {
 			: Type(type) {}
 		LightComponent(const LightComponent&) = default;
 
-		virtual void CreateHelper(const Entity* entity) override
+		virtual void CreateHelper(Entity* entity) override
 		{
 			ComponentHelper = CreateRef<LightComponentHelper>(entity);
 		}

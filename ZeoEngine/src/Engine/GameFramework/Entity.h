@@ -85,6 +85,9 @@ namespace ZeoEngine {
 		void SetRotation(const Vec3& rotation);
 		const Vec3& GetScale() const;
 		void SetScale(const Vec3& scale);
+		Vec3 GetForwardVector() const;
+		Vec3 GetRightVector() const;
+		Vec3 GetUpVector() const;
 		const BoxSphereBounds& GetBounds() const;
 		void UpdateBounds() const;
 		BoxSphereBounds GetDefaultBounds() const;

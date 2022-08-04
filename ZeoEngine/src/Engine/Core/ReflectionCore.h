@@ -98,6 +98,13 @@ enum class PropertyType
 
 };
 
+#define MONO_COMP_NAME(comp) ZE_STRINGIFY(ZeoEngine.comp)
+#define REGISTER_MONO_COMP(comp)																	\
+if (auto* monoType = mono_reflection_type_from_name(MONO_COMP_NAME(comp), ScriptEngine::GetCoreAssemblyImage()))\
+{																									\
+	ScriptRegistry::s_RegisteredMonoComponents[monoType] = entt::type_hash<comp>::value();			\
+}
+
 #define ZTEXT(text) ZE_CAT(u8, text)
 using namespace entt::literals;
 #define ZDATA_ID(data) ZE_CAT(ZE_STRINGIFY(data), _hs)
@@ -144,6 +151,7 @@ static void ze_auto_register_reflection_function_()
  * @param ... - Various component properties. Use ZPROP() to register them
  */
 #define ZCOMPONENT(_comp, ...)																		\
+REGISTER_MONO_COMP(_comp)																			\
 entt::meta<_comp>()																					\
     .type()																							\
         _ZPROP_SHARED(_comp, __VA_ARGS__)															\

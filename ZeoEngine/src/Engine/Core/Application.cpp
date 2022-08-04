@@ -5,6 +5,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/GameFramework/ComponentRegistry.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/Profile/Profiler.h"
 
@@ -35,8 +36,10 @@ namespace ZeoEngine {
 		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
+		// TODO:
 		Renderer::Init();
 		ScriptEngine::Init();
+		ComponentRegistry::RegisterComponents();
 		
 		// m_ImGuiLayer does not need to be unique pointer
 		// since it is going to be part of the layer stack who will control its lifecycle

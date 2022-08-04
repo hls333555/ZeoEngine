@@ -193,6 +193,16 @@ namespace ZeoEngine {
 		s_Data->EntityInstances.clear();
 	}
 
+	MonoDomain* ScriptEngine::GetAppDomain()
+	{
+		return s_Data->AppDomain;
+	}
+
+	MonoImage* ScriptEngine::GetCoreAssemblyImage()
+	{
+		return s_Data->CoreAssemblyImage;
+	}
+
 	void ScriptEngine::OnCreateEntity(Entity entity)
 	{
 		const auto& scriptComp = entity.GetComponent<ScriptComponent>();
@@ -302,13 +312,19 @@ namespace ZeoEngine {
 
 	void ScriptInstance::InvokeOnCreate() const
 	{
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod);
+		if (m_OnCreateMethod)
+		{
+			m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod);
+		}
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float dt) const
 	{
-		void* param = &dt;
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		if (m_OnUpdateMethod)
+		{
+			void* param = &dt;
+			m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		}
 	}
 
 }

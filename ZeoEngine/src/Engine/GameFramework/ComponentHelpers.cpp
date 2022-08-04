@@ -16,7 +16,7 @@ namespace ZeoEngine {
 			: OwnerEntity(entity) {}
 	};
 
-	IComponentHelper::IComponentHelper(const Entity* entity)
+	IComponentHelper::IComponentHelper(Entity* entity)
 		: m_Impl(CreateScope<Impl>(*entity))
 	{
 	}

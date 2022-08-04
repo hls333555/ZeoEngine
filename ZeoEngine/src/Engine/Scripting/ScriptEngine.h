@@ -7,6 +7,8 @@ extern "C" {
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoMethod MonoMethod;
 	typedef struct _MonoAssembly MonoAssembly;
+	typedef struct _MonoImage MonoImage;
+	typedef struct _MonoDomain MonoDomain;
 }
 
 namespace ZeoEngine {
@@ -26,6 +28,9 @@ namespace ZeoEngine {
 
 		static void OnRuntimeStart(Ref<Scene> scene);
 		static void OnRuntimeStop();
+
+		static MonoDomain* GetAppDomain();
+		static MonoImage* GetCoreAssemblyImage();
 
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity, DeltaTime dt);

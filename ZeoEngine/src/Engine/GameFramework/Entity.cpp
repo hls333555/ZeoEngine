@@ -74,6 +74,21 @@ namespace ZeoEngine {
 		GetComponent<TransformComponent>().Scale = scale;
 	}
 
+	Vec3 Entity::GetForwardVector() const
+	{
+		return Math::GetForwardVector(GetRotation());
+	}
+
+	Vec3 Entity::GetRightVector() const
+	{
+		return Math::GetRightVector(GetRotation());
+	}
+
+	Vec3 Entity::GetUpVector() const
+	{
+		return Math::GetUpVector(GetRotation());
+	}
+
 	const BoxSphereBounds& Entity::GetBounds() const
 	{
 		return GetComponent<BoundsComponent>().Bounds;

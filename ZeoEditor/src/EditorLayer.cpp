@@ -20,11 +20,12 @@ namespace ZeoEngine {
 	{
 		EngineLayer::OnAttach();
 
+		// TODO:
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		const Ref<LevelEditor> levelEditor = EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
+		EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
 		
 	}
 

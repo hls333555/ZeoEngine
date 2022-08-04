@@ -7,29 +7,27 @@ namespace Sandbox
     {
         void OnCreate()
         {
-            Console.WriteLine($"Player.OnCreate - {ID}");
+            Console.WriteLine($"Entity: {Name}");
         }
 
         void OnUpdate(float dt)
         {
-            Console.WriteLine($"Player.OnUpdate: {dt}");
-
             Vector3 translation = Translation;
             if (Input.IsKeyPressed(KeyCode.W))
             {
-                translation.Y += dt;
+                translation += GetForwardVector() * dt;
             }
             if (Input.IsKeyPressed(KeyCode.S))
             {
-                translation.Y -= dt;
+                translation -= GetForwardVector() * dt;
             }
             if (Input.IsKeyPressed(KeyCode.A))
             {
-                translation.X -= dt;
+                translation -= GetRightVector() * dt;
             }
             if (Input.IsKeyPressed(KeyCode.D))
             {
-                translation.X += dt;
+                translation += GetRightVector() * dt;
             }
             Translation = translation;
         }

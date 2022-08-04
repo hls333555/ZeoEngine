@@ -1,11 +1,18 @@
+#include "ZEpch.h"
+#include "Engine/GameFramework/ComponentRegistry.h"
+
+#include <mono/metadata/reflection.h>
+
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Sampler.h"
+#include "Engine/Scripting/ScriptRegistry.h"
+#include "Engine/Scripting/ScriptEngine.h"
 
 namespace ZeoEngine {
 
-	ZE_REGISTRATION
+	void ComponentRegistry::RegisterComponents()
 	{
 		ZCOMPONENT(CoreComponent, ZPROP(Inherent), ZPROP(HideComponentHeader))
 			ZDATA(CoreComponent, Name);
@@ -170,7 +177,6 @@ namespace ZeoEngine {
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, SRGB, SetSRGB, IsSRGB)
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, SamplerType, SetSamplerType, GetSamplerType)
 			ZDATA_SETTER_GETTER(TexturePreviewComponent, GenerateMipmaps, SetGenerateMipmaps, ShouldGenerateMipmaps);
-
 	}
 
 }
