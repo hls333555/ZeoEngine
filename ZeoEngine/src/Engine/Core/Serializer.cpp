@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		for (const auto data : m_PreprocessedDatas)
 		{
 			// Do not serialize transient data
-			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, data);
+			auto bDiscardSerialize = DoesPropExist(Reflection::Transient, data);
 			if (bDiscardSerialize) continue;
 
 			EvaluateSerializeData(node, data, instance, false);
@@ -151,7 +151,7 @@ namespace ZeoEngine {
 				SerializeData<Ref<Shader>>(node, data, instance, bIsSeqElement);
 				break;
 			default:
-				const auto dataName = GetMetaObjectDisplayName(data);
+				const auto dataName = GetMetaObjectName(data);
 				ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", *dataName);
 				break;
 		}
@@ -160,7 +160,7 @@ namespace ZeoEngine {
 	void ComponentSerializer::EvaluateSerializeSequenceContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance)
 	{
 		auto seqView = data.get(instance).as_sequence_container();
-		const auto dataName = GetMetaObjectDisplayName(data);
+		const auto dataName = GetMetaObjectName(data);
 		YAML::Node seqNode;
 		seqNode.SetStyle(YAML::EmitterStyle::Flow);
 		for (auto it = seqView.begin(); it != seqView.end(); ++it)
@@ -192,7 +192,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			const auto dataName = GetMetaObjectDisplayName(data);
+			const auto dataName = GetMetaObjectName(data);
 			node[*dataName] = subNode;
 		}
 	}
@@ -206,7 +206,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			const auto dataName = GetMetaObjectDisplayName(data);
+			const auto dataName = GetMetaObjectName(data);
 			const auto enumValue = data.get(instance);
 			const char* enumValueName = GetEnumDisplayName(enumValue);
 			node[*dataName] = enumValueName;
@@ -221,7 +221,7 @@ namespace ZeoEngine {
 
 		for (const auto data : m_PreprocessedDatas)
 		{
-			auto dataName = GetMetaObjectDisplayName(data);
+			auto dataName = GetMetaObjectName(data);
 			const auto& dataValue = node[*dataName];
 			// Evaluate serialized data only
 			if (dataValue)
@@ -318,7 +318,7 @@ namespace ZeoEngine {
 				DeserializeData<Ref<Shader>>(data, instance, node, bIsSeqElement);
 				break;
 			default:
-				auto dataName = GetMetaObjectDisplayName(data);
+				auto dataName = GetMetaObjectName(data);
 				ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", *dataName);
 				break;
 		}
@@ -329,7 +329,7 @@ namespace ZeoEngine {
 		auto retIt = seqView.insert(seqView.end(), seqView.value_type().construct());
 		if (!retIt)
 		{
-			auto dataName = GetMetaObjectDisplayName(data);
+			auto dataName = GetMetaObjectName(data);
 			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
 		}
 		return retIt;
@@ -360,7 +360,7 @@ namespace ZeoEngine {
 		U32 i = 0;
 		for (const auto subData : type.data())
 		{
-			auto subDataName = GetMetaObjectDisplayName(subData);
+			auto subDataName = GetMetaObjectName(subData);
 			// Evaluate serialized subdata only
 			if (node[i])
 			{
@@ -381,7 +381,7 @@ namespace ZeoEngine {
 		const auto& datas = bIsSeqElement ? instance.type().data() : data.type().data();
 		for (const auto enumData : datas)
 		{
-			auto valueName = GetMetaObjectDisplayName(enumData);
+			auto valueName = GetMetaObjectName(enumData);
 			if (currentValueName == valueName)
 			{
 				auto newValue = enumData.get({});
@@ -547,7 +547,7 @@ namespace ZeoEngine {
 		{
 			auto compInstance = entity.GetComponentById(compID);
 			// Do not serialize transient component
-			auto bDiscardSerialize = DoesPropExist(PropertyType::Transient, compInstance.type());
+			auto bDiscardSerialize = DoesPropExist(Reflection::Transient, compInstance.type());
 			if (bDiscardSerialize) continue;
 
 			// Serialize component

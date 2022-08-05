@@ -7,10 +7,10 @@ namespace ZeoEngine {
 
 	bool DataParser::ShouldHideData(entt::meta_data data, entt::meta_any& instance)
 	{
-		auto bIsHiddenInEditor = DoesPropExist(PropertyType::HiddenInEditor, data);
+		auto bIsHiddenInEditor = DoesPropExist(Reflection::HiddenInEditor, data);
 		if (bIsHiddenInEditor) return true;
 
-		auto hideCondition = GetPropValue<const char*>(PropertyType::HideCondition, data);
+		auto hideCondition = GetPropValue<const char*>(Reflection::HideCondition, data);
 		// HideCondition property is not set, show this data normally
 		if (!hideCondition) return false;
 
@@ -67,7 +67,7 @@ namespace ZeoEngine {
 		{
 			if (!m_HideConditionBuffers[dataId].bHasShownWarning)
 			{
-				auto dataName = GetMetaObjectDisplayName(data);
+				auto dataName = GetMetaObjectName(data);
 				ZE_CORE_WARN("Invalid HideCondition key: '{0}' on data '{1}'!", keyStr, *dataName);
 				m_HideConditionBuffers[dataId].bHasShownWarning = true;
 			}

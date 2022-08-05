@@ -5,7 +5,7 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
-#include "Engine/GameFramework/ComponentRegistry.h"
+#include "Engine/GameFramework/TypeRegistry.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/Profile/Profiler.h"
 
@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		// TODO:
 		Renderer::Init();
 		ScriptEngine::Init();
-		ComponentRegistry::RegisterComponents();
+		TypeRegistry::Init();
 		
 		// m_ImGuiLayer does not need to be unique pointer
 		// since it is going to be part of the layer stack who will control its lifecycle

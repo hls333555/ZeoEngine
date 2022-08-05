@@ -23,7 +23,7 @@ namespace ZeoEngine {
 			auto compInstance = m_OwnerEntity.GetComponentById(m_ComponentId);
 			const char* compDisplayName = GetComponentDisplayNameFull(m_ComponentId);
 
-			bool bShouldDisplayCompHeader = !DoesPropExist(PropertyType::HideComponentHeader, compType);
+			bool bShouldDisplayCompHeader = !DoesPropExist(Reflection::HideComponentHeader, compType);
 			bool bIsCompHeaderExpanded = true;
 			// Display component header
 			if (bShouldDisplayCompHeader)
@@ -48,7 +48,7 @@ namespace ZeoEngine {
 					if (ImGui::BeginPopupWithPadding("ComponentSettings"))
 					{
 						// Inherent components can never be removed
-						bool bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);
+						bool bIsInherentComp = DoesPropExist(Reflection::Inherent, compType);
 						if (ImGui::MenuItem(ICON_FA_MINUS_CIRCLE "  Remove Component", nullptr, false, !bIsInherentComp))
 						{
 							bWillRemove = true;
@@ -146,7 +146,7 @@ namespace ZeoEngine {
 
 	void ComponentInspector::PreprocessData(entt::meta_data data)
 	{
-		auto categoryName = GetPropValue<const char*>(PropertyType::Category, data);
+		auto categoryName = GetPropValue<const char*>(Reflection::Category, data);
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
 		m_PreprocessedDatas[category].push_front(data.id());

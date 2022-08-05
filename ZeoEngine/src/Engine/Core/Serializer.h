@@ -159,7 +159,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				const auto dataName = GetMetaObjectDisplayName(data);
+				const auto dataName = GetMetaObjectName(data);
 				const auto dataValue = data.get(instance).cast<T>();
 				if constexpr (std::is_same_v<T, U8>)
 				{

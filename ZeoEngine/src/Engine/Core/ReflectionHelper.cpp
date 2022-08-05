@@ -1,8 +1,6 @@
 #include "ZEpch.h"
 #include "Engine/Core/ReflectionHelper.h"
 
-#include <glm/glm.hpp>
-
 #include "Engine/Renderer/Texture.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/EngineTypes.h"
@@ -10,11 +8,13 @@
 
 namespace ZeoEngine {
 
+	using namespace entt::literals;
+
 	const char* GetComponentDisplayNameFull(U32 compId)
 	{
 		const auto compType = entt::resolve(compId);
 		const char* compIcon = compType.func("get_icon"_hs).invoke({}).cast<const char*>();
-		const auto compName = GetMetaObjectDisplayName(compType);
+		const auto compName = GetMetaObjectName(compType);
 		static char fullCompName[128];
 		strcpy_s(fullCompName, compIcon);
 		strcat_s(fullCompName, "  ");
@@ -32,7 +32,7 @@ namespace ZeoEngine {
 		{
 			return BasicMetaType::SEQCON;
 		}
-		if (DoesPropExist(PropertyType::Struct, type))
+		if (DoesPropExist(Reflection::Struct, type))
 		{
 			return BasicMetaType::STRUCT;
 		}
@@ -110,34 +110,6 @@ namespace ZeoEngine {
 
 	}
 
-	ZE_REGISTRATION
-	{
-		// Register common numeric conversions for registration purpose
-		entt::meta<I32>()
-			.type()
-			.prop(PropertyType::Inherent)
-			.conv<U8>()
-			.conv<U32>()
-			.conv<U64>()
-			.conv<I8>()
-			.conv<I32>()
-			.conv<I64>()
-			.conv<float>()
-			.conv<double>();
-
-		entt::meta<float>()
-			.type()
-			.prop(PropertyType::Inherent)
-			.conv<double>();
-
-		entt::meta<double>()
-			.type()
-			.prop(PropertyType::Inherent)
-			.conv<float>();
-
-		entt::meta<typename std::vector<bool>::reference>().conv<bool>();
-	}
-
 	const char* GetEnumDisplayName(const entt::meta_any& enumValue)
 	{
 		// Get current enum value name by iterating all enum values and comparing
@@ -145,7 +117,7 @@ namespace ZeoEngine {
 		{
 			if (enumValue == enumData.get({}))
 			{
-				auto valueName = GetMetaObjectDisplayName(enumData);
+				auto valueName = GetMetaObjectName(enumData);
 				const char* valueNameChar = *valueName;
 				return valueNameChar;
 			}

@@ -21,20 +21,12 @@ namespace ZeoEngine {
 	};
 
 	template<typename T>
-	std::optional<const char*> GetMetaObjectDisplayName(T metaObj)
+	std::optional<const char*> GetMetaObjectName(T metaObj)
 	{
-		auto prop = metaObj.prop(PropertyType::DisplayName);
+		auto prop = metaObj.prop(Reflection::PropertyType::Name);
 		if (prop)
 		{
 			return prop.value().cast<const char*>();
-		}
-		else
-		{
-			prop = metaObj.prop(PropertyType::Name);
-			if (prop)
-			{
-				return prop.value().cast<const char*>();
-			}
 		}
 		return {};
 	}
@@ -64,7 +56,7 @@ namespace ZeoEngine {
 			, bIsStructSubdata(isStructSubdata)
 			, bIsSeqElement(isSeqElement)
 		{
-			const auto dataName = GetMetaObjectDisplayName(Data);
+			const auto dataName = GetMetaObjectName(Data);
 			DataName = *dataName;
 		}
 		DataSpec(const DataSpec& other)
@@ -125,7 +117,7 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				if constexpr (std::is_same<T, bool&>::value)
+				if constexpr (std::is_same_v<T, bool&>)
 				{
 					Instance.cast<typename std::vector<bool>::reference>() = value;
 				}
@@ -174,11 +166,11 @@ namespace ZeoEngine {
 		{
 			if (bIsSeqElement)
 			{
-				if constexpr (std::is_same<T, bool>::value) // std::vector<bool>
+				if constexpr (std::is_same_v<T, bool>) // std::vector<bool>
 				{
 					return instance.cast<typename std::vector<bool>::reference>();
 				}
-				else if constexpr (std::is_same<T, entt::meta_any>::value) // Enum
+				else if constexpr (std::is_same_v<T, entt::meta_any>) // Enum
 				{
 					return instance; // NOTE: Here as_ref() is not needed to call as instance is already a reference
 				}
@@ -189,7 +181,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				if constexpr (std::is_same<T, entt::meta_any>::value) // Enum
+				if constexpr (std::is_same_v<T, entt::meta_any>) // Enum
 				{
 					return data.get(instance);
 				}
@@ -214,13 +206,13 @@ namespace ZeoEngine {
 	}
 
 	template<typename T>
-	bool DoesPropExist(PropertyType propType, T metaObj)
+	bool DoesPropExist(Reflection::PropertyType propType, T metaObj)
 	{
 		return static_cast<bool>(metaObj.prop(propType));
 	}
 
 	template<typename Ret, typename T>
-	std::optional<Ret> GetPropValue(PropertyType propType, T metaObj)
+	std::optional<Ret> GetPropValue(Reflection::PropertyType propType, T metaObj)
 	{
 		const auto prop = metaObj.prop(propType);
 		if (prop)

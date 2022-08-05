@@ -31,7 +31,7 @@ namespace ZeoEngine {
 	{
 		if (ImGui::IsItemHovered())
 		{
-			auto tooltip = GetPropValue<const char*>(PropertyType::Tooltip, metaObj);
+			auto tooltip = GetPropValue<const char*>(Reflection::Tooltip, metaObj);
 			if (tooltip)
 			{
 				ImGui::SetTooltipWithPadding(*tooltip);
@@ -192,13 +192,13 @@ namespace ZeoEngine {
 			if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 			auto data = m_DataSpec.Data;
-			const auto dragSpeed = GetPropValue<float>(PropertyType::DragSensitivity, data);
+			const auto dragSpeed = GetPropValue<float>(Reflection::DragSensitivity, data);
 			const float dragSpeedValue = dragSpeed.value_or(1.0f);
-			const auto min = GetPropValue<CT>(PropertyType::ClampMin, data);
+			const auto min = GetPropValue<CT>(Reflection::ClampMin, data);
 			const auto minValue = min.value_or(m_DefaultMin);
-			const auto max = GetPropValue<CT>(PropertyType::ClampMax, data);
+			const auto max = GetPropValue<CT>(Reflection::ClampMax, data);
 			const auto maxValue = max.value_or(m_DefaultMax);
-			const ImGuiSliderFlags clampMode = DoesPropExist(PropertyType::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
+			const ImGuiSliderFlags clampMode = DoesPropExist(Reflection::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			void* valuePtr = nullptr;
 			if constexpr (N == 1)
 			{

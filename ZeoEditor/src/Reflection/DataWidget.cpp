@@ -175,7 +175,7 @@ namespace ZeoEngine {
 		{
 			for (const auto enumData : m_EnumDatas)
 			{
-				auto enumDataName = GetMetaObjectDisplayName(enumData);
+				auto enumDataName = GetMetaObjectName(enumData);
 				bool bIsSelected = ImGui::Selectable(*enumDataName);
 				ShowPropertyTooltip(enumData);
 				if (bIsSelected)
@@ -539,7 +539,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 		if (!bIsTest)
 		{
-			m_bIsFixedSize = DoesPropExist(PropertyType::FixedSizeContainer, m_DataSpec.Data);
+			m_bIsFixedSize = DoesPropExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
 			DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
 			auto seqView = m_DataSpec.GetValue().as_sequence_container();
 			m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type());
@@ -561,7 +561,7 @@ namespace ZeoEngine {
 			ImGui::AlignTextToFramePadding();
 
 			std::string elementName;
-			if (DoesPropExist(PropertyType::CustomElementName, m_DataSpec.Data))
+			if (DoesPropExist(Reflection::CustomElementName, m_DataSpec.Data))
 			{
 				auto& comp = m_DataSpec.ComponentInstance.cast<IComponent&>();
 				if (comp.ComponentHelper)
@@ -576,7 +576,7 @@ namespace ZeoEngine {
 				elementName = indexNameBuffer;
 			}
 			
-			bool bIsElementStruct = DoesPropExist(PropertyType::Struct, seqView.value_type());
+			bool bIsElementStruct = DoesPropExist(Reflection::Struct, seqView.value_type());
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
 			// Element name
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(elementName.c_str(), flags);
@@ -790,7 +790,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			auto dataName = GetMetaObjectDisplayName(m_DataSpec.Data);
+			auto dataName = GetMetaObjectName(m_DataSpec.Data);
 			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
 		}
 		return retIt;
@@ -806,7 +806,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			auto dataName = GetMetaObjectDisplayName(m_DataSpec.Data);
+			auto dataName = GetMetaObjectName(m_DataSpec.Data);
 			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
 		}
 		return retIt;
@@ -817,7 +817,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 		if (!bIsTest)
 		{
-			m_bIsFixedSize = DoesPropExist(PropertyType::FixedSizeContainer, m_DataSpec.Data);
+			m_bIsFixedSize = DoesPropExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
 		}
 	}
 
@@ -901,7 +901,7 @@ namespace ZeoEngine {
 		// Preprocess subdatas if needed
 		if (m_bIsPreprocessedSubdatasDirty)
 		{
-			const auto compName = GetMetaObjectDisplayName(compInstance.type());
+			const auto compName = GetMetaObjectName(compInstance.type());
 			ZE_CORE_TRACE("Sorting subdatas on '{0}' of '{1}'", m_DataSpec.DataName, *compName);
 			PreprocessStruct(structType);
 			m_bIsPreprocessedSubdatasDirty = false;

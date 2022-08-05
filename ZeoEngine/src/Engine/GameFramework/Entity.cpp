@@ -130,7 +130,7 @@ namespace ZeoEngine {
 
 		if (HasComponentById(compId))
 		{
-			auto compName = GetMetaObjectDisplayName(compType);
+			auto compName = GetMetaObjectName(compType);
 			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *compName);
 			return {};
 		}
