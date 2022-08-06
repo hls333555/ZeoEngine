@@ -3,6 +3,7 @@
 #include <IconsFontAwesome5.h>
 
 #include "Reflection/DataWidget.h"
+#include "Engine/Utils/ReflectionUtils.h"
 
 namespace ZeoEngine {
 
@@ -21,9 +22,9 @@ namespace ZeoEngine {
 		ImGui::PushID(m_ComponentId);
 		{
 			auto compInstance = m_OwnerEntity.GetComponentById(m_ComponentId);
-			const char* compDisplayName = GetComponentDisplayNameFull(m_ComponentId);
+			const char* compDisplayName = ReflectionUtils::GetComponentDisplayNameFull(m_ComponentId);
 
-			bool bShouldDisplayCompHeader = !DoesPropExist(Reflection::HideComponentHeader, compType);
+			bool bShouldDisplayCompHeader = !ReflectionUtils::DoesPropertyExist(Reflection::HideComponentHeader, compType);
 			bool bIsCompHeaderExpanded = true;
 			// Display component header
 			if (bShouldDisplayCompHeader)
@@ -34,7 +35,7 @@ namespace ZeoEngine {
 				// Component collapsing header
 				bIsCompHeaderExpanded = ImGui::CollapsingHeader(compDisplayName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 				// Header tooltip
-				ShowPropertyTooltip(compType);
+				Utils::ShowPropertyTooltip(compType);
 
 				ImGui::SameLine(contentRegionAvailable.x - lineHeight + ImGui::GetFramePadding().x);
 
@@ -48,7 +49,7 @@ namespace ZeoEngine {
 					if (ImGui::BeginPopupWithPadding("ComponentSettings"))
 					{
 						// Inherent components can never be removed
-						bool bIsInherentComp = DoesPropExist(Reflection::Inherent, compType);
+						bool bIsInherentComp = ReflectionUtils::DoesPropertyExist(Reflection::Inherent, compType);
 						if (ImGui::MenuItem(ICON_FA_MINUS_CIRCLE "  Remove Component", nullptr, false, !bIsInherentComp))
 						{
 							bWillRemove = true;
@@ -146,7 +147,7 @@ namespace ZeoEngine {
 
 	void ComponentInspector::PreprocessData(entt::meta_data data)
 	{
-		auto categoryName = GetPropValue<const char*>(Reflection::Category, data);
+		auto categoryName = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Category, data);
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
 		m_PreprocessedDatas[category].push_front(data.id());
@@ -154,7 +155,7 @@ namespace ZeoEngine {
 
 	void ComponentInspector::DrawDataWidget(entt::meta_data data, entt::meta_any& compInstance)
 	{
-		U32 aggregatedDataId = GetAggregatedDataID(data);
+		U32 aggregatedDataId = Utils::GetAggregatedDataID(data);
 		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
 		{
 			if (m_DataWidgets[aggregatedDataId])

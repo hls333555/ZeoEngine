@@ -11,7 +11,7 @@
 
 namespace ZeoEngine {
 
-	U32 GetAggregatedDataID(entt::meta_data data)
+	U32 Utils::GetAggregatedDataID(entt::meta_data data)
 	{
 		return ImGui::GetCurrentWindow()->GetID(data.id());
 	}
@@ -19,61 +19,61 @@ namespace ZeoEngine {
 	Ref<DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, bool bIsTest)
 	{
 		const bool bIsSeqElement = dataSpec.bIsSeqElement;
-		switch (EvaluateMetaType(type))
+		switch (ReflectionUtils::EvaluateType(type))
 		{
-			case BasicMetaType::STRUCT:
+			case Reflection::BasicMetaType::STRUCT:
 				return CreateRef<StructWidget>(dataSpec, bIsTest);
-			case BasicMetaType::SEQCON:
+			case Reflection::BasicMetaType::SEQCON:
 				if (bIsSeqElement)
 				{
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return {};
 				}
 				return CreateRef<SequenceContainerWidget>(dataSpec, bIsTest);
-			case BasicMetaType::ASSCON:
+			case Reflection::BasicMetaType::ASSCON:
 				if (bIsSeqElement)
 				{
 					ZE_CORE_ERROR("Container nesting is not supported!");
 					return {};
 				}
 				return CreateRef<AssociativeContainerWidget>(dataSpec, bIsTest);
-			case BasicMetaType::BOOL:
+			case Reflection::BasicMetaType::BOOL:
 				return CreateRef<BoolDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::I8:
+			case Reflection::BasicMetaType::I8:
 				return CreateRef<ScalarNDataWidget<I8>>(dataSpec, bIsTest, ImGuiDataType_S8, static_cast<I8>(INT8_MIN), static_cast<I8>(INT8_MAX), "%hhd");
-			case BasicMetaType::I32:
+			case Reflection::BasicMetaType::I32:
 				return CreateRef<ScalarNDataWidget<I32>>(dataSpec, bIsTest, ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d");
-			case BasicMetaType::I64:
+			case Reflection::BasicMetaType::I64:
 				return CreateRef<ScalarNDataWidget<I64>>(dataSpec, bIsTest, ImGuiDataType_S64, INT64_MIN, INT64_MAX, "%lld");
-			case BasicMetaType::UI8:
+			case Reflection::BasicMetaType::UI8:
 				return CreateRef<ScalarNDataWidget<U8>>(dataSpec, bIsTest, ImGuiDataType_U8, 0ui8, UINT8_MAX, "%hhu");
-			case BasicMetaType::UI32:
+			case Reflection::BasicMetaType::UI32:
 				return CreateRef<ScalarNDataWidget<U32>>(dataSpec, bIsTest, ImGuiDataType_U32, 0ui32, UINT32_MAX, "%u");
-			case BasicMetaType::UI64:
+			case Reflection::BasicMetaType::UI64:
 				return CreateRef<ScalarNDataWidget<U64>>(dataSpec, bIsTest, ImGuiDataType_U64, 0ui64, UINT64_MAX, "%llu");
-			case BasicMetaType::FLOAT:
+			case Reflection::BasicMetaType::FLOAT:
 				return CreateRef<ScalarNDataWidget<float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
-			case BasicMetaType::DOUBLE:
+			case Reflection::BasicMetaType::DOUBLE:
 				return CreateRef<ScalarNDataWidget<double>>(dataSpec, bIsTest, ImGuiDataType_Double, -DBL_MAX, DBL_MAX, "%.4lf");
-			case BasicMetaType::ENUM:
+			case Reflection::BasicMetaType::ENUM:
 				return CreateRef<EnumDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::STRING:
+			case Reflection::BasicMetaType::STRING:
 				return CreateRef<StringDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::VEC2:
+			case Reflection::BasicMetaType::VEC2:
 				return CreateRef<ScalarNDataWidget<Vec2, 2, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
-			case BasicMetaType::VEC3:
+			case Reflection::BasicMetaType::VEC3:
 				return CreateRef<ScalarNDataWidget<Vec3, 3, float>>(dataSpec, bIsTest, ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f");
-			case BasicMetaType::VEC4:
+			case Reflection::BasicMetaType::VEC4:
 				return CreateRef<ColorDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::TEXTURE:
+			case Reflection::BasicMetaType::TEXTURE:
 				return CreateRef<Texture2DDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::PARTICLE:
+			case Reflection::BasicMetaType::PARTICLE:
 				return CreateRef<ParticleTemplateDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::MESH:
+			case Reflection::BasicMetaType::MESH:
 				return CreateRef<MeshDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::MATERIAL:
+			case Reflection::BasicMetaType::MATERIAL:
 				return CreateRef<MaterialDataWidget>(dataSpec, bIsTest);
-			case BasicMetaType::SHADER:
+			case Reflection::BasicMetaType::SHADER:
 				return CreateRef<ShaderDataWidget>(dataSpec, bIsTest);
 		}
 
@@ -175,9 +175,9 @@ namespace ZeoEngine {
 		{
 			for (const auto enumData : m_EnumDatas)
 			{
-				auto enumDataName = GetMetaObjectName(enumData);
-				bool bIsSelected = ImGui::Selectable(*enumDataName);
-				ShowPropertyTooltip(enumData);
+				const char* enumDataName = ReflectionUtils::GetMetaObjectName(enumData);
+				bool bIsSelected = ImGui::Selectable(enumDataName);
+				Utils::ShowPropertyTooltip(enumData);
 				if (bIsSelected)
 				{
 					ImGui::SetItemDefaultFocus();
@@ -187,7 +187,7 @@ namespace ZeoEngine {
 						if (m_DataSpec.bIsSeqElement)
 						{
 							// TODO: Think a better way for enum sequence container
-							Reflection::SetEnumValueForSeq(instance, m_Buffer);
+							ReflectionUtils::SetEnumValueForSeq(instance, m_Buffer);
 							InvokePostDataValueEditChangeCallback(m_DataSpec.Data, m_OldBuffer, m_DataSpec.ElementIndex);
 						}
 						else
@@ -219,7 +219,7 @@ namespace ZeoEngine {
 	void EnumDataWidget::UpdateBuffer()
 	{
 		m_Buffer = GetValueFromData();
-		m_CurrentEnumDataName = GetEnumDisplayName(m_Buffer);
+		m_CurrentEnumDataName = ReflectionUtils::GetEnumDisplayName(m_Buffer);
 	}
 
 #ifndef DOCTEST_CONFIG_DISABLE
@@ -239,7 +239,7 @@ namespace ZeoEngine {
 				m_Buffer = enumData.get({});
 				if (m_DataSpec.bIsSeqElement)
 				{
-					Reflection::SetEnumValueForSeq(m_DataSpec.Instance, m_Buffer);
+					ReflectionUtils::SetEnumValueForSeq(m_DataSpec.Instance, m_Buffer);
 				}
 				else
 				{
@@ -517,7 +517,7 @@ namespace ZeoEngine {
 		// Data name
 		bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, flags);
 		// Data tooltip
-		ShowPropertyTooltip(m_DataSpec.Data);
+		Utils::ShowPropertyTooltip(m_DataSpec.Data);
 		// Switch to the right column
 		ImGui::TableNextColumn();
 
@@ -539,7 +539,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 		if (!bIsTest)
 		{
-			m_bIsFixedSize = DoesPropExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
+			m_bIsFixedSize = ReflectionUtils::DoesPropertyExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
 			DataSpec elementDataSpec{ dataSpec.Data, dataSpec.ComponentInstance, dataSpec.Instance, false, true };
 			auto seqView = m_DataSpec.GetValue().as_sequence_container();
 			m_ElementWidgetTemplate = ConstructBasicDataWidget(elementDataSpec, seqView.value_type());
@@ -561,7 +561,7 @@ namespace ZeoEngine {
 			ImGui::AlignTextToFramePadding();
 
 			std::string elementName;
-			if (DoesPropExist(Reflection::CustomElementName, m_DataSpec.Data))
+			if (ReflectionUtils::DoesPropertyExist(Reflection::CustomElementName, m_DataSpec.Data))
 			{
 				auto& comp = m_DataSpec.ComponentInstance.cast<IComponent&>();
 				if (comp.ComponentHelper)
@@ -576,7 +576,7 @@ namespace ZeoEngine {
 				elementName = indexNameBuffer;
 			}
 			
-			bool bIsElementStruct = DoesPropExist(Reflection::Struct, seqView.value_type());
+			bool bIsElementStruct = ReflectionUtils::DoesPropertyExist(Reflection::Struct, seqView.value_type());
 			ImGuiTreeNodeFlags flags = bIsElementStruct ? DefaultStructDataTreeNodeFlags : DefaultDataTreeNodeFlags;
 			// Element name
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(elementName.c_str(), flags);
@@ -592,7 +592,7 @@ namespace ZeoEngine {
 					ImGui::SetTooltipWithPadding("[%d] Drag to re-arrange elements", i);
 				}
 
-				U32 id = GetAggregatedDataID(m_DataSpec.Data);
+				U32 id = Utils::GetAggregatedDataID(m_DataSpec.Data);
 				char dragTypeBuffer[DRAG_DROP_PAYLOAD_TYPE_SIZE];
 				_itoa_s(id, dragTypeBuffer, 10);
 				if (ImGui::BeginDragDropSource())
@@ -790,8 +790,8 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			auto dataName = GetMetaObjectName(m_DataSpec.Data);
-			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", *dataName);
+			const char* dataName = ReflectionUtils::GetMetaObjectName(m_DataSpec.Data);
+			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", dataName);
 		}
 		return retIt;
 	}
@@ -806,8 +806,8 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			auto dataName = GetMetaObjectName(m_DataSpec.Data);
-			ZE_CORE_ERROR("Failed to erase with data: {0}!", *dataName);
+			const char* dataName = ReflectionUtils::GetMetaObjectName(m_DataSpec.Data);
+			ZE_CORE_ERROR("Failed to erase with data: {0}!", dataName);
 		}
 		return retIt;
 	}
@@ -817,7 +817,7 @@ namespace ZeoEngine {
 		Init(dataSpec, bIsTest);
 		if (!bIsTest)
 		{
-			m_bIsFixedSize = DoesPropExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
+			m_bIsFixedSize = ReflectionUtils::DoesPropertyExist(Reflection::FixedSizeContainer, m_DataSpec.Data);
 		}
 	}
 
@@ -882,7 +882,7 @@ namespace ZeoEngine {
 		// Data name
 		bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultStructDataTreeNodeFlags);
 		// Data tooltip
-		ShowPropertyTooltip(m_DataSpec.Data);
+		Utils::ShowPropertyTooltip(m_DataSpec.Data);
 		// Switch to the right column
 		ImGui::TableNextColumn();
 		// Switch to the next row
@@ -901,8 +901,8 @@ namespace ZeoEngine {
 		// Preprocess subdatas if needed
 		if (m_bIsPreprocessedSubdatasDirty)
 		{
-			const auto compName = GetMetaObjectName(compInstance.type());
-			ZE_CORE_TRACE("Sorting subdatas on '{0}' of '{1}'", m_DataSpec.DataName, *compName);
+			const char* compName = ReflectionUtils::GetMetaObjectName(compInstance.type());
+			ZE_CORE_TRACE("Sorting subdatas on '{0}' of '{1}'", m_DataSpec.DataName, compName);
 			PreprocessStruct(structType);
 			m_bIsPreprocessedSubdatasDirty = false;
 		}
@@ -972,7 +972,7 @@ namespace ZeoEngine {
 
 	void StructWidget::DrawSubdataWidget(entt::meta_data subdata, entt::meta_any& structInstance)
 	{
-		U32 aggregatedSubdataId = GetAggregatedDataID(subdata);
+		U32 aggregatedSubdataId = Utils::GetAggregatedDataID(subdata);
 		if (m_SubdataWidgets.find(aggregatedSubdataId) != m_SubdataWidgets.cend())
 		{
 			if (m_SubdataWidgets[aggregatedSubdataId])

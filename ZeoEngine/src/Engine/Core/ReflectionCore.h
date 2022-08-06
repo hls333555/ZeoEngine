@@ -27,6 +27,19 @@ namespace entt {
 
 namespace ZeoEngine::Reflection {
 
+	enum class BasicMetaType
+	{
+		NONE,
+		STRUCT, // Custom struct
+		SEQCON, // Sequence container
+		ASSCON, // Associative container
+		BOOL, I8, I32, I64, UI8, UI32, UI64,
+		FLOAT, DOUBLE,
+		ENUM,
+		STRING, VEC2, VEC3, VEC4,
+		TEXTURE, PARTICLE, MESH, MATERIAL, SHADER,
+	};
+
 	enum PropertyType
 	{
 		Name,						// [value_type: const char*] Name of component or data.

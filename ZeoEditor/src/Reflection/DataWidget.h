@@ -6,10 +6,11 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#ifndef DOCTEST_CONFIG_DISABLE
 #include <doctest.h>
+#endif
 
 #include "Engine/Core/Core.h"
-#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Mesh.h"
@@ -19,27 +20,174 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/GameFramework/Components.h"
 #include "Reflection/DataParser.h"
-#include "Test/TestComponent.h"
 #include "Engine/ImGui/AssetBrowser.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Utils/ReflectionUtils.h"
 
 namespace ZeoEngine {
 
-	template<typename T>
-	void ShowPropertyTooltip(T metaObj)
-	{
-		if (ImGui::IsItemHovered())
+	namespace Utils {
+
+		U32 GetAggregatedDataID(entt::meta_data data);
+
+		template<typename T>
+		void ShowPropertyTooltip(T metaObj)
 		{
-			auto tooltip = GetPropValue<const char*>(Reflection::Tooltip, metaObj);
-			if (tooltip)
+			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding(*tooltip);
+				auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, metaObj);
+				if (tooltip)
+				{
+					ImGui::SetTooltipWithPadding(*tooltip);
+				}
 			}
 		}
+
+		template<typename T>
+		static T GetDataValue(entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+		{
+			if (bIsSeqElement)
+			{
+				if constexpr (std::is_same_v<T, bool>) // std::vector<bool>
+				{
+					return instance.cast<std::vector<bool>::reference>();
+				}
+				else if constexpr (std::is_same_v<T, entt::meta_any>) // Enum
+				{
+					return instance; // NOTE: Here as_ref() is not needed to call as instance is already a reference
+				}
+				else
+				{
+					return instance.cast<T>();
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<T, entt::meta_any>) // Enum
+				{
+					return data.get(instance);
+				}
+				else
+				{
+					return data.get(instance).cast<T>();
+				}
+			}
+		}
+
 	}
 
-	U32 GetAggregatedDataID(entt::meta_data data);
+	struct DataSpec
+	{
+		entt::meta_data Data;
+		const char* DataName = nullptr;
+		// Setting instance references to mutable to make sure non-const version of as_ref() is always invoked
+		mutable entt::meta_any ComponentInstance;
+		mutable entt::meta_any Instance; // Can be component instance, element instance or struct instance
+
+		bool bIsStructSubdata = false;
+		bool bIsSeqElement = false;
+		I32 ElementIndex = -1;
+
+		DataSpec() = default;
+		// NOTE: Instances should not be const otherwise const version of as_ref() will be invoked, then they will become const references and cannot get modified directly
+		DataSpec(entt::meta_data data, entt::meta_any& compInstance, entt::meta_any& instance, bool isStructSubdata, bool isSeqElement)
+			: Data(data)
+			, DataName(ReflectionUtils::GetMetaObjectName(Data))
+			, ComponentInstance(compInstance.as_ref())
+			, Instance(instance.as_ref())
+			, bIsStructSubdata(isStructSubdata)
+			, bIsSeqElement(isSeqElement)
+		{}
+		DataSpec(const DataSpec& other)
+		{
+			DataName = other.DataName;
+			Data = other.Data;
+			Instance = other.Instance.as_ref();
+			ComponentInstance = other.ComponentInstance.as_ref();
+			bIsStructSubdata = other.bIsStructSubdata;
+			bIsSeqElement = other.bIsSeqElement;
+			ElementIndex = other.ElementIndex;
+		}
+		DataSpec& operator=(const DataSpec& other)
+		{
+			DataName = other.DataName;
+			Data = other.Data;
+			Instance = other.Instance.as_ref();
+			ComponentInstance = other.ComponentInstance.as_ref();
+			bIsStructSubdata = other.bIsStructSubdata;
+			bIsSeqElement = other.bIsSeqElement;
+			ElementIndex = other.ElementIndex;
+			return *this;
+		}
+
+		void Update(entt::meta_any& compInstance, entt::meta_any& instance, I32 elementIndex)
+		{
+			ComponentInstance = compInstance.as_ref();
+			Instance = instance.as_ref();
+			ElementIndex = elementIndex;
+		}
+
+		entt::meta_type GetType() const
+		{
+			if (bIsSeqElement) return Instance.type();
+			return Data.type();
+		}
+
+		entt::meta_any GetValue()
+		{
+			if (bIsSeqElement)
+			{
+				return Instance.as_ref(); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
+			}
+			else
+			{
+				return Data.get(Instance);
+			}
+		}
+
+		template<typename T>
+		T GetValue()
+		{
+			return Utils::GetDataValue<T>(Data, Instance, bIsSeqElement);
+		}
+
+		template<typename T>
+		void SetValue(T&& value)
+		{
+			if (bIsSeqElement)
+			{
+				if constexpr (std::is_same_v<T, bool&>)
+				{
+					Instance.cast<typename std::vector<bool>::reference>() = value;
+				}
+				else
+				{
+					Instance.cast<T>() = value;
+				}
+			}
+			else
+			{
+				Data.set(Instance, std::forward<T>(value));
+			}
+		}
+	};
+
+#ifndef DOCTEST_CONFIG_DISABLE
+	/** Used to track nested struct instance from component instance. */
+	struct DataStackSpec
+	{
+		entt::meta_data Data;
+		bool bIsSeqElement = false;
+		I32 ElementIndex = -1;
+
+		DataStackSpec(entt::meta_data data, bool isSeqElement, I32 elementIndex)
+			: Data(data)
+			, bIsSeqElement(isSeqElement)
+			, ElementIndex(elementIndex)
+		{}
+	};
+#endif
 
 	Ref<class DataWidget> ConstructBasicDataWidget(DataSpec& dataSpec, entt::meta_type type, bool bIsTest = false);
 
@@ -91,7 +239,7 @@ namespace ZeoEngine {
 			// Data name
 			bool bIsDataTreeExpanded = ImGui::TreeNodeEx(m_DataSpec.DataName, DefaultDataTreeNodeFlags);
 			// Data tooltip
-			ShowPropertyTooltip(m_DataSpec.Data);
+			Utils::ShowPropertyTooltip(m_DataSpec.Data);
 			// Switch to the right column
 			ImGui::TableNextColumn();
 			// Align widget width to the right side
@@ -122,7 +270,7 @@ namespace ZeoEngine {
 #ifndef DOCTEST_CONFIG_DISABLE
 		T GetTestDataValue(entt::registry& reg, entt::entity entity, const std::vector<DataStackSpec>& dataStack, I32 elementIndex)
 		{
-			auto compInstance = Reflection::GetComponent(entt::resolve(entt::type_hash<TestComponent>::value()), reg, entity);
+			auto compInstance = ReflectionUtils::GetComponent(entt::resolve(entt::type_hash<TestComponent>::value()), reg, entity);
 			entt::meta_any instance = compInstance.as_ref();
 			// Recursively get parent instance
 			for (const auto& spec : dataStack)
@@ -134,7 +282,7 @@ namespace ZeoEngine {
 				auto seqView = m_DataSpec.Data.get(instance).as_sequence_container();
 				instance = seqView[elementIndex];
 			}
-			return Reflection::GetDataValue<T>(m_DataSpec.Data, instance, m_DataSpec.bIsSeqElement);
+			return Utils::GetDataValue<T>(m_DataSpec.Data, instance, m_DataSpec.bIsSeqElement);
 		}
 #endif
 
@@ -192,13 +340,13 @@ namespace ZeoEngine {
 			if (!PreDraw(compInstance, instance, elementIndex)) return;
 
 			auto data = m_DataSpec.Data;
-			const auto dragSpeed = GetPropValue<float>(Reflection::DragSensitivity, data);
+			const auto dragSpeed = ReflectionUtils::GetPropertyValue<float>(Reflection::DragSensitivity, data);
 			const float dragSpeedValue = dragSpeed.value_or(1.0f);
-			const auto min = GetPropValue<CT>(Reflection::ClampMin, data);
+			const auto min = ReflectionUtils::GetPropertyValue<CT>(Reflection::ClampMin, data);
 			const auto minValue = min.value_or(m_DefaultMin);
-			const auto max = GetPropValue<CT>(Reflection::ClampMax, data);
+			const auto max = ReflectionUtils::GetPropertyValue<CT>(Reflection::ClampMax, data);
 			const auto maxValue = max.value_or(m_DefaultMax);
-			const ImGuiSliderFlags clampMode = DoesPropExist(Reflection::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
+			const ImGuiSliderFlags clampMode = ReflectionUtils::DoesPropertyExist(Reflection::ClampOnlyDuringDragging, data) ? 0 : ImGuiSliderFlags_AlwaysClamp;
 			void* valuePtr = nullptr;
 			if constexpr (N == 1)
 			{

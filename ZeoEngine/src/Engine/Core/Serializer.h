@@ -4,7 +4,6 @@
 #include <deque>
 
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Material.h"
 
@@ -159,15 +158,15 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				const auto dataName = GetMetaObjectName(data);
+				const char* dataName = ReflectionUtils::GetMetaObjectName(data);
 				const auto dataValue = data.get(instance).cast<T>();
 				if constexpr (std::is_same_v<T, U8>)
 				{
-					node[*dataName] = +dataValue;
+					node[dataName] = +dataValue;
 				}
 				else
 				{
-					node[*dataName] = dataValue;
+					node[dataName] = dataValue;
 				}
 			}
 		}

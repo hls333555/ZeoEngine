@@ -4,7 +4,6 @@
 
 #include "Engine/GameFramework/Entity.h"
 #include "Reflection/ComponentInspector.h"
-#include "Engine/Core/ReflectionHelper.h"
 
 namespace ZeoEngine {
 
@@ -32,7 +31,7 @@ namespace ZeoEngine {
 						// NOTE: This pair of brackets inside if statement are required for template argument expansion!
 						if ((ShouldIgnoreComponent<IgnoredComponents>(compId) || ...)) continue;
 						// Skip if there is no data registered
-						if (!DoesTypeContainData(compId)) continue;
+						if (!ReflectionUtils::DoesTypeContainData(compId)) continue;
 
 						m_ComponentInspectors.emplace_back(CreateScope<InspectorClass>(compId, entity));
 					}
