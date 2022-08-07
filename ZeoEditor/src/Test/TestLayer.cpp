@@ -7,14 +7,12 @@
 namespace ZeoEngine {
 
 	TestLayer::TestLayer()
-		: EngineLayer("Test")
+		: Layer("Test")
 	{
 	}
 
 	void TestLayer::OnAttach()
 	{
-		EngineLayer::OnAttach();
-
 		doctest::Context context;
 		context.run();
 	}

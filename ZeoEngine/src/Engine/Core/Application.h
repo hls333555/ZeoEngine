@@ -7,7 +7,6 @@
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Profile/BenchmarkTimer.h"
-#include "Engine/GameFramework/EngineLayer.h"
 #include "Engine/Profile/Profiler.h"
 
 int main(int argc, char** argv);

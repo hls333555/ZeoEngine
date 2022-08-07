@@ -3,6 +3,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include "Engine/Core/RandomEngine.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/TypeRegistry.h"
@@ -37,6 +38,7 @@ namespace ZeoEngine {
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
 		// TODO:
+		RandomEngine::Init();
 		Renderer::Init();
 		ScriptEngine::Init();
 		TypeRegistry::Init();

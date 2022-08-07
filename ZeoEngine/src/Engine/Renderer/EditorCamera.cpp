@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		if (!entity) return;
 
 		m_FocusTargetFocalPoint = entity.GetBounds().Origin;
-		m_FocusTargetDistance = entity.GetBounds().SphereRadius * 1.2f / sin(glm::radians(m_FOVy / 2.0f));
+		m_FocusTargetDistance = entity.GetBounds().SphereRadius / glm::sin(glm::radians(m_FOVy / 2.0f));
 		if (bIsTeleport)
 		{
 			m_FocalPoint = m_FocusTargetFocalPoint;

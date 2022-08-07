@@ -104,7 +104,7 @@ namespace ZeoEngine {
 		BoxSphereBounds(const Box& box)
 		{
 			box.GetCenterAndExtents(Origin, BoxExtent);
-			SphereRadius = (BoxExtent.x == BoxExtent.y && BoxExtent.x == BoxExtent.z) ? BoxExtent.x : glm::length(BoxExtent);
+			SphereRadius = glm::length(BoxExtent);
 		}
 
 		BoxSphereBounds(const Sphere& Sphere)

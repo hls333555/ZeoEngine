@@ -49,7 +49,7 @@ namespace ZeoEngine {
 		{
 			SetMaterialAsset(materialPreviewComp, Material::GetDefaultMaterial());
 		});
-		FocusContextEntity();
+		FocusContextEntity(true);
 	}
 
 	Entity MaterialEditor::CreatePreviewEntity(const Ref<Scene>& scene)
