@@ -14,9 +14,10 @@ namespace ZeoEngine {
 	{
 	public:
 		FileWatcher(const std::filesystem::path& directoryToWatch, std::chrono::duration<I32, std::milli> interval)
-			: m_DirectoryToWatch(directoryToWatch), m_Interval(interval)
+			: m_DirectoryToWatch(std::filesystem::canonical(directoryToWatch)) // Directory to watch must use absolute path!
+			, m_Interval(interval)
 		{
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
 			{
 				if (entry.is_directory()) continue;
 
