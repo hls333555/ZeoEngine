@@ -10,4 +10,10 @@ namespace ZeoEngine {
 		return Math::GetForwardVector(rotation);
 	}
 
+	void DirectionalLight::SetShadowType(ShadowType type)
+	{
+		Light::SetShadowType(type);
+
+		ScreenSpaceShadowPass::GetShadowShader()->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(type));
+	}
 }

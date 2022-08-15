@@ -492,6 +492,8 @@ namespace ZeoEngine {
 
 		const Ref<Shader>& GetShader() const { return MaterialAsset->GetShader(); }
 		void SetShader(const Ref<Shader>& shader) { MaterialAsset->SetShader(shader); }
+		U32 GetShaderVariant() const { return MaterialAsset->GetShaderVariant(); }
+		void SetShaderVariant(U32 ID) { MaterialAsset->SetShaderVariant(ID); }
 	};
 
 	struct BillboardComponent : public IComponent

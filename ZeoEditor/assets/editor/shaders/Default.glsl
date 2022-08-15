@@ -51,9 +51,10 @@ void main()
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;
 
+[macro](2)USE_NORMALMAPPING Material.UseNormalMapping
+
 #define MAX_POINT_LIGHTS 32
 #define MAX_SPOT_LIGHTS 32
-
 #define MAX_CASCADE_COUNT 4
 
 struct LightBase
@@ -105,7 +106,6 @@ layout (std140, binding = 3) uniform Light
 
 [Property]layout (std140, binding = 4) uniform Material
 {
-	bool bUseNormalMapping;
 	float Shininess;
 }u_Material;
 
@@ -130,7 +130,9 @@ layout (location = 5) in CameraInput v_CameraInput;
 layout (binding = 0) uniform sampler2D u_ScreenSpaceShadowMap;
 [Property]layout (binding = 1) uniform sampler2D u_DiffuseTexture;
 [Property]layout (binding = 2) uniform sampler2D u_SpecularTexture;
+#if USE_NORMALMAPPING
 [Property]layout (binding = 3) uniform sampler2D u_NormalTexture;
+#endif
 
 vec4 CalculateLightInternal(LightBase base, vec3 lightDirection, vec3 normal)
 {
@@ -205,21 +207,24 @@ vec4 CalculateSpotLight(SpotLight spotLight, vec3 normal)
 	}
 }
 
-vec3 GetFinalNormalWS(vec3 vertexNormal, vec3 vertexTangent, vec3 textureNormal)
+vec3 GetFinalNormalWS(vec3 vertexNormal, vec3 vertexTangent)
 {
 	const vec3 N = normalize(vertexNormal);
+#if USE_NORMALMAPPING
 	vec3 T = normalize(vertexTangent);
 	T = normalize(T - dot(T, N) * N); // Re-orthogonalize T with respect to N
 	const vec3 B = cross(N,T);
-	
 	const mat3 TBN = mat3(T, B, N);
-	return u_Material.bUseNormalMapping ? TBN * normalize(textureNormal * 2.0f - 1.0f) : N;
+	vec3 textureNormal = texture(u_NormalTexture, v_VertexInput.TexCoord).rgb;
+	return TBN * normalize(textureNormal * 2.0f - 1.0f);
+#else
+	return N;
+#endif
 }
 
 void main()
 {
-	vec3 textureNormal = texture(u_NormalTexture, v_VertexInput.TexCoord).rgb;
-	vec3 normalWS = GetFinalNormalWS(v_VertexInput.NormalWS, v_VertexInput.TangentWS, textureNormal);
+	vec3 normalWS = GetFinalNormalWS(v_VertexInput.NormalWS, v_VertexInput.TangentWS);
 
 	vec4 totalLight = CalculateDirectionalLight(normalWS);
 	for (int i = 0; i < u_NumPointLights; ++i)

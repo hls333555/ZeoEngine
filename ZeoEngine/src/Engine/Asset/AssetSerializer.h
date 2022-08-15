@@ -131,14 +131,12 @@ namespace ZeoEngine {
 	class MaterialAssetSerializer : public AssetSerializerBase
 	{
 	public:
-		void ReloadShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const;
+		void DeserializeShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const;
 
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
 		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
-
-		bool DeserializeImplInternal(const Ref<AssetMetadata>& metadata, const Ref<Material>& material, const YAML::Node& node, bool bIncludeComponentData) const;
 	};
 	
 }

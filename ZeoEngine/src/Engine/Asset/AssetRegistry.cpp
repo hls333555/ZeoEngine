@@ -129,7 +129,7 @@ namespace ZeoEngine {
 		const std::string temp = path.string();
 		if (temp.find(GetAssetRootDirectory()) != std::string::npos)
 		{
-			return std::filesystem::relative(path, GetAssetRootDirectory());
+			return std::filesystem::relative(path);
 		}
 		return path;
 	}
@@ -351,7 +351,8 @@ namespace ZeoEngine {
 			if (path.extension().string().c_str() != GetEngineAssetExtension())
 			{
 				path += GetEngineAssetExtension();
-				AssetLibrary::ReloadAsset(path);
+				// FileWatcher uses absolute path
+				AssetLibrary::ReloadAsset(GetRelativePath(path));
 			}
 			it = m_PendingModifiedAssets.erase(it);
 		}

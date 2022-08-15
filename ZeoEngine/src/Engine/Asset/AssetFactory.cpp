@@ -138,6 +138,7 @@ namespace ZeoEngine {
 		if (!mesh) return;
 
 		// Create dummy materials automatically
+		// TODO: Auto assign these to mesh asset
 		for (const auto& materialName : mesh->GetMaterialNames())
 		{
 			const auto materialPath = destPath.parent_path() / fmt::format("Mat_{0}{1}", materialName, AssetRegistry::GetEngineAssetExtension());
@@ -163,9 +164,7 @@ namespace ZeoEngine {
 
 	Ref<IAsset> MaterialAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
 	{
-		const auto material = CreateRef<Material>();
-		material->InitMaterialData(); // Called outside of ctor as it contains SharedFromThis()
-		return material;
+		return CreateRef<Material>();
 	}
 
 	const char* ShaderAssetFactory::GetAssetTemplatePath() const

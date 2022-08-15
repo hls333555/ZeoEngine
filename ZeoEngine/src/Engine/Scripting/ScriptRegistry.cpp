@@ -116,7 +116,7 @@ namespace ZeoEngine {
 
 	void ScriptRegistry::RegisterFunctions()
 	{
-#pragma region Name
+#pragma region Entity
 		ZE_ADD_INTERNAL_CALL(Entity_GetName);
 		ZE_ADD_INTERNAL_CALL(Entity_GetForwardVector);
 		ZE_ADD_INTERNAL_CALL(Entity_GetRightVector);

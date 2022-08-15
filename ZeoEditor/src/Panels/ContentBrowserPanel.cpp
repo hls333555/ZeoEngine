@@ -187,11 +187,8 @@ namespace ZeoEngine {
 				{
 					if (AssetRegistry::Get().GetAssetMetadata(inPath))
 					{
-						if (AssetLibrary::HasAsset(inPath))
-						{
-							const auto asset = AssetLibrary::LoadAsset<IAsset>(inPath);
-						   AssetManager::Get().SaveAsset(inPath, asset);
-						}
+						const auto asset = AssetLibrary::LoadAsset<IAsset>(inPath);
+						AssetManager::Get().SaveAsset(inPath, asset);
 					}
 				});
 			}

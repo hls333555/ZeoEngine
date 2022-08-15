@@ -406,40 +406,40 @@ namespace ZeoEngine {
 	{
 		if (!material) return;
 
-		for (const auto& uniform : material->GetDynamicBindableUniforms())
+		for (const auto& data : material->GetDynamicBindableData())
 		{
-			EvaluateSerializeData(node, uniform);
+			EvaluateSerializeData(node, data);
 		}
-		for (const auto& uniform : material->GetDynamicUniforms())
+		for (const auto& data : material->GetDynamicData())
 		{
-			EvaluateSerializeData(node, uniform);
+			EvaluateSerializeData(node, data);
 		}
 	}
 
-	void MaterialSerializer::EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& data)
 	{
-		switch (uniform->GetDataType())
+		switch (data->GetDataType())
 		{
 			case ShaderReflectionType::Bool:
-				SerializeData<bool>(node, uniform);
+				SerializeData<bool>(node, data);
 				break;
 			case ShaderReflectionType::Int:
-				SerializeData<I32>(node, uniform);
+				SerializeData<I32>(node, data);
 				break;
 			case ShaderReflectionType::Float:
-				SerializeData<float>(node, uniform);
+				SerializeData<float>(node, data);
 				break;
 			case ShaderReflectionType::Vec2:
-				SerializeData<Vec2>(node, uniform);
+				SerializeData<Vec2>(node, data);
 				break;
 			case ShaderReflectionType::Vec3:
-				SerializeData<Vec3>(node, uniform);
+				SerializeData<Vec3>(node, data);
 				break;
 			case ShaderReflectionType::Vec4:
-				SerializeData<Vec4>(node, uniform);
+				SerializeData<Vec4>(node, data);
 				break;
 			case ShaderReflectionType::Texture2D:
-				SerializeData<Ref<Texture2D>>(node, uniform);
+				SerializeData<Ref<Texture2D>>(node, data);
 				break;
 			default:
 				break;
@@ -450,52 +450,52 @@ namespace ZeoEngine {
 	{
 		if (!material) return;
 
-		for (const auto& uniform : material->GetDynamicBindableUniforms())
+		for (const auto& data : material->GetDynamicBindableData())
 		{
-			const auto& dataName = uniform->Name;
+			const auto& dataName = data->Name;
 			const auto& dataValue = node[dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
-				EvaluateDeserializeData(dataValue, uniform);
+				EvaluateDeserializeData(dataValue, data);
 			}
 		}
-		for (const auto& uniform : material->GetDynamicUniforms())
+		for (const auto& data : material->GetDynamicData())
 		{
-			const auto& dataName = uniform->Name;
+			const auto& dataName = data->Name;
 			const auto& dataValue = node[dataName];
 			// Evaluate serialized data only
 			if (dataValue)
 			{
-				EvaluateDeserializeData(dataValue, uniform);
+				EvaluateDeserializeData(dataValue, data);
 			}
 		}
 	}
 
-	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform)
+	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& data)
 	{
-		switch (uniform->GetDataType())
+		switch (data->GetDataType())
 		{
 			case ShaderReflectionType::Bool:
-				DeserializeData<bool>(node, uniform);
+				DeserializeData<bool>(node, data);
 				break;
 			case ShaderReflectionType::Int:
-				DeserializeData<I32>(node, uniform);
+				DeserializeData<I32>(node, data);
 				break;
 			case ShaderReflectionType::Float:
-				DeserializeData<float>(node, uniform);
+				DeserializeData<float>(node, data);
 				break;
 			case ShaderReflectionType::Vec2:
-				DeserializeData<Vec2>(node, uniform);
+				DeserializeData<Vec2>(node, data);
 				break;
 			case ShaderReflectionType::Vec3:
-				DeserializeData<Vec3>(node, uniform);
+				DeserializeData<Vec3>(node, data);
 				break;
 			case ShaderReflectionType::Vec4:
-				DeserializeData<Vec4>(node, uniform);
+				DeserializeData<Vec4>(node, data);
 				break;
 			case ShaderReflectionType::Texture2D:
-				DeserializeData<Ref<Texture2D>>(node, uniform);
+				DeserializeData<Ref<Texture2D>>(node, data);
 				break;
 			default:
 				break;

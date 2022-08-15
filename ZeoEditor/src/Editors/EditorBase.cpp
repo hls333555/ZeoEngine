@@ -27,7 +27,6 @@ namespace ZeoEngine {
 		m_EditorUIRenderer->OnAttach();
 
 		NewDefaultScene();
-		LoadAndApplyDefaultAsset();
 		m_SceneRenderer = CreateSceneRenderer();
 		if (m_SceneRenderer)
 		{

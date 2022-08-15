@@ -15,6 +15,8 @@ namespace ZeoEngine {
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
 
 		EditorBase::OnAttach();
+
+		LoadAndApplyDefaultAsset();
 	}
 
 	Scope<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()

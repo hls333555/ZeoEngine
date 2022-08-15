@@ -203,7 +203,7 @@ namespace ZeoEngine {
 		void Deserialize(const YAML::Node& node, const Ref<Material>& material);
 
 	private:
-		void EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform);
+		void EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
 
 		template<typename T>
 		void SerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const
@@ -213,7 +213,7 @@ namespace ZeoEngine {
 			node[dataName] = dataValue;
 		}
 
-		void EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform);
+		void EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
 
 		template<typename T>
 		void DeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const

@@ -21,7 +21,15 @@ namespace ZeoEngine {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
+		virtual void SetActiveRendererIDByID(U32 variantID) override;
+		virtual Ref<ShaderVariant> GetVariantByID(U32 ID) const override;
+		virtual bool IsVariantValid(U32 ID) const override;
+		virtual Ref<ShaderVariant> GetDefaultVariant() const override;
+
 		virtual bool ParseAndCompile() override;
+		virtual bool Compile(const Ref<ShaderVariant>& variant) override;
+		virtual bool GatherReflectionData(U32 variantID) override;
+
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, U32 count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -30,9 +38,11 @@ namespace ZeoEngine {
 		virtual void SetFloat4(const std::string& name, const Vec4& value) override;
 		virtual void SetMat4(const std::string& name, const Mat4& value) override;
 
-		virtual const std::vector<Scope<ShaderReflectionDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
-		virtual SizeT GetResourceCount() const override { return m_ResourceCount; }
-		virtual const std::unordered_map<U32, UniformBlockData>& GetUniformBlockDatas() const override { return m_UniformBlockDatas; }
+		virtual const std::vector<Scope<ShaderReflectionNonMacroDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
+		virtual const std::vector<Scope<ShaderReflectionMacroDataBase>>& GetShaderReflectionMacroData() const override { return m_ShaderReflectionMacroData; }
+		virtual const std::unordered_map<U32, SizeT>& GetUniformBlockSizes() const override { return m_UniformBlockSizes; }
+
+		virtual void ClearCache() const override;
 
 		static const char* GetCacheDirectory() { return "cache/shader/opengl"; }
 		static std::array<const char*, 8> GetCacheFileExtensions()
@@ -61,25 +71,31 @@ namespace ZeoEngine {
 		void UploadUniformMat4(const std::string& name, const Mat4& matrix);
 
 	private:
-		std::string ReadFile(const std::string& path);
-		std::unordered_map<GLenum, std::string> PreProcess(const std::string& src);
-		bool ParseProperties(GLenum stage, std::string& src);
+		void ClearData();
+		void ClearReflectionData();
 
-		bool Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
-		bool CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
-		bool CompileOrGetOpenGLBinaries();
-		void CreateProgram();
+		bool PreProcess(const std::string& src);
+		bool ParseMacros(GLenum stage, std::string& shaderSrc);
+		void EvaluateVariants(std::unordered_map<std::string, U32>& macros);
+		void EvaluateVariantsRecursively(const std::unordered_map<std::string, U32>& variants, std::unordered_map<std::string, U32>::iterator it, std::map<std::string, std::string>& variantDataRef);
+		bool ParseProperties(GLenum stage, std::string& shaderSrc);
 
-		void ClearReflectionCache();
+		std::string GetCachePath(U32 variantID, const char* cacheExtension) const;
+		bool CompileOrGetVulkanBinaries(const Ref<ShaderVariant>& variant);
+		bool CompileOrGetOpenGLBinaries(const Ref<ShaderVariant>& variant, std::unordered_map<GLenum, std::vector<U32>>& outOpenGLSPIRV) const;
+		bool CreateProgram(U32& outRendererID, const std::unordered_map<GLenum, std::vector<U32>>& openGLSPIRV);
+
+		U32 GetRendererIDByID(U32 variantID) const;
 		void Reflect(GLenum stage, const std::vector<U32>& shaderData);
-		void ReflectStructType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, U32 binding);
-		void ReflectType(const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, U32 binding, U32 offset, SizeT size);
+		void ReflectStructType(const std::string& bufferName, const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, U32 binding);
+		void ReflectType(const std::string& bufferName, const spirv_cross::Compiler& compiler, const spirv_cross::SPIRType& type, const std::string& name, U32 binding, U32 offset, SizeT size);
 
 		void FormatErrorMessage(GLenum stage, std::string& errorMsg);
 
 	private:
-		U32 m_RendererID;
+		U32 m_ActiveRendererID;
 		std::string m_ShaderResourcePath;
+		std::vector<Ref<ShaderVariant>> m_Variants;
 
 		/** Texture bindings used for reflection filtering */
 		std::unordered_set<U32> m_ReflectTexturePropertyBindings;
@@ -87,17 +103,16 @@ namespace ZeoEngine {
 		std::unordered_set<U32> m_ReflectUniformBufferPropertyBindings;
 		/** Map from uniform buffer binding to uniform buffer bool variable names. Used for bool reflection */
 		std::unordered_map<U32, std::unordered_set<std::string>> m_UniformBufferBoolVars;
+		/** Map from shader stage to its start line number */
 		std::unordered_map<GLenum, SizeT> m_ShaderSourceRelativeLineNums;
 
-		std::unordered_map<GLenum, std::vector<U32>> m_VulkanSPIRV;
-		std::unordered_map<GLenum, std::vector<U32>> m_OpenGLSPIRV;
+		/** Preprocessed shader sources, map from shader stage to source */
+		std::unordered_map<GLenum, std::string> m_ShaderSources;
 
-		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
-
-		std::vector<Scope<ShaderReflectionDataBase>> m_ShaderReflectionData;
-		SizeT m_ResourceCount = 0;
-		/** Map from uniform block binding to uniform buffer data */
-		std::unordered_map<U32, UniformBlockData> m_UniformBlockDatas;
+		std::vector<Scope<ShaderReflectionNonMacroDataBase>> m_ShaderReflectionData;
+		std::vector<Scope<ShaderReflectionMacroDataBase>> m_ShaderReflectionMacroData;
+		/** Map from uniform block binding to uniform buffer size */
+		std::unordered_map<U32, SizeT> m_UniformBlockSizes;
 
 	};
 

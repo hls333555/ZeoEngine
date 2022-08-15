@@ -280,6 +280,7 @@ namespace ZeoEngine {
 	}
 
 	Ref<FrameBuffer> ScreenSpaceShadowPass::s_FBO = nullptr;
+	Ref<ShaderInstance> ScreenSpaceShadowPass::s_ShadowShader = nullptr;
 
 	ScreenSpaceShadowPass::ScreenSpaceShadowPass(std::string name, bool bAutoActive)
 		: RenderQueuePass(std::move(name), bAutoActive)
@@ -288,8 +289,9 @@ namespace ZeoEngine {
 
 		RegisterBindableInput<FrameBuffer>("ShadowMap");
 		// NOTE: Bind shader after all its required bindings being bound properly!
-		// Or OpenGL warnings will keep poping up
-		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/ScreenSpaceShadow.glsl.zasset"));
+		// Or OpenGL warnings will keep popping up
+		s_ShadowShader = AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/ScreenSpaceShadow.glsl.zasset")->CreateInstance();
+		AddBindable(s_ShadowShader);
 		AddBindable(Depth::Resolve(Depth::State::ReadWrite));
 		AddBindable(TwoSided::Resolve(TwoSided::State::CullBack));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));

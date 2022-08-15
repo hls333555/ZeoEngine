@@ -90,6 +90,7 @@ namespace ZeoEngine {
 			.Data<nullptr, &MeshPreviewComponent::GetMaterials>("MaterialSlots", FixedSizeContainer, CustomElementName);
 
 		RegisterComponent<MaterialPreviewComponent>("Material Detail", Inherent, HideComponentHeader)
+			.Data<&MaterialPreviewComponent::SetShaderVariant, &MaterialPreviewComponent::GetShaderVariant>("ShaderVariant", HiddenInEditor)
 			.Data<&MaterialPreviewComponent::SetShader, &MaterialPreviewComponent::GetShader>("Shader");
 
 		RegisterEnum<LightComponent::LightType>()

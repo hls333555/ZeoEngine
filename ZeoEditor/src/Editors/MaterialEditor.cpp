@@ -32,6 +32,7 @@ namespace ZeoEngine {
 		{
 			SetMaterialAsset(materialPreviewComp, AssetLibrary::LoadAsset<Material>(path));
 		});
+		FocusContextEntity(true);
 	}
 
 	void MaterialEditor::SaveAsset(const std::filesystem::path& path)

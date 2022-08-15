@@ -203,23 +203,11 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region MaterialAssetSerializer
-	void MaterialAssetSerializer::ReloadShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const
-	{
-		const auto res = DeserializeAsset(metadata->Path);
-		if (!res) return;
-
-		const auto node = *res;
-		material->InitMaterialData();
-		DeserializeImplInternal(metadata, material, node, false);
-	}
-
 	void MaterialAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const auto material = std::dynamic_pointer_cast<Material>(asset);
-		// Serialize component data
 		ComponentSerializer cs;
 		cs.Serialize(node, MaterialPreviewComponent(material));
-		// Serialize shader uniform data
 		MaterialSerializer ms;
 		ms.Serialize(node, material);
 	}
@@ -227,29 +215,25 @@ namespace ZeoEngine {
 	bool MaterialAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const auto material = std::dynamic_pointer_cast<Material>(asset);
-		return DeserializeImplInternal(metadata, material, node, true);
+		ComponentSerializer cs;
+		cs.Deserialize(node, MaterialPreviewComponent(material));
+		return true;
 	}
 
 	void MaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
 	{
-		const auto material = std::dynamic_pointer_cast<Material>(asset);
-		material->InitMaterialData();
-		Deserialize(metadata, material, nullptr);
+		Deserialize(metadata, asset, nullptr);
 	}
 
-	bool MaterialAssetSerializer::DeserializeImplInternal(const Ref<AssetMetadata>& metadata, const Ref<Material>& material, const YAML::Node& node, bool bIncludeComponentData) const
+	void MaterialAssetSerializer::DeserializeShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const
 	{
-		// Deserialize component data
-		if (bIncludeComponentData)
-		{
-			ComponentSerializer cs;
-			cs.Deserialize(node, MaterialPreviewComponent(material));
-		}
-		// Deserialize shader uniform data
+		const auto res = DeserializeAsset(metadata->Path);
+		if (!res) return;
+
+		const auto node = *res;
 		MaterialSerializer ms;
 		ms.Deserialize(node, material);
-		material->ApplyUniformDatas();
-		return true;
+		material->ApplyDynamicData();
 	}
 #pragma endregion
 

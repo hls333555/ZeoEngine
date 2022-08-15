@@ -2,6 +2,9 @@
 
 #include <glm/glm.hpp>
 
+#include "Shader.h"
+#include "Engine/Renderer/RenderPass.h"
+
 namespace ZeoEngine {
 
 	class Camera;
@@ -29,7 +32,7 @@ namespace ZeoEngine {
 		bool IsCastShadow() const { return m_bCastShadow; }
 		void SetCastShadow(bool bCast) { m_bCastShadow = bCast; }
 		ShadowType GetShadowType() const { return m_ShadowType; }
-		void SetShadowType(ShadowType type) { m_ShadowType = type; }
+		virtual void SetShadowType(ShadowType type) { m_ShadowType = type; }
 		float GetDepthBias() const { return m_DepthBias; }
 		void SetDepthBias(float bias) { m_DepthBias = bias; }
 		float GetNormalBias() const { return m_NormalBias; }
@@ -64,6 +67,7 @@ namespace ZeoEngine {
 	class DirectionalLight : public Light
 	{
 	public:
+		virtual void SetShadowType(ShadowType type) override;
 		virtual U32 GetCascadeCount() const override { return m_CascadeCount; }
 		virtual void SetCascadeCount(U32 count) override { m_CascadeCount = count; }
 		virtual float GetCascadeBlendThreshold() const { return m_CascadeBlendThreshold; }

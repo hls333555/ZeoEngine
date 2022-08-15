@@ -122,7 +122,6 @@ namespace ZeoEngine {
 		const auto direction = directionalLight->CalculateDirection(rotation);
 		m_LightBuffer.DirectionalLightBuffer.Direction = direction;
 		m_LightBuffer.DirectionalLightBuffer.bCastShadow = directionalLight->IsCastShadow();
-		m_LightBuffer.DirectionalLightBuffer.ShadowType = static_cast<I32>(directionalLight->GetShadowType());
 		m_LightBuffer.DirectionalLightBuffer.DepthBias = directionalLight->GetDepthBias();
 		m_LightBuffer.DirectionalLightBuffer.NormalBias = directionalLight->GetNormalBias();
 		m_LightBuffer.DirectionalLightBuffer.FilterSize = directionalLight->GetFilterSize();
@@ -141,7 +140,6 @@ namespace ZeoEngine {
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Position = position;
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = pointLight->GetRange();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = pointLight->IsCastShadow();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].ShadowType = static_cast<I32>(pointLight->GetShadowType());
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = pointLight->GetDepthBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = pointLight->GetNormalBias();
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].LightSize = pointLight->GetLightSize();
@@ -157,7 +155,6 @@ namespace ZeoEngine {
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].ShadowType = static_cast<I32>(spotLight->GetShadowType());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = spotLight->GetLightSize();
 		++m_LightBuffer.NumSpotLights;

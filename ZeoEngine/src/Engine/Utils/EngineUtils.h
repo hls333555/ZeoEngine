@@ -52,6 +52,18 @@ namespace ZeoEngine {
 			return tokens;
 		}
 
+		static std::optional<int> StringToInt(const std::string& str)
+		{
+			try
+			{
+				return std::stoi(str);
+			}
+			catch (const std::exception&)
+			{
+				return {};
+			}
+		}
+
 		static std::optional<float> StringToFloat(const std::string& str)
 		{
 			try

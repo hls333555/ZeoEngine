@@ -42,6 +42,8 @@ void main()
 
 layout(location = 0) out vec4 o_Color;
 
+[macro](3)SHADOW_TYPE
+
 #define MAX_POINT_LIGHTS 32
 #define MAX_SPOT_LIGHTS 32
 
@@ -124,7 +126,6 @@ struct LightBase
 	vec4 Color;
 	float Intensity;
 	bool bCastShadow;
-	int ShadowType;
 	float DepthBias;
 	float NormalBias;
 	float FilterSize;
@@ -386,19 +387,17 @@ float SampleShadowCascade(vec3 shadowCoords, vec3 texCoordDX, vec3 texCoordDY, i
 
     shadowCoords.z = clamp(shadowCoords.z - bias, 0.0f, 1.0f); // clamp to avoid buggy results at infinity
 
-	switch (u_DirectionalLight.Base.ShadowType)
-	{
-		case 0:
-			return SampleShadowMapHardShadow_DirectionalLight(shadowCoords, cascadeIndex);
-		case 1:
-            #if USE_OPTIMIZED_PCF
-			    return SampleShadowMapOptimizedPCF_DirectionalLight(shadowCoords, cascadeIndex, texelSize, receiverPlaneDepthBias);
-            #else
-			    return SampleShadowMapRandomDiscPCF_DirectionalLight(shadowCoords, cascadeIndex, rotateMatrix, texelSize, receiverPlaneDepthBias);
-            #endif
-		case 2:
-			return SampleShadowMapPCSS_DirectionalLight(shadowCoords, cascadeIndex, rotateMatrix, texelSize, receiverPlaneDepthBias);
-	}
+    #if SHADOW_TYPE == 1
+        #if USE_OPTIMIZED_PCF
+			return SampleShadowMapOptimizedPCF_DirectionalLight(shadowCoords, cascadeIndex, texelSize, receiverPlaneDepthBias);
+        #else
+			return SampleShadowMapRandomDiscPCF_DirectionalLight(shadowCoords, cascadeIndex, rotateMatrix, texelSize, receiverPlaneDepthBias);
+        #endif
+    #elif SHADOW_TYPE == 2
+        return SampleShadowMapPCSS_DirectionalLight(shadowCoords, cascadeIndex, rotateMatrix, texelSize, receiverPlaneDepthBias);
+    #else
+        return SampleShadowMapHardShadow_DirectionalLight(shadowCoords, cascadeIndex);
+    #endif
 }
 
 vec3 ShadowVisibility(vec3 normal)
