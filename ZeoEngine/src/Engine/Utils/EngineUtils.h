@@ -8,6 +8,7 @@ namespace ZeoEngine {
 	
 	class SceneRenderer;
 	class Scene;
+	class RenderPass;
 
 	class EngineUtils
 	{
@@ -76,7 +77,14 @@ namespace ZeoEngine {
 			}
 		}
 
-		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& sceneContext);
+		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& scene);
+
+		template<typename T>
+		static T* GetRenderPassFromContext(const Ref<Scene>& sceneContext, const std::string& passName)
+		{
+			const auto sceneRenderer = GetSceneRendererFromContext(sceneContext);
+			return sceneRenderer->GetRenderGraph().GetRenderPass<T>(passName);
+		}
 
 	};
 

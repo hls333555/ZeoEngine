@@ -27,7 +27,26 @@ namespace ZeoEngine {
 		void OnViewportResize(U32 width, U32 height) const;
 
 		void ToggleRenderPassActive(const std::string& passName, bool bActive);
-		RenderQueuePass* GetRenderQueuePass(const std::string& passName) const;
+
+		template<typename T>
+		T* GetRenderPass(const std::string& passName) const
+		{
+			for (const auto& pass : m_Passes)
+			{
+				if (pass->GetName() == passName)
+				{
+					T* outPass = dynamic_cast<T*>(pass.get());
+					if (!outPass)
+					{
+						ZE_CORE_ERROR("Failed to get render pass {0} with invalid type!", passName);
+					}
+					return outPass;
+				}
+			}
+
+			ZE_CORE_ERROR("Failed to find render pass with unknown name: {0}!", passName);
+			return nullptr;
+		}
 
 	protected:
 		constexpr const char* GetBackFrameBufferName() const { return "BackFrameBuffer"; }

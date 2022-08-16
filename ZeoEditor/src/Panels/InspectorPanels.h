@@ -84,6 +84,8 @@ namespace ZeoEngine {
 				m_ComponentInspectors[0]->ProcessComponent();
 			}
 			ImGui::PopID();
+
+			ImGui::Separator();
 		}
 
 		void MarkComponentInspectorsDirty() { m_bIsComponentInspectorsDirty = true; }

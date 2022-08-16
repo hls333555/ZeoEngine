@@ -272,22 +272,22 @@ namespace ZeoEngine {
 		return sphere;
 	}
 
-	void LightComponentHelper::InitLight()
+	void LightComponentHelper::InitLight() const
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& billboardComp = GetOwnerEntity()->GetComponent<BillboardComponent>();
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:
-				lightComp.LightSource = CreateRef<DirectionalLight>();
+				lightComp.LightSource = CreateRef<DirectionalLight>(GetOwnerEntity()->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
-				lightComp.LightSource = CreateRef<PointLight>();
+				lightComp.LightSource = CreateRef<PointLight>(GetOwnerEntity()->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
-				lightComp.LightSource = CreateRef<SpotLight>();
+				lightComp.LightSource = CreateRef<SpotLight>(GetOwnerEntity()->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/SpotLight.png.zasset");
 				break;
 			default:

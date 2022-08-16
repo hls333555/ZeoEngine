@@ -7,11 +7,15 @@
 
 namespace ZeoEngine {
 
+	class Scene;
+	class ShaderInstance;
 	class Camera;
 
 	class Light
 	{
 	public:
+		explicit Light(const Ref<Scene>& scene)
+			: m_Scene(scene) {}
 		virtual ~Light() = default;
 
 		enum class ShadowType
@@ -52,6 +56,9 @@ namespace ZeoEngine {
 
 		Vec3 CalculateDirection(const Vec3& rotation) const;
 
+	protected:
+		Ref<Scene> GetScene() const { return m_Scene.lock(); }
+
 	private:
 		Vec4 m_Color{ 1.0f };
 		float m_Intensity = 1.0f;
@@ -62,10 +69,14 @@ namespace ZeoEngine {
 		float m_NormalBias = 30.0f;
 		float m_FilterSize = 20.0f;
 		float m_LightSize = 150.0f;
+
+		Weak<Scene> m_Scene;
 	};
 
 	class DirectionalLight : public Light
 	{
+		using Light::Light;
+
 	public:
 		virtual void SetShadowType(ShadowType type) override;
 		virtual U32 GetCascadeCount() const override { return m_CascadeCount; }
@@ -86,10 +97,13 @@ namespace ZeoEngine {
 
 	class PointLight : public Light
 	{
+		using Light::Light;
 	};
 
 	class SpotLight : public PointLight
 	{
+		using PointLight::PointLight;
+
 	public:
 		virtual float GetCutoff() const override { return m_CutoffAngle; }
 		virtual void SetCutoff(float cutoff) override { m_CutoffAngle = cutoff; }

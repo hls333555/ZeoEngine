@@ -179,14 +179,14 @@ namespace ZeoEngine {
 		explicit ScreenSpaceShadowPass(std::string name, bool bAutoActive = true);
 
 		static Ref<FrameBuffer> GetShadowFrameBuffer() { return s_FBO; }
-		static Ref<class ShaderInstance> GetShadowShader() { return s_ShadowShader; }
+		Ref<class ShaderInstance> GetShadowShader() const { return m_ShadowShader; }
 
 	private:
 		void CreateShadowBuffer();
 
 	private:
-		static Ref<FrameBuffer> s_FBO;
-		static Ref<ShaderInstance> s_ShadowShader;
+		static Ref<FrameBuffer> s_FBO; // TODO: Remove or change to non-static one
+		Ref<ShaderInstance> m_ShadowShader;
 	};
 
 	class OpaqueRenderPass : public RenderQueuePass

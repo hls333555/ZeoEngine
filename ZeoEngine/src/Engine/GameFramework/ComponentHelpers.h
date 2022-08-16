@@ -146,7 +146,7 @@ namespace ZeoEngine {
 		virtual void PostDataDeserialize(U32 dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
-		void InitLight();
+		void InitLight() const;
 	};
 
 }

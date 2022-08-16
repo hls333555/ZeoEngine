@@ -44,10 +44,7 @@ namespace ZeoEngine {
 
 	void RenderStep::LinkRenderQueuePass()
 	{
-		const auto& sceneRenderer = EngineUtils::GetSceneRendererFromContext(m_SceneContext.lock());
-		ZE_CORE_ASSERT(sceneRenderer);
-
-		m_RenderQueuePass = sceneRenderer->GetRenderGraph().GetRenderQueuePass(m_RenderQueuePassName);
+		m_RenderQueuePass = EngineUtils::GetRenderPassFromContext<RenderQueuePass>(m_SceneContext.lock(), m_RenderQueuePassName);
 	}
 
 	void RenderStep::Submit(const Drawable& drawable)
