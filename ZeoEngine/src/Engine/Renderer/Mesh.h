@@ -71,6 +71,7 @@ namespace ZeoEngine {
 		U32 GetMeshCount() const { return static_cast<U32>(m_Entries.size()); }
 
 		auto& GetDefaultMaterials() { return m_MaterialSlots; }
+		void SetDefaultMaterial(U32 index, const Ref<Material>& material);
 		const auto& GetMaterialNames() const { return m_MaterialNames; }
 		U32 GetMaterialCount() const { return static_cast<U32>(m_MaterialSlots.size()); }
 

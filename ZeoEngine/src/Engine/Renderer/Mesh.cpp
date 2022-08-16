@@ -80,6 +80,16 @@ namespace ZeoEngine {
 		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Plane.fbx.zasset");
 	}
 
+	void Mesh::SetDefaultMaterial(U32 index, const Ref<Material>& material)
+	{
+		if (index < 0 || index >= m_MaterialSlots.size()) return;
+
+		const auto& oldMaterial = m_MaterialSlots[index];
+		if (material == oldMaterial) return;
+
+		m_MaterialSlots[index] = material;
+	}
+
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene)
 	{
 		m_VAO = VertexArray::Create();

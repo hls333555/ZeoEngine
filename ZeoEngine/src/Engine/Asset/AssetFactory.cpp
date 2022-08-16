@@ -138,15 +138,17 @@ namespace ZeoEngine {
 		if (!mesh) return;
 
 		// Create dummy materials automatically
-		// TODO: Auto assign these to mesh asset
-		for (const auto& materialName : mesh->GetMaterialNames())
+		const auto& materialNames = mesh->GetMaterialNames();
+		for (SizeT i = 0; i < materialNames.size(); ++i)
 		{
-			const auto materialPath = destPath.parent_path() / fmt::format("Mat_{0}{1}", materialName, AssetRegistry::GetEngineAssetExtension());
+			const auto materialPath = destPath.parent_path() / fmt::format("Mat_{0}{1}", materialNames[i], AssetRegistry::GetEngineAssetExtension());
 			if (!PathUtils::Exists(materialPath))
 			{
 				if (AssetManager::Get().CreateAssetFile(Material::TypeID(), materialPath))
 				{
 					AssetRegistry::Get().OnPathCreated(materialPath, true);
+					// Apply material to mesh
+					mesh->SetDefaultMaterial(static_cast<U32>(i), AssetLibrary::LoadAsset<Material>(materialPath));
 				}
 			}
 		}
