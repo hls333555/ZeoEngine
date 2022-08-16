@@ -336,6 +336,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnAssetModified(const std::filesystem::path& path)
 	{
+		// We should not process reloading on a separate thread as rendering may break
 		m_PendingModifiedAssets.emplace(path);
 	}
 

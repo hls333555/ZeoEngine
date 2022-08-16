@@ -31,30 +31,34 @@ namespace ZeoEngine {
 
 		~FileWatcher()
 		{
-			Stop();
+			{
+				std::lock_guard<std::mutex> lock(m_Mutex);
+				m_bIsRunning = false;
+			}
+			m_CV.notify_one();
 		}
 		
 		void Start()
 		{
-			m_bIsRunning = true;
 			m_FileWatcherThread = CreateScope<std::thread>(&FileWatcher::Execute, this);
 			m_FileWatcherThread->detach();
 		}
 
-		void Stop()
+	private:
+		// https://stackoverflow.com/a/52611091/13756224
+		// Returns false if m_bIsRunning = false
+		template<class Duration>
+		bool WaitFor(Duration duration)
 		{
-			m_bIsRunning = false;
+			std::unique_lock<std::mutex> lock(m_Mutex);
+			return !m_CV.wait_for(lock, duration, [this]() { return !m_bIsRunning; });
 		}
 
-	private:
 		/** Monitor "m_DirectoryToWatch" for changes and in case of a change execute the delegate. */
 		void Execute()
 		{
-			while (m_bIsRunning)
+			while (WaitFor(m_Interval))
 			{
-				// Wait for several milliseconds
-				std::this_thread::sleep_for(m_Interval);
-
 				auto it = m_WatchedFiles.begin();
 				while (it != m_WatchedFiles.end())
 				{
@@ -113,6 +117,8 @@ namespace ZeoEngine {
 		/** A record of files from the base directory to their last modification time */
 		std::unordered_map<std::filesystem::path, std::filesystem::file_time_type> m_WatchedFiles;
 
+		mutable std::mutex m_Mutex;
+		mutable std::condition_variable m_CV;
 		bool m_bIsRunning = true;
 		Scope<std::thread> m_FileWatcherThread;
 
