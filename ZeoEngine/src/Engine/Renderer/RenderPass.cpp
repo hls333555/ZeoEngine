@@ -257,7 +257,7 @@ namespace ZeoEngine {
 	{
 		CreateDepthBuffer();
 
-		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/ShadowMap.glsl.zasset"));
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/shaders/ShadowMap.glsl.zasset"));
 		// Front face culling can perfectly solve Shadow Acne and Peter Panning artifacts but it will have issues with thin objects
 		//AddBindable(TwoSided::Resolve(TwoSided::State::CullFront));
 		// Enable depth clamping so that the shadow maps keep from moving through objects which causes shadows to disappear
@@ -360,7 +360,7 @@ namespace ZeoEngine {
 		gridUniformBuffer->SetData(&gridBuffer);
 
 		AddBindable(gridUniformBuffer);
-		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/Grid.glsl.zasset"));
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/shaders/Grid.glsl.zasset"));
 		AddBindable(Depth::Resolve(Depth::State::ReadOnly));
 		AddBindable(TwoSided::Resolve(TwoSided::State::Disable));
 
@@ -382,7 +382,7 @@ namespace ZeoEngine {
 		: FullscreenPass(std::move(name), bAutoActive)
 	{
 		m_SceneBufferIndex = RegisterBindableInput<FrameBuffer>("SceneTexture");
-		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/PostProcessing.glsl.zasset"));
+		AddBindable(AssetLibrary::LoadAsset<Shader>("assets/shaders/PostProcessing.glsl.zasset"));
 		AddBindable(Clear::Resolve(Clear::State::ClearColorDepthStencil));
 
 		RegisterInput(RenderPassBufferInput<FrameBuffer>::Create("BackFrameBuffer", m_FBO));

@@ -219,8 +219,11 @@ namespace ZeoEngine {
 	void AssetBrowserPanelBase::DrawDirectoryNavigator()
 	{
 		I32 i = 0;
+		const std::filesystem::path projectName = AssetRegistry::GetProjectName();
 		for (const auto& parentFolder : m_SelectedDirectory)
 		{
+			if (parentFolder == projectName) continue;
+
 			ImGui::SameLine(0.0f, 0.0f);
 			if (ImGui::TransparentSmallButton(parentFolder.string().c_str()))
 			{
@@ -229,6 +232,8 @@ namespace ZeoEngine {
 				for (const auto& parentFolder2 : m_SelectedDirectory)
 				{
 					jumpToDirectory /= parentFolder2;
+					if (parentFolder2 == projectName) continue;
+
 					if (j++ == i) break;
 				}
 				m_SelectedDirectory = std::move(jumpToDirectory);

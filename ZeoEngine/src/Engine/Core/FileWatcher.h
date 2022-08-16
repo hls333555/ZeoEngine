@@ -13,15 +13,19 @@ namespace ZeoEngine {
 	class FileWatcher
 	{
 	public:
-		FileWatcher(const std::filesystem::path& directoryToWatch, std::chrono::duration<I32, std::milli> interval)
-			: m_DirectoryToWatch(std::filesystem::canonical(directoryToWatch)) // Directory to watch must use absolute path!
+		// Directory to watch must use absolute path!
+		FileWatcher(std::vector<std::filesystem::path> directoriesToWatch, std::chrono::duration<I32, std::milli> interval)
+			: m_DirectoriesToWatch(std::move(directoriesToWatch))
 			, m_Interval(interval)
 		{
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
+			for (const auto& directoryToWatch : m_DirectoriesToWatch)
 			{
-				if (entry.is_directory()) continue;
+				for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
+				{
+					if (entry.is_directory()) continue;
 
-				m_WatchedFiles[entry.path()] = std::filesystem::last_write_time(entry);
+					m_WatchedFiles[entry.path()] = std::filesystem::last_write_time(entry);
+				}
 			}
 
 			ZE_CORE_TRACE("File watcher initialized");
@@ -74,29 +78,32 @@ namespace ZeoEngine {
 					}
 				}
 
-				if (std::filesystem::exists(m_DirectoryToWatch))
+				for (const auto& directoryToWatch : m_DirectoriesToWatch)
 				{
-					// Check if a file was created or modified
-					for (const auto& entry : std::filesystem::recursive_directory_iterator(m_DirectoryToWatch))
+					if (std::filesystem::exists(directoryToWatch))
 					{
-						if (entry.is_directory()) continue;
-
-						auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
-
-						auto filePath = entry.path();
-						// File creation
-						if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
+						// Check if a file was created or modified
+						for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
 						{
-							m_WatchedFiles[filePath] = currentFileLastWriteTime;
-							m_OnFileAddedDel.publish(filePath);
-						}
-						// File modification
-						else
-						{
-							if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
+							if (entry.is_directory()) continue;
+
+							auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
+
+							auto filePath = entry.path();
+							// File creation
+							if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
 							{
 								m_WatchedFiles[filePath] = currentFileLastWriteTime;
-								m_OnFileModifiedDel.publish(filePath);
+								m_OnFileAddedDel.publish(filePath);
+							}
+							// File modification
+							else
+							{
+								if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
+								{
+									m_WatchedFiles[filePath] = currentFileLastWriteTime;
+									m_OnFileModifiedDel.publish(filePath);
+								}
 							}
 						}
 					}
@@ -110,7 +117,7 @@ namespace ZeoEngine {
 		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
 
 	private:
-		std::filesystem::path m_DirectoryToWatch;
+		std::vector<std::filesystem::path> m_DirectoriesToWatch;
 		/** Time interval at which we check the base folder for changes */
 		std::chrono::duration<I32, std::milli> m_Interval;
 

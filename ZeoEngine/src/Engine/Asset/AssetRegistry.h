@@ -82,9 +82,10 @@ namespace ZeoEngine {
 		}
 
 		// TODO: Move to other file
-		static constexpr const char* GetAssetRootDirectory() { return "assets"; } // TODO: Change to project directory
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
-		static constexpr const char* GetEditorRootDirectory() { return "assets/editor"; } // TODO:
+		static constexpr const char* GetEditorRootDirectory() { return "assets"; }
+		static constexpr const char* GetProjectName() { return "SandboxProject"; }
+		static constexpr const char* GetAssetRootDirectory() { return "SandboxProject/Assets"; } // TODO: This directory must exist
 		static constexpr const char* GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
 		static constexpr const char* GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
 
@@ -170,7 +171,7 @@ namespace ZeoEngine {
 	private:
 		void Init();
 
-		void ConstructPathTree();
+		void ConstructPathTree(const std::filesystem::path& rootDirectory);
 		void ConstructPathTreeRecursively(const std::filesystem::path& baseDirectory);
 
 		/**

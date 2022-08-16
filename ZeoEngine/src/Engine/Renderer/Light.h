@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 
-#include "Shader.h"
 #include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
@@ -81,8 +80,8 @@ namespace ZeoEngine {
 		virtual void SetShadowType(ShadowType type) override;
 		virtual U32 GetCascadeCount() const override { return m_CascadeCount; }
 		virtual void SetCascadeCount(U32 count) override { m_CascadeCount = count; }
-		virtual float GetCascadeBlendThreshold() const { return m_CascadeBlendThreshold; }
-		virtual void SetCascadeBlendThreshold(float threshold) { m_CascadeBlendThreshold = threshold; }
+		virtual float GetCascadeBlendThreshold() const override { return m_CascadeBlendThreshold; }
+		virtual void SetCascadeBlendThreshold(float threshold) override { m_CascadeBlendThreshold = threshold; }
 		virtual float GetMaxShadowDistance() override { return m_MaxShadowDistance; }
 		virtual void SetMaxShadowDistance(float distance) override { m_MaxShadowDistance = distance; }
 		virtual float GetCascadeSplitLambda() override { return m_CascadeSplitLambda; }

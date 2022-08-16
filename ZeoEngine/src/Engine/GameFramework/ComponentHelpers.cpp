@@ -44,7 +44,7 @@ namespace ZeoEngine {
 	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/Camera.png.zasset");
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraComponentHelper::OnComponentDestroy()
@@ -280,15 +280,15 @@ namespace ZeoEngine {
 		{
 			case LightComponent::LightType::DirectionalLight:
 				lightComp.LightSource = CreateRef<DirectionalLight>(GetOwnerEntity()->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/DirectionalLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
 				lightComp.LightSource = CreateRef<PointLight>(GetOwnerEntity()->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/PointLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
 				lightComp.LightSource = CreateRef<SpotLight>(GetOwnerEntity()->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/SpotLight.png.zasset");
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

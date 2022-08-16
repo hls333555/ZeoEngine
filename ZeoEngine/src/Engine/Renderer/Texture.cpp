@@ -68,7 +68,7 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> Texture2D::GetCheckerboardTexture()
 	{
-		return AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/Checkerboard.png.zasset");
+		return AssetLibrary::LoadAsset<Texture2D>("assets/textures/Checkerboard.png.zasset");
 	}
 
 	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)

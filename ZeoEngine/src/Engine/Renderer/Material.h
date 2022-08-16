@@ -265,7 +265,7 @@ namespace ZeoEngine {
 		Material(Material&&) = default; // Defined as RenderTechnique cannot be copied
 		virtual ~Material();
 
-		static constexpr const char* GetTemplatePath() { return "assets/editor/materials/NewMaterial.zasset"; }
+		static constexpr const char* GetTemplatePath() { return "assets/materials/NewMaterial.zasset"; }
 		static Ref<Material> GetDefaultMaterial();
 
 		const Ref<Shader>& GetShader() const { return m_ShaderInstance->GetShader(); }

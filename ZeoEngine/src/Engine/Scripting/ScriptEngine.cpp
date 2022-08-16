@@ -94,6 +94,9 @@ namespace ZeoEngine {
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 
+		MonoAssembly* AppAssembly = nullptr;
+		MonoImage* AppAssemblyImage = nullptr;
+
 		ScriptClass EntityClass;
 
 		Ref<Scene> SceneContext;
@@ -110,9 +113,10 @@ namespace ZeoEngine {
 
 		InitMono();
 		LoadAssembly("resources/scripts/ZeoEngine-ScriptCore.dll");
-		LoadAssemblyClasses(s_Data->CoreAssembly);
+		LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");
+		LoadAssemblyClasses();
 		ScriptRegistry::RegisterFunctions();
-		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity");
+		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
 
 #if Test
 		Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
@@ -182,6 +186,12 @@ namespace ZeoEngine {
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 	}
 
+	void ScriptEngine::LoadAppAssembly(const std::string& path)
+	{
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(path);
+		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	}
+
 	void ScriptEngine::OnRuntimeStart(Ref<Scene> scene)
 	{
 		s_Data->SceneContext = std::move(scene);
@@ -238,25 +248,24 @@ namespace ZeoEngine {
 		return s_Data->EntityClasses;
 	}
 
-	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	void ScriptEngine::LoadAssemblyClasses()
 	{
 		s_Data->EntityClasses.clear();
 
-		MonoImage* image = mono_assembly_get_image(assembly);
-		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
 		I32 numTypes = mono_table_info_get_rows(typeDefinitionsTable);
-		MonoClass* entityClass = mono_class_from_name(image, "ZeoEngine", "Entity");
+		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "ZeoEngine", "Entity");
 
 		for (I32 i = 0; i < numTypes; i++)
 		{
 			U32 cols[MONO_TYPEDEF_SIZE];
 			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
 
-			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 			std::string fullName = strlen(nameSpace) ? fmt::format("{}.{}", nameSpace, name) : name;
 
-			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
 			if (monoClass == entityClass) continue;
 
 			bool bIsEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
@@ -274,10 +283,10 @@ namespace ZeoEngine {
 		return instance;
 	}
 
-	ScriptClass::ScriptClass(std::string nameSpace, std::string className)
+	ScriptClass::ScriptClass(std::string nameSpace, std::string className, bool bIsCore)
 		: m_Namespace(std::move(nameSpace)), m_ClassName(std::move(className))
 	{
-		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, m_Namespace.c_str(), m_ClassName.c_str());
+		m_MonoClass = mono_class_from_name(bIsCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, m_Namespace.c_str(), m_ClassName.c_str());
 	}
 
 	MonoObject* ScriptClass::Instantiate() const

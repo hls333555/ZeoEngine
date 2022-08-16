@@ -57,7 +57,7 @@ namespace ZeoEngine {
 			m_PrimitiveBuffer.QuadVAO->SetIndexBuffer(quadIBO);
 			delete[] quadIndices;
 
-			m_PrimitiveBuffer.QuadShader = AssetLibrary::LoadAsset<Shader>("assets/editor/shaders/Quad.glsl.zasset");
+			m_PrimitiveBuffer.QuadShader = AssetLibrary::LoadAsset<Shader>("assets/shaders/Quad.glsl.zasset");
 		}
 
 		// Generate a 1x1 white texture to be used by flat color

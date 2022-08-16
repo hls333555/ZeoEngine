@@ -76,23 +76,26 @@ namespace ZeoEngine {
 
 	void AssetRegistry::Init()
 	{
-		m_FileWatcher = CreateScope<FileWatcher>(GetAssetRootDirectory(), std::chrono::duration<I32, std::milli>(1000));
+		std::vector<std::filesystem::path> directoriesToWatch;
+		directoriesToWatch.emplace_back(std::filesystem::canonical(GetEditorRootDirectory()));
+		directoriesToWatch.emplace_back(std::filesystem::canonical(GetAssetRootDirectory()));
+		m_FileWatcher = CreateScope<FileWatcher>(std::move(directoriesToWatch), std::chrono::duration<I32, std::milli>(1000));
 		m_FileWatcher->m_OnFileModified.connect<&AssetRegistry::OnAssetModified>(this);
-		ConstructPathTree();
+
+		Timer timer;
+		ConstructPathTree(GetEditorRootDirectory());
+		ConstructPathTree(GetAssetRootDirectory());
+		ZE_CORE_WARN("Path tree construction took {0} ms", timer.ElapsedMillis());
 	}
 
-	void AssetRegistry::ConstructPathTree()
+	void AssetRegistry::ConstructPathTree(const std::filesystem::path& rootDirectory)
 	{
-		Timer timer;
+		m_PathTree.emplace_back(std::make_pair(rootDirectory, std::vector<std::filesystem::path>{}));
+		m_PathMetadatas[rootDirectory] = CreateRef<DirectoryMetadata>(rootDirectory);
 
-		m_PathTree.emplace_back(std::make_pair(GetAssetRootDirectory(), std::vector<std::filesystem::path>{}));
-		m_PathMetadatas[GetAssetRootDirectory()] = CreateRef<DirectoryMetadata>(GetAssetRootDirectory());
-
-		ConstructPathTreeRecursively(GetAssetRootDirectory());
+		ConstructPathTreeRecursively(rootDirectory);
 
 		SortPathTree();
-
-		ZE_CORE_WARN("Path tree construction took {0} ms", timer.ElapsedMillis());
 	}
 
 	void AssetRegistry::ConstructPathTreeRecursively(const std::filesystem::path& baseDirectory)

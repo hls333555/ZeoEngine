@@ -173,8 +173,8 @@ namespace ZeoEngine {
 
 		Ref<class ShaderInstance> CreateInstance();
 
-		static constexpr const char* GetTemplatePath() { return "assets/editor/shaders/NewShader.glsl.zasset"; }
-		static constexpr const char* GetResourceTemplatePath() { return "assets/editor/shaders/NewShader.glsl"; }
+		static constexpr const char* GetTemplatePath() { return "assets/shaders/NewShader.glsl.zasset"; }
+		static constexpr const char* GetResourceTemplatePath() { return "assets/shaders/NewShader.glsl"; }
 
 		void Reload();
 

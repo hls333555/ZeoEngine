@@ -25,6 +25,7 @@ namespace ZeoEngine {
 		static void Shutdown();
 
 		static void LoadAssembly(const std::string& path);
+		static void LoadAppAssembly(const std::string& path);
 
 		static void OnRuntimeStart(Ref<Scene> scene);
 		static void OnRuntimeStop();
@@ -43,7 +44,7 @@ namespace ZeoEngine {
 		static void InitMono();
 		static void ShutdownMono();
 
-		static void LoadAssemblyClasses(MonoAssembly* assembly);
+		static void LoadAssemblyClasses();
 		static MonoObject* InstantiateClass(MonoClass* monoClass);
 	};
 
@@ -51,7 +52,7 @@ namespace ZeoEngine {
 	{
 	public:
 		ScriptClass() = default;
-		ScriptClass(std::string nameSpace, std::string className);
+		ScriptClass(std::string nameSpace, std::string className, bool bIsCore = false);
 
 		MonoObject* Instantiate() const;
 		MonoMethod* GetMethod(const std::string& name, int paramCount) const;

@@ -3,11 +3,8 @@ project "ZeoEngine-ScriptCore"
 	language "C#"
 	dotnetframework "4.7.2"
 
-	targetdir("%{wks.location}/ZeoEditor/resources/scripts")
-	objdir("%{wks.location}/ZeoEditor/resources/scripts/Intermediates")
-
-	pchheader "ZEpch.h"
-	pchsource "src/ZEpch.cpp"
+	targetdir("../ZeoEditor/resources/scripts")
+	objdir("../ZeoEditor/resources/scripts/Intermediates")
 
 	files
 	{

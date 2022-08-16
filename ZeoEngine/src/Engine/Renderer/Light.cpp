@@ -4,6 +4,7 @@
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Math/Math.h"
+#include "Engine/Renderer/Shader.h"
 
 namespace ZeoEngine {
 
