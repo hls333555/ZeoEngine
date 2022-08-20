@@ -99,7 +99,7 @@ namespace ZeoEngine {
 	class Level : public AssetBase<Level>
 	{
 	public:
-		static constexpr const char* GetTemplatePath() { return "assets/levels/NewLevel.zasset"; }
+		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewLevel.zasset"; }
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }

@@ -51,20 +51,16 @@ namespace ZeoEngine {
 			// Possibly retrieve source path
 			if (const auto sourceData = node["SourcePath"])
 			{
-				metadata->SourcePath = sourceData.as<std::filesystem::path>();
+				metadata->SourcePath = sourceData.as<std::string>();
 			}
 
 			return true;
 		}
 
-		/** Returns true if provided path is in the editor directory. */
-		// https://stackoverflow.com/questions/67144806/c-check-if-path-is-outside-a-given-directory
-		static bool IsEditorPath(const std::filesystem::path& path)
+		/** Returns true if provided path is in the engine directory. */
+		static bool IsEnginePath(const std::string& path)
 		{
-			const std::string relativePath = std::filesystem::relative(path, AssetRegistry::GetEditorRootDirectory()).string();
-			// Size check for "." result
-			// If path starts with ".." it's not subdir
-			return relativePath.size() == 1 || relativePath[0] != '.' && relativePath[1] != '.';
+			return path.find(AssetRegistry::GetEnginePathPrefix()) == 0;
 		}
 
 	}
@@ -77,21 +73,22 @@ namespace ZeoEngine {
 	void AssetRegistry::Init()
 	{
 		std::vector<std::filesystem::path> directoriesToWatch;
-		directoriesToWatch.emplace_back(std::filesystem::canonical(GetEditorRootDirectory()));
-		directoriesToWatch.emplace_back(std::filesystem::canonical(GetAssetRootDirectory()));
+		directoriesToWatch.emplace_back(GetEngineAssetDirectory());
+		directoriesToWatch.emplace_back(GetProjectAssetDirectory());
 		m_FileWatcher = CreateScope<FileWatcher>(std::move(directoriesToWatch), std::chrono::duration<I32, std::milli>(1000));
 		m_FileWatcher->m_OnFileModified.connect<&AssetRegistry::OnAssetModified>(this);
 
 		Timer timer;
-		ConstructPathTree(GetEditorRootDirectory());
-		ConstructPathTree(GetAssetRootDirectory());
+		ConstructPathTree(GetEngineAssetDirectory());
+		ConstructPathTree(GetProjectAssetDirectory());
 		ZE_CORE_WARN("Path tree construction took {0} ms", timer.ElapsedMillis());
 	}
 
 	void AssetRegistry::ConstructPathTree(const std::filesystem::path& rootDirectory)
 	{
-		m_PathTree.emplace_back(std::make_pair(rootDirectory, std::vector<std::filesystem::path>{}));
-		m_PathMetadatas[rootDirectory] = CreateRef<DirectoryMetadata>(rootDirectory);
+		std::string rootPath = PathUtils::GetStandardPath(rootDirectory);
+		m_PathTree.emplace_back(std::make_pair(rootPath, std::vector<std::string>{}));
+		m_PathMetadatas[std::move(rootPath)] = CreateRef<DirectoryMetadata>(rootPath);
 
 		ConstructPathTreeRecursively(rootDirectory);
 
@@ -105,14 +102,14 @@ namespace ZeoEngine {
 			switch (it.status().type())
 			{
 				case std::filesystem::file_type::directory:
-					AddDirectoryToTree(baseDirectory, it.path());
+					AddDirectoryToTree(PathUtils::GetStandardPath(baseDirectory), PathUtils::GetStandardPath(it.path()));
 
 					ConstructPathTreeRecursively(it.path());
 					break;
 				case std::filesystem::file_type::regular:
 					if (it.path().extension().string() == GetEngineAssetExtension())
 					{
-						AddAssetToTree(baseDirectory, it.path());
+						AddAssetToTree(PathUtils::GetStandardPath(baseDirectory), PathUtils::GetStandardPath(it.path()));
 					}
 					break;
 				default:
@@ -121,23 +118,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	AssetHandle AssetRegistry::GetAssetHandleFromPath(const std::filesystem::path& path) const
+	AssetHandle AssetRegistry::GetAssetHandleFromPath(const std::string& path) const
 	{
 		const auto metadata = GetAssetMetadata(path);
 		return metadata ? metadata->Handle : 0;
 	}
 
-	std::filesystem::path AssetRegistry::GetRelativePath(const std::filesystem::path& path) const
-	{
-		const std::string temp = path.string();
-		if (temp.find(GetAssetRootDirectory()) != std::string::npos)
-		{
-			return std::filesystem::relative(path);
-		}
-		return path;
-	}
-
-	bool AssetRegistry::ContainsPathInDirectory(const std::filesystem::path& baseDirectory, const std::filesystem::path& path)
+	bool AssetRegistry::ContainsPathInDirectory(const std::string& baseDirectory, const std::string& path)
 	{
 		const auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 		{
@@ -148,7 +135,7 @@ namespace ZeoEngine {
 		return std::find(it->second.begin(), it->second.end(), path) != it->second.end();
 	}
 	
-	const std::vector<std::filesystem::path>& AssetRegistry::GetPathsInDirectory(const std::filesystem::path& baseDirectory)
+	const std::vector<std::string>& AssetRegistry::GetPathsInDirectory(const std::string& baseDirectory)
 	{
 		const auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 		{
@@ -159,12 +146,12 @@ namespace ZeoEngine {
 		return it->second;
 	}
 
-	Ref<DirectoryMetadata> AssetRegistry::AddDirectoryToTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& path)
+	Ref<DirectoryMetadata> AssetRegistry::AddDirectoryToTree(const std::string& baseDirectory, const std::string& path)
 	{
-		m_PathTree.emplace_back(std::make_pair(path, std::vector<std::filesystem::path>{}));
+		m_PathTree.emplace_back(std::make_pair(path, std::vector<std::string>{}));
 		auto metadata = CreateRef<DirectoryMetadata>(path);
 		metadata->ThumbnailTexture = ThumbnailManager::Get().GetDirectoryIcon();
-		m_PathMetadatas[path] = metadata;
+		m_PathMetadatas[metadata->Path] = metadata;
 		GetPathMetadata<DirectoryMetadata>(baseDirectory)->bHasAnySubDirectory = true;
 
 		const auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
@@ -179,7 +166,7 @@ namespace ZeoEngine {
 		return metadata;
 	}
 
-	Ref<AssetMetadata> AssetRegistry::AddAssetToTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& path, AssetTypeID typeID)
+	Ref<AssetMetadata> AssetRegistry::AddAssetToTree(const std::string& baseDirectory, const std::string& path, AssetTypeID typeID)
 	{
 		auto metadata = CreateRef<AssetMetadata>(path);
 		if (!typeID)
@@ -207,14 +194,14 @@ namespace ZeoEngine {
 			metadata->Handle = AssetHandle();
 		}
 
-		if (Utils::IsEditorPath(path))
+		if (Utils::IsEnginePath(path))
 		{
 			metadata->Flags |= PathFlag_Template;
 		}
 		// TODO: Optimize: No need to load all textures
 		metadata->UpdateThumbnail();
 		m_AssetMetadatasByID[metadata->TypeID].emplace_back(metadata);
-		m_PathMetadatas[path] = metadata;
+		m_PathMetadatas[metadata->Path] = metadata;
 
 		const auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 		{
@@ -228,7 +215,7 @@ namespace ZeoEngine {
 		return metadata;
 	}
 
-	std::vector<std::filesystem::path>::iterator AssetRegistry::RemovePathFromTree(std::filesystem::path path)
+	std::vector<std::string>::iterator AssetRegistry::RemovePathFromTree(std::string path)
 	{
 		if (const auto metadata = GetAssetMetadata(path))
 		{
@@ -253,7 +240,7 @@ namespace ZeoEngine {
 			m_PathTree.erase(currentPathIt);
 		}
 
-		const auto parentPath = path.parent_path();
+		const auto parentPath = PathUtils::GetParentPath(path);
 		const auto parentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&parentPath](const auto& pair)
 		{
 			return pair.first == parentPath;
@@ -275,14 +262,14 @@ namespace ZeoEngine {
 			}
 		}
 
-		const auto it = m_PathMetadatas.find(path);
+		const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path));
 		ZE_CORE_ASSERT(it != m_PathMetadatas.end());
 		m_PathMetadatas.erase(it);
 
 		return retIt;
 	}
 
-	void AssetRegistry::RenamePathInTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& oldPath, const std::filesystem::path& newPath)
+	void AssetRegistry::RenamePathInTree(const std::string& baseDirectory, const std::string& oldPath, const std::string& newPath)
 	{
 		const auto parentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 		{
@@ -304,7 +291,7 @@ namespace ZeoEngine {
 		}
 
 		m_PathMetadatas[oldPath]->Path = newPath;
-		m_PathMetadatas[oldPath]->PathName = newPath.stem().string();
+		m_PathMetadatas[oldPath]->PathName = PathUtils::GetPathName(newPath);
 		// C++17 way of modifying key of a map
 		auto node = m_PathMetadatas.extract(oldPath);
 		node.key() = newPath;
@@ -324,7 +311,7 @@ namespace ZeoEngine {
 					// Default comparison behaviour for directories: "NewFolder" is ahead of "cache"
 					// So we have to convert file name to upper or lower case before comparing
 					// Comparison behaviour after conversion: "cache" is ahead of "NewFolder"
-					Utils::FileNameToUpperCase(lhs.string()) < Utils::FileNameToUpperCase(rhs.string()));
+					Utils::FileNameToUpperCase(lhs) < Utils::FileNameToUpperCase(rhs));
 			});
 		}
 		std::sort(m_PathTree.begin(), m_PathTree.end(), [this](const auto& lhs, const auto& rhs)
@@ -333,11 +320,11 @@ namespace ZeoEngine {
 			const bool bIsRhsDirectory = m_PathMetadatas[rhs.first]->IsAsset();
 			return !bIsLhsDirectory && bIsRhsDirectory ||
 				(((!bIsLhsDirectory && !bIsRhsDirectory) || (bIsLhsDirectory && bIsRhsDirectory)) &&
-				Utils::FileNameToUpperCase(lhs.first.string()) < Utils::FileNameToUpperCase(rhs.first.string()));
+				Utils::FileNameToUpperCase(lhs.first) < Utils::FileNameToUpperCase(rhs.first));
 		});
 	}
 
-	void AssetRegistry::OnAssetModified(const std::filesystem::path& path)
+	void AssetRegistry::OnAssetModified(const std::string& path)
 	{
 		// We should not process reloading on a separate thread as rendering may break
 		m_PendingModifiedAssets.emplace(path);
@@ -352,19 +339,19 @@ namespace ZeoEngine {
 		{
 			auto path = *it;
 			// Currently only resource hot-reloading is supported
-			if (path.extension().string().c_str() != GetEngineAssetExtension())
+			if (PathUtils::GetPathExtension(path) != GetEngineAssetExtension())
 			{
 				path += GetEngineAssetExtension();
 				// FileWatcher uses absolute path
-				AssetLibrary::ReloadAsset(GetRelativePath(path));
+				AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(path));
 			}
 			it = m_PendingModifiedAssets.erase(it);
 		}
 	}
 
-	Ref<AssetMetadata> AssetRegistry::GetAssetMetadata(const std::filesystem::path& path) const
+	Ref<AssetMetadata> AssetRegistry::GetAssetMetadata(const std::string& path) const
 	{
-		if (const auto it = m_PathMetadatas.find(path); it != m_PathMetadatas.cend())
+		if (const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path)); it != m_PathMetadatas.cend())
 		{
 			return std::dynamic_pointer_cast<AssetMetadata>(it->second);
 		}
@@ -388,9 +375,9 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	Ref<PathMetadata> AssetRegistry::OnPathCreated(const std::filesystem::path& path, bool bIsAsset)
+	Ref<PathMetadata> AssetRegistry::OnPathCreated(const std::string& path, bool bIsAsset)
 	{
-		const auto parentPath = path.parent_path();
+		const auto parentPath = PathUtils::GetParentPath(path);
 		Ref<PathMetadata> metadata;
 		if (bIsAsset)
 		{
@@ -404,22 +391,33 @@ namespace ZeoEngine {
 		return metadata;
 	}
 
-	void AssetRegistry::OnTempAssetPathCreated(const std::filesystem::path& path, AssetTypeID typeID)
+	void AssetRegistry::OnTempPathCreated(const std::string& path, AssetTypeID typeID)
 	{
-		AddAssetToTree(path.parent_path(), path, typeID);
+		const auto parentPath = PathUtils::GetParentPath(path);
+		Ref<PathMetadata> metadata;
+		if (typeID)
+		{
+			// Called when a new asset is created in the Content Browser
+			// Any actual asset file is not created yet so we have to pass typeID to metadata instead of parsing from the actual asset file
+			metadata = AddAssetToTree(parentPath, path, typeID);
+		}
+		else
+		{
+			metadata = AddDirectoryToTree(parentPath, path);
+		}
 		SortPathTree();
 	}
 
-	void AssetRegistry::OnPathRemoved(const std::filesystem::path& path)
+	void AssetRegistry::OnPathRemoved(const std::string& path)
 	{
 		// Possibly unload asset
 		AssetLibrary::UnloadAsset(GetAssetHandleFromPath(path));
 		RemovePathFromTree(path);
 	}
 
-	void AssetRegistry::OnPathRenamed(const std::filesystem::path oldPath, const std::filesystem::path newPath)
+	void AssetRegistry::OnPathRenamed(const std::string oldPath, const std::string newPath)
 	{
-		RenamePathInTree(oldPath.parent_path(), oldPath, newPath);
+		RenamePathInTree(PathUtils::GetParentPath(oldPath), oldPath, newPath);
 		SortPathTree();
 	}
 

@@ -19,10 +19,10 @@ namespace ZeoEngine {
 	{
 	public:
 		/** Open the file explorer and select the path. */
-		static void ShowInExplorer(const std::filesystem::path& path);
+		static void ShowInExplorer(const std::string& filepath);
 
 		/** Open the file using the default program. */
-		static void OpenFile(const std::filesystem::path& path);
+		static void OpenFile(const std::string& filepath);
 	};
 
 }

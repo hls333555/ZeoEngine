@@ -3,7 +3,7 @@
 #type vertex
 #version 450 core
 
-#include "assets/editor/shaders/Uniforms.glsl"
+#include "assets/shaders/Uniforms.glsl"
 
 layout (location = 0) in vec3 a_Position;
 

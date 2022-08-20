@@ -61,7 +61,7 @@ namespace ZeoEngine {
 		{
 			const float duration = timer.ElapsedMillis();
 			const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
-			ZE_CORE_WARN("Reloading shader {0} took {1} ms", metadata->Path, duration);
+			ZE_CORE_WARN("Reloading shader \"{0}\" took {1} ms", metadata->Path, duration);
 		}
 	}
 

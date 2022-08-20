@@ -13,13 +13,14 @@ namespace ZeoEngine {
 	class FileWatcher
 	{
 	public:
-		// Directory to watch must use absolute path!
 		FileWatcher(std::vector<std::filesystem::path> directoriesToWatch, std::chrono::duration<I32, std::milli> interval)
 			: m_DirectoriesToWatch(std::move(directoriesToWatch))
 			, m_Interval(interval)
 		{
-			for (const auto& directoryToWatch : m_DirectoriesToWatch)
+			for (auto& directoryToWatch : m_DirectoriesToWatch)
 			{
+				// Directory to watch must use absolute path!
+				directoryToWatch = std::filesystem::canonical(directoryToWatch);
 				for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
 				{
 					if (entry.is_directory()) continue;
@@ -69,7 +70,7 @@ namespace ZeoEngine {
 					// File removal
 					if (!std::filesystem::exists(it->first))
 					{
-						m_OnFileRemovedDel.publish(it->first);
+						m_OnFileRemovedDel.publish(it->first.string());
 						it = m_WatchedFiles.erase(it);
 					}
 					else
@@ -89,12 +90,12 @@ namespace ZeoEngine {
 
 							auto currentFileLastWriteTime = std::filesystem::last_write_time(entry);
 
-							auto filePath = entry.path();
+							const auto& filePath = entry.path();
 							// File creation
 							if (m_WatchedFiles.find(filePath) == m_WatchedFiles.end())
 							{
 								m_WatchedFiles[filePath] = currentFileLastWriteTime;
-								m_OnFileAddedDel.publish(filePath);
+								m_OnFileAddedDel.publish(filePath.string());
 							}
 							// File modification
 							else
@@ -102,7 +103,7 @@ namespace ZeoEngine {
 								if (m_WatchedFiles[filePath] != currentFileLastWriteTime)
 								{
 									m_WatchedFiles[filePath] = currentFileLastWriteTime;
-									m_OnFileModifiedDel.publish(filePath);
+									m_OnFileModifiedDel.publish(filePath.string());
 								}
 							}
 						}
@@ -112,9 +113,9 @@ namespace ZeoEngine {
 		}
 
 	public:
-		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileAdded{ m_OnFileAddedDel };
-		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileModified{ m_OnFileModifiedDel };
-		entt::sink<entt::sigh<void(const std::filesystem::path&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileAdded{ m_OnFileAddedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileModified{ m_OnFileModifiedDel };
+		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileRemoved{ m_OnFileRemovedDel };
 
 	private:
 		std::vector<std::filesystem::path> m_DirectoriesToWatch;
@@ -129,7 +130,7 @@ namespace ZeoEngine {
 		bool m_bIsRunning = true;
 		Scope<std::thread> m_FileWatcherThread;
 
-		entt::sigh<void(const std::filesystem::path&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;
+		entt::sigh<void(const std::string&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;
 	};
 
 }

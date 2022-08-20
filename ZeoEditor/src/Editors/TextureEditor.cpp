@@ -17,7 +17,7 @@ namespace ZeoEngine {
 	}
 
 	// TODO: Should support reloading
-	void TextureEditor::LoadAsset(const std::filesystem::path& path)
+	void TextureEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<TexturePreviewComponent>([&path, this](auto& texturePreviewComp)
 		{
@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void TextureEditor::SaveAsset(const std::filesystem::path& path)
+	void TextureEditor::SaveAsset(const std::string& path)
 	{
 		AssetManager::Get().SaveAsset(path, GetAsset());
 		GetContextEntity().GetComponent<TexturePreviewComponent>().TextureAsset = AssetLibrary::LoadAsset<Texture2D>(path, AssetLibrary::DeserializeMode::Force);

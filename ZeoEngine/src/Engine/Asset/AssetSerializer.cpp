@@ -30,12 +30,12 @@ namespace ZeoEngine {
 		return DeserializeImpl(metadata, asset, node, payload);
 	}
 
-	std::optional<YAML::Node> AssetSerializerBase::DeserializeAsset(const std::filesystem::path& path)
+	std::optional<YAML::Node> AssetSerializerBase::DeserializeAsset(const std::string& path)
 	{
 		YAML::Node node;
 		try
 		{
-			node = YAML::LoadFile(path.string());
+			node = YAML::LoadFile(PathUtils::GetFileSystemPath(path));
 		}
 		catch (YAML::BadFile&)
 		{
@@ -67,7 +67,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void ImportableAssetSerializerBase::SerializeSourcePath(const std::filesystem::path& resourcePath, YAML::Node& node)
+	void ImportableAssetSerializerBase::SerializeSourcePath(const std::string& resourcePath, YAML::Node& node)
 	{
 		node["SourcePath"] = resourcePath;
 	}

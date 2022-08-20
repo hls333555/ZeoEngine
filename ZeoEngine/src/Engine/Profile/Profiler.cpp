@@ -18,13 +18,13 @@ namespace ZeoEngine {
 	void Optick::StopCapture() const
 	{
 		OPTICK_STOP_CAPTURE();
-		std::filesystem::path outputPath = AssetRegistry::GetCPUProfileOutputDirectory();
+		std::string outputPath = AssetRegistry::GetCPUProfileOutputDirectory();
 		if (!PathUtils::Exists(outputPath))
 		{
 			PathUtils::CreateDirectory(outputPath);
 		}
 		outputPath += m_CaptureName;
-		OPTICK_SAVE_CAPTURE(outputPath.string().c_str());
+		OPTICK_SAVE_CAPTURE(outputPath.c_str());
 		ZE_CORE_INFO("Stop capturing frames for Optick, captured files have been saved to: {0}", outputPath);
 	}
 

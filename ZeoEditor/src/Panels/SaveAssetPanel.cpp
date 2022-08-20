@@ -13,14 +13,14 @@ namespace ZeoEngine {
 		m_bHasKeyboardFocused = false;
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
-		SetSelectedDirectory(metadata->Path.parent_path());
+		SetSelectedDirectory(PathUtils::GetParentPath(metadata->Path));
 	}
 
-	void SaveAssetPanel::OnPathSelected(const std::filesystem::path& path)
+	void SaveAssetPanel::OnPathSelected(const std::string& path)
 	{
 		if (AssetRegistry::Get().GetAssetMetadata(path))
 		{
-			strcpy_s(m_NameBuffer, path.stem().string().c_str());
+			strcpy_s(m_NameBuffer, PathUtils::GetPathName(path).c_str());
 		}
 	}
 
@@ -50,16 +50,16 @@ namespace ZeoEngine {
 			if (ImGui::Button("Save"))
 			{
 				const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
-				auto name = std::filesystem::path(m_NameBuffer);
-				const auto originalExtension = std::filesystem::path(metadata->PathName).extension();
-				if (name.extension() != originalExtension)
+				std::string name = m_NameBuffer;
+				const std::string extension = PathUtils::GetPathExtension(name);
+				const std::string originalExtension = PathUtils::GetPathExtension(metadata->PathName);
+				if (extension != originalExtension)
 				{
 					// Force add resource extension if not exist
 					// For non-resource asset, this should never happen
 					name += originalExtension;
 				}
-				auto newPath = GetSelectedDirectory() / name;
-				newPath += AssetRegistry::GetEngineAssetExtension();
+				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetEngineAssetExtension());
 				if (AssetRegistry::Get().ContainsPathInDirectory(GetSelectedDirectory(), newPath))
 				{
 					m_ToReplacePath = std::move(newPath);
@@ -89,12 +89,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SaveAssetPanel::HandleRightColumnAssetOpen(const std::filesystem::path& path)
+	void SaveAssetPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
 		m_ToReplacePath = path;
 	}
 
-	void SaveAssetPanel::DrawReplaceDialog(const std::filesystem::path& path)
+	void SaveAssetPanel::DrawReplaceDialog(const std::string& path)
 	{
 		static ImVec2 buttonSize{ 120.0f, 0.0f };
 		ImGui::OpenPopup("Replace?");
@@ -122,7 +122,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SaveAssetPanel::SaveAndClose(const std::filesystem::path& path)
+	void SaveAssetPanel::SaveAndClose(const std::string& path)
 	{
 		GetContextEditor()->SaveScene(path);
 		Close();

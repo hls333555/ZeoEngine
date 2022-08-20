@@ -44,7 +44,7 @@ namespace ZeoEngine {
 
 		virtual void ClearCache() const override;
 
-		static const char* GetCacheDirectory() { return "cache/shader/opengl"; }
+		static std::string GetCacheDirectory() { return "cache/shader/opengl"; }
 		static std::array<const char*, 8> GetCacheFileExtensions()
 		{
 			return {

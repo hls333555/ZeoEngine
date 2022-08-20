@@ -3,7 +3,7 @@
 #type vertex
 #version 450 core
 
-#include "assets/editor/shaders/Uniforms.glsl"
+#include "assets/shaders/Uniforms.glsl"
 
 layout (location = 0) in vec3 a_Position;
 layout (location = 1) in vec3 a_Normal;
@@ -46,7 +46,7 @@ void main()
 #type fragment
 #version 450 core
 
-#include "assets/editor/shaders/Uniforms.glsl"
+#include "assets/shaders/Uniforms.glsl"
 
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_EntityID;

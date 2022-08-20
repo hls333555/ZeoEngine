@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <filesystem>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
@@ -31,22 +30,23 @@ namespace ZeoEngine {
 		virtual bool Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, void* payload) const override;
 
 		template<typename Func>
-		static void SerializeEmptyAsset(const std::filesystem::path& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
+		static void SerializeEmptyAsset(const std::string& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
 		{
 			YAML::Node node;
+			const std::string filepath = PathUtils::GetFileSystemPath(path);
 			const auto f = [&]()
 			{
 				node["AssetType"] = typeID;
 				node["AssetHandle"] = handle;
 				func(node);
-				std::ofstream fout(path);
+				std::ofstream fout(filepath);
 				fout << node;
 			};
 			if (!bOverwrite)
 			{
 				try
 				{
-					node = YAML::LoadFile(path.string());
+					node = YAML::LoadFile(filepath);
 				}
 				catch (YAML::BadFile&)
 				{
@@ -54,11 +54,11 @@ namespace ZeoEngine {
 			}
 			f();
 		}
-		static void SerializeEmptyAsset(const std::filesystem::path& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite)
+		static void SerializeEmptyAsset(const std::string& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite)
 		{
 			SerializeEmptyAsset(path, typeID, handle, bOverwrite, [](YAML::Node& node) {});
 		}
-		static std::optional<YAML::Node> DeserializeAsset(const std::filesystem::path& path);
+		static std::optional<YAML::Node> DeserializeAsset(const std::string& path);
 
 	private:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const = 0;
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 	{
 	public:
 		template<typename Func>
-		static void SerializeEmptyAsset(const std::filesystem::path& path, const std::filesystem::path& resourcePath, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
+		static void SerializeEmptyAsset(const std::string& path, const std::string& resourcePath, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
 		{
 			AssetSerializerBase::SerializeEmptyAsset(path, typeID, handle, bOverwrite, [&](YAML::Node& node)
 			{
@@ -77,7 +77,7 @@ namespace ZeoEngine {
 				func(node);
 			});
 		}
-		static void SerializeEmptyAsset(const std::filesystem::path& path, const std::filesystem::path& resourcePath, AssetTypeID typeID, AssetHandle handle, bool bOverwrite)
+		static void SerializeEmptyAsset(const std::string& path, const std::string& resourcePath, AssetTypeID typeID, AssetHandle handle, bool bOverwrite)
 		{
 			SerializeEmptyAsset(path, resourcePath, typeID, handle, bOverwrite, [](YAML::Node& node) {});
 		}
@@ -85,7 +85,7 @@ namespace ZeoEngine {
 	protected:
 		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
 		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
-		static void SerializeSourcePath(const std::filesystem::path& resourcePath, YAML::Node& node);
+		static void SerializeSourcePath(const std::string& resourcePath, YAML::Node& node);
 	};
 
 	class LevelAssetSerializer : public AssetSerializerBase

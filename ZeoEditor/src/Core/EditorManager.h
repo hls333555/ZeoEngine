@@ -51,7 +51,7 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		Ref<EditorBase> OpenEditor(std::string editorName, const std::filesystem::path& assetPath = {})
+		Ref<EditorBase> OpenEditor(std::string editorName, const std::string& assetPath = {})
 		{
 			Ref<EditorBase> editor = GetEditor(editorName);
 			if (!editor)

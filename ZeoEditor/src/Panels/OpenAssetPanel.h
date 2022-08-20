@@ -19,7 +19,7 @@ namespace ZeoEngine {
 
 		virtual bool ShouldDrawPath(const Ref<PathMetadata>& metadata) override;
 
-		virtual void HandleRightColumnAssetOpen(const std::filesystem::path& path) override;
+		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
 
 	private:
 		AssetTypeID m_AssetTypeID;

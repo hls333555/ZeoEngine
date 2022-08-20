@@ -17,7 +17,7 @@ void main()
 #type fragment
 #version 450 core
 
-#include "assets/editor/shaders/Uniforms.glsl"
+#include "assets/shaders/Uniforms.glsl"
 
 layout(location = 0) in vec2 v_Uv;
 layout (binding = 0) uniform sampler2D u_ScreenSpaceShadowMap;

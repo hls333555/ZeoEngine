@@ -3,7 +3,7 @@
 #type vertex
 #version 450 core
 
-#include "assets/editor/shaders/Uniforms.glsl"
+#include "assets/shaders/Uniforms.glsl"
 
 layout (std140, binding = 5) uniform Grid
 {

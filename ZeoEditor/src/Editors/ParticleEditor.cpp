@@ -37,7 +37,7 @@ namespace ZeoEngine {
 		return GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().ParticleTemplateAsset;
 	}
 
-	void ParticleEditor::LoadAsset(const std::filesystem::path& path)
+	void ParticleEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path](auto& particlePreviewComp)
 		{
@@ -45,7 +45,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticleEditor::SaveAsset(const std::filesystem::path& path)
+	void ParticleEditor::SaveAsset(const std::string& path)
 	{
 		AssetManager::Get().SaveAsset(path, GetAsset());
 		GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().ParticleTemplateAsset = AssetLibrary::LoadAsset<ParticleTemplate>(path, AssetLibrary::DeserializeMode::Force);

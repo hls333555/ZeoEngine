@@ -122,7 +122,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::LoadScene(const std::filesystem::path& path)
+	void EditorBase::LoadScene(const std::string& path)
 	{
 		Timer timer;
 
@@ -130,7 +130,7 @@ namespace ZeoEngine {
 		m_ActiveScene->PostLoad();
 		m_PostSceneLoadDel.publish();
 
-		ZE_CORE_WARN("Loading {0} took {1} ms", path, timer.ElapsedMillis());
+		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
 	void EditorBase::SaveScene()
@@ -147,13 +147,13 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorBase::SaveScene(const std::filesystem::path& path)
+	void EditorBase::SaveScene(const std::string& path)
 	{
 		Timer timer;
 
 		SaveAsset(path);
 
-		ZE_CORE_WARN("Saving {0} took {1} ms", path, timer.ElapsedMillis());
+		ZE_CORE_WARN("Saving \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
 	void EditorBase::SaveSceneAs() const

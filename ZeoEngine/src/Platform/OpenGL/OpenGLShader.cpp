@@ -66,7 +66,7 @@ namespace ZeoEngine {
 
 		static void CreateCacheDirectoryIfNeeded()
 		{
-			const std::filesystem::path cacheDirectory = OpenGLShader::GetCacheDirectory();
+			const std::string cacheDirectory = OpenGLShader::GetCacheDirectory();
 			if (!PathUtils::Exists(cacheDirectory))
 			{
 				PathUtils::CreateDirectory(cacheDirectory);
@@ -540,13 +540,9 @@ namespace ZeoEngine {
 
 	std::string OpenGLShader::GetCachePath(U32 variantID, const char* cacheExtension) const
 	{
-		const std::filesystem::path shaderFilePath = m_ShaderResourcePath;
-		const std::filesystem::path cacheDirectory = GetCacheDirectory();
-
-		std::string cacheName = variantID == 0
-			? fmt::format("{}{}", shaderFilePath.filename().string(), cacheExtension)
-			: fmt::format("{}-{}{}", shaderFilePath.filename().string(), std::to_string(variantID), cacheExtension);
-		return (cacheDirectory / cacheName).string();
+		return variantID == 0
+			? fmt::format("{}/{}{}", GetCacheDirectory(), PathUtils::GetPathFileName(m_ShaderResourcePath), cacheExtension)
+			: fmt::format("{}/{}-{}{}", GetCacheDirectory(), PathUtils::GetPathFileName(m_ShaderResourcePath), std::to_string(variantID), cacheExtension);
 	}
 
 	bool OpenGLShader::CompileOrGetVulkanBinaries(const Ref<ShaderVariant>& variant)
