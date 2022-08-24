@@ -71,7 +71,7 @@ namespace ZeoEngine {
 			const auto metadata = AssetRegistry::Get().OnPathCreated(assetPath, true);
 			metadata->Flags |= PathFlag_Importable | PathFlag_HasResource;
 			// Record source path
-			std::dynamic_pointer_cast<AssetMetadata>(metadata)->SourcePath = srcPath;
+			std::static_pointer_cast<AssetMetadata>(metadata)->SourcePath = srcPath;
 		}
 		else // Asset already exist, just reload and update
 		{

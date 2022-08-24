@@ -180,7 +180,7 @@ namespace ZeoEngine {
 			// Ignore asset with existing handle
 			const auto it = std::find_if(m_PathMetadatas.begin(), m_PathMetadatas.end(), [&metadata](const auto& pair)
 			{
-				return pair.second->IsAsset() && std::dynamic_pointer_cast<AssetMetadata>(pair.second)->Handle == metadata->Handle;
+				return pair.second->IsAsset() && std::static_pointer_cast<AssetMetadata>(pair.second)->Handle == metadata->Handle;
 			});
 			if (it != m_PathMetadatas.end())
 			{
@@ -353,7 +353,7 @@ namespace ZeoEngine {
 	{
 		if (const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path)); it != m_PathMetadatas.cend())
 		{
-			return std::dynamic_pointer_cast<AssetMetadata>(it->second);
+			return std::static_pointer_cast<AssetMetadata>(it->second);
 		}
 		return nullptr;
 	}

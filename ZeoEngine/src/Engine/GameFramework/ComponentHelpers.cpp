@@ -132,7 +132,7 @@ namespace ZeoEngine {
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Copy(meshComp, dynamic_cast<MeshRendererComponent*>(otherComp)->Instance);
+		MeshInstance::Copy(meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
 	void MeshRendererComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
@@ -221,9 +221,9 @@ namespace ZeoEngine {
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		switch (lightComp.Type)
 		{
-			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::dynamic_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::dynamic_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::dynamic_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::static_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::static_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::static_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
 			default: break;
 		}
 	}

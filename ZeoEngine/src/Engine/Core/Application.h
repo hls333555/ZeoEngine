@@ -64,20 +64,6 @@ namespace ZeoEngine {
 
 		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
 
-		// TODO:
-		template<typename T>
-		T* FindLayer()
-		{
-			for (auto* layer : m_LayerStack)
-			{
-				if (T* layerCast = dynamic_cast<T*>(layer))
-				{
-					return layerCast;
-				}
-			}
-			return nullptr;
-		}
-
 	private:
 		void Run();
 		void PropagateEvent(Event& e);

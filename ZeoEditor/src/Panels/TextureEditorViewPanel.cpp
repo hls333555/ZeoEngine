@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 0.1f }));
 
 		// Texture
-		const auto texture = std::dynamic_pointer_cast<Texture2D>(GetContextEditor()->GetAsset());
+		const auto texture = std::static_pointer_cast<Texture2D>(GetContextEditor()->GetAsset());
 		ImGui::Image(texture->GetTextureID(), displaySize, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 		// Display texture info at the bottom center

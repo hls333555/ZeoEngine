@@ -72,21 +72,15 @@ namespace ZeoEngine {
 			return panel;
 		}
 
-		template<typename T = PanelBase>
-		Ref<T> GetPanel(const std::string& panelName) const
+		template<typename PanelClass = PanelBase>
+		Ref<PanelClass> GetPanel(const std::string& panelName) const
 		{
+			static_assert(std::is_base_of_v<PanelBase, PanelClass>, "PanelClass must be derived from 'PanelBase'!");
+
 			const auto it = m_Panels.find(panelName);
 			if (it == m_Panels.end()) return {};
 
-			Ref<PanelBase> panel = it->second;
-			if constexpr (std::is_same_v<T, PanelBase>)
-			{
-				return panel;
-			}
-			else
-			{
-				return std::dynamic_pointer_cast<T>(panel);
-			}
+			return std::static_pointer_cast<PanelClass>(it->second);
 		}
 
 		Ref<EditorViewPanelBase> GetViewPanel() const;

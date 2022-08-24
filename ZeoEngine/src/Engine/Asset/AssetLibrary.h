@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		template<typename T>
 		static Ref<T> LoadAsset(AssetHandle handle, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
 		{
-			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T is not derived from 'AssetBase'!");
+			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T must be derived from 'AssetBase'!");
 
 			if (IsMemoryAsset(handle))
 			{

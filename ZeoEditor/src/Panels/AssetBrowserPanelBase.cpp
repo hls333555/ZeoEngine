@@ -759,7 +759,7 @@ namespace ZeoEngine {
 
 			if (bIsAsset)
 			{
-				DrawPathContextMenuItem_Asset(path, std::dynamic_pointer_cast<AssetMetadata>(metadata));
+				DrawPathContextMenuItem_Asset(path, std::static_pointer_cast<AssetMetadata>(metadata));
 			}
 
 			if (ImGui::MenuItem("Show In Explorer"))

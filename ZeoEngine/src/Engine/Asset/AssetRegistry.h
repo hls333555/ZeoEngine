@@ -97,19 +97,14 @@ namespace ZeoEngine {
 		void OnUpdate(DeltaTime dt);
 
 		/** Get directory/asset metadata of the specific path. The path should be relative. */
-		template<typename T = PathMetadata>
-		Ref<T> GetPathMetadata(const std::string& path) const
+		template<typename MetadataClass = PathMetadata>
+		Ref<MetadataClass> GetPathMetadata(const std::string& path) const
 		{
+			static_assert(std::is_base_of_v<PathMetadata, MetadataClass>, "MetadataClass must be derived from 'PathMetadata'!");
+
 			if (const auto it = m_PathMetadatas.find(path); it != m_PathMetadatas.cend())
 			{
-				if constexpr (std::is_same_v<T, PathMetadata>)
-				{
-					return it->second;
-				}
-				else
-				{
-					return std::dynamic_pointer_cast<T>(it->second);
-				}
+				return std::static_pointer_cast<MetadataClass>(it->second);
 			}
 
 			return nullptr;
