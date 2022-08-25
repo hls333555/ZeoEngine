@@ -4,7 +4,6 @@
 #include <deque>
 
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/Core/ReflectionHelper.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Material.h"
 
@@ -159,15 +158,15 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				const auto dataName = GetMetaObjectDisplayName(data);
+				const char* dataName = ReflectionUtils::GetMetaObjectName(data);
 				const auto dataValue = data.get(instance).cast<T>();
 				if constexpr (std::is_same_v<T, U8>)
 				{
-					node[*dataName] = +dataValue;
+					node[dataName] = +dataValue;
 				}
 				else
 				{
-					node[*dataName] = dataValue;
+					node[dataName] = dataValue;
 				}
 			}
 		}
@@ -204,7 +203,7 @@ namespace ZeoEngine {
 		void Deserialize(const YAML::Node& node, const Ref<Material>& material);
 
 	private:
-		void EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform);
+		void EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
 
 		template<typename T>
 		void SerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const
@@ -214,7 +213,7 @@ namespace ZeoEngine {
 			node[dataName] = dataValue;
 		}
 
-		void EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform);
+		void EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
 
 		template<typename T>
 		void DeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const

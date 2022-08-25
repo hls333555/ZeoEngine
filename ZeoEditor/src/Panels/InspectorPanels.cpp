@@ -4,7 +4,7 @@
 
 #include "Editors/EditorBase.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/ReflectionHelper.h"
+#include "Engine/Utils/ReflectionUtils.h"
 #include "Reflection/MaterialInspector.h"
 
 namespace ZeoEngine {
@@ -37,10 +37,10 @@ namespace ZeoEngine {
 				for (const auto compType : entt::resolve())
 				{
 					// Inherent components can never be added
-					auto bIsInherentComp = DoesPropExist(PropertyType::Inherent, compType);
+					auto bIsInherentComp = ReflectionUtils::DoesPropertyExist(Reflection::Inherent, compType);
 					if (bIsInherentComp) continue;
 
-					auto category = GetPropValue<const char*>(PropertyType::Category, compType);
+					auto category = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Category, compType);
 					std::string categoryName = category ? *category : "Default";
 					// Categorize components
 					m_CategorizedComponents[categoryName].push_back(compType.info().hash());
@@ -55,7 +55,7 @@ namespace ZeoEngine {
 				{
 					for (const auto compId : compIds)
 					{
-						if (ImGui::Selectable(GetComponentDisplayNameFull(compId)))
+						if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compId)))
 						{
 							auto compInstance = entity.AddComponentById(compId);
 							// Instance may be null as AddComponentById() failed

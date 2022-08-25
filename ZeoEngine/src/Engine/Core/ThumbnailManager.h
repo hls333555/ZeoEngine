@@ -20,7 +20,7 @@ namespace ZeoEngine {
 
 		/** Try to get asset thumbnail from disk or return the default type icon. */
 		Ref<Texture2D> GetAssetThumbnail(const Ref<AssetMetadata>& metadata);
-		std::filesystem::path GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const;
+		std::string GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const;
 
 		Ref<Texture2D> GetAssetTypeIcon(AssetTypeID typeId) const;
 		const Ref<Texture2D>& GetDirectoryIcon() const { return m_DirectoryIcon; }

@@ -57,6 +57,7 @@ namespace ZeoEngine {
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
+		Entity GetEntityByUUID(UUID uuid);
 
 		SizeT GetEntityCount() const { return m_Registry.alive(); }
 
@@ -85,8 +86,10 @@ namespace ZeoEngine {
 	protected:
 		entt::registry m_Registry;
 	private:
+		std::unordered_map<UUID, Entity> m_Entities;
 		/** Systems are shared among copied scenes. */
 		std::vector<Ref<SystemBase>> m_Systems;
+
 		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
 
 		U32 m_CurrentEntityIndex = 0;
@@ -96,7 +99,7 @@ namespace ZeoEngine {
 	class Level : public AssetBase<Level>
 	{
 	public:
-		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewLevel.zasset"; }
+		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewLevel.zasset"; }
 
 		const Ref<Scene>& GetScene() const { return m_Scene; }
 		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }

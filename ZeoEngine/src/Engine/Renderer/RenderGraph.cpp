@@ -61,23 +61,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	RenderQueuePass* RenderGraph::GetRenderQueuePass(const std::string& passName) const
-	{
-		for (const auto& pass : m_Passes)
-		{
-			if (pass->GetName() == passName)
-			{
-				auto* renderQueuePass = dynamic_cast<RenderQueuePass*>(pass.get());
-				if (renderQueuePass)
-				{
-					return renderQueuePass;
-				}
-			}
-		}
-		ZE_CORE_ERROR("Failed to find RenderQueuePass with unknown name: {0}", passName);
-		return nullptr;
-	}
-
 	void RenderGraph::AddGlobalInput(Scope<RenderPassInput> input)
 	{
 		m_GlobalInputs.emplace_back(std::move(input));

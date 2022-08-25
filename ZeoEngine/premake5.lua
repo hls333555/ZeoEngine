@@ -46,6 +46,7 @@ project "ZeoEngine"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.magic_enum}",
+		"%{IncludeDir.mono}",
 		"%{IncludeDir.optick}",
 		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
@@ -63,6 +64,7 @@ project "ZeoEngine"
 		"Glad",
 		"GLFW",
 		"ImGui",
+		"%{Library.mono}",
 		"optick",
 		"yaml-cpp",
 	}
@@ -72,6 +74,14 @@ project "ZeoEngine"
 
 	filter "system:windows"
 		systemversion "latest"
+
+		links
+		{
+			"%{Library.WinSock}",
+			"%{Library.WinMM}",
+			"%{Library.WinVersion}",
+			"%{Library.Bcrypt}"
+		}
 
 	filter "configurations:Debug"
 		defines "ZE_DEBUG"

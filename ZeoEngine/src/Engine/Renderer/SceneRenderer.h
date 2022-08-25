@@ -116,13 +116,13 @@ namespace ZeoEngine {
 
 			float Intensity;
 			I32 bCastShadow;
-			I32 ShadowType;
 			float DepthBias;
-
 			float NormalBias;
+
 			float FilterSize;
 			float LightSize;
 			float _Padding;
+			float _Padding2;
 
 			void Reset()
 			{

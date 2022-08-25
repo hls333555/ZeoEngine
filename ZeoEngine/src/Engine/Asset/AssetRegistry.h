@@ -7,6 +7,7 @@
 #include "Engine/Core/FileWatcher.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Asset/Asset.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
@@ -22,14 +23,14 @@ namespace ZeoEngine {
 
 	struct PathMetadata
 	{
-		explicit PathMetadata(const std::filesystem::path& path)
-			: Path(path), PathName(path.stem().string()) {}
+		explicit PathMetadata(std::string path)
+			: Path(std::move(path)), PathName(PathUtils::GetPathName(Path)) {}
 		virtual ~PathMetadata() = default;
 
 		virtual bool IsAsset() const = 0;
 		virtual AssetTypeID GetAssetTypeID() const = 0;
 
-		std::filesystem::path Path;
+		std::string Path;
 		std::string PathName;
 		U8 Flags = 0;
 		Ref<Texture2D> ThumbnailTexture;
@@ -57,13 +58,13 @@ namespace ZeoEngine {
 		bool IsResourceAsset() const { return Flags & PathFlag_HasResource; }
 		bool IsImportableAsset() const { return Flags & PathFlag_Importable; }
 		bool IsTemplateAsset() const { return Flags & PathFlag_Template; }
-		std::filesystem::path GetResourcePath() const { return IsResourceAsset() ? Path.parent_path() / Path.stem() : std::filesystem::path{}; }
+		std::string GetResourceFileSystemPath() const { return IsResourceAsset() ? fmt::format("{}/{}", PathUtils::GetParentPath(PathUtils::GetFileSystemPath(Path)), PathName) : ""; }
 
 		void UpdateThumbnail();
 
 		AssetHandle Handle = 0;
 		AssetTypeID TypeID = {};
-		std::filesystem::path SourcePath; // Can be empty if this is not an imported asset
+		std::string SourcePath; // Can be empty if this is not an imported asset
 	};
 
 	class AssetRegistry
@@ -82,44 +83,43 @@ namespace ZeoEngine {
 		}
 
 		// TODO: Move to other file
-		static constexpr const char* GetAssetRootDirectory() { return "assets"; } // TODO: Change to project directory
 		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
-		static constexpr const char* GetEditorRootDirectory() { return "assets/editor"; } // TODO:
-		static constexpr const char* GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
-		static constexpr const char* GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
+
+		static std::string GetEnginePathPrefix() { return "Engine"; }
+		static std::string GetProjectPathPrefix() { return "Game"; }
+		static std::string GetEngineAssetDirectory() { return "assets"; } // TODO:
+		static std::string GetProjectDirectory() { return "SandboxProject"; } // TODO:
+		static std::string GetProjectAssetDirectory() { return "SandboxProject/Assets"; } // TODO:
+
+		static std::string GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
+		static std::string GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
 
 		void OnUpdate(DeltaTime dt);
 
 		/** Get directory/asset metadata of the specific path. The path should be relative. */
-		template<typename T = PathMetadata>
-		Ref<T> GetPathMetadata(const std::filesystem::path& path) const
+		template<typename MetadataClass = PathMetadata>
+		Ref<MetadataClass> GetPathMetadata(const std::string& path) const
 		{
+			static_assert(std::is_base_of_v<PathMetadata, MetadataClass>, "MetadataClass must be derived from 'PathMetadata'!");
+
 			if (const auto it = m_PathMetadatas.find(path); it != m_PathMetadatas.cend())
 			{
-				if constexpr (std::is_same_v<T, PathMetadata>)
-				{
-					return it->second;
-				}
-				else
-				{
-					return std::dynamic_pointer_cast<T>(it->second);
-				}
+				return std::static_pointer_cast<MetadataClass>(it->second);
 			}
 
 			return nullptr;
 		}
 
-		Ref<AssetMetadata> GetAssetMetadata(const std::filesystem::path& path) const;
+		Ref<AssetMetadata> GetAssetMetadata(const std::string& path) const;
 		Ref<AssetMetadata> GetAssetMetadata(AssetHandle handle) const;
 
-		AssetHandle GetAssetHandleFromPath(const std::filesystem::path& path) const;
+		AssetHandle GetAssetHandleFromPath(const std::string& path) const;
 
-		std::filesystem::path GetRelativePath(const std::filesystem::path& path) const;
-		bool ContainsPathInDirectory(const std::filesystem::path& baseDirectory, const std::filesystem::path& path);
-		const std::vector<std::filesystem::path>& GetPathsInDirectory(const std::filesystem::path& baseDirectory);
+		bool ContainsPathInDirectory(const std::string& baseDirectory, const std::string& path);
+		const std::vector<std::string>& GetPathsInDirectory(const std::string& baseDirectory);
 
 		template<typename Func>
-		void ForEachPathInDirectory(const std::filesystem::path& baseDirectory, Func func)
+		void ForEachPathInDirectory(const std::string& baseDirectory, Func func)
 		{
 			auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 			{
@@ -134,7 +134,7 @@ namespace ZeoEngine {
 		}
 
 		template<typename Func>
-		void ForEachPathInDirectoryRecursively(const std::filesystem::path& baseDirectory, Func func)
+		void ForEachPathInDirectoryRecursively(const std::string& baseDirectory, Func func)
 		{
 			auto it = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&baseDirectory](const auto& pair)
 			{
@@ -161,16 +161,16 @@ namespace ZeoEngine {
 			}
 		}
 
-		Ref<PathMetadata> OnPathCreated(const std::filesystem::path& path, bool bIsAsset);
-		void OnTempAssetPathCreated(const std::filesystem::path& path, AssetTypeID typeID);
-		void OnPathRemoved(const std::filesystem::path& path);
+		Ref<PathMetadata> OnPathCreated(const std::string& path, bool bIsAsset);
+		void OnTempPathCreated(const std::string& path, AssetTypeID typeID);
+		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass path by value because we will then modify values in container directly which will affect these paths if passed by reference. */
-		void OnPathRenamed(const std::filesystem::path oldPath, const std::filesystem::path newPath);
+		void OnPathRenamed(const std::string oldPath, const std::string newPath);
 
 	private:
 		void Init();
 
-		void ConstructPathTree();
+		void ConstructPathTree(const std::filesystem::path& rootDirectory);
 		void ConstructPathTreeRecursively(const std::filesystem::path& baseDirectory);
 
 		/**
@@ -180,7 +180,7 @@ namespace ZeoEngine {
 		 * @param path - Path to add
 		 * @return - Created directory metadata
 		 */
-		Ref<DirectoryMetadata> AddDirectoryToTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& path);
+		Ref<DirectoryMetadata> AddDirectoryToTree(const std::string& baseDirectory, const std::string& path);
 		/**
 		 * Add an asset to the path tree.
 		 * 
@@ -189,15 +189,15 @@ namespace ZeoEngine {
 		 * @param typeID - If set, the asset is created in the Content Browser Panel
 		 * @return - Created asset metadata
 		 */
-		Ref<AssetMetadata> AddAssetToTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& path, AssetTypeID typeID = {});
+		Ref<AssetMetadata> AddAssetToTree(const std::string& baseDirectory, const std::string& path, AssetTypeID typeID = {});
 		/**
 		 * Remove a path from the path tree.
 		 * If path is a directory, it will recursively remove its child paths.
 		 * Path parameter should be copied during recursion.
 		 * Returns the iterator next to the removed one.
 		 */
-		std::vector<std::filesystem::path>::iterator RemovePathFromTree(std::filesystem::path path);
-		void RenamePathInTree(const std::filesystem::path& baseDirectory, const std::filesystem::path& oldPath, const std::filesystem::path& newPath);
+		std::vector<std::string>::iterator RemovePathFromTree(std::string path);
+		void RenamePathInTree(const std::string& baseDirectory, const std::string& oldPath, const std::string& newPath);
 
 		/**
 		 * Sorting:
@@ -207,22 +207,22 @@ namespace ZeoEngine {
 		void SortPathTree();
 
 		/** Called from file watcher callback on a separate thread. */
-		void OnAssetModified(const std::filesystem::path& path);
+		void OnAssetModified(const std::string& path);
 
 	protected:
 		AssetRegistry() = default;
 
 	private:
 		/** Map from base directory to list of its direct sub-paths in order */
-		std::vector<std::pair<std::filesystem::path, std::vector<std::filesystem::path>>> m_PathTree;
+		std::vector<std::pair<std::string, std::vector<std::string>>> m_PathTree;
 		/** Map from path to path metadata */
-		std::unordered_map<std::filesystem::path, Ref<PathMetadata>> m_PathMetadatas;
+		std::unordered_map<std::string, Ref<PathMetadata>> m_PathMetadatas;
 		/** Map from asset type id to list of asset metadata of this type */
 		std::unordered_map<AssetTypeID, std::vector<Ref<AssetMetadata>>> m_AssetMetadatasByID;
 
 		Scope<FileWatcher> m_FileWatcher;
 		/** Stores a series of modified assets to be processed by the main thread */
-		std::set<std::filesystem::path> m_PendingModifiedAssets;
+		std::set<std::string> m_PendingModifiedAssets;
 		std::mutex m_Mutex;
 	};
 

@@ -5,18 +5,27 @@
 
 namespace ZeoEngine {
 
-	void DynamicUniformDataBase::Apply()
+	void DynamicUniformNonMacroDataBase::ApplyInternal(void* valuePtr, const Ref<Material>& material) const
 	{
-		void* valuePtr = GetValuePtr();
 		if (!valuePtr) return;
 
-		auto& buffers = OwnerMaterial->GetDynamicUniformBuffers();
-		auto& datas = OwnerMaterial->GetDynamicUniformBufferDatas();
+		auto& buffers = material->GetDynamicUniformBuffers();
+		auto& datas = material->GetDynamicUniformBufferDatas();
 		std::copy(reinterpret_cast<char*>(valuePtr), reinterpret_cast<char*>(valuePtr) + Size, datas[Binding] + Offset);
 		buffers[Binding]->SetData(datas[Binding]);
 	}
 
-	void DynamicUniformBoolData::Draw()
+	void DynamicUniformMacroDataBase::ApplyInternal(bool bIsInit, const Ref<Material>& material, U32 value) const
+	{
+		material->SetShaderVariantByMacro(MacroName, value);
+		if (!bIsInit)
+		{
+			// We have to cache current values due to later we will reconstruct these dynamic data
+			material->SnapshotDynamicData();
+		}
+	}
+
+	void DynamicUniformBoolDataBase::Draw()
 	{
 		bValue = Value;
 		if (ImGui::Checkbox("##Bool", &bValue))
@@ -24,6 +33,16 @@ namespace ZeoEngine {
 			Value = bValue;
 			Apply();
 		}
+	}
+
+	void DynamicUniformBoolData::Apply(bool bIsInit)
+	{
+		ApplyInternal(GetValuePtr(), OwnerMaterial);
+	}
+
+	void DynamicUniformBoolMacroData::Apply(bool bIsInit)
+	{
+		ApplyInternal(bIsInit, OwnerMaterial, Value);
 	}
 
 	void DynamicUniformColorData::Draw()
@@ -59,6 +78,11 @@ namespace ZeoEngine {
 		}
 	}
 
+	void DynamicUniformColorData::Apply(bool bIsInit)
+	{
+		ApplyInternal(GetValuePtr(), OwnerMaterial);
+	}
+
 	void DynamicUniformTexture2DData::Draw()
 	{
 		// Texture2D asset browser
@@ -86,15 +110,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DynamicUniformTexture2DData::Apply()
+	void DynamicUniformTexture2DData::Apply(bool bIsInit)
 	{
 		Bind();
 	}
 
 	Material::Material()
 	{
-		m_Shader = Shader::GetDefaultShader();
-		m_Shader->m_OnAssetReloaded.connect<&Material::ReloadShaderData>(this);
+		m_ShaderInstance = CreateRef<ShaderInstance>();
 	}
 
 	Material::~Material()
@@ -103,7 +126,7 @@ namespace ZeoEngine {
 		{
 			delete[] uniformBufferDatas;
 		}
-		m_Shader->m_OnAssetReloaded.disconnect(this);
+		GetShader()->m_OnAssetReloaded.disconnect(this);
 	}
 
 	Ref<Material> Material::GetDefaultMaterial()
@@ -111,24 +134,180 @@ namespace ZeoEngine {
 		return AssetLibrary::LoadAsset<Material>(GetTemplatePath());
 	}
 
-	void Material::ReloadShaderData()
+	void Material::SetShader(const Ref<Shader>& shader)
 	{
+		if (const auto& lastShader = GetShader())
+		{
+			lastShader->m_OnAssetReloaded.disconnect(this);
+		}
+		m_ShaderInstance->SetShader(shader);
+		GetShader()->m_OnAssetReloaded.connect<&Material::ReloadShaderDataAndDeserialize>(this);
+		ReloadShaderDataAndDeserialize();
+	}
+
+	void Material::SnapshotDynamicData()
+	{
+		MaterialSerializer ms;
+		ms.Serialize(m_SnapshotDynamicData, SharedFromThis());
+	}
+
+	void Material::RestoreSnapshotDynamicData()
+	{
+		MaterialSerializer ms;
+		ms.Deserialize(m_SnapshotDynamicData, SharedFromThis());
+		m_SnapshotDynamicData.reset();
+	}
+
+	void Material::ReloadShaderDataAndApplyDynamicData()
+	{
+		if (!GetShader()->GatherReflectionData(GetShaderVariant())) return;
+
+		InitMaterialData();
+		RestoreSnapshotDynamicData();
+		ApplyDynamicData();
+	}
+
+	void Material::ReloadShaderDataAndDeserialize()
+	{
+		if (!GetShader()->IsVariantValid(GetShaderVariant()))
+		{
+			// Set default shader variant if current one is not valid due to
+			// 1. material asset does not have a ShaderVariant data to deserialize
+			// 2. shader content has changed so that current variant no longer exists
+			SetShaderVariant(GetShader()->GetDefaultVariant()->ID);
+		}
+
+		if (!GetShader()->GatherReflectionData(GetShaderVariant())) return;
+
+		InitMaterialData();
 		auto* serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
 		const auto* materialSerializer = dynamic_cast<MaterialAssetSerializer*>(serializer);
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
-		materialSerializer->ReloadShaderData(metadata, SharedFromThis());
+		const U32 lastShaderVariant = GetShaderVariant();
+		// Deserialize data and possibly apply macro value
+		materialSerializer->DeserializeShaderData(metadata, SharedFromThis());
+		// If any macro value after deserializing and applying is different from current variant's, we regather reflection data based on the new variant and deserialize again
+		// so that certain saved values can be deserialized properly (imagine "UseNormalMapping" will toggle existence of "u_NormalTexture")
+		if (GetShaderVariant() != lastShaderVariant)
+		{
+			ReloadShaderDataAndDeserialize();
+		}
+	}
+
+	void Material::ApplyDynamicData() const
+	{
+		for (const auto& data : m_DynamicData)
+		{
+			data->Apply(true);
+		}
 	}
 
 	void Material::InitMaterialData()
 	{
 		m_Techniques.clear();
-		m_DynamicUniforms.clear();
-		m_DynamicBindableUniforms.clear();
+		m_DynamicData.clear();
+		m_DynamicDataCategoryLocations.clear();
+		m_DynamicBindableData.clear();
 		m_DynamicUniformBuffers.clear();
 		m_DynamicUniformBufferDatas.clear();
-		InitUniformBuffers();
-		ParseReflectionData();
 
+		InitUniformBuffers();
+		ConstructDynamicData();
+		InitRenderTechniques();
+
+		m_OnMaterialInitializedDel.publish(SharedFromThis());
+	}
+
+	void Material::InitUniformBuffers()
+	{
+		for (const auto& [binding, uniformBlockSize] : GetShader()->GetUniformBlockSizes())
+		{
+			if (m_DynamicUniformBufferDatas.find(binding) != m_DynamicUniformBufferDatas.end())
+			{
+				delete[] m_DynamicUniformBufferDatas[binding];
+			}
+			char* bufferData = new char[uniformBlockSize];
+			memset(bufferData, 0, uniformBlockSize);
+			m_DynamicUniformBufferDatas[binding] = bufferData;
+
+			auto uniformBuffer = UniformBuffer::Create(static_cast<U32>(uniformBlockSize), binding);
+			// Upload default 0 values
+			uniformBuffer->SetData(bufferData);
+			m_DynamicUniformBuffers[binding] = std::move(uniformBuffer);
+		}
+	}
+
+	void Material::ConstructDynamicData()
+	{
+		for (const auto& reflectionData : GetShader()->GetShaderReflectionMacroData())
+		{
+			switch (reflectionData->GetType())
+			{
+				case ShaderReflectionType::Bool:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformBoolMacroData>(*reflectionData, SharedFromThis()));
+					break;
+				case ShaderReflectionType::Int:
+					{
+						const auto& intData = dynamic_cast<ShaderReflectionIntMacroData&>(*reflectionData);
+						m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNMacroData>(intData, SharedFromThis(), ImGuiDataType_S32, 0, intData.ValueRange - 1, "%d"));
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		for (const auto& reflectionData : GetShader()->GetShaderReflectionData())
+		{
+			switch (reflectionData->GetType())
+			{
+				case ShaderReflectionType::Bool:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, SharedFromThis()));
+					break;
+				case ShaderReflectionType::Int:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, SharedFromThis(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+					break;
+				case ShaderReflectionType::Float:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+					break;
+				case ShaderReflectionType::Vec2:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+					break;
+				case ShaderReflectionType::Vec3:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+					break;
+				case ShaderReflectionType::Vec4:
+					m_DynamicData.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, SharedFromThis()));
+					break;
+				case ShaderReflectionType::Texture2D:
+					m_DynamicBindableData.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, SharedFromThis()));
+					break;
+				default:
+					break;
+			}
+		}
+
+		// Sort data by category
+		std::sort(m_DynamicData.begin(), m_DynamicData.end(), [](const auto& lhs, const auto& rhs)
+		{
+			return lhs->Category < rhs->Category;
+		});
+
+		// Record category location in m_DynamicData
+		std::string lastCategory;
+		for (SizeT i = 0; i < m_DynamicData.size(); ++i)
+		{
+			const std::string& category = m_DynamicData[i]->Category;
+			if (category != lastCategory)
+			{
+				m_DynamicDataCategoryLocations.emplace_back(i);
+			}
+			lastCategory = category;
+		}
+		m_DynamicDataCategoryLocations.emplace_back(m_DynamicData.size());
+	}
+
+	void Material::InitRenderTechniques()
+	{
 		{
 			RenderTechnique shadow("Shadow");
 			{
@@ -147,77 +326,14 @@ namespace ZeoEngine {
 				{
 					step.AddBindable(uniformBuffer);
 				}
-				for (const auto& uniformBindableData : m_DynamicBindableUniforms)
+				for (const auto& uniformBindableData : m_DynamicBindableData)
 				{
 					step.AddBindable(uniformBindableData);
 				}
-				step.AddBindable(m_Shader);
+				step.AddBindable(m_ShaderInstance);
 				shade.AddStep(std::move(step));
 			}
 			m_Techniques.emplace_back(std::move(shade));
-		}
-
-		m_OnMaterialInitializedDel.publish(SharedFromThis());
-	}
-
-	void Material::ApplyUniformDatas() const
-	{
-		for (const auto& uniformData : m_DynamicUniforms)
-		{
-			uniformData->Apply();
-		}
-	}
-
-	void Material::ParseReflectionData()
-	{
-		for (const auto& reflectionData : m_Shader->GetShaderReflectionData())
-		{
-			switch (reflectionData->GetType())
-			{
-			case ShaderReflectionType::Bool:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, SharedFromThis()));
-				break;
-			case ShaderReflectionType::Int:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, SharedFromThis(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
-				break;
-			case ShaderReflectionType::Float:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
-				break;
-			case ShaderReflectionType::Vec2:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
-				break;
-			case ShaderReflectionType::Vec3:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
-				break;
-			case ShaderReflectionType::Vec4:
-				m_DynamicUniforms.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, SharedFromThis()));
-				break;
-			case ShaderReflectionType::Texture2D:
-				m_DynamicBindableUniforms.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, SharedFromThis()));
-				break;
-			default:
-				break;
-			}
-		}
-	}
-
-	void Material::InitUniformBuffers()
-	{
-		for (const auto& [binding, uniformBlockData] : m_Shader->GetUniformBlockDatas())
-		{
-			auto uniformBlockSize = uniformBlockData.Size;
-			if (m_DynamicUniformBufferDatas.find(binding) != m_DynamicUniformBufferDatas.end())
-			{
-				delete[] m_DynamicUniformBufferDatas[binding];
-			}
-			char* bufferData = new char[uniformBlockSize];
-			memset(bufferData, 0, uniformBlockSize);
-			m_DynamicUniformBufferDatas[binding] = bufferData;
-
-			auto uniformBuffer = UniformBuffer::Create(static_cast<U32>(uniformBlockSize), binding);
-			// Upload default 0 values
-			uniformBuffer->SetData(bufferData);
-			m_DynamicUniformBuffers[binding] = std::move(uniformBuffer);
 		}
 	}
 

@@ -16,7 +16,7 @@ namespace ZeoEngine {
 			: OwnerEntity(entity) {}
 	};
 
-	IComponentHelper::IComponentHelper(const Entity* entity)
+	IComponentHelper::IComponentHelper(Entity* entity)
 		: m_Impl(CreateScope<Impl>(*entity))
 	{
 	}
@@ -44,7 +44,7 @@ namespace ZeoEngine {
 	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
 	{
 		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/Camera.png.zasset");
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraComponentHelper::OnComponentDestroy()
@@ -52,6 +52,15 @@ namespace ZeoEngine {
 		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
 	}
 #pragma endregion
+
+	void ScriptComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	{
+		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
+		{
+			auto& scriptComp = GetOwnerEntity()->GetComponent<ScriptComponent>();
+			// TODO:
+		}
+	}
 
 #pragma region ParticleSystemComponentHelper
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -123,7 +132,7 @@ namespace ZeoEngine {
 	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
 	{
 		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Copy(meshComp, dynamic_cast<MeshRendererComponent*>(otherComp)->Instance);
+		MeshInstance::Copy(meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
 	}
 
 	void MeshRendererComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
@@ -212,9 +221,9 @@ namespace ZeoEngine {
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		switch (lightComp.Type)
 		{
-			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::dynamic_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::dynamic_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::dynamic_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::static_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::static_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::static_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
 			default: break;
 		}
 	}
@@ -263,23 +272,23 @@ namespace ZeoEngine {
 		return sphere;
 	}
 
-	void LightComponentHelper::InitLight()
+	void LightComponentHelper::InitLight() const
 	{
 		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
 		auto& billboardComp = GetOwnerEntity()->GetComponent<BillboardComponent>();
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:
-				lightComp.LightSource = CreateRef<DirectionalLight>();
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/DirectionalLight.png.zasset");
+				lightComp.LightSource = CreateRef<DirectionalLight>(GetOwnerEntity()->GetScene());
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
-				lightComp.LightSource = CreateRef<PointLight>();
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/PointLight.png.zasset");
+				lightComp.LightSource = CreateRef<PointLight>(GetOwnerEntity()->GetScene());
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
-				lightComp.LightSource = CreateRef<SpotLight>();
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/editor/textures/icons/SpotLight.png.zasset");
+				lightComp.LightSource = CreateRef<SpotLight>(GetOwnerEntity()->GetScene());
+				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
 				break;
 			default:
 				break;

@@ -14,7 +14,7 @@ namespace ZeoEngine {
 	class IComponentHelper
 	{
 	public:
-		explicit IComponentHelper(const Entity* entity);
+		explicit IComponentHelper(Entity* entity);
 		virtual ~IComponentHelper();
 
 		/** Called after component being added to the owner entity. If bIsDeserialize is true, the component is added during deserialization. */
@@ -82,6 +82,14 @@ namespace ZeoEngine {
 		virtual void OnComponentDestroy() override;
 	};
 
+	class ScriptComponentHelper : public IComponentHelper
+	{
+	public:
+		using IComponentHelper::IComponentHelper;
+
+		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+	};
+
 	class ParticleSystemComponentHelper : public IComponentHelper
 	{
 	public:
@@ -138,7 +146,7 @@ namespace ZeoEngine {
 		virtual void PostDataDeserialize(U32 dataId) override;
 		virtual BoxSphereBounds GetBounds() override;
 
-		void InitLight();
+		void InitLight() const;
 	};
 
 }

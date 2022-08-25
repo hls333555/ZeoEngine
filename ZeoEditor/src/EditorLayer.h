@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Engine/GameFramework/EngineLayer.h"
+#include "Engine/Core/Layer.h"
 
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
-	class EditorLayer : public EngineLayer
+	class EditorLayer : public Layer
 	{
 	public:
 		EditorLayer();

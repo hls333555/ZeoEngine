@@ -21,7 +21,7 @@ namespace ZeoEngine {
 		template<typename T>
 		static Ref<T> LoadAsset(AssetHandle handle, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
 		{
-			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T is not derived from 'AssetBase'!");
+			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T must be derived from 'AssetBase'!");
 
 			if (IsMemoryAsset(handle))
 			{
@@ -62,7 +62,7 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		static Ref<T> LoadAsset(const std::filesystem::path& path, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
+		static Ref<T> LoadAsset(const std::string& path, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
 		{
 			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), deserializeMode, payload);
 		}
@@ -98,7 +98,7 @@ namespace ZeoEngine {
 			return true;
 		}
 
-		static bool ReloadAsset(const std::filesystem::path& path)
+		static bool ReloadAsset(const std::string& path)
 		{
 			return ReloadAsset(AssetRegistry::Get().GetAssetHandleFromPath(path));
 		}
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 			return s_LoadedAssets.find(handle) != s_LoadedAssets.end();
 		}
 
-		static bool HasAsset(const std::filesystem::path& path)
+		static bool HasAsset(const std::string& path)
 		{
 			return HasAsset(AssetRegistry::Get().GetAssetHandleFromPath(path));
 		}

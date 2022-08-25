@@ -8,6 +8,7 @@ namespace ZeoEngine {
 	
 	class SceneRenderer;
 	class Scene;
+	class RenderPass;
 
 	class EngineUtils
 	{
@@ -52,6 +53,18 @@ namespace ZeoEngine {
 			return tokens;
 		}
 
+		static std::optional<int> StringToInt(const std::string& str)
+		{
+			try
+			{
+				return std::stoi(str);
+			}
+			catch (const std::exception&)
+			{
+				return {};
+			}
+		}
+
 		static std::optional<float> StringToFloat(const std::string& str)
 		{
 			try
@@ -64,7 +77,14 @@ namespace ZeoEngine {
 			}
 		}
 
-		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& sceneContext);
+		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& scene);
+
+		template<typename T>
+		static T* GetRenderPassFromContext(const Ref<Scene>& sceneContext, const std::string& passName)
+		{
+			const auto sceneRenderer = GetSceneRendererFromContext(sceneContext);
+			return sceneRenderer->GetRenderGraph().GetRenderPass<T>(passName);
+		}
 
 	};
 

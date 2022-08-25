@@ -51,7 +51,7 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		Ref<EditorBase> OpenEditor(std::string editorName, const std::filesystem::path& assetPath = {})
+		Ref<EditorBase> OpenEditor(std::string editorName, const std::string& assetPath = {})
 		{
 			Ref<EditorBase> editor = GetEditor(editorName);
 			if (!editor)
@@ -64,24 +64,18 @@ namespace ZeoEngine {
 			{
 				editor->LoadScene(assetPath);
 			}
-			return editor;
+			return editor;	
 		}
 
-		template<typename T = EditorBase>
-		Ref<T> GetEditor(const std::string& editorName) const
+		template<typename EditorClass = EditorBase>
+		Ref<EditorClass> GetEditor(const std::string& editorName) const
 		{
+			static_assert(std::is_base_of_v<EditorBase, EditorClass>, "EditorClass must be derived from 'EditorBase'!");
+
 			const auto it = m_Editors.find(editorName);
 			if (it == m_Editors.end()) return {};
 
-			Ref<EditorBase> editor = it->second;
-			if constexpr (std::is_same_v<T, EditorBase>)
-			{
-				return editor;
-			}
-			else
-			{
-				return std::dynamic_pointer_cast<T>(editor);
-			}
+			return std::static_pointer_cast<EditorClass>(it->second);
 		}
 
 		void RebuildLayoutForAllEditors();

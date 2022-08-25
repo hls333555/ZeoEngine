@@ -16,6 +16,7 @@ namespace ZeoEngine {
 	{
 		RegisterSystem<ParticleUpdateSystem>(shared_from_this());
 		RegisterSystem<PhysicsSystem>(shared_from_this());
+		RegisterSystem<ScriptSystem>(shared_from_this());
 		RegisterSystem<NativeScriptSystem>(shared_from_this());
 	}
 
@@ -25,7 +26,7 @@ namespace ZeoEngine {
 		//m_NativeScriptSystem->OnEvent(e);
 	}
 
-	void LevelEditorScene::OnRuntimeStart()
+	void LevelEditorScene::OnRuntimeStart() const
 	{
 		for (const auto& system : GetSystems())
 		{
@@ -33,7 +34,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelEditorScene::OnRuntimeStop()
+	void LevelEditorScene::OnRuntimeStop() const
 	{
 		for (const auto& system : GetSystems())
 		{

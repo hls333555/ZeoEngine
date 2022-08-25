@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		}
 		if (ImGui::IsItemHovered())
 		{
-			ImGui::SetTooltipWithPadding("Import to %s", GetSelectedDirectory().string().c_str());
+			ImGui::SetTooltipWithPadding("Import to %s", GetSelectedDirectory().c_str());
 		}
 
 		ImGui::SameLine();
@@ -162,7 +162,7 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Save(const std::filesystem::path& path, bool bIsAsset)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset)
 	{
 		if (bIsAsset)
 		{
@@ -183,15 +183,12 @@ namespace ZeoEngine {
 		{
 			if (ImGui::MenuItem("Save All", "CTRL+S"))
 			{
-				AssetRegistry::Get().ForEachPathInDirectoryRecursively(path, [](const std::filesystem::path& inPath)
+				AssetRegistry::Get().ForEachPathInDirectoryRecursively(path, [](const std::string& inPath)
 				{
 					if (AssetRegistry::Get().GetAssetMetadata(inPath))
 					{
-						if (AssetLibrary::HasAsset(inPath))
-						{
-							const auto asset = AssetLibrary::LoadAsset<IAsset>(inPath);
-						   AssetManager::Get().SaveAsset(inPath, asset);
-						}
+						const auto asset = AssetLibrary::LoadAsset<IAsset>(inPath);
+						AssetManager::Get().SaveAsset(inPath, asset);
 					}
 				});
 			}
@@ -202,7 +199,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::filesystem::path& path, const Ref<AssetMetadata>& metadata)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata)
 	{
 		const auto& am = AssetManager::Get();
 
@@ -238,11 +235,11 @@ namespace ZeoEngine {
 		ImGui::Separator();
 	}
 
-	void ContentBrowserPanel::ImportAsset(const std::filesystem::path& path)
+	void ContentBrowserPanel::ImportAsset(const std::string& path)
 	{
-		const auto destPath = GetSelectedDirectory() / path.filename();
+		const auto destPath = fmt::format("{}/{}", GetSelectedDirectory(), PathUtils::GetPathFileName(path));
 		const auto& am = AssetManager::Get();
-		if (const auto typeID = am.GetAssetTypeFromFileExtension(path.extension().string()))
+		if (const auto typeID = am.GetAssetTypeFromFileExtension(PathUtils::GetPathExtension(path)))
 		{
 			am.ImportAsset(typeID, path, destPath);
 			SetForceUpdateFilterCache(true);
@@ -268,7 +265,7 @@ namespace ZeoEngine {
 		ImGui::PopStyleColor();
 	}
 
-	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::filesystem::path& path)
+	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
 		AssetManager::Get().OpenAsset(path);
 	}

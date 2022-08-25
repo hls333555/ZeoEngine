@@ -10,30 +10,31 @@ namespace ZeoEngine {
 
 	namespace Utils {
 
-		static const char* GetDirectoryIconPath()
+		// TODO: Move
+		static std::string GetDirectoryIconPath()
 		{
 			return "resources/textures/icons/Folder.png";
 		}
 
-		static std::filesystem::path GetAssetTypeIconDirectory()
+		static std::string GetAssetTypeIconDirectory()
 		{
 			return "resources/textures/icons";
 		}
 
-		static std::filesystem::path GetAssetTypeIconPath(AssetTypeID typeID)
+		static std::string GetAssetTypeIconPath(AssetTypeID typeID)
 		{
 			const std::string pathName = std::to_string(typeID) + ".png";
-			return GetAssetTypeIconDirectory() / pathName;
+			return fmt::format("{}/{}", GetAssetTypeIconDirectory(), pathName);
 		}
 
-		static std::filesystem::path GetThumbnailCacheDirectory()
+		static std::string GetThumbnailCacheDirectory()
 		{
 			return "cache/thumbnails";
 		}
 
 		static void CreateCacheDirectoryIfNeeded()
 		{
-			const auto cacheDirectory = GetThumbnailCacheDirectory();
+			const std::string cacheDirectory = GetThumbnailCacheDirectory();
 			if (!PathUtils::Exists(cacheDirectory))
 			{
 				PathUtils::CreateDirectory(cacheDirectory);
@@ -53,10 +54,10 @@ namespace ZeoEngine {
 	{
 		AssetManager::Get().ForEachAssetType([this](AssetTypeID typeID)
 		{
-			const auto thumbnailPath = Utils::GetAssetTypeIconPath(typeID);
+			std::string thumbnailPath = Utils::GetAssetTypeIconPath(typeID);
 			ZE_CORE_ASSERT(PathUtils::Exists(thumbnailPath));
 
-			m_AssetTypeIcons[typeID] = Texture2D::Create(thumbnailPath.string());
+			m_AssetTypeIcons[typeID] = Texture2D::Create(std::move(thumbnailPath));
 		});
 
 		m_DirectoryIcon = Texture2D::Create(Utils::GetDirectoryIconPath());
@@ -64,18 +65,18 @@ namespace ZeoEngine {
 
 	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const Ref<AssetMetadata>& metadata)
 	{
-		const auto thumbnailPath = GetAssetThumbnailPath(metadata);
-		return PathUtils::Exists(thumbnailPath) ? Texture2D::Create(thumbnailPath.string()) : m_AssetTypeIcons[metadata->TypeID];
+		std::string thumbnailPath = GetAssetThumbnailPath(metadata);
+		return PathUtils::Exists(thumbnailPath) ? Texture2D::Create(std::move(thumbnailPath)) : m_AssetTypeIcons[metadata->TypeID];
 	}
 
-	std::filesystem::path ThumbnailManager::GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const
+	std::string ThumbnailManager::GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const
 	{
 		if (metadata->TypeID == Texture2D::TypeID())
 		{
-			return metadata->GetResourcePath();
+			return metadata->GetResourceFileSystemPath();
 		}
 
-		return Utils::GetThumbnailCacheDirectory() / std::to_string(metadata->Handle);
+		return fmt::format("{}/{}", Utils::GetThumbnailCacheDirectory(), std::to_string(metadata->Handle));
 	}
 
 	Ref<Texture2D> ThumbnailManager::GetAssetTypeIcon(AssetTypeID typeID) const

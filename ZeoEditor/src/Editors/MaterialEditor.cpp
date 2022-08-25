@@ -26,15 +26,16 @@ namespace ZeoEngine {
 	}
 
 	// TODO: Should support reloading
-	void MaterialEditor::LoadAsset(const std::filesystem::path& path)
+	void MaterialEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
 		{
 			SetMaterialAsset(materialPreviewComp, AssetLibrary::LoadAsset<Material>(path));
 		});
+		FocusContextEntity(true);
 	}
 
-	void MaterialEditor::SaveAsset(const std::filesystem::path& path)
+	void MaterialEditor::SaveAsset(const std::string& path)
 	{
 		AssetManager::Get().SaveAsset(path, GetAsset());
 		auto& materialPreviewComp = GetContextEntity().GetComponent<MaterialPreviewComponent>();
@@ -49,7 +50,7 @@ namespace ZeoEngine {
 		{
 			SetMaterialAsset(materialPreviewComp, Material::GetDefaultMaterial());
 		});
-		FocusContextEntity();
+		FocusContextEntity(true);
 	}
 
 	Entity MaterialEditor::CreatePreviewEntity(const Ref<Scene>& scene)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
 #include "Engine/Core/Layer.h"
 
 namespace ZeoEngine {

@@ -15,6 +15,8 @@ namespace ZeoEngine {
 		m_PreSceneCreate.connect<&LevelEditor::ClearSelectedEntity>(this);
 
 		EditorBase::OnAttach();
+
+		LoadAndApplyDefaultAsset();
 	}
 
 	Scope<EditorUIRendererBase> LevelEditor::CreateEditorUIRenderer()
@@ -96,7 +98,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelEditor::LoadAsset(const std::filesystem::path& path)
+	void LevelEditor::LoadAsset(const std::string& path)
 	{
 		// Stop current playing scene
 		if (m_SceneState != SceneState::Edit)
@@ -108,7 +110,7 @@ namespace ZeoEngine {
 		m_LevelAsset = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Force, &scene);
 	}
 
-	void LevelEditor::SaveAsset(const std::filesystem::path& path)
+	void LevelEditor::SaveAsset(const std::string& path)
 	{
 		AssetManager::Get().SaveAsset(path, m_LevelAsset);
 		// There are mainly four situations:

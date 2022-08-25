@@ -16,40 +16,40 @@
 
 namespace ZeoEngine {
 
-	void AssetActionsBase::RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const
+	void AssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
 		PathUtils::RenamePath(oldPath, newPath);
 		// TODO: Fixup references
 
 	}
 
-	void AssetActionsBase::DeleteAsset(const std::filesystem::path& path) const
+	void AssetActionsBase::DeleteAsset(const std::string& path) const
 	{
 		PathUtils::DeletePath(path);
 		AssetRegistry::Get().OnPathRemoved(path);
 	}
 
-	void ResourceAssetActionsBase::RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const
+	void ResourceAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
 		const auto& ar = AssetRegistry::Get();
-		const auto resourcePath = ar.GetAssetMetadata(oldPath)->GetResourcePath();
-		const auto newResourcePath = ar.GetAssetMetadata(newPath)->GetResourcePath();
+		const auto resourcePath = ar.GetAssetMetadata(oldPath)->GetResourceFileSystemPath();
+		const auto newResourcePath = ar.GetAssetMetadata(newPath)->GetResourceFileSystemPath();
 		// Rename resource
 		PathUtils::RenamePath(resourcePath, newResourcePath);
 		// Rename asset
 		AssetActionsBase::RenameAsset(oldPath, newPath);
 	}
 
-	void ResourceAssetActionsBase::DeleteAsset(const std::filesystem::path& path) const
+	void ResourceAssetActionsBase::DeleteAsset(const std::string& path) const
 	{
-		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourcePath();
+		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourceFileSystemPath();
 		// Delete resource
 		PathUtils::DeletePath(resourcePath);
 		// Delete asset
 		AssetActionsBase::DeleteAsset(path);
 	}
 
-	void ImportableAssetActionsBase::ReimportAsset(const std::filesystem::path& path) const
+	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		const auto& ar = AssetRegistry::Get();
 		const auto metadata = ar.GetAssetMetadata(path);
@@ -63,10 +63,7 @@ namespace ZeoEngine {
 			srcPath = filePaths[0];
 		}
 
-		const auto destPath = metadata->GetResourcePath();
-		// Copy self is not allowed
-		if (PathUtils::Equivalent(srcPath, destPath)) return;
-
+		const std::string destPath = metadata->GetResourceFileSystemPath();
 		// Copy and overwrite existing resource
 		const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
 		if (!bSuccess)
@@ -85,34 +82,34 @@ namespace ZeoEngine {
 		ZE_CORE_INFO("Successfully reimported {0} from {1}", path, metadata->SourcePath);
 	}
 
-	void LevelAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void LevelAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<LevelEditor>(LEVEL_EDITOR, path);
 	}
 
-	void ParticleTemplateAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void ParticleTemplateAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR, path);
 	}
 
-	void Texture2DAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void Texture2DAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<TextureEditor>(TEXTURE_EDITOR, path);
 	}
 
-	void MeshAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void MeshAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<MeshEditor>(MESH_EDITOR, path);
 	}
 
-	void MaterialAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void MaterialAssetActions::OpenAsset(const std::string& path) const
 	{
 		EditorManager::Get().OpenEditor<MaterialEditor>(MATERIAL_EDITOR, path);
 	}
 
-	void ShaderAssetActions::OpenAsset(const std::filesystem::path& path) const
+	void ShaderAssetActions::OpenAsset(const std::string& path) const
 	{
-		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourcePath();
+		const std::string resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourceFileSystemPath();
 		PlatformUtils::OpenFile(resourcePath);
 	}
 

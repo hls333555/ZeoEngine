@@ -63,12 +63,12 @@ namespace ZeoEngine {
 		return m_AssetSerializers.insert(std::make_pair(typeID, std::move(serializer))).second;
 	}
 
-	static void UnknownAssetTypeWarning(const char* operation, const std::filesystem::path& path, AssetTypeID typeID)
+	static void UnknownAssetTypeWarning(const char* operation, const std::string& path, AssetTypeID typeID)
 	{
-		ZE_CORE_WARN("Failed to {0} asset: {1} with unknown asset type: {2}!", operation, std::filesystem::path(path).filename(), typeID);
+		ZE_CORE_WARN("Failed to {0} asset: {1} with unknown asset type: {2}!", operation, path, typeID);
 	}
 
-	bool AssetManager::CreateAssetFile(AssetTypeID typeID, const std::filesystem::path& path) const
+	bool AssetManager::CreateAssetFile(AssetTypeID typeID, const std::string& path) const
 	{
 		if (const auto* factory = GetAssetFactoryByAssetType(typeID))
 		{
@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::ImportAsset(AssetTypeID typeID, const std::filesystem::path& srcPath, const std::filesystem::path& destPath) const
+	bool AssetManager::ImportAsset(AssetTypeID typeID, const std::string& srcPath, const std::string& destPath) const
 	{
 		if (const auto* factory = GetAssetFactoryByAssetType(typeID))
 		{
@@ -103,7 +103,7 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	bool AssetManager::OpenAsset(const std::filesystem::path& path) const
+	bool AssetManager::OpenAsset(const std::string& path) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
@@ -119,7 +119,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const
+	bool AssetManager::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(oldPath);
 		if (!metadata) return false;
@@ -135,7 +135,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::DeleteAsset(const std::filesystem::path& path) const
+	bool AssetManager::DeleteAsset(const std::string& path) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
@@ -151,7 +151,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::SaveAsset(const std::filesystem::path& path, const Ref<IAsset>& asset) const
+	bool AssetManager::SaveAsset(const std::string& path, const Ref<IAsset>& asset) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
@@ -167,7 +167,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	bool AssetManager::ReimportAsset(const std::filesystem::path& path) const
+	bool AssetManager::ReimportAsset(const std::string& path) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;

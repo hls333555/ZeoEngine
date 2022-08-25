@@ -64,7 +64,7 @@ namespace ZeoEngine {
 		{
 			SortEntities();
 		}
-
+		m_Entities[uuid] = entity;
 		return entity;
 	}
 
@@ -78,8 +78,19 @@ namespace ZeoEngine {
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		const auto uuid = entity.GetUUID();
 		m_Registry.destroy(entity);
+		m_Entities.erase(uuid);
 		SortEntities();
+	}
+
+	Entity Scene::GetEntityByUUID(UUID uuid)
+	{
+		if (m_Entities.find(uuid) != m_Entities.end())
+		{
+			return m_Entities[uuid];
+		}
+		return {};
 	}
 
 	Entity Scene::GetSelectedEntity() const

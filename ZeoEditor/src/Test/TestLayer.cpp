@@ -2,22 +2,19 @@
 
 #include <doctest.h>
 
-#include "Test/TestComponent.h"
 #include "Reflection/DataWidget.h"
 
 namespace ZeoEngine {
 
 	TestLayer::TestLayer()
-		: EngineLayer("Test")
+		: Layer("Test")
 	{
 	}
 
 	void TestLayer::OnAttach()
 	{
-		EngineLayer::OnAttach();
-
 		doctest::Context context;
-		int doctestRes = context.run();
+		context.run();
 	}
 
 	TEST_CASE("Test data widget reflection")

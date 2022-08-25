@@ -5,6 +5,7 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
@@ -19,9 +20,9 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 		const auto& GetSelectedDirectory() const { return m_SelectedDirectory; }
-		void SetSelectedDirectory(std::filesystem::path directory) { m_SelectedDirectory = std::move(directory); }
+		void SetSelectedDirectory(std::string directory) { m_SelectedDirectory = std::move(directory); }
 		const auto& GetSelectedPath() const { return m_SelectedPath; }
-		void SetSelectedPath(const std::filesystem::path& path) { m_SelectedPath = path; SetSelectedDirectory(path.parent_path()); m_bFocusSelectedPath = true; }
+		void SetSelectedPath(const std::string& path) { m_SelectedPath = path; SetSelectedDirectory(PathUtils::GetParentPath(path)); m_bFocusSelectedPath = true; }
 
 	protected:
 		constexpr float GetSelectableThumbnailWidth() const { return 32.0f; }
@@ -38,13 +39,13 @@ namespace ZeoEngine {
 		std::string GetFormattedAssetTypeName(const char* typeName) const;
 
 		/** Try to find an available path name in current directory by appending suffix to it. */
-		std::filesystem::path GetAvailableNewPathName(const char* baseName, bool bIsAsset) const;
+		std::string GetAvailableNewPathName(const char* baseName, bool bIsAsset) const;
 
-		void RequestPathCreation(const std::filesystem::path& path, AssetTypeID typeID, bool bNeedsRenaming);
-		void RequestPathCreationForResourceAsset(const std::filesystem::path& srcPath, const std::filesystem::path& destPath);
-		void RequestPathDeletion(const std::filesystem::path& path);
-		void RequestPathRenaming(const std::filesystem::path& path);
-		void RequestPathOpen(const std::filesystem::path& path);
+		void RequestPathCreation(const std::string& path, AssetTypeID typeID, bool bNeedsRenaming);
+		void RequestPathCreationForResourceAsset(const std::string& srcPath, const std::string& destPath);
+		void RequestPathDeletion(const std::string& path);
+		void RequestPathRenaming(const std::string& path);
+		void RequestPathOpen(const std::string& path);
 
 		virtual void ProcessEvent(Event& e) override;
 	private:
@@ -62,7 +63,7 @@ namespace ZeoEngine {
 		virtual void DrawBottom() {}
 
 		void DrawDirectoryTree();
-		void DrawDirectoryTreeRecursively(const std::filesystem::path& baseDirectory);
+		void DrawDirectoryTreeRecursively(const std::string& baseDirectory);
 
 		void DrawDirectoryNavigator();
 		void DrawPathsInDirectory();
@@ -73,21 +74,21 @@ namespace ZeoEngine {
 		virtual bool ShouldDrawPath(const Ref<PathMetadata>& metadata) { return true; }
 		void DrawSelectablePath(const Ref<PathMetadata>& metadata);
 		void DrawTilePath(const Ref<PathMetadata>& metadata);
-		virtual void OnPathSelected(const std::filesystem::path& path) {}
+		virtual void OnPathSelected(const std::string& path) {}
 
 		void DrawPathTooltip(const Ref<PathMetadata>& metadata) const;
-		void DrawPathContextMenu(const std::filesystem::path& path);
-		virtual void DrawPathContextMenuItem_Save(const std::filesystem::path& path, bool bIsAsset) {}
-		virtual void DrawPathContextMenuItem_Asset(const std::filesystem::path& path, const Ref<AssetMetadata>& metadata) {}
+		void DrawPathContextMenu(const std::string& path);
+		virtual void DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset) {}
+		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata) {}
 
 		virtual void ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding) {}
 		void SubmitPathRenaming(char* renameBuffer, const Ref<PathMetadata>& metadata, bool& bHasKeyboardFocused);
 
-		void HandleRightColumnDirectoryOpen(const std::filesystem::path& directory);
-		virtual void HandleRightColumnAssetOpen(const std::filesystem::path& path) = 0;
+		void HandleRightColumnDirectoryOpen(const std::string& directory);
+		virtual void HandleRightColumnAssetOpen(const std::string& path) = 0;
 
-		void ProcessPathDeletion(const std::filesystem::path& path);
-		void ProcessPathRenaming(const std::filesystem::path& oldPath, const std::filesystem::path& newPath, AssetTypeID typeID);
+		void ProcessPathDeletion(const std::string& path);
+		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeID typeID);
 
 	private:
 		float m_LeftColumnWidth = 200.0f;
@@ -101,25 +102,25 @@ namespace ZeoEngine {
 		AssetBrowserViewType m_ViewType = AssetBrowserViewType::Tiles;
 
 		/** Selected directory in the left column */
-		std::filesystem::path m_SelectedDirectory;
+		std::string m_SelectedDirectory;
 		/** Selected directory/asset in the right column */
-		std::filesystem::path m_SelectedPath;
+		std::string m_SelectedPath;
 		/** Flag used to scroll to the selected path once */
 		bool m_bFocusSelectedPath = false;
 
 		/** Directory waiting for opening */
-		std::filesystem::path m_DirectoryToOpen;
+		std::string m_DirectoryToOpen;
 		/** Directory or asset waiting for renaming */
-		std::filesystem::path m_PathToRename;
+		std::string m_PathToRename;
 		/** Directory or asset waiting for creation */
-		std::filesystem::path m_PathToCreate;
+		std::string m_PathToCreate;
 		/** Directory or asset waiting for deletion */
-		std::filesystem::path m_PathToDelete;
+		std::string m_PathToDelete;
 
 		TextFilter m_Filter;
 
 		/** Filter cache */
-		std::vector<std::filesystem::path> m_FilteredPaths;
+		std::vector<std::string> m_FilteredPaths;
 		bool m_bForceUpdateFilterCache = false;
 	};
 

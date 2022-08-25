@@ -14,7 +14,7 @@ namespace ZeoEngine {
 		virtual I32 ProcessComponent() override;
 
 	private:
-		void DrawUniformData(const Ref<DynamicUniformDataBase>& uniform) const;
+		void DrawUniformData(const Ref<DynamicUniformDataBase>& data) const;
 	};
 
 }

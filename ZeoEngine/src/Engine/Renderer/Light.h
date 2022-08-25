@@ -2,13 +2,19 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Renderer/RenderPass.h"
+
 namespace ZeoEngine {
 
+	class Scene;
+	class ShaderInstance;
 	class Camera;
 
 	class Light
 	{
 	public:
+		explicit Light(const Ref<Scene>& scene)
+			: m_Scene(scene) {}
 		virtual ~Light() = default;
 
 		enum class ShadowType
@@ -29,7 +35,7 @@ namespace ZeoEngine {
 		bool IsCastShadow() const { return m_bCastShadow; }
 		void SetCastShadow(bool bCast) { m_bCastShadow = bCast; }
 		ShadowType GetShadowType() const { return m_ShadowType; }
-		void SetShadowType(ShadowType type) { m_ShadowType = type; }
+		virtual void SetShadowType(ShadowType type) { m_ShadowType = type; }
 		float GetDepthBias() const { return m_DepthBias; }
 		void SetDepthBias(float bias) { m_DepthBias = bias; }
 		float GetNormalBias() const { return m_NormalBias; }
@@ -49,6 +55,9 @@ namespace ZeoEngine {
 
 		Vec3 CalculateDirection(const Vec3& rotation) const;
 
+	protected:
+		Ref<Scene> GetScene() const { return m_Scene.lock(); }
+
 	private:
 		Vec4 m_Color{ 1.0f };
 		float m_Intensity = 1.0f;
@@ -59,15 +68,20 @@ namespace ZeoEngine {
 		float m_NormalBias = 30.0f;
 		float m_FilterSize = 20.0f;
 		float m_LightSize = 150.0f;
+
+		Weak<Scene> m_Scene;
 	};
 
 	class DirectionalLight : public Light
 	{
+		using Light::Light;
+
 	public:
+		virtual void SetShadowType(ShadowType type) override;
 		virtual U32 GetCascadeCount() const override { return m_CascadeCount; }
 		virtual void SetCascadeCount(U32 count) override { m_CascadeCount = count; }
-		virtual float GetCascadeBlendThreshold() const { return m_CascadeBlendThreshold; }
-		virtual void SetCascadeBlendThreshold(float threshold) { m_CascadeBlendThreshold = threshold; }
+		virtual float GetCascadeBlendThreshold() const override { return m_CascadeBlendThreshold; }
+		virtual void SetCascadeBlendThreshold(float threshold) override { m_CascadeBlendThreshold = threshold; }
 		virtual float GetMaxShadowDistance() override { return m_MaxShadowDistance; }
 		virtual void SetMaxShadowDistance(float distance) override { m_MaxShadowDistance = distance; }
 		virtual float GetCascadeSplitLambda() override { return m_CascadeSplitLambda; }
@@ -82,10 +96,13 @@ namespace ZeoEngine {
 
 	class PointLight : public Light
 	{
+		using Light::Light;
 	};
 
 	class SpotLight : public PointLight
 	{
+		using PointLight::PointLight;
+
 	public:
 		virtual float GetCutoff() const override { return m_CutoffAngle; }
 		virtual void SetCutoff(float cutoff) override { m_CutoffAngle = cutoff; }

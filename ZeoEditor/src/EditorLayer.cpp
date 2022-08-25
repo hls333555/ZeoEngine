@@ -12,27 +12,24 @@
 namespace ZeoEngine {
 
 	EditorLayer::EditorLayer()
-		: EngineLayer("Editor")
+		: Layer("Editor")
 	{
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		EngineLayer::OnAttach();
-
+		// TODO:
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		const Ref<LevelEditor> levelEditor = EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
+		EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
 		
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNC();
-
-		EngineLayer::OnUpdate(dt);
 
 		Renderer::ResetStats();
 		EditorManager::Get().OnUpdate(dt);

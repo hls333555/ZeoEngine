@@ -10,7 +10,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static Ref<Scene> GetActiveGameScene();
-		static void OpenLevel(const std::filesystem::path& path);
+		static void OpenLevel(const std::string& path);
 	};
 	
 }

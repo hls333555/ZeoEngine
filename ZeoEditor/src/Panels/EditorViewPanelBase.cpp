@@ -116,7 +116,7 @@ namespace ZeoEngine {
 		const auto thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(metadata);
 		if (!bOverwriteThumbnail && PathUtils::Exists(thumbnailPath)) return;
 
-		GetContextEditor()->GetFrameBuffer()->Snapshot(thumbnailPath.string(), imageWidth);
+		GetContextEditor()->GetFrameBuffer()->Snapshot(thumbnailPath, imageWidth);
 		metadata->UpdateThumbnail();
 	}
 

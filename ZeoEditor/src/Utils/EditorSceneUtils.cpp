@@ -14,7 +14,7 @@ namespace ZeoEngine {
 		return EditorManager::Get().GetEditor(LEVEL_EDITOR)->GetScene();
 	}
 
-	void SceneUtils::OpenLevel(const std::filesystem::path& path)
+	void SceneUtils::OpenLevel(const std::string& path)
 	{
 		EditorManager::Get().GetEditor(LEVEL_EDITOR)->LoadScene(path);
 	}

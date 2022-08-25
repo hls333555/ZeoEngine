@@ -67,17 +67,27 @@ namespace ZeoEngine {
 
 	Ref<Mesh> Mesh::GetDefaultCubeMesh()
 	{
-		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Cube.fbx.zasset");
+		return AssetLibrary::LoadAsset<Mesh>("assets/meshes/Cube.fbx.zasset");
 	}
 
 	Ref<Mesh> Mesh::GetDefaultSphereMesh()
 	{
-		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Sphere.fbx.zasset");
+		return AssetLibrary::LoadAsset<Mesh>("assets/meshes/Sphere.fbx.zasset");
 	}
 
 	Ref<Mesh> Mesh::GetDefaultPlaneMesh()
 	{
-		return AssetLibrary::LoadAsset<Mesh>("assets/editor/meshes/Plane.fbx.zasset");
+		return AssetLibrary::LoadAsset<Mesh>("assets/meshes/Plane.fbx.zasset");
+	}
+
+	void Mesh::SetDefaultMaterial(U32 index, const Ref<Material>& material)
+	{
+		if (index < 0 || index >= m_MaterialSlots.size()) return;
+
+		const auto& oldMaterial = m_MaterialSlots[index];
+		if (material == oldMaterial) return;
+
+		m_MaterialSlots[index] = material;
 	}
 
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene)

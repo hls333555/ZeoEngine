@@ -87,9 +87,9 @@ namespace ZeoEngine {
 		// Generate a 1x1 white texture to be used by flat color
 		s_Data.TextureSlots[0] = Texture2D::GetWhiteTexture();
 
-		s_Data.QuadShader = Shader::Create("assets/editor/shaders/Renderer2D_Quad.glsl");
-		s_Data.CircleShader = Shader::Create("assets/editor/shaders/Renderer2D_Circle.glsl");
-		s_Data.LineShader = Shader::Create("assets/editor/shaders/Renderer2D_Line.glsl");
+		s_Data.QuadShader = Shader::Create("assets/shaders/Renderer2D_Quad.glsl");
+		s_Data.CircleShader = Shader::Create("assets/shaders/Renderer2D_Circle.glsl");
+		s_Data.LineShader = Shader::Create("assets/shaders/Renderer2D_Line.glsl");
 		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2DData::CameraData), 0);
 
 	}

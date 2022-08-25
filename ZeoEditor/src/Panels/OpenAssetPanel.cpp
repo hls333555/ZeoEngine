@@ -45,7 +45,7 @@ namespace ZeoEngine {
 		return assetTypeID == AssetTypeID{} || assetTypeID == m_AssetTypeID;
 	}
 
-	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::filesystem::path& path)
+	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
 		GetContextEditor()->LoadScene(path);
 		Close();

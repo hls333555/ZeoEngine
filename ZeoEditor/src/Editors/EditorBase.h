@@ -73,9 +73,9 @@ namespace ZeoEngine {
 		void NewScene(bool bIsCreateDefault);
 		void LoadScene() const;
 		/** Create an empty scene and load asset from disk. */
-		void LoadScene(const std::filesystem::path& path);
+		void LoadScene(const std::string& path);
 		void SaveScene();
-		void SaveScene(const std::filesystem::path& path);
+		void SaveScene(const std::string& path);
 		void SaveSceneAs() const;
 
 		void Open();
@@ -94,8 +94,8 @@ namespace ZeoEngine {
 	public:
 		virtual Ref<IAsset> GetAsset() const = 0;
 	protected:
-		virtual void LoadAsset(const std::filesystem::path& path) = 0;
-		virtual void SaveAsset(const std::filesystem::path& path) = 0;
+		virtual void LoadAsset(const std::string& path) = 0;
+		virtual void SaveAsset(const std::string& path) = 0;
 		virtual void LoadAndApplyDefaultAsset() {}
 
 	private:

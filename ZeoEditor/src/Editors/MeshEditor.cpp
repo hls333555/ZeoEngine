@@ -31,7 +31,7 @@ namespace ZeoEngine {
 	}
 
 	// TODO: Should support reloading
-	void MeshEditor::LoadAsset(const std::filesystem::path& path)
+	void MeshEditor::LoadAsset(const std::string& path)
 	{
 		GetContextEntity().PatchComponent<MeshPreviewComponent>([&path, this](auto& meshPreviewComp)
 		{
@@ -43,7 +43,7 @@ namespace ZeoEngine {
 		FocusContextEntity(true);
 	}
 
-	void MeshEditor::SaveAsset(const std::filesystem::path& path)
+	void MeshEditor::SaveAsset(const std::string& path)
 	{
 		AssetManager::Get().SaveAsset(path, GetAsset());
 		auto& meshPreviewComp = GetContextEntity().GetComponent<MeshPreviewComponent>();

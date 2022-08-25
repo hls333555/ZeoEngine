@@ -65,7 +65,7 @@ namespace ZeoEngine {
 		ParticleTemplate();
 
 		// TODO:
-		static constexpr const char* GetTemplatePath() { return "assets/editor/levels/NewParticleTemplate.zasset"; }
+		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewParticleTemplate.zasset"; }
 
 		SizeT GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 

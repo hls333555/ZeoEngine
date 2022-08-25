@@ -118,7 +118,7 @@ namespace ZeoEngine {
 							bIsListEmpty = false;
 
 							// Push asset path as id
-							ImGui::PushID(md->Path.string().c_str());
+							ImGui::PushID(md->Path.c_str());
 							{
 								static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
 								static const float thumbnailRounding = 4.0f;
@@ -127,7 +127,7 @@ namespace ZeoEngine {
 								// Display asset path tooltip for drop-down asset
 								if (ImGui::IsItemHovered())
 								{
-									ImGui::SetTooltipWithPadding("%s", md->Path.string().c_str());
+									ImGui::SetTooltipWithPadding("%s", md->Path.c_str());
 								}
 
 								ImGui::SameLine();
@@ -173,7 +173,7 @@ namespace ZeoEngine {
 			// Display path tooltip for current selection
 			if (metadata && ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding("%s", metadata->Path.string().c_str());
+				ImGui::SetTooltipWithPadding("%s", metadata->Path.c_str());
 			}
 
 			return std::make_pair(bIsValueChanged, metadata);

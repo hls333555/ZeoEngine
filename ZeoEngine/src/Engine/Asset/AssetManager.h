@@ -36,21 +36,21 @@ namespace ZeoEngine {
 		bool RegisterAssetSerializer(AssetTypeID typeID, Scope<AssetSerializerBase> serializer);
 
 		/** Create a new empty asset file. */
-		bool CreateAssetFile(AssetTypeID typeID, const std::filesystem::path& path) const;
+		bool CreateAssetFile(AssetTypeID typeID, const std::string& path) const;
 		/** Import a new resource from file dialog or dragging by copying it from srcPath to destPath. */
-		bool ImportAsset(AssetTypeID typeID, const std::filesystem::path& srcPath, const std::filesystem::path& destPath) const;
+		bool ImportAsset(AssetTypeID typeID, const std::string& srcPath, const std::string& destPath) const;
 		/** Construct a new asset. */
 		Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const;
 		/** Open an existing asset. */
-		bool OpenAsset(const std::filesystem::path& path) const;
+		bool OpenAsset(const std::string& path) const;
 		/** Rename an existing asset. */
-		bool RenameAsset(const std::filesystem::path& oldPath, const std::filesystem::path& newPath) const;
+		bool RenameAsset(const std::string& oldPath, const std::string& newPath) const;
 		/** Delete an existing asset. */
-		bool DeleteAsset(const std::filesystem::path& path) const;
+		bool DeleteAsset(const std::string& path) const;
 		/** Save an existing asset. */
-		bool SaveAsset(const std::filesystem::path& path, const Ref<IAsset>& asset) const;
+		bool SaveAsset(const std::string& path, const Ref<IAsset>& asset) const;
 		/** Reimport an existing asset from its source place. */
-		bool ReimportAsset(const std::filesystem::path& path) const;
+		bool ReimportAsset(const std::string& path) const;
 
 		AssetFactoryBase* GetAssetFactoryByAssetType(AssetTypeID typeID) const;
 		AssetActionsBase* GetAssetActionsByAssetType(AssetTypeID typeID) const;

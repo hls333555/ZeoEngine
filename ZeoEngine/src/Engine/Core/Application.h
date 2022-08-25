@@ -7,7 +7,6 @@
 #include "Engine/Events/ApplicationEvent.h"
 #include "Engine/Core/LayerStack.h"
 #include "Engine/Profile/BenchmarkTimer.h"
-#include "Engine/GameFramework/EngineLayer.h"
 #include "Engine/Profile/Profiler.h"
 
 int main(int argc, char** argv);
@@ -64,20 +63,6 @@ namespace ZeoEngine {
 		void PushOverlay(Layer* layer);
 
 		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
-
-		// TODO:
-		template<typename T>
-		T* FindLayer()
-		{
-			for (auto* layer : m_LayerStack)
-			{
-				if (T* layerCast = dynamic_cast<T*>(layer))
-				{
-					return layerCast;
-				}
-			}
-			return nullptr;
-		}
 
 	private:
 		void Run();

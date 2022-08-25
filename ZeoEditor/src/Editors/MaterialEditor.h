@@ -19,8 +19,8 @@ namespace ZeoEngine {
 	public:
 		virtual Ref<IAsset> GetAsset() const override;
 	private:
-		virtual void LoadAsset(const std::filesystem::path& path) override;
-		virtual void SaveAsset(const std::filesystem::path& path) override;
+		virtual void LoadAsset(const std::string& path) override;
+		virtual void SaveAsset(const std::string& path) override;
 		virtual void LoadAndApplyDefaultAsset() override;
 
 		virtual Entity CreatePreviewEntity(const Ref<Scene>& scene) override;
