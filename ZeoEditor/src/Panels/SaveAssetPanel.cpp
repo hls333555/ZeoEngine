@@ -1,17 +1,23 @@
 #include "Panels/SaveAssetPanel.h"
 
-#include "Core/EditorManager.h"
+#include "Core/Editor.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Engine/Asset/AssetRegistry.h"
-#include "Editors/EditorBase.h"
-#include "EditorUIRenderers/EditorUIRendererBase.h"
+#include "Worlds/AssetPreviewWorlds.h"
 
 namespace ZeoEngine {
+
+	SaveAssetPanel::SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, const Ref<EditorPreviewWorldBase>& world)
+		: OpenAssetPanel(std::move(panelName), assetTypeID)
+		, m_World(world)
+	{
+	}
 
 	void SaveAssetPanel::OnPanelOpen()
 	{
 		m_bHasKeyboardFocused = false;
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
+		const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
 		SetSelectedDirectory(PathUtils::GetParentPath(metadata->Path));
 	}
@@ -49,7 +55,8 @@ namespace ZeoEngine {
 		{
 			if (ImGui::Button("Save"))
 			{
-				const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetContextEditor()->GetAsset()->GetHandle());
+				const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 				std::string name = m_NameBuffer;
 				const std::string extension = PathUtils::GetPathExtension(name);
 				const std::string originalExtension = PathUtils::GetPathExtension(metadata->PathName);
@@ -62,7 +69,14 @@ namespace ZeoEngine {
 				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetEngineAssetExtension());
 				if (AssetRegistry::Get().ContainsPathInDirectory(GetSelectedDirectory(), newPath))
 				{
-					m_ToReplacePath = std::move(newPath);
+					if (AssetRegistry::Get().GetAssetMetadata(newPath)->TypeID == metadata->TypeID)
+					{
+						m_ToReplacePath = std::move(newPath);
+					}
+					else
+					{
+						m_bReplaceError = true;
+					}
 				}
 				else
 				{
@@ -85,7 +99,12 @@ namespace ZeoEngine {
 
 		if (!m_ToReplacePath.empty())
 		{
-			DrawReplaceDialog(m_ToReplacePath);
+			DrawReplaceDialog();
+		}
+
+		if (m_bReplaceError)
+		{
+			DrawReplaceErrorDialog();
 		}
 	}
 
@@ -94,17 +113,18 @@ namespace ZeoEngine {
 		m_ToReplacePath = path;
 	}
 
-	void SaveAssetPanel::DrawReplaceDialog(const std::string& path)
+	static ImVec2 s_ButtonSize{ 120.0f, 0.0f };
+
+	void SaveAssetPanel::DrawReplaceDialog()
 	{
-		static ImVec2 buttonSize{ 120.0f, 0.0f };
 		ImGui::OpenPopup("Replace?");
 		if (ImGui::BeginPopupModal("Replace?", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
 		{
 			ImGui::Text("The asset already exists.\nDo you want to replace it?\n\n");
 
-			if (ImGui::Button("OK", buttonSize))
+			if (ImGui::Button("OK", s_ButtonSize))
 			{
-				SaveAndClose(path);
+				SaveAndClose(m_ToReplacePath);
 				m_ToReplacePath.clear();
 				ImGui::CloseCurrentPopup();
 			}
@@ -112,7 +132,7 @@ namespace ZeoEngine {
 
 			ImGui::SameLine();
 
-			if (ImGui::Button("Cancel", buttonSize))
+			if (ImGui::Button("Cancel", s_ButtonSize))
 			{
 				m_ToReplacePath.clear();
 				ImGui::CloseCurrentPopup();
@@ -122,13 +142,39 @@ namespace ZeoEngine {
 		}
 	}
 
+	void SaveAssetPanel::DrawReplaceErrorDialog()
+	{
+		ImGui::OpenPopup("Replace Error");
+		if (ImGui::BeginPopupModal("Replace Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+		{
+			ImGui::Text("The asset with a different type already exists! Please choose another name.\n\n");
+
+			ImGui::Indent((ImGui::GetContentRegionAvail().x  - s_ButtonSize.x) / 2);
+
+			if (ImGui::Button("OK", s_ButtonSize))
+			{
+				m_bReplaceError = false;
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+	}
+
 	void SaveAssetPanel::SaveAndClose(const std::string& path)
 	{
-		GetContextEditor()->SaveScene(path);
-		Close();
-		const auto levelEditor = EditorManager::Get().GetEditor(LEVEL_EDITOR);
-		const auto contentBrowser = levelEditor->GetEditorUIRenderer()->GetPanel<ContentBrowserPanel>(CONTENT_BROWSER);
+		const auto world = m_World.lock();
+		world->SaveAsset(path);
+		const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		if (path != metadata->Path)
+		{
+			world->OnAssetSaveAs(path);
+		}
+		Toggle(false);
+		const auto contentBrowser = g_Editor->GetPanel<ContentBrowserPanel>(CONTENT_BROWSER);
 		// Jump and focus new saved asset
 		contentBrowser->SetSelectedPath(path);
 	}
+
 }

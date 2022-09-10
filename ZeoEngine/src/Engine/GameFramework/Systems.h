@@ -7,6 +7,7 @@ class b2World;
 
 namespace ZeoEngine {
 
+	class WorldBase;
 	class SceneRenderer;
 	class SceneCamera;
 
@@ -16,19 +17,20 @@ namespace ZeoEngine {
 	class ISystem
 	{
 	public:
-		explicit ISystem(const Ref<Scene>& scene);
+		explicit ISystem(const Ref<WorldBase>& world);
 		virtual ~ISystem() = default;
 
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; m_SceneRaw = scene.get(); }
+		void UpdateScene(const Ref<Scene>& scene) { m_SceneRef = scene; m_Scene = scene.get(); }
 
 	protected:
-		Ref<Scene> GetScene() const { return m_Scene.lock(); }
-		const Scene* GetSceneRaw() const { return m_SceneRaw; }
+		Ref<Scene> GetSceneRef() const { return m_SceneRef.lock(); }
+		Scene* GetScene() const { return m_Scene; }
 
+		// TODO: Move to scene
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
 		{
-			m_SceneRaw->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
+			m_Scene->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
 		}
 
 		struct DefaultCompare
@@ -40,10 +42,11 @@ namespace ZeoEngine {
 			}
 		};
 
+		// TODO: Move to scene
 		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
 		void ForEachComponentGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
 		{
-			auto group = m_SceneRaw->m_Registry.group<Owned..., Get...>(exclude);
+			auto group = m_Scene->m_Registry.group<Owned..., Get...>(exclude);
 			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
 			{
 				group.sort<Owned..., Get...>(std::move(compareFunc));
@@ -52,14 +55,14 @@ namespace ZeoEngine {
 		}
 
 	private:
-		Weak<Scene> m_Scene;
-		Scene* m_SceneRaw = nullptr; // We cannot only store std::weak_ptr here as its lock() will return nullptr inside Scene's destructor
+		Weak<Scene> m_SceneRef;
+		Scene* m_Scene = nullptr;
 	};
 
 	class SystemBase : public ISystem
 	{
 	public:
-		explicit SystemBase(const Ref<Scene>& scene);
+		explicit SystemBase(const Ref<WorldBase>& world);
 
 		virtual void OnCreate() {}
 		void OnUpdate(DeltaTime dt) const;
@@ -81,7 +84,7 @@ namespace ZeoEngine {
 	class RenderSystemBase : public ISystem
 	{
 	public:
-		RenderSystemBase(const Ref<Scene>& scene, const Ref<SceneRenderer>& sceneRenderer);
+		explicit RenderSystemBase(const Ref<WorldBase>& world);
 		
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}
@@ -89,59 +92,10 @@ namespace ZeoEngine {
 		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera();
 
 	protected:
-		Ref<SceneRenderer> GetSceneRenderer() const { return m_SceneRenderer.lock(); }
+		SceneRenderer* GetSceneRenderer() const { return m_SceneRenderer; }
 
 	private:
-		Weak<SceneRenderer> m_SceneRenderer;
-	};
-
-	class RenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-		virtual void OnRenderRuntime() override;
-
-	private:
-		void RenderLights(bool bIsEditor);
-		void RenderMeshes();
-	};
-
-	class RenderSystem2D : public RenderSystem
-	{
-	public:
-		using RenderSystem::RenderSystem;
-
-		virtual void OnRenderEditor() override;
-		virtual void OnRenderRuntime() override;
-
-	private:
-		void OnRenderImpl();
-	};
-
-	class ParticlePreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-	};
-
-	class MaterialPreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-	};
-
-	class MeshPreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
+		SceneRenderer* m_SceneRenderer = nullptr;
 	};
 
 	class ParticleUpdateSystem : public SystemBase
@@ -154,20 +108,18 @@ namespace ZeoEngine {
 		virtual void OnDestroy() override;
 
 	private:
-		void OnUpdateImpl(DeltaTime dt);
+		virtual void OnUpdateImpl(DeltaTime dt);
 	};
 
-	class ParticlePreviewUpdateSystem : public SystemBase
+	class ParticlePreviewUpdateSystem : public ParticleUpdateSystem
 	{
 	public:
-		using SystemBase::SystemBase;
+		using ParticleUpdateSystem::ParticleUpdateSystem;
 
-		virtual void OnUpdateEditor(DeltaTime dt) override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
 		virtual void OnDestroy() override;
 
 	private:
-		void OnUpdateImpl(DeltaTime dt);
+		virtual void OnUpdateImpl(DeltaTime dt) override;
 	};
 
 	class ScriptSystem : public SystemBase
@@ -213,6 +165,55 @@ namespace ZeoEngine {
 
 	private:
 		b2World* m_PhysicsWorld = nullptr;
+	};
+
+	class RenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
+		virtual void OnRenderRuntime() override;
+
+	private:
+		void RenderLights(bool bIsEditor);
+		void RenderMeshes();
+	};
+
+	class RenderSystem2D : public RenderSystem
+	{
+	public:
+		using RenderSystem::RenderSystem;
+
+		virtual void OnRenderEditor() override;
+		virtual void OnRenderRuntime() override;
+
+	private:
+		void OnRenderImpl();
+	};
+
+	class ParticlePreviewRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
+	};
+
+	class MeshPreviewRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
+	};
+
+	class MaterialPreviewRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor() override;
 	};
 
 }

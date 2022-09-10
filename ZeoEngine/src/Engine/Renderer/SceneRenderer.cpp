@@ -10,26 +10,30 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/Light.h"
 #include "Engine/Renderer/Mesh.h"
+#include "Engine/GameFramework/World.h"
 
 namespace ZeoEngine {
-	
+
+	SceneRenderer::SceneRenderer() = default;
+
 	SceneRenderer::~SceneRenderer()
 	{
 		DDRenderInterface::Shutdown(m_SceneContext);
 	}
 
-	void SceneRenderer::OnAttach(const Ref<Scene>& scene)
+	void SceneRenderer::OnAttach(const Ref<WorldBase>& world)
 	{
 		m_RenderDocRef = &Application::Get().GetRenderDoc();
 
 		m_QuadBatcher.Init();
 
 		m_Ddri = DDRenderInterface::Create(shared_from_this());
-		UpdateSceneContext(scene);
-
 		m_RenderGraph = CreateRenderGraph();
 		m_RenderGraph->Init();
-		m_RenderSystem = CreateRenderSystem(scene);
+		m_RenderSystem = CreateRenderSystem(world);
+
+		UpdateSceneContext(world->GetActiveScene());
+		world->m_OnActiveSceneChanged.connect<&SceneRenderer::UpdateSceneContext>(this);
 
 		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), UniformBufferBinding::Global);
 		m_CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), UniformBufferBinding::Camera);
@@ -46,7 +50,7 @@ namespace ZeoEngine {
 		{
 			PrepareScene();
 			OnRenderScene();
-			m_PostSceneRenderDel(GetFrameBuffer());
+			m_PostSceneRenderDel.publish(GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
 		m_RenderDocRef->StopFrameCapture();

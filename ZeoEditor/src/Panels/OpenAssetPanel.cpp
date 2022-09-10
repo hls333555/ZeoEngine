@@ -1,12 +1,12 @@
 #include "Panels/OpenAssetPanel.h"
 
 #include "Engine/Asset/AssetRegistry.h"
-#include "Editors/EditorBase.h"
+#include "Core/Editor.h"
 
 namespace ZeoEngine {
 
-	OpenAssetPanel::OpenAssetPanel(std::string panelName, const Weak<EditorBase>& contextEditor, AssetTypeID assetTypeID)
-		: AssetBrowserPanelBase(std::move(panelName), contextEditor)
+	OpenAssetPanel::OpenAssetPanel(std::string panelName, AssetTypeID assetTypeID)
+		: AssetBrowserPanelBase(std::move(panelName))
 		, m_AssetTypeID(assetTypeID)
 	{
 	}
@@ -47,8 +47,8 @@ namespace ZeoEngine {
 
 	void OpenAssetPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
-		GetContextEditor()->LoadScene(path);
-		Close();
+		g_Editor->LoadLevel(path);
+		Toggle(false);
 	}
 
 }

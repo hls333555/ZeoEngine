@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Panels/EditorViewPanelBase.h"
+#include "Panels/ViewPanelBase.h"
 
 namespace ZeoEngine {
 
-	class ParticleEditorViewPanel : public EditorViewPanelBase
+	class ParticleEditorViewPanel : public ViewPanelBase
 	{
 	public:
-		using EditorViewPanelBase::EditorViewPanelBase;
+		using ViewPanelBase::ViewPanelBase;
 
 	private:
 		virtual void ProcessRender() override;
 
-		virtual void RenderToolbar() override;
+		void RenderToolbar();
 
 	};
 

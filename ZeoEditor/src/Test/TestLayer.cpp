@@ -2,7 +2,7 @@
 
 #include <doctest.h>
 
-#include "Reflection/DataWidget.h"
+#include "Inspectors/DataWidget.h"
 
 namespace ZeoEngine {
 

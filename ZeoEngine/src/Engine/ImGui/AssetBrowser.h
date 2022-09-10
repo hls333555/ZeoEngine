@@ -53,7 +53,7 @@ namespace ZeoEngine {
 							// Double-click on the preview thumbnail to open the asset editor
 							if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 							{
-								AssetManager::Get().OpenAsset(metadata->Path);
+								AssetManager::Get().OpenAsset(metadata->Path, true);
 							}
 						}
 
@@ -62,7 +62,7 @@ namespace ZeoEngine {
 						{
 							if (ImGui::MenuItem(ICON_FA_EDIT "  Edit"))
 							{
-								AssetManager::Get().OpenAsset(metadata->Path);
+								AssetManager::Get().OpenAsset(metadata->Path, true);
 							}
 
 							rightClickFunc();

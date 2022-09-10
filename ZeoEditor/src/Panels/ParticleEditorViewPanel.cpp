@@ -3,7 +3,7 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Editors/EditorBase.h"
+#include "Worlds/EditorPreviewWorldBase.h"
 
 namespace ZeoEngine {
 
@@ -12,9 +12,9 @@ namespace ZeoEngine {
 		// Get default available region before drawing any widgets
 		const ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		EditorViewPanelBase::ProcessRender();
+		ViewPanelBase::ProcessRender();
 
-		const auto& psInstance = GetContextEditor()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
+		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
 
 		// Display particle count at the top right corner
 		{
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 	
 	void ParticleEditorViewPanel::RenderToolbar()
 	{
-		const auto& psInstance = GetContextEditor()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
+		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
 
 		// Place buttons at window center
 		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing());

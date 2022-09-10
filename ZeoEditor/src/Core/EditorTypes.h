@@ -6,15 +6,10 @@
 
 namespace ZeoEngine {
 
-#define LEVEL_EDITOR			"Level Editor"
-#define PARTICLE_EDITOR			ICON_FA_FIRE "  Particle Editor"
-#define MATERIAL_EDITOR			ICON_FA_CIRCLE "  Material Editor"
-#define TEXTURE_EDITOR			ICON_FA_CHESS_BOARD "  Texture Editor"
-#define MESH_EDITOR				ICON_FA_CUBES "  Mesh Editor"
-
-#define LEVEL_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Level Editor View"
-#define SCENE_OUTLINE			ICON_FA_SITEMAP "  Scene Outline"
-#define ENTITY_INSPECTOR		ICON_FA_INFO_CIRCLE "  Entity Inspector"
+#define LEVEL_VIEW				ICON_FA_PLAY_CIRCLE "  Level View"
+#define LEVEL_OUTLINE			ICON_FA_SITEMAP "  Level Outline"
+#define INSPECTOR				ICON_FA_INFO_CIRCLE "  Inspector"
+#define DETAILS					ICON_FA_INFO_CIRCLE "  Details"
 #define OPEN_ASSET				ICON_FA_FOLDER "  Open Asset"
 #define SAVE_ASSET				ICON_FA_FOLDER "  Save Asset"
 #define CONTENT_BROWSER			ICON_FA_FOLDER "  Content Browser"
@@ -23,24 +18,12 @@ namespace ZeoEngine {
 #define FRAME_DEBUGGER			ICON_FA_BUG "  Frame Debugger"
 #define PREFERENCES				ICON_FA_COGS "  Preferences"
 #define ABOUT					ICON_FA_QUESTION_CIRCLE "  About"
-#define PARTICLE_EDITOR_VIEW	ICON_FA_PLAY_CIRCLE "  Particle Editor View"
-#define PARTICLE_INSPECTOR		ICON_FA_INFO_CIRCLE "  Particle Inspector"
-#define MATERIAL_EDITOR_VIEW	ICON_FA_PLAY_CIRCLE "  Material Editor View"
-#define MATERIAL_INSPECTOR		ICON_FA_INFO_CIRCLE "  Material Inspector"
-#define TEXTURE_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Texture Editor View"
-#define TEXTURE_INSPECTOR		ICON_FA_INFO_CIRCLE "  Texture Inspector"
-#define MESH_EDITOR_VIEW		ICON_FA_PLAY_CIRCLE "  Mesh Editor View"
-#define MESH_INSPECTOR			ICON_FA_INFO_CIRCLE "  Mesh Inspector"
-
-	struct DockspaceSpec
-	{
-		ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_MenuBar;
-		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
-	};
+#define ASSET_VIEW				ICON_FA_PLAY_CIRCLE "  Asset View"
 
 	struct PanelSpec
 	{
 		ImGuiWindowFlags WindowFlags = 0;
+		bool bDisableClose = false;
 		ImVec2 Padding = ImVec2(3.0f, 3.0f);
 		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
 	};

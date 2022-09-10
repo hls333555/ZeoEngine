@@ -11,29 +11,30 @@
 
 namespace ZeoEngine {
 
-	 class EditorCamera;
-	 class SystemBase;
+	class EditorCamera;
+	class SystemBase;
+	class WorldBase;
 
 	/** A scene context which shares among copied scenes. */
-	 struct SceneContext
-	 {
-		 dd::ContextHandle DebugDrawContext = nullptr;
-	 };
+	struct SceneContext
+	{
+		dd::ContextHandle DebugDrawContext = nullptr;
+	};
 
 	class Scene : public std::enable_shared_from_this<Scene>
 	{
 		// TODO: make public interface for m_Registry
 		friend class Entity;
 		friend class SceneSerializer;
-		friend class EditorViewPanelBase;
-		friend class SceneOutlinePanel;
+		friend class ViewPanelBase;
+		friend class LevelOutlinePanel;
 		friend class ISystem;
 
 	public:
 		Scene() = default;
 		virtual ~Scene();
 
-		virtual void OnAttach() {}
+		virtual void OnAttach(const Ref<WorldBase>& world) {}
 		void OnUpdate(DeltaTime dt) const;
 		virtual void OnEvent(Event& e) {}
 

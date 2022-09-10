@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Core/Core.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
 

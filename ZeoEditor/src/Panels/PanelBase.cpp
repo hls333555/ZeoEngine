@@ -4,9 +4,8 @@
 
 namespace ZeoEngine {
 
-	PanelBase::PanelBase(std::string panelName, const Weak<EditorBase>& contextEditor)
+	PanelBase::PanelBase(std::string panelName)
 		: m_PanelName(std::move(panelName))
-		, m_ContextEditor(contextEditor)
 	{
 	}
 
@@ -27,7 +26,7 @@ namespace ZeoEngine {
 		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
-		if (ImGui::Begin(GetPanelTitle().c_str(), &m_bShow, m_PanelSpec.WindowFlags))
+		if (ImGui::Begin(GetPanelTitle().c_str(), m_PanelSpec.bDisableClose ? nullptr : &m_bShow, m_PanelSpec.WindowFlags))
 		{
 			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
@@ -63,15 +62,13 @@ namespace ZeoEngine {
 		m_bShouldFocusPanel = true;
 	}
 
-	void PanelBase::Open()
+	void PanelBase::Toggle(bool bShow)
 	{
-		m_bShow = true;
-		OnPanelOpen();
-	}
-
-	void PanelBase::Close()
-	{
-		m_bShow = false;
+		m_bShow = bShow;
+		if (bShow)
+		{
+			OnPanelOpen();
+		}
 	}
 
 }

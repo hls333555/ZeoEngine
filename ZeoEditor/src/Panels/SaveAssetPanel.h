@@ -4,10 +4,12 @@
 
 namespace ZeoEngine {
 
+	class EditorPreviewWorldBase;
+
 	class SaveAssetPanel : public OpenAssetPanel
 	{
 	public:
-		using OpenAssetPanel::OpenAssetPanel;
+		SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, const Ref<EditorPreviewWorldBase>& world);
 
 	private:
 		virtual void OnPanelOpen() override;
@@ -18,14 +20,17 @@ namespace ZeoEngine {
 
 		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
 
-		void DrawReplaceDialog(const std::string& path);
+		void DrawReplaceDialog();
+		void DrawReplaceErrorDialog();
 
 		void SaveAndClose(const std::string& path);
 
 	private:
+		Weak<EditorPreviewWorldBase> m_World;
 		char m_NameBuffer[MAX_PATH_SIZE];
 		bool m_bHasKeyboardFocused = false;
 		std::string m_ToReplacePath;
+		bool m_bReplaceError = false;
 	};
 
 }

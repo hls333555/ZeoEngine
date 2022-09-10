@@ -205,7 +205,7 @@ namespace ZeoEngine {
 
 		if (ImGui::MenuItem("Edit"))
 		{
-			am.OpenAsset(path);
+			am.OpenAsset(path, false);
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -267,7 +267,7 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::HandleRightColumnAssetOpen(const std::string& path)
 	{
-		AssetManager::Get().OpenAsset(path);
+		AssetManager::Get().OpenAsset(path, false);
 	}
 
 }

@@ -6,6 +6,8 @@
 
 namespace ZeoEngine {
 
+	class Editor;
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -15,6 +17,9 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
+
+	private:
+		Ref<Editor> m_Editor;
 	};
 
 }

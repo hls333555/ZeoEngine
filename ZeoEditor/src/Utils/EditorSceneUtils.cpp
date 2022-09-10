@@ -1,33 +1,33 @@
 #include "Utils/EditorSceneUtils.h"
 
+#include "Core/Editor.h"
 #include "Engine/Utils/SceneUtils.h"
-#include "Core/EditorManager.h"
-#include "Core/EditorTypes.h"
-#include "Editors/EditorBase.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/GameFramework/Components.h"
+#include "Worlds/EditorPreviewWorldBase.h"
+#include "Worlds/LevelPreviewWorld.h"
 
 namespace ZeoEngine {
 
 	Ref<Scene> SceneUtils::GetActiveGameScene()
 	{
-		return EditorManager::Get().GetEditor(LEVEL_EDITOR)->GetScene();
+		return g_Editor->GetLevelWorldCast()->GetActiveScene();
 	}
 
 	void SceneUtils::OpenLevel(const std::string& path)
 	{
-		EditorManager::Get().GetEditor(LEVEL_EDITOR)->LoadScene(path);
+		g_Editor->LoadLevel(path);
 	}
 
-	EditorCamera* EditorSceneUtils::GetEditorCamera()
+	EditorCamera& EditorSceneUtils::GetEditorCamera()
 	{
-		return EditorManager::Get().GetEditor(LEVEL_EDITOR)->GetEditorCamera();
+		return g_Editor->GetLevelWorld()->GetEditorCamera();
 	}
 
 	Entity EditorSceneUtils::CreateAndPlaceEntity(const Ref<Scene>& scene, const std::string& name)
 	{
-		EditorCamera* editorCamera = GetEditorCamera();
-		const Vec3 position = editorCamera->GetPosition() + editorCamera->GetForwardVector() * 2.0f;
+		const EditorCamera& editorCamera = GetEditorCamera();
+		const Vec3 position = editorCamera.GetPosition() + editorCamera.GetForwardVector() * 2.0f;
 		return scene->CreateEntity(name, position);
 	}
 

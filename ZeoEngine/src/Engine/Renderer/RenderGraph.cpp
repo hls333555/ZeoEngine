@@ -238,7 +238,7 @@ namespace ZeoEngine {
 		Finalize();
 	}
 
-	Ref<FrameBuffer> EditorPreviewRenderGraph::CreateBackFrameBuffer()
+	Ref<FrameBuffer> AssetPreviewRenderGraph::CreateBackFrameBuffer()
 	{
 		FrameBufferSpec fbSpec;
 		fbSpec.Attachments = {
@@ -249,7 +249,7 @@ namespace ZeoEngine {
 	}
 
 	// TODO:
-	void EditorPreviewRenderGraph::InitRenderPasses()
+	void AssetPreviewRenderGraph::InitRenderPasses()
 	{
 		{
 			auto pass = CreateScope<ShadowMappingPass>("ShadowMapping");

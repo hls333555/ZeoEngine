@@ -2,20 +2,16 @@
 
 #include <string>
 
-#include "Engine/Core/Core.h"
 #include "Engine/Events/KeyEvent.h"
-#include "Core/EditorManager.h"
+#include "Core/Editor.h"
 
 namespace ZeoEngine {
-
-	class EditorBase;
-	class EditorUIRendererBase;
 
 	class MenuItemBase
 	{
 	public:
 		MenuItemBase() = delete;
-		MenuItemBase(const Weak<EditorBase>& contextEditor, std::string menuItemName, std::string shortcutName = "");
+		MenuItemBase(std::string menuItemName, std::string shortcutName = "");
 	protected:
 		virtual ~MenuItemBase() = default;
 	
@@ -25,10 +21,6 @@ namespace ZeoEngine {
 
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
 
-	protected:
-		Ref<EditorBase> GetContextEditor() const { return m_ContextEditor.lock(); }
-		EditorUIRendererBase& GetContextEditorUIRenderer() const;
-
 	private:
 		virtual void OnMenuItemActivated() {}
 
@@ -37,7 +29,6 @@ namespace ZeoEngine {
 		virtual bool OnKeyPressedImpl(KeyPressedEvent& e) { return false; }
 
 	protected:
-		Weak<EditorBase> m_ContextEditor;
 		std::string m_MenuItemName;
 		std::string m_ShortcutName;
 		bool* m_bSelected = nullptr;
@@ -47,76 +38,40 @@ namespace ZeoEngine {
 	class MenuItem_Separator : public MenuItemBase
 	{
 	public:
-		explicit MenuItem_Separator(const Weak<EditorBase>& contextEditor, std::string menuItemName = "Separator");
+		explicit MenuItem_Separator(std::string menuItemName = "Separator");
 
 		virtual void OnImGuiRender() override;
 	};
 
-	template<typename EditorClass>
-	class MenuItem_ToggleEditor : public MenuItemBase
+	class MenuItem_TogglePanelBase : public MenuItemBase
 	{
 	public:
-		MenuItem_ToggleEditor(const Weak<EditorBase>& contextEditor, std::string editorName, std::string shortcutName = "")
-			: MenuItemBase(contextEditor, std::move(editorName), std::move(shortcutName))
+		MenuItem_TogglePanelBase(std::string panelName, std::string shortcutName = "")
+			: MenuItemBase(std::move(panelName), std::move(shortcutName))
 		{
 		}
 
-		virtual void OnImGuiRender() override
-		{
-			if (!m_bSelected)
-			{
-				if (auto editor = EditorManager::Get().GetEditor(m_MenuItemName))
-				{
-					m_bSelected = editor->GetShowPtr();
-				}
-			}
-
-			MenuItemBase::OnImGuiRender();
-		}
-
-	private:
-		virtual void OnMenuItemActivated() override
-		{
-			if (!m_bSelected)
-			{
-				EditorManager::Get().OpenEditor<EditorClass>(m_MenuItemName);
-			}
-		}
+		virtual void OnImGuiRender() override;
 	};
 
 	template<typename PanelClass>
-	class MenuItem_TogglePanel : public MenuItemBase
+	class MenuItem_TogglePanel : public MenuItem_TogglePanelBase
 	{
 	public:
-		MenuItem_TogglePanel(const Weak<EditorBase>& contextEditor, std::string panelName, std::string shortcutName = "")
-			: MenuItemBase(contextEditor, std::move(panelName), std::move(shortcutName))
-		{
-		}
-
-		virtual void OnImGuiRender() override
-		{
-			if (!m_bSelected)
-			{
-				if (auto panel = GetContextEditorUIRenderer().GetPanel(m_MenuItemName.c_str()))
-				{
-					m_bSelected = panel->GetShowPtr();
-				}
-			}
-
-			MenuItemBase::OnImGuiRender();
-		}
+		using MenuItem_TogglePanelBase::MenuItem_TogglePanelBase;
 
 	private:
 		virtual void OnMenuItemActivated() override
 		{
 			if (!m_bSelected)
 			{
-				GetContextEditorUIRenderer().OpenPanel<PanelClass>(m_MenuItemName.c_str());
+				// You can pass different panel constructor parameters by specializing this template class
+				g_Editor->OpenPanel<PanelClass>(m_MenuItemName);
 			}
 		}
 	};
 
-	class MenuItem_NewAsset : public MenuItemBase
+	class MenuItem_NewLevel : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -126,7 +81,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_LoadAsset : public MenuItemBase
+	class MenuItem_LoadLevel : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -136,7 +91,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveAsset : public MenuItemBase
+	class MenuItem_SaveLevel : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -146,7 +101,7 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
-	class MenuItem_SaveAssetAs : public MenuItemBase
+	class MenuItem_SaveLevelAs : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
@@ -202,15 +157,6 @@ namespace ZeoEngine {
 	};
 	
 	class MenuItem_ResetLayout : public MenuItemBase
-	{
-	public:
-		using MenuItemBase::MenuItemBase;
-
-	private:
-		virtual void OnMenuItemActivated() override;
-	};
-
-	class MenuItem_Snapshot : public MenuItemBase
 	{
 	public:
 		using MenuItemBase::MenuItemBase;
