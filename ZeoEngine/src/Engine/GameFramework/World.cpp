@@ -1,8 +1,8 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/World.h"
 
+#include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/SceneRenderer.h"
-#include "Engine/GameFramework/Systems.h"
 
 namespace ZeoEngine {
 
@@ -38,8 +38,9 @@ namespace ZeoEngine {
 	{
 		if (scene == m_ActiveScene) return;
 
+		const auto lastScene = m_ActiveScene;
 		m_ActiveScene = std::move(scene);
-		m_OnActiveSceneChangedDel.publish(m_ActiveScene);
+		m_OnActiveSceneChangedDel.publish(m_ActiveScene, lastScene);
 	}
 
 	void WorldBase::NewSceneRenderer()

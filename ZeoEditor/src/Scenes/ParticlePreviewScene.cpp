@@ -5,6 +5,17 @@
 
 namespace ZeoEngine {
 
+	ParticlePreviewScene::~ParticlePreviewScene()
+	{
+		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+		{
+			if (particlePreviewComp.ParticleTemplateAsset)
+			{
+				particlePreviewComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particlePreviewComp.Instance);
+			}
+		});
+	}
+
 	void ParticlePreviewScene::OnAttach(const Ref<WorldBase>& world)
 	{
 		RegisterSystem<ParticlePreviewUpdateSystem>(world);
@@ -12,7 +23,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewScene::PostLoad()
 	{
-		m_Registry.view<ParticleSystemPreviewComponent>().each([](auto entity, auto& particlePreviewComp)
+		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
 		{
 			ParticleSystemInstance::Create(particlePreviewComp);
 		});

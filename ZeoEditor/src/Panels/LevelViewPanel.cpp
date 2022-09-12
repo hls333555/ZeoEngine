@@ -21,6 +21,9 @@ namespace ZeoEngine {
 		: ViewPanelBase(std::move(panelName))
 	{
 		UpdateWorld(g_Editor->GetLevelWorld());
+
+		// Call these manually as delegates are bound after the initial scene creation
+		BindCameraComponentConstructionDelegate(GetEditorWorld()->GetActiveScene());
 		UpdateViewportSizeOnSceneCameras();
 	}
 
@@ -51,6 +54,32 @@ namespace ZeoEngine {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnMouseButtonPressed));
+	}
+
+	void LevelViewPanel::OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld)
+	{
+		ViewPanelBase::OnWorldChanged(world, lastWorld);
+
+		if (lastWorld)
+		{
+			lastWorld->m_OnActiveSceneChanged.disconnect<&LevelViewPanel::OnActiveSceneChanged>(this);
+		}
+
+		world->m_OnActiveSceneChanged.connect<&LevelViewPanel::OnActiveSceneChanged>(this);
+	}
+
+	void LevelViewPanel::OnActiveSceneChanged(const Ref<Scene>& scene, const Ref<Scene>& lastScene)
+	{
+		if (lastScene)
+		{
+			scene->UnbindOnComponentConstruct<CameraComponent, &ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
+		}
+		BindCameraComponentConstructionDelegate(scene);
+	}
+
+	void LevelViewPanel::BindCameraComponentConstructionDelegate(const Ref<Scene>& scene)
+	{
+		scene->BindOnComponentConstruct<CameraComponent, &ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
 	}
 
 	void LevelViewPanel::RenderToolbar() const

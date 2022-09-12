@@ -7,6 +7,8 @@ namespace ZeoEngine {
 	class LevelPreviewScene : public Scene
 	{
 	public:
+		~LevelPreviewScene();
+
 		virtual void OnAttach(const Ref<WorldBase>& world) override;
 		virtual void OnEvent(Event& e) override;
 

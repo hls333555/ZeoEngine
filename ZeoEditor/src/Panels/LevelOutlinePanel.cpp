@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		if (ImGui::BeginChild("SceneOutlineEntityList", entityListSize))
 		{
 			// Display entities in creation order, the order is updated when a new entity is created or destroyed
-			scene->m_Registry.view<CoreComponent>().each([this, &scene](auto entityId, auto& coreComp)
+			scene->ForEachComponentView<CoreComponent>([this, &scene](auto entityId, auto& coreComp)
 			{
 				Entity entity{ entityId, scene };
 				DrawEntityNode(entity);

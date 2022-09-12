@@ -18,11 +18,11 @@ namespace ZeoEngine {
 	void AssetInspector::Draw(Entity entity)
 	{
 		const auto inspectorPanel = g_Editor->GetPanel<InspectorPanel>(INSPECTOR);
-		if (!inspectorPanel->IsInspectHistoryEmpty() && ImGui::TransparentButton(ICON_FA_ARROW_LEFT))
+		if (inspectorPanel->IsLastInspectHistoryValid() && ImGui::TransparentButton(ICON_FA_ARROW_LEFT))
 		{
 			inspectorPanel->InspectLast();
 		}
-		if (!inspectorPanel->IsInspectHistoryEmpty() && ImGui::IsItemHovered())
+		if (inspectorPanel->IsLastInspectHistoryValid() && ImGui::IsItemHovered())
 		{
 			const std::string lastName = inspectorPanel->GetLastInspectHistoryDisplayName();
 			ImGui::SetTooltipWithPadding(lastName.c_str());

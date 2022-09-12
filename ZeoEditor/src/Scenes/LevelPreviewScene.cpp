@@ -6,6 +6,17 @@
 
 namespace ZeoEngine {
 
+	LevelPreviewScene::~LevelPreviewScene()
+	{
+		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		{
+			if (particleComp.ParticleTemplateAsset)
+			{
+				particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
+			}
+		});
+	}
+
 	void LevelPreviewScene::OnAttach(const Ref<WorldBase>& world)
 	{
 		RegisterSystem<ParticleUpdateSystem>(world);
@@ -38,12 +49,12 @@ namespace ZeoEngine {
 
 	void LevelPreviewScene::PostLoad()
 	{
-		m_Registry.view<ParticleSystemComponent>().each([](auto entity, auto& particleComp)
+		ForEachComponentView<ParticleSystemComponent>([](auto entity, auto& particleComp)
 		{
 			ParticleSystemInstance::Create(particleComp);
 		});
 		
-		m_Registry.view<BoundsComponent>().each([this](auto e, auto& boundsComp)
+		ForEachComponentView<BoundsComponent>([this](auto e, auto& boundsComp)
 		{
 			Entity entity = { e, shared_from_this() };
 			entity.UpdateBounds();

@@ -37,8 +37,6 @@ namespace ZeoEngine {
 		virtual void OnAttach(const Ref<WorldBase>& world);
 		void OnRender();
 
-		void UpdateSceneContext(const Ref<Scene>& scene);
-
 		void SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 		void AddPointLight(const Vec3& position, const Ref<PointLight>& pointLight);
 		void AddSpotLight(const Vec3& position, const Vec3& rotation, const Ref<SpotLight>& spotLight);
@@ -69,10 +67,11 @@ namespace ZeoEngine {
 		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
 		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) = 0;
 
+		void UpdateSceneContext(const Ref<Scene>& scene);
 		void PrepareScene();
 		virtual void OnRenderScene() = 0;
 		void FlushScene() const;
-
+		
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction);
 		void UploadLightData();
 

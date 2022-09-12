@@ -17,24 +17,9 @@ namespace ZeoEngine {
 	{
 		if (!world || world.get() == m_EditorWorld) return;
 
-		if (m_EditorWorld)
-		{
-			UnbindCameraComponentConstructionDelegate(m_EditorWorld->GetActiveScene());
-			m_EditorWorld->m_OnActiveSceneChanged.disconnect<&ViewPanelBase::BindCameraComponentConstructionDelegate>(this);
-			if (auto& sceneRenderer = m_EditorWorld->GetSceneRenderer())
-			{
-				m_OnViewportResize.disconnect<&SceneRenderer::OnViewportResize>(sceneRenderer);
-			}
-		}
-
+		auto* lastWorld = m_EditorWorld;
 		m_EditorWorld = world.get();
-		m_FrameBuffer = nullptr;
-		if (auto& sceneRenderer = world->GetSceneRenderer())
-		{
-			m_FrameBuffer = sceneRenderer->GetFrameBuffer().get();
-			m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(sceneRenderer);
-		}
-		world->m_OnActiveSceneChanged.connect<&ViewPanelBase::BindCameraComponentConstructionDelegate>(this);
+		OnWorldChanged(world.get(), lastWorld);
 	}
 
 	void ViewPanelBase::ProcessUpdate(DeltaTime dt)
@@ -107,6 +92,24 @@ namespace ZeoEngine {
 		return false;
 	}
 
+	void ViewPanelBase::OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld)
+	{
+		if (lastWorld)
+		{
+			if (auto& sceneRenderer = lastWorld->GetSceneRenderer())
+			{
+				m_OnViewportResize.disconnect<&SceneRenderer::OnViewportResize>(sceneRenderer);
+			}
+		}
+
+		m_FrameBuffer = nullptr;
+		if (auto& sceneRenderer = world->GetSceneRenderer())
+		{
+			m_FrameBuffer = sceneRenderer->GetFrameBuffer().get();
+			m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(sceneRenderer);
+		}
+	}
+
 	std::string ViewPanelBase::GetPanelTitle() const
 	{
 		std::string assetName = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle())->PathName;
@@ -148,28 +151,16 @@ namespace ZeoEngine {
 		UpdateViewportSizeOnSceneCameras();
 	}
 
-	void ViewPanelBase::BindCameraComponentConstructionDelegate(const Ref<Scene>& scene)
-	{
-		scene->m_Registry.on_construct<CameraComponent>().connect<&ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
-	}
-
-	void ViewPanelBase::UnbindCameraComponentConstructionDelegate(const Ref<Scene>& scene)
-	{
-		scene->m_Registry.on_construct<CameraComponent>().disconnect<&ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
-	}
-
 	void ViewPanelBase::UpdateViewportSizeOnSceneCameras() const
 	{
 		// Resize non-FixedAspectRatio cameras
-		auto view = m_EditorWorld->GetActiveScene()->m_Registry.view<CameraComponent>();
-		for (auto entity : view)
+		m_EditorWorld->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto entityId, auto& cameraComp)
 		{
-			auto& cameraComp = view.get<CameraComponent>(entity);
 			if (!cameraComp.bFixedAspectRatio)
 			{
 				cameraComp.Camera.SetViewportSize(m_LastViewportSize);
 			}
-		}
+		});
 	}
 
 }

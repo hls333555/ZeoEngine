@@ -24,6 +24,11 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
+		virtual void OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld) override;
+		void OnActiveSceneChanged(const Ref<Scene>& scene, const Ref<Scene>& lastScene);
+
+		void BindCameraComponentConstructionDelegate(const Ref<Scene>& scene);
+
 		void RenderToolbar() const;
 		void RenderGizmo();
 

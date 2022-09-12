@@ -3,6 +3,7 @@
 #include "Engine/Asset/Asset.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Core/DeltaTime.h"
+#include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
 
@@ -35,7 +36,7 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt);
 
 		void NewScene();
-		Ref<Scene>& GetActiveScene() { return m_ActiveScene; }
+		Ref<Scene> GetActiveScene() const { return m_ActiveScene; }
 		template<typename T>
 		Ref<T> GetActiveScene() const
 		{
@@ -48,6 +49,9 @@ namespace ZeoEngine {
 		const Ref<IAsset>& GetAsset() const { return m_Asset; }
 		void SetAsset(Ref<IAsset> asset) { m_Asset = std::move(asset); }
 
+		// To be defined in EditorPreviewWorldBase
+		virtual Entity GetContextEntity() const { return {}; }
+
 	private:
 		virtual Ref<Scene> CreateScene() = 0;
 		virtual void PostSceneCreate(const Ref<Scene>& scene) {}
@@ -56,7 +60,7 @@ namespace ZeoEngine {
 		void NewSceneRenderer();
 
 	public:
-		entt::sink<entt::sigh<void(const Ref<Scene>&)>> m_OnActiveSceneChanged{ m_OnActiveSceneChangedDel };
+		entt::sink<entt::sigh<void(const Ref<Scene>&, const Ref<Scene>&)>> m_OnActiveSceneChanged{ m_OnActiveSceneChangedDel };
 		entt::sink<entt::sigh<void(const Ref<FrameBuffer>&)>> m_PostSceneRender{ m_PostSceneRenderDel };
 
 	private:
@@ -67,7 +71,7 @@ namespace ZeoEngine {
 
 		Ref<IAsset> m_Asset;
 
-		entt::sigh<void(const Ref<Scene>&)> m_OnActiveSceneChangedDel;
+		entt::sigh<void(const Ref<Scene>&, const Ref<Scene>&)> m_OnActiveSceneChangedDel;
 		entt::sigh<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
 	};
 

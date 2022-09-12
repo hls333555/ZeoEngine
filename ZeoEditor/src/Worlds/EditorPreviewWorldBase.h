@@ -26,7 +26,7 @@ namespace ZeoEngine {
 
 		EditorCamera& GetEditorCamera() { return m_EditorCamera; }
 
-		Entity GetContextEntity() const { return m_ContextEntity; }
+		virtual Entity GetContextEntity() const override final { return m_ContextEntity; }
 		void SetContextEntity(Entity entity);
 		/** If bIsTeleport is true, the camera will trigger an immediately focus instead of interpolating several frames. */
 		void FocusContextEntity(bool bIsTeleport = false);

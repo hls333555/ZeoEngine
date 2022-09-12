@@ -9,8 +9,6 @@
 
 namespace ZeoEngine {
 
-	struct AssetMetadata;
-	class Scene;
 	class EditorPreviewWorldBase;
 	class FrameBuffer;
 
@@ -34,13 +32,15 @@ namespace ZeoEngine {
 
 		std::pair<float, float> GetMouseViewportPosition() const;
 
+		void UpdateViewportSizeOnSceneCameras() const;
+
 	protected:
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
+		virtual void OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld);
 
-		void UpdateViewportSizeOnSceneCameras() const;
+		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) override;
@@ -51,9 +51,6 @@ namespace ZeoEngine {
 		bool OnKeyPressed(KeyPressedEvent& e) const;
 
 		void OnViewportResize(const Vec2& size) const;
-
-		void BindCameraComponentConstructionDelegate(const Ref<Scene>& scene);
-		void UnbindCameraComponentConstructionDelegate(const Ref<Scene>& scene);
 
 	public:
 		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };

@@ -33,10 +33,11 @@ namespace ZeoEngine {
 		void UpdateWorld(const Ref<EditorPreviewWorldBase>& world, bool bIncludeAssetViewPanel);
 		void ToggleAssetView(bool bShow) const;
 
-		bool IsInspectHistoryEmpty() const { return m_InspectHistory.empty(); }
 		void AddInspectHistory(InspectHistoryData data) { m_InspectHistory.push(std::move(data)); }
 		void ClearInspectHistory() { m_InspectHistory = {}; }
 		void InspectLast();
+		bool IsLastInspectHistoryValid() const { return !m_InspectHistory.empty() && (m_InspectHistory.top().LevelSelectedEntity.IsValid() || !m_InspectHistory.top().AssetPath.empty()); }
+		/** You must call IsLastInspectHistoryValid() before calling this to make sure there is a valid name to display. */
 		std::string GetLastInspectHistoryDisplayName() const;
 
 	private:

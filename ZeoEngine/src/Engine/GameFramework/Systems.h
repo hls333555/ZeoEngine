@@ -1,18 +1,15 @@
 #pragma once
 
+#include "Engine/GameFramework/World.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/GameFramework/Scene.h"
+#include "Engine/Events/Event.h"
 
 class b2World;
 
 namespace ZeoEngine {
 
-	class WorldBase;
 	class SceneRenderer;
 	class SceneCamera;
-
-	template<typename... Component>
-	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
 	class ISystem
 	{
@@ -20,43 +17,12 @@ namespace ZeoEngine {
 		explicit ISystem(const Ref<WorldBase>& world);
 		virtual ~ISystem() = default;
 
-		void UpdateScene(const Ref<Scene>& scene) { m_SceneRef = scene; m_Scene = scene.get(); }
-
 	protected:
-		Ref<Scene> GetSceneRef() const { return m_SceneRef.lock(); }
-		Scene* GetScene() const { return m_Scene; }
-
-		// TODO: Move to scene
-		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
-		{
-			m_Scene->m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
-		}
-
-		struct DefaultCompare
-		{
-			template<typename... Component>
-			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const
-			{
-				return true;
-			}
-		};
-
-		// TODO: Move to scene
-		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
-		{
-			auto group = m_Scene->m_Registry.group<Owned..., Get...>(exclude);
-			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
-			{
-				group.sort<Owned..., Get...>(std::move(compareFunc));
-			}
-			group.each(std::forward<Func>(func));
-		}
+		WorldBase* GetWorld() const { return m_World; }
+		Ref<Scene> GetScene() const { return m_World->GetActiveScene(); }
 
 	private:
-		Weak<Scene> m_SceneRef;
-		Scene* m_Scene = nullptr;
+		WorldBase* m_World = nullptr;
 	};
 
 	class SystemBase : public ISystem
@@ -66,7 +32,6 @@ namespace ZeoEngine {
 
 		virtual void OnCreate() {}
 		void OnUpdate(DeltaTime dt) const;
-		virtual void OnDestroy() {}
 
 		void BindUpdateFuncToEditor();
 		void BindUpdateFuncToRuntime();
@@ -89,7 +54,7 @@ namespace ZeoEngine {
 		virtual void OnRenderEditor() = 0;
 		virtual void OnRenderRuntime() {}
 
-		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera();
+		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera() const;
 
 	protected:
 		SceneRenderer* GetSceneRenderer() const { return m_SceneRenderer; }
@@ -105,7 +70,6 @@ namespace ZeoEngine {
 
 		virtual void OnUpdateEditor(DeltaTime dt) override;
 		virtual void OnUpdateRuntime(DeltaTime dt) override;
-		virtual void OnDestroy() override;
 
 	private:
 		virtual void OnUpdateImpl(DeltaTime dt);
@@ -115,8 +79,6 @@ namespace ZeoEngine {
 	{
 	public:
 		using ParticleUpdateSystem::ParticleUpdateSystem;
-
-		virtual void OnDestroy() override;
 
 	private:
 		virtual void OnUpdateImpl(DeltaTime dt) override;
