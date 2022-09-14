@@ -14,7 +14,7 @@ namespace ZeoEngine {
 
 	LevelOutlinePanel::LevelOutlinePanel(std::string panelName)
 		: PanelBase(std::move(panelName))
-		, m_EditorWorld(static_cast<EditorPreviewWorldBase*>(g_Editor->GetLevelWorld().get()))
+		, m_EditorWorld(g_Editor->GetLevelWorld())
 	{
 	}
 
@@ -24,7 +24,8 @@ namespace ZeoEngine {
 		
 		ImGui::Separator();
 
-		const auto& scene = m_EditorWorld->GetActiveScene();
+		const auto editorWorld = m_EditorWorld.lock();
+		const auto scene = editorWorld->GetActiveScene();
 
 		const auto availRegion = ImGui::GetContentRegionAvail();
 		const ImVec2 entityListSize = { availRegion.x, availRegion.y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetFramePadding().y * 2 /* separator */ };
@@ -41,7 +42,7 @@ namespace ZeoEngine {
 			// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			{
-				m_EditorWorld->SetContextEntity({});
+				editorWorld->SetContextEntity({});
 			}
 
 			// Right-click on blank space
@@ -94,7 +95,7 @@ namespace ZeoEngine {
 					ImGui::EndMenu();
 				}
 
-				m_EditorWorld->SetContextEntity(newEntity);
+				editorWorld->SetContextEntity(newEntity);
 
 				ImGui::EndPopup();
 			}
@@ -108,11 +109,12 @@ namespace ZeoEngine {
 
 	void LevelOutlinePanel::DrawEntityNode(Entity entity) const
 	{
+		const auto editorWorld = m_EditorWorld.lock();
 		std::string entityNameStr = entity.GetName();
 		const char* entityName = entityNameStr.c_str();
 		if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(entityName))
 		{
-			auto selectedEntity = m_EditorWorld->GetContextEntity();
+			auto selectedEntity = editorWorld->GetContextEntity();
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(U64)(U32)entity, flags, entityName);
@@ -123,11 +125,11 @@ namespace ZeoEngine {
 			}
 			if (ImGui::IsItemClicked())
 			{
-				m_EditorWorld->SetContextEntity(entity);
+				editorWorld->SetContextEntity(entity);
 			}
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
 			{
-				m_EditorWorld->FocusContextEntity();
+				editorWorld->FocusContextEntity();
 			}
 
 			bool bIsCurrentEntitySelected = selectedEntity == entity;
@@ -148,10 +150,10 @@ namespace ZeoEngine {
 			// Defer entity destruction
 			if (bWillDestroyEntity)
 			{
-				m_EditorWorld->GetActiveScene()->DestroyEntity(entity);
+				editorWorld->GetActiveScene()->DestroyEntity(entity);
 				if (bIsCurrentEntitySelected)
 				{
-					m_EditorWorld->SetContextEntity({});
+					editorWorld->SetContextEntity({});
 				}
 			}
 		}

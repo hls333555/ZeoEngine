@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		virtual void OnEvent(Event& event) override;
 
 	private:
-		Ref<Editor> m_Editor;
+		Scope<Editor> m_Editor;
 	};
 
 }

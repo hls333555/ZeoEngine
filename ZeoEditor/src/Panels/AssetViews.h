@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		virtual void DrawToolBar() override;
 
 	private:
-		EditorPreviewWorldBase* m_World = nullptr;
+		Weak<EditorPreviewWorldBase> m_EditorWorld;
 	};
 	
 }

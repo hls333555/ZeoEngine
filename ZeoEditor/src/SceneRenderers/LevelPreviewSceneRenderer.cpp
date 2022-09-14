@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	{
 		SceneRenderer::OnAttach(world);
 
-		m_World = dynamic_cast<LevelPreviewWorld*>(world.get());
+		m_LevelWorld = std::dynamic_pointer_cast<LevelPreviewWorld>(world);
 	}
 
 	Scope<RenderGraph> LevelPreviewSceneRenderer::CreateRenderGraph()
@@ -26,10 +26,11 @@ namespace ZeoEngine {
 
 	void LevelPreviewSceneRenderer::OnRenderScene()
 	{
-		switch (m_World->GetSceneState())
+		const auto levelWorld = m_LevelWorld.lock();
+		switch (levelWorld->GetSceneState())
 		{
 			case SceneState::Edit:
-				BeginScene(m_World->GetEditorCamera());
+				BeginScene(levelWorld->GetEditorCamera());
 				GetRenderGraph().ToggleRenderPassActive("Grid", true);
 				GetRenderSystem()->OnRenderEditor();
 				break;
@@ -42,7 +43,7 @@ namespace ZeoEngine {
 				}
 				else
 				{
-					BeginScene(m_World->GetEditorCamera());
+					BeginScene(levelWorld->GetEditorCamera());
 				}
 				GetRenderGraph().ToggleRenderPassActive("Grid", false);
 				GetRenderSystem()->OnRenderRuntime();

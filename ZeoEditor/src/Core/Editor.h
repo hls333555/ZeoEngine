@@ -28,6 +28,7 @@ namespace ZeoEngine {
 
 	public:
 		Editor();
+		~Editor();
 
 		void OnAttach();
 		void OnUpdate(DeltaTime dt) const;
@@ -139,7 +140,7 @@ namespace ZeoEngine {
 	private:
 		std::unordered_map<std::string, Ref<EditorPreviewWorldBase>> m_Worlds;
 
-		std::vector<Ref<EditorMenu>> m_Menus;
+		std::vector<Scope<EditorMenu>> m_Menus;
 		std::unordered_map<std::string, Ref<PanelBase>> m_Panels;
 
 		bool m_bShouldRebuildDockspaceLayout = false;

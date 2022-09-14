@@ -26,7 +26,7 @@ namespace ZeoEngine {
 	}
 
 	TextureAssetView::TextureAssetView(const Ref<EditorPreviewWorldBase>& world)
-		: m_World(world.get())
+		: m_EditorWorld(world)
 	{
 	}
 
@@ -53,7 +53,7 @@ namespace ZeoEngine {
 			ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 0.1f }));
 
 		// Texture
-		const auto texture = std::static_pointer_cast<Texture2D>(m_World->GetAsset());
+		const auto texture = std::static_pointer_cast<Texture2D>(m_EditorWorld.lock()->GetAsset());
 		ImGui::Image(texture->GetTextureID(), displaySize, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 		// Display texture info at the bottom center

@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	{
 	}
 
-	void EditorMenu::OnImGuiRender()
+	void EditorMenu::OnImGuiRender() const
 	{
 		if (ImGui::BeginMenu(m_MenuName.c_str(), m_bEnabled))
 		{

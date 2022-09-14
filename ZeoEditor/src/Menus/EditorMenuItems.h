@@ -10,9 +10,7 @@ namespace ZeoEngine {
 	class MenuItemBase
 	{
 	public:
-		MenuItemBase() = delete;
 		MenuItemBase(std::string menuItemName, std::string shortcutName = "");
-	protected:
 		virtual ~MenuItemBase() = default;
 	
 	public:

@@ -18,7 +18,7 @@
 namespace ZeoEngine {
 
 	ISystem::ISystem(const Ref<WorldBase>& world)
-		: m_World(world.get())
+		: m_World(world)
 	{
 	}
 
@@ -45,7 +45,7 @@ namespace ZeoEngine {
 
 	RenderSystemBase::RenderSystemBase(const Ref<WorldBase>& world)
 		: ISystem(world)
-		, m_SceneRenderer(world->GetSceneRenderer().get())
+		, m_SceneRenderer(world->GetSceneRenderer())
 	{
 	}
 
@@ -59,8 +59,6 @@ namespace ZeoEngine {
 			{
 				camera = &cameraComp.Camera;
 				transform = transformComp.GetTransform();
-				// TODO:
-				return;
 			}
 		});
 		return std::make_pair(camera, transform);
@@ -283,8 +281,8 @@ namespace ZeoEngine {
 			// Draw frustum visualizer when selected
 			if (GetWorld()->GetContextEntity() == entity)
 			{
-				const Mat4 invMatix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
-				DebugDrawUtils::DrawFrustum(GetScene(), invMatix, debugDrawColor);
+				const Mat4 invMatrix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
+				DebugDrawUtils::DrawFrustum(GetScene(), invMatrix, debugDrawColor);
 			}
 		});
 	}

@@ -18,11 +18,11 @@ namespace ZeoEngine {
 		virtual ~ISystem() = default;
 
 	protected:
-		WorldBase* GetWorld() const { return m_World; }
-		Ref<Scene> GetScene() const { return m_World->GetActiveScene(); }
+		Ref<WorldBase> GetWorld() const { return m_World.lock(); }
+		Ref<Scene> GetScene() const { return GetWorld()->GetActiveScene(); }
 
 	private:
-		WorldBase* m_World = nullptr;
+		Weak<WorldBase> m_World;
 	};
 
 	class SystemBase : public ISystem
@@ -57,10 +57,10 @@ namespace ZeoEngine {
 		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera() const;
 
 	protected:
-		SceneRenderer* GetSceneRenderer() const { return m_SceneRenderer; }
+		Ref<SceneRenderer> GetSceneRenderer() const { return m_SceneRenderer.lock(); }
 
 	private:
-		SceneRenderer* m_SceneRenderer = nullptr;
+		Weak<SceneRenderer> m_SceneRenderer;
 	};
 
 	class ParticleUpdateSystem : public SystemBase

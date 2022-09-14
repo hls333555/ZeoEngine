@@ -19,7 +19,7 @@ namespace ZeoEngine {
 		virtual void OnRenderScene() override;
 
 	private:
-		LevelPreviewWorld* m_World = nullptr;
+		Weak<LevelPreviewWorld> m_LevelWorld;
 
 	};
 

@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw(Entity entity) {}
 
 	private:
-		AssetPreviewWorldBase* m_World = nullptr;
+		Weak<AssetPreviewWorldBase> m_AssetWorld;
 	};
 
 }

@@ -29,6 +29,8 @@ namespace ZeoEngine {
 		g_Editor = this;
 	}
 
+	Editor::~Editor() = default;
+
 	void Editor::OnAttach()
 	{
 		NewLevel();
@@ -173,9 +175,10 @@ namespace ZeoEngine {
 
 	EditorMenu& Editor::CreateMenu(std::string menuName)
 	{
-		Ref<EditorMenu> menu = CreateRef<EditorMenu>(std::move(menuName));
-		m_Menus.emplace_back(menu);
-		return *menu;
+		Scope<EditorMenu> menu = CreateScope<EditorMenu>(std::move(menuName));
+		EditorMenu& ret = *menu;
+		m_Menus.emplace_back(std::move(menu));
+		return ret;
 	}
 
 	void Editor::InspectLevelEntity() const

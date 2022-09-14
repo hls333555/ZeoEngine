@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 	AssetInspector::AssetInspector(const Ref<AssetPreviewWorldBase>& world, U32 compId)
 		: ComponentInspector(compId)
-		, m_World(world.get())
+		, m_AssetWorld(world)
 	{
 	}
 
@@ -30,9 +30,10 @@ namespace ZeoEngine {
 
 		ImGui::SameLine(0.0f, 0.0f);
 
+		const auto assetWorld = m_AssetWorld.lock();
 		if (ImGui::TransparentButton(ICON_FA_SAVE))
 		{
-			m_World->SaveCurrentAsset();
+			assetWorld->SaveCurrentAsset();
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -43,7 +44,7 @@ namespace ZeoEngine {
 
 		if (ImGui::TransparentButton(ICON_FA_FILE_EXPORT))
 		{
-			m_World->SaveAssetAs();
+			assetWorld->SaveAssetAs();
 		}
 		if (ImGui::IsItemHovered())
 		{

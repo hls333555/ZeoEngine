@@ -38,9 +38,9 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		virtual void OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld);
+		virtual void OnWorldChanged(const Ref<EditorPreviewWorldBase>& world, const Ref<EditorPreviewWorldBase>& lastWorld);
 
-		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
+		Ref<EditorPreviewWorldBase> GetEditorWorld() const { return m_EditorWorld.lock(); }
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) override;
@@ -50,14 +50,14 @@ namespace ZeoEngine {
 		bool OnMouseScroll(MouseScrolledEvent& e) const;
 		bool OnKeyPressed(KeyPressedEvent& e) const;
 
-		void OnViewportResize(const Vec2& size) const;
+		void OnViewportResize(const Ref<EditorPreviewWorldBase>& editorWorld, const Vec2& size) const;
 
 	public:
 		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };
 
 	private:
-		EditorPreviewWorldBase* m_EditorWorld = nullptr;
-		FrameBuffer* m_FrameBuffer = nullptr;
+		Weak<EditorPreviewWorldBase> m_EditorWorld;
+		Weak<FrameBuffer> m_FrameBuffer;
 
 		Vec2 m_ViewportBounds[2];
 		Vec2 m_LastViewportSize{ 0.0f };

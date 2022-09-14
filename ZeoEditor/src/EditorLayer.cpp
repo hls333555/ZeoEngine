@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		m_Editor = CreateRef<Editor>();
+		m_Editor = CreateScope<Editor>();
 		m_Editor->OnAttach();
 		
 	}

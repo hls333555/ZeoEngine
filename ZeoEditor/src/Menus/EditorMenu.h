@@ -14,10 +14,9 @@ namespace ZeoEngine {
 	class EditorMenu
 	{
 	public:
-		EditorMenu() = delete;
 		explicit EditorMenu(std::string menuName);
 
-		void OnImGuiRender();
+		void OnImGuiRender() const;
 		void OnEvent(Event& e) const;
 
 		void SetEnabled(bool bEnabled) { m_bEnabled = bEnabled; }
@@ -25,8 +24,8 @@ namespace ZeoEngine {
 		template<typename T, typename ... Args>
 		EditorMenu& MenuItem(Args&& ... args)
 		{
-			Ref<T> menuItem = CreateRef<T>(std::forward<Args>(args)...);
-			m_MenuItems.emplace_back(menuItem);
+			Scope<T> menuItem = CreateScope<T>(std::forward<Args>(args)...);
+			m_MenuItems.emplace_back(std::move(menuItem));
 			return *this;
 		}
 
@@ -36,7 +35,7 @@ namespace ZeoEngine {
 	private:
 		std::string m_MenuName;
 		bool m_bEnabled = true;
-		std::vector<Ref<MenuItemBase>> m_MenuItems;
+		std::vector<Scope<MenuItemBase>> m_MenuItems;
 	};
 
 }

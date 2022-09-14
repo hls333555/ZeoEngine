@@ -27,6 +27,7 @@ namespace ZeoEngine {
 
 	private:
 		Weak<EditorPreviewWorldBase> m_World;
+
 		char m_NameBuffer[MAX_PATH_SIZE];
 		bool m_bHasKeyboardFocused = false;
 		std::string m_ToReplacePath;

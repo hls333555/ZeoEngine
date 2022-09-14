@@ -44,7 +44,7 @@ namespace ZeoEngine {
 		}
 		void SetActiveScene(Ref<Scene> scene);
 
-		Ref<SceneRenderer>& GetSceneRenderer() { return m_SceneRenderer; }
+		Ref<SceneRenderer> GetSceneRenderer() { return m_SceneRenderer; }
 
 		const Ref<IAsset>& GetAsset() const { return m_Asset; }
 		void SetAsset(Ref<IAsset> asset) { m_Asset = std::move(asset); }
