@@ -57,7 +57,7 @@ namespace ZeoEngine {
 			const auto it = m_Worlds.find(worldName);
 			if (it == m_Worlds.end()) return {};
 
-			return std::static_pointer_cast<WorldClass>(it->second);
+			return std::dynamic_pointer_cast<WorldClass>(it->second);
 		}
 
 		template<typename T, typename ... Args>
@@ -72,8 +72,7 @@ namespace ZeoEngine {
 			return world;
 		}
 
-		Ref<EditorPreviewWorldBase> GetLevelWorld() const { return GetWorld("Level"); }
-		Ref<LevelPreviewWorld> GetLevelWorldCast() const;
+		Ref<LevelPreviewWorld> GetLevelWorld() const;
 
 		void NewLevel();
 		void LoadLevel();
@@ -124,7 +123,7 @@ namespace ZeoEngine {
 			const auto it = m_Panels.find(panelName);
 			if (it == m_Panels.end()) return {};
 
-			return std::static_pointer_cast<PanelClass>(it->second);
+			return std::dynamic_pointer_cast<PanelClass>(it->second);
 		}
 
 		void InspectLevelEntity() const;

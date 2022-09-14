@@ -106,7 +106,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<LevelPreviewWorld> Editor::GetLevelWorldCast() const
+	Ref<LevelPreviewWorld> Editor::GetLevelWorld() const
 	{
 		return GetWorld<LevelPreviewWorld>("Level");
 	}

@@ -2,6 +2,7 @@
 
 #include "Core/Editor.h"
 #include "Worlds/AssetPreviewWorlds.h"
+#include "Worlds/LevelPreviewWorld.h"
 #include "Panels/AssetViewPanel.h"
 #include "Engine/GameFramework/Components.h"
 #include "Inspectors/MaterialInspector.h"
@@ -10,7 +11,7 @@ namespace ZeoEngine {
 
 	InspectorPanel::InspectorPanel(std::string panelName)
 		: PanelBase(std::move(panelName))
-		, m_EditorWorld(g_Editor->GetLevelWorld())
+		, m_EditorWorld(std::static_pointer_cast<EditorPreviewWorldBase>(g_Editor->GetLevelWorld()))
 	{
 		m_PanelSpec.Padding = { 0.0f, 0.0f };
 		m_AssetViewPanel = CreateRef<AssetViewPanel>(ASSET_VIEW);

@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 	Ref<Scene> SceneUtils::GetActiveGameScene()
 	{
-		return g_Editor->GetLevelWorldCast()->GetActiveScene();
+		return g_Editor->GetLevelWorld()->GetActiveScene();
 	}
 
 	void SceneUtils::OpenLevel(const std::string& path)

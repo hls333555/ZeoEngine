@@ -7,13 +7,14 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Utils/EditorSceneUtils.h"
 #include "Worlds/EditorPreviewWorldBase.h"
+#include "Worlds/LevelPreviewWorld.h"
 #include "Core/Editor.h"
 
 namespace ZeoEngine {
 
 	LevelOutlinePanel::LevelOutlinePanel(std::string panelName)
 		: PanelBase(std::move(panelName))
-		, m_EditorWorld(g_Editor->GetLevelWorld().get())
+		, m_EditorWorld(static_cast<EditorPreviewWorldBase*>(g_Editor->GetLevelWorld().get()))
 	{
 	}
 
