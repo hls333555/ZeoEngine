@@ -353,7 +353,7 @@ namespace ZeoEngine {
 	{
 		if (const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path)); it != m_PathMetadatas.cend())
 		{
-			return std::static_pointer_cast<AssetMetadata>(it->second);
+			return std::dynamic_pointer_cast<AssetMetadata>(it->second);
 		}
 		return nullptr;
 	}

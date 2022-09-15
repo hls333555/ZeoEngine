@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		/** Construct a new asset. */
 		Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const;
 		/** Open an existing asset. */
-		bool OpenAsset(const std::string& path) const;
+		bool OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const;
 		/** Rename an existing asset. */
 		bool RenameAsset(const std::string& oldPath, const std::string& newPath) const;
 		/** Delete an existing asset. */

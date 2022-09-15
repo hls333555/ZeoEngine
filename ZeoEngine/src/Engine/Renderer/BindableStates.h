@@ -19,6 +19,7 @@ namespace ZeoEngine {
 		static Ref<T> Resolve(Args&&...args)
 		{
 			static_assert(std::is_base_of<BindableState, T>::value, "Can only resolve classes derived from BindableState!");
+
 			return Get().ResolveImpl<T>(std::forward<Args>(args)...);
 		}
 

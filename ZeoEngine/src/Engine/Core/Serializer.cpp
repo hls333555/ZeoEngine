@@ -506,7 +506,7 @@ namespace ZeoEngine {
 	{
 		if (!scene) return;
 
-		scene->m_Registry.view<CoreComponent>().each([&](auto entityID, auto& cc)
+		scene->ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
 		{
 			const Entity entity = { entityID, scene };
 			if (!entity) return;

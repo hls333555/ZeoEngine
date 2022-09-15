@@ -41,12 +41,12 @@ namespace ZeoEngine {
 				m_bIsRunning = false;
 			}
 			m_CV.notify_one();
+			m_FileWatcherThread->join();
 		}
 		
 		void Start()
 		{
 			m_FileWatcherThread = CreateScope<std::thread>(&FileWatcher::Execute, this);
-			m_FileWatcherThread->detach();
 		}
 
 	private:

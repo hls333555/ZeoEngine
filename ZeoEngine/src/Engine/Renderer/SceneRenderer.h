@@ -14,6 +14,7 @@ namespace ZeoEngine {
 	class Camera;
 	class EditorCamera;
 	class FrameBuffer;
+	class WorldBase;
 	class Scene;
 	struct SceneContext;
 	class RenderGraph;
@@ -29,15 +30,12 @@ namespace ZeoEngine {
 
 	class SceneRenderer : public std::enable_shared_from_this<SceneRenderer>
 	{
-		friend class EditorBase;
-
 	public:
+		SceneRenderer();
 		virtual ~SceneRenderer();
 
-		void OnAttach(const Ref<Scene>& scene);
+		virtual void OnAttach(const Ref<WorldBase>& world);
 		void OnRender();
-
-		void UpdateSceneContext(const Ref<Scene>& scene);
 
 		void SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight);
 		void AddPointLight(const Vec3& position, const Ref<PointLight>& pointLight);
@@ -56,6 +54,8 @@ namespace ZeoEngine {
 
 		Mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
 
+		void OnViewportResize(U32 width, U32 height) const;
+
 	protected:
 		/** Begin scene for editor. */
 		void BeginScene(const EditorCamera& camera);
@@ -65,20 +65,20 @@ namespace ZeoEngine {
 
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
-		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<Scene>& scene) = 0;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) = 0;
 
+		void UpdateSceneContext(const Ref<Scene>& scene);
 		void PrepareScene();
 		virtual void OnRenderScene() = 0;
 		void FlushScene() const;
-
+		
 		void UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction);
 		void UploadLightData();
 
-		void OnViewportResize(U32 width, U32 height) const;
+	public:
+		entt::sink<entt::sigh<void(const Ref<FrameBuffer>&)>> m_PostSceneRender{ m_PostSceneRenderDel };
 
 	private:
-		EditorCamera* m_EditorCamera = nullptr;
-
 		RenderDoc* m_RenderDocRef = nullptr;
 
 		Ref<SceneContext> m_SceneContext;
@@ -87,7 +87,7 @@ namespace ZeoEngine {
 
 		Ref<DDRenderInterface> m_Ddri;
 
-		entt::delegate<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
+		entt::sigh<void(const Ref<FrameBuffer>&)> m_PostSceneRenderDel;
 
 		BatchRenderer m_QuadBatcher;
 

@@ -104,7 +104,7 @@ namespace ZeoEngine {
 
 			if (const auto it = m_PathMetadatas.find(path); it != m_PathMetadatas.cend())
 			{
-				return std::static_pointer_cast<MetadataClass>(it->second);
+				return std::dynamic_pointer_cast<MetadataClass>(it->second);
 			}
 
 			return nullptr;

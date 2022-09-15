@@ -15,12 +15,13 @@
 namespace ZeoEngine {
 
 	EditorCamera::EditorCamera(float fovy, float aspectRatio, float nearClip, float farClip)
-		: m_FOVy(fovy), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), Camera(glm::perspective(glm::radians(fovy), aspectRatio, nearClip, farClip))
+		: Camera(glm::perspective(glm::radians(fovy), aspectRatio, nearClip, farClip))
+		, m_FOVy(fovy), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip)
 	{
 		UpdateView();
 	}
 
-	void EditorCamera::OnUpdate(DeltaTime dt, bool bIsViewportHovered)
+	void EditorCamera::OnUpdate(DeltaTime dt)
 	{
 		if (!m_bEnableUpdate) return;
 
@@ -54,7 +55,7 @@ namespace ZeoEngine {
 
 		// Record last hovering state
 		// Note that the hovering state will become inaccurate as soon as we set mouse to lock state
-		m_bLastIsViewportHovered = bIsViewportHovered;
+		m_bLastIsViewportHovered = m_bIsViewportHovered;
 	}
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)

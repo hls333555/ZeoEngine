@@ -12,15 +12,15 @@ namespace ZeoEngine {
 
 	class EditorCamera : public Camera
 	{
-		friend EditorViewPanelBase;
-
 	public:
 		EditorCamera() = default;
 		EditorCamera(float fovy, float aspectRatio, float nearClip, float farClip);
 
 		void SetEnableUpdate(bool bEnable) { m_bEnableUpdate = bEnable; }
 
-		void OnUpdate(DeltaTime dt, bool bIsViewportHovered);
+		void OnUpdate(DeltaTime dt);
+
+		void SetViewportHovered(bool bHovered) { m_bIsViewportHovered = bHovered; }
 
 		void StartFocusEntity(Entity entity, bool bIsTeleport);
 
@@ -105,6 +105,8 @@ namespace ZeoEngine {
 		bool m_bEnableControls[4];
 		bool m_bIsFirstPress = true;
 		bool m_bIsRightMouseDragged = false;
+
+		bool m_bIsViewportHovered = false;
 		bool m_bLastIsViewportHovered = false;
 	};
 

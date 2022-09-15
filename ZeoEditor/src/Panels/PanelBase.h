@@ -7,13 +7,11 @@
 
 namespace ZeoEngine {
 
-	class EditorBase;
-
 	class PanelBase
 	{
 	public:
 		PanelBase() = delete;
-		PanelBase(std::string panelName, const Weak<EditorBase>& contextEditor);
+		explicit PanelBase(std::string panelName);
 	protected:
 		virtual ~PanelBase() = default;
 
@@ -26,24 +24,17 @@ namespace ZeoEngine {
 
 		const std::string& GetPanelName() const { return m_PanelName; }
 
-		Ref<EditorBase> GetContextEditor() const { return m_ContextEditor.lock(); }
-		template<typename T>
-		Ref<T> GetContextEditor() const
-		{
-			return std::dynamic_pointer_cast<T>(GetContextEditor());
-		}
-
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
 
 		void FocusPanel();
 
-		void Open();
-		void Close();
+		void Toggle(bool bShow);
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
+		virtual void ProcessDockspaceRender() {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
 
@@ -56,7 +47,6 @@ namespace ZeoEngine {
 
 	private:
 		std::string m_PanelName;
-		Weak<EditorBase> m_ContextEditor;
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;

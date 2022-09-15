@@ -80,7 +80,7 @@ namespace ZeoEngine {
 		virtual void InitRenderPasses() override;
 	};
 
-	class EditorPreviewRenderGraph : public RenderGraph
+	class AssetPreviewRenderGraph : public RenderGraph
 	{
 	private:
 		virtual Ref<FrameBuffer> CreateBackFrameBuffer() override;

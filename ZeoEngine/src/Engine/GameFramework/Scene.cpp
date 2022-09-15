@@ -8,13 +8,7 @@
 
 namespace ZeoEngine {
 
-	Scene::~Scene()
-	{
-		for (const auto& system : m_Systems)
-		{
-			system->OnDestroy();
-		}
-	}
+	Scene::~Scene() = default;
 
 	void Scene::OnUpdate(DeltaTime dt) const
 	{
@@ -30,7 +24,7 @@ namespace ZeoEngine {
 	{
 		m_Systems = other->m_Systems;
 		m_Context = other->m_Context;
-		other->m_Registry.view<CoreComponent>().each([this, &other](auto entityId, auto& coreComp)
+		other->ForEachComponentView<CoreComponent>([this, &other](auto entityId, auto& coreComp)
 		{
 			Entity entity{ entityId, other };
 			// Clone a new "empty" entity
@@ -90,11 +84,6 @@ namespace ZeoEngine {
 		{
 			return m_Entities[uuid];
 		}
-		return {};
-	}
-
-	Entity Scene::GetSelectedEntity() const
-	{
 		return {};
 	}
 

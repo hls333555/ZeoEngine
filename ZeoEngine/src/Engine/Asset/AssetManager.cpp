@@ -103,7 +103,7 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	bool AssetManager::OpenAsset(const std::string& path) const
+	bool AssetManager::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
@@ -111,7 +111,7 @@ namespace ZeoEngine {
 		const auto typeID = metadata->TypeID;
 		if (const auto* actions = GetAssetActionsByAssetType(typeID))
 		{
-			actions->OpenAsset(path);
+			actions->OpenAsset(path, bIsFromAssetBrowser);
 			return true;
 		}
 

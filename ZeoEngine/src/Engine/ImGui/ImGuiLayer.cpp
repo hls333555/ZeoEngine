@@ -313,7 +313,7 @@ namespace ZeoEngine {
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Load full Chinese characters
-		io.Fonts->AddFontFromFileTTF("resources/fonts/wqy-microhei.ttc", 15.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
+		io.Fonts->AddFontFromFileTTF("resources/fonts/wqy-microhei.ttc", 14.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
 
 		ImFontConfig config;
 		config.MergeMode = true; // Merge into first font

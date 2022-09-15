@@ -1,7 +1,6 @@
 #include "EditorLayer.h"
 
-#include "Core/EditorManager.h"
-#include "Editors/LevelEditor.h"
+#include "Core/Editor.h"
 #include "Core/EditorTypes.h"
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetRegistry.h"
@@ -23,7 +22,8 @@ namespace ZeoEngine {
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		EditorManager::Get().CreateEditor<LevelEditor>(LEVEL_EDITOR);
+		m_Editor = CreateScope<Editor>();
+		m_Editor->OnAttach();
 		
 	}
 
@@ -32,7 +32,8 @@ namespace ZeoEngine {
 		ZE_PROFILE_FUNC();
 
 		Renderer::ResetStats();
-		EditorManager::Get().OnUpdate(dt);
+
+		m_Editor->OnUpdate(dt);
 		AssetRegistry::Get().OnUpdate(dt);
 	}
 
@@ -45,12 +46,12 @@ namespace ZeoEngine {
 		ImGui::ShowDemoWindow(&bShow);
 #endif
 
-		EditorManager::Get().OnImGuiRender();
+		m_Editor->OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		EditorManager::Get().OnEvent(event);
+		m_Editor->OnEvent(event);
 	}
 
 }

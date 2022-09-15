@@ -1,18 +1,13 @@
 #include "Engine/Asset/AssetActions.h"
 
-#include "Core/EditorManager.h"
-#include "Core/EditorTypes.h"
-#include "Editors/LevelEditor.h"
-#include "Editors/ParticleEditor.h"
-#include "Editors/MaterialEditor.h"
-#include "Editors/MeshEditor.h"
-#include "Editors/TextureEditor.h"
+#include "Core/Editor.h"
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Utils/PathUtils.h"
+#include "Worlds/AssetPreviewWorlds.h"
 
 namespace ZeoEngine {
 
@@ -27,6 +22,7 @@ namespace ZeoEngine {
 	{
 		PathUtils::DeletePath(path);
 		AssetRegistry::Get().OnPathRemoved(path);
+		// TODO: Clear references, possibly clear inspector
 	}
 
 	void ResourceAssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
@@ -82,32 +78,36 @@ namespace ZeoEngine {
 		ZE_CORE_INFO("Successfully reimported {0} from {1}", path, metadata->SourcePath);
 	}
 
-	void LevelAssetActions::OpenAsset(const std::string& path) const
+	void LevelAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		EditorManager::Get().OpenEditor<LevelEditor>(LEVEL_EDITOR, path);
+		g_Editor->LoadLevel(path);
 	}
 
-	void ParticleTemplateAssetActions::OpenAsset(const std::string& path) const
+	void ParticleTemplateAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		EditorManager::Get().OpenEditor<ParticleEditor>(PARTICLE_EDITOR, path);
+		const auto particleWorld = g_Editor->GetOrCreateWorld<ParticlePreviewWorld>("Particle");
+		g_Editor->InspectAsset(path, particleWorld, bIsFromAssetBrowser);
 	}
 
-	void Texture2DAssetActions::OpenAsset(const std::string& path) const
+	void Texture2DAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		EditorManager::Get().OpenEditor<TextureEditor>(TEXTURE_EDITOR, path);
+		const auto textureWorld = g_Editor->GetOrCreateWorld<TexturePreviewWorld>("Texture");
+		g_Editor->InspectAsset(path, textureWorld, bIsFromAssetBrowser);
 	}
 
-	void MeshAssetActions::OpenAsset(const std::string& path) const
+	void MeshAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		EditorManager::Get().OpenEditor<MeshEditor>(MESH_EDITOR, path);
+		const auto meshWorld = g_Editor->GetOrCreateWorld<MeshPreviewWorld>("Mesh");
+		g_Editor->InspectAsset(path, meshWorld, bIsFromAssetBrowser);
 	}
 
-	void MaterialAssetActions::OpenAsset(const std::string& path) const
+	void MaterialAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		EditorManager::Get().OpenEditor<MaterialEditor>(MATERIAL_EDITOR, path);
+		const auto materialWorld = g_Editor->GetOrCreateWorld<MaterialPreviewWorld>("Material");
+		g_Editor->InspectAsset(path, materialWorld, bIsFromAssetBrowser);
 	}
 
-	void ShaderAssetActions::OpenAsset(const std::string& path) const
+	void ShaderAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
 		const std::string resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourceFileSystemPath();
 		PlatformUtils::OpenFile(resourcePath);
