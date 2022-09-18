@@ -2,10 +2,14 @@
 
 #include <IconsFontAwesome5.h>
 
+#include "Core/Editor.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Worlds/EditorPreviewWorldBase.h"
 #include "Inspectors/ComponentInspector.h"
 #include "Engine/Utils/ReflectionUtils.h"
+#include "Engine/GameFramework/Components.h"
+#include "Engine/Scripting/ScriptEngine.h"
+#include "Utils/EditorSceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -58,6 +62,38 @@ namespace ZeoEngine {
 			else
 			{
 				++it;
+			}
+		}
+
+		// TODO: TEST
+		const bool bIsRuntime = EditorSceneUtils::IsRuntime();
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			const UUID entityID = entity.GetUUID();
+			const auto& className = entity.GetComponent<ScriptComponent>().ClassName;
+			if (ScriptEngine::EntityClassExists(className))
+			{
+				auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
+				for (const auto& [name, field] : entityFields)
+				{
+					auto& fieldInstance = entityFields[name];
+					if (field.Field->Type == ScriptFieldType::Float)
+					{
+						const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(entityID);
+						auto value = bIsRuntime ? fieldInstance.GetRuntimeValue<float>(scriptInstance) : fieldInstance.GetValue<float>();
+						if (ImGui::DragFloat(name.c_str(), &value))
+						{
+							if (bIsRuntime)
+							{
+								fieldInstance.SetRuntimeValue(scriptInstance, value);
+							}
+							else
+							{
+								fieldInstance.SetValue(value);
+							}
+						}
+					}
+				}
 			}
 		}
 

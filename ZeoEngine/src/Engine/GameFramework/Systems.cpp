@@ -111,6 +111,7 @@ namespace ZeoEngine {
 		GetScene()->ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
 		{
 			const Entity entity = { e, GetScene() };
+			ScriptEngine::InstantiateEntityClass(entity);
 			ScriptEngine::OnCreateEntity(entity);
 		});
 	}

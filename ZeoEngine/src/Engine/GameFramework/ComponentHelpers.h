@@ -87,7 +87,9 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
+		virtual void OnComponentDestroy() override;
 		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
+		virtual void PostDataDeserialize(U32 dataId) override;
 	};
 
 	class ParticleSystemComponentHelper : public IComponentHelper
@@ -106,6 +108,7 @@ namespace ZeoEngine {
 	public:
 		using IComponentHelper::IComponentHelper;
 
+		virtual void OnComponentDestroy() override;
 		virtual void OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 		virtual void PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex = -1) override;
 	};

@@ -10,6 +10,7 @@ namespace ZeoEngine {
 	class EditorSceneUtils
 	{
 	public:
+		static bool IsRuntime();
 		static EditorCamera& GetEditorCamera();
 		static Entity CreateAndPlaceEntity(const Ref<Scene>& scene, const std::string& name = "New Entity");
 		static Entity CreateAndPlaceCube(const Ref<Scene>& scene);

@@ -19,6 +19,11 @@ namespace ZeoEngine {
 		g_Editor->LoadLevel(path);
 	}
 
+	bool EditorSceneUtils::IsRuntime()
+	{
+		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
+	}
+
 	EditorCamera& EditorSceneUtils::GetEditorCamera()
 	{
 		return g_Editor->GetLevelWorld()->GetEditorCamera();

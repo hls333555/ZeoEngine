@@ -5,6 +5,7 @@
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Scripting/ScriptEngine.h"
 
 namespace ZeoEngine {
 
@@ -53,14 +54,28 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
+#pragma region ScriptComponentHelper
+	void ScriptComponentHelper::OnComponentDestroy()
+	{
+		ScriptEngine::OnDestroyEntity(*GetOwnerEntity());
+	}
+
 	void ScriptComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
 		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
 		{
-			auto& scriptComp = GetOwnerEntity()->GetComponent<ScriptComponent>();
-			// TODO:
+			ScriptEngine::InitScriptEntity(*GetOwnerEntity());
 		}
 	}
+
+	void ScriptComponentHelper::PostDataDeserialize(U32 dataId)
+	{
+		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
+		{
+			ScriptEngine::InitScriptEntity(*GetOwnerEntity());
+		}
+	}
+#pragma endregion
 
 #pragma region ParticleSystemComponentHelper
 	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
@@ -71,7 +86,7 @@ namespace ZeoEngine {
 
 	void ParticleSystemComponentHelper::OnComponentDestroy()
 	{
-		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
+		const auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
 		if (particleComp.ParticleTemplateAsset)
 		{
 			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
@@ -105,16 +120,27 @@ namespace ZeoEngine {
 			ParticleSystemInstance::Create(particleComp);
 		}
 	}
+#pragma endregion
+
+#pragma region ParticleSystemPreviewComponentHelper
+	void ParticleSystemPreviewComponentHelper::OnComponentDestroy()
+	{
+		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
+		if (particlePreviewComp.ParticleTemplateAsset)
+		{
+			particlePreviewComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particlePreviewComp.Instance);
+		}
+	}
 
 	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
-		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
+		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 	 
 	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
 	{
-		auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
+		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
 		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 #pragma endregion

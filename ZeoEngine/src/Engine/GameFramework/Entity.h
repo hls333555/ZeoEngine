@@ -15,8 +15,6 @@ namespace ZeoEngine {
 		Entity(entt::entity handle, const Ref<Scene>& scene);
 		Entity(const Entity&) = default;
 
-		bool IsValid() const;
-
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{
@@ -94,9 +92,7 @@ namespace ZeoEngine {
 
 		Ref<Scene> GetScene() const { return m_Scene.lock(); }
 
-		// TODO:
-		/** Returns the entity identifier without the version. */
-		U32 GetEntityId() const { return entt::to_entity(m_EntityHandle); }
+		bool IsValid() const;
 
 		/** This only checks if this entity is a null-entity while IsValid() checks if this entity is still alive. */
 		operator bool() const { return m_EntityHandle != entt::null; }

@@ -11,15 +11,6 @@ namespace ZeoEngine {
 	{
 	}
 
-	bool Entity::IsValid() const
-	{
-		if (const auto scene = m_Scene.lock())
-		{
-			return scene->m_Registry.valid(*this);
-		}
-		return false;
-	}
-
 	UUID Entity::GetUUID() const
 	{
 		return GetComponent<IDComponent>().ID;
@@ -117,6 +108,15 @@ namespace ZeoEngine {
 	{
 		auto& transformComp = GetComponent<TransformComponent>();
 		return { transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f };
+	}
+
+	bool Entity::IsValid() const
+	{
+		if (const auto scene = m_Scene.lock())
+		{
+			return scene->m_Registry.valid(*this);
+		}
+		return false;
 	}
 
 	entt::meta_any Entity::AddComponentById(entt::id_type compId, bool bIsDeserialize)
