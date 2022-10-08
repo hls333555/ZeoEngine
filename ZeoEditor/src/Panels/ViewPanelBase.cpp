@@ -156,7 +156,7 @@ namespace ZeoEngine {
 	void ViewPanelBase::UpdateViewportSizeOnSceneCameras() const
 	{
 		// Resize non-FixedAspectRatio cameras
-		GetEditorWorld()->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto entityId, auto& cameraComp)
+		GetEditorWorld()->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto entityID, auto& cameraComp)
 		{
 			if (!cameraComp.bFixedAspectRatio)
 			{

@@ -2,27 +2,30 @@
 
 #include <IconsFontAwesome5.h>
 
-#include "Inspectors/DataWidget.h"
 #include "Engine/Utils/ReflectionUtils.h"
+#include "Inspectors/FieldWidget.h"
+#include "Inspectors/ComponentFieldInstance.h"
 
 namespace ZeoEngine {
 
-	ComponentInspector::ComponentInspector(U32 compId)
-		: m_ComponentId(compId)
+	ComponentInspector::ComponentInspector(U32 compID)
+		: m_ComponentID(compID)
 	{
 		PreprocessComponent();
 	}
+
+	ComponentInspector::~ComponentInspector() = default;
 
 	void ComponentInspector::Draw(Entity entity)
 	{
 		m_bWillRemove = false;
 
-		const auto compType = entt::resolve(m_ComponentId);
-		// Push component id
-		ImGui::PushID(m_ComponentId);
+		const auto compType = entt::resolve(m_ComponentID);
+		// Push component ID
+		ImGui::PushID(m_ComponentID);
 		{
-			auto compInstance = entity.GetComponentById(m_ComponentId);
-			const char* compDisplayName = ReflectionUtils::GetComponentDisplayNameFull(m_ComponentId);
+			auto compInstance = entity.GetComponentByID(m_ComponentID);
+			const char* compDisplayName = ReflectionUtils::GetComponentDisplayNameFull(m_ComponentID);
 
 			bool bShouldDisplayCompHeader = !ReflectionUtils::DoesPropertyExist(Reflection::HideComponentHeader, compType);
 			bool bIsCompHeaderExpanded = true;
@@ -35,7 +38,10 @@ namespace ZeoEngine {
 				// Component collapsing header
 				bIsCompHeaderExpanded = ImGui::CollapsingHeader(compDisplayName, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 				// Header tooltip
-				Utils::ShowPropertyTooltip(compType);
+				if (const auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, compType))
+				{
+					ImGui::SetTooltipWithPadding(*tooltip);
+				}
 
 				ImGui::SameLine(contentRegionAvailable.x - lineHeight + ImGui::GetFramePadding().x);
 
@@ -62,64 +68,57 @@ namespace ZeoEngine {
 			if (bIsCompHeaderExpanded)
 			{
 				// Iterate all categories
-				for (const auto& [category, dataIds] : m_PreprocessedDatas)
+				for (const auto& [category, fieldIDs] : m_PreprocessedFields)
 				{
 					bool bShouldDisplayCategoryTree = false;
-					std::vector<entt::meta_data> visibleDatas;
-					// Do not show TreeNode if none of these datas will show or category is not set
-					for (const auto dataId : dataIds)
+					std::vector<entt::meta_data> visibleFields;
+					// Do not show TreeNode if none of these fields will show or category is not set
+					for (const auto fieldID : fieldIDs)
 					{
-						entt::meta_data data = compType.data(dataId);
-						if (!m_DataParser.ShouldHideData(data, compInstance))
+						entt::meta_data data = compType.data(fieldID);
+						if (!m_FieldParser.ShouldHideField(data, compInstance))
 						{
 							bShouldDisplayCategoryTree = !category.empty();
-							visibleDatas.push_back(data);
+							visibleFields.push_back(data);
 						}
 					}
 					bool bIsCategoryTreeExpanded = true;
 					if (bShouldDisplayCategoryTree)
 					{
-						// Data category tree
-						bIsCategoryTreeExpanded = ImGui::TreeNodeEx(category.c_str(),
-							ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
+						ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */;
+						// Field category tree
+						bIsCategoryTreeExpanded = ImGui::TreeNodeEx(category.c_str(), flags);
 					}
 					if (bIsCategoryTreeExpanded)
 					{
-						// We want column separator to keep synced across different entities...
-						// so we pop component id...
-						ImGui::PopID();
-						// and pop entity id
-						ImGui::PopID();
+						const auto backupID = ImGui::GetItemID();
+						// Sync table column separator
+						ImGui::PushOverrideID(GetTableID());
 						if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 						{
-							m_TableID = ImGui::GetItemID();
 							ImGui::TableNextColumn();
-							// Re-push entity id
-							ImGui::PushID(static_cast<U32>(entity));
-							// Re-push component id
-							ImGui::PushID(m_ComponentId);
 
-							// Iterate all visible datas
-							for (const auto data : visibleDatas)
+							ImGui::PushOverrideID(backupID);
 							{
-								// Push data id
-								ImGui::PushID(data.id());
+								// Iterate all visible fields
+								for (const auto data : visibleFields)
 								{
-									// Draw widget based on data type
-									DrawDataWidget(data, compInstance);
+									// Push field ID
+									ImGui::PushID(data.id());
+									{
+										// Draw widget based on data type
+										DrawFieldWidget(data, entity);
+									}
+									ImGui::PopID();
 								}
-								ImGui::PopID();
-							}
 
-							// When EndTable() is called, the ID stack must be the same as when BeginTable() is called!
+								DrawExtraFieldWidgets(entity);
+							}
 							ImGui::PopID();
-							ImGui::PopID();
+
 							ImGui::EndTable();
 						}
-						// Re-push entity id
-						ImGui::PushID(static_cast<U32>(entity));
-						// Re-push component id
-						ImGui::PushID(m_ComponentId);
+						ImGui::PopID();
 					}
 				}
 			}
@@ -129,34 +128,36 @@ namespace ZeoEngine {
 
 	void ComponentInspector::PreprocessComponent()
 	{
-		for (const auto data : entt::resolve(m_ComponentId).data())
+		for (const auto data : entt::resolve(m_ComponentID).data())
 		{
-			PreprocessData(data);
+			PreprocessField(data);
 		}
 	}
 
-	void ComponentInspector::PreprocessData(entt::meta_data data)
+	void ComponentInspector::PreprocessField(entt::meta_data data)
 	{
 		const auto categoryName = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Category, data);
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
-		m_PreprocessedDatas[category].push_front(data.id());
+		m_PreprocessedFields[category].push_front(data.id());
 	}
 
-	void ComponentInspector::DrawDataWidget(entt::meta_data data, entt::meta_any& compInstance)
+	void ComponentInspector::DrawFieldWidget(entt::meta_data data, Entity entity)
 	{
-		const U32 aggregatedDataId = Utils::GetAggregatedDataID(data);
-		if (m_DataWidgets.find(aggregatedDataId) != m_DataWidgets.cend())
+		const U32 aggregatedID = ImGui::GetCurrentWindow()->GetID(data.id());
+		if (m_FieldWidgets.find(aggregatedID) != m_FieldWidgets.cend())
 		{
-			if (m_DataWidgets[aggregatedDataId])
+			if (m_FieldWidgets[aggregatedID])
 			{
-				m_DataWidgets[aggregatedDataId]->Draw(compInstance, compInstance);
+				m_FieldWidgets[aggregatedID]->Draw();
 			}
 		}
 		else
 		{
-			DataSpec dataSpec{ data, compInstance, compInstance, false, false };
-			m_DataWidgets[aggregatedDataId] = ConstructBasicDataWidget(dataSpec, data.type());
+			const char* name = ReflectionUtils::GetMetaObjectName(data);
+			const auto type = ReflectionUtils::MetaTypeToFieldType(data.type());
+			auto fieldInstance = CreateRef<ComponentFieldInstance>(type, data, entity, m_ComponentID);
+			m_FieldWidgets[aggregatedID] = Utils::ConstructFieldWidget<ComponentFieldInstance>(type, aggregatedID, std::move(fieldInstance));
 		}
 	}
 

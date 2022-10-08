@@ -143,7 +143,7 @@ namespace ZeoEngine {
 				{
 					AssetRegistry::Get().OnPathCreated(materialPath, true);
 					// Assign material to mesh
-					mesh->SetDefaultMaterial(static_cast<U32>(i), AssetLibrary::LoadAsset<Material>(materialPath));
+					mesh->SetDefaultMaterialAsset(static_cast<U32>(i), AssetLibrary::LoadAsset<Material>(materialPath)->GetHandle());
 				}
 			}
 		}

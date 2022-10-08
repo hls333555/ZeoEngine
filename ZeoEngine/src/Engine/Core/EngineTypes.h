@@ -25,4 +25,15 @@ namespace ZeoEngine {
 	using Mat3 = glm::mat3;
 	using Mat4 = glm::mat4;
 
+	enum class FieldType
+	{
+		None = 0,
+		Bool, I8, U8, I16, U16, I32, U32, I64, U64,
+		Float, Double,
+		Vec2, Vec3, Vec4,
+		Enum, String,
+		SeqCon, AssCon,
+		Asset, Entity,
+	};
+
 }

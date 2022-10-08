@@ -369,11 +369,11 @@ namespace ZeoEngine {
 			macros[defName] = valueRange;
 			if (valueRange == 2)
 			{
-				m_ShaderReflectionMacroData.emplace_back(CreateScope<ShaderReflectionBoolMacroData>(std::move(uniformBlockName), std::move(defDisplayName), std::move(defName)));
+				m_ShaderReflectionMacroFields.emplace_back(CreateScope<ShaderReflectionBoolMacroField>(std::move(uniformBlockName), std::move(defDisplayName), std::move(defName)));
 			}
 			else
 			{
-				m_ShaderReflectionMacroData.emplace_back(CreateScope<ShaderReflectionIntMacroData>(std::move(uniformBlockName), std::move(defDisplayName), std::move(defName), valueRange));
+				m_ShaderReflectionMacroFields.emplace_back(CreateScope<ShaderReflectionIntMacroField>(std::move(uniformBlockName), std::move(defDisplayName), std::move(defName), valueRange));
 			}
 			
 			// Replace macro line with same-length spaces
@@ -382,7 +382,7 @@ namespace ZeoEngine {
 			macroTokenPos = shaderSrc.find(macroToken, eol);
 		}
 
-		if (!m_ShaderReflectionMacroData.empty())
+		if (!m_ShaderReflectionMacroFields.empty())
 		{
 			EvaluateVariants(macros);
 		}
@@ -476,7 +476,7 @@ namespace ZeoEngine {
 					auto boolVarName = uniformBlock.substr(boolVarNamePos, boolVarEndPos - boolVarNamePos);
 					// Store bool uniform name
 					// This name may be outside uniform buffer block due to missing corresponding closing braces
-					m_UniformBufferBoolVars[binding].emplace(std::move(boolVarName));
+					m_UniformBufferBoolFields[binding].emplace(std::move(boolVarName));
 
 					uniformBoolVarPos = uniformBlock.find(boolToken, boolVarEndPos);
 				}
@@ -722,15 +722,15 @@ namespace ZeoEngine {
 		m_Variants.clear();
 		m_ReflectTexturePropertyBindings.clear();
 		m_ReflectUniformBufferPropertyBindings.clear();
-		m_UniformBufferBoolVars.clear();
-		m_ShaderReflectionMacroData.clear();
+		m_UniformBufferBoolFields.clear();
+		m_ShaderReflectionMacroFields.clear();
 
 		m_ShaderSources.clear();
 	}
 
 	void OpenGLShader::ClearReflectionData()
 	{
-		m_ShaderReflectionData.clear();
+		m_ShaderReflectionFields.clear();
 		m_UniformBlockSizes.clear();
 	}
 
@@ -786,7 +786,7 @@ namespace ZeoEngine {
 			if (m_ReflectTexturePropertyBindings.find(binding) == m_ReflectTexturePropertyBindings.end()) continue;
 
 			const auto& name = resource.name;
-			m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionTexture2DData>("Resources", name, binding));
+			m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionTexture2DField>("Resources", name, binding));
 		}
 
 		//ZE_CORE_TRACE("    {0} resources", resourceCount);
@@ -832,28 +832,28 @@ namespace ZeoEngine {
 		{
 			case spirv_cross::SPIRType::UInt:
 				// We have to do this extra check as bool is recognized as UInt
-				if (m_UniformBufferBoolVars[binding].find(name) != m_UniformBufferBoolVars[binding].end())
+				if (m_UniformBufferBoolFields[binding].find(name) != m_UniformBufferBoolFields[binding].end())
 				{
-					m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionBoolData>(bufferName, name, binding, offset, size));
+					m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionBoolField>(bufferName, name, binding, offset, size));
 				}
 				break;
 			case spirv_cross::SPIRType::Int:
-				m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionIntData>(bufferName, name, binding, offset, size));
+				m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionIntField>(bufferName, name, binding, offset, size));
 				break;
 			case spirv_cross::SPIRType::Float:
 				switch (type.vecsize)
 				{
 					case 1:
-						m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionFloatData>(bufferName, name, binding, offset, size));
+						m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionFloatField>(bufferName, name, binding, offset, size));
 						break;
 					case 2:
-						m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec2Data>(bufferName, name, binding, offset, size));
+						m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionVec2Field>(bufferName, name, binding, offset, size));
 						break;
 					case 3:
-						m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec3Data>(bufferName, name, binding, offset, size));
+						m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionVec3Field>(bufferName, name, binding, offset, size));
 						break;
 					case 4:
-						m_ShaderReflectionData.emplace_back(CreateScope<ShaderReflectionVec4Data>(bufferName, name, binding, offset, size));
+						m_ShaderReflectionFields.emplace_back(CreateScope<ShaderReflectionVec4Field>(bufferName, name, binding, offset, size));
 						break;
 					default:
 						ZE_CORE_ASSERT(false);

@@ -9,10 +9,10 @@
 
 namespace ZeoEngine {
 
-	struct DataParser
+	struct FieldParser
 	{
 	public:
-		bool ShouldHideData(entt::meta_data data, entt::meta_any& instance);
+		bool ShouldHideField(entt::meta_data data, entt::meta_any& instance);
 
 		void ClearCache();
 

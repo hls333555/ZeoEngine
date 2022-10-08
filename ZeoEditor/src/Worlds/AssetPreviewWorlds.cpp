@@ -75,7 +75,7 @@ namespace ZeoEngine {
 	{
 		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
 		previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
-		previewMaterialEntity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh());
+		previewMaterialEntity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
 		previewMaterialEntity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
 		return previewMaterialEntity;
 	}
@@ -92,9 +92,9 @@ namespace ZeoEngine {
 
 	void MaterialPreviewWorld::SetMaterialAsset(MaterialPreviewComponent& materialPreviewComp, Ref<Material> material)
 	{
-		materialPreviewComp.MaterialAsset = material;
+		materialPreviewComp.LoadedMaterial = material;
 		const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-		meshComp.Instance->SetMaterial(0, materialPreviewComp.MaterialAsset);
+		meshComp.Instance->SetMaterial(0, materialPreviewComp.LoadedMaterial->GetHandle());
 		SetAsset(std::move(material));
 	}
 #pragma endregion
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 	{
 		GetContextEntity().PatchComponent<MeshPreviewComponent>([&path, this](auto& meshPreviewComp)
 		{
-			SetMeshAsset(meshPreviewComp, AssetLibrary::LoadAsset<Mesh>(path, AssetLibrary::DeserializeMode::Normal, &meshPreviewComp));
+			SetMeshAsset(meshPreviewComp, AssetLibrary::LoadAsset<Mesh>(path));
 		});
 	}
 
@@ -147,8 +147,8 @@ namespace ZeoEngine {
 
 	void MeshPreviewWorld::SetMeshAsset(MeshPreviewComponent& meshPreviewComp, Ref<Mesh> mesh)
 	{
-		meshPreviewComp.MeshAsset = mesh;
-		meshPreviewComp.Instance = meshPreviewComp.MeshAsset->CreateInstance(GetContextEntity().GetScene());
+		meshPreviewComp.LoadedMesh = mesh;
+		meshPreviewComp.Instance = meshPreviewComp.LoadedMesh->CreateInstance(GetContextEntity().GetScene());
 		meshPreviewComp.Instance->SubmitAllTechniques();
 		SetAsset(std::move(mesh));
 	}
@@ -195,7 +195,7 @@ namespace ZeoEngine {
 
 	void TexturePreviewWorld::SetTextureAsset(TexturePreviewComponent& texturePreviewComp, Ref<Texture2D> texture)
 	{
-		texturePreviewComp.TextureAsset = texture;
+		texturePreviewComp.LoadedTexture = texture;
 		SetAsset(std::move(texture));
 	}
 #pragma endregion

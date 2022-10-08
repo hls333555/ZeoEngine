@@ -7,119 +7,119 @@
 
 namespace ZeoEngine {
 
-	enum class ShaderReflectionType
+	enum class ShaderReflectionFieldType
 	{
-		None, Bool, Float, Int, Vec2, Vec3, Vec4, Texture2D,
+		None, Bool, Int, Float, Vec2, Vec3, Vec4, Texture2D,
 	};
 
-	struct ShaderReflectionDataBase
+	struct ShaderReflectionFieldBase
 	{
 		std::string BufferName;
 		std::string Name;
 
-		ShaderReflectionDataBase(std::string bufferName, std::string name)
+		ShaderReflectionFieldBase(std::string bufferName, std::string name)
 			: BufferName(std::move(bufferName)), Name(std::move(name)) {}
-		virtual ~ShaderReflectionDataBase() = default;
+		virtual ~ShaderReflectionFieldBase() = default;
 
-		virtual ShaderReflectionType GetType() const = 0 { return ShaderReflectionType::None; }
+		virtual ShaderReflectionFieldType GetType() const = 0 { return ShaderReflectionFieldType::None; }
 	};
 
-	struct ShaderReflectionNonMacroDataBase : public ShaderReflectionDataBase
+	struct ShaderReflectionNonMacroFieldBase : public ShaderReflectionFieldBase
 	{
 		U32 Binding = 0;
 		U32 Offset = 0;
 		SizeT Size = 0;
 
-		ShaderReflectionNonMacroDataBase(std::string bufferName, std::string name, U32 binding, U32 offset = 0, SizeT size = 0)
-			: ShaderReflectionDataBase(std::move(bufferName), std::move(name)), Binding(binding), Offset(offset), Size(size) {}
+		ShaderReflectionNonMacroFieldBase(std::string bufferName, std::string name, U32 binding, U32 offset = 0, SizeT size = 0)
+			: ShaderReflectionFieldBase(std::move(bufferName), std::move(name)), Binding(binding), Offset(offset), Size(size) {}
 	};
 
-	struct ShaderReflectionMacroDataBase : public ShaderReflectionDataBase
+	struct ShaderReflectionMacroFieldBase : public ShaderReflectionFieldBase
 	{
 		std::string MacroName;
 
-		ShaderReflectionMacroDataBase(std::string bufferName, std::string name, std::string macroName)
-			: ShaderReflectionDataBase(std::move(bufferName), std::move(name))
+		ShaderReflectionMacroFieldBase(std::string bufferName, std::string name, std::string macroName)
+			: ShaderReflectionFieldBase(std::move(bufferName), std::move(name))
 			, MacroName(std::move(macroName)) {}
 	};
 
-	struct ShaderReflectionBoolData : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionBoolField : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		bool Value = false;
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Bool; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Bool; }
 	};
 
-	struct ShaderReflectionBoolMacroData : public ShaderReflectionMacroDataBase
+	struct ShaderReflectionBoolMacroField : public ShaderReflectionMacroFieldBase
 	{
-		using ShaderReflectionMacroDataBase::ShaderReflectionMacroDataBase;
+		using ShaderReflectionMacroFieldBase::ShaderReflectionMacroFieldBase;
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Bool; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Bool; }
 	};
 
-	struct ShaderReflectionIntData : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionIntField : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		I32 Value = 0;
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Int; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Int; }
 	};
 
-	struct ShaderReflectionIntMacroData : public ShaderReflectionMacroDataBase
+	struct ShaderReflectionIntMacroField : public ShaderReflectionMacroFieldBase
 	{
 		U32 ValueRange;
 
-		ShaderReflectionIntMacroData(std::string bufferName, std::string name, std::string macroName, U32 valueRange)
-			: ShaderReflectionMacroDataBase(std::move(bufferName), std::move(name), std::move(macroName))
+		ShaderReflectionIntMacroField(std::string bufferName, std::string name, std::string macroName, U32 valueRange)
+			: ShaderReflectionMacroFieldBase(std::move(bufferName), std::move(name), std::move(macroName))
 			, ValueRange(valueRange) {}
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Int; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Int; }
 	};
 
-	struct ShaderReflectionFloatData : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionFloatField : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		float Value = 0.0f;
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Float; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Float; }
 	};
 
-	struct ShaderReflectionVec2Data : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionVec2Field : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		Vec2 Value{ 0.0f };
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec2; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Vec2; }
 	};
 
-	struct ShaderReflectionVec3Data : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionVec3Field : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		Vec3 Value{ 0.0f };
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec3; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Vec3; }
 	};
 
-	struct ShaderReflectionVec4Data : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionVec4Field : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
 		Vec4 Value{ 0.0f };
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Vec4; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Vec4; }
 	};
 
-	struct ShaderReflectionTexture2DData : public ShaderReflectionNonMacroDataBase
+	struct ShaderReflectionTexture2DField : public ShaderReflectionNonMacroFieldBase
 	{
-		using ShaderReflectionNonMacroDataBase::ShaderReflectionNonMacroDataBase;
+		using ShaderReflectionNonMacroFieldBase::ShaderReflectionNonMacroFieldBase;
 
-		virtual ShaderReflectionType GetType() const override { return ShaderReflectionType::Texture2D; }
+		virtual ShaderReflectionFieldType GetType() const override { return ShaderReflectionFieldType::Texture2D; }
 	};
 
 	struct ShaderVariantData
@@ -195,8 +195,8 @@ namespace ZeoEngine {
 		virtual void SetFloat4(const std::string& name, const Vec4& value) = 0;
 		virtual void SetMat4(const std::string& name, const Mat4& value) = 0;
 
-		virtual const std::vector<Scope<ShaderReflectionNonMacroDataBase>>& GetShaderReflectionData() const = 0;
-		virtual const std::vector<Scope<ShaderReflectionMacroDataBase>>& GetShaderReflectionMacroData() const = 0;
+		virtual const std::vector<Scope<ShaderReflectionNonMacroFieldBase>>& GetShaderReflectionFields() const = 0;
+		virtual const std::vector<Scope<ShaderReflectionMacroFieldBase>>& GetShaderReflectionMacroFields() const = 0;
 		virtual const std::unordered_map <U32, SizeT>& GetUniformBlockSizes() const = 0;
 
 		virtual void ClearCache() const = 0;
@@ -205,22 +205,25 @@ namespace ZeoEngine {
 
 	class ShaderInstance : public Bindable
 	{
+		friend struct MaterialPreviewComponent;
+
 	public:
 		ShaderInstance() = default;
-		ShaderInstance(Ref<Shader> shader)
-			: m_Shader(std::move(shader))
-			, m_ShaderVariantID(m_Shader->GetDefaultVariant()->ID) {}
+		ShaderInstance(const Ref<Shader>& shader)
+			: m_ShaderAsset(shader->GetHandle())
+			, m_ShaderVariantID(shader->GetDefaultVariant()->ID) {}
 
-		virtual void Bind() const override { m_Shader->SetActiveRendererIDByID(m_ShaderVariantID); m_Shader->Bind(); }
+		virtual void Bind() const override;
 
-		const Ref<Shader>& GetShader() const { return m_Shader; }
-		void SetShader(const Ref<Shader>& shader) { m_Shader = shader; }
+		AssetHandle GetShaderAsset() const { return m_ShaderAsset; }
+		Ref<Shader> GetShader() const;
+		void SetShader(AssetHandle shader) { m_ShaderAsset = shader; }
 		U32 GetShaderVariant() const { return m_ShaderVariantID; }
 		void SetShaderVariant(U32 ID) { m_ShaderVariantID = ID; }
 		void SetShaderVariantByMacro(const std::string& name, U32 value);
 
 	private:
-		Ref<Shader> m_Shader;
+		AssetHandle m_ShaderAsset;
 		U32 m_ShaderVariantID = 0;
 	};
 

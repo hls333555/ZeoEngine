@@ -9,8 +9,8 @@
 
 namespace ZeoEngine {
 
-	AssetInspector::AssetInspector(const Ref<AssetPreviewWorldBase>& world, U32 compId)
-		: ComponentInspector(compId)
+	AssetInspector::AssetInspector(const Ref<AssetPreviewWorldBase>& world, U32 compID)
+		: ComponentInspector(compID)
 		, m_AssetWorld(world)
 	{
 	}
@@ -55,12 +55,14 @@ namespace ZeoEngine {
 
 		if (ImGui::BeginChild("AssetInspector"))
 		{
-			// Push entity id
+			const auto tableID = ImGui::GetID("");
+			SetTableID(tableID);
+			// Push entity ID
 			ImGui::PushID(static_cast<U32>(entity));
-
-			ComponentInspector::Draw(entity);
-			ProcessDraw(entity);
-
+			{
+				ComponentInspector::Draw(entity);
+				ProcessDraw(entity);
+			}
 			ImGui::PopID();
 		}
 		ImGui::EndChild();

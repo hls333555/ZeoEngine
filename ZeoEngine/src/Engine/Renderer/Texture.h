@@ -46,27 +46,37 @@ namespace ZeoEngine {
 
 	class Texture : public Bindable
 	{
+		friend struct TexturePreviewComponent;
+
 	public:
+		bool IsSRGB() const { return m_bIsSRGB; }
+		void SetSRGB(bool bSRGB) { m_bIsSRGB = bSRGB; Invalidate(); }
+		const Ref<Sampler>& GetSampler() const { return m_Sampler; }
+		void ChangeSampler(SamplerType type) { m_Sampler = SamplerLibrary::GetOrAddSampler(type); }
+		bool ShouldGenerateMipmaps() const { return m_bShouldGenerateMipmaps; }
+		void SetGenerateMipmaps(bool bGenerate) { m_bShouldGenerateMipmaps = bGenerate; Invalidate(); }
+
 		virtual U32 GetWidth() const = 0;
 		virtual U32 GetHeight() const = 0;
 		virtual TextureFormat GetFormat() const = 0;
 		virtual bool HasAlpha() const = 0;
-		virtual bool bIsSRGB() const = 0;
-		virtual void SetSRGB(bool bSRGB) = 0;
-		virtual SamplerType GetSamplerType() const = 0;
-		virtual void ChangeSampler(SamplerType type) = 0;
-		virtual bool ShouldGenerateMipmaps() const = 0;
-		virtual void SetGenerateMipmaps(bool bGenerate) = 0;
 		virtual U32 GetMipmapLevels() const = 0;
 
 		virtual void* GetTextureID() const = 0;
 		virtual void* GetTextureViewID(U32 index) const = 0;
+
+		virtual void Invalidate() = 0;
 
 		/** Upload a block of memory with texture data to GPU. */
 		virtual void SetData(void* data, U32 size) = 0;
 
 		virtual void SetBindingSlot(U32 slot) = 0;
 		virtual void BindAsImage(U32 slot, bool bReadOrWrite) const = 0;
+
+	private:
+		bool m_bIsSRGB = true;
+		Ref<Sampler> m_Sampler;
+		bool m_bShouldGenerateMipmaps = true;
 	};
 
 	class Texture2D : public Texture, public AssetBase<Texture2D>
@@ -83,8 +93,6 @@ namespace ZeoEngine {
 		static Ref<Texture2D> GetDefaultMaterialTexture();
 		static Ref<Texture2D> GetAssetBackgroundTexture();
 		static Ref<Texture2D> GetCheckerboardTexture();
-
-		virtual void Invalidate() = 0;
 	};
 
 	class Texture2DArray : public Texture

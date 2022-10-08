@@ -6,10 +6,10 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Worlds/EditorPreviewWorldBase.h"
 #include "Inspectors/ComponentInspector.h"
+#include "Inspectors/ScriptInspector.h"
 #include "Engine/Utils/ReflectionUtils.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptEngine.h"
-#include "Utils/EditorSceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -26,8 +26,7 @@ namespace ZeoEngine {
 		{
 			// Sometimes, selected entity is changed while certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
 			// so we have to draw last entity's components once again to ensure all caches are applied
-			// TODO: Edit(2022.9.10): After refactoring the whole editor, this is broken... and cannot be fixed right now,
-			// if ImGui supports no-live-edit, we can refactor DataWidget till then
+			// If ImGui supports no-live-edit, we can refactor FieldWidget till then
 			// https://github.com/ocornut/imgui/issues/701
 			DrawInternal(m_LastEntity);
 			m_LastEntity = {};
@@ -47,56 +46,26 @@ namespace ZeoEngine {
 
 	void EntityInspector::DrawInternal(Entity entity)
 	{
-		// Push entity id
+		const auto tableID = ImGui::GetID("");
+		// Push entity ID
 		ImGui::PushID(static_cast<U32>(entity));
-
-		for (auto it = m_ComponentInspectors.begin(); it != m_ComponentInspectors.end();)
 		{
-			const auto& compInspector = *it;
-			compInspector->Draw(entity);
-			if (const U32 compId = compInspector->GetWillRemoveComponentId())
+			for (auto it = m_ComponentInspectors.begin(); it != m_ComponentInspectors.end();)
 			{
-				entity.RemoveComponentById(compId);
-				it = m_ComponentInspectors.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-
-		// TODO: TEST
-		const bool bIsRuntime = EditorSceneUtils::IsRuntime();
-		if (entity.HasComponent<ScriptComponent>())
-		{
-			const UUID entityID = entity.GetUUID();
-			const auto& className = entity.GetComponent<ScriptComponent>().ClassName;
-			if (ScriptEngine::EntityClassExists(className))
-			{
-				auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
-				for (const auto& [name, field] : entityFields)
+				const auto& compInspector = *it;
+				compInspector->SetTableID(tableID);
+				compInspector->Draw(entity);
+				if (const U32 compID = compInspector->GetWillRemoveComponentID())
 				{
-					auto& fieldInstance = entityFields[name];
-					if (field.Field->Type == ScriptFieldType::Float)
-					{
-						const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(entityID);
-						auto value = bIsRuntime ? fieldInstance.GetRuntimeValue<float>(scriptInstance) : fieldInstance.GetValue<float>();
-						if (ImGui::DragFloat(name.c_str(), &value))
-						{
-							if (bIsRuntime)
-							{
-								fieldInstance.SetRuntimeValue(scriptInstance, value);
-							}
-							else
-							{
-								fieldInstance.SetValue(value);
-							}
-						}
-					}
+					entity.RemoveComponentByID(compID);
+					it = m_ComponentInspectors.erase(it);
+				}
+				else
+				{
+					++it;
 				}
 			}
 		}
-
 		ImGui::PopID();
 
 		// The following part will not have entity id pushed into ImGui!
@@ -137,16 +106,16 @@ namespace ZeoEngine {
 
 		if (ImGui::BeginPopupWithPadding("AddComponent"))
 		{
-			for (const auto& [category, compIds] : m_CategorizedComponents)
+			for (const auto& [category, compIDs] : m_CategorizedComponents)
 			{
 				if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
 				{
-					for (const auto compId : compIds)
+					for (const auto compID : compIDs)
 					{
-						if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compId)))
+						if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compID)))
 						{
-							const auto compInstance = entity.AddComponentById(compId);
-							// Instance may be null as AddComponentById() failed
+							const auto compInstance = entity.AddComponentByID(compID);
+							// Instance may be null as AddComponentByID() failed
 							if (compInstance)
 							{
 								RebuildComponentInspectors(entity);
@@ -173,12 +142,20 @@ namespace ZeoEngine {
 		m_ComponentInspectors.clear();
 
 		// Process components on this entity
-		for (const auto compId : entity.GetOrderedComponentIds())
+		for (const auto compID : entity.GetOrderedComponentIDs())
 		{
 			// Skip if there is no data registered
-			if (!ReflectionUtils::DoesTypeContainData(compId)) continue;
+			if (!ReflectionUtils::DoesTypeContainData(compID)) continue;
 
-			m_ComponentInspectors.emplace_back(CreateScope<ComponentInspector>(compId));
+			switch (compID)
+			{
+				case entt::type_hash<ScriptComponent>::value():
+					m_ComponentInspectors.emplace_back(CreateScope<ScriptInspector>(compID));
+					break;
+				default:
+					m_ComponentInspectors.emplace_back(CreateScope<ComponentInspector>(compID));
+					break;
+			}
 		}
 	}
 

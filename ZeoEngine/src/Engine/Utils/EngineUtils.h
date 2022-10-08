@@ -3,6 +3,7 @@
 #include <magic_enum.hpp>
 
 #include "Engine/Core/Application.h"
+#include "Engine/Asset/Asset.h"
 
 namespace ZeoEngine {
 	
@@ -75,6 +76,139 @@ namespace ZeoEngine {
 			{
 				return {};
 			}
+		}
+		
+		static U32 GetFieldSize(FieldType type)
+		{
+			switch (type)
+			{
+				case FieldType::Bool:	return sizeof(bool);
+				case FieldType::I8:		return sizeof(I8);
+				case FieldType::I16:	return sizeof(I16);
+				case FieldType::I32:	return sizeof(I32);
+				case FieldType::I64:	return sizeof(I64);
+				case FieldType::U8:		return sizeof(U8);
+				case FieldType::U16:	return sizeof(U16);
+				case FieldType::U32:	return sizeof(U32);
+				case FieldType::U64:	return sizeof(U64);
+				case FieldType::Float:	return sizeof(float);
+				case FieldType::Double:	return sizeof(double);
+				case FieldType::Enum:	return 4;
+				case FieldType::Vec2:	return sizeof(Vec2);
+				case FieldType::Vec3:	return sizeof(Vec3);
+				case FieldType::Vec4:	return sizeof(Vec4);
+				case FieldType::Asset:	return sizeof(AssetHandle);
+				case FieldType::Entity:	return sizeof(UUID);
+			}
+			ZE_CORE_ASSERT(false, "Unknown field type!");
+			return 0;
+		}
+
+		template<typename Type>
+		static Type GetDefaultMin()
+		{
+			Type min;
+			if constexpr (std::is_same_v<Type, I8>)
+			{
+				min = INT8_MIN;
+			}
+			else if constexpr (std::is_same_v<Type, U8>) // Every else if also needs a "constexpr"
+			{
+				min = 0ui8;
+			}
+			else if constexpr (std::is_same_v<Type, I16>)
+			{
+				min = INT16_MIN;
+			}
+			else if constexpr (std::is_same_v<Type, U16>)
+			{
+				min = 0ui16;
+			}
+			else if constexpr (std::is_same_v<Type, I32>)
+			{
+				min = INT32_MIN;
+			}
+			else if constexpr (std::is_same_v<Type, U32>)
+			{
+				min = 0ui32;
+			}
+			else if constexpr (std::is_same_v<Type, I64>)
+			{
+				min = INT64_MIN;
+			}
+			else if constexpr (std::is_same_v<Type, U64>)
+			{
+				min = 0ui64;
+			}
+			else if constexpr (std::is_same_v<Type, float>)
+			{
+				min = -FLT_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, double>)
+			{
+				min = -DBL_MAX;
+			}
+			return min;
+		}
+
+		template<typename Type>
+		static Type GetDefaultMax()
+		{
+			Type max;
+			if constexpr (std::is_same_v<Type, I8>)
+			{
+				max = INT8_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, U8>)
+			{
+				max = UINT8_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, I16>)
+			{
+				max = INT16_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, U16>)
+			{
+				max = UINT16_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, I32>)
+			{
+				max = INT32_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, U32>)
+			{
+				max = UINT32_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, I64>)
+			{
+				max = INT64_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, U64>)
+			{
+				max = UINT64_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, float>)
+			{
+				max = FLT_MAX;
+			}
+			else if constexpr (std::is_same_v<Type, double>)
+			{
+				max = DBL_MAX;
+			}
+			return max;
+		}
+
+		[[nodiscard]] static U8* AllocateFieldBuffer(FieldType type)
+		{
+			U32 size = GetFieldSize(type);
+			U8* buffer = new U8[size];
+			memset(buffer, 0, size);
+			return buffer;
+		}
+
+		static void FreeFieldBuffer(U8* buffer)
+		{
+			delete[] buffer;
 		}
 
 		static Ref<SceneRenderer> GetSceneRendererFromContext(const Ref<Scene>& scene);

@@ -1,7 +1,7 @@
 AssetType: 779009498
 AssetHandle: 1122544103148254889
 ShaderVariant: 207502656
-Shader: 2878967810450418044
+ShaderAsset: 2878967810450418044
 u_DiffuseTexture: 0
 u_SpecularTexture: 0
 u_NormalTexture: 0

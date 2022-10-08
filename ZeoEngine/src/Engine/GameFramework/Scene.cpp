@@ -24,9 +24,9 @@ namespace ZeoEngine {
 	{
 		m_Systems = other->m_Systems;
 		m_Context = other->m_Context;
-		other->ForEachComponentView<CoreComponent>([this, &other](auto entityId, auto& coreComp)
+		other->ForEachComponentView<CoreComponent>([this, &other](auto entityID, auto& coreComp)
 		{
-			Entity entity{ entityId, other };
+			Entity entity{ entityID, other };
 			// Clone a new "empty" entity
 			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
 			// Copy components to that entity

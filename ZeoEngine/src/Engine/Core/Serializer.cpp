@@ -1,43 +1,13 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Shader.h"
-#include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Utils/ReflectionUtils.h"
-
-namespace YAML {
-
-#define DEFINE_ASSET_CONVERTOR(assetClass)									\
-	template<>																\
-	struct convert<Ref<assetClass>>											\
-	{																		\
-		static Node encode(const Ref<assetClass>& rhs)						\
-		{																	\
-			Node node;														\
-			node = rhs ? rhs->GetHandle() : 0;								\
-			return node;													\
-		}																	\
-		static bool decode(const Node& node, Ref<assetClass>& rhs)			\
-		{																	\
-			const auto handle = node.as<AssetHandle>();						\
-			if (!handle) return true;										\
-			rhs = AssetLibrary::LoadAsset<assetClass>(handle);				\
-			return true;													\
-		}																	\
-	};
-
-	DEFINE_ASSET_CONVERTOR(Texture2D);
-	DEFINE_ASSET_CONVERTOR(ParticleTemplate);
-	DEFINE_ASSET_CONVERTOR(Mesh);
-	DEFINE_ASSET_CONVERTOR(Material);
-	DEFINE_ASSET_CONVERTOR(Shader);
-
-}
 
 namespace ZeoEngine {
 
@@ -45,355 +15,165 @@ namespace ZeoEngine {
 	// ComponentSerializer ///////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void ComponentSerializer::Serialize(YAML::Node& node, entt::meta_any instance)
+	void ComponentSerializer::Serialize(YAML::Node& compNode, entt::meta_any compInstance)
 	{
-		if (!instance) return;
+		if (!compInstance) return;
 
-		PreprocessDatas(instance);
-
-		for (const auto data : m_PreprocessedDatas)
+		const auto preprocessedFields = PreprocessFields(compInstance);
+		for (const auto data : preprocessedFields)
 		{
 			// Do not serialize transient data
 			auto bDiscardSerialize = ReflectionUtils::DoesPropertyExist(Reflection::Transient, data);
 			if (bDiscardSerialize) continue;
 
-			EvaluateSerializeData(node, data, instance, false);
+			auto fieldInstance = data.get(compInstance);
+			const char* fieldName = ReflectionUtils::GetMetaObjectName(data);
+			EvaluateSerializeField(compNode, fieldInstance, fieldName, false);
 		}
 	}
 
-	void ComponentSerializer::PreprocessDatas(entt::meta_any& instance)
+	std::deque<entt::meta_data> ComponentSerializer::PreprocessFields(const entt::meta_any& compInstance)
 	{
-		m_PreprocessedDatas.clear();
-		for (const auto data : instance.type().data())
+		std::deque<entt::meta_data> preprocessedFields;
+		for (const auto data : compInstance.type().data())
 		{
-			m_PreprocessedDatas.push_front(data);
+			preprocessedFields.push_front(data);
 		}
+		return preprocessedFields;
 	}
 
-	void ComponentSerializer::EvaluateSerializeData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateSerializeField(YAML::Node& node, const entt::meta_any& fieldInstance, const char* fieldName, bool bIsSeqElement)
 	{
-		const auto type = bIsSeqElement ? instance.type() : data.type();
-		switch (ReflectionUtils::EvaluateType(type))
+		const auto type = ReflectionUtils::MetaTypeToFieldType(fieldInstance.type());
+		switch (type)
 		{
-			case Reflection::BasicMetaType::STRUCT:
-				EvaluateSerializeStructData(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::SEQCON:
-				if (bIsSeqElement)
-				{
-					ZE_CORE_ERROR("Container nesting is not supported!");
-					return;
-				}
-				EvaluateSerializeSequenceContainerData(node, data, instance);
-				break;
-			case Reflection::BasicMetaType::ASSCON:
-				if (bIsSeqElement)
-				{
-					ZE_CORE_ERROR("Container nesting is not supported!");
-					return;
-				}
-				EvaluateSerializeAssociativeContainerData(node, data, instance);
-				break;
-			case Reflection::BasicMetaType::BOOL:
-				SerializeData<bool>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I8:
-				SerializeData<I8>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I32:
-				SerializeData<I32>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I64:
-				SerializeData<I64>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI8:
-				SerializeData<U8>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI32:
-				SerializeData<U32>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI64:
-				SerializeData<U64>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::FLOAT:
-				SerializeData<float>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::DOUBLE:
-				SerializeData<double>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::ENUM:
-				SerializeEnumData(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::STRING:
-				SerializeData<std::string>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC2:
-				SerializeData<Vec2>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC3:
-				SerializeData<Vec3>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC4:
-				SerializeData<Vec4>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::TEXTURE:
-				SerializeData<Ref<Texture2D>>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::PARTICLE:
-				SerializeData<Ref<ParticleTemplate>>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::MESH:
-				SerializeData<Ref<Mesh>>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::MATERIAL:
-				SerializeData<Ref<Material>>(node, data, instance, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::SHADER:
-				SerializeData<Ref<Shader>>(node, data, instance, bIsSeqElement);
-				break;
-			default:
-				const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-				ZE_CORE_ASSERT(false, "Failed to serialize data: '{0}'", dataName);
-				break;
+			case FieldType::Bool:	SerializeField<bool>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::I8:		SerializeField<I8>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::U8:		SerializeField<U8>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::I16:	SerializeField<I16>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::U16:	SerializeField<U16>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::I32:	SerializeField<I32>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::U32:	SerializeField<U32>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::I64:	SerializeField<I64>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::U64:	SerializeField<U64>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Float:	SerializeField<float>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Double:	SerializeField<double>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Vec2:	SerializeField<Vec2>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Vec3:	SerializeField<Vec3>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Vec4:	SerializeField<Vec4>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Enum:	SerializeEnumField(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::String:	SerializeField<std::string>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::SeqCon: EvaluateSerializeSequenceContainerField(node, fieldInstance, fieldName, bIsSeqElement); break;
+			case FieldType::Asset:	SerializeField<AssetHandle>(node, fieldInstance, fieldName, bIsSeqElement); break;
+			default: ZE_CORE_ASSERT(false);
 		}
 	}
 
-	void ComponentSerializer::EvaluateSerializeSequenceContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance)
+	void ComponentSerializer::EvaluateSerializeSequenceContainerField(YAML::Node& node, const entt::meta_any& seqInstance, const char* fieldName, bool bIsSeqElement)
 	{
-		auto seqView = data.get(instance).as_sequence_container();
-		const char* dataName = ReflectionUtils::GetMetaObjectName(data);
+		ZE_CORE_ASSERT(!bIsSeqElement);
+
+		auto seqView = seqInstance.as_sequence_container();
 		YAML::Node seqNode;
 		seqNode.SetStyle(YAML::EmitterStyle::Flow);
 		for (auto it = seqView.begin(); it != seqView.end(); ++it)
 		{
 			auto elementInstance = *it;
-			EvaluateSerializeData(seqNode, data, elementInstance, true);
+			EvaluateSerializeField(seqNode, elementInstance, fieldName, true);
 		}
-		node[dataName] = seqNode;
+		node[fieldName] = seqNode;
 	}
 
-	void ComponentSerializer::EvaluateSerializeAssociativeContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance)
+	void ComponentSerializer::SerializeEnumField(YAML::Node& node, const entt::meta_any& enumInstance, const char* fieldName, bool bIsSeqElement)
 	{
-		// Not implemented
-		ZE_CORE_ASSERT(false);
-	}
-
-	void ComponentSerializer::EvaluateSerializeStructData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
-	{
-		YAML::Node subNode;
-		const auto structType = bIsSeqElement ? instance.type() : data.type();
-		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
-		for (const auto subData : structType.data())
-		{
-			EvaluateSerializeData(subNode, subData, structInstance, false);
-		}
+		const char* enumValueName = ReflectionUtils::GetEnumDisplayName(enumInstance);
 		if (bIsSeqElement)
 		{
-			node.push_back(subNode);
-		}
-		else
-		{
-			const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-			node[dataName] = subNode;
-		}
-	}
-
-	void ComponentSerializer::SerializeEnumData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
-	{
-		if (bIsSeqElement)
-		{
-			const char* enumValueName = ReflectionUtils::GetEnumDisplayName(instance);
 			node.push_back(enumValueName);
 		}
 		else
 		{
-			const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-			const auto enumValue = data.get(instance);
-			const char* enumValueName = ReflectionUtils::GetEnumDisplayName(enumValue);
-			node[dataName] = enumValueName;
+			node[fieldName] = enumValueName;
 		}
 	}
 
-	void ComponentSerializer::Deserialize(const YAML::Node& node, entt::meta_any instance)
+	void ComponentSerializer::Deserialize(const YAML::Node& compNode, entt::meta_any compInstance)
 	{
-		if (!instance) return;
+		if (!compInstance) return;
 
-		PreprocessDatas(instance);
-
-		for (const auto data : m_PreprocessedDatas)
+		const auto preprocessedFields = PreprocessFields(compInstance);
+		for (const auto data : preprocessedFields)
 		{
-			const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-			const auto& dataValue = node[dataName];
-			// Evaluate serialized data only
-			if (dataValue)
+			const char* fieldName = ReflectionUtils::GetMetaObjectName(data);
+			const auto& fieldNode = compNode[fieldName];
+			// Evaluate serialized field only
+			if (fieldNode)
 			{
-				EvaluateDeserializeData(data, instance, dataValue, false);
-				const auto* comp = instance.try_cast<IComponent>();
-				if (comp->ComponentHelper)
+				auto fieldInstance = data.get(compInstance);
+				EvaluateDeserializeField(fieldNode, fieldInstance);
+				if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compInstance.type().id()))
 				{
-					comp->ComponentHelper->PostDataDeserialize(data.id());
+					auto* comp = compInstance.try_cast<IComponent>();
+					helper->PostFieldDeserialize(comp, data.id());
 				}
 			}
 		}
 	}
 
-	void ComponentSerializer::EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
+	void ComponentSerializer::EvaluateDeserializeField(const YAML::Node& fieldNode, entt::meta_any& fieldInstance)
 	{
-		const auto type = bIsSeqElement ? instance.type() : data.type();
-		switch (ReflectionUtils::EvaluateType(type))
+		const auto type = ReflectionUtils::MetaTypeToFieldType(fieldInstance.type());
+		switch (type)
 		{
-			case Reflection::BasicMetaType::STRUCT:
-				EvaluateDeserializeStructData(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::SEQCON:
-				if (bIsSeqElement)
-				{
-					ZE_CORE_ERROR("Container nesting is not supported!");
-					return;
-				}
-				EvaluateDeserializeSequenceContainerData(data, instance, node);
-				break;
-			case Reflection::BasicMetaType::ASSCON:
-				if (bIsSeqElement)
-				{
-					ZE_CORE_ERROR("Container nesting is not supported!");
-					return;
-				}
-				EvaluateDeserializeAssociativeContainerData(data, instance, node);
-				break;
-			case Reflection::BasicMetaType::BOOL:
-				DeserializeData<bool>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I8:
-				DeserializeData<I8>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I32:
-				DeserializeData<I32>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::I64:
-				DeserializeData<I64>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI8:
-				DeserializeData<U8>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI32:
-				DeserializeData<U32>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::UI64:
-				DeserializeData<U64>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::FLOAT:
-				DeserializeData<float>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::DOUBLE:
-				DeserializeData<double>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::ENUM:
-				DeserializeEnumData(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::STRING:
-				DeserializeData<std::string>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC2:
-				DeserializeData<Vec2>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC3:
-				DeserializeData<Vec3>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::VEC4:
-				DeserializeData<Vec4>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::TEXTURE:
-				DeserializeData<Ref<Texture2D>>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::PARTICLE:
-				DeserializeData<Ref<ParticleTemplate>>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::MESH:
-				DeserializeData<Ref<Mesh>>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::MATERIAL:
-				DeserializeData<Ref<Material>>(data, instance, node, bIsSeqElement);
-				break;
-			case Reflection::BasicMetaType::SHADER:
-				DeserializeData<Ref<Shader>>(data, instance, node, bIsSeqElement);
-				break;
-			default:
-				const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-				ZE_CORE_ASSERT(false, "Failed to deserialize data: '{0}'", dataName);
-				break;
+			case FieldType::Bool:	DeserializeField<bool>(fieldNode, fieldInstance); break;
+			case FieldType::I8:		DeserializeField<I8>(fieldNode, fieldInstance); break;
+			case FieldType::U8:		DeserializeField<U8>(fieldNode, fieldInstance); break;
+			case FieldType::I16:	DeserializeField<I16>(fieldNode, fieldInstance); break;
+			case FieldType::U16:	DeserializeField<U16>(fieldNode, fieldInstance); break;
+			case FieldType::I32:	DeserializeField<I32>(fieldNode, fieldInstance); break;
+			case FieldType::U32:	DeserializeField<U32>(fieldNode, fieldInstance); break;
+			case FieldType::I64:	DeserializeField<I64>(fieldNode, fieldInstance); break;
+			case FieldType::U64:	DeserializeField<U64>(fieldNode, fieldInstance); break;
+			case FieldType::Float:	DeserializeField<float>(fieldNode, fieldInstance); break;
+			case FieldType::Double:	DeserializeField<double>(fieldNode, fieldInstance); break;
+			case FieldType::Vec2:	DeserializeField<Vec2>(fieldNode, fieldInstance); break;
+			case FieldType::Vec3:	DeserializeField<Vec3>(fieldNode, fieldInstance); break;
+			case FieldType::Vec4:	DeserializeField<Vec4>(fieldNode, fieldInstance); break;
+			case FieldType::Enum:	DeserializeEnumField(fieldNode, fieldInstance); break;
+			case FieldType::String:	DeserializeField<std::string>(fieldNode, fieldInstance); break;
+			case FieldType::SeqCon: EvaluateDeserializeSequenceContainerField(fieldNode, fieldInstance); break;
+			case FieldType::Asset:	DeserializeField<AssetHandle>(fieldNode, fieldInstance); break;
+			default: ZE_CORE_ASSERT(false);
 		}
 	}
 
-	static entt::meta_sequence_container::iterator InsertDefaultValueForSeq(const entt::meta_data data, entt::meta_sequence_container& seqView)
+	void ComponentSerializer::EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, entt::meta_any& seqInstance)
 	{
-		auto retIt = seqView.insert(seqView.end(), seqView.value_type().construct());
-		if (!retIt)
-		{
-			const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-			ZE_CORE_ASSERT(false, "Failed to insert with data: '{0}'! Please check if its type is properly registered.", dataName);
-		}
-		return retIt;
-	}
-
-	void ComponentSerializer::EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node)
-	{
-		auto seqView = data.get(instance).as_sequence_container();
+		auto seqView = seqInstance.as_sequence_container();
 		// Clear elements first
 		seqView.clear();
-		for (const auto& elementValue : node)
+		for (const auto& elementNode : seqNode)
 		{
-			auto it = InsertDefaultValueForSeq(data, seqView);
+			auto it = seqView.insert(seqView.end(), seqView.value_type().construct());
+			ZE_CORE_ASSERT(it, "Failed to insert sequence container elements during deserialization! Please check if its type is properly registered.");
+
 			auto elementInstance = *it;
-			EvaluateDeserializeData(data, elementInstance, elementValue, true);
+			EvaluateDeserializeField(elementNode, elementInstance);
 		}
 	}
 
-	void ComponentSerializer::EvaluateDeserializeAssociativeContainerData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node)
+	void ComponentSerializer::DeserializeEnumField(const YAML::Node& enumNode, entt::meta_any& enumInstance)
 	{
-
-	}
-
-	void ComponentSerializer::EvaluateDeserializeStructData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
-	{
-		const auto type = bIsSeqElement ? instance.type() : data.type();
-		auto structInstance = bIsSeqElement ? instance.as_ref() : data.get(instance); // NOTE: We must call as_ref() to return reference here or it will return a copy since entt 3.7.0
-		U32 i = 0;
-		for (const auto subData : type.data())
+		const auto currentName = enumNode.as<std::string>();
+		const auto& enumEntries = enumInstance.type().data();
+		for (const auto enumData : enumEntries)
 		{
-			const char* subDataName = ReflectionUtils::GetMetaObjectName(subData);
-			// Evaluate serialized subdata only
-			if (node[i])
+			const char* enumEntryName = ReflectionUtils::GetMetaObjectName(enumData);
+			if (currentName == enumEntryName)
 			{
-				const auto& subValue = node[i][subDataName];
-				// Evaluate serialized subdata only
-				if (subValue)
-				{
-					EvaluateDeserializeData(subData, structInstance, subValue, false);
-				}
-			}
-			++i;
-		}
-	}
-
-	void ComponentSerializer::DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
-	{
-		const auto currentValueName = node.as<std::string>();
-		const auto& datas = bIsSeqElement ? instance.type().data() : data.type().data();
-		for (const auto enumData : datas)
-		{
-			const char* valueName = ReflectionUtils::GetMetaObjectName(enumData);
-			if (currentValueName == valueName)
-			{
-				auto newValue = enumData.get({});
-				if (bIsSeqElement)
-				{
-					ReflectionUtils::SetEnumValueForSeq(instance, newValue);
-				}
-				else
-				{
-					data.set(instance, newValue);
-				}
+				const auto value = enumData.get({}).data();
+				const U32 size = EngineUtils::GetFieldSize(FieldType::Enum);
+				memcpy(enumInstance.data(), value, size);
 			}
 		}
 	}
@@ -402,106 +182,80 @@ namespace ZeoEngine {
 	// MaterialSerializer ////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	void MaterialSerializer::Serialize(YAML::Node& node, const Ref<Material>& material)
+	void MaterialSerializer::Serialize(YAML::Node& node, const Ref<Material>& material) const
 	{
 		if (!material) return;
 
-		for (const auto& data : material->GetDynamicBindableData())
+		for (const auto& field : material->GetDynamicBindableFields())
 		{
-			EvaluateSerializeData(node, data);
+			EvaluateSerializeField(node, field);
 		}
-		for (const auto& data : material->GetDynamicData())
+		for (const auto& field : material->GetDynamicFields())
 		{
-			EvaluateSerializeData(node, data);
+			EvaluateSerializeField(node, field);
 		}
 	}
 
-	void MaterialSerializer::EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& data)
+	void MaterialSerializer::EvaluateSerializeField(YAML::Node& node, const Ref<DynamicUniformFieldBase>& field) const
 	{
-		switch (data->GetDataType())
+		switch (field->GetFieldType())
 		{
-			case ShaderReflectionType::Bool:
-				SerializeData<bool>(node, data);
-				break;
-			case ShaderReflectionType::Int:
-				SerializeData<I32>(node, data);
-				break;
-			case ShaderReflectionType::Float:
-				SerializeData<float>(node, data);
-				break;
-			case ShaderReflectionType::Vec2:
-				SerializeData<Vec2>(node, data);
-				break;
-			case ShaderReflectionType::Vec3:
-				SerializeData<Vec3>(node, data);
-				break;
-			case ShaderReflectionType::Vec4:
-				SerializeData<Vec4>(node, data);
-				break;
-			case ShaderReflectionType::Texture2D:
-				SerializeData<Ref<Texture2D>>(node, data);
-				break;
-			default:
-				break;
+			case ShaderReflectionFieldType::Bool:		SerializeField<bool>(node, field); break;
+			case ShaderReflectionFieldType::Int:		SerializeField<I32>(node, field); break;
+			case ShaderReflectionFieldType::Float:		SerializeField<float>(node, field); break;
+			case ShaderReflectionFieldType::Vec2:		SerializeField<Vec2>(node, field); break;
+			case ShaderReflectionFieldType::Vec3:		SerializeField<Vec3>(node, field); break;
+			case ShaderReflectionFieldType::Vec4:		SerializeField<Vec4>(node, field); break;
+			case ShaderReflectionFieldType::Texture2D:	SerializeField<AssetHandle>(node, field); break;
+			default: ZE_CORE_ASSERT(false);
 		}
 	}
 
-	void MaterialSerializer::Deserialize(const YAML::Node& node, const Ref<Material>& material)
+	void MaterialSerializer::Deserialize(const YAML::Node& node, const Ref<Material>& material) const
 	{
 		if (!material) return;
 
-		for (const auto& data : material->GetDynamicBindableData())
+		for (const auto& field : material->GetDynamicBindableFields())
 		{
-			const auto& dataName = data->Name;
-			const auto& dataValue = node[dataName];
+			const auto& fieldName = field->Name;
+			const auto& fieldNode = node[fieldName];
 			// Evaluate serialized data only
-			if (dataValue)
+			if (fieldNode)
 			{
-				EvaluateDeserializeData(dataValue, data);
+				EvaluateDeserializeData(fieldNode, field);
 			}
 		}
-		for (const auto& data : material->GetDynamicData())
+		for (const auto& field : material->GetDynamicFields())
 		{
-			const auto& dataName = data->Name;
-			const auto& dataValue = node[dataName];
+			const auto& fieldName = field->Name;
+			const auto& fieldNode = node[fieldName];
 			// Evaluate serialized data only
-			if (dataValue)
+			if (fieldNode)
 			{
-				EvaluateDeserializeData(dataValue, data);
+				EvaluateDeserializeData(fieldNode, field);
 			}
 		}
 	}
 
-	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& data)
+	void MaterialSerializer::EvaluateDeserializeData(const YAML::Node& fieldNode, const Ref<DynamicUniformFieldBase>& field) const
 	{
-		switch (data->GetDataType())
+		switch (field->GetFieldType())
 		{
-			case ShaderReflectionType::Bool:
-				DeserializeData<bool>(node, data);
-				break;
-			case ShaderReflectionType::Int:
-				DeserializeData<I32>(node, data);
-				break;
-			case ShaderReflectionType::Float:
-				DeserializeData<float>(node, data);
-				break;
-			case ShaderReflectionType::Vec2:
-				DeserializeData<Vec2>(node, data);
-				break;
-			case ShaderReflectionType::Vec3:
-				DeserializeData<Vec3>(node, data);
-				break;
-			case ShaderReflectionType::Vec4:
-				DeserializeData<Vec4>(node, data);
-				break;
-			case ShaderReflectionType::Texture2D:
-				DeserializeData<Ref<Texture2D>>(node, data);
-				break;
-			default:
-				break;
+			case ShaderReflectionFieldType::Bool:		DeserializeField<bool>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Int:		DeserializeField<I32>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Float:		DeserializeField<float>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Vec2:		DeserializeField<Vec2>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Vec3:		DeserializeField<Vec3>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Vec4:		DeserializeField<Vec4>(fieldNode, field); break;
+			case ShaderReflectionFieldType::Texture2D:	DeserializeField<AssetHandle>(fieldNode, field); break;
+			default: ZE_CORE_ASSERT(false);
 		}
 	}
 
+	//////////////////////////////////////////////////////////////////////////
+	// SceneSerializer ///////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+	
 	void SceneSerializer::Serialize(YAML::Node& node, const Ref<Scene>& scene)
 	{
 		if (!scene) return;
@@ -540,13 +294,13 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	void SceneSerializer::SerializeEntity(YAML::Node& node, const Entity entity)
+	void SceneSerializer::SerializeEntity(YAML::Node& entityNode, const Entity entity)
 	{
-		node["Entity"] = entity.GetUUID();
+		entityNode["Entity"] = entity.GetUUID();
 		// Do not call entt::registry::visit() as the order is reversed
-		for (const auto compID : entity.GetOrderedComponentIds())
+		for (const auto compID : entity.GetOrderedComponentIDs())
 		{
-			auto compInstance = entity.GetComponentById(compID);
+			auto compInstance = entity.GetComponentByID(compID);
 			// Do not serialize transient component
 			auto bDiscardSerialize = ReflectionUtils::DoesPropertyExist(Reflection::Transient, compInstance.type());
 			if (bDiscardSerialize) continue;
@@ -556,16 +310,16 @@ namespace ZeoEngine {
 			compNode["Component"] = compID;
 			ComponentSerializer cs;
 			cs.Serialize(compNode, compInstance);
-			node["Components"].push_back(compNode);
+			entityNode["Components"].push_back(compNode);
 		}
 	}
 
-	void SceneSerializer::DeserializeEntity(const YAML::Node& node, const Ref<Scene>& scene)
+	void SceneSerializer::DeserializeEntity(const YAML::Node& entityNode, const Ref<Scene>& scene)
 	{
-		const UUID uuid = node["Entity"].as<UUID>();
+		const UUID uuid = entityNode["Entity"].as<UUID>();
 		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
 
-		if (auto components = node["Components"])
+		if (auto components = entityNode["Components"])
 		{
 			for (auto component : components)
 			{
@@ -573,7 +327,7 @@ namespace ZeoEngine {
 				// TODO: NativeScriptComponent deserialization
 				if (compID == entt::type_hash<NativeScriptComponent>::value()) continue;
 
-				auto compInstance = deserializedEntity.GetOrAddComponentById(compID, true);
+				auto compInstance = deserializedEntity.GetOrAddComponentByID(compID, true);
 				// Instance may be null as compID is invalid
 				if (compInstance)
 				{

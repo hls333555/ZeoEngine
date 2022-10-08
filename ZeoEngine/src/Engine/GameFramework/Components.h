@@ -6,7 +6,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <IconsFontAwesome5.h>
 
-#include "Engine/GameFramework/ComponentHelpers.h"
+#include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/UUID.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
@@ -21,20 +22,15 @@ namespace ZeoEngine {
 	class Texture2D;
 	class ScriptableEntity;
 
+	extern std::vector<AssetHandle> g_AssetVectorPlaceholder;
+
 	struct IComponent
 	{
-		Ref<IComponentHelper> ComponentHelper;
+		Entity OwnerEntity;
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
 		virtual ~IComponent() = default;
-
-		virtual void CreateHelper(Entity* entity) {}
-		template<typename T>
-		Ref<T> GetHelper()
-		{
-			return std::dynamic_pointer_cast<T>(ComponentHelper);
-		}
 
 		static const char* GetIcon() { return ICON_FA_CIRCLE_NOTCH; }
 	};
@@ -52,38 +48,15 @@ namespace ZeoEngine {
 			TestEnumClass1, TestEnumClass2, TestEnumClass3
 		};
 
-		struct TestStruct
-		{
-			bool operator==(const TestStruct& other) const
-			{
-				return EnumVar == other.EnumVar && I32Var == other.I32Var;
-			}
-
-			TestEnum EnumVar;
-			I32 I32Var;
-		};
-
-		struct TestNestedStruct
-		{
-			bool operator==(const TestNestedStruct& other) const
-			{
-				return TestStructVar == other.TestStructVar && FloatVar == other.FloatVar;
-			}
-
-			TestStruct TestStructVar;
-			float FloatVar;
-		};
-
-		TestNestedStruct& GetTestNestedStructGetterVar() { return TestNestedStructGetterVar; }
-		bool GetShowSequenceContainers() const { return bShowSequenceContainers; }
-		void SetShowSequenceContainers(bool value) { bShowSequenceContainers = value; }
-		auto& GetTestNestedStructVecGetterVar() { return TestNestedStructVecGetterVar; }
+		bool& ShowSequenceContainers() { return bShowSequenceContainers; }
 
 		bool BoolVar;
-		U8 Ui8Var;
-		U32 Ui32Var;
-		U64 Ui64Var;
+		U8 U8Var;
+		U16 U16Var;
+		U32 U32Var;
+		U64 U64Var;
 		I8 I8Var;
+		I16 I16Var;
 		I32 I32Var;
 		I64 I64Var;
 		float FloatVar;
@@ -94,18 +67,18 @@ namespace ZeoEngine {
 		Vec2 Vec2Var;
 		Vec3 Vec3Var;
 		Vec4 ColorVar;
-		Ref<Texture2D> Texture2DVar;
-		Ref<ParticleTemplate> ParticleTemplateVar;
-		TestStruct TestStructVar;
-		TestNestedStruct TestNestedStructGetterVar;
+		AssetHandle TextureAssetVar;
+		AssetHandle MeshAssetVar;
 
 		bool bShowSequenceContainers;
 
 		std::vector<bool> BoolVecVar;
-		std::vector<U8> Ui8VecVar;
-		std::vector<U32> Ui32VecVar;
-		std::vector<U64> Ui64VecVar;
+		std::vector<U8> U8VecVar;
+		std::vector<U16> U16VecVar;
+		std::vector<U32> U32VecVar;
+		std::vector<U64> U64VecVar;
 		std::vector<I8> I8VecVar;
+		std::vector<I16> I16VecVar;
 		std::vector<I32> I32VecVar;
 		std::vector<I64> I64VecVar;
 		std::vector<float> FloatVecVar;
@@ -116,10 +89,8 @@ namespace ZeoEngine {
 		std::vector<Vec2> Vec2VecVar;
 		std::vector<Vec3> Vec3VecVar;
 		std::vector<Vec4> ColorVecVar;
-		std::vector<Ref<Texture2D>> Texture2DVecVar;
-		std::vector<Ref<ParticleTemplate>> ParticleTemplateVecVar;
-		std::vector<TestStruct> TestStructVecVar;
-		std::vector<TestNestedStruct> TestNestedStructVecGetterVar;
+		std::vector<AssetHandle> TextureAssetVecVar;
+		std::vector<AssetHandle> MeshAssetVecVar;
 
 		TestComponent() = default;
 		TestComponent(const TestComponent&) = default;
@@ -150,7 +121,7 @@ namespace ZeoEngine {
 	struct TransformComponent : public IComponent
 	{
 		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		Vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
+		Vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in degrees
 		Vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
 		TransformComponent() = default;
@@ -158,20 +129,13 @@ namespace ZeoEngine {
 		TransformComponent(const Vec3& translation)
 			: Translation(translation) {}
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<TransformComponentHelper>(entity);
-		}
-
 		static const char* GetIcon() { return ICON_FA_MAP_MARKER_ALT; }
 
-		Vec3 GetRotationAsDegrees() const { return glm::degrees(Rotation); }
-		void SetRotationToRadians(const Vec3& rotationInDegrees) { Rotation = glm::radians(rotationInDegrees); }
+		Vec3 GetRotationInRadians() const { return glm::radians(Rotation); }
 
 		Mat4 GetTransform() const
 		{
-			Mat4 rotation = glm::toMat4(glm::quat(Rotation));
-
+			const Mat4 rotation = glm::toMat4(glm::quat(GetRotationInRadians()));
 			return glm::translate(Mat4(1.0f), Translation) *
 				rotation *
 				glm::scale(Mat4(1.0f), Scale);
@@ -181,8 +145,8 @@ namespace ZeoEngine {
 
 	struct SpriteRendererComponent : public IComponent
 	{
+		AssetHandle TextureAsset;
 		Vec4 TintColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		Ref<Texture2D> TextureAsset;
 		Vec2 TextureTiling{ 1.0f };
 		I32 SortingOrder = 0;
 
@@ -190,8 +154,10 @@ namespace ZeoEngine {
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const Vec4& color)
 			: TintColor(color) {}
-		SpriteRendererComponent(const Ref<Texture2D>& texture, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
-			: TextureAsset(texture), TintColor(tintColor), TextureTiling(textureTiling) {}
+		SpriteRendererComponent(AssetHandle textureAsset, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
+			: TextureAsset(textureAsset), TintColor(tintColor), TextureTiling(textureTiling) {}
+
+		Ref<Texture2D> GetTexture() const { return AssetLibrary::LoadAsset<Texture2D>(TextureAsset); }
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
 
@@ -220,29 +186,17 @@ namespace ZeoEngine {
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<CameraComponentHelper>(entity);
-		}
-
 		static const char* GetIcon() { return ICON_FA_CAMERA; }
 
-		SceneCamera::ProjectionType GetProjectionType() const { return Camera.GetProjectionType(); }
-		void SetProjectionType(SceneCamera::ProjectionType type) { Camera.SetProjectionType(type); }
+		SceneCamera::ProjectionType& GetProjectionType() { return Camera.m_ProjectionType; }
 
-		float GetPerspectiveVerticalFOV() const { return glm::degrees(Camera.GetPerspectiveVerticalFOV()); }
-		void SetPerspectiveVerticalFOV(float horizontalFOV) { Camera.SetPerspectiveVerticalFOV(glm::radians(horizontalFOV)); }
-		float GetPerspectiveNearClip() const { return Camera.GetPerspectiveNearClip(); }
-		void SetPerspectiveNearClip(float nearClip) { Camera.SetPerspectiveNearClip(nearClip); }
-		float GetPerspectiveFarClip() const { return Camera.GetPerspectiveFarClip(); }
-		void SetPerspectiveFarClip(float farClip) { Camera.SetPerspectiveFarClip(farClip); }
+		float& GetPerspectiveVerticalFOV() { return Camera.m_PerspectiveFOV; }
+		float& GetPerspectiveNearClip() { return Camera.m_PerspectiveNear; }
+		float& GetPerspectiveFarClip() { return Camera.m_PerspectiveFar; }
 
-		float GetOrthographicSize() const { return Camera.GetOrthographicSize(); }
-		void SetOrthographicSize(float size) { Camera.SetOrthographicSize(size); }
-		float GetOrthographicNearClip() const { return Camera.GetOrthographicNearClip(); }
-		void SetOrthographicNearClip(float nearClip) { Camera.SetOrthographicNearClip(nearClip); }
-		float GetOrthographicFarClip() const { return Camera.GetOrthographicFarClip(); }
-		void SetOrthographicFarClip(float farClip) { Camera.SetOrthographicFarClip(farClip); }
+		float& GetOrthographicSize() { return Camera.m_OrthographicSize; }
+		float& GetOrthographicNearClip() { return Camera.m_OrthographicNear; }
+		float& GetOrthographicFarClip() { return Camera.m_OrthographicFar; }
 
 	};
 
@@ -271,28 +225,18 @@ namespace ZeoEngine {
 		ScriptComponent() = default;
 		ScriptComponent(const ScriptComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<ScriptComponentHelper>(entity);
-		}
-
 		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
 	};
 
 	struct ParticleSystemComponent : public IComponent
 	{
-		Ref<ParticleTemplate> ParticleTemplateAsset;
+		Ref<ParticleTemplate> ParticleTemplateAsset; // TODO: Change to handle
 		Vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
 
 		ParticleSystemComponent() = default;
 		ParticleSystemComponent(const ParticleSystemComponent&) = default;
-
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<ParticleSystemComponentHelper>(entity);
-		}
 
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
 	};
@@ -305,17 +249,9 @@ namespace ZeoEngine {
 			ParticleTemplateAsset = particleTemplate;
 		}
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<ParticleSystemPreviewComponentHelper>(entity);
-		}
-
-		bool IsLocalSpace() const { return ParticleTemplateAsset->bIsLocalSpace; }
-		void SetLocalSpace(bool bValue) { ParticleTemplateAsset->bIsLocalSpace = bValue; }
-		I32 GetLoopCount() const { return ParticleTemplateAsset->LoopCount; }
-		void SetLoopCount(I32 count) { ParticleTemplateAsset->LoopCount = count; }
-		float GetLoopDuration() const { return ParticleTemplateAsset->LoopDuration; }
-		void SetLoopDuration(float duration) { ParticleTemplateAsset->LoopDuration = duration; }
+		bool& IsLocalSpace() const { return ParticleTemplateAsset->bIsLocalSpace; }
+		I32& GetLoopCount() const { return ParticleTemplateAsset->LoopCount; }
+		float& GetLoopDuration() const { return ParticleTemplateAsset->LoopDuration; }
 		ParticleFloat& GetSpawnRate() { return ParticleTemplateAsset->SpawnRate; }
 		auto& GetBurstList() { return ParticleTemplateAsset->BurstList; }
 		ParticleVec3& GetInitialPosition() { return ParticleTemplateAsset->InitialPosition; }
@@ -324,17 +260,13 @@ namespace ZeoEngine {
 		ParticleVec3& GetSizeBegin() { return ParticleTemplateAsset->SizeBegin; }
 		ParticleVec3& GetSizeEnd() { return ParticleTemplateAsset->SizeEnd; }
 		ParticleVec3& GetInitialVelocity() { return ParticleTemplateAsset->InitialVelocity; }
-		const Vec3& GetInheritVelocityRatio() const { return ParticleTemplateAsset->InheritVelocityRatio; }
-		void SetInheritVelocityRatio(const Vec3& ratio) { ParticleTemplateAsset->InheritVelocityRatio = ratio; }
+		Vec3& GetInheritVelocityRatio() const { return ParticleTemplateAsset->InheritVelocityRatio; }
 		ParticleColor& GetColorBegin() { return ParticleTemplateAsset->ColorBegin; }
 		ParticleColor& GetColorEnd() { return ParticleTemplateAsset->ColorEnd; }
 		ParticleFloat& GetLifetime() { return ParticleTemplateAsset->Lifetime; }
-		const Ref<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
-		void SetTexture(const Ref<Texture2D>& texture) { ParticleTemplateAsset->Texture = texture; }
-		const Vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
-		void SetSubImageSize(const Vec2& size) { ParticleTemplateAsset->SubImageSize = size; }
-		U32 GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
-		void SetMaxParticles(U32 count) { ParticleTemplateAsset->MaxParticles = count; }
+		Ref<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
+		Vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
+		U32& GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
 
 	};
 
@@ -390,36 +322,33 @@ namespace ZeoEngine {
 	
 	struct MeshRendererComponent : public IComponent
 	{
-		Ref<Mesh> MeshAsset;
+		AssetHandle MeshAsset;
 
 		Ref<MeshInstance> Instance;
-		std::vector<Ref<Material>> MaterialsPlaceholder;
 
 		MeshRendererComponent() = default;
-		MeshRendererComponent(const Ref<Mesh>& mesh)
-			: MeshAsset(mesh) {}
+		MeshRendererComponent(AssetHandle meshAsset)
+			: MeshAsset(meshAsset) {}
 		MeshRendererComponent(const MeshRendererComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<MeshRendererComponentHelper>(entity);
-		}
+		Ref<Mesh> GetMesh() const { return AssetLibrary::LoadAsset<Mesh>(MeshAsset); }
 
-		virtual std::vector<Ref<Material>>& GetMaterials() { return Instance ? Instance->GetMaterials() : MaterialsPlaceholder; }
+		std::vector<AssetHandle>& GetMaterialAssets() const { return Instance ? Instance->GetMaterialAssets() : g_AssetVectorPlaceholder; }
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
 
-	struct MeshPreviewComponent : public MeshRendererComponent
+	struct MeshPreviewComponent : public IComponent
 	{
-		using MeshRendererComponent::MeshRendererComponent;
+		Ref<Mesh> LoadedMesh;
+		Ref<MeshInstance> Instance;
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<MeshPreviewComponentHelper>(entity);
-		}
+		MeshPreviewComponent() = default;
+		MeshPreviewComponent(const Ref<Mesh>& mesh)
+			: LoadedMesh(mesh) {}
+		MeshPreviewComponent(const MeshPreviewComponent&) = default;
 
-		virtual std::vector<Ref<Material>>& GetMaterials() override { return MeshAsset ? MeshAsset->GetDefaultMaterials() : MaterialsPlaceholder; }
+		std::vector<AssetHandle>& GetMaterialAssets() const { return LoadedMesh ? LoadedMesh->GetDefaultMaterialAssets() : g_AssetVectorPlaceholder; }
 	};
 
 	struct LightComponent : public IComponent
@@ -438,62 +367,41 @@ namespace ZeoEngine {
 			: Type(type) {}
 		LightComponent(const LightComponent&) = default;
 
-		virtual void CreateHelper(Entity* entity) override
-		{
-			ComponentHelper = CreateRef<LightComponentHelper>(entity);
-		}
-
 		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
 
 		template<typename T>
-		Ref<T> GetLight()
+		Ref<T> GetLight() const
 		{
 			return std::dynamic_pointer_cast<T>(LightSource);
 		}
 
-		const Vec4& GetColor() const { return LightSource->GetColor(); }
-		void SetColor(const Vec4& color) { LightSource->SetColor(color); }
-		float GetIntensity() const { return LightSource->GetIntensity(); }
-		void SetIntensity(float intensity) { return LightSource->SetIntensity(intensity); }
-		float GetRange() const { return LightSource->GetRange(); }
-		void SetRange(float range) { LightSource->SetRange(range); }
-		float GetCutoffAsDegrees() const { return glm::degrees(LightSource->GetCutoff()); }
-		void SetCutoffToRadians(float cutoffInDegrees) { LightSource->SetCutoff(glm::radians(cutoffInDegrees)); }
-		bool IsCastShadow() const { return LightSource->IsCastShadow(); }
-		void SetCastShadow(bool bCast) { LightSource->SetCastShadow(bCast); }
-		Light::ShadowType GetShadowType() const { return LightSource->GetShadowType(); }
-		void SetShadowType(Light::ShadowType type) { LightSource->SetShadowType(type); }
-		float GetDepthBias() const { return LightSource->GetDepthBias(); }
-		void SetDepthBias(float bias) { LightSource->SetDepthBias(bias); }
-		float GetNormalBias() const { return LightSource->GetNormalBias(); }
-		void SetNormalBias(float bias) { LightSource->SetNormalBias(bias); }
-		float GetLightSize() const { return LightSource->GetLightSize(); }
-		void SetLightSize(float size) { LightSource->SetLightSize(size); }
-		float GetFilterSize() const { return LightSource->GetFilterSize(); }
-		void SetFilterSize(float size) { LightSource->SetFilterSize(size); }
-		U32 GetCascadeCount() const { return LightSource->GetCascadeCount(); }
-		void SetCascadeCount(U32 count) { LightSource->SetCascadeCount(count); }
-		float GetCascadeBlendThreshold() const { return LightSource->GetCascadeBlendThreshold(); }
-		void SetCascadeBlendThreshold(float threshold) { LightSource->SetCascadeBlendThreshold(threshold); }
-		float GetMaxShadowDistance() { return LightSource->GetMaxShadowDistance(); }
-		void SetMaxShadowDistance(float distance) { LightSource->SetMaxShadowDistance(distance); }
-		float GetCascadeSplitLambda() { return LightSource->GetCascadeSplitLambda(); }
-		void SetCascadeSplitLambda(float lambda) { LightSource->SetGetCascadeSplitLambda(lambda); }
+		Vec4& GetColor() const { return LightSource->m_Color; }
+		float& GetIntensity() const { return LightSource->m_Intensity; }
+		float& GetRange() const { return LightSource->m_Range; }
+		float& GetCutoff() const { return LightSource->m_CutoffAngle; }
+		bool& IsCastShadow() const { return LightSource->m_bCastShadow; }
+		Light::ShadowType& GetShadowType() const { return LightSource->m_ShadowType; }
+		float& GetDepthBias() const { return LightSource->m_DepthBias; }
+		float& GetNormalBias() const { return LightSource->m_NormalBias; }
+		float& GetLightSize() const { return LightSource->m_LightSize; }
+		float& GetFilterSize() const { return LightSource->m_FilterSize; }
+		U32& GetCascadeCount() const { return LightSource->m_CascadeCount; }
+		float& GetCascadeBlendThreshold() const { return LightSource->m_CascadeBlendThreshold; }
+		float& GetMaxShadowDistance() { return LightSource->m_MaxShadowDistance; }
+		float& GetCascadeSplitLambda() { return LightSource->m_CascadeSplitLambda; }
 	};
 
 	struct MaterialPreviewComponent : public IComponent
 	{
-		Ref<Material> MaterialAsset;
+		Ref<Material> LoadedMaterial;
 
 		MaterialPreviewComponent() = default;
 		MaterialPreviewComponent(const Ref<Material>& material)
-			: MaterialAsset(material) {}
+			: LoadedMaterial(material) {}
 		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
 
-		const Ref<Shader>& GetShader() const { return MaterialAsset->GetShader(); }
-		void SetShader(const Ref<Shader>& shader) { MaterialAsset->SetShader(shader); }
-		U32 GetShaderVariant() const { return MaterialAsset->GetShaderVariant(); }
-		void SetShaderVariant(U32 ID) { MaterialAsset->SetShaderVariant(ID); }
+		AssetHandle& GetShaderAsset() const { return LoadedMaterial->m_ShaderInstance->m_ShaderAsset; }
+		U32& GetShaderVariant() const { return LoadedMaterial->m_ShaderInstance->m_ShaderVariantID; }
 	};
 
 	struct BillboardComponent : public IComponent
@@ -515,19 +423,16 @@ namespace ZeoEngine {
 
 	struct TexturePreviewComponent : public IComponent
 	{
-		Ref<Texture2D> TextureAsset;
+		Ref<Texture2D> LoadedTexture;
+		SamplerType SamplerType = SamplerType::BilinearRepeat;
 
 		TexturePreviewComponent() = default;
 		TexturePreviewComponent(const Ref<Texture2D>& texture)
-			: TextureAsset(texture) {}
+			: LoadedTexture(texture) {}
 		TexturePreviewComponent(const TexturePreviewComponent&) = default;
 
-		bool IsSRGB() const { return TextureAsset->bIsSRGB(); }
-		void SetSRGB(bool bSRGB) { TextureAsset->SetSRGB(bSRGB); }
-		SamplerType GetSamplerType() const { return TextureAsset->GetSamplerType(); }
-		void SetSamplerType(SamplerType type) { TextureAsset->ChangeSampler(type); }
-		bool ShouldGenerateMipmaps() const { return TextureAsset->ShouldGenerateMipmaps(); }
-		void SetGenerateMipmaps(bool bGenerate) { TextureAsset->SetGenerateMipmaps(bGenerate); }
+		bool& IsSRGB() const { return LoadedTexture->m_bIsSRGB; }
+		bool& ShouldGenerateMipmaps() const { return LoadedTexture->m_bShouldGenerateMipmaps; }
 	};
 
 }

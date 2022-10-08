@@ -17,20 +17,14 @@ namespace ZeoEngine {
 		virtual U32 GetHeight() const override { return m_Height; }
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
-		virtual bool bIsSRGB() const override { return m_bIsSRGB; }
-		virtual void SetSRGB(bool bSRGB) override { m_bIsSRGB = bSRGB; Invalidate(); }
-		virtual SamplerType GetSamplerType() const override { return m_Sampler ? m_Sampler->GetType() : SamplerType::BilinearRepeat; }
-		virtual void ChangeSampler(SamplerType type) override { m_Sampler = SamplerLibrary::GetOrAddSampler(type); }
-		virtual bool ShouldGenerateMipmaps() const override { return m_bShouldGenerateMipmaps; }
-		virtual void SetGenerateMipmaps(bool bGenerate) override { m_bShouldGenerateMipmaps = bGenerate; Invalidate(); }
 		virtual U32 GetMipmapLevels() const override { return m_MipmapLevels; }
 
 		virtual void* GetTextureID() const override { return (void*)(intptr_t)m_RendererID; }
 		virtual void* GetTextureViewID(U32 index) const override { return GetTextureID(); }
 
-		virtual void SetData(void* data, U32 size) override;
-
 		virtual void Invalidate() override;
+
+		virtual void SetData(void* data, U32 size) override;
 
 		virtual void SetBindingSlot(U32 slot) override { m_BindingSlot = slot; }
 		virtual void Bind() const override;
@@ -43,14 +37,10 @@ namespace ZeoEngine {
 
 		U32 m_Width, m_Height;
 		TextureFormat m_Format = TextureFormat::None;
-		bool m_bIsSRGB = true;
-		bool m_bShouldGenerateMipmaps = true;
 		U32 m_MipmapLevels = 1;
 		std::optional<U32> m_BindingSlot;
 		GLenum m_InternalFormat, m_DataFormat;
 		bool m_bHasAlpha = false;
-
-		Ref<Sampler> m_Sampler;
 	};
 
 	class OpenGLTexture2DArray : public Texture2DArray
@@ -63,16 +53,12 @@ namespace ZeoEngine {
 		virtual U32 GetHeight() const override { return m_Height; }
 		virtual TextureFormat GetFormat() const override { return m_Format; }
 		virtual bool HasAlpha() const override { return m_bHasAlpha; }
-		virtual bool bIsSRGB() const override { return m_bIsSRGB; }
-		virtual void SetSRGB(bool bSRGB) override { m_bIsSRGB = bSRGB; }
-		virtual SamplerType GetSamplerType() const override { return m_Sampler->GetType(); }
-		virtual void ChangeSampler(SamplerType type) override { m_Sampler = SamplerLibrary::GetOrAddSampler(type); }
-		virtual bool ShouldGenerateMipmaps() const override { return m_bShouldGenerateMipmaps; }
-		virtual void SetGenerateMipmaps(bool bGenerate) override { m_bShouldGenerateMipmaps = bGenerate; }
 		virtual U32 GetMipmapLevels() const override { return m_MipmapLevels; }
 
 		virtual void* GetTextureID() const override { return (void*)(intptr_t)m_RendererID; }
 		virtual void* GetTextureViewID(U32 index = 0) const override { return (void*)(intptr_t)m_TextureViews[index]; }
+
+		virtual void Invalidate() override;
 
 		virtual void SetData(void* data, U32 size) override;
 
@@ -86,14 +72,10 @@ namespace ZeoEngine {
 
 		U32 m_Width, m_Height;
 		TextureFormat m_Format;
-		bool m_bIsSRGB = true;
-		bool m_bShouldGenerateMipmaps = true;
 		U32 m_MipmapLevels = 1;
 		std::optional<U32> m_BindingSlot;
 		GLenum m_InternalFormat, m_DataFormat;
 		bool m_bHasAlpha = false;
-
-		Ref<Sampler> m_Sampler;
 
 		U32 m_ArraySize;
 		std::vector<U32> m_TextureViews;

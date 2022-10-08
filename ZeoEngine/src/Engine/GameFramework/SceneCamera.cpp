@@ -38,7 +38,7 @@ namespace ZeoEngine {
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+			m_Projection = glm::perspective(glm::radians(m_PerspectiveFOV), m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
 		}
 		else
 		{

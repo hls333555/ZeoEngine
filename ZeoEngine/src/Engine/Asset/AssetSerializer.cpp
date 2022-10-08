@@ -163,18 +163,7 @@ namespace ZeoEngine {
 
 		const auto mesh = std::static_pointer_cast<Mesh>(asset);
 		ComponentSerializer cs;
-		if (auto* meshComp = static_cast<MeshPreviewComponent*>(payload))
-		{
-			// When load from Mesh Editor, the payload is passed as MeshPreviewComponent
-			meshComp->MeshAsset = mesh;
-			cs.Deserialize(node, *meshComp);
-		}
-		else
-		{
-			// When load from SceneSerializer, we just create a temporary MeshPreviewComponent for deserialization needs
-			// Note that the PostDataDeserialize function will never get invoked as temporary MeshPreviewComponent does not create a component helper
-			cs.Deserialize(node, MeshPreviewComponent(mesh));
-		}
+		cs.Deserialize(node, MeshPreviewComponent(mesh));
 		return true;
 	}
 
@@ -229,11 +218,11 @@ namespace ZeoEngine {
 	{
 		const auto res = DeserializeAsset(metadata->Path);
 		if (!res) return;
-
-		const auto node = *res;
+		
+		const auto& node = *res;
 		MaterialSerializer ms;
 		ms.Deserialize(node, material);
-		material->ApplyDynamicData();
+		material->ApplyDynamicFields();
 	}
 #pragma endregion
 

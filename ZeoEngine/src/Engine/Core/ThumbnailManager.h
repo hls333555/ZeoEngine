@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		Ref<Texture2D> GetAssetThumbnail(const Ref<AssetMetadata>& metadata);
 		std::string GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const;
 
-		Ref<Texture2D> GetAssetTypeIcon(AssetTypeID typeId) const;
+		Ref<Texture2D> GetAssetTypeIcon(AssetTypeID typeID) const;
 		const Ref<Texture2D>& GetDirectoryIcon() const { return m_DirectoryIcon; }
 
 	private:

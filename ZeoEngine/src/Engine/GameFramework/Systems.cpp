@@ -181,7 +181,7 @@ namespace ZeoEngine {
 			const auto& position = body->GetPosition();
 			transformComp.Translation.x = position.x;
 			transformComp.Translation.y = position.y;
-			transformComp.Rotation.z = body->GetAngle();
+			transformComp.Rotation.z = glm::degrees(body->GetAngle());
 		});
 	}
 
@@ -210,7 +210,7 @@ namespace ZeoEngine {
 			b2BodyDef bodyDef;
 			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
 			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
-			bodyDef.angle = transformComp.Rotation.z;
+			bodyDef.angle = glm::radians(transformComp.Rotation.z);
 
 			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
 			body->SetFixedRotation(rb2dComp.bFixedRotation);
@@ -298,17 +298,18 @@ namespace ZeoEngine {
 	{
 		GetScene()->ForEachComponentView<TransformComponent, LightComponent, BillboardComponent>([this, bIsEditor](auto entity, auto& transformComp, auto& lightComp, auto& billboardComp)
 		{
+			const Vec3 rotationRad = transformComp.GetRotationInRadians();
 			switch (lightComp.Type)
 			{
 				case LightComponent::LightType::DirectionalLight:
 				{
 					const auto& directionalLight = lightComp.GetLight<DirectionalLight>();
-					GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, directionalLight);
+					GetSceneRenderer()->SetupDirectionalLight(rotationRad, directionalLight);
 
 					// Draw arrow visualizer when selected
 					if (bIsEditor && GetWorld()->GetContextEntity() == entity)
 					{
-						const auto forward = glm::rotate(glm::quat(transformComp.Rotation), { 0.0f, 0.0f, -1.0f });
+						const auto forward = Math::GetForwardVector(rotationRad);
 						const auto endPosition = transformComp.Translation + glm::normalize(forward);
 						DebugDrawUtils::DrawArrow(GetScene(), transformComp.Translation, endPosition, debugDrawColor, 0.25f);
 					}
@@ -329,13 +330,13 @@ namespace ZeoEngine {
 				case LightComponent::LightType::SpotLight:
 				{
 					const auto& spotLight = lightComp.GetLight<SpotLight>();
-					GetSceneRenderer()->AddSpotLight(transformComp.Translation, transformComp.Rotation, spotLight);
+					GetSceneRenderer()->AddSpotLight(transformComp.Translation, rotationRad, spotLight);
 
 					// Draw cone visualizer when selected
 					if (bIsEditor && GetWorld()->GetContextEntity() == entity)
 					{
-						const auto direction = spotLight->CalculateDirection(transformComp.Rotation) * spotLight->GetRange();
-						const auto radius = tan(spotLight->GetCutoff()) * spotLight->GetRange();
+						const auto direction = spotLight->CalculateDirection(rotationRad) * spotLight->GetRange();
+						const auto radius = tan(spotLight->GetCutoffInRadians()) * spotLight->GetRange();
 						DebugDrawUtils::DrawCone(GetScene(), transformComp.Translation, direction, debugDrawColor, radius, 0.0f);
 					}
 					break;
@@ -415,7 +416,7 @@ namespace ZeoEngine {
 	{
 		GetScene()->ForEachComponentView<TransformComponent, LightComponent>([this](auto entity, auto& transformComp, auto& lightComp)
 		{
-			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+			GetSceneRenderer()->SetupDirectionalLight(transformComp.GetRotationInRadians(), lightComp.GetLight<DirectionalLight>());
 		});
 		GetScene()->ForEachComponentGroup<TransformComponent>(entt::get<MeshPreviewComponent/*, BoundsComponent*/>, [this](auto entity, auto& transformComp, auto& meshComp/*, auto& boundsComp*/)
 		{
@@ -428,7 +429,7 @@ namespace ZeoEngine {
 	{
 		GetScene()->ForEachComponentView<TransformComponent, LightComponent>([this](auto entity, auto& transformComp, auto& lightComp)
 		{
-			GetSceneRenderer()->SetupDirectionalLight(transformComp.Rotation, lightComp.GetLight<DirectionalLight>());
+			GetSceneRenderer()->SetupDirectionalLight(transformComp.GetRotationInRadians(), lightComp.GetLight<DirectionalLight>());
 		});
 		GetScene()->ForEachComponentGroup<TransformComponent>(entt::get<MeshRendererComponent>, [this](auto entity, auto& transformComp, auto& meshComp)
 		{

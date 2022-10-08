@@ -6,6 +6,8 @@ namespace ZeoEngine {
 
 	class SceneCamera : public Camera
 	{
+		friend struct CameraComponent;
+
 	public:
 		enum class ProjectionType
 		{
@@ -41,13 +43,12 @@ namespace ZeoEngine {
 		float GetOrthographicFarClip() const { return m_OrthographicFar; }
 		void SetOrthographicFarClip(float farClip) { m_OrthographicFar = farClip; RecalculateProjection(); }
 
-	private:
 		void RecalculateProjection();
 
 	private:
 		ProjectionType m_ProjectionType = ProjectionType::Orthographic;
 
-		float m_PerspectiveFOV = glm::radians(90.0f);
+		float m_PerspectiveFOV = 90.0f;
 		float m_PerspectiveNear = 0.01f, m_PerspectiveFar = 1000.0f;
 
 		float m_OrthographicSize = 6.0f;

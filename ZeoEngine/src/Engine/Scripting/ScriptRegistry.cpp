@@ -23,15 +23,6 @@ namespace ZeoEngine {
 		{
 			return mono_string_new(ScriptEngine::GetAppDomain(), str.c_str());
 		}
-
-		static Entity GetEntityByID(UUID entityID)
-		{
-			const auto& scene = ScriptEngine::GetSceneContext();
-			ZE_CORE_ASSERT(scene);
-			const Entity entity = scene->GetEntityByUUID(entityID);
-			ZE_CORE_ASSERT(entity);
-			return entity;
-		}
 		
 	}
 
@@ -41,57 +32,57 @@ namespace ZeoEngine {
 
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* compType)
 	{
-		return Utils::GetEntityByID(entityID).HasComponentById(Utils::ComponentTypeToID(compType));
+		return ScriptEngine::GetEntityByID(entityID).HasComponentByID(Utils::ComponentTypeToID(compType));
 	}
 
 	static MonoString* Entity_GetName(UUID entityID)
 	{
-		return Utils::StringToMonoString(Utils::GetEntityByID(entityID).GetName());
+		return Utils::StringToMonoString(ScriptEngine::GetEntityByID(entityID).GetName());
 	}
 
 	static void Entity_GetForwardVector(UUID entityID, Vec3* outForwardVector)
 	{
-		*outForwardVector = Utils::GetEntityByID(entityID).GetForwardVector();
+		*outForwardVector = ScriptEngine::GetEntityByID(entityID).GetForwardVector();
 	}
 
 	static void Entity_GetRightVector(UUID entityID, Vec3* outForwardVector)
 	{
-		*outForwardVector = Utils::GetEntityByID(entityID).GetRightVector();
+		*outForwardVector = ScriptEngine::GetEntityByID(entityID).GetRightVector();
 	}
 
 	static void Entity_GetUpVector(UUID entityID, Vec3* outUpVector)
 	{
-		*outUpVector = Utils::GetEntityByID(entityID).GetUpVector();
+		*outUpVector = ScriptEngine::GetEntityByID(entityID).GetUpVector();
 	}
 
 	static void TransformComponent_GetTranslation(UUID entityID, Vec3* outTranslation)
 	{
-		*outTranslation = Utils::GetEntityByID(entityID).GetTranslation();
+		*outTranslation = ScriptEngine::GetEntityByID(entityID).GetTranslation();
 	}
 
 	static void TransformComponent_SetTranslation(UUID entityID, Vec3* translation)
 	{
-		Utils::GetEntityByID(entityID).SetTranslation(*translation);
+		ScriptEngine::GetEntityByID(entityID).SetTranslation(*translation);
 	}
 
 	static void TransformComponent_GetRotation(UUID entityID, Vec3* outRotation)
 	{
-		*outRotation = Utils::GetEntityByID(entityID).GetRotation();
+		*outRotation = ScriptEngine::GetEntityByID(entityID).GetRotation();
 	}
 
 	static void TransformComponent_SetRotation(UUID entityID, Vec3* rotation)
 	{
-		Utils::GetEntityByID(entityID).SetRotation(*rotation);
+		ScriptEngine::GetEntityByID(entityID).SetRotation(*rotation);
 	}
 
 	static void TransformComponent_GetScale(UUID entityID, Vec3* outScale)
 	{
-		*outScale = Utils::GetEntityByID(entityID).GetScale();
+		*outScale = ScriptEngine::GetEntityByID(entityID).GetScale();
 	}
 
 	static void TransformComponent_SetScale(UUID entityID, Vec3* scale)
 	{
-		Utils::GetEntityByID(entityID).SetScale(*scale);
+		ScriptEngine::GetEntityByID(entityID).SetScale(*scale);
 	}
 
 	static bool Input_IsKeyPressed(KeyCode keycode)

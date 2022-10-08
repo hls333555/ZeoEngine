@@ -9,6 +9,11 @@
 
 namespace ZeoEngine {
 
+	bool SceneUtils::IsRuntime()
+	{
+		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
+	}
+
 	Ref<Scene> SceneUtils::GetActiveGameScene()
 	{
 		return g_Editor->GetLevelWorld()->GetActiveScene();
@@ -17,11 +22,6 @@ namespace ZeoEngine {
 	void SceneUtils::OpenLevel(const std::string& path)
 	{
 		g_Editor->LoadLevel(path);
-	}
-
-	bool EditorSceneUtils::IsRuntime()
-	{
-		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
 	}
 
 	EditorCamera& EditorSceneUtils::GetEditorCamera()
@@ -39,21 +39,21 @@ namespace ZeoEngine {
 	Entity EditorSceneUtils::CreateAndPlaceCube(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Cube");
-		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCubeMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCubeMesh()->GetHandle());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlaceSphere(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
-		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlacePlane(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Plane");
-		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultPlaneMesh());
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultPlaneMesh()->GetHandle());
 		return entity;
 	}
 

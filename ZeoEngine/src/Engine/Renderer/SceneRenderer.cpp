@@ -157,7 +157,7 @@ namespace ZeoEngine {
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Position = position;
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Radius = spotLight->GetRange();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoff());
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoffInRadians());
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = spotLight->GetLightSize();

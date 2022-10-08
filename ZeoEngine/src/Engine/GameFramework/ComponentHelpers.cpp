@@ -9,314 +9,358 @@
 
 namespace ZeoEngine {
 
-	struct IComponentHelper::Impl
-	{
-		Entity OwnerEntity;
+	/** Map from component ID to its helper */
+	static std::unordered_map<U32, Scope<IComponentHelper>> s_ComponentHelpers;
 
-		Impl(Entity entity)
-			: OwnerEntity(entity) {}
-	};
+	std::vector<AssetHandle> g_AssetVectorPlaceholder;
 
-	IComponentHelper::IComponentHelper(Entity* entity)
-		: m_Impl(CreateScope<Impl>(*entity))
+	void ComponentHelperRegistry::AddComponentHelper(U32 compID, Scope<IComponentHelper> helper)
 	{
+		s_ComponentHelpers[compID] = std::move(helper);
 	}
 
-	IComponentHelper::~IComponentHelper() = default;
-
-	Entity* IComponentHelper::GetOwnerEntity() const
+	IComponentHelper* ComponentHelperRegistry::GetComponentHelper(U32 compID)
 	{
-		return &m_Impl->OwnerEntity;
+		return s_ComponentHelpers.find(compID) != s_ComponentHelpers.end() ? s_ComponentHelpers[compID].get() : nullptr;
 	}
 
 #pragma region TransformComponentHelper
-	void TransformComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void TransformComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		GetOwnerEntity()->UpdateBounds();
-	}
-
-	void TransformComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
-	{
-		GetOwnerEntity()->UpdateBounds();
+		comp->OwnerEntity.UpdateBounds();
 	}
 #pragma endregion
 
 #pragma region CameraComponentHelper
-	void CameraComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	void CameraComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
-		auto& billboardComp = GetOwnerEntity()->AddComponent<BillboardComponent>();
+		auto& billboardComp = comp->OwnerEntity.AddComponent<BillboardComponent>();
 		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
 	}
 
-	void CameraComponentHelper::OnComponentDestroy()
+	void CameraComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
+		auto* cameraComp = static_cast<CameraComponent*>(comp);
+		if (fieldID == GetFieldIDByName<CameraComponent>("ProjectionType") ||
+			fieldID == GetFieldIDByName<CameraComponent>("VerticalFOV") ||
+			fieldID == GetFieldIDByName<CameraComponent>("PerspectiveNear") ||
+			fieldID == GetFieldIDByName<CameraComponent>("PerspectiveFar") ||
+			fieldID == GetFieldIDByName<CameraComponent>("Size") ||
+			fieldID == GetFieldIDByName<CameraComponent>("OrthographicNear") ||
+			fieldID == GetFieldIDByName<CameraComponent>("OrthographicFar"))
+		{
+			cameraComp->Camera.RecalculateProjection();
+		}
+	}
+
+	void CameraComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
+	{
+		auto* cameraComp = static_cast<CameraComponent*>(comp);
+		if (fieldID == GetFieldIDByName<CameraComponent>("ProjectionType") ||
+			fieldID == GetFieldIDByName<CameraComponent>("VerticalFOV") ||
+			fieldID == GetFieldIDByName<CameraComponent>("PerspectiveNear") ||
+			fieldID == GetFieldIDByName<CameraComponent>("PerspectiveFar") ||
+			fieldID == GetFieldIDByName<CameraComponent>("Size") ||
+			fieldID == GetFieldIDByName<CameraComponent>("OrthographicNear") ||
+			fieldID == GetFieldIDByName<CameraComponent>("OrthographicFar"))
+		{
+			cameraComp->Camera.RecalculateProjection();
+		}
+	}
+
+	void CameraComponentHelper::OnComponentDestroy(IComponent* comp)
+	{
+		comp->OwnerEntity.RemoveComponentIfExist<BillboardComponent>();
 	}
 #pragma endregion
 
 #pragma region ScriptComponentHelper
-	void ScriptComponentHelper::OnComponentDestroy()
+	void ScriptComponentHelper::OnComponentDestroy(IComponent* comp)
 	{
-		ScriptEngine::OnDestroyEntity(*GetOwnerEntity());
+		ScriptEngine::OnDestroyEntity(comp->OwnerEntity);
 	}
 
-	void ScriptComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void ScriptComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
+		if (fieldID == GetFieldIDByName<ScriptComponent>("ClassName"))
 		{
-			ScriptEngine::InitScriptEntity(*GetOwnerEntity());
+			ScriptEngine::InitScriptEntity(comp->OwnerEntity);
 		}
 	}
 
-	void ScriptComponentHelper::PostDataDeserialize(U32 dataId)
+	void ScriptComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
 	{
-		if (dataId == GetDataIdByName<ScriptComponent>("ClassName"))
+		if (fieldID == GetFieldIDByName<ScriptComponent>("ClassName"))
 		{
-			ScriptEngine::InitScriptEntity(*GetOwnerEntity());
+			ScriptEngine::InitScriptEntity(comp->OwnerEntity);
 		}
 	}
 #pragma endregion
 
 #pragma region ParticleSystemComponentHelper
-	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* otherComp)
+	void ParticleSystemComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
 	{
-		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		ParticleSystemInstance::Create(particleComp);
+		auto* particleComp = static_cast<ParticleSystemComponent*>(comp);
+		ParticleSystemInstance::Create(*particleComp);
 	}
 
-	void ParticleSystemComponentHelper::OnComponentDestroy()
+	void ParticleSystemComponentHelper::OnComponentDestroy(IComponent* comp)
 	{
-		const auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		if (particleComp.ParticleTemplateAsset)
+		const auto* particleComp = static_cast<ParticleSystemComponent*>(comp);
+		if (particleComp->ParticleTemplateAsset)
 		{
-			particleComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp.Instance);
+			particleComp->ParticleTemplateAsset->RemoveParticleSystemInstance(particleComp->Instance);
 		}
 	}
 
-	void ParticleSystemComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void ParticleSystemComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		ParticleSystemInstance::Create(particleComp);
-	}
-
-	void ParticleSystemComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
-	{
-		auto& particleComp = GetOwnerEntity()->GetComponent<ParticleSystemComponent>();
-		if (dataId == GetDataIdByName<ParticleSystemComponent>("ParticleTemplateAsset"))
+		auto* particleComp = static_cast<ParticleSystemComponent*>(comp);
+		if (fieldID == GetFieldIDByName<ParticleSystemComponent>("ParticleTemplateAsset"))
 		{
-			Ref<ParticleTemplate> oldTemplate = (*oldValue._Cast<Ref<ParticleTemplate>>());
+			Ref<ParticleTemplate> oldTemplate = *static_cast<const Ref<ParticleTemplate>*>(oldValue);
 			if (oldTemplate)
 			{
-				oldTemplate->RemoveParticleSystemInstance(particleComp.Instance);
+				oldTemplate->RemoveParticleSystemInstance(particleComp->Instance);
 			}
 		}
 		// Manually clear particle template selection
-		if (!particleComp.ParticleTemplateAsset)
+		if (!particleComp->ParticleTemplateAsset)
 		{
-			particleComp.Instance.reset();
+			particleComp->Instance.reset();
 		}
 		else
 		{
-			ParticleSystemInstance::Create(particleComp);
+			ParticleSystemInstance::Create(*particleComp);
 		}
 	}
 #pragma endregion
 
 #pragma region ParticleSystemPreviewComponentHelper
-	void ParticleSystemPreviewComponentHelper::OnComponentDestroy()
+	void ParticleSystemPreviewComponentHelper::OnComponentDestroy(IComponent* comp)
 	{
-		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		if (particlePreviewComp.ParticleTemplateAsset)
+		const auto* particlePreviewComp = static_cast<ParticleSystemPreviewComponent*>(comp);
+		if (particlePreviewComp->ParticleTemplateAsset)
 		{
-			particlePreviewComp.ParticleTemplateAsset->RemoveParticleSystemInstance(particlePreviewComp.Instance);
+			particlePreviewComp->ParticleTemplateAsset->RemoveParticleSystemInstance(particlePreviewComp->Instance);
 		}
 	}
-
-	void ParticleSystemPreviewComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
-	{
-		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
-	}
 	 
-	void ParticleSystemPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void ParticleSystemPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		const auto& particlePreviewComp = GetOwnerEntity()->GetComponent<ParticleSystemPreviewComponent>();
-		particlePreviewComp.ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
+		const auto* particlePreviewComp = static_cast<ParticleSystemPreviewComponent*>(comp);
+		particlePreviewComp->ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 #pragma endregion
 
 #pragma region MeshRendererComponentHelper
-	void MeshRendererComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	void MeshRendererComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		if (meshComp.MeshAsset)
+		auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		const auto mesh = meshComp->GetMesh();
+		meshComp->Instance = mesh ? mesh->CreateInstance(comp->OwnerEntity.GetScene(), bIsDeserialize) : nullptr;
+	}
+
+	void MeshRendererComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
+	{
+		auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		MeshInstance::Copy(*meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
+	}
+
+	void MeshRendererComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	{
+		auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		Entity entity = comp->OwnerEntity;
+		if (fieldID == GetFieldIDByName<MeshRendererComponent>("MeshAsset"))
 		{
-			meshComp.Instance = meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene(), bIsDeserialize);
+			entity.UpdateBounds();
+			const auto mesh = meshComp->GetMesh();
+			meshComp->Instance = mesh ? mesh->CreateInstance(entity.GetScene()) : nullptr;
+		}
+		else if (fieldID == GetFieldIDByName<MeshRendererComponent>("MaterialSlots"))
+		{
+			const auto oldMaterial = *static_cast<const AssetHandle*>(oldValue);
+			meshComp->Instance->OnMaterialChanged(elementIndex, oldMaterial);
 		}
 	}
 
-	void MeshRendererComponentHelper::OnComponentCopied(IComponent* otherComp)
+	void MeshRendererComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
 	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		MeshInstance::Copy(meshComp, static_cast<MeshRendererComponent*>(otherComp)->Instance);
-	}
-
-	void MeshRendererComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
-	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
-		{
-			GetOwnerEntity()->UpdateBounds();
-			meshComp.Instance = meshComp.MeshAsset ? meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene()) : nullptr;
-		}
-		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
-		{
-			auto oldMaterial = (*oldValue._Cast<Ref<Material>>());
-			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
-		}
-	}
-
-	void MeshRendererComponentHelper::PostDataDeserialize(U32 dataId)
-	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		if (dataId == GetDataIdByName<MeshRendererComponent>("MeshAsset"))
+		auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MeshRendererComponent>("MeshAsset"))
 		{
 			// Create mesh instance when mesh asset is loaded so that material data can be deserialized into mesh instance properly
-			if (meshComp.MeshAsset)
-			{
-				meshComp.Instance = meshComp.MeshAsset->CreateInstance(GetOwnerEntity()->GetScene());
-			}
+			const auto mesh = meshComp->GetMesh();
+			meshComp->Instance = mesh ? mesh->CreateInstance(comp->OwnerEntity.GetScene()) : nullptr;
 		}
-		else if (dataId == GetDataIdByName<MeshRendererComponent>("MaterialSlots"))
+		else if (fieldID == GetFieldIDByName<MeshRendererComponent>("MaterialSlots"))
 		{
-			meshComp.Instance->SubmitAllTechniques();
+			meshComp->Instance->SubmitAllTechniques();
 		}
 	}
 
-	BoxSphereBounds MeshRendererComponentHelper::GetBounds()
+	BoxSphereBounds MeshRendererComponentHelper::GetBounds(IComponent* comp)
 	{
-		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
+		const auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		const auto mesh = meshComp->GetMesh();
+		return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
-	std::string MeshRendererComponentHelper::GetCustomSequenceContainerElementName(U32 index) const
+	std::string MeshRendererComponentHelper::GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const
 	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshRendererComponent>();
-		return meshComp.MeshAsset->GetMaterialNames()[index];
+		const auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+		return meshComp->GetMesh()->GetMaterialNames()[index];
 	}
 #pragma endregion
 
 #pragma region MeshPreviewComponentHelper
-	void MeshPreviewComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void MeshPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
-		if (dataId == GetDataIdByName<MeshPreviewComponent>("MaterialSlots"))
+		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MeshPreviewComponent>("MaterialSlots"))
 		{
-			meshComp.Instance->SetMaterial(elementIndex, meshComp.GetMaterials()[elementIndex]);
-			auto oldMaterial = (*oldValue._Cast<Ref<Material>>());
-			meshComp.Instance->OnMaterialChanged(elementIndex, oldMaterial);
+			meshComp->Instance->SetMaterial(elementIndex, meshComp->GetMaterialAssets()[elementIndex]);
+			const auto oldMaterial = *static_cast<const AssetHandle*>(oldValue);
+			meshComp->Instance->OnMaterialChanged(elementIndex, oldMaterial);
 		}
 	}
 
-	BoxSphereBounds MeshPreviewComponentHelper::GetBounds()
+	BoxSphereBounds MeshPreviewComponentHelper::GetBounds(IComponent* comp)
 	{
-		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
-		return meshComp.MeshAsset ? meshComp.MeshAsset->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
+		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
+		const auto& mesh = meshComp->LoadedMesh;
+		return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
-	std::string MeshPreviewComponentHelper::GetCustomSequenceContainerElementName(U32 index) const
+	std::string MeshPreviewComponentHelper::GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const
 	{
-		auto& meshComp = GetOwnerEntity()->GetComponent<MeshPreviewComponent>();
-		return meshComp.MeshAsset->GetMaterialNames()[index];
+		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
+		return meshComp->LoadedMesh->GetMaterialNames()[index];
+	}
+#pragma endregion
+
+#pragma region MaterialPreviewComponentHelper
+	void MaterialPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	{
+		const auto* materialComp = static_cast<MaterialPreviewComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MaterialPreviewComponent>("ShaderAsset"))
+		{
+			const auto oldShader = *static_cast<const AssetHandle*>(oldValue);
+			materialComp->LoadedMaterial->OnShaderChanged(materialComp->GetShaderAsset(), oldShader);
+		}
+	}
+
+	void MaterialPreviewComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
+	{
+		const auto* materialComp = static_cast<MaterialPreviewComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MaterialPreviewComponent>("ShaderAsset"))
+		{
+			materialComp->LoadedMaterial->OnShaderChanged(materialComp->GetShaderAsset(), 0);
+		}
+	}
+#pragma endregion
+
+#pragma region TexturePreviewComponentHelper
+	void TexturePreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	{
+		const auto* textureComp = static_cast<TexturePreviewComponent*>(comp);
+		if (fieldID == GetFieldIDByName<TexturePreviewComponent>("SRGB") ||
+			fieldID == GetFieldIDByName<TexturePreviewComponent>("GenerateMipmaps"))
+		{
+			textureComp->LoadedTexture->Invalidate();
+		}
+		else if (fieldID == GetFieldIDByName<TexturePreviewComponent>("SamplerType"))
+		{
+			textureComp->LoadedTexture->ChangeSampler(textureComp->SamplerType);
+		}
 	}
 #pragma endregion
 
 #pragma region LightComponentHelper
-	void LightComponentHelper::OnComponentAdded(bool bIsDeserialize)
+	void LightComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
-		GetOwnerEntity()->AddComponent<BillboardComponent>();
-		InitLight();
+		Entity entity = comp->OwnerEntity;
+		entity.AddComponent<BillboardComponent>();
+		InitLight(&entity);
 	}
 
-	void LightComponentHelper::OnComponentCopied(IComponent* otherComp)
+	void LightComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
 	{
 		// Perform the deep copy of smart pointer
-		auto* otherLightComp = static_cast<LightComponent*>(otherComp);
-		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
-		switch (lightComp.Type)
+		const auto* otherLightComp = static_cast<LightComponent*>(otherComp);
+		auto* lightComp = static_cast<LightComponent*>(comp);
+		switch (lightComp->Type)
 		{
-			case LightComponent::LightType::DirectionalLight:	lightComp.LightSource = CreateRef<DirectionalLight>(*std::static_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::PointLight:			lightComp.LightSource = CreateRef<PointLight>(*std::static_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::SpotLight:			lightComp.LightSource = CreateRef<SpotLight>(*std::static_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
-			default: break;
+			case LightComponent::LightType::DirectionalLight:	lightComp->LightSource = CreateRef<DirectionalLight>(*std::static_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::PointLight:			lightComp->LightSource = CreateRef<PointLight>(*std::static_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
+			case LightComponent::LightType::SpotLight:			lightComp->LightSource = CreateRef<SpotLight>(*std::static_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
 		}
 	}
 
-	void LightComponentHelper::OnComponentDestroy()
+	void LightComponentHelper::OnComponentDestroy(IComponent* comp)
 	{
-		GetOwnerEntity()->RemoveComponentIfExist<BillboardComponent>();
+		comp->OwnerEntity.RemoveComponentIfExist<BillboardComponent>();
 	}
 
-	void LightComponentHelper::OnComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void LightComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		if (dataId == GetDataIdByName<LightComponent>("Range"))
+		if (fieldID == GetFieldIDByName<LightComponent>("Type"))
 		{
-			GetOwnerEntity()->UpdateBounds();
+			InitLight(&comp->OwnerEntity);
+		}
+		else if (fieldID == GetFieldIDByName<LightComponent>("Range"))
+		{
+			comp->OwnerEntity.UpdateBounds();
+		}
+		else if (fieldID == GetFieldIDByName<LightComponent>("ShadowType"))
+		{
+			const auto* lightComp = static_cast<LightComponent*>(comp);
+			lightComp->LightSource->OnShadowTypeChanged();
 		}
 	}
 
-	void LightComponentHelper::PostComponentDataValueEditChange(U32 dataId, std::any oldValue, I32 elementIndex)
+	void LightComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
 	{
-		if (dataId == GetDataIdByName<LightComponent>("Type"))
+		// Create light instance when light type is loaded so that light specific data can be deserialized properly
+		if (fieldID == GetFieldIDByName<LightComponent>("Type"))
 		{
-			InitLight();
+			InitLight(&comp->OwnerEntity);
 		}
-		else if (dataId == GetDataIdByName<LightComponent>("Range"))
+		else if (fieldID == GetFieldIDByName<LightComponent>("ShadowType"))
 		{
-			GetOwnerEntity()->UpdateBounds();
-		}
-	}
-
-	void LightComponentHelper::PostDataDeserialize(U32 dataId)
-	{
-		// Create light instance when light type is loaded so that light specific data can be deserizlized properly
-		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
-		if (dataId == GetDataIdByName<LightComponent>("Type"))
-		{
-			lightComp.GetHelper<LightComponentHelper>()->InitLight();
+			const auto* lightComp = static_cast<LightComponent*>(comp);
+			lightComp->LightSource->OnShadowTypeChanged();
 		}
 	}
 
-	BoxSphereBounds LightComponentHelper::GetBounds()
+	BoxSphereBounds LightComponentHelper::GetBounds(IComponent* comp)
 	{
-		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
-		auto& transformComp = GetOwnerEntity()->GetComponent<TransformComponent>();
-		const float range = lightComp.Type == LightComponent::LightType::DirectionalLight ? 0.0f : lightComp.LightSource->GetRange();
-		const Sphere sphere{ transformComp.Translation, range * (lightComp.Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
+		const auto* lightComp = static_cast<LightComponent*>(comp);
+		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
+		const float range = lightComp->Type == LightComponent::LightType::DirectionalLight ? 0.0f : lightComp->LightSource->GetRange();
+		const Sphere sphere{ transformComp.Translation, range * (lightComp->Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
 		return sphere;
 	}
 
-	void LightComponentHelper::InitLight() const
+	void LightComponentHelper::InitLight(Entity* entity) const
 	{
-		auto& lightComp = GetOwnerEntity()->GetComponent<LightComponent>();
-		auto& billboardComp = GetOwnerEntity()->GetComponent<BillboardComponent>();
+		auto& lightComp = entity->GetComponent<LightComponent>();
+		auto& billboardComp = entity->GetComponent<BillboardComponent>();
 		switch (lightComp.Type)
 		{
 			case LightComponent::LightType::DirectionalLight:
-				lightComp.LightSource = CreateRef<DirectionalLight>(GetOwnerEntity()->GetScene());
+				lightComp.LightSource = CreateRef<DirectionalLight>(entity->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
 				break;
 			case LightComponent::LightType::PointLight:
-				lightComp.LightSource = CreateRef<PointLight>(GetOwnerEntity()->GetScene());
+				lightComp.LightSource = CreateRef<PointLight>(entity->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
 				break;
 			case LightComponent::LightType::SpotLight:
-				lightComp.LightSource = CreateRef<SpotLight>(GetOwnerEntity()->GetScene());
+				lightComp.LightSource = CreateRef<SpotLight>(entity->GetScene());
 				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
-				break;
-			default:
 				break;
 		}
 	}

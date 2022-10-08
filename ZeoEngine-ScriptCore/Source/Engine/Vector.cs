@@ -84,4 +84,50 @@
         }
 
     }
+
+    public struct Vector4
+    {
+        public float X, Y, Z, W;
+
+        public static Vector4 Black = new Vector4(0, 0, 0, 1);
+        public static Vector4 White = new Vector4(1, 1, 1, 1);
+        public static Vector4 Grey = new Vector4(0.5f, 0.5f, 0.5f, 0.5f);
+        public static Vector4 Red = new Vector4(1, 0, 0, 1);
+        public static Vector4 Green = new Vector4(0, 1, 0, 1);
+        public static Vector4 Blue = new Vector4(0, 0, 1, 1);
+        public static Vector4 Yellow = new Vector4(1, 1, 0, 1);
+
+        public Vector4(float scalar)
+        {
+            X = scalar;
+            Y = scalar;
+            Z = scalar;
+            W = scalar;
+        }
+
+        public Vector4(float x, float y, float z, float w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
+
+        public static Vector4 operator+(Vector4 lhs, Vector4 rhs)
+        {
+            return new Vector4(lhs.X + rhs.X, lhs.Y + rhs.Y, lhs.Z + rhs.Z, lhs.W + rhs.W);
+        }
+
+        public static Vector4 operator-(Vector4 lhs, Vector4 rhs)
+        {
+            return new Vector4(lhs.X - rhs.X, lhs.Y - rhs.Y, lhs.Z - rhs.Z, lhs.W - rhs.W);
+        }
+
+        public static Vector4 operator*(Vector4 vector, float scalar)
+        {
+            return new Vector4(vector.X * scalar, vector.Y * scalar, vector.Z * scalar, vector.W * scalar);
+        }
+
+    }
+
 }

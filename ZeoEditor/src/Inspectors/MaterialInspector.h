@@ -4,7 +4,7 @@
 
 namespace ZeoEngine {
 
-	struct DynamicUniformDataBase;
+	struct DynamicUniformFieldBase;
 
 	class MaterialInspector : public AssetInspector
 	{
@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw(Entity entity) override;
 
 	private:
-		void DrawUniformData(const Ref<DynamicUniformDataBase>& data) const;
+		void DrawFieldWidget(const Ref<DynamicUniformFieldBase>& field) const;
 	};
 
 }

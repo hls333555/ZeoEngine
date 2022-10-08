@@ -3,7 +3,6 @@
 
 #include <stb_image.h>
 
-#include "Engine/Utils/PathUtils.h"
 #include "Platform/OpenGL/OpenGLUtils.h"
 
 namespace ZeoEngine {
@@ -27,7 +26,7 @@ namespace ZeoEngine {
 
 		if (type != SamplerType::None)
 		{
-			m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+			ChangeSampler(type);
 		}
 	}
 
@@ -41,20 +40,6 @@ namespace ZeoEngine {
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
 		glDeleteTextures(1, &m_RendererID);
-	}
-
-	void OpenGLTexture2D::SetData(void* data, U32 size)
-	{
-		// Bytes per pixel
-		U32 bpp = 0;
-		switch (m_DataFormat)
-		{
-			case GL_RGB:	bpp = 3; break;
-			case GL_RGBA:	bpp = 4; break;
-		}
-		ZE_CORE_ASSERT(bpp != 0, "Data format must be RGB or RGBA!");
-		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
 	void OpenGLTexture2D::Invalidate()
@@ -80,10 +65,10 @@ namespace ZeoEngine {
 			m_Format = TextureFormat::R8;
 			break;
 		case 3:
-			m_Format = m_bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8;
+			m_Format = IsSRGB() ? TextureFormat::SRGB8 : TextureFormat::RGB8;
 			break;
 		case 4:
-			m_Format = m_bIsSRGB ? TextureFormat::SRGBA8 : TextureFormat::RGBA8;
+			m_Format = IsSRGB() ? TextureFormat::SRGBA8 : TextureFormat::RGBA8;
 			m_bHasAlpha = true;
 			break;
 		default:
@@ -96,7 +81,7 @@ namespace ZeoEngine {
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 
 		m_MipmapLevels = static_cast<U32>(floor(log2(std::max(width, height))));
-		if (!m_bShouldGenerateMipmaps || m_MipmapLevels == 0)
+		if (!ShouldGenerateMipmaps() || m_MipmapLevels == 0)
 		{
 			m_MipmapLevels = 1;
 		}
@@ -119,6 +104,20 @@ namespace ZeoEngine {
 		stbi_image_free(data);
 	}
 
+	void OpenGLTexture2D::SetData(void* data, U32 size)
+	{
+		// Bytes per pixel
+		U32 bpp = 0;
+		switch (m_DataFormat)
+		{
+			case GL_RGB:	bpp = 3; break;
+			case GL_RGBA:	bpp = 4; break;
+		}
+		ZE_CORE_ASSERT(bpp != 0, "Data format must be RGB or RGBA!");
+		ZE_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+	}
+
 	void OpenGLTexture2D::Bind() const
 	{
 		if (!m_BindingSlot)
@@ -128,9 +127,9 @@ namespace ZeoEngine {
 		}
 
 		glBindTextureUnit(*m_BindingSlot, m_RendererID);
-		if (m_Sampler)
+		if (const auto& sampler = GetSampler())
 		{
-			m_Sampler->Bind(*m_BindingSlot);
+			sampler->Bind(*m_BindingSlot);
 		}
 	}
 
@@ -148,20 +147,19 @@ namespace ZeoEngine {
 		}
 
 		glBindTextureUnit(*m_BindingSlot, 0);
-		if (m_Sampler)
+		if (const auto& sampler = GetSampler())
 		{
-			m_Sampler->Unbind(*m_BindingSlot);
+			sampler->Unbind(*m_BindingSlot);
 		}
 	}
 
 	OpenGLTexture2DArray::OpenGLTexture2DArray(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
-		: m_ArraySize(arraySize)
+		: m_Width(width)
+		, m_Height(height)
+		, m_ArraySize(arraySize)
 		, m_Format(format)
 		, m_BindingSlot(bindingSlot)
 	{
-		m_Width = width;
-		m_Height = height;
-
 		m_InternalFormat = OpenGLUtils::ToGLTextureInternalFormat(format);
 		m_DataFormat = OpenGLUtils::ToGLTextureFormat(format);
 
@@ -177,7 +175,7 @@ namespace ZeoEngine {
 
 		if (type != SamplerType::None)
 		{
-			m_Sampler = SamplerLibrary::GetOrAddSampler(type);
+			ChangeSampler(type);
 		}
 
 		m_TextureViews.resize(arraySize);
@@ -192,6 +190,11 @@ namespace ZeoEngine {
 	{
 		glDeleteTextures(1, &m_RendererID);
 		glDeleteTextures(m_ArraySize, m_TextureViews.data());
+	}
+
+	void OpenGLTexture2DArray::Invalidate()
+	{
+		// TODO:
 	}
 
 	// TODO:
@@ -218,9 +221,9 @@ namespace ZeoEngine {
 		}
 
 		glBindTextureUnit(*m_BindingSlot, m_RendererID);
-		if (m_Sampler)
+		if (const auto& sampler = GetSampler())
 		{
-			m_Sampler->Bind(*m_BindingSlot);
+			sampler->Bind(*m_BindingSlot);
 		}
 	}
 
@@ -238,9 +241,9 @@ namespace ZeoEngine {
 		}
 
 		glBindTextureUnit(*m_BindingSlot, 0);
-		if (m_Sampler)
+		if (const auto& sampler = GetSampler())
 		{
-			m_Sampler->Unbind(*m_BindingSlot);
+			sampler->Unbind(*m_BindingSlot);
 		}
 	}
 

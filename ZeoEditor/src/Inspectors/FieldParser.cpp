@@ -1,11 +1,11 @@
-#include "Inspectors/DataParser.h"
+#include "Inspectors/FieldParser.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/Utils/ReflectionUtils.h"
 
 namespace ZeoEngine {
 
-	bool DataParser::ShouldHideData(entt::meta_data data, entt::meta_any& instance)
+	bool FieldParser::ShouldHideField(entt::meta_data data, entt::meta_any& instance)
 	{
 		auto bIsHiddenInEditor = ReflectionUtils::DoesPropertyExist(Reflection::HiddenInEditor, data);
 		if (bIsHiddenInEditor) return true;
@@ -23,12 +23,12 @@ namespace ZeoEngine {
 		return *shouldHide;
 	}
 
-	void DataParser::ClearCache()
+	void FieldParser::ClearCache()
 	{
 		m_HideConditionBuffers.clear();
 	}
 
-	void DataParser::ParseHideCondition(entt::meta_data data, entt::meta_any& instance, const std::string& hideConditionStr, const char* operatorToken, std::optional<bool>& shouldHide)
+	void FieldParser::ParseHideCondition(entt::meta_data data, entt::meta_any& instance, const std::string& hideConditionStr, const char* operatorToken, std::optional<bool>& shouldHide)
 	{
 		// The string has been successfully parsed already, just return
 		if (shouldHide) return;

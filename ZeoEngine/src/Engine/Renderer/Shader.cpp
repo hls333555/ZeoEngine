@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Shader.h"
 
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
@@ -65,9 +66,21 @@ namespace ZeoEngine {
 		}
 	}
 
+	void ShaderInstance::Bind() const
+	{
+		const auto shader = GetShader();
+		shader->SetActiveRendererIDByID(m_ShaderVariantID);
+		shader->Bind();
+	}
+
+	Ref<Shader> ShaderInstance::GetShader() const
+	{
+		return AssetLibrary::LoadAsset<Shader>(m_ShaderAsset);
+	}
+
 	void ShaderInstance::SetShaderVariantByMacro(const std::string& name, U32 value)
 	{
-		const auto variant = m_Shader->GetVariantByID(m_ShaderVariantID);
+		const auto variant = GetShader()->GetVariantByID(m_ShaderVariantID);
 		ZE_CORE_ASSERT(variant);
 		// Fetch current macro combination and update it with our value to generate the new variant ID
 		ShaderVariantData tempData(variant->Data->Macros);

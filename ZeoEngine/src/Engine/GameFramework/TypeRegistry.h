@@ -37,24 +37,17 @@ namespace ZeoEngine {
 			}
 		}
 
-		template<auto Data, typename... Property>
-		RegisterComponent& Data(const char* name, Property... properties)
+		template<auto Field, typename... Property>
+		RegisterComponent& Field(const char* name, Property... properties)
 		{
-			m_MetaFactory.data<Data, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
+			m_MetaFactory.data<Field, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
 			return *this;
 		}
 
-		template<auto Setter, auto Getter, typename... Property>
-		RegisterComponent& Data(const char* name, Property... properties)
+		template<bool IsGetter, auto Getter, typename... Property>
+		RegisterComponent& Field(const char* name, Property... properties)
 		{
-			if constexpr (std::is_same_v<decltype(Setter), std::nullptr_t>)
-			{
-				m_MetaFactory.data<Setter, Getter, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
-			}
-			else
-			{
-				m_MetaFactory.data<Setter, Getter, entt::as_is_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
-			}
+			m_MetaFactory.data<nullptr, Getter, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
 			return *this;
 		}
 
@@ -78,13 +71,12 @@ namespace ZeoEngine {
 		RegisterEnum()
 			: m_MetaFactory(entt::meta<Enum>())
 		{
-			m_MetaFactory.func<&Reflection::set_enum_value_for_seq<Enum>, entt::as_void_t>("set_enum_value_for_seq"_hs);
 		}
 
-		template<auto Data, typename... Property>
-		RegisterEnum& Data(const char* name, Property... properties)
+		template<auto Field, typename... Property>
+		RegisterEnum& Field(const char* name, Property... properties)
 		{
-			m_MetaFactory.data<Data>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
+			m_MetaFactory.data<Field>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
 			return *this;
 		}
 
@@ -110,15 +102,15 @@ namespace ZeoEngine {
 		{
 		}
 
-		template<auto Data, typename... Property>
-		RegisterStruct& Data(const char* name, Property... properties)
+		template<auto Field, typename... Property>
+		RegisterStruct& Field(const char* name, Property... properties)
 		{
-			m_MetaFactory.data<Data, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
+			m_MetaFactory.data<Field, entt::as_ref_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
 			return *this;
 		}
 
 		template<auto Setter, auto Getter, typename... Property>
-		RegisterStruct& Data(const char* name, Property... properties)
+		RegisterStruct& Field(const char* name, Property... properties)
 		{
 			m_MetaFactory.data<Setter, Getter, entt::as_is_t>(entt::hashed_string(name)).props(std::make_pair(Reflection::Name, name), std::forward<Property>(properties)...);
 			return *this;
@@ -132,8 +124,11 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Init();
+
+	private:
 		static void RegisterBasicTypes();
 		static void RegisterComponents();
+		static void RegisterComponentHelpers();
 	};
 
 }

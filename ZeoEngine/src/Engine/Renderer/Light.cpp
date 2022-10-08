@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Light.h"
 
+#include "Engine/Renderer/RenderPass.h"
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Math/Math.h"
@@ -13,12 +14,11 @@ namespace ZeoEngine {
 		return Math::GetForwardVector(rotation);
 	}
 
-	void DirectionalLight::SetShadowType(ShadowType type)
+	void DirectionalLight::OnShadowTypeChanged() const
 	{
-		Light::SetShadowType(type);
-
 		const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(GetScene(), "ScreenSpaceShadow");
 		const auto shadowShader = shadowPass->GetShadowShader();
-		shadowShader->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(type));
+		shadowShader->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(GetShadowType()));
 	}
+
 }

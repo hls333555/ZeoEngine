@@ -70,10 +70,10 @@ namespace ZeoEngine {
 		const auto& GetMeshEntries() const { return m_Entries; }
 		U32 GetMeshCount() const { return static_cast<U32>(m_Entries.size()); }
 
-		auto& GetDefaultMaterials() { return m_MaterialSlots; }
-		void SetDefaultMaterial(U32 index, const Ref<Material>& material);
+		auto& GetDefaultMaterialAssets() { return m_MaterialAssets; }
+		void SetDefaultMaterialAsset(U32 index, AssetHandle materialAsset);
 		const auto& GetMaterialNames() const { return m_MaterialNames; }
-		U32 GetMaterialCount() const { return static_cast<U32>(m_MaterialSlots.size()); }
+		U32 GetMaterialCount() const { return static_cast<U32>(m_MaterialAssets.size()); }
 
 		U32 GetVertexCount() const { return m_VertexCount; }
 		U32 GetIndexCount() const { return m_IndexCount; }
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 		Ref<VertexArray> m_VAO;
 		U32 m_VertexCount = 0, m_IndexCount = 0;
 		std::vector<MeshEntry> m_Entries;
-		std::vector<Ref<Material>> m_MaterialSlots;
+		std::vector<AssetHandle> m_MaterialAssets;
 		std::vector<std::string> m_MaterialNames;
 		BoxSphereBounds m_Bounds;
 	};
@@ -108,11 +108,11 @@ namespace ZeoEngine {
 		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
-		auto& GetMaterials() { return m_Materials; }
-		void SetMaterial(U32 index, const Ref<Material>& material);
-		void OnMaterialChanged(U32 index, Ref<Material>& oldMaterial);
+		auto& GetMaterialAssets() { return m_MaterialAssets; }
+		void SetMaterial(U32 index, AssetHandle material);
+		void OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset);
 
-		void SubmitTechniques(MeshEntryInstance& entryInstance);
+		void SubmitTechniques(MeshEntryInstance& entryInstance) const;
 		void SubmitAllTechniques();
 
 		void Submit(const Mat4& transform, I32 entityID);
@@ -131,6 +131,6 @@ namespace ZeoEngine {
 		ModelData m_ModelBuffer;
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 		std::vector<MeshEntryInstance> m_EntryInstances;
-		std::vector<Ref<Material>> m_Materials;
+		std::vector<AssetHandle> m_MaterialAssets;
 	};
 }

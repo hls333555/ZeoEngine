@@ -5,6 +5,7 @@
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Core/ReflectionCore.h"
 #include "Engine/Math/BoxSphereBounds.h"
+#include "Engine/GameFramework/ComponentHelpers.h"
 
 namespace ZeoEngine {
 
@@ -20,12 +21,13 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
 			T& comp = GetScene()->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			comp.OwnerEntity = *this;
+			const U32 compID = entt::type_hash<T>::value();
 			// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
-			AddComponentId(entt::type_hash<T>::value());
-			comp.CreateHelper(this);
-			if (comp.ComponentHelper)
+			AddComponentID(compID);
+			if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compID))
 			{
-				comp.ComponentHelper->OnComponentAdded(false);
+				helper->OnComponentAdded(&comp, false);
 				UpdateBounds();
 				GetScene()->m_Registry.on_destroy<T>().template connect<&Reflection::on_destroy<T>>();
 			}
@@ -36,7 +38,7 @@ namespace ZeoEngine {
 		auto RemoveComponent()
 		{
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			RemoveComponentId(entt::type_hash<T>::value());
+			RemoveComponentID(entt::type_hash<T>::value());
 			UpdateBounds();
 			return GetScene()->m_Registry.remove<T>(m_EntityHandle);
 		}
@@ -46,7 +48,7 @@ namespace ZeoEngine {
 		{
 			if (HasComponent<T>())
 			{
-				RemoveComponentId(entt::type_hash<T>::value());
+				RemoveComponentID(entt::type_hash<T>::value());
 				UpdateBounds();
 				return GetScene()->m_Registry.remove<T>(m_EntityHandle);
 			}
@@ -76,13 +78,13 @@ namespace ZeoEngine {
 		UUID GetUUID() const;
 		const std::string& GetName() const;
 		Mat4 GetTransform() const;
-		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
+		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale) const;
 		const Vec3& GetTranslation() const;
-		void SetTranslation(const Vec3& translation);
-		const Vec3& GetRotation() const;
-		void SetRotation(const Vec3& rotation);
+		void SetTranslation(const Vec3& translation) const;
+		Vec3 GetRotation() const;
+		void SetRotation(const Vec3& rotation) const;
 		const Vec3& GetScale() const;
-		void SetScale(const Vec3& scale);
+		void SetScale(const Vec3& scale) const;
 		Vec3 GetForwardVector() const;
 		Vec3 GetRightVector() const;
 		Vec3 GetUpVector() const;
@@ -103,17 +105,17 @@ namespace ZeoEngine {
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	public:
-		entt::meta_any AddComponentById(entt::id_type compId, bool bIsDeserialize = false);
-		void RemoveComponentById(entt::id_type compId);
-		entt::meta_any GetComponentById(entt::id_type compId) const;
-		bool HasComponentById(entt::id_type compId) const;
-		entt::meta_any GetOrAddComponentById(entt::id_type compId, bool bIsDeserialize = false);
-		void CopyAllComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIds = {});
-		void CopyComponentById(entt::id_type compId, Entity srcEntity);
+		entt::meta_any AddComponentByID(U32 compID, bool bIsDeserialize = false);
+		void RemoveComponentByID(U32 compID);
+		entt::meta_any GetComponentByID(U32 compID) const;
+		bool HasComponentByID(U32 compID) const;
+		entt::meta_any GetOrAddComponentByID(U32 compID, bool bIsDeserialize = false);
+		void CopyAllComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs = {});
+		void CopyComponentByID(U32 compID, Entity srcEntity);
 
-		const std::vector<U32>& GetOrderedComponentIds() const;
-		void AddComponentId(U32 Id);
-		void RemoveComponentId(U32 Id);
+		const std::vector<U32>& GetOrderedComponentIDs() const;
+		void AddComponentID(U32 id);
+		void RemoveComponentID(U32 id);
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };

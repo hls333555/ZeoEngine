@@ -80,14 +80,14 @@ namespace ZeoEngine {
 		return AssetLibrary::LoadAsset<Mesh>("assets/meshes/Plane.fbx.zasset");
 	}
 
-	void Mesh::SetDefaultMaterial(U32 index, const Ref<Material>& material)
+	void Mesh::SetDefaultMaterialAsset(U32 index, AssetHandle materialAsset)
 	{
-		if (index < 0 || index >= m_MaterialSlots.size()) return;
+		if (index < 0 || index >= m_MaterialAssets.size()) return;
 
-		const auto& oldMaterial = m_MaterialSlots[index];
-		if (material == oldMaterial) return;
+		const AssetHandle oldMaterial = m_MaterialAssets[index];
+		if (materialAsset == oldMaterial) return;
 
-		m_MaterialSlots[index] = material;
+		m_MaterialAssets[index] = materialAsset;
 	}
 
 	void Mesh::LoadFromMeshScene(const aiScene* meshScene)
@@ -122,11 +122,11 @@ namespace ZeoEngine {
 	void Mesh::LoadMeshEntries(const aiScene* meshScene)
 	{
 		// Init material slots with default materials
-		m_MaterialSlots.reserve(meshScene->mNumMaterials);
+		m_MaterialAssets.reserve(meshScene->mNumMaterials);
 		m_MaterialNames.reserve(meshScene->mNumMaterials);
 		for (U32 i = 0; i < meshScene->mNumMaterials; ++i)
 		{
-			m_MaterialSlots.emplace_back(Material::GetDefaultMaterial());
+			m_MaterialAssets.emplace_back(Material::GetDefaultMaterial()->GetHandle());
 			m_MaterialNames.emplace_back(meshScene->mMaterials[i]->GetName().C_Str());
 		}
 
@@ -193,18 +193,19 @@ namespace ZeoEngine {
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
 		// Copy default materials
-		m_Materials = mesh->GetDefaultMaterials();
+		m_MaterialAssets = mesh->GetDefaultMaterialAssets();
 		const auto& entries = m_MeshPtr->GetMeshEntries();
 		// Allocate space first so that every element's address remains unchanged
 		m_EntryInstances.reserve(entries.size());
 		for (const auto& entry : entries)
 		{
-			m_EntryInstances.emplace_back(sceneContext, entry, m_Materials[entry.MaterialIndex], mesh->GetVAO(), m_ModelUniformBuffer, bIsDeserialize);
+			const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entry.MaterialIndex]);
+			m_EntryInstances.emplace_back(sceneContext, entry, material, mesh->GetVAO(), m_ModelUniformBuffer, bIsDeserialize);
 		}
 	}
 
 	MeshInstance::MeshInstance(const MeshInstance& other)
-		: m_MeshPtr(other.m_MeshPtr), m_Materials(other.m_Materials)
+		: m_MeshPtr(other.m_MeshPtr), m_MaterialAssets(other.m_MaterialAssets)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
 		const auto& entries = m_MeshPtr->GetMeshEntries();
@@ -214,7 +215,8 @@ namespace ZeoEngine {
 		for (SizeT i = 0; i < size; ++i)
 		{
 			const auto& entry = entries[i];
-			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, m_Materials[entry.MaterialIndex], m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
+			const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entry.MaterialIndex]);
+			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, material, m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
 		}
 	}
 
@@ -224,36 +226,36 @@ namespace ZeoEngine {
 		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 	}
 
-	void MeshInstance::SetMaterial(U32 index, const Ref<Material>& material)
+	void MeshInstance::SetMaterial(U32 index, AssetHandle material)
 	{
-		if (index < 0 || index >= m_Materials.size()) return;
+		if (index < 0 || index >= m_MaterialAssets.size()) return;
 
-		auto& oldMaterial = m_Materials[index];
+		const AssetHandle oldMaterial = m_MaterialAssets[index];
 		if (material == oldMaterial) return;
 
-		m_Materials[index] = material;
+		m_MaterialAssets[index] = material;
 		OnMaterialChanged(index, oldMaterial);
 	}
 
-	void MeshInstance::OnMaterialChanged(U32 index, Ref<Material>& oldMaterial)
+	void MeshInstance::OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset)
 	{
 		for (auto& entryInstance : m_EntryInstances)
 		{
 			if (entryInstance.EntryPtr->MaterialIndex == index)
 			{
-				if (oldMaterial)
+				if (const auto lastMaterial = AssetLibrary::LoadAsset<Material>(lastMaterialAsset))
 				{
 					// Disconnect callback on old material for all referenced instances
-					oldMaterial->m_OnMaterialInitialized.disconnect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
+					lastMaterial->m_OnMaterialInitialized.disconnect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
 				}
 				SubmitTechniques(entryInstance);
 			}
 		}
 	}
 
-	void MeshInstance::SubmitTechniques(MeshEntryInstance& entryInstance)
+	void MeshInstance::SubmitTechniques(MeshEntryInstance& entryInstance) const
 	{
-		auto& material = m_Materials[entryInstance.EntryPtr->MaterialIndex];
+		const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entryInstance.EntryPtr->MaterialIndex]);
 		if (!material) return;
 
 		entryInstance.BindAndSubmitTechniques(material);

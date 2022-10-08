@@ -5,101 +5,123 @@
 
 namespace ZeoEngine {
 
-	void DynamicUniformNonMacroDataBase::ApplyInternal(void* valuePtr, const Ref<Material>& material) const
+	void DynamicUniformNonMacroFieldBase::ApplyInternal(const void* value, const Ref<Material>& material) const
 	{
-		if (!valuePtr) return;
+		if (!value) return;
 
 		auto& buffers = material->GetDynamicUniformBuffers();
-		auto& datas = material->GetDynamicUniformBufferDatas();
-		std::copy(reinterpret_cast<char*>(valuePtr), reinterpret_cast<char*>(valuePtr) + Size, datas[Binding] + Offset);
-		buffers[Binding]->SetData(datas[Binding]);
+		auto& dataContainer = material->GetDynamicUniformBufferDataContainer();
+		std::copy(static_cast<const char*>(value), static_cast<const char*>(value) + Size, dataContainer[Binding] + Offset);
+		buffers[Binding]->SetData(dataContainer[Binding]);
 	}
 
-	void DynamicUniformMacroDataBase::ApplyInternal(bool bIsInit, const Ref<Material>& material, U32 value) const
+	void DynamicUniformMacroFieldBase::ApplyInternal(U32 value, const Ref<Material>& material, bool bIsInit) const
 	{
 		material->SetShaderVariantByMacro(MacroName, value);
 		if (!bIsInit)
 		{
-			// We have to cache current values due to later we will reconstruct these dynamic data
-			material->SnapshotDynamicData();
+			// We have to cache current value due to later we will reconstruct these dynamic data
+			material->SnapshotDynamicFields();
 		}
 	}
 
-	void DynamicUniformBoolDataBase::Draw()
+	void DynamicUniformBoolFieldBase::Draw()
 	{
-		bValue = Value;
-		if (ImGui::Checkbox("##Bool", &bValue))
+		bool bValue = Value;
+		if (ImGui::Checkbox("", &bValue))
 		{
 			Value = bValue;
 			Apply();
 		}
 	}
 
-	void DynamicUniformBoolData::Apply(bool bIsInit)
+	void DynamicUniformBoolField::Apply(bool bIsInit)
 	{
-		ApplyInternal(GetValuePtr(), OwnerMaterial);
+		ApplyInternal(GetValueRaw(), OwnerMaterial);
 	}
 
-	void DynamicUniformBoolMacroData::Apply(bool bIsInit)
+	void DynamicUniformBoolMacroField::Apply(bool bIsInit)
 	{
-		ApplyInternal(bIsInit, OwnerMaterial, Value);
+		ApplyInternal(Value, OwnerMaterial, bIsInit);
 	}
 
-	void DynamicUniformColorData::Draw()
+	void DynamicUniformScalarNMacroField::Draw()
 	{
-		bool bChanged = ImGui::ColorEdit4("", glm::value_ptr(Value));
-		// For dragging
-		if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-		{
-			Apply();
-			LastValue = Value;
-		}
-		// For tabbing (we must force set value back in this case or the buffer will be reset on the next draw)
-		if (Input::IsKeyPressed(Key::Tab) && ImGui::GetFocusID() == ImGui::GetItemID())
-		{
-			if (Value != LastValue)
-			{
-				Apply();
-				LastValue = Value;
-			}
-		}
-		// For multi-component widget, tabbing will switch to the next component, so we must handle deactivation to apply cache first
+		const I32 min = 0;
+		const I32 max = ValueRange - 1;
+		void* buffer = bIsEditActive ? &Buffer : &Value;
+		// We do not apply during dragging as reloading and reconstructing widgets are not necessary during this operation
+		ImGui::DragScalarNEx("", ImGuiDataType_S32, buffer, 1, 0.5f, &min, &max, "%d", ImGuiSliderFlags_AlwaysClamp);
 		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
-			if (Value != LastValue)
+			bIsEditActive = false;
+			if (Value != Buffer)
 			{
 				Apply();
-				LastValue = Value;
 			}
 		}
 		if (ImGui::IsItemActivated())
 		{
-			LastValue = Value;
+			bIsEditActive = true;
+			Buffer = Value;
 		}
 	}
 
-	void DynamicUniformColorData::Apply(bool bIsInit)
+	void DynamicUniformScalarNMacroField::Apply(bool bIsInit)
 	{
-		ApplyInternal(GetValuePtr(), OwnerMaterial);
+		if (!bIsInit)
+		{
+			Value = Buffer;
+		}
+		ApplyInternal(Value, OwnerMaterial, bIsInit);
 	}
 
-	void DynamicUniformTexture2DData::Draw()
+	void DynamicUniformColorField::Draw()
 	{
-		// Texture2D asset browser
-		auto [bIsBufferChanged, metadata] = Browser.Draw(Value ? Value->GetHandle() : 0, -1.0f, []() {});
-		if (bIsBufferChanged)
+		float* buffer = bIsEditActive ? glm::value_ptr(Buffer) : glm::value_ptr(Value);
+		bool bChanged = ImGui::ColorEdit4("", buffer);
+		if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 		{
-			Value = metadata ? AssetLibrary::LoadAsset<Texture2D>(metadata->Path) : nullptr;
+			Apply();
+		}
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			bIsEditActive = false;
+			if (Value != Buffer)
+			{
+				Apply();
+			}
+		}
+		if (ImGui::IsItemActivated())
+		{
+			bIsEditActive = true;
+			Buffer = Value;
+		}
+	}
+
+	void DynamicUniformColorField::Apply(bool bIsInit)
+	{
+		if (!bIsInit)
+		{
+			Value = Buffer;
+		}
+		ApplyInternal(GetValueRaw(), OwnerMaterial);
+	}
+
+	void DynamicUniformTexture2DField::Draw()
+	{
+		if (Browser.Draw(Value, 0.0f, []() {}))
+		{
 			Apply();
 		}
 	}
 
-	void DynamicUniformTexture2DData::Bind() const
+	void DynamicUniformTexture2DField::Bind() const
 	{
-		if (Value)
+		if (const auto texture = AssetLibrary::LoadAsset<Texture2D>(Value))
 		{
-			Value->SetBindingSlot(Binding);
-			Value->Bind();
+			texture->SetBindingSlot(Binding);
+			texture->Bind();
 		}
 		else // Bind default texture
 		{
@@ -110,7 +132,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DynamicUniformTexture2DData::Apply(bool bIsInit)
+	void DynamicUniformTexture2DField::Apply(bool bIsInit)
 	{
 		Bind();
 	}
@@ -122,9 +144,9 @@ namespace ZeoEngine {
 
 	Material::~Material()
 	{
-		for (const auto& [binding, uniformBufferDatas] : m_DynamicUniformBufferDatas)
+		for (const auto& [binding, uniformBufferData] : m_DynamicUniformBufferDataContainer)
 		{
-			delete[] uniformBufferDatas;
+			delete[] uniformBufferData;
 		}
 		GetShader()->m_OnAssetReloaded.disconnect(this);
 	}
@@ -134,50 +156,50 @@ namespace ZeoEngine {
 		return AssetLibrary::LoadAsset<Material>(GetTemplatePath());
 	}
 
-	void Material::SetShader(const Ref<Shader>& shader)
+	void Material::SetShaderAsset(AssetHandle shaderAsset)
 	{
-		if (const auto& lastShader = GetShader())
+		const auto lastShaderAsset = GetShaderAsset();
+		if (shaderAsset != lastShaderAsset)
 		{
-			lastShader->m_OnAssetReloaded.disconnect(this);
+			m_ShaderInstance->SetShader(shaderAsset);
+			OnShaderChanged(shaderAsset, lastShaderAsset);
 		}
-		m_ShaderInstance->SetShader(shader);
-		GetShader()->m_OnAssetReloaded.connect<&Material::ReloadShaderDataAndDeserialize>(this);
-		ReloadShaderDataAndDeserialize();
 	}
 
-	void Material::SnapshotDynamicData()
+	void Material::SnapshotDynamicFields()
 	{
 		MaterialSerializer ms;
-		ms.Serialize(m_SnapshotDynamicData, SharedFromThis());
+		ms.Serialize(m_DynamicFieldCache, SharedFromThis());
 	}
 
-	void Material::RestoreSnapshotDynamicData()
+	void Material::RestoreDynamicFields()
 	{
 		MaterialSerializer ms;
-		ms.Deserialize(m_SnapshotDynamicData, SharedFromThis());
-		m_SnapshotDynamicData.reset();
+		ms.Deserialize(m_DynamicFieldCache, SharedFromThis());
+		m_DynamicFieldCache.reset();
 	}
 
-	void Material::ReloadShaderDataAndApplyDynamicData()
+	void Material::ReloadShaderDataAndApplyDynamicFields()
 	{
 		if (!GetShader()->GatherReflectionData(GetShaderVariant())) return;
 
 		InitMaterialData();
-		RestoreSnapshotDynamicData();
-		ApplyDynamicData();
+		RestoreDynamicFields();
+		ApplyDynamicFields();
 	}
 
 	void Material::ReloadShaderDataAndDeserialize()
 	{
-		if (!GetShader()->IsVariantValid(GetShaderVariant()))
+		const auto shader = GetShader();
+		if (!shader->IsVariantValid(GetShaderVariant()))
 		{
 			// Set default shader variant if current one is not valid due to
 			// 1. material asset does not have a ShaderVariant data to deserialize
 			// 2. shader content has changed so that current variant no longer exists
-			SetShaderVariant(GetShader()->GetDefaultVariant()->ID);
+			SetShaderVariant(shader->GetDefaultVariant()->ID);
 		}
 
-		if (!GetShader()->GatherReflectionData(GetShaderVariant())) return;
+		if (!shader->GatherReflectionData(GetShaderVariant())) return;
 
 		InitMaterialData();
 		auto* serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
@@ -194,25 +216,25 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Material::ApplyDynamicData() const
+	void Material::ApplyDynamicFields() const
 	{
-		for (const auto& data : m_DynamicData)
+		for (const auto& field : m_DynamicFields)
 		{
-			data->Apply(true);
+			field->Apply(true);
 		}
 	}
 
 	void Material::InitMaterialData()
 	{
 		m_Techniques.clear();
-		m_DynamicData.clear();
-		m_DynamicDataCategoryLocations.clear();
-		m_DynamicBindableData.clear();
+		m_DynamicFields.clear();
+		m_DynamicFieldCategoryLocations.clear();
+		m_DynamicBindableFields.clear();
 		m_DynamicUniformBuffers.clear();
-		m_DynamicUniformBufferDatas.clear();
+		m_DynamicUniformBufferDataContainer.clear();
 
 		InitUniformBuffers();
-		ConstructDynamicData();
+		ConstructDynamicFields();
 		InitRenderTechniques();
 
 		m_OnMaterialInitializedDel.publish(SharedFromThis());
@@ -222,13 +244,13 @@ namespace ZeoEngine {
 	{
 		for (const auto& [binding, uniformBlockSize] : GetShader()->GetUniformBlockSizes())
 		{
-			if (m_DynamicUniformBufferDatas.find(binding) != m_DynamicUniformBufferDatas.end())
+			if (m_DynamicUniformBufferDataContainer.find(binding) != m_DynamicUniformBufferDataContainer.end())
 			{
-				delete[] m_DynamicUniformBufferDatas[binding];
+				delete[] m_DynamicUniformBufferDataContainer[binding];
 			}
 			char* bufferData = new char[uniformBlockSize];
 			memset(bufferData, 0, uniformBlockSize);
-			m_DynamicUniformBufferDatas[binding] = bufferData;
+			m_DynamicUniformBufferDataContainer[binding] = bufferData;
 
 			auto uniformBuffer = UniformBuffer::Create(static_cast<U32>(uniformBlockSize), binding);
 			// Upload default 0 values
@@ -237,49 +259,50 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Material::ConstructDynamicData()
+	void Material::ConstructDynamicFields()
 	{
-		for (const auto& reflectionData : GetShader()->GetShaderReflectionMacroData())
+		const auto shader = GetShader();
+		for (const auto& reflectionData : shader->GetShaderReflectionMacroFields())
 		{
 			switch (reflectionData->GetType())
 			{
-				case ShaderReflectionType::Bool:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformBoolMacroData>(*reflectionData, SharedFromThis()));
+				case ShaderReflectionFieldType::Bool:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformBoolMacroField>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Int:
+				case ShaderReflectionFieldType::Int:
 					{
-						const auto& intData = dynamic_cast<ShaderReflectionIntMacroData&>(*reflectionData);
-						m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNMacroData>(intData, SharedFromThis(), ImGuiDataType_S32, 0, intData.ValueRange - 1, "%d"));
+						const auto& intData = dynamic_cast<ShaderReflectionIntMacroField&>(*reflectionData);
+						m_DynamicFields.emplace_back(CreateRef<DynamicUniformScalarNMacroField>(intData, SharedFromThis(), intData.ValueRange));
 					}
 					break;
 				default:
 					break;
 			}
 		}
-		for (const auto& reflectionData : GetShader()->GetShaderReflectionData())
+		for (const auto& reflectionData : shader->GetShaderReflectionFields())
 		{
 			switch (reflectionData->GetType())
 			{
-				case ShaderReflectionType::Bool:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformBoolData>(*reflectionData, SharedFromThis()));
+				case ShaderReflectionFieldType::Bool:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformBoolField>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Int:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<I32>>(*reflectionData, SharedFromThis(), ImGuiDataType_S32, INT32_MIN, INT32_MAX, "%d"));
+				case ShaderReflectionFieldType::Int:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformScalarNField<I32>>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Float:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				case ShaderReflectionFieldType::Float:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformScalarNField<float>>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Vec2:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<Vec2, 2, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				case ShaderReflectionFieldType::Vec2:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformScalarNField<Vec2, 2, float>>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Vec3:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformScalarNData<Vec3, 3, float>>(*reflectionData, SharedFromThis(), ImGuiDataType_Float, -FLT_MAX, FLT_MAX, "%.3f"));
+				case ShaderReflectionFieldType::Vec3:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformScalarNField<Vec3, 3, float>>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Vec4:
-					m_DynamicData.emplace_back(CreateRef<DynamicUniformColorData>(*reflectionData, SharedFromThis()));
+				case ShaderReflectionFieldType::Vec4:
+					m_DynamicFields.emplace_back(CreateRef<DynamicUniformColorField>(*reflectionData, SharedFromThis()));
 					break;
-				case ShaderReflectionType::Texture2D:
-					m_DynamicBindableData.emplace_back(CreateRef<DynamicUniformTexture2DData>(*reflectionData, SharedFromThis()));
+				case ShaderReflectionFieldType::Texture2D:
+					m_DynamicBindableFields.emplace_back(CreateRef<DynamicUniformTexture2DField>(*reflectionData, SharedFromThis()));
 					break;
 				default:
 					break;
@@ -287,23 +310,23 @@ namespace ZeoEngine {
 		}
 
 		// Sort data by category
-		std::sort(m_DynamicData.begin(), m_DynamicData.end(), [](const auto& lhs, const auto& rhs)
+		std::sort(m_DynamicFields.begin(), m_DynamicFields.end(), [](const auto& lhs, const auto& rhs)
 		{
 			return lhs->Category < rhs->Category;
 		});
 
-		// Record category location in m_DynamicData
+		// Record category location in m_DynamicFields
 		std::string lastCategory;
-		for (SizeT i = 0; i < m_DynamicData.size(); ++i)
+		for (SizeT i = 0; i < m_DynamicFields.size(); ++i)
 		{
-			const std::string& category = m_DynamicData[i]->Category;
+			const std::string& category = m_DynamicFields[i]->Category;
 			if (category != lastCategory)
 			{
-				m_DynamicDataCategoryLocations.emplace_back(i);
+				m_DynamicFieldCategoryLocations.emplace_back(i);
 			}
 			lastCategory = category;
 		}
-		m_DynamicDataCategoryLocations.emplace_back(m_DynamicData.size());
+		m_DynamicFieldCategoryLocations.emplace_back(m_DynamicFields.size());
 	}
 
 	void Material::InitRenderTechniques()
@@ -326,15 +349,27 @@ namespace ZeoEngine {
 				{
 					step.AddBindable(uniformBuffer);
 				}
-				for (const auto& uniformBindableData : m_DynamicBindableData)
+				for (const auto& uniformBindableField : m_DynamicBindableFields)
 				{
-					step.AddBindable(uniformBindableData);
+					step.AddBindable(uniformBindableField);
 				}
 				step.AddBindable(m_ShaderInstance);
 				shade.AddStep(std::move(step));
 			}
 			m_Techniques.emplace_back(std::move(shade));
 		}
+	}
+
+	void Material::OnShaderChanged(AssetHandle shaderAsset, AssetHandle lastShaderAsset)
+	{
+		if (const auto lastShader = AssetLibrary::LoadAsset<Shader>(lastShaderAsset))
+		{
+			lastShader->m_OnAssetReloaded.disconnect(this);
+		}
+		const auto shader = AssetLibrary::LoadAsset<Shader>(shaderAsset);
+		ZE_CORE_ASSERT(shaderAsset); // Setting invalid shader is not allowed
+		shader->m_OnAssetReloaded.connect<&Material::ReloadShaderDataAndDeserialize>(this);
+		ReloadShaderDataAndDeserialize();
 	}
 
 }

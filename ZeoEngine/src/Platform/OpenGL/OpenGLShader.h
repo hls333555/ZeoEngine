@@ -38,8 +38,8 @@ namespace ZeoEngine {
 		virtual void SetFloat4(const std::string& name, const Vec4& value) override;
 		virtual void SetMat4(const std::string& name, const Mat4& value) override;
 
-		virtual const std::vector<Scope<ShaderReflectionNonMacroDataBase>>& GetShaderReflectionData() const override { return m_ShaderReflectionData; }
-		virtual const std::vector<Scope<ShaderReflectionMacroDataBase>>& GetShaderReflectionMacroData() const override { return m_ShaderReflectionMacroData; }
+		virtual const std::vector<Scope<ShaderReflectionNonMacroFieldBase>>& GetShaderReflectionFields() const override { return m_ShaderReflectionFields; }
+		virtual const std::vector<Scope<ShaderReflectionMacroFieldBase>>& GetShaderReflectionMacroFields() const override { return m_ShaderReflectionMacroFields; }
 		virtual const std::unordered_map<U32, SizeT>& GetUniformBlockSizes() const override { return m_UniformBlockSizes; }
 
 		virtual void ClearCache() const override;
@@ -101,16 +101,16 @@ namespace ZeoEngine {
 		std::unordered_set<U32> m_ReflectTexturePropertyBindings;
 		/** Uniform buffer bindings used for reflection filtering */
 		std::unordered_set<U32> m_ReflectUniformBufferPropertyBindings;
-		/** Map from uniform buffer binding to uniform buffer bool variable names. Used for bool reflection */
-		std::unordered_map<U32, std::unordered_set<std::string>> m_UniformBufferBoolVars;
+		/** Map from uniform buffer binding to uniform buffer bool field names. Used for bool reflection */
+		std::unordered_map<U32, std::unordered_set<std::string>> m_UniformBufferBoolFields;
 		/** Map from shader stage to its start line number */
 		std::unordered_map<GLenum, SizeT> m_ShaderSourceRelativeLineNums;
 
 		/** Preprocessed shader sources, map from shader stage to source */
 		std::unordered_map<GLenum, std::string> m_ShaderSources;
 
-		std::vector<Scope<ShaderReflectionNonMacroDataBase>> m_ShaderReflectionData;
-		std::vector<Scope<ShaderReflectionMacroDataBase>> m_ShaderReflectionMacroData;
+		std::vector<Scope<ShaderReflectionNonMacroFieldBase>> m_ShaderReflectionFields;
+		std::vector<Scope<ShaderReflectionMacroFieldBase>> m_ShaderReflectionMacroFields;
 		/** Map from uniform block binding to uniform buffer size */
 		std::unordered_map<U32, SizeT> m_UniformBlockSizes;
 

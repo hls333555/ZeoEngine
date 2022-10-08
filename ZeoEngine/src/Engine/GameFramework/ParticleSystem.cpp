@@ -177,7 +177,7 @@ namespace ZeoEngine {
 
 		if (particleComp.ParticleTemplateAsset)
 		{
-			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.ParticleTemplateAsset, particleComp.ComponentHelper->GetOwnerEntity(), particleComp.PositionOffset);
+			auto psInstance = CreateRef<ParticleSystemEnableShared>(particleComp.ParticleTemplateAsset, &particleComp.OwnerEntity, particleComp.PositionOffset);
 			if (particleComp.Instance)
 			{
 				// Get old template from instance as template in component may have been updated

@@ -150,9 +150,9 @@ namespace ZeoEngine {
 		}
 
 		template<typename Func>
-		void ForEachAssetByTypeID(AssetTypeID typeId, Func func)
+		void ForEachAssetByTypeID(AssetTypeID typeID, Func func)
 		{
-			if (const auto it = m_AssetMetadatasByID.find(typeId); it != m_AssetMetadatasByID.cend())
+			if (const auto it = m_AssetMetadatasByID.find(typeID); it != m_AssetMetadatasByID.cend())
 			{
 				for (const auto& assetMetadata : it->second)
 				{

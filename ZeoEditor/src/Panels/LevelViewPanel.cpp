@@ -168,8 +168,8 @@ namespace ZeoEngine {
 				Math::DecomposeTransform(entityTransform, outTranslation, outRotation, outScale);
 
 				// This delta rotation prevents gimbal lock situation
-				Vec3 deltaRotation = outRotation - transformComp.Rotation;
-				selectedEntity.SetTransform(outTranslation, transformComp.Rotation + deltaRotation, outScale);
+				Vec3 deltaRotation = outRotation - transformComp.GetRotationInRadians();
+				selectedEntity.SetTransform(outTranslation, transformComp.GetRotationInRadians() + deltaRotation, outScale);
 			}
 		}
 	}

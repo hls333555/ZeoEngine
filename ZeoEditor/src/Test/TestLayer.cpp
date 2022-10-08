@@ -2,8 +2,6 @@
 
 #include <doctest.h>
 
-#include "Inspectors/DataWidget.h"
-
 namespace ZeoEngine {
 
 	TestLayer::TestLayer()
@@ -17,24 +15,9 @@ namespace ZeoEngine {
 		context.run();
 	}
 
-	TEST_CASE("Test data widget reflection")
+	TEST_CASE("Test field widget reflection")
 	{
-		entt::registry reg;
-		auto entity = reg.create();
-		auto& testComp = reg.emplace<TestComponent>(entity);
-		entt::meta_any compInstance{ entt::forward_as_meta(testComp) }; // NOTE: We must use entt::forward_as_meta to create aliases for unmanaged objects
-		const auto compType = compInstance.type();
-		std::deque<entt::meta_data> datas;
-		for (const auto data : compType.data())
-		{
-			datas.push_front(data);
-		}
-		for (const auto data : datas)
-		{
-			DataSpec dataSpec{ data, compInstance, compInstance, false, false };
-			std::vector<DataStackSpec> dataStack;
-			ConstructBasicDataWidget(dataSpec, data.type(), true)->Test(reg, entity, dataStack);
-		}
+
 	}
 
 }

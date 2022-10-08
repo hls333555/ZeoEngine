@@ -27,37 +27,25 @@ namespace entt {
 
 namespace ZeoEngine::Reflection {
 
-	enum class BasicMetaType
-	{
-		NONE,
-		STRUCT, // Custom struct
-		SEQCON, // Sequence container
-		ASSCON, // Associative container
-		BOOL, I8, I32, I64, UI8, UI32, UI64,
-		FLOAT, DOUBLE,
-		ENUM,
-		STRING, VEC2, VEC3, VEC4,
-		TEXTURE, PARTICLE, MESH, MATERIAL, SHADER,
-	};
-
 	enum PropertyType
 	{
-		Name,						// [value_type: const char*] Name of component or data.
-		Inherent,					// [key_only] This component cannot be added or removed within editor.
-		Tooltip,					// [value_type: const char*] Tooltip of component or data.
-		Struct,						// [key_only] This data has subdatas and will display a special TreeNode.
-		HideComponentHeader,		// [key_only] This component will not display a collapsing header.
-		Category,					// [value_type: const char*] Category of component or data.
-		HiddenInEditor,				// [key_only] Should hide this data in editor?
-		HideCondition,				// [value_type: const char*] Hide this data if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
+		Name,						// [value_type: const char*] Name of component or field.
+		Inherent,					// [key_only] This component cannot be added or removed within the editor.
+		Tooltip,					// [value_type: const char*] Tooltip of component or field.
+		Struct,						// [key_only] This field has sub-fields and will display a special TreeNode.
+		HideComponentHeader,		// [key_only] This component will not display the collapsing header.
+		Category,					// [value_type: const char*] Category of component or field.
+		HiddenInEditor,				// [key_only] Should hide this field in the editor?
+		HideCondition,				// [value_type: const char*] Hide this field if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
 		Transient,					// [key_only] If set, this component or data will not get serialized.
 
 		DragSensitivity,			// [value_type: float] Speed of dragging.
 		ClampMin,					// [value_type: type_dependent] Min value.
 		ClampMax,					// [value_type: type_dependent] Max value.
-		ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, inputted value will not get clamped.
+		ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, input value will not get clamped.
 		FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
 		CustomElementName,			// [key_only] Container's element name are retrieved from ComponentHelper.
+		AssetType,					// [value_type: AssetTypeID] Type ID of asset.
 
 	};
 
@@ -91,19 +79,17 @@ namespace ZeoEngine::Reflection {
 	template<typename T>
 	void on_destroy(entt::registry& registry, entt::entity entity)
 	{
-		registry.get<T>(entity).ComponentHelper->OnComponentDestroy();
+		T& comp = registry.get<T>(entity);
+		if (auto* helper = ComponentHelperRegistry::GetComponentHelper(entt::type_hash<T>::value()))
+		{
+			helper->OnComponentDestroy(&comp);
+		}
 	}
 
 	template<typename T>
 	void bind_on_destroy(entt::registry& registry)
 	{
 		registry.on_destroy<T>().template connect<&on_destroy<T>>();
-	}
-
-	template<typename T>
-	void set_enum_value_for_seq(entt::meta_any& instance, const entt::meta_any& newValue)
-	{
-		instance.cast<T&>() = newValue.cast<T>();
 	}
 
 }

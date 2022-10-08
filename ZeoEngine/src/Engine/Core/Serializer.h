@@ -127,99 +127,82 @@ namespace ZeoEngine {
 	class ComponentSerializer
 	{
 	public:
-		void Serialize(YAML::Node& node, entt::meta_any instance);
-		void Deserialize(const YAML::Node& node, entt::meta_any instance);
+		void Serialize(YAML::Node& compNode, entt::meta_any compInstance);
+		void Deserialize(const YAML::Node& compNode, entt::meta_any compInstance);
 
 	private:
-		/** Reverse data order so that serialized and deserialized datas are in correct order. */
-		void PreprocessDatas(entt::meta_any& instance);
+		/** Reverse order so that serialized and deserialized fields are in correct order. */
+		std::deque<entt::meta_data> PreprocessFields(const entt::meta_any& compInstance);
 
-		// NOTE: Changing instance to const& will cause assertion but don't know why...
-		void EvaluateSerializeData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
-		void EvaluateSerializeSequenceContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance);
-		void EvaluateSerializeAssociativeContainerData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance);
-		void EvaluateSerializeStructData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
+		void EvaluateSerializeField(YAML::Node& node, const entt::meta_any& fieldInstance, const char* fieldName, bool bIsSeqElement);
+		void EvaluateSerializeSequenceContainerField(YAML::Node& node, const entt::meta_any& seqInstance, const char* fieldName, bool bIsSeqElement);
 
 		template<typename T>
-		void SerializeData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement)
+		void SerializeField(YAML::Node& node, const entt::meta_any& fieldInstance, const char* fieldName, bool bIsSeqElement)
 		{
+			const auto value = fieldInstance.cast<T>();
 			if (bIsSeqElement)
 			{
-				const auto elementValue = instance.cast<T>();
 				if constexpr (std::is_same_v<T, U8>)
 				{
 					// This '+' can force output U8 as number
-					node.push_back(+elementValue);
+					node.push_back(+value);
 				}
 				else
 				{
-					node.push_back(elementValue);
+					node.push_back(value);
 				}
 			}
 			else
 			{
-				const char* dataName = ReflectionUtils::GetMetaObjectName(data);
-				const auto dataValue = data.get(instance).cast<T>();
 				if constexpr (std::is_same_v<T, U8>)
 				{
-					node[dataName] = +dataValue;
+					node[fieldName] = +value;
 				}
 				else
 				{
-					node[dataName] = dataValue;
+					node[fieldName] = value;
 				}
 			}
 		}
-		void SerializeEnumData(YAML::Node& node, const entt::meta_data data, entt::meta_any& instance, bool bIsSeqElement);
+		void SerializeEnumField(YAML::Node& node, const entt::meta_any& enumInstance, const char* fieldName, bool bIsSeqElement);
 
-		void EvaluateDeserializeData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement);
-		void EvaluateDeserializeSequenceContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node);
-		void EvaluateDeserializeAssociativeContainerData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node);
-		void EvaluateDeserializeStructData(const entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement);
+		void EvaluateDeserializeField(const YAML::Node& fieldNode, entt::meta_any& fieldInstance);
+		void EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, entt::meta_any& seqInstance);
 
 		template<typename T>
-		void DeserializeData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement)
+		void DeserializeField(const YAML::Node& fieldNode, entt::meta_any& fieldInstance) const
 		{
-			const auto& dataValue = node.as<T>();
-			if (bIsSeqElement)
-			{
-				instance.cast<T&>() = dataValue;
-			}
-			else
-			{
-				data.set(instance, dataValue);
-			}
+			const auto& value = fieldNode.as<T>();
+			fieldInstance.cast<T&>() = value;
 		}
-		void DeserializeEnumData(entt::meta_data data, entt::meta_any& instance, const YAML::Node& node, bool bIsSeqElement);
-
-	private:
-		std::deque<entt::meta_data> m_PreprocessedDatas;
+		void DeserializeEnumField(const YAML::Node& enumNode, entt::meta_any& enumInstance);
 	};
 
 	class MaterialSerializer
 	{
 	public:
-		void Serialize(YAML::Node& node, const Ref<Material>& material);
-		void Deserialize(const YAML::Node& node, const Ref<Material>& material);
+		void Serialize(YAML::Node& node, const Ref<Material>& material) const;
+		void Deserialize(const YAML::Node& node, const Ref<Material>& material) const;
 
 	private:
-		void EvaluateSerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
+		void EvaluateSerializeField(YAML::Node& node, const Ref<DynamicUniformFieldBase>& field) const;
 
 		template<typename T>
-		void SerializeData(YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const
+		void SerializeField(YAML::Node& node, const Ref<DynamicUniformFieldBase>& field) const
 		{
-			const auto& dataName = uniform->Name;
-			const auto& dataValue = *static_cast<T*>(uniform->GetValuePtr());
-			node[dataName] = dataValue;
+			const auto& fieldName = field->Name;
+			const auto& value = *static_cast<T*>(field->GetValueRaw());
+			node[fieldName] = value;
 		}
 
-		void EvaluateDeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& data);
+		void EvaluateDeserializeData(const YAML::Node& fieldNode, const Ref<DynamicUniformFieldBase>& field) const;
 
 		template<typename T>
-		void DeserializeData(const YAML::Node& node, const Ref<DynamicUniformDataBase>& uniform) const
+		void DeserializeField(const YAML::Node& fieldNode, const Ref<DynamicUniformFieldBase>& field) const
 		{
-			const auto& dataValue = node.as<T>();
-			*static_cast<T*>(uniform->GetValuePtr()) = dataValue;
+			const auto& value = fieldNode.as<T>();
+			*static_cast<T*>(field->GetValueRaw()) = value;
 		}
 	};
 
@@ -232,8 +215,8 @@ namespace ZeoEngine {
 		static void DeserializeRuntime();
 
 	private:
-		static void SerializeEntity(YAML::Node& node, const Entity entity);
-		static void DeserializeEntity(const YAML::Node& node, const Ref<Scene>& scene);
+		static void SerializeEntity(YAML::Node& entityNode, const Entity entity);
+		static void DeserializeEntity(const YAML::Node& entityNode, const Ref<Scene>& scene);
 	};
 
 }

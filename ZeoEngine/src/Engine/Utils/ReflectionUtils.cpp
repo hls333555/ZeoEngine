@@ -1,67 +1,55 @@
 #include "ZEpch.h"
 #include "Engine/Utils/ReflectionUtils.h"
 
-#include "Engine/Renderer/Texture.h"
-#include "Engine/Renderer/Mesh.h"
-#include "Engine/Renderer/Shader.h"
-#include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Asset/Asset.h"
 
 namespace ZeoEngine {
 
 	using namespace entt::literals;
 
-	Reflection::BasicMetaType ReflectionUtils::EvaluateType(entt::meta_type type)
+	FieldType ReflectionUtils::MetaTypeToFieldType(entt::meta_type type)
 	{
 		if (type.is_enum())
 		{
-			return Reflection::BasicMetaType::ENUM;
+			return FieldType::Enum;
 		}
-		else if (type.is_sequence_container())
+		if (type.is_sequence_container())
 		{
-			return Reflection::BasicMetaType::SEQCON;
+			return FieldType::SeqCon;
 		}
-		if (DoesPropertyExist(Reflection::Struct, type))
+		if (type.is_associative_container())
 		{
-			return Reflection::BasicMetaType::STRUCT;
+			return FieldType::AssCon;
 		}
-		else if (type.is_associative_container())
+		switch (type.info().hash())
 		{
-			return Reflection::BasicMetaType::ASSCON;
-		}
-		else
-		{
-			switch (type.info().hash())
-			{
-				// Integral
-				case entt::type_hash<bool>::value():					return Reflection::BasicMetaType::BOOL;
-				case entt::type_hash<I8>::value():						return Reflection::BasicMetaType::I8;
-				case entt::type_hash<I32>::value():						return Reflection::BasicMetaType::I32;
-				case entt::type_hash<I64>::value():						return Reflection::BasicMetaType::I64;
-				case entt::type_hash<U8>::value():						return Reflection::BasicMetaType::UI8;
-				case entt::type_hash<U32>::value():						return Reflection::BasicMetaType::UI32;
-				case entt::type_hash<U64>::value():						return Reflection::BasicMetaType::UI64;
-				// Floating point
-				case entt::type_hash<float>::value():					return Reflection::BasicMetaType::FLOAT;
-				case entt::type_hash<double>::value():					return Reflection::BasicMetaType::DOUBLE;
-				// Class
-				case entt::type_hash<std::string>::value():				return Reflection::BasicMetaType::STRING;
-				case entt::type_hash<Vec2>::value():					return Reflection::BasicMetaType::VEC2;
-				case entt::type_hash<Vec3>::value():					return Reflection::BasicMetaType::VEC3;
-				case entt::type_hash<Vec4>::value():					return Reflection::BasicMetaType::VEC4;
-				case entt::type_hash<Ref<Texture2D>>::value():			return Reflection::BasicMetaType::TEXTURE;
-				case entt::type_hash<Ref<ParticleTemplate>>::value():	return Reflection::BasicMetaType::PARTICLE;
-				case entt::type_hash<Ref<Mesh>>::value():				return Reflection::BasicMetaType::MESH;
-				case entt::type_hash<Ref<Material>>::value():			return Reflection::BasicMetaType::MATERIAL;
-				case entt::type_hash<Ref<Shader>>::value():				return Reflection::BasicMetaType::SHADER;
-			}
+			// Integral
+			case entt::type_hash<bool>::value():		return FieldType::Bool;
+			case entt::type_hash<I8>::value():			return FieldType::I8;
+			case entt::type_hash<I16>::value():			return FieldType::I16;
+			case entt::type_hash<I32>::value():			return FieldType::I32;
+			case entt::type_hash<I64>::value():			return FieldType::I64;
+			case entt::type_hash<U8>::value():			return FieldType::U8;
+			case entt::type_hash<U16>::value():			return FieldType::U16;
+			case entt::type_hash<U32>::value():			return FieldType::U32;
+			case entt::type_hash<U64>::value():			return FieldType::U64;
+			// Floating point
+			case entt::type_hash<float>::value():		return FieldType::Float;
+			case entt::type_hash<double>::value():		return FieldType::Double;
+			// Class
+			case entt::type_hash<std::string>::value():	return FieldType::String;
+			case entt::type_hash<Vec2>::value():		return FieldType::Vec2;
+			case entt::type_hash<Vec3>::value():		return FieldType::Vec3;
+			case entt::type_hash<Vec4>::value():		return FieldType::Vec4;
+			case entt::type_hash<AssetHandle>::value():	return FieldType::Asset;
 		}
 
-		return Reflection::BasicMetaType::NONE;
+		return FieldType::None;
 	}
 
-	bool ReflectionUtils::DoesTypeContainData(entt::id_type typeId)
+	bool ReflectionUtils::DoesTypeContainData(U32 typeID)
 	{
-		const auto datas = entt::resolve(typeId).data();
+		const auto datas = entt::resolve(typeID).data();
 		return datas.begin() != datas.end();
 	}
 
@@ -78,9 +66,9 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	const char* ReflectionUtils::GetComponentDisplayNameFull(U32 compId)
+	const char* ReflectionUtils::GetComponentDisplayNameFull(U32 compID)
 	{
-		const auto compType = entt::resolve(compId);
+		const auto compType = entt::resolve(compID);
 		const char* compIcon = compType.func("get_icon"_hs).invoke({}).cast<const char*>();
 		const char* compName = GetMetaObjectName(compType);
 		static char fullCompName[128];
@@ -118,11 +106,6 @@ namespace ZeoEngine {
 	void ReflectionUtils::BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry)
 	{
 		compType.func("bind_on_destroy"_hs).invoke({}, entt::forward_as_meta(registry));
-	}
-
-	void ReflectionUtils::SetEnumValueForSeq(entt::meta_any& instance, entt::meta_any& newValue)
-	{
-		instance.type().func("set_enum_value_for_seq"_hs).invoke({}, entt::forward_as_meta(instance), entt::forward_as_meta(newValue));
 	}
 
 }

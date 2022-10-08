@@ -4,7 +4,6 @@
 #include <imgui_internal.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Inspectors/DataWidget.h"
 
 namespace ZeoEngine {
 
@@ -13,25 +12,25 @@ namespace ZeoEngine {
 		ImGui::Separator();
 
 		const auto& materialComp = entity.GetComponent<MaterialPreviewComponent>();
-		const auto& material = materialComp.MaterialAsset;
-		const auto& dynamicData = material->GetDynamicData();
-		const auto& dynamicDataCategoryLocations = material->GetDynamicDataCategoryLocations();
-		const auto& dynamicBindableData = material->GetDynamicBindableData();
+		const auto& material = materialComp.LoadedMaterial;
+		const auto& dynamicFields = material->GetDynamicFields();
+		const auto& dynamicFieldCategoryLocations = material->GetDynamicFieldCategoryLocations();
+		const auto& dynamicBindableFields = material->GetDynamicBindableFields();
 
+		const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */;
 		// Draw resources
 		{
 			// Resource tree
-			bool bIsTreeExpanded = ImGui::TreeNodeEx("Resource",
-			   ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
+			bool bIsTreeExpanded = ImGui::TreeNodeEx("Resource", flags);
 			if (bIsTreeExpanded)
 			{
 				// Sync table column separator with the component inspector
 				ImGui::PushOverrideID(GetTableID());
 				if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 				{
-					for (const auto& data : dynamicBindableData)
+					for (const auto& field : dynamicBindableFields)
 					{
-						DrawUniformData(data);
+						DrawFieldWidget(field);
 					}
 
 					ImGui::EndTable();
@@ -40,25 +39,24 @@ namespace ZeoEngine {
 			}
 		}
 
-		// Draw uniform block datas
+		// Draw uniform block fields
 		{
-			for (SizeT i = 0; i < dynamicDataCategoryLocations.size() - 1; ++i)
+			for (SizeT i = 0; i < dynamicFieldCategoryLocations.size() - 1; ++i)
 			{
-				const auto location = dynamicDataCategoryLocations[i];
+				const auto location = dynamicFieldCategoryLocations[i];
 				// Uniform block tree
-				bool bIsTreeExpanded = ImGui::TreeNodeEx(dynamicData[location]->Category.c_str(),
-					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Selected | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_NoTreePushOnOpen/* Prevent indent of next row, which will affect column. */);
+				bool bIsTreeExpanded = ImGui::TreeNodeEx(dynamicFields[location]->Category.c_str(), flags);
 
 				// Sync table column separator with the component inspector
 				ImGui::PushOverrideID(GetTableID());
 				if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 				{
-					const auto nextLocation = dynamicDataCategoryLocations[i + 1];
+					const auto nextLocation = dynamicFieldCategoryLocations[i + 1];
 					for (SizeT j = location; j < nextLocation; ++j)
 					{
 						if (bIsTreeExpanded)
 						{
-							DrawUniformData(dynamicData[j]);
+							DrawFieldWidget(dynamicFields[j]);
 						}
 					}
 
@@ -68,29 +66,30 @@ namespace ZeoEngine {
 			}
 		}
 
-		// Certain macro value has been changed, reload dynamic data
-		if (material->IsSnapshotDynamicDataAvailable())
+		// Certain macro value has been changed, reload dynamic fields
+		if (material->IsDynamicFieldCacheAvailable())
 		{
-			material->ReloadShaderDataAndApplyDynamicData();
+			material->ReloadShaderDataAndApplyDynamicFields();
 		}
 	}
 
-	void MaterialInspector::DrawUniformData(const Ref<DynamicUniformDataBase>& data) const
+	void MaterialInspector::DrawFieldWidget(const Ref<DynamicUniformFieldBase>& field) const
 	{
 		ImGui::TableNextColumn();
 
-		const char* name = data->Name.c_str();
-		// Push name as id
+		const char* name = field->Name.c_str();
+		// Push name as ID
 		ImGui::PushID(name);
 		{
 			// Uniform name
-			ImGui::TreeNodeEx(name, DefaultDataTreeNodeFlags);
+			const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_SpanAvailWidth;
+			ImGui::TreeNodeEx(name, flags);
 			// Switch to the right column
 			ImGui::TableNextColumn();
 			// Align widget width to the right side
 			ImGui::SetNextItemWidth(-1.0f);
 			// Draw widget
-			data->Draw();
+			field->Draw();
 		}
 		ImGui::PopID();
 	}
