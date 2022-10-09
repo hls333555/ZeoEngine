@@ -129,6 +129,7 @@ namespace ZeoEngine {
 		static void RegisterBasicTypes();
 		static void RegisterComponents();
 		static void RegisterComponentHelpers();
+		static void RegisterComponentSerializerExtenders();
 	};
 
 }

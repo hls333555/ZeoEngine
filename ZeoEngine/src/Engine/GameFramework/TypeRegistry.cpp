@@ -12,6 +12,7 @@ namespace ZeoEngine {
 		RegisterBasicTypes();
 		RegisterComponents();
 		RegisterComponentHelpers();
+		RegisterComponentSerializerExtenders();
 	}
 
 	void TypeRegistry::RegisterBasicTypes()
@@ -265,6 +266,11 @@ namespace ZeoEngine {
 		ComponentHelperRegistry::RegisterComponentHelper<MaterialPreviewComponentHelper, MaterialPreviewComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<TexturePreviewComponentHelper, TexturePreviewComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<LightComponentHelper, LightComponent>();
+	}
+
+	void TypeRegistry::RegisterComponentSerializerExtenders()
+	{
+		ComponentSerializerExtenderRegistry::RegisterComponentSerializerExtender<ScriptComponentSerializerExtender, ScriptComponent>();
 	}
 
 }

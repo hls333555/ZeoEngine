@@ -3,6 +3,7 @@
 #include <yaml-cpp/yaml.h>
 #include <deque>
 
+#include "Serializer.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Material.h"
@@ -123,6 +124,80 @@ namespace YAML {
 }
 
 namespace ZeoEngine {
+
+	class ScriptFieldInstance;
+
+	class ComponentSerializerExtenderRegistry
+	{
+	public:
+		template<typename ComponentSerializerExtender, typename Component>
+		static void RegisterComponentSerializerExtender()
+		{
+			AddComponentSerializerExtender(entt::type_hash<Component>::value(), CreateScope<ComponentSerializerExtender>());
+		}
+		static class ComponentSerializerExtenderBase* GetComponentSerializerExtender(U32 compID);
+
+	private:
+		static void AddComponentSerializerExtender(U32 compID, Scope<ComponentSerializerExtenderBase> extender);
+	};
+
+	class ComponentSerializerExtenderBase
+	{
+	public:
+		virtual ~ComponentSerializerExtenderBase() = default;
+
+		virtual void Serialize(YAML::Node& compNode, IComponent* comp) = 0;
+		virtual void Deserialize(const YAML::Node& compNode, IComponent* comp) = 0;
+	};
+
+	class ScriptComponentSerializerExtender : public ComponentSerializerExtenderBase
+	{
+	public:
+		virtual void Serialize(YAML::Node& compNode, IComponent* comp) override;
+		virtual void Deserialize(const YAML::Node& compNode, IComponent* comp) override;
+
+	private:
+		void EvaluateSerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const;
+		void EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const;
+
+	private:
+		template<typename T>
+		static void SerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement)
+		{
+			const auto value = fieldInstance->GetValue<T>();
+			const char* fieldName = fieldInstance->GetFieldName();
+			if (bIsSeqElement)
+			{
+				if constexpr (std::is_same_v<T, U8>)
+				{
+					// This '+' can force output U8 as number
+					node.push_back(+value);
+				}
+				else
+				{
+					node.push_back(value);
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<T, U8>)
+				{
+					node[fieldName] = +value;
+				}
+				else
+				{
+					node[fieldName] = value;
+				}
+			}
+		}
+
+		template<typename T>
+		void DeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const
+		{
+			const auto& value = fieldNode.as<T>();
+			fieldInstance->SetValue(value);
+		}
+	};
 
 	class ComponentSerializer
 	{

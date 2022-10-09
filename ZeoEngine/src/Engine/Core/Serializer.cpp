@@ -7,9 +7,118 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/ComponentHelpers.h"
+#include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Engine/Utils/ReflectionUtils.h"
 
 namespace ZeoEngine {
+
+	/** Map from component ID to its serializer extender */
+	static std::unordered_map<U32, Scope<ComponentSerializerExtenderBase>> s_ComponentSerializerExtenders;
+
+	void ComponentSerializerExtenderRegistry::AddComponentSerializerExtender(U32 compID, Scope<ComponentSerializerExtenderBase> extender)
+	{
+		s_ComponentSerializerExtenders[compID] = std::move(extender);
+	}
+
+	ComponentSerializerExtenderBase* ComponentSerializerExtenderRegistry::GetComponentSerializerExtender(U32 compID)
+	{
+		return s_ComponentSerializerExtenders.find(compID) != s_ComponentSerializerExtenders.end() ? s_ComponentSerializerExtenders[compID].get() : nullptr;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// ComponentSerializerExtenders //////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	void ScriptComponentSerializerExtender::Serialize(YAML::Node& compNode, IComponent* comp)
+	{
+		const auto* scriptComp = static_cast<ScriptComponent*>(comp);
+		const auto& className = scriptComp->ClassName;
+		if (ScriptEngine::EntityClassExists(className))
+		{
+			const auto entityID = scriptComp->OwnerEntity.GetUUID();
+			auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
+			for (const auto& [name, field] : entityFields)
+			{
+				// TODO: Do not serialize transient data
+
+				EvaluateSerializeField(compNode, field, false);
+			}
+		}
+	}
+
+	void ScriptComponentSerializerExtender::Deserialize(const YAML::Node& compNode, IComponent* comp)
+	{
+		const auto* scriptComp = static_cast<ScriptComponent*>(comp);
+		const auto& className = scriptComp->ClassName;
+		if (ScriptEngine::EntityClassExists(className))
+		{
+			const auto entityID = scriptComp->OwnerEntity.GetUUID();
+			auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
+			for (const auto& [name, field] : entityFields)
+			{
+				const char* fieldName = field->GetFieldName();
+				const auto& fieldNode = compNode[fieldName];
+				// Evaluate serialized field only
+				if (fieldNode)
+				{
+					EvaluateDeserializeField(fieldNode, field);
+				}
+			}
+		}
+	}
+
+	// TODO: Enum and containers...
+	void ScriptComponentSerializerExtender::EvaluateSerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const
+	{
+		const auto type = fieldInstance->GetFieldType();
+		switch (type)
+		{
+			case FieldType::Bool:	SerializeField<bool>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::I8:		SerializeField<I8>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::U8:		SerializeField<U8>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::I16:	SerializeField<I16>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::U16:	SerializeField<U16>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::I32:	SerializeField<I32>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::U32:	SerializeField<U32>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::I64:	SerializeField<I64>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::U64:	SerializeField<U64>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Float:	SerializeField<float>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Double:	SerializeField<double>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Vec2:	SerializeField<Vec2>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Vec3:	SerializeField<Vec3>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Vec4:	SerializeField<Vec4>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::String:	SerializeField<std::string>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Asset:	SerializeField<AssetHandle>(node, fieldInstance, bIsSeqElement); break;
+			default: ZE_CORE_ASSERT(false);
+		}
+	}
+
+	// TODO: Enum and containers...
+	void ScriptComponentSerializerExtender::EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const
+	{
+		const auto type = fieldInstance->GetFieldType();
+		switch (type)
+		{
+			case FieldType::Bool:	DeserializeField<bool>(fieldNode, fieldInstance); break;
+			case FieldType::I8:		DeserializeField<I8>(fieldNode, fieldInstance); break;
+			case FieldType::U8:		DeserializeField<U8>(fieldNode, fieldInstance); break;
+			case FieldType::I16:	DeserializeField<I16>(fieldNode, fieldInstance); break;
+			case FieldType::U16:	DeserializeField<U16>(fieldNode, fieldInstance); break;
+			case FieldType::I32:	DeserializeField<I32>(fieldNode, fieldInstance); break;
+			case FieldType::U32:	DeserializeField<U32>(fieldNode, fieldInstance); break;
+			case FieldType::I64:	DeserializeField<I64>(fieldNode, fieldInstance); break;
+			case FieldType::U64:	DeserializeField<U64>(fieldNode, fieldInstance); break;
+			case FieldType::Float:	DeserializeField<float>(fieldNode, fieldInstance); break;
+			case FieldType::Double:	DeserializeField<double>(fieldNode, fieldInstance); break;
+			case FieldType::Vec2:	DeserializeField<Vec2>(fieldNode, fieldInstance); break;
+			case FieldType::Vec3:	DeserializeField<Vec3>(fieldNode, fieldInstance); break;
+			case FieldType::Vec4:	DeserializeField<Vec4>(fieldNode, fieldInstance); break;
+			case FieldType::String:	DeserializeField<std::string>(fieldNode, fieldInstance); break;
+			case FieldType::Asset:	DeserializeField<AssetHandle>(fieldNode, fieldInstance); break;
+			default: ZE_CORE_ASSERT(false);
+		}
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// ComponentSerializer ///////////////////////////////////////////////////
@@ -29,6 +138,12 @@ namespace ZeoEngine {
 			auto fieldInstance = data.get(compInstance);
 			const char* fieldName = ReflectionUtils::GetMetaObjectName(data);
 			EvaluateSerializeField(compNode, fieldInstance, fieldName, false);
+		}
+
+		if (auto* extender = ComponentSerializerExtenderRegistry::GetComponentSerializerExtender(compInstance.type().id()))
+		{
+			auto* comp = compInstance.try_cast<IComponent>();
+			extender->Serialize(compNode, comp);
 		}
 	}
 
@@ -117,6 +232,12 @@ namespace ZeoEngine {
 					helper->PostFieldDeserialize(comp, data.id());
 				}
 			}
+		}
+
+		if (auto* extender = ComponentSerializerExtenderRegistry::GetComponentSerializerExtender(compInstance.type().id()))
+		{
+			auto* comp = compInstance.try_cast<IComponent>();
+			extender->Deserialize(compNode, comp);
 		}
 	}
 

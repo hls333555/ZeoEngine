@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		const auto res = DeserializeAsset(metadata->Path);
 		if (!res) return false;
 
-		const auto node = *res;
+		const auto& node = *res;
 		const auto typeID = node["AssetType"].as<AssetTypeID>();
 		const auto handle = node["AssetHandle"].as<AssetHandle>();
 		ZE_CORE_ASSERT(typeID == metadata->TypeID && handle == metadata->Handle);
