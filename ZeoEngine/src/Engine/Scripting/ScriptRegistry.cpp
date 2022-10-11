@@ -30,14 +30,29 @@ namespace ZeoEngine {
 
 	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
 
+	static MonoString* Entity_GetName(UUID entityID)
+	{
+		return Utils::StringToMonoString(ScriptEngine::GetEntityByID(entityID).GetName());
+	}
+
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* compType)
 	{
 		return ScriptEngine::GetEntityByID(entityID).HasComponentByID(Utils::ComponentTypeToID(compType));
 	}
 
-	static MonoString* Entity_GetName(UUID entityID)
+	static U64 Entity_GetEntityByName(MonoString* name)
 	{
-		return Utils::StringToMonoString(ScriptEngine::GetEntityByID(entityID).GetName());
+		char* str = mono_string_to_utf8(name);
+		const Entity entity = ScriptEngine::GetEntityByName(str);
+		mono_free(str);
+		return entity ? entity.GetUUID() : 0;
+	}
+
+	static MonoObject* GetScriptInstance(UUID entityID)
+	{
+		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(entityID);
+		ZE_CORE_ASSERT(scriptInstance);
+		return scriptInstance->GetMonoInstance();
 	}
 
 	static void Entity_GetForwardVector(UUID entityID, Vec3* outForwardVector)
@@ -109,10 +124,12 @@ namespace ZeoEngine {
 	{
 #pragma region Entity
 		ZE_ADD_INTERNAL_CALL(Entity_GetName);
+		ZE_ADD_INTERNAL_CALL(Entity_HasComponent);
+		ZE_ADD_INTERNAL_CALL(Entity_GetEntityByName);
+		ZE_ADD_INTERNAL_CALL(GetScriptInstance);
 		ZE_ADD_INTERNAL_CALL(Entity_GetForwardVector);
 		ZE_ADD_INTERNAL_CALL(Entity_GetRightVector);
 		ZE_ADD_INTERNAL_CALL(Entity_GetUpVector);
-		ZE_ADD_INTERNAL_CALL(Entity_HasComponent);
 #pragma endregion
 
 #pragma region TransformComponent

@@ -11,6 +11,15 @@ namespace ZeoEngine
         internal static extern string Entity_GetName(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Entity_HasComponent(ulong entityID, Type compType);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_GetEntityByName(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern object GetScriptInstance(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_GetForwardVector(ulong entityID, out Vector3 forwardVector);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -18,9 +27,6 @@ namespace ZeoEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_GetUpVector(ulong entityID, out Vector3 upVector);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern bool Entity_HasComponent(ulong entityID, Type compType);
 
         #endregion
 

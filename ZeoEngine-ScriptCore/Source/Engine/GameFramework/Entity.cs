@@ -74,5 +74,20 @@ namespace ZeoEngine
 
             return new T() { Entity = this };
         }
+
+        public Entity GetEntityByName(string name)
+        {
+            ulong entityID = InternalCalls.Entity_GetEntityByName(name);
+            if (entityID == 0) return null;
+
+            return new Entity(entityID);
+        }
+
+        public T As<T>() where T : Entity, new()
+        {
+            object instance = InternalCalls.GetScriptInstance(ID);
+            return instance as T;
+        }
+
     }
 }

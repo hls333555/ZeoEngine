@@ -58,6 +58,7 @@ namespace ZeoEngine {
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 		Entity GetEntityByUUID(UUID uuid);
+		Entity GetEntityByName(std::string_view name);
 		SizeT GetEntityCount() const { return m_Registry.alive(); }
 
 		/** Called after all data have been loaded. */

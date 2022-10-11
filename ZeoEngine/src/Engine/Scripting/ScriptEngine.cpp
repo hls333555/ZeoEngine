@@ -376,6 +376,13 @@ namespace ZeoEngine {
 		return entity;
 	}
 
+	Entity ScriptEngine::GetEntityByName(std::string_view name)
+	{
+		const auto& scene = GetSceneContext();
+		ZE_CORE_ASSERT(scene);
+		return scene->GetEntityByName(name);
+	}
+
 	void ScriptEngine::LoadAssemblyClasses()
 	{
 		s_Data->EntityClasses.clear();
@@ -616,28 +623,28 @@ namespace ZeoEngine {
 	void ScriptFieldInstance::GetRuntimeValueInternal(void* outValue) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-		mono_field_get_value(scriptInstance->GetInstance(), Field->ClassField, outValue);
+		mono_field_get_value(scriptInstance->GetMonoInstance(), Field->ClassField, outValue);
 	}
 
 	void ScriptFieldInstance::GetRuntimeValueInternal(std::string& outValue) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
 		MonoString* monoStr;
-		mono_field_get_value(scriptInstance->GetInstance(), Field->ClassField, &monoStr);
-		outValue = monoStr != nullptr ? mono_string_to_utf8(monoStr) : "";
+		mono_field_get_value(scriptInstance->GetMonoInstance(), Field->ClassField, &monoStr);
+		outValue = monoStr != nullptr ? mono_string_to_utf8(monoStr) : ""; // TODO: mono_free()?
 	}
 
 	void ScriptFieldInstance::SetRuntimeValueInternal(const void* value) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-		mono_field_set_value(scriptInstance->GetInstance(), Field->ClassField, const_cast<void*>(value));
+		mono_field_set_value(scriptInstance->GetMonoInstance(), Field->ClassField, const_cast<void*>(value));
 	}
 
 	void ScriptFieldInstance::SetRuntimeValueInternal(const std::string& value) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
 		MonoString* monoStr = mono_string_new(ScriptEngine::GetAppDomain(), value.c_str());
-		mono_field_set_value(scriptInstance->GetInstance(), Field->ClassField, monoStr);
+		mono_field_set_value(scriptInstance->GetMonoInstance(), Field->ClassField, monoStr);
 	}
 
 	ScriptClass::ScriptClass(std::string nameSpace, std::string className, bool bIsCore)
@@ -678,7 +685,7 @@ namespace ZeoEngine {
 		// Call entity ctor
 		auto entityID = entity.GetUUID();
 		void* param = &entityID;
-		m_ScriptClass->InvokeMethod(GetInstance(), m_Constructor, &param);
+		m_ScriptClass->InvokeMethod(GetMonoInstance(), m_Constructor, &param);
 	}
 
 	ScriptInstance::~ScriptInstance()
@@ -687,7 +694,7 @@ namespace ZeoEngine {
 		m_InstanceHandle = 0;
 	}
 
-	MonoObject* ScriptInstance::GetInstance() const
+	MonoObject* ScriptInstance::GetMonoInstance() const
 	{
 		ZE_CORE_ASSERT(m_InstanceHandle, "Entity has not been instantiated!");
 		return mono_gchandle_get_target(m_InstanceHandle);
@@ -697,7 +704,7 @@ namespace ZeoEngine {
 	{
 		if (m_OnCreateMethod)
 		{
-			m_ScriptClass->InvokeMethod(GetInstance(), m_OnCreateMethod);
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnCreateMethod);
 		}
 	}
 
@@ -706,7 +713,7 @@ namespace ZeoEngine {
 		if (m_OnUpdateMethod)
 		{
 			void* param = &dt;
-			m_ScriptClass->InvokeMethod(GetInstance(), m_OnUpdateMethod, &param);
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnUpdateMethod, &param);
 		}
 	}
 

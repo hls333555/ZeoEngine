@@ -53,6 +53,7 @@ namespace ZeoEngine {
 		static ScriptFieldMap& GetScriptFieldMap(UUID entityID);
 
 		static Entity GetEntityByID(UUID entityID);
+		static Entity GetEntityByName(std::string_view name);
 
 	private:
 		static void InitMono();
@@ -103,7 +104,7 @@ namespace ZeoEngine {
 		~ScriptInstance();
 
 		Ref<ScriptClass> GetScriptClass() const { return m_ScriptClass; }
-		MonoObject* GetInstance() const;
+		MonoObject* GetMonoInstance() const;
 
 		void InvokeOnCreate() const;
 		void InvokeOnUpdate(float dt) const;

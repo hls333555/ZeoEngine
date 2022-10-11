@@ -87,6 +87,19 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	Entity Scene::GetEntityByName(std::string_view name)
+	{
+		Entity entity;
+		ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
+		{
+			if (coreComp.Name == name)
+			{
+				entity = Entity{ entityID, shared_from_this() };
+			}
+		});
+		return entity;
+	}
+
 	void Scene::SortEntities()
 	{
 		// Sort entities by creation index
