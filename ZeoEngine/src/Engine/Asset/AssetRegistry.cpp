@@ -1,7 +1,6 @@
 #include "ZEpch.h"
 #include "Engine/Asset/AssetRegistry.h"
 
-#include "Engine/Core/EngineTypes.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Asset/AssetSerializer.h"
 #include "Engine/Core/ThumbnailManager.h"
@@ -72,12 +71,6 @@ namespace ZeoEngine {
 
 	void AssetRegistry::Init()
 	{
-		std::vector<std::filesystem::path> directoriesToWatch;
-		directoriesToWatch.emplace_back(GetEngineAssetDirectory());
-		directoriesToWatch.emplace_back(GetProjectAssetDirectory());
-		m_FileWatcher = CreateScope<FileWatcher>(std::move(directoriesToWatch), std::chrono::duration<I32, std::milli>(1000));
-		m_FileWatcher->m_OnFileModified.connect<&AssetRegistry::OnAssetModified>(this);
-
 		Timer timer;
 		ConstructPathTree(GetEngineAssetDirectory());
 		ConstructPathTree(GetProjectAssetDirectory());
@@ -322,31 +315,6 @@ namespace ZeoEngine {
 				(((!bIsLhsDirectory && !bIsRhsDirectory) || (bIsLhsDirectory && bIsRhsDirectory)) &&
 				Utils::FileNameToUpperCase(lhs.first) < Utils::FileNameToUpperCase(rhs.first));
 		});
-	}
-
-	void AssetRegistry::OnAssetModified(const std::string& path)
-	{
-		// We should not process reloading on a separate thread as rendering may break
-		m_PendingModifiedAssets.emplace(path);
-	}
-
-	void AssetRegistry::OnUpdate(DeltaTime dt)
-	{
-		ZE_PROFILE_FUNC();
-
-		std::unique_lock<std::mutex> lock(m_Mutex);
-		for (auto it = m_PendingModifiedAssets.begin(); it != m_PendingModifiedAssets.end();)
-		{
-			auto path = *it;
-			// Currently only resource hot-reloading is supported
-			if (PathUtils::GetPathExtension(path) != GetEngineAssetExtension())
-			{
-				path += GetEngineAssetExtension();
-				// FileWatcher uses absolute path
-				AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(path));
-			}
-			it = m_PendingModifiedAssets.erase(it);
-		}
 	}
 
 	Ref<AssetMetadata> AssetRegistry::GetAssetMetadata(const std::string& path) const

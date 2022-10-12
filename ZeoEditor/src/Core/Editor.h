@@ -19,6 +19,7 @@ namespace ZeoEngine {
 	class SceneRenderer;
 	class EditorMenu;
 	class PanelBase;
+	class FileWatcher;
 
 	extern class Editor* g_Editor;
 
@@ -31,9 +32,11 @@ namespace ZeoEngine {
 		~Editor();
 
 		void OnAttach();
-		void OnUpdate(DeltaTime dt) const;
+		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 		void OnEvent(Event& e) const;
+
+		const FileWatcher& GetFileWatcher() const { return *m_FileWatcher; }
 
 		template<typename T, typename ... Args>
 		Ref<T> CreateWorld(std::string worldName, Args&& ... args)
@@ -137,7 +140,16 @@ namespace ZeoEngine {
 		void BuildDockWindows(ImGuiID dockspaceID);
 		void RenderMainMenuBar() const;
 
+		/** Called from file watcher callback on a separate thread. */
+		void OnFileModified(const std::string& path);
+		void HotReloadAsset();
+
 	private:
+		Scope<FileWatcher> m_FileWatcher;
+
+		std::set<std::string> m_PendingReloadResourceAssets;
+		std::mutex m_Mutex;
+
 		std::unordered_map<std::string, Ref<EditorPreviewWorldBase>> m_Worlds;
 
 		std::vector<Scope<EditorMenu>> m_Menus;

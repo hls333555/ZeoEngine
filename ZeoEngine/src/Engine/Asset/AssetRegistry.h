@@ -4,7 +4,6 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/Core/FileWatcher.h"
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Asset/Asset.h"
 #include "Engine/Utils/PathUtils.h"
@@ -93,8 +92,6 @@ namespace ZeoEngine {
 
 		static std::string GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
 		static std::string GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
-
-		void OnUpdate(DeltaTime dt);
 
 		/** Get directory/asset metadata of the specific path. The path should be relative. */
 		template<typename MetadataClass = PathMetadata>
@@ -206,9 +203,6 @@ namespace ZeoEngine {
 		 */
 		void SortPathTree();
 
-		/** Called from file watcher callback on a separate thread. */
-		void OnAssetModified(const std::string& path);
-
 	protected:
 		AssetRegistry() = default;
 
@@ -219,11 +213,6 @@ namespace ZeoEngine {
 		std::unordered_map<std::string, Ref<PathMetadata>> m_PathMetadatas;
 		/** Map from asset type id to list of asset metadata of this type */
 		std::unordered_map<AssetTypeID, std::vector<Ref<AssetMetadata>>> m_AssetMetadatasByID;
-
-		Scope<FileWatcher> m_FileWatcher;
-		/** Stores a series of modified assets to be processed by the main thread */
-		std::set<std::string> m_PendingModifiedAssets;
-		std::mutex m_Mutex;
 	};
 
 }

@@ -11,9 +11,19 @@ namespace ZeoEngine {
 	ScriptInspector::ScriptInspector(U32 compID)
 		: ComponentInspector(compID)
 	{
+		if (auto* reloadDel= ScriptEngine::GetScriptReloadedDelegate())
+		{
+			reloadDel->connect<&ScriptInspector::ClearScriptFieldWidgets>(this);
+		}
 	}
 
-	ScriptInspector::~ScriptInspector() = default;
+	ScriptInspector::~ScriptInspector()
+	{
+		if (auto* reloadDel = ScriptEngine::GetScriptReloadedDelegate())
+		{
+			reloadDel->disconnect<&ScriptInspector::ClearScriptFieldWidgets>(this);
+		}
+	}
 
 	void ScriptInspector::DrawExtraFieldWidgets(Entity entity)
 	{
@@ -48,6 +58,11 @@ namespace ZeoEngine {
 		{
 			m_ScriptFieldWidgets[aggregatedID] = Utils::ConstructFieldWidget<ScriptFieldInstance>(fieldInstance->GetFieldType(), aggregatedID, fieldInstance);
 		}
+	}
+
+	void ScriptInspector::ClearScriptFieldWidgets()
+	{
+		m_ScriptFieldWidgets.clear();
 	}
 
 }

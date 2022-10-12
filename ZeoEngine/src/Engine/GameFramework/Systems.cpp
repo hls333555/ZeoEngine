@@ -107,7 +107,7 @@ namespace ZeoEngine {
 
 	void ScriptSystem::OnRuntimeStart()
 	{
-		ScriptEngine::OnRuntimeStart(GetScene());
+		ScriptEngine::SetSceneContext(GetScene());
 		GetScene()->ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
 		{
 			const Entity entity = { e, GetScene() };
@@ -118,7 +118,7 @@ namespace ZeoEngine {
 
 	void ScriptSystem::OnRuntimeStop()
 	{
-		ScriptEngine::OnRuntimeStop();
+		ScriptEngine::SetSceneContext(GetScene());
 	}
 
 	void NativeScriptSystem::OnUpdateRuntime(DeltaTime dt)

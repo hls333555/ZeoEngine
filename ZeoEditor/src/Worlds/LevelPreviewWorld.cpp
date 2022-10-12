@@ -20,8 +20,9 @@ namespace ZeoEngine {
 	{
 		StopScene();
 		NewScene();
+		Ref<Scene> scene = GetActiveScene();
 		// An empty scene is created every time, so we have to deserialize every time
-		Ref<Level> level = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Force, &GetActiveScene());
+		Ref<Level> level = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Force, &scene);
 		SetAsset(std::move(level));
 		GetActiveScene()->PostLoad();
 	}

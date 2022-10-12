@@ -1,11 +1,9 @@
 #pragma once
 
 #include <entt.hpp>
-#include <mono/metadata/reflection.h>
 
 #include "Engine/Core/ReflectionCore.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Scripting/ScriptRegistry.h"
 
 namespace ZeoEngine {
@@ -31,10 +29,7 @@ namespace ZeoEngine {
 				.func<&Reflection::bind_on_destroy<Component>, entt::as_void_t>("bind_on_destroy"_hs)
 				.func<&Component::GetIcon>("get_icon"_hs);
 
-			if (auto* monoType = mono_reflection_type_from_name(GetMonoComponentName<Component>().data(), ScriptEngine::GetCoreAssemblyImage()))
-			{
-				ScriptRegistry::s_RegisteredMonoComponents[monoType] = entt::type_hash<Component>::value();
-			}
+			ScriptRegistry::RegisterMonoComponent(GetMonoComponentName().data(), entt::type_hash<Component>::value());
 		}
 
 		template<auto Field, typename... Property>
@@ -52,12 +47,12 @@ namespace ZeoEngine {
 		}
 
 	private:
-		template<typename T>
 		std::string GetMonoComponentName()
 		{
-			auto view = entt::type_name<T>::value();
+			auto view = entt::type_name<Component>::value();
 			auto separator = view.find("::");
-			return fmt::format("{}.{}", view.substr(0, separator), view.substr(separator + 2, view.size() - separator));
+			SizeT startPos = 7; // Excluding "struct "
+			return fmt::format("{}.{}", view.substr(startPos, separator - startPos), view.substr(separator + 2, view.size() - separator));
 		}
 
 	private:

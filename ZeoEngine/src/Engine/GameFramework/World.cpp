@@ -3,6 +3,7 @@
 
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Scripting/ScriptEngine.h"
 
 namespace ZeoEngine {
 
@@ -29,6 +30,7 @@ namespace ZeoEngine {
 	void WorldBase::NewScene()
 	{
 		Ref<Scene> scene = CreateScene();
+		ScriptEngine::SetSceneContext(scene);
 		scene->OnAttach(shared_from_this());
 		PostSceneCreate(scene);
 		SetActiveScene(std::move(scene));

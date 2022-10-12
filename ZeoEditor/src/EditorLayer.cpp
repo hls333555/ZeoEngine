@@ -34,7 +34,6 @@ namespace ZeoEngine {
 		Renderer::ResetStats();
 
 		m_Editor->OnUpdate(dt);
-		AssetRegistry::Get().OnUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()

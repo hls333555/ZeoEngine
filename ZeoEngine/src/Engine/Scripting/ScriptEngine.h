@@ -27,13 +27,16 @@ namespace ZeoEngine {
 
 	public:
 		static void Init();
+		static void OnUpdate();
 		static void Shutdown();
 
-		static void LoadAssembly(const std::string& path);
+		static void LoadCoreAssembly(const std::string& path);
 		static void LoadAppAssembly(const std::string& path);
+		static void OnFileModified(const std::string& path);
+		static void ReloadAssembly();
+		static entt::sink<entt::sigh<void()>>* GetScriptReloadedDelegate();
 
-		static void OnRuntimeStart(Ref<Scene> scene);
-		static void OnRuntimeStop();
+		static void SetSceneContext(const Ref<Scene>& scene);
 
 		static MonoDomain* GetAppDomain();
 		static MonoImage* GetCoreAssemblyImage();

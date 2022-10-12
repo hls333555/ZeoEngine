@@ -68,10 +68,10 @@ namespace ZeoEngine {
 
 	public:
 		entt::sink<entt::sigh<void()>> m_OnAssetReloaded{ m_OnAssetReloadedDel };
-		entt::sigh<void()> m_OnAssetReloadedDel;
 
 	private:
 		AssetHandle m_Handle = 0;
+		entt::sigh<void()> m_OnAssetReloadedDel;
 	};
 
 }

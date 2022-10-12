@@ -16,6 +16,7 @@ namespace ZeoEngine {
 	private:
 		virtual void DrawExtraFieldWidgets(Entity entity) override;
 		void DrawScriptFieldWidget(const Ref<ScriptFieldInstance>& fieldInstance);
+		void ClearScriptFieldWidgets();
 
 	private:
 		/** Map from aggregated field ID to script field widget */

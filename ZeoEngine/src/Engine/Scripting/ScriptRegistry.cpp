@@ -12,13 +12,6 @@ namespace ZeoEngine {
 
 	namespace Utils {
 
-		static U32 ComponentTypeToID(MonoReflectionType* compType)
-		{
-			MonoType* monoCompType = mono_reflection_type_get_type(compType);
-			ZE_CORE_ASSERT(ScriptRegistry::s_RegisteredMonoComponents.find(monoCompType) != ScriptRegistry::s_RegisteredMonoComponents.end());
-			return ScriptRegistry::s_RegisteredMonoComponents[monoCompType];
-		}
-
 		static MonoString* StringToMonoString(const std::string& str)
 		{
 			return mono_string_new(ScriptEngine::GetAppDomain(), str.c_str());
@@ -28,8 +21,6 @@ namespace ZeoEngine {
 
 #define ZE_ADD_INTERNAL_CALL(Name) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name, Name)
 
-	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
-
 	static MonoString* Entity_GetName(UUID entityID)
 	{
 		return Utils::StringToMonoString(ScriptEngine::GetEntityByID(entityID).GetName());
@@ -37,7 +28,7 @@ namespace ZeoEngine {
 
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* compType)
 	{
-		return ScriptEngine::GetEntityByID(entityID).HasComponentByID(Utils::ComponentTypeToID(compType));
+		return ScriptEngine::GetEntityByID(entityID).HasComponentByID(ScriptRegistry::GetComponentIDFromType(compType));
 	}
 
 	static U64 Entity_GetEntityByName(MonoString* name)
@@ -120,6 +111,9 @@ namespace ZeoEngine {
 		return Input::IsMouseButtonReleased(mousecode);
 	}
 
+	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
+	std::unordered_map<std::string, U32> ScriptRegistry::s_RegisteredMonoComponentNames;
+
 	void ScriptRegistry::RegisterFunctions()
 	{
 #pragma region Entity
@@ -148,6 +142,31 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(Input_IsMouseButtonReleased);
 #pragma endregion
 
+	}
+
+	void ScriptRegistry::RegisterMonoComponent(char* monoCompName, U32 compID)
+	{
+		if (auto* monoType = mono_reflection_type_from_name(monoCompName, ScriptEngine::GetCoreAssemblyImage()))
+		{
+			s_RegisteredMonoComponents[monoType] = compID;
+			s_RegisteredMonoComponentNames[monoCompName] = compID;
+		}
+	}
+
+	void ScriptRegistry::ReloadMonoComponents()
+	{
+		s_RegisteredMonoComponents.clear();
+		for (const auto& [name, compID] : s_RegisteredMonoComponentNames)
+		{
+			RegisterMonoComponent(const_cast<char*>(name.c_str()), compID);
+		}
+	}
+
+	U32 ScriptRegistry::GetComponentIDFromType(MonoReflectionType* compType)
+	{
+		MonoType* monoCompType = mono_reflection_type_get_type(compType);
+		ZE_CORE_ASSERT(ScriptRegistry::s_RegisteredMonoComponents.find(monoCompType) != ScriptRegistry::s_RegisteredMonoComponents.end());
+		return s_RegisteredMonoComponents[monoCompType];
 	}
 
 }

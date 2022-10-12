@@ -131,6 +131,12 @@ namespace ZeoEngine {
 		MonoDomain* RootDomain = nullptr;
 		MonoDomain* AppDomain = nullptr;
 
+		std::string CoreAssemblyPath;
+		std::string AppAssemblyPath;
+		bool bPendingReloadAssembly = false;
+		entt::sink<entt::sigh<void()>> OnScriptReloaded{ OnScriptReloadedDel };
+		entt::sigh<void()> OnScriptReloadedDel;
+
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 
@@ -146,6 +152,7 @@ namespace ZeoEngine {
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields; // Map from entity UUID to script field map
 		using StringBufferMap = std::unordered_map<std::string, std::string>; // Map from script field name to string buffer
 		std::unordered_map<UUID, StringBufferMap> EntityScriptFieldStringBuffer; // Map from entity UUID to string buffer map
+
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
@@ -155,7 +162,7 @@ namespace ZeoEngine {
 		s_Data = new ScriptEngineData();
 
 		InitMono();
-		LoadAssembly("resources/scripts/ZeoEngine-ScriptCore.dll");
+		LoadCoreAssembly("resources/scripts/ZeoEngine-ScriptCore.dll");
 		const std::string path = fmt::format("{}/Scripts/Binaries/Sandbox.dll", AssetRegistry::GetProjectAssetDirectory());
 		LoadAppAssembly(path);
 		LoadAssemblyClasses();
@@ -194,10 +201,20 @@ namespace ZeoEngine {
 #endif
 	}
 
+	void ScriptEngine::OnUpdate()
+	{
+		if (s_Data->bPendingReloadAssembly)
+		{
+			ReloadAssembly();
+			s_Data->bPendingReloadAssembly = false;
+		}
+	}
+
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();
 		delete s_Data;
+		s_Data = nullptr;
 	}
 
 	// https://peter1745.github.io/
@@ -214,37 +231,76 @@ namespace ZeoEngine {
 
 	void ScriptEngine::ShutdownMono()
 	{
-		//mono_domain_unload(s_Data->AppDomain);
+		mono_domain_set(mono_get_root_domain(), false);
+		mono_domain_unload(s_Data->AppDomain);
 		s_Data->AppDomain = nullptr;
-		//mono_jit_cleanup(s_Data->RootDomain);
+		mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
+
+		s_Data->SceneContext = nullptr;
+		s_Data->EntityInstances.clear();
 	}
 
-	void ScriptEngine::LoadAssembly(const std::string& path)
+	void ScriptEngine::LoadCoreAssembly(const std::string& path)
 	{
 		// Create an App Domain
 	    s_Data->AppDomain = mono_domain_create_appdomain("ZeoEngineScriptRuntime", nullptr);
 	    mono_domain_set(s_Data->AppDomain, true);
 
+		s_Data->CoreAssemblyPath = path;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path);
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 	}
 
 	void ScriptEngine::LoadAppAssembly(const std::string& path)
 	{
+		s_Data->AppAssemblyPath = path;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(path);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 	}
 
-	void ScriptEngine::OnRuntimeStart(Ref<Scene> scene)
+	void ScriptEngine::OnFileModified(const std::string& path)
 	{
-		s_Data->SceneContext = std::move(scene);
+		if (PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->CoreAssemblyPath) ||
+			PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->AppAssemblyPath))
+		{
+			s_Data->bPendingReloadAssembly = true;
+		}
 	}
 
-	void ScriptEngine::OnRuntimeStop()
+	void ScriptEngine::ReloadAssembly()
 	{
-		s_Data->SceneContext = nullptr;
-		s_Data->EntityInstances.clear();
+		Timer timer;
+		{
+			mono_domain_set(mono_get_root_domain(), false);
+			mono_domain_unload(s_Data->AppDomain);
+
+			LoadCoreAssembly(s_Data->CoreAssemblyPath);
+			LoadAppAssembly(s_Data->AppAssemblyPath);
+
+			ScriptRegistry::ReloadMonoComponents();
+
+			LoadAssemblyClasses();
+			s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
+
+			for (const auto& [entityID, scriptInstance] : s_Data->EntityInstances)
+			{
+				InitScriptEntity(GetEntityByID(entityID));
+			}
+
+			s_Data->OnScriptReloadedDel.publish();
+		}
+		ZE_CORE_WARN("Reloading scripts took {} ms", timer.ElapsedMillis());
+	}
+
+	entt::sink<entt::sigh<void()>>* ScriptEngine::GetScriptReloadedDelegate()
+	{
+		return s_Data ? &s_Data->OnScriptReloaded : nullptr;
+	}
+
+	void ScriptEngine::SetSceneContext(const Ref<Scene>& scene)
+	{
+		s_Data->SceneContext = scene;
 	}
 
 	MonoDomain* ScriptEngine::GetAppDomain()
@@ -259,6 +315,10 @@ namespace ZeoEngine {
 
 	void ScriptEngine::InitScriptEntity(Entity entity)
 	{
+		s_Data->EntityInstances.clear();
+		s_Data->EntityScriptFields.clear();
+		s_Data->EntityScriptFieldStringBuffer.clear();
+
 		const auto& scriptComp = entity.GetComponent<ScriptComponent>();
 		const auto& className = scriptComp.ClassName;
 		if (!EntityClassExists(className)) return;
@@ -268,12 +328,33 @@ namespace ZeoEngine {
 		// Default construct an instance of the script class
 		// We then use this to set initial values for any public fields
 		s_Data->EntityInstances[entityID] = CreateRef<ScriptInstance>(entityClass, entity);
+
+		auto& scriptFields = s_Data->EntityScriptFields[entityID];
+		// Save old fields so that reloading does not break modified values
+		std::unordered_map<std::string, Ref<ScriptFieldInstance>> oldFieldInstances;
+		for (auto& [name, fieldInstance] : scriptFields)
+		{
+			oldFieldInstances[name] = std::move(fieldInstance);
+		}
+
+		scriptFields.clear();
 		for (const auto& [name, field] : entityClass->GetFields())
 		{
+			auto& fieldInstance = scriptFields[name];
+
+			// Apply saved fields
 			auto* fieldPtr = const_cast<ScriptField*>(&field);
-			auto fieldInstance = CreateRef<ScriptFieldInstance>(fieldPtr, entityID);
+			const auto it = oldFieldInstances.find(name);
+			if (it != oldFieldInstances.end() && field.Type == it->second->GetFieldType())
+			{
+				fieldInstance = std::move(it->second);
+				fieldInstance->Field = fieldPtr;
+				continue;
+			}
+
+			// Create a new field instance
+			fieldInstance = CreateRef<ScriptFieldInstance>(fieldPtr, entityID);
 			fieldInstance->CopyValueFromRuntime();
-			s_Data->EntityScriptFields[entityID][name] = std::move(fieldInstance);
 		}
 	}
 

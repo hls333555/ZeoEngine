@@ -13,6 +13,8 @@ namespace ZeoEngine {
 
 	class ScriptFieldInstance : public FieldInstanceBase
 	{
+		friend class ScriptEngine;
+
 	public:
 		ScriptFieldInstance(ScriptField* field, UUID entityID);
 		ScriptFieldInstance(const ScriptFieldInstance& other);
