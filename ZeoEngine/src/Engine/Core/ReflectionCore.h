@@ -27,10 +27,11 @@ namespace entt {
 
 namespace ZeoEngine::Reflection {
 
+	// Properties are bound to certain component and do not support inheritance
 	enum PropertyType
 	{
 		Name,						// [value_type: const char*] Name of component or field.
-		Inherent,					// [key_only] This component cannot be added or removed within the editor.
+		Inherent,					// [key_only, non-inheritable] This component cannot be added or removed within the editor.
 		Tooltip,					// [value_type: const char*] Tooltip of component or field.
 		Struct,						// [key_only] This field has sub-fields and will display a special TreeNode.
 		HideComponentHeader,		// [key_only] This component will not display the collapsing header.

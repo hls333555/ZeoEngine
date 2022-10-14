@@ -6,7 +6,6 @@
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Utils/EditorSceneUtils.h"
-#include "Worlds/EditorPreviewWorldBase.h"
 #include "Worlds/LevelPreviewWorld.h"
 #include "Core/Editor.h"
 

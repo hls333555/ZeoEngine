@@ -128,10 +128,11 @@ namespace ZeoEngine {
 
 	void ComponentInspector::PreprocessComponent()
 	{
-		for (const auto data : entt::resolve(m_ComponentID).data())
+		const auto type = entt::resolve(m_ComponentID);
+		ReflectionUtils::ForEachFieldInComponent(type, [this](entt::meta_data data)
 		{
 			PreprocessField(data);
-		}
+		});
 	}
 
 	void ComponentInspector::PreprocessField(entt::meta_data data)

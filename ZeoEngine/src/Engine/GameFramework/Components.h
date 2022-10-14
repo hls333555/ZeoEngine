@@ -143,6 +143,7 @@ namespace ZeoEngine {
 
 	};
 
+#pragma region 2D
 	struct SpriteRendererComponent : public IComponent
 	{
 		AssetHandle TextureAsset;
@@ -176,6 +177,57 @@ namespace ZeoEngine {
 		static const char* GetIcon() { return ICON_FA_CIRCLE; }
 
 	};
+
+	struct Rigidbody2DComponent : public IComponent
+	{
+		enum class BodyType
+		{
+			Static = 0, Dynamic, Kinematic
+		};
+
+		BodyType Type = BodyType::Static;
+		bool bFixedRotation = false;
+
+		void* RuntimeBody = nullptr;
+
+		Rigidbody2DComponent() = default;
+		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
+	};
+
+	struct BoxCollider2DComponent : public IComponent
+	{
+		Vec2 Offset = { 0.0f, 0.0f };
+		Vec2 Size = { 0.5f, 0.5f }; // Half width and half height
+
+		// TODO: Move into physics material
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		void* RuntimeFixture = nullptr;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	struct CircleCollider2DComponent : public IComponent
+	{
+		Vec2 Offset = { 0.0f, 0.0f };
+		float Radius = 0.5f;
+
+		// TODO: Move into physics material
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		void* RuntimeFixture = nullptr;
+
+		CircleCollider2DComponent() = default;
+		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
+	};
+#pragma endregion
 
 	struct CameraComponent : public IComponent
 	{
@@ -269,56 +321,6 @@ namespace ZeoEngine {
 		U32& GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
 
 	};
-
-	struct Rigidbody2DComponent : public IComponent
-	{
-		enum class BodyType
-		{
-			Static = 0, Dynamic, Kinematic
-		};
-
-		BodyType Type = BodyType::Static;
-		bool bFixedRotation = false;
-
-		void* RuntimeBody = nullptr;
-
-		Rigidbody2DComponent() = default;
-		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
-	};
-
-	struct BoxCollider2DComponent : public IComponent
-	{
-		Vec2 Offset = { 0.0f, 0.0f };
-		Vec2 Size = { 0.5f, 0.5f }; // Half width and half height
-
-		// TODO: Move into physics material
-		float Density = 1.0f;
-		float Friction = 0.5f;
-		float Restitution = 0.0f;
-		float RestitutionThreshold = 0.5f;
-
-		void* RuntimeFixture = nullptr;
-
-		BoxCollider2DComponent() = default;
-		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
-	};
-
-	struct CircleCollider2DComponent : public IComponent
-	{
-		Vec2 Offset = { 0.0f, 0.0f };
-		float Radius = 0.5f;
-
-		// TODO: Move into physics material
-		float Density = 1.0f;
-		float Friction = 0.5f;
-		float Restitution = 0.0f;
-		float RestitutionThreshold = 0.5f;
-
-		void* RuntimeFixture = nullptr;
-
-		CircleCollider2DComponent() = default;
-		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
-	};
 	
 	struct MeshRendererComponent : public IComponent
 	{
@@ -351,44 +353,57 @@ namespace ZeoEngine {
 		std::vector<AssetHandle>& GetMaterialAssets() const { return LoadedMesh ? LoadedMesh->GetDefaultMaterialAssets() : g_AssetVectorPlaceholder; }
 	};
 
-	struct LightComponent : public IComponent
+	struct LightComponentBase : public IComponent
 	{
 		Ref<Light> LightSource;
 
-		enum class LightType
-		{
-			DirectionalLight = 0, PointLight, SpotLight,
-		};
-
-		LightType Type = LightType::PointLight;
-
-		LightComponent() = default;
-		LightComponent(LightType type)
-			: Type(type) {}
-		LightComponent(const LightComponent&) = default;
-
-		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
-
-		template<typename T>
-		Ref<T> GetLight() const
-		{
-			return std::dynamic_pointer_cast<T>(LightSource);
-		}
-
 		Vec4& GetColor() const { return LightSource->m_Color; }
 		float& GetIntensity() const { return LightSource->m_Intensity; }
-		float& GetRange() const { return LightSource->m_Range; }
-		float& GetCutoff() const { return LightSource->m_CutoffAngle; }
 		bool& IsCastShadow() const { return LightSource->m_bCastShadow; }
 		Light::ShadowType& GetShadowType() const { return LightSource->m_ShadowType; }
 		float& GetDepthBias() const { return LightSource->m_DepthBias; }
 		float& GetNormalBias() const { return LightSource->m_NormalBias; }
 		float& GetLightSize() const { return LightSource->m_LightSize; }
 		float& GetFilterSize() const { return LightSource->m_FilterSize; }
-		U32& GetCascadeCount() const { return LightSource->m_CascadeCount; }
-		float& GetCascadeBlendThreshold() const { return LightSource->m_CascadeBlendThreshold; }
-		float& GetMaxShadowDistance() { return LightSource->m_MaxShadowDistance; }
-		float& GetCascadeSplitLambda() { return LightSource->m_CascadeSplitLambda; }
+	};
+
+	struct DirectionalLightComponent : public LightComponentBase
+	{
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_SUN; }
+
+		Ref<DirectionalLight> GetDirectionalLight() const { return std::static_pointer_cast<DirectionalLight>(LightSource); }
+
+		U32& GetCascadeCount() const { return GetDirectionalLight()->m_CascadeCount; }
+		float& GetCascadeBlendThreshold() const { return GetDirectionalLight()->m_CascadeBlendThreshold; }
+		float& GetMaxShadowDistance() const { return GetDirectionalLight()->m_MaxShadowDistance; }
+		float& GetCascadeSplitLambda() const { return GetDirectionalLight()->m_CascadeSplitLambda; }
+	};
+
+	struct PointLightComponent : public LightComponentBase
+	{
+		PointLightComponent() = default;
+		PointLightComponent(const PointLightComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+
+		Ref<PointLight> GetPointLight() const { return std::static_pointer_cast<PointLight>(LightSource); }
+
+		float& GetRange() const { return GetPointLight()->m_Range; }
+	};
+
+	struct SpotLightComponent : public PointLightComponent
+	{
+		SpotLightComponent() = default;
+		SpotLightComponent(const SpotLightComponent&) = default;
+
+		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+
+		Ref<SpotLight> GetSpotLight() const { return std::static_pointer_cast<SpotLight>(LightSource); }
+		
+		float& GetCutoff() const { return GetSpotLight()->m_CutoffAngle; }
 	};
 
 	struct MaterialPreviewComponent : public IComponent

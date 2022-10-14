@@ -159,19 +159,46 @@ namespace ZeoEngine {
 		virtual void PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex = -1) override;
 	};
 
-	class LightComponentHelper : public IComponentHelper
+	class LightComponentHelperBase : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;
 
 		virtual void OnComponentAdded(IComponent* comp, bool bIsDeserialize) override;
-		virtual void OnComponentCopied(IComponent* comp, IComponent* otherComp) override;
 		virtual void OnComponentDestroy(IComponent* comp) override;
 		virtual void PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex = -1) override;
 		virtual void PostFieldDeserialize(IComponent* comp, U32 fieldID) override;
-		virtual BoxSphereBounds GetBounds(IComponent* comp) override;
+	};
 
-		void InitLight(Entity* entity) const;
+	class DirectionalLightComponentHelper : public LightComponentHelperBase
+	{
+	public:
+		using LightComponentHelperBase::LightComponentHelperBase;
+
+		virtual void OnComponentAdded(IComponent* comp, bool bIsDeserialize) override;
+		virtual void OnComponentCopied(IComponent* comp, IComponent* otherComp) override;
+		virtual BoxSphereBounds GetBounds(IComponent* comp) override;
+	};
+
+	class PointLightComponentHelper : public LightComponentHelperBase
+	{
+	public:
+		using LightComponentHelperBase::LightComponentHelperBase;
+
+		virtual void OnComponentAdded(IComponent* comp, bool bIsDeserialize) override;
+		virtual void OnComponentCopied(IComponent* comp, IComponent* otherComp) override;
+		virtual void PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex = -1) override;
+		virtual BoxSphereBounds GetBounds(IComponent* comp) override;
+	};
+
+	class SpotLightComponentHelper : public PointLightComponentHelper
+	{
+	public:
+		using PointLightComponentHelper::PointLightComponentHelper;
+
+		virtual void OnComponentAdded(IComponent* comp, bool bIsDeserialize) override;
+		virtual void OnComponentCopied(IComponent* comp, IComponent* otherComp) override;
+		virtual BoxSphereBounds GetBounds(IComponent* comp) override;
 	};
 
 }

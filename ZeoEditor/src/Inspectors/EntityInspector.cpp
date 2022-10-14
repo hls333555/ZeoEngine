@@ -104,6 +104,7 @@ namespace ZeoEngine {
 			ImGui::OpenPopup("AddComponent");
 		}
 
+		// TODO: Sort and searchable
 		if (ImGui::BeginPopupWithPadding("AddComponent"))
 		{
 			for (const auto& [category, compIDs] : m_CategorizedComponents)
@@ -144,8 +145,8 @@ namespace ZeoEngine {
 		// Process components on this entity
 		for (const auto compID : entity.GetOrderedComponentIDs())
 		{
-			// Skip if there is no data registered
-			if (!ReflectionUtils::DoesTypeContainData(compID)) continue;
+			// Skip if there is no field registered
+			if (!ReflectionUtils::DoesComponentContainAnyField(compID)) continue;
 
 			switch (compID)
 			{

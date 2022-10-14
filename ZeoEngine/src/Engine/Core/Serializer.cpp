@@ -150,10 +150,11 @@ namespace ZeoEngine {
 	std::deque<entt::meta_data> ComponentSerializer::PreprocessFields(const entt::meta_any& compInstance)
 	{
 		std::deque<entt::meta_data> preprocessedFields;
-		for (const auto data : compInstance.type().data())
+		const auto type = compInstance.type();
+		ReflectionUtils::ForEachFieldInComponent(type, [&preprocessedFields](entt::meta_data data)
 		{
 			preprocessedFields.push_front(data);
-		}
+		});
 		return preprocessedFields;
 	}
 

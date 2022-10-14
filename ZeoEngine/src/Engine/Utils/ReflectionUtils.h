@@ -10,7 +10,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static FieldType MetaTypeToFieldType(entt::meta_type type);
-		static bool DoesTypeContainData(U32 typeID);
+		static bool DoesComponentContainAnyField(U32 compID);
 
 		template<typename T>
 		static bool IsTypeEqual(entt::meta_type type)
@@ -35,20 +35,45 @@ namespace ZeoEngine {
 		template<typename T>
 		static bool DoesPropertyExist(Reflection::PropertyType propType, T metaObj)
 		{
-			return static_cast<bool>(metaObj.prop(propType));
+			for (const auto& prop : metaObj.prop())
+			{
+				if (prop.key() == propType)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		template<typename Ret, typename T>
 		static std::optional<Ret> GetPropertyValue(Reflection::PropertyType propType, T metaObj)
 		{
-			auto prop = metaObj.prop(propType);
-			if (prop)
+			for (const auto& prop : metaObj.prop())
 			{
-				const auto value = prop.value();
-				// As I32 conversions are already registered, the system can convert to all registered integral types seamlessly
-				return value.allow_cast<Ret>().cast<Ret>();
+				if (prop.key() == propType)
+				{
+					// Make value const so that allow_cast will call the const version
+					const auto value = prop.value();
+					return value.allow_cast<Ret>().cast<Ret>();
+				}
 			}
 			return {};
+		}
+
+		template<typename Func>
+		static void ForEachFieldInComponent(entt::meta_type compType, Func func)
+		{
+			for (const auto data : compType.data())
+			{
+				func(data);
+			}
+			for (const auto base : compType.base())
+			{
+				for (const auto data : base.data())
+				{
+					func(data);
+				}
+			}
 		}
 
 		static entt::meta_any ConstructComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);

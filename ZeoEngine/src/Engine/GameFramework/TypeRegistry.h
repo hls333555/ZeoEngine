@@ -10,7 +10,7 @@ namespace ZeoEngine {
 
 	using namespace entt::literals;
 
-	template<typename Component>
+	template<typename Component, typename BaseComponent = IComponent>
 	class RegisterComponent
 	{
 	public:
@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		{
 			static_assert(std::is_base_of_v<IComponent, Component>, "Registered Component should derive from 'IComponent'!");
 
-			m_MetaFactory.base<IComponent>()
+			m_MetaFactory.base<BaseComponent>()
 				.ctor<&Reflection::emplace<Component>, entt::as_ref_t>()
 				.func<&Reflection::remove<Component>, entt::as_void_t>("remove"_hs)
 				.func<&Reflection::get<Component>, entt::as_ref_t>("get"_hs)

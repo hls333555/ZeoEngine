@@ -278,92 +278,128 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
-#pragma region LightComponentHelper
-	void LightComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
+#pragma region LightComponentHelpers
+	void LightComponentHelperBase::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
 		Entity entity = comp->OwnerEntity;
 		entity.AddComponent<BillboardComponent>();
-		InitLight(&entity);
 	}
 
-	void LightComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
-	{
-		// Perform the deep copy of smart pointer
-		const auto* otherLightComp = static_cast<LightComponent*>(otherComp);
-		auto* lightComp = static_cast<LightComponent*>(comp);
-		switch (lightComp->Type)
-		{
-			case LightComponent::LightType::DirectionalLight:	lightComp->LightSource = CreateRef<DirectionalLight>(*std::static_pointer_cast<DirectionalLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::PointLight:			lightComp->LightSource = CreateRef<PointLight>(*std::static_pointer_cast<PointLight>(otherLightComp->LightSource)); break;
-			case LightComponent::LightType::SpotLight:			lightComp->LightSource = CreateRef<SpotLight>(*std::static_pointer_cast<SpotLight>(otherLightComp->LightSource)); break;
-		}
-	}
-
-	void LightComponentHelper::OnComponentDestroy(IComponent* comp)
+	void LightComponentHelperBase::OnComponentDestroy(IComponent* comp)
 	{
 		comp->OwnerEntity.RemoveComponentIfExist<BillboardComponent>();
 	}
 
-	void LightComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	void LightComponentHelperBase::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		if (fieldID == GetFieldIDByName<LightComponent>("Type"))
+		if (fieldID == GetFieldIDByName<LightComponentBase>("ShadowType"))
 		{
-			InitLight(&comp->OwnerEntity);
-		}
-		else if (fieldID == GetFieldIDByName<LightComponent>("Range"))
-		{
-			comp->OwnerEntity.UpdateBounds();
-		}
-		else if (fieldID == GetFieldIDByName<LightComponent>("ShadowType"))
-		{
-			const auto* lightComp = static_cast<LightComponent*>(comp);
+			const auto* lightComp = static_cast<LightComponentBase*>(comp);
 			lightComp->LightSource->OnShadowTypeChanged();
 		}
 	}
 
-	void LightComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
+	void LightComponentHelperBase::PostFieldDeserialize(IComponent* comp, U32 fieldID)
 	{
-		// Create light instance when light type is loaded so that light specific data can be deserialized properly
-		if (fieldID == GetFieldIDByName<LightComponent>("Type"))
+		if (fieldID == GetFieldIDByName<LightComponentBase>("ShadowType"))
 		{
-			InitLight(&comp->OwnerEntity);
-		}
-		else if (fieldID == GetFieldIDByName<LightComponent>("ShadowType"))
-		{
-			const auto* lightComp = static_cast<LightComponent*>(comp);
+			const auto* lightComp = static_cast<LightComponentBase*>(comp);
 			lightComp->LightSource->OnShadowTypeChanged();
 		}
 	}
 
-	BoxSphereBounds LightComponentHelper::GetBounds(IComponent* comp)
+	void DirectionalLightComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
-		const auto* lightComp = static_cast<LightComponent*>(comp);
+		LightComponentHelperBase::OnComponentAdded(comp, bIsDeserialize);
+
+		const auto entity = comp->OwnerEntity;
+		auto& lightComp = entity.GetComponent<DirectionalLightComponent>();
+		auto& billboardComp = entity.GetComponent<BillboardComponent>();
+		lightComp.LightSource = CreateRef<DirectionalLight>(entity.GetScene());
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
+	}
+
+	void DirectionalLightComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
+	{
+		// Perform the deep copy of smart pointer
+		auto* otherLightComp = static_cast<DirectionalLightComponent*>(otherComp);
+		auto* lightComp = static_cast<DirectionalLightComponent*>(comp);
+		lightComp->LightSource = CreateRef<DirectionalLight>(*otherLightComp->GetDirectionalLight());
+	}
+
+	BoxSphereBounds DirectionalLightComponentHelper::GetBounds(IComponent* comp)
+	{
 		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
-		const float range = lightComp->Type == LightComponent::LightType::DirectionalLight ? 0.0f : lightComp->LightSource->GetRange();
-		const Sphere sphere{ transformComp.Translation, range * (lightComp->Type == LightComponent::LightType::SpotLight ? 0.5f : 1.0f) };
+		const Sphere sphere{ transformComp.Translation, 0.0f };
 		return sphere;
 	}
 
-	void LightComponentHelper::InitLight(Entity* entity) const
+	void PointLightComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
 	{
-		auto& lightComp = entity->GetComponent<LightComponent>();
-		auto& billboardComp = entity->GetComponent<BillboardComponent>();
-		switch (lightComp.Type)
+		LightComponentHelperBase::OnComponentAdded(comp, bIsDeserialize);
+
+		const auto entity = comp->OwnerEntity;
+		auto& lightComp = entity.GetComponent<PointLightComponent>();
+		auto& billboardComp = entity.GetComponent<BillboardComponent>();
+		lightComp.LightSource = CreateRef<PointLight>(entity.GetScene());
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
+	}
+
+	void PointLightComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
+	{
+		// Perform the deep copy of smart pointer
+		auto* otherLightComp = static_cast<PointLightComponent*>(otherComp);
+		auto* lightComp = static_cast<PointLightComponent*>(comp);
+		lightComp->LightSource = CreateRef<PointLight>(*otherLightComp->GetPointLight());
+	}
+
+	void PointLightComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	{
+		LightComponentHelperBase::PostComponentFieldValueEditChange(comp, fieldID, oldValue, elementIndex);
+
+		if (fieldID == GetFieldIDByName<PointLightComponent>("Range"))
 		{
-			case LightComponent::LightType::DirectionalLight:
-				lightComp.LightSource = CreateRef<DirectionalLight>(entity->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
-				break;
-			case LightComponent::LightType::PointLight:
-				lightComp.LightSource = CreateRef<PointLight>(entity->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
-				break;
-			case LightComponent::LightType::SpotLight:
-				lightComp.LightSource = CreateRef<SpotLight>(entity->GetScene());
-				billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
-				break;
+			comp->OwnerEntity.UpdateBounds();
 		}
 	}
+
+	BoxSphereBounds PointLightComponentHelper::GetBounds(IComponent* comp)
+	{
+		auto* lightComp = static_cast<PointLightComponent*>(comp);
+		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
+		const float range = lightComp->GetPointLight()->GetRange();
+		const Sphere sphere{ transformComp.Translation, range };
+		return sphere;
+	}
+
+	void SpotLightComponentHelper::OnComponentAdded(IComponent* comp, bool bIsDeserialize)
+	{
+		LightComponentHelperBase::OnComponentAdded(comp, bIsDeserialize);
+
+		const auto entity = comp->OwnerEntity;
+		auto& lightComp = entity.GetComponent<SpotLightComponent>();
+		auto& billboardComp = entity.GetComponent<BillboardComponent>();
+		lightComp.LightSource = CreateRef<SpotLight>(entity.GetScene());
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
+	}
+
+	void SpotLightComponentHelper::OnComponentCopied(IComponent* comp, IComponent* otherComp)
+	{
+		// Perform the deep copy of smart pointer
+		auto* otherLightComp = static_cast<SpotLightComponent*>(otherComp);
+		auto* lightComp = static_cast<SpotLightComponent*>(comp);
+		lightComp->LightSource = CreateRef<SpotLight>(*otherLightComp->GetSpotLight());
+	}
+
+	BoxSphereBounds SpotLightComponentHelper::GetBounds(IComponent* comp)
+	{
+		auto* lightComp = static_cast<SpotLightComponent*>(comp);
+		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
+		const float range = lightComp->GetSpotLight()->GetRange();
+		const Sphere sphere{ transformComp.Translation, range * 0.5f };
+		return sphere;
+	}
+
 #pragma endregion
 
 }

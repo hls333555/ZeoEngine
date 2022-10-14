@@ -73,32 +73,32 @@ namespace ZeoEngine {
 			.Field<true, &MaterialPreviewComponent::GetShaderVariant>("ShaderVariant", HiddenInEditor)
 			.Field<true, &MaterialPreviewComponent::GetShaderAsset>("ShaderAsset", std::make_pair(AssetType, Shader::TypeID()));
 
-		RegisterEnum<LightComponent::LightType>()
-			.Field<LightComponent::LightType::DirectionalLight>("DirectionalLight")
-			.Field<LightComponent::LightType::PointLight>("PointLight")
-			.Field<LightComponent::LightType::SpotLight>("SpotLight");
-
 		RegisterEnum<Light::ShadowType>()
 			.Field<Light::ShadowType::HardShadow>("HardShadow")
 			.Field<Light::ShadowType::PCF>("PCF")
 			.Field<Light::ShadowType::PCSS>("PCSS");
 
-		RegisterComponent<LightComponent>("Light", std::make_pair(Category, "Rendering"))
-			.Field<&LightComponent::Type>("Type")
-			.Field<true, &LightComponent::GetColor>("Color")
-			.Field<true, &LightComponent::GetIntensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
-			.Field<true, &LightComponent::GetRange>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "Type == DirectionalLight"))
-			.Field<true, &LightComponent::GetCutoff>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f), std::make_pair(HideCondition, "Type != SpotLight"))
-			.Field<true, &LightComponent::IsCastShadow>("CastShadow")
-			.Field<true, &LightComponent::GetShadowType>("ShadowType", std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponent::GetDepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponent::GetNormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponent::GetFilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
-			.Field<true, &LightComponent::GetLightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
-			.Field<true, &LightComponent::GetCascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false || Type != DirectionalLight"))
-			.Field<true, &LightComponent::GetCascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false || Type != DirectionalLight"))
-			.Field<true, &LightComponent::GetMaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || Type != DirectionalLight"))
-			.Field<true, &LightComponent::GetCascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false || Type != DirectionalLight"));
+		RegisterComponent<LightComponentBase>("LightComponentBase", Inherent)
+			.Field<true, &LightComponentBase::GetColor>("Color")
+			.Field<true, &LightComponentBase::GetIntensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
+			.Field<true, &LightComponentBase::IsCastShadow>("CastShadow")
+			.Field<true, &LightComponentBase::GetShadowType>("ShadowType", std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &LightComponentBase::GetDepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &LightComponentBase::GetNormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &LightComponentBase::GetFilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
+			.Field<true, &LightComponentBase::GetLightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"));
+
+		RegisterComponent<DirectionalLightComponent, LightComponentBase>("DirectionalLight", std::make_pair(Category, "Rendering"))
+			.Field<true, &DirectionalLightComponent::GetCascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &DirectionalLightComponent::GetCascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &DirectionalLightComponent::GetMaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<true, &DirectionalLightComponent::GetCascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"));
+
+		RegisterComponent<PointLightComponent, LightComponentBase>("PointLight", std::make_pair(Category, "Rendering"))
+			.Field<true, &PointLightComponent::GetRange>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f));
+
+		RegisterComponent<SpotLightComponent, PointLightComponent>("SpotLight", std::make_pair(Category, "Rendering"))
+			.Field<true, &SpotLightComponent::GetCutoff>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f));
 
 		RegisterComponent<BillboardComponent>("Billboard", Inherent, Transient);
 
@@ -265,7 +265,9 @@ namespace ZeoEngine {
 		ComponentHelperRegistry::RegisterComponentHelper<MeshPreviewComponentHelper, MeshPreviewComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<MaterialPreviewComponentHelper, MaterialPreviewComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<TexturePreviewComponentHelper, TexturePreviewComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<LightComponentHelper, LightComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<DirectionalLightComponentHelper, DirectionalLightComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<PointLightComponentHelper, PointLightComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<SpotLightComponentHelper, SpotLightComponent>();
 	}
 
 	void TypeRegistry::RegisterComponentSerializerExtenders()

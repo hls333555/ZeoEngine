@@ -60,21 +60,21 @@ namespace ZeoEngine {
 	Entity EditorSceneUtils::CreateAndPlaceDirectionalLight(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Directional Light");
-		entity.AddComponent<LightComponent>(LightComponent::LightType::DirectionalLight);
+		entity.AddComponent<DirectionalLightComponent>();
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlacePointLight(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Point Light");
-		entity.AddComponent<LightComponent>(LightComponent::LightType::PointLight);
+		entity.AddComponent<PointLightComponent>();
 		return entity;
 	}
 
 	Entity EditorSceneUtils::CreateAndPlaceSpotLight(const Ref<Scene>& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Spot Light");
-		entity.AddComponent<LightComponent>(LightComponent::LightType::SpotLight);
+		entity.AddComponent<SpotLightComponent>();
 		return entity;
 	}
 

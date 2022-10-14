@@ -22,6 +22,9 @@ namespace ZeoEngine {
 	};
 
 	template<typename... Component>
+	inline constexpr entt::get_t<Component...> IncludeComponents{};
+
+	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
 	class Scene : public std::enable_shared_from_this<Scene>
@@ -76,13 +79,24 @@ namespace ZeoEngine {
 			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const { return true; }
 		};
 
-		template<typename... Owned, typename... Get, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(entt::get_t<Get...> get, Func&& func, CompareFunc compareFunc = CompareFunc{}, entt::exclude_t<Exclude...> exclude = {})
+		template<typename... Owned, typename... Include, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
+		void ForEachComponentGroup(entt::get_t<Include...> include, Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
 		{
-			auto group = m_Registry.group<Owned..., Get...>(exclude);
-			if constexpr (!std::is_same<CompareFunc, DefaultCompare>::value)
+			auto group = m_Registry.group<Owned...>(include, exclude);
+			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
 			{
-				group.sort<Owned..., Get...>(std::move(compareFunc));
+				group.sort<Owned..., Include...>(std::move(compareFunc));
+			}
+			group.each(std::forward<Func>(func));
+		}
+
+		template<typename... Owned, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
+		void ForEachComponentGroup(Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
+		{
+			auto group = m_Registry.group<Owned...>(exclude);
+			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
+			{
+				group.sort<Owned...>(std::move(compareFunc));
 			}
 			group.each(std::forward<Func>(func));
 		}

@@ -47,10 +47,10 @@ namespace ZeoEngine {
 		return FieldType::None;
 	}
 
-	bool ReflectionUtils::DoesTypeContainData(U32 typeID)
+	bool ReflectionUtils::DoesComponentContainAnyField(U32 compID)
 	{
-		const auto datas = entt::resolve(typeID).data();
-		return datas.begin() != datas.end();
+		const auto dataList = entt::resolve(compID).data();
+		return dataList.begin() != dataList.end();
 	}
 
 	const char* ReflectionUtils::GetEnumDisplayName(const entt::meta_any& enumValue)
