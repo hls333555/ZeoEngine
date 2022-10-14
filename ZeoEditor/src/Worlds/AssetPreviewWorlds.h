@@ -5,13 +5,13 @@
 namespace ZeoEngine {
 
 	class AssetView;
-	struct MaterialPreviewComponent;
+	struct MaterialDetailComponent;
 	class Material;
-	struct MeshPreviewComponent;
+	struct MeshDetailComponent;
 	class Mesh;
-	struct TexturePreviewComponent;
+	struct TextureDetailComponent;
 	class Texture2D;
-	struct ParticleSystemPreviewComponent;
+	struct ParticleSystemDetailComponent;
 	class ParticleTemplate;
 
 	class AssetPreviewWorldBase : public EditorPreviewWorldBase
@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		virtual Scope<InspectorBase> CreateInspector() override;
 		virtual Scope<AssetView> CreateAssetView() override;
 
-		void SetMaterialAsset(MaterialPreviewComponent& materialPreviewComp, Ref<Material> material);
+		void SetMaterialAsset(MaterialDetailComponent& materialPreviewComp, Ref<Material> material);
 	};
 
 	class MeshPreviewWorld : public AssetPreviewWorldBase
@@ -71,7 +71,7 @@ namespace ZeoEngine {
 		virtual Scope<InspectorBase> CreateInspector() override;
 		virtual Scope<AssetView> CreateAssetView() override;
 
-		void SetMeshAsset(MeshPreviewComponent& meshPreviewComp, Ref<Mesh> mesh);
+		void SetMeshAsset(MeshDetailComponent& meshPreviewComp, Ref<Mesh> mesh);
 	};
 
 	class TexturePreviewWorld : public AssetPreviewWorldBase
@@ -89,7 +89,7 @@ namespace ZeoEngine {
 		virtual Scope<InspectorBase> CreateInspector() override;
 		virtual Scope<AssetView> CreateAssetView() override;
 
-		void SetTextureAsset(TexturePreviewComponent& texturePreviewComp, Ref<Texture2D> texture);
+		void SetTextureAsset(TextureDetailComponent& texturePreviewComp, Ref<Texture2D> texture);
 	};
 
 	class ParticlePreviewWorld : public AssetPreviewWorldBase
@@ -108,7 +108,7 @@ namespace ZeoEngine {
 		virtual Scope<InspectorBase> CreateInspector() override;
 		virtual Scope<AssetView> CreateAssetView() override;
 
-		void SetParticleAsset(ParticleSystemPreviewComponent& particlePreviewComp, Ref<ParticleTemplate> particle);
+		void SetParticleAsset(ParticleSystemDetailComponent& particlePreviewComp, Ref<ParticleTemplate> particle);
 	};
 	
 }

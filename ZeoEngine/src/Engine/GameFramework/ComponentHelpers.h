@@ -110,7 +110,7 @@ namespace ZeoEngine {
 		virtual void PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex = -1) override;
 	};
 
-	class ParticleSystemPreviewComponentHelper : public IComponentHelper
+	class ParticleSystemDetailComponentHelper : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;
@@ -132,7 +132,7 @@ namespace ZeoEngine {
 		virtual std::string GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const override;
 	};
 
-	class MeshPreviewComponentHelper : public IComponentHelper
+	class MeshDetailComponentHelper : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;
@@ -142,7 +142,7 @@ namespace ZeoEngine {
 		virtual std::string GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const override;
 	};
 
-	class MaterialPreviewComponentHelper : public IComponentHelper
+	class MaterialDetailComponentHelper : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;
@@ -151,7 +151,7 @@ namespace ZeoEngine {
 		virtual void PostFieldDeserialize(IComponent* comp, U32 fieldID) override;
 	};
 
-	class TexturePreviewComponentHelper : public IComponentHelper
+	class TextureDetailComponentHelper : public IComponentHelper
 	{
 	public:
 		using IComponentHelper::IComponentHelper;

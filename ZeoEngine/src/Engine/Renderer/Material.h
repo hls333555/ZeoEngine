@@ -253,7 +253,7 @@ namespace ZeoEngine {
 
 	class Material : public AssetBase<Material>
 	{
-		friend struct MaterialPreviewComponent;
+		friend struct MaterialDetailComponent;
 
 	public:
 		Material();

@@ -205,7 +205,7 @@ namespace ZeoEngine {
 
 	class ShaderInstance : public Bindable
 	{
-		friend struct MaterialPreviewComponent;
+		friend struct MaterialDetailComponent;
 
 	public:
 		ShaderInstance() = default;

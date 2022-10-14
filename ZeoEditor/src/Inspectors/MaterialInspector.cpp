@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	{
 		ImGui::Separator();
 
-		const auto& materialComp = entity.GetComponent<MaterialPreviewComponent>();
+		const auto& materialComp = entity.GetComponent<MaterialDetailComponent>();
 		const auto& material = materialComp.LoadedMaterial;
 		const auto& dynamicFields = material->GetDynamicFields();
 		const auto& dynamicFieldCategoryLocations = material->GetDynamicFieldCategoryLocations();

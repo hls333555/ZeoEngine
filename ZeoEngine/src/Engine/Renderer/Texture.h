@@ -46,7 +46,7 @@ namespace ZeoEngine {
 
 	class Texture : public Bindable
 	{
-		friend struct TexturePreviewComponent;
+		friend struct TextureDetailComponent;
 
 	public:
 		bool IsSRGB() const { return m_bIsSRGB; }

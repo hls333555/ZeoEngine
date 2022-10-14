@@ -100,14 +100,14 @@ namespace ZeoEngine {
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		ComponentSerializer cs;
-		cs.Serialize(node, ParticleSystemPreviewComponent(particleTemplate));
+		cs.Serialize(node, ParticleSystemDetailComponent(particleTemplate));
 	}
 
 	bool ParticleTemplateAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, ParticleSystemPreviewComponent(particleTemplate));
+		cs.Deserialize(node, ParticleSystemDetailComponent(particleTemplate));
 		return true;
 	}
 
@@ -126,7 +126,7 @@ namespace ZeoEngine {
 
 		const auto texture = std::static_pointer_cast<Texture2D>(asset);
 		ComponentSerializer cs;
-		cs.Serialize(node, TexturePreviewComponent(texture));
+		cs.Serialize(node, TextureDetailComponent(texture));
 	}
 
 	bool Texture2DAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
@@ -135,7 +135,7 @@ namespace ZeoEngine {
 
 		const auto texture = std::static_pointer_cast<Texture2D>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, TexturePreviewComponent(texture));
+		cs.Deserialize(node, TextureDetailComponent(texture));
 		return true;
 	}
 
@@ -154,7 +154,7 @@ namespace ZeoEngine {
 
 		const auto mesh = std::static_pointer_cast<Mesh>(asset);
 		ComponentSerializer cs;
-		cs.Serialize(node, MeshPreviewComponent(mesh));
+		cs.Serialize(node, MeshDetailComponent(mesh));
 	}
 
 	bool MeshAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
@@ -163,7 +163,7 @@ namespace ZeoEngine {
 
 		const auto mesh = std::static_pointer_cast<Mesh>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, MeshPreviewComponent(mesh));
+		cs.Deserialize(node, MeshDetailComponent(mesh));
 		return true;
 	}
 
@@ -196,7 +196,7 @@ namespace ZeoEngine {
 	{
 		const auto material = std::static_pointer_cast<Material>(asset);
 		ComponentSerializer cs;
-		cs.Serialize(node, MaterialPreviewComponent(material));
+		cs.Serialize(node, MaterialDetailComponent(material));
 		MaterialSerializer ms;
 		ms.Serialize(node, material);
 	}
@@ -205,7 +205,7 @@ namespace ZeoEngine {
 	{
 		const auto material = std::static_pointer_cast<Material>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, MaterialPreviewComponent(material));
+		cs.Deserialize(node, MaterialDetailComponent(material));
 		return true;
 	}
 

@@ -293,10 +293,10 @@ namespace ZeoEngine {
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
 	};
 
-	struct ParticleSystemPreviewComponent : public ParticleSystemComponent
+	struct ParticleSystemDetailComponent : public ParticleSystemComponent
 	{
-		ParticleSystemPreviewComponent() = default;
-		ParticleSystemPreviewComponent(const Ref<ParticleTemplate>& particleTemplate)
+		ParticleSystemDetailComponent() = default;
+		ParticleSystemDetailComponent(const Ref<ParticleTemplate>& particleTemplate)
 		{
 			ParticleTemplateAsset = particleTemplate;
 		}
@@ -340,15 +340,15 @@ namespace ZeoEngine {
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
 
-	struct MeshPreviewComponent : public IComponent
+	struct MeshDetailComponent : public IComponent
 	{
 		Ref<Mesh> LoadedMesh;
 		Ref<MeshInstance> Instance;
 
-		MeshPreviewComponent() = default;
-		MeshPreviewComponent(const Ref<Mesh>& mesh)
+		MeshDetailComponent() = default;
+		MeshDetailComponent(const Ref<Mesh>& mesh)
 			: LoadedMesh(mesh) {}
-		MeshPreviewComponent(const MeshPreviewComponent&) = default;
+		MeshDetailComponent(const MeshDetailComponent&) = default;
 
 		std::vector<AssetHandle>& GetMaterialAssets() const { return LoadedMesh ? LoadedMesh->GetDefaultMaterialAssets() : g_AssetVectorPlaceholder; }
 	};
@@ -406,14 +406,14 @@ namespace ZeoEngine {
 		float& GetCutoff() const { return GetSpotLight()->m_CutoffAngle; }
 	};
 
-	struct MaterialPreviewComponent : public IComponent
+	struct MaterialDetailComponent : public IComponent
 	{
 		Ref<Material> LoadedMaterial;
 
-		MaterialPreviewComponent() = default;
-		MaterialPreviewComponent(const Ref<Material>& material)
+		MaterialDetailComponent() = default;
+		MaterialDetailComponent(const Ref<Material>& material)
 			: LoadedMaterial(material) {}
-		MaterialPreviewComponent(const MaterialPreviewComponent&) = default;
+		MaterialDetailComponent(const MaterialDetailComponent&) = default;
 
 		AssetHandle& GetShaderAsset() const { return LoadedMaterial->m_ShaderInstance->m_ShaderAsset; }
 		U32& GetShaderVariant() const { return LoadedMaterial->m_ShaderInstance->m_ShaderVariantID; }
@@ -436,15 +436,15 @@ namespace ZeoEngine {
 		BoundsComponent(const BoundsComponent&) = default;
 	};
 
-	struct TexturePreviewComponent : public IComponent
+	struct TextureDetailComponent : public IComponent
 	{
 		Ref<Texture2D> LoadedTexture;
 		SamplerType SamplerType = SamplerType::BilinearRepeat;
 
-		TexturePreviewComponent() = default;
-		TexturePreviewComponent(const Ref<Texture2D>& texture)
+		TextureDetailComponent() = default;
+		TextureDetailComponent(const Ref<Texture2D>& texture)
 			: LoadedTexture(texture) {}
-		TexturePreviewComponent(const TexturePreviewComponent&) = default;
+		TextureDetailComponent(const TextureDetailComponent&) = default;
 
 		bool& IsSRGB() const { return LoadedTexture->m_bIsSRGB; }
 		bool& ShouldGenerateMipmaps() const { return LoadedTexture->m_bShouldGenerateMipmaps; }

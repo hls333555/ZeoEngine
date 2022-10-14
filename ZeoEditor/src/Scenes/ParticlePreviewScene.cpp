@@ -12,7 +12,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewScene::PostLoad()
 	{
-		ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+		ForEachComponentView<ParticleSystemDetailComponent>([](auto entity, auto& particlePreviewComp)
 		{
 			ParticleSystemInstance::Create(particlePreviewComp);
 		});

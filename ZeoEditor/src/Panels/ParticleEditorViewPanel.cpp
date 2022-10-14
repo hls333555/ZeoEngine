@@ -14,7 +14,7 @@ namespace ZeoEngine {
 
 		ViewPanelBase::ProcessRender();
 
-		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
+		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemDetailComponent>().Instance;
 
 		// Display particle count at the top right corner
 		{
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 	
 	void ParticleEditorViewPanel::RenderToolbar()
 	{
-		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemPreviewComponent>().Instance;
+		const auto& psInstance = GetEditorWorld()->GetContextEntity().GetComponent<ParticleSystemDetailComponent>().Instance;
 
 		// Place buttons at window center
 		ImGui::Indent(ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing());

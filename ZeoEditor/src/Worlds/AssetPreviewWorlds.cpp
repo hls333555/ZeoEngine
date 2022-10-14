@@ -52,7 +52,7 @@ namespace ZeoEngine {
 #pragma region MaterialPreviewWorld
 	void MaterialPreviewWorld::LoadAsset(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
+		GetContextEntity().PatchComponent<MaterialDetailComponent>([&path, this](auto& materialPreviewComp)
 		{
 			SetMaterialAsset(materialPreviewComp, AssetLibrary::LoadAsset<Material>(path));
 		});
@@ -60,7 +60,7 @@ namespace ZeoEngine {
 
 	void MaterialPreviewWorld::OnAssetSaveAs(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<MaterialPreviewComponent>([&path, this](auto& materialPreviewComp)
+		GetContextEntity().PatchComponent<MaterialDetailComponent>([&path, this](auto& materialPreviewComp)
 		{
 			SetMaterialAsset(materialPreviewComp, AssetLibrary::LoadAsset<Material>(path, AssetLibrary::DeserializeMode::Force));
 		});
@@ -74,7 +74,7 @@ namespace ZeoEngine {
 	Entity MaterialPreviewWorld::CreatePreviewEntity(const Ref<Scene>& scene)
 	{
 		Entity previewMaterialEntity = scene->CreateEntity("Preview Material");
-		previewMaterialEntity.AddComponent<MaterialPreviewComponent>();
+		previewMaterialEntity.AddComponent<MaterialDetailComponent>();
 		previewMaterialEntity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
 		previewMaterialEntity.AddComponent<DirectionalLightComponent>();
 		return previewMaterialEntity;
@@ -82,7 +82,7 @@ namespace ZeoEngine {
 
 	Scope<InspectorBase> MaterialPreviewWorld::CreateInspector()
 	{
-		return CreateScope<MaterialInspector>(SharedFromBase<MaterialPreviewWorld>(), entt::type_hash<MaterialPreviewComponent>::value());
+		return CreateScope<MaterialInspector>(SharedFromBase<MaterialPreviewWorld>(), entt::type_hash<MaterialDetailComponent>::value());
 	}
 
 	Scope<AssetView> MaterialPreviewWorld::CreateAssetView()
@@ -90,7 +90,7 @@ namespace ZeoEngine {
 		return CreateScope<AssetView>();
 	}
 
-	void MaterialPreviewWorld::SetMaterialAsset(MaterialPreviewComponent& materialPreviewComp, Ref<Material> material)
+	void MaterialPreviewWorld::SetMaterialAsset(MaterialDetailComponent& materialPreviewComp, Ref<Material> material)
 	{
 		materialPreviewComp.LoadedMaterial = material;
 		const auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
@@ -108,7 +108,7 @@ namespace ZeoEngine {
 
 	void MeshPreviewWorld::LoadAsset(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<MeshPreviewComponent>([&path, this](auto& meshPreviewComp)
+		GetContextEntity().PatchComponent<MeshDetailComponent>([&path, this](auto& meshPreviewComp)
 		{
 			SetMeshAsset(meshPreviewComp, AssetLibrary::LoadAsset<Mesh>(path));
 		});
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 
 	void MeshPreviewWorld::OnAssetSaveAs(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<MeshPreviewComponent>([&path, this](auto& meshPreviewComp)
+		GetContextEntity().PatchComponent<MeshDetailComponent>([&path, this](auto& meshPreviewComp)
 		{
 			SetMeshAsset(meshPreviewComp, AssetLibrary::LoadAsset<Mesh>(path, AssetLibrary::DeserializeMode::Force));
 		});
@@ -130,14 +130,14 @@ namespace ZeoEngine {
 	Entity MeshPreviewWorld::CreatePreviewEntity(const Ref<Scene>& scene)
 	{
 		Entity previewMeshEntity = scene->CreateEntity("Preview Mesh");
-		previewMeshEntity.AddComponent<MeshPreviewComponent>();
+		previewMeshEntity.AddComponent<MeshDetailComponent>();
 		previewMeshEntity.AddComponent<DirectionalLightComponent>();
 		return previewMeshEntity;
 	}
 
 	Scope<InspectorBase> MeshPreviewWorld::CreateInspector()
 	{
-		return CreateScope<AssetInspector>(SharedFromBase<MaterialPreviewWorld>(), entt::type_hash<MeshPreviewComponent>::value());
+		return CreateScope<AssetInspector>(SharedFromBase<MaterialPreviewWorld>(), entt::type_hash<MeshDetailComponent>::value());
 	}
 
 	Scope<AssetView> MeshPreviewWorld::CreateAssetView()
@@ -145,7 +145,7 @@ namespace ZeoEngine {
 		return CreateScope<AssetView>();
 	}
 
-	void MeshPreviewWorld::SetMeshAsset(MeshPreviewComponent& meshPreviewComp, Ref<Mesh> mesh)
+	void MeshPreviewWorld::SetMeshAsset(MeshDetailComponent& meshPreviewComp, Ref<Mesh> mesh)
 	{
 		meshPreviewComp.LoadedMesh = mesh;
 		meshPreviewComp.Instance = meshPreviewComp.LoadedMesh->CreateInstance(GetContextEntity().GetScene());
@@ -157,7 +157,7 @@ namespace ZeoEngine {
 #pragma region TexturePreviewWorld
 	void TexturePreviewWorld::LoadAsset(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<TexturePreviewComponent>([&path, this](auto& texturePreviewComp)
+		GetContextEntity().PatchComponent<TextureDetailComponent>([&path, this](auto& texturePreviewComp)
 		{
 			SetTextureAsset(texturePreviewComp, AssetLibrary::LoadAsset<Texture2D>(path));
 		});
@@ -165,7 +165,7 @@ namespace ZeoEngine {
 
 	void TexturePreviewWorld::OnAssetSaveAs(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<TexturePreviewComponent>([&path, this](auto& texturePreviewComp)
+		GetContextEntity().PatchComponent<TextureDetailComponent>([&path, this](auto& texturePreviewComp)
 		{
 			SetTextureAsset(texturePreviewComp, AssetLibrary::LoadAsset<Texture2D>(path, AssetLibrary::DeserializeMode::Force));
 		});
@@ -179,13 +179,13 @@ namespace ZeoEngine {
 	Entity TexturePreviewWorld::CreatePreviewEntity(const Ref<Scene>& scene)
 	{
 		Entity previewTextureEntity = scene->CreateEntity("Preview Texture");
-		previewTextureEntity.AddComponent<TexturePreviewComponent>();
+		previewTextureEntity.AddComponent<TextureDetailComponent>();
 		return previewTextureEntity;
 	}
 
 	Scope<InspectorBase> TexturePreviewWorld::CreateInspector()
 	{
-		return CreateScope<AssetInspector>(SharedFromBase<TexturePreviewWorld>(), entt::type_hash<TexturePreviewComponent>::value());
+		return CreateScope<AssetInspector>(SharedFromBase<TexturePreviewWorld>(), entt::type_hash<TextureDetailComponent>::value());
 	}
 
 	Scope<AssetView> TexturePreviewWorld::CreateAssetView()
@@ -193,7 +193,7 @@ namespace ZeoEngine {
 		return CreateScope<TextureAssetView>(SharedFromBase<TexturePreviewWorld>());
 	}
 
-	void TexturePreviewWorld::SetTextureAsset(TexturePreviewComponent& texturePreviewComp, Ref<Texture2D> texture)
+	void TexturePreviewWorld::SetTextureAsset(TextureDetailComponent& texturePreviewComp, Ref<Texture2D> texture)
 	{
 		texturePreviewComp.LoadedTexture = texture;
 		SetAsset(std::move(texture));
@@ -203,7 +203,7 @@ namespace ZeoEngine {
 #pragma region ParticlePreviewWorld
 	void ParticlePreviewWorld::LoadAsset(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path, this](auto& particlePreviewComp)
+		GetContextEntity().PatchComponent<ParticleSystemDetailComponent>([&path, this](auto& particlePreviewComp)
 		{
 			SetParticleAsset(particlePreviewComp, AssetLibrary::LoadAsset<ParticleTemplate>(path));
 		});
@@ -211,7 +211,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewWorld::OnAssetSaveAs(const std::string& path)
 	{
-		GetContextEntity().PatchComponent<ParticleSystemPreviewComponent>([&path, this](auto& particlePreviewComp)
+		GetContextEntity().PatchComponent<ParticleSystemDetailComponent>([&path, this](auto& particlePreviewComp)
 		{
 			SetParticleAsset(particlePreviewComp, AssetLibrary::LoadAsset<ParticleTemplate>(path, AssetLibrary::DeserializeMode::Force));
 		});
@@ -230,7 +230,7 @@ namespace ZeoEngine {
 	Entity ParticlePreviewWorld::CreatePreviewEntity(const Ref<Scene>& scene)
 	{
 		Entity previewParticleEntity = scene->CreateEntity("Preview Particle");
-		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemPreviewComponent>();
+		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemDetailComponent>();
 		// TODO:
 		// For loading phase, instance will be created in ParticleScene::PostLoad
 		ParticleSystemInstance::Create(particlePreviewComp);
@@ -239,7 +239,7 @@ namespace ZeoEngine {
 
 	Scope<InspectorBase> ParticlePreviewWorld::CreateInspector()
 	{
-		return CreateScope<AssetInspector>(SharedFromBase<ParticlePreviewWorld>(), entt::type_hash<ParticleSystemPreviewComponent>::value());
+		return CreateScope<AssetInspector>(SharedFromBase<ParticlePreviewWorld>(), entt::type_hash<ParticleSystemDetailComponent>::value());
 	}
 
 	Scope<AssetView> ParticlePreviewWorld::CreateAssetView()
@@ -247,7 +247,7 @@ namespace ZeoEngine {
 		return CreateScope<AssetView>();
 	}
 
-	void ParticlePreviewWorld::SetParticleAsset(ParticleSystemPreviewComponent& particlePreviewComp, Ref<ParticleTemplate> particle)
+	void ParticlePreviewWorld::SetParticleAsset(ParticleSystemDetailComponent& particlePreviewComp, Ref<ParticleTemplate> particle)
 	{
 		particlePreviewComp.ParticleTemplateAsset = particle;
 		SetAsset(std::move(particle));

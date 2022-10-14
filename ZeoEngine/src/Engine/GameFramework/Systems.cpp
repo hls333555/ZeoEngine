@@ -87,7 +87,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewUpdateSystem::OnUpdateImpl(DeltaTime dt)
 	{
-		GetScene()->ForEachComponentView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
+		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([dt](auto entity, auto& particlePreviewComp)
 		{
 			if (particlePreviewComp.Instance)
 			{
@@ -408,7 +408,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewRenderSystem::OnRenderEditor()
 	{
-		GetScene()->ForEachComponentView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([](auto entity, auto& particlePreviewComp)
 		{
 			particlePreviewComp.Instance->OnRender();
 		});
@@ -420,7 +420,7 @@ namespace ZeoEngine {
 		{
 			GetSceneRenderer()->SetupDirectionalLight(transformComp.GetRotationInRadians(), lightComp.GetDirectionalLight());
 		});
-		GetScene()->ForEachComponentGroup<MeshPreviewComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, auto& meshComp, auto& transformComp/*, auto& boundsComp*/)
+		GetScene()->ForEachComponentGroup<MeshDetailComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, auto& meshComp, auto& transformComp/*, auto& boundsComp*/)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance);
 			//DebugDrawUtils::DrawSphereBounds(GetScene(), boundsComp.Bounds.Origin, debugDrawColor, boundsComp.Bounds.SphereRadius);

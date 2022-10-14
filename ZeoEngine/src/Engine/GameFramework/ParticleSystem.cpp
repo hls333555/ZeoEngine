@@ -161,7 +161,7 @@ namespace ZeoEngine {
 		, m_ParticleTemplate(particleTemplate)
 		, m_PositionOffset(positionOffset)
 	{
-		m_bIsPreview = ownerEntity->HasComponent<ParticleSystemPreviewComponent>();
+		m_bIsPreview = ownerEntity->HasComponent<ParticleSystemDetailComponent>();
 		Reevaluate();
 	}
 

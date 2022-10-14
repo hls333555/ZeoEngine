@@ -66,12 +66,12 @@ namespace ZeoEngine {
 			.Field<&MeshRendererComponent::MeshAsset>("MeshAsset", std::make_pair(AssetType, Mesh::TypeID()))
 			.Field<true, &MeshRendererComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, CustomElementName, std::make_pair(AssetType, Material::TypeID()));
 
-		RegisterComponent<MeshPreviewComponent>("Mesh Detail", Inherent, HideComponentHeader)
-			.Field<true, &MeshPreviewComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, CustomElementName, std::make_pair(AssetType, Material::TypeID()));
+		RegisterComponent<MeshDetailComponent>("Mesh Detail", Inherent, HideComponentHeader)
+			.Field<true, &MeshDetailComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, CustomElementName, std::make_pair(AssetType, Material::TypeID()));
 
-		RegisterComponent<MaterialPreviewComponent>("Material Detail", Inherent, HideComponentHeader)
-			.Field<true, &MaterialPreviewComponent::GetShaderVariant>("ShaderVariant", HiddenInEditor)
-			.Field<true, &MaterialPreviewComponent::GetShaderAsset>("ShaderAsset", std::make_pair(AssetType, Shader::TypeID()));
+		RegisterComponent<MaterialDetailComponent>("Material Detail", Inherent, HideComponentHeader)
+			.Field<true, &MaterialDetailComponent::GetShaderVariant>("ShaderVariant", HiddenInEditor)
+			.Field<true, &MaterialDetailComponent::GetShaderAsset>("ShaderAsset", std::make_pair(AssetType, Shader::TypeID()));
 
 		RegisterEnum<Light::ShadowType>()
 			.Field<Light::ShadowType::HardShadow>("HardShadow")
@@ -108,10 +108,10 @@ namespace ZeoEngine {
 			.Field<SamplerType::PointRepeat>("PointRepeat")
 			.Field<SamplerType::PointClamp>("PointClamp");
 
-		RegisterComponent<TexturePreviewComponent>("Texture Detail", Inherent, HideComponentHeader)
-			.Field<true, &TexturePreviewComponent::IsSRGB>("SRGB")
-			.Field<&TexturePreviewComponent::SamplerType>("SamplerType")
-			.Field<true, &TexturePreviewComponent::ShouldGenerateMipmaps>("GenerateMipmaps");
+		RegisterComponent<TextureDetailComponent>("Texture Detail", Inherent, HideComponentHeader)
+			.Field<true, &TextureDetailComponent::IsSRGB>("SRGB")
+			.Field<&TextureDetailComponent::SamplerType>("SamplerType")
+			.Field<true, &TextureDetailComponent::ShouldGenerateMipmaps>("GenerateMipmaps");
 #pragma endregion
 
 #pragma region Scripts
@@ -147,25 +147,25 @@ namespace ZeoEngine {
 			.Field<&BurstData::Time>("Time", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(Tooltip, u8"标准化的时间点：[0,1]"))
 			.Field<&BurstData::Amount>("Amount", std::make_pair(Tooltip, u8"在该时间点一次性生成的粒子数"));
 
-		RegisterComponent<ParticleSystemPreviewComponent>("Particle System Detail", Inherent, HideComponentHeader)
-			.Field<true, &ParticleSystemPreviewComponent::IsLocalSpace>("IsLocalSpace", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"是否在局部空间模拟粒子"))
-			.Field<true, &ParticleSystemPreviewComponent::GetLoopCount>("LoopCount", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"循环次数。若小于等于0, 则为无限循环"))
-			.Field<true, &ParticleSystemPreviewComponent::GetLoopDuration>("LoopDuration", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每次循环的时长"))
-			.Field<true, &ParticleSystemPreviewComponent::GetSpawnRate>("SpawnRate", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于等于0，则不生成"))
-			.Field<true, &ParticleSystemPreviewComponent::GetBurstList>("BurstList", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每个时间点一次性生成的粒子数列表"))
-			.Field<true, &ParticleSystemPreviewComponent::GetInitialPosition>("InitialPosition", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始位置"))
-			.Field<true, &ParticleSystemPreviewComponent::GetInitialRotation>("InitialRotation", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始旋转"))
-			.Field<true, &ParticleSystemPreviewComponent::GetRotationRate>("RotationRate", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的旋转速度"))
-			.Field<true, &ParticleSystemPreviewComponent::GetSizeBegin>("SizeBegin", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始大小"))
-			.Field<true, &ParticleSystemPreviewComponent::GetSizeEnd>("SizeEnd", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的最终大小"))
-			.Field<true, &ParticleSystemPreviewComponent::GetInitialVelocity>("InitialVelocity", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始速度"))
-			.Field<true, &ParticleSystemPreviewComponent::GetInheritVelocityRatio>("InheritVelocity", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"决定粒子所能从发射器继承的速度比率。该变量只有在非局部空间有效"), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
-			.Field<true, &ParticleSystemPreviewComponent::GetColorBegin>("ColorBegin", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始颜色"))
-			.Field<true, &ParticleSystemPreviewComponent::GetColorEnd>("ColorEnd", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的最终颜色"))
-			.Field<true, &ParticleSystemPreviewComponent::GetLifetime>("Lifetime", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的生命周期"))
-			.Field<true, &ParticleSystemPreviewComponent::GetTexture>("Texture", std::make_pair(Category, "Renderer"), std::make_pair(Tooltip, u8"粒子的材质贴图"))
-			.Field<true, &ParticleSystemPreviewComponent::GetSubImageSize>("SubImageSize", std::make_pair(Category, "Renderer"), std::make_pair(Tooltip, u8"决定如何分割贴图来用于UV动画。x为列数，y为行数"), std::make_pair(ClampMin, 0.0f))
-			.Field<true, &ParticleSystemPreviewComponent::GetMaxParticles>("MaxParticles", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"最多生成的粒子数"), std::make_pair(ClampMin, 0));
+		RegisterComponent<ParticleSystemDetailComponent>("Particle System Detail", Inherent, HideComponentHeader)
+			.Field<true, &ParticleSystemDetailComponent::IsLocalSpace>("IsLocalSpace", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"是否在局部空间模拟粒子"))
+			.Field<true, &ParticleSystemDetailComponent::GetLoopCount>("LoopCount", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"循环次数。若小于等于0, 则为无限循环"))
+			.Field<true, &ParticleSystemDetailComponent::GetLoopDuration>("LoopDuration", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每次循环的时长"))
+			.Field<true, &ParticleSystemDetailComponent::GetSpawnRate>("SpawnRate", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每秒总共生成的粒子数，该变量决定粒子的生成速度。若小于等于0，则不生成"))
+			.Field<true, &ParticleSystemDetailComponent::GetBurstList>("BurstList", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"每个时间点一次性生成的粒子数列表"))
+			.Field<true, &ParticleSystemDetailComponent::GetInitialPosition>("InitialPosition", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始位置"))
+			.Field<true, &ParticleSystemDetailComponent::GetInitialRotation>("InitialRotation", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始旋转"))
+			.Field<true, &ParticleSystemDetailComponent::GetRotationRate>("RotationRate", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的旋转速度"))
+			.Field<true, &ParticleSystemDetailComponent::GetSizeBegin>("SizeBegin", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始大小"))
+			.Field<true, &ParticleSystemDetailComponent::GetSizeEnd>("SizeEnd", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的最终大小"))
+			.Field<true, &ParticleSystemDetailComponent::GetInitialVelocity>("InitialVelocity", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始速度"))
+			.Field<true, &ParticleSystemDetailComponent::GetInheritVelocityRatio>("InheritVelocity", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"决定粒子所能从发射器继承的速度比率。该变量只有在非局部空间有效"), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
+			.Field<true, &ParticleSystemDetailComponent::GetColorBegin>("ColorBegin", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的初始颜色"))
+			.Field<true, &ParticleSystemDetailComponent::GetColorEnd>("ColorEnd", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的最终颜色"))
+			.Field<true, &ParticleSystemDetailComponent::GetLifetime>("Lifetime", std::make_pair(Category, "Particle"), std::make_pair(Tooltip, u8"粒子的生命周期"))
+			.Field<true, &ParticleSystemDetailComponent::GetTexture>("Texture", std::make_pair(Category, "Renderer"), std::make_pair(Tooltip, u8"粒子的材质贴图"))
+			.Field<true, &ParticleSystemDetailComponent::GetSubImageSize>("SubImageSize", std::make_pair(Category, "Renderer"), std::make_pair(Tooltip, u8"决定如何分割贴图来用于UV动画。x为列数，y为行数"), std::make_pair(ClampMin, 0.0f))
+			.Field<true, &ParticleSystemDetailComponent::GetMaxParticles>("MaxParticles", std::make_pair(Category, "Emitter"), std::make_pair(Tooltip, u8"最多生成的粒子数"), std::make_pair(ClampMin, 0));
 #pragma endregion
 
 #pragma region Physics
@@ -260,11 +260,11 @@ namespace ZeoEngine {
 		ComponentHelperRegistry::RegisterComponentHelper<CameraComponentHelper, CameraComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<ScriptComponentHelper, ScriptComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<ParticleSystemComponentHelper, ParticleSystemComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<ParticleSystemPreviewComponentHelper, ParticleSystemPreviewComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<ParticleSystemDetailComponentHelper, ParticleSystemDetailComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<MeshRendererComponentHelper, MeshRendererComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<MeshPreviewComponentHelper, MeshPreviewComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<MaterialPreviewComponentHelper, MaterialPreviewComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<TexturePreviewComponentHelper, TexturePreviewComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<MeshDetailComponentHelper, MeshDetailComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<MaterialDetailComponentHelper, MaterialDetailComponent>();
+		ComponentHelperRegistry::RegisterComponentHelper<TextureDetailComponentHelper, TextureDetailComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<DirectionalLightComponentHelper, DirectionalLightComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<PointLightComponentHelper, PointLightComponent>();
 		ComponentHelperRegistry::RegisterComponentHelper<SpotLightComponentHelper, SpotLightComponent>();

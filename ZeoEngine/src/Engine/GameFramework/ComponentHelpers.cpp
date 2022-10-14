@@ -136,19 +136,19 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
-#pragma region ParticleSystemPreviewComponentHelper
-	void ParticleSystemPreviewComponentHelper::OnComponentDestroy(IComponent* comp)
+#pragma region ParticleSystemDetailComponentHelper
+	void ParticleSystemDetailComponentHelper::OnComponentDestroy(IComponent* comp)
 	{
-		const auto* particlePreviewComp = static_cast<ParticleSystemPreviewComponent*>(comp);
+		const auto* particlePreviewComp = static_cast<ParticleSystemDetailComponent*>(comp);
 		if (particlePreviewComp->ParticleTemplateAsset)
 		{
 			particlePreviewComp->ParticleTemplateAsset->RemoveParticleSystemInstance(particlePreviewComp->Instance);
 		}
 	}
 	 
-	void ParticleSystemPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+	void ParticleSystemDetailComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		const auto* particlePreviewComp = static_cast<ParticleSystemPreviewComponent*>(comp);
+		const auto* particlePreviewComp = static_cast<ParticleSystemDetailComponent*>(comp);
 		particlePreviewComp->ParticleTemplateAsset->ResimulateAllParticleSystemInstances();
 	}
 #pragma endregion
@@ -214,11 +214,11 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
-#pragma region MeshPreviewComponentHelper
-	void MeshPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+#pragma region MeshDetailComponentHelper
+	void MeshDetailComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
-		if (fieldID == GetFieldIDByName<MeshPreviewComponent>("MaterialSlots"))
+		const auto* meshComp = static_cast<MeshDetailComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MeshDetailComponent>("MaterialSlots"))
 		{
 			meshComp->Instance->SetMaterial(elementIndex, meshComp->GetMaterialAssets()[elementIndex]);
 			const auto oldMaterial = *static_cast<const AssetHandle*>(oldValue);
@@ -226,52 +226,52 @@ namespace ZeoEngine {
 		}
 	}
 
-	BoxSphereBounds MeshPreviewComponentHelper::GetBounds(IComponent* comp)
+	BoxSphereBounds MeshDetailComponentHelper::GetBounds(IComponent* comp)
 	{
 		const auto& transformComp = comp->OwnerEntity.GetComponent<TransformComponent>();
-		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
+		const auto* meshComp = static_cast<MeshDetailComponent*>(comp);
 		const auto& mesh = meshComp->LoadedMesh;
 		return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
 	}
 
-	std::string MeshPreviewComponentHelper::GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const
+	std::string MeshDetailComponentHelper::GetCustomSequenceContainerElementName(IComponent* comp, U32 index) const
 	{
-		const auto* meshComp = static_cast<MeshPreviewComponent*>(comp);
+		const auto* meshComp = static_cast<MeshDetailComponent*>(comp);
 		return meshComp->LoadedMesh->GetMaterialNames()[index];
 	}
 #pragma endregion
 
-#pragma region MaterialPreviewComponentHelper
-	void MaterialPreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+#pragma region MaterialDetailComponentHelper
+	void MaterialDetailComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		const auto* materialComp = static_cast<MaterialPreviewComponent*>(comp);
-		if (fieldID == GetFieldIDByName<MaterialPreviewComponent>("ShaderAsset"))
+		const auto* materialComp = static_cast<MaterialDetailComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MaterialDetailComponent>("ShaderAsset"))
 		{
 			const auto oldShader = *static_cast<const AssetHandle*>(oldValue);
 			materialComp->LoadedMaterial->OnShaderChanged(materialComp->GetShaderAsset(), oldShader);
 		}
 	}
 
-	void MaterialPreviewComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
+	void MaterialDetailComponentHelper::PostFieldDeserialize(IComponent* comp, U32 fieldID)
 	{
-		const auto* materialComp = static_cast<MaterialPreviewComponent*>(comp);
-		if (fieldID == GetFieldIDByName<MaterialPreviewComponent>("ShaderAsset"))
+		const auto* materialComp = static_cast<MaterialDetailComponent*>(comp);
+		if (fieldID == GetFieldIDByName<MaterialDetailComponent>("ShaderAsset"))
 		{
 			materialComp->LoadedMaterial->OnShaderChanged(materialComp->GetShaderAsset(), 0);
 		}
 	}
 #pragma endregion
 
-#pragma region TexturePreviewComponentHelper
-	void TexturePreviewComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
+#pragma region TextureDetailComponentHelper
+	void TextureDetailComponentHelper::PostComponentFieldValueEditChange(IComponent* comp, U32 fieldID, const void* oldValue, U32 elementIndex)
 	{
-		const auto* textureComp = static_cast<TexturePreviewComponent*>(comp);
-		if (fieldID == GetFieldIDByName<TexturePreviewComponent>("SRGB") ||
-			fieldID == GetFieldIDByName<TexturePreviewComponent>("GenerateMipmaps"))
+		const auto* textureComp = static_cast<TextureDetailComponent*>(comp);
+		if (fieldID == GetFieldIDByName<TextureDetailComponent>("SRGB") ||
+			fieldID == GetFieldIDByName<TextureDetailComponent>("GenerateMipmaps"))
 		{
 			textureComp->LoadedTexture->Invalidate();
 		}
-		else if (fieldID == GetFieldIDByName<TexturePreviewComponent>("SamplerType"))
+		else if (fieldID == GetFieldIDByName<TextureDetailComponent>("SamplerType"))
 		{
 			textureComp->LoadedTexture->ChangeSampler(textureComp->SamplerType);
 		}
