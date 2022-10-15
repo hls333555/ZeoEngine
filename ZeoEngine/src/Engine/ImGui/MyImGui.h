@@ -41,18 +41,3 @@ namespace ImGui {
 	/** Version that modifies the hightlight style for drop target. */
 	IMGUI_API const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding = 0.0f, ImGuiDragDropFlags flags = 0);
 }
-
-namespace ZeoEngine {
-	
-	struct ImVec2Data
-	{
-		ImVec2 Data;
-		ImGuiCond Condition{ ImGuiCond_FirstUseEver };
-
-		bool operator==(const ImVec2Data& other) const
-		{
-			return Data.x == other.Data.x && Data.y == other.Data.y && Condition == other.Condition;
-		}
-	};
-
-}

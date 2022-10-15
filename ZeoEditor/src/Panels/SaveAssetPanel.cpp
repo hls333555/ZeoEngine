@@ -3,6 +3,7 @@
 #include "Core/Editor.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/ImGui/MyImGui.h"
 #include "Worlds/AssetPreviewWorlds.h"
 
 namespace ZeoEngine {

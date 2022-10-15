@@ -2,6 +2,7 @@
 
 #include "Engine/Asset/AssetRegistry.h"
 #include "Core/Editor.h"
+#include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {
 
@@ -15,8 +16,8 @@ namespace ZeoEngine {
 	{
 		AssetBrowserPanelBase::OnAttach();
 
-		m_PanelSpec.WindowFlags |= ImGuiWindowFlags_NoDocking;
-		m_PanelSpec.InitialSize = { { 700.0f, 400.0f } };
+		SetFlags(ImGuiWindowFlags_NoDocking);
+		SetInitialSize({ 700.0f, 400.0f });
 	}
 
 	void OpenAssetPanel::DrawBottom()

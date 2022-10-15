@@ -8,7 +8,8 @@ namespace ZeoEngine {
 	AssetViewPanel::AssetViewPanel(std::string panelName)
 		: ViewPanelBase(std::move(panelName))
 	{
-		m_PanelSpec.bDisableClose = true;
+		SetFlags(ImGuiWindowFlags_NoFocusOnAppearing);
+		SetDisableClose(true);
 	}
 
 	void AssetViewPanel::ProcessRender()

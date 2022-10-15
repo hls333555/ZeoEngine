@@ -45,12 +45,15 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
+		void RenderDetailsPanel(const Ref<EditorPreviewWorldBase>& editorWorld, Entity selectedEntity);
 		void BuildDockspaceLayout(ImGuiID dockspaceID);
 
 	private:
 		Weak<EditorPreviewWorldBase> m_EditorWorld;
 
 		Ref<AssetViewPanel> m_AssetViewPanel;
+		/** Flag for details panel to update once for last selected entity which fixes a issue where field caches cannot be applied when an empty entity is selected */
+		bool m_bShouldDrawWhenNoEntitySelected = true;
 
 		std::stack<InspectHistoryData> m_InspectHistory;
 

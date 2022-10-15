@@ -1,8 +1,7 @@
 #pragma once
 
 #include <IconsFontAwesome5.h>
-
-#include "Engine/ImGui/MyImGui.h"
+#include <imgui.h>
 
 namespace ZeoEngine {
 
@@ -24,8 +23,9 @@ namespace ZeoEngine {
 	{
 		ImGuiWindowFlags WindowFlags = 0;
 		bool bDisableClose = false;
-		ImVec2 Padding = ImVec2(3.0f, 3.0f);
-		ImVec2Data InitialSize{ { 800.0f, 600.0f } };
+		ImVec2 Padding{ 3.0f, 3.0f };
+		ImVec2 InitialSize{ 800.0f, 600.0f };
+		ImGuiCond InitialSizeCondition = ImGuiCond_FirstUseEver;
 	};
 
 }

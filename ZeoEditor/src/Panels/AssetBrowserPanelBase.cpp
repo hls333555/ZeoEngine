@@ -8,6 +8,7 @@
 #include "Engine/Asset/AssetFactory.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
+#include "Engine/ImGui/MyImGui.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Texture.h"

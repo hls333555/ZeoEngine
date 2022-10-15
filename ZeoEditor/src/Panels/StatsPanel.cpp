@@ -11,9 +11,8 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
-		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
-		m_PanelSpec.InitialSize = { { 300.0f, 300.0f } };
+		SetFlags(ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize);
+		SetPadding(ImGui::GetStyle().WindowPadding);
 	}
 
 	void StatsPanel::ProcessRender()
@@ -44,24 +43,20 @@ namespace ZeoEngine {
 
 		if (ImGui::TreeNodeEx("Entity", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			std::string HoveredEntityName = Stats.HoveredEntity ? Stats.HoveredEntity.GetName() : "NA";
-			ImGui::Text("Hovered Entity: %s", HoveredEntityName.c_str());
+			const std::string hoveredEntityName = Stats.HoveredEntity ? Stats.HoveredEntity.GetName() : "NA";
+			ImGui::Text("Hovered Entity: %s", hoveredEntityName.c_str());
 
 			ImGui::TreePop();
 		}
-		
-		//if (ImGui::TreeNodeEx("Particle Template", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-		//{
-		//	ParticleTemplateLibrary::Get().ForEach([&](const entt::id_type id, const AssetHandle<ParticleTemplate>& pTemplate)
-		//	{
-		//		std::ostringstream stringStream;
-		//		stringStream << pTemplate->GetPath() << ": " << pTemplate->GetParticleSystemInstanceCount() << "reference(s)";
-		//		std::string pTemplateInfo = stringStream.str();
-		//		ImGui::Text(pTemplateInfo.c_str());
-		//	});
 
-		//	ImGui::TreePop();
-		//}
+		if (ImGui::TreeNodeEx("ImGui", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+		{
+			const auto* focusedWindow = ImGui::GetCurrentContext()->NavWindow;
+			ImGui::Text("Focused Window: %s", focusedWindow ? focusedWindow->Name : "None");
+
+			ImGui::TreePop();
+		}
+
 	}
 
 }

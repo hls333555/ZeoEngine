@@ -24,6 +24,11 @@ namespace ZeoEngine {
 
 		const std::string& GetPanelName() const { return m_PanelName; }
 
+		void SetFlags(ImGuiWindowFlags flags) { m_PanelSpec.WindowFlags = flags; }
+		void SetDisableClose(bool bDisable) { m_PanelSpec.bDisableClose = bDisable; }
+		void SetPadding(const Vec2& padding) { m_PanelSpec.Padding = padding; }
+		void SetInitialSize(const Vec2& size) { m_PanelSpec.InitialSize = size; }
+
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
@@ -31,6 +36,7 @@ namespace ZeoEngine {
 		void FocusPanel();
 
 		void Toggle(bool bShow);
+
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
@@ -42,11 +48,9 @@ namespace ZeoEngine {
 
 		virtual void OnPanelOpen() {}
 
-	protected:
-		PanelSpec m_PanelSpec;
-
 	private:
 		std::string m_PanelName;
+		PanelSpec m_PanelSpec;
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;

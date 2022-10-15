@@ -9,7 +9,6 @@
 #include "Inspectors/ScriptInspector.h"
 #include "Engine/Utils/ReflectionUtils.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Scripting/ScriptEngine.h"
 
 namespace ZeoEngine {
 
@@ -24,12 +23,20 @@ namespace ZeoEngine {
 		// We need to check validity as entity may have been destroyed just now
 		if (m_LastEntity.IsValid())
 		{
+			// Store last focused window
+			auto* lastFocusedWindow = ImGui::GetCurrentContext()->NavWindow;
+			// Make sure current window is focused for caches being applied successfully
+			ImGui::FocusWindow(ImGui::GetCurrentWindow());
+
 			// Sometimes, selected entity is changed while certain input box is still active, ImGui::IsItemDeactivatedAfterEdit() of that item will not get called,
 			// so we have to draw last entity's components once again to ensure all caches are applied
 			// If ImGui supports no-live-edit, we can refactor FieldWidget till then
 			// https://github.com/ocornut/imgui/issues/701
 			DrawInternal(m_LastEntity);
 			m_LastEntity = {};
+
+			// Restore last focused window
+			ImGui::FocusWindow(lastFocusedWindow);
 			return;
 		}
 

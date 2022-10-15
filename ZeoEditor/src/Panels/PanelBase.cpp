@@ -1,5 +1,7 @@
 #include "Panels/PanelBase.h"
 
+#include <imgui_internal.h>
+
 #include "Engine/Core/Input.h"
 
 namespace ZeoEngine {
@@ -23,7 +25,7 @@ namespace ZeoEngine {
 		ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImVec2 centerPos{ mainViewport->Pos.x + mainViewport->Size.x / 2.0f, mainViewport->Pos.y + mainViewport->Size.y / 2.0f };
 		ImGui::SetNextWindowPos(centerPos, ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize.Data, m_PanelSpec.InitialSize.Condition);
+		ImGui::SetNextWindowSize(m_PanelSpec.InitialSize, m_PanelSpec.InitialSizeCondition);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
 		if (ImGui::Begin(GetPanelTitle().c_str(), m_PanelSpec.bDisableClose ? nullptr : &m_bShow, m_PanelSpec.WindowFlags))

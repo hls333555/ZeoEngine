@@ -8,7 +8,7 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+		SetPadding(ImGui::GetStyle().WindowPadding);
 	}
 
 	void ConsolePanel::ProcessRender()

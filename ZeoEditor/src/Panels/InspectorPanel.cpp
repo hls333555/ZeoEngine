@@ -13,7 +13,7 @@ namespace ZeoEngine {
 		: PanelBase(std::move(panelName))
 		, m_EditorWorld(std::static_pointer_cast<EditorPreviewWorldBase>(g_Editor->GetLevelWorld()))
 	{
-		m_PanelSpec.Padding = { 0.0f, 0.0f };
+		SetPadding({ 0.0f, 0.0f });
 		m_AssetViewPanel = CreateRef<AssetViewPanel>(ASSET_VIEW);
 		m_AssetViewPanel->OnAttach();
 	}
@@ -74,13 +74,16 @@ namespace ZeoEngine {
 		const auto editorWorld = GetEditorWorld();
 		if (const Entity selectedEntity = editorWorld->GetContextEntity())
 		{
-			// Render Asset View panel
 			m_AssetViewPanel->OnImGuiRender();
+			RenderDetailsPanel(editorWorld, selectedEntity);
 
-			// Render Details panel
-			ImGui::Begin(DETAILS);
-			editorWorld->GetInspector().Draw(selectedEntity);
-			ImGui::End();
+			m_bShouldDrawWhenNoEntitySelected = true;
+		}
+		else if (m_bShouldDrawWhenNoEntitySelected)
+		{
+			m_bShouldDrawWhenNoEntitySelected = false;
+
+			RenderDetailsPanel(editorWorld, selectedEntity);
 		}
 	}
 
@@ -90,6 +93,13 @@ namespace ZeoEngine {
 		{
 			m_AssetViewPanel->OnEvent(e);
 		}
+	}
+
+	void InspectorPanel::RenderDetailsPanel(const Ref<EditorPreviewWorldBase>& editorWorld, Entity selectedEntity)
+	{
+		ImGui::Begin(DETAILS, nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
+		editorWorld->GetInspector().Draw(selectedEntity);
+		ImGui::End();
 	}
 
 	void InspectorPanel::BuildDockspaceLayout(ImGuiID dockspaceID)
