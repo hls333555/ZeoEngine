@@ -7,6 +7,8 @@
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
+#include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 
@@ -20,6 +22,8 @@ namespace ZeoEngine {
 	}
 
 #define ZE_ADD_INTERNAL_CALL(Name) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name, Name)
+#define EXPAND_PARAM_TYPE(...) "(" #__VA_ARGS__ ")"
+#define ZE_ADD_INTERNAL_CALL_OVERLOAD(Name, OverloadName, ...) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name EXPAND_PARAM_TYPE(__VA_ARGS__), OverloadName)
 
 	static MonoString* Entity_GetName(UUID entityID)
 	{
@@ -91,6 +95,27 @@ namespace ZeoEngine {
 		ScriptEngine::GetEntityByID(entityID).SetScale(*scale);
 	}
 
+	static AssetHandle MeshRendererComponent_GetMeshAsset(UUID entityID)
+	{
+		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MeshAsset;
+	}
+
+	static void MeshRendererComponent_SetMeshAsset(UUID entityID, AssetHandle meshAsset)
+	{
+		// TODO:
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		auto& meshComp = entity.GetComponent<MeshRendererComponent>();
+		meshComp.MeshAsset = meshAsset;
+		entity.UpdateBounds();
+		const auto mesh = meshComp.GetMesh();
+		meshComp.Instance = mesh ? mesh->CreateInstance(entity.GetScene()) : nullptr;
+	}
+
+	static void* MeshRendererComponent_GetInstance(UUID entityID)
+	{
+		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().Instance.get();
+	}
+
 	static bool Input_IsKeyPressed(KeyCode keycode)
 	{
 		return Input::IsKeyPressed(keycode);
@@ -109,6 +134,45 @@ namespace ZeoEngine {
 	static bool Input_IsMouseButtonReleased(MouseCode mousecode)
 	{
 		return Input::IsMouseButtonReleased(mousecode);
+	}
+
+	static void* AssetLibrary_LoadAssetByPath(MonoString* path)
+	{
+		char* str = mono_string_to_utf8(path);
+		const auto asset = AssetLibrary::LoadAsset<IAsset>(str).get();
+		mono_free(str);
+		return asset;
+	}
+
+	static void* AssetLibrary_LoadAssetByHandle(AssetHandle handle)
+	{
+		return AssetLibrary::LoadAsset<IAsset>(handle).get();
+	}
+
+	static MonoString* Asset_GetName(AssetHandle handle)
+	{
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		return Utils::StringToMonoString(metadata ? metadata->PathName : "Invalid name");
+	}
+
+	static void Asset_GetHandle(void* assetPtr, AssetHandle* handle)
+	{
+		const auto* asset = static_cast<IAsset*>(assetPtr);
+		*handle = asset ? asset->GetHandle() : 0;
+	}
+
+	static U64 MeshInstance_GetMaterial(void* meshInstance, U32 index)
+	{
+		const auto* instance = static_cast<MeshInstance*>(meshInstance);
+		return instance ? instance->GetMaterial(index) : 0;
+	}
+
+	static void MeshInstance_SetMaterial(void* meshInstance, U32 index, AssetHandle materialAsset)
+	{
+		auto* instance = static_cast<MeshInstance*>(meshInstance);
+		if (!instance) return;
+
+		instance->SetMaterial(index, materialAsset);
 	}
 
 	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
@@ -135,11 +199,29 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(TransformComponent_SetScale);
 #pragma endregion
 
+#pragma region MeshComponent
+		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetMeshAsset);
+		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMeshAsset);
+		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetInstance);
+#pragma endregion
+
 #pragma region Input
 		ZE_ADD_INTERNAL_CALL(Input_IsKeyPressed);
 		ZE_ADD_INTERNAL_CALL(Input_IsKeyReleased);
 		ZE_ADD_INTERNAL_CALL(Input_IsMouseButtonPressed);
 		ZE_ADD_INTERNAL_CALL(Input_IsMouseButtonReleased);
+#pragma endregion
+
+#pragma region Asset
+		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByPath, string);
+		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByHandle, ulong);
+		ZE_ADD_INTERNAL_CALL(Asset_GetName);
+		ZE_ADD_INTERNAL_CALL(Asset_GetHandle);
+#pragma endregion
+
+#pragma region Mesh
+		ZE_ADD_INTERNAL_CALL(MeshInstance_GetMaterial);
+		ZE_ADD_INTERNAL_CALL(MeshInstance_SetMaterial);
 #pragma endregion
 
 	}

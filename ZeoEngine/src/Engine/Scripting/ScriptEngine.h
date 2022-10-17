@@ -36,13 +36,15 @@ namespace ZeoEngine {
 		static void ReloadAssembly();
 		static entt::sink<entt::sigh<void()>>* GetScriptReloadedDelegate();
 
-		static void SetSceneContext(const Ref<Scene>& scene);
-
 		static MonoDomain* GetAppDomain();
 		static MonoImage* GetCoreAssemblyImage();
 
 		static const Ref<Scene>& GetSceneContext();
+		static void SetSceneContext(const Ref<Scene>& scene);
 
+		static MonoObject* GetMonoInstanceFromHandle(U32 handle);
+
+		static void OnScriptClassChanged(Entity entity);
 		static void InitScriptEntity(Entity entity);
 		static void InstantiateEntityClass(Entity entity);
 		static void OnCreateEntity(Entity entity);
@@ -65,6 +67,7 @@ namespace ZeoEngine {
 		static void LoadAssemblyClasses();
 		static U32 InstantiateClass(MonoClass* monoClass);
 		static void DestroyClass(U32 handle);
+		static void ClearEntityCacheData();
 	};
 
 	struct ScriptField
@@ -83,6 +86,7 @@ namespace ZeoEngine {
 		ScriptClass(std::string nameSpace, std::string className, bool bIsCore = false);
 
 		const auto& GetFields() const { return m_Fields; }
+		const ScriptField* GetField(const std::string& name) const;
 
 		U32 Instantiate() const;
 		void Destroy(U32 handle) const;

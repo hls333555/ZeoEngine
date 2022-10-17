@@ -146,14 +146,28 @@ namespace ZeoEngine {
 			}
 		}
 
+		/** If typeID is 0, all assets will be traversed. The signature of func should be "void(const Ref<AssetMetadata>&)". */
 		template<typename Func>
 		void ForEachAssetByTypeID(AssetTypeID typeID, Func func)
 		{
-			if (const auto it = m_AssetMetadatasByID.find(typeID); it != m_AssetMetadatasByID.cend())
+			if (typeID)
 			{
-				for (const auto& assetMetadata : it->second)
+				if (const auto it = m_AssetMetadatasByID.find(typeID); it != m_AssetMetadatasByID.cend())
 				{
-					func(assetMetadata);
+					for (const auto& metadata : it->second)
+					{
+						func(metadata);
+					}
+				}
+			}
+			else
+			{
+				for (const auto& pair : m_AssetMetadatasByID)
+				{
+					for (const auto& metadata : pair.second)
+					{
+						func(metadata);
+					}
 				}
 			}
 		}

@@ -106,8 +106,10 @@ namespace ZeoEngine {
 		void SetValue_Internal(const void* value) const;
 		void GetRuntimeValueInternal(void* outValue) const;
 		void GetRuntimeValueInternal(std::string& outValue) const;
+		//void GetRuntimeValueInternal(AssetHandle* outValue) const;
 		void SetRuntimeValueInternal(const void* value) const;
 		void SetRuntimeValueInternal(const std::string& value) const;
+		//void SetRuntimeValueInternal(const AssetHandle* value) const;
 
 	private:
 		ScriptField* Field = nullptr;

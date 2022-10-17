@@ -487,7 +487,7 @@ namespace ZeoEngine {
 			m_Browser.TypeID = GetFieldInstance()->GetAssetTypeID();
 			if (!m_Browser.TypeID)
 			{
-				ZE_CORE_ERROR("Asset field '{0}' does not register an 'AssetType' property!", GetFieldInstance()->GetFieldName());
+				ZE_CORE_WARN("Asset field '{0}' does not register an 'AssetType' property!", GetFieldInstance()->GetFieldName());
 			}
 		}
 

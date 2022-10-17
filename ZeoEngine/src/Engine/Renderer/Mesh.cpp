@@ -226,15 +226,22 @@ namespace ZeoEngine {
 		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
 	}
 
-	void MeshInstance::SetMaterial(U32 index, AssetHandle material)
+	AssetHandle MeshInstance::GetMaterial(U32 index) const
 	{
-		if (index < 0 || index >= m_MaterialAssets.size()) return;
+		if (index >= m_MaterialAssets.size()) return {};
 
-		const AssetHandle oldMaterial = m_MaterialAssets[index];
-		if (material == oldMaterial) return;
+		return m_MaterialAssets[index];
+	}
 
-		m_MaterialAssets[index] = material;
-		OnMaterialChanged(index, oldMaterial);
+	void MeshInstance::SetMaterial(U32 index, AssetHandle materialAsset)
+	{
+		if (index >= m_MaterialAssets.size()) return;
+
+		const AssetHandle oldMaterialAsset = m_MaterialAssets[index];
+		if (materialAsset == oldMaterialAsset) return;
+
+		m_MaterialAssets[index] = materialAsset;
+		OnMaterialChanged(index, oldMaterialAsset);
 	}
 
 	void MeshInstance::OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset)

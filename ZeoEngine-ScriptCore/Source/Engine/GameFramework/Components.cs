@@ -37,4 +37,16 @@
             set => InternalCalls.TransformComponent_SetScale(Entity.ID, ref value);
         }
     }
+
+    public class MeshRendererComponent : IComponent
+    {
+        public AssetHandle MeshAsset
+        {
+            get => InternalCalls.MeshRendererComponent_GetMeshAsset(Entity.ID);
+            set => InternalCalls.MeshRendererComponent_SetMeshAsset(Entity.ID, value);
+        }
+
+        public MeshInstance Instance => new MeshInstance(InternalCalls.MeshRendererComponent_GetInstance(Entity.ID));
+    }
+
 }

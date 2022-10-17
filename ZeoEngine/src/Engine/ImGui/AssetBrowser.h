@@ -13,6 +13,7 @@ namespace ZeoEngine {
 
 	struct AssetBrowser
 	{
+		/** If 0, all assets, without any type filtering, will be displayed */
 		AssetTypeID TypeID = 0;
 		TextFilter Filter;
 
@@ -148,7 +149,7 @@ namespace ZeoEngine {
 									// Display asset name
 									ImGui::Text(md->PathName.c_str());
 									// Display asset type name
-									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(TypeID)->GetAssetTypeName());
+									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(md->TypeID)->GetAssetTypeName());
 									ImGui::PopStyleVar();
 								}
 								ImGui::EndGroup();

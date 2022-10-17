@@ -109,7 +109,8 @@ namespace ZeoEngine {
 		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
 		auto& GetMeshEntryInstances() { return m_EntryInstances; }
 		auto& GetMaterialAssets() { return m_MaterialAssets; }
-		void SetMaterial(U32 index, AssetHandle material);
+		AssetHandle GetMaterial(U32 index) const;
+		void SetMaterial(U32 index, AssetHandle materialAsset);
 		void OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset);
 
 		void SubmitTechniques(MeshEntryInstance& entryInstance) const;

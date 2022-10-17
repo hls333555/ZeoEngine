@@ -84,7 +84,7 @@ namespace ZeoEngine {
 	{
 		if (fieldID == GetFieldIDByName<ScriptComponent>("ClassName"))
 		{
-			ScriptEngine::InitScriptEntity(comp->OwnerEntity);
+			ScriptEngine::OnScriptClassChanged(comp->OwnerEntity);
 		}
 	}
 
@@ -92,7 +92,7 @@ namespace ZeoEngine {
 	{
 		if (fieldID == GetFieldIDByName<ScriptComponent>("ClassName"))
 		{
-			ScriptEngine::InitScriptEntity(comp->OwnerEntity);
+			ScriptEngine::OnScriptClassChanged(comp->OwnerEntity);
 		}
 	}
 #pragma endregion

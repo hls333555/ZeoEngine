@@ -52,6 +52,19 @@ namespace ZeoEngine
 
         #endregion
 
+        #region MeshRendererComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern AssetHandle MeshRendererComponent_GetMeshAsset(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void MeshRendererComponent_SetMeshAsset(ulong entityID, AssetHandle meshAsset);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern IntPtr MeshRendererComponent_GetInstance(ulong entityID);
+
+        #endregion
+
         #region Input
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -65,6 +78,32 @@ namespace ZeoEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsMouseButtonReleased(MouseCode mousecode);
+
+        #endregion
+
+        #region Asset
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern IntPtr AssetLibrary_LoadAsset(string path);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern IntPtr AssetLibrary_LoadAsset(AssetHandle handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string Asset_GetName(AssetHandle handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Asset_GetHandle(IntPtr asset, out AssetHandle handle);
+
+        #endregion
+
+        #region Mesh
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern AssetHandle MeshInstance_GetMaterial(IntPtr meshInstance, uint index);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void MeshInstance_SetMaterial(IntPtr meshInstance, uint index, AssetHandle materialAsset);
 
         #endregion
         
