@@ -23,11 +23,6 @@ namespace ZeoEngine {
 	{
 	}
 
-	bool RenderTask::HasSameMaterial(const RenderStep* step) const
-	{
-		return m_Step->GetMaterialRef() == step->GetMaterialRef();
-	}
-
 	void RenderTask::AddSubTask(SubRenderTask subTask)
 	{
 		m_SubTasks.emplace_back(subTask);

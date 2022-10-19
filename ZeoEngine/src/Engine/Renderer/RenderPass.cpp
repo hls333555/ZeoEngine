@@ -206,7 +206,7 @@ namespace ZeoEngine {
 		const SubRenderTask subTask(drawable);
 		for (auto& task : m_Tasks)
 		{
-			if (task.HasSameMaterial(step))
+			if (task.GetRenderStep() == step)
 			{
 				task.AddSubTask(subTask);
 				return;

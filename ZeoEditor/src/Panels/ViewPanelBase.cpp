@@ -13,9 +13,9 @@
 
 namespace ZeoEngine {
 
-	void ViewPanelBase::UpdateWorld(const Ref<EditorPreviewWorldBase>& world)
+	void ViewPanelBase::UpdateWorld(EditorPreviewWorldBase* world)
 	{
-		const auto lastWorld = GetEditorWorld();
+		const auto lastWorld = m_EditorWorld;
 		if (!world || world == lastWorld) return;
 
 		m_EditorWorld = world;
@@ -24,21 +24,19 @@ namespace ZeoEngine {
 
 	void ViewPanelBase::ProcessUpdate(DeltaTime dt)
 	{
-		const auto fbo = m_FrameBuffer.lock();
-		if (!fbo) return;
+		if (!m_FrameBuffer) return;
 
-		const auto editorWorld = GetEditorWorld();
 		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
 		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
 		// This results in never rendering an empty (black) framebuffer
-		if (FrameBufferSpec spec = fbo->GetSpec();
+		if (FrameBufferSpec spec = m_FrameBuffer->GetSpec();
 			m_LastViewportSize.x > 0.0f && m_LastViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_LastViewportSize.x || spec.Height != m_LastViewportSize.y))
 		{
-			OnViewportResize(editorWorld, m_LastViewportSize);
+			OnViewportResize(m_LastViewportSize);
 		}
 
-		editorWorld->GetEditorCamera().SetViewportHovered(IsPanelHovered());
+		m_EditorWorld->GetEditorCamera().SetViewportHovered(IsPanelHovered());
 	}
 
 	void ViewPanelBase::ProcessRender()
@@ -54,9 +52,9 @@ namespace ZeoEngine {
 		//GetContextEditor()->BlockSceneEvents(!IsPanelFocused() && !IsPanelHovered());
 
 		// Draw framebuffer texture
-		if (const auto fbo = m_FrameBuffer.lock())
+		if (m_FrameBuffer)
 		{
-			ImGui::ImageRounded(fbo->GetColorAttachment()->GetTextureID(), m_LastViewportSize,
+			ImGui::ImageRounded(m_FrameBuffer->GetColorAttachment()->GetTextureID(), m_LastViewportSize,
 				ImGui::IsWindowDocked() ? 0.0f : 8.0f,
 				{ 0, 1 }, { 1, 0 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 },
 				ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
@@ -82,30 +80,30 @@ namespace ZeoEngine {
 
 	bool ViewPanelBase::OnMouseScroll(MouseScrolledEvent& e) const
 	{
-		return GetEditorWorld()->GetEditorCamera().OnMouseScroll(e);
+		return m_EditorWorld->GetEditorCamera().OnMouseScroll(e);
 	}
 
 	bool ViewPanelBase::OnKeyPressed(KeyPressedEvent& e) const
 	{
 		if (e.GetKeyCode() == Key::F)
 		{
-			GetEditorWorld()->FocusContextEntity();
+			m_EditorWorld->FocusContextEntity();
 		}
 		return false;
 	}
 
-	void ViewPanelBase::OnWorldChanged(const Ref<EditorPreviewWorldBase>& world, const Ref<EditorPreviewWorldBase>& lastWorld)
+	void ViewPanelBase::OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld)
 	{
 		if (lastWorld)
 		{
-			if (const auto sceneRenderer = lastWorld->GetSceneRenderer())
+			if (const auto* sceneRenderer = lastWorld->GetSceneRenderer())
 			{
 				m_OnViewportResize.disconnect<&SceneRenderer::OnViewportResize>(*sceneRenderer);
 			}
 		}
 
 		m_FrameBuffer.reset();
-		if (const auto sceneRenderer = world->GetSceneRenderer())
+		if (const auto* sceneRenderer = world->GetSceneRenderer())
 		{
 			m_FrameBuffer = sceneRenderer->GetFrameBuffer();
 			m_OnViewportResize.connect<&SceneRenderer::OnViewportResize>(*sceneRenderer);
@@ -114,18 +112,18 @@ namespace ZeoEngine {
 
 	std::string ViewPanelBase::GetPanelTitle() const
 	{
-		std::string assetName = AssetRegistry::Get().GetAssetMetadata(GetEditorWorld()->GetAsset()->GetHandle())->PathName;
+		std::string assetName = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle())->PathName;
 		ZE_CORE_ASSERT(!assetName.empty());
 		return fmt::format("{}###{}", assetName, GetPanelName());
 	}
 
 	void ViewPanelBase::Snapshot(U32 imageWidth, bool bOverwriteThumbnail) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetEditorWorld()->GetAsset()->GetHandle());
+		const auto metadata = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle());
 		const auto thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(metadata);
 		if (!bOverwriteThumbnail && PathUtils::Exists(thumbnailPath)) return;
 
-		m_FrameBuffer.lock()->Snapshot(thumbnailPath, imageWidth);
+		m_FrameBuffer->Snapshot(thumbnailPath, imageWidth);
 		metadata->UpdateThumbnail();
 	}
 
@@ -142,27 +140,32 @@ namespace ZeoEngine {
 		return { mx, my };
 	}
 
-	void ViewPanelBase::OnViewportResize(const Ref<EditorPreviewWorldBase>& editorWorld, const Vec2& size) const
+	void ViewPanelBase::OnCameraComponentAdded(Scene& scene, entt::entity e) const
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		UpdateViewportSizeOnSceneCamera(entity.GetComponent<CameraComponent>());
+	}
+
+	void ViewPanelBase::OnViewportResize(const Vec2& size) const
 	{
 		// Broadcast changes
 		m_OnViewportResizeDel.publish(static_cast<U32>(size.x), static_cast<U32>(size.y));
 
 		// Resize editor camera
-		editorWorld->GetEditorCamera().SetViewportSize(size.x, size.y);
+		m_EditorWorld->GetEditorCamera().SetViewportSize(size.x, size.y);
 
-		UpdateViewportSizeOnSceneCameras();
+		m_EditorWorld->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto e, auto& cameraComp)
+		{
+			UpdateViewportSizeOnSceneCamera(cameraComp);
+		});
 	}
 
-	void ViewPanelBase::UpdateViewportSizeOnSceneCameras() const
+	void ViewPanelBase::UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const
 	{
-		// Resize non-FixedAspectRatio cameras
-		GetEditorWorld()->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto entityID, auto& cameraComp)
+		if (!cameraComp.bFixedAspectRatio)
 		{
-			if (!cameraComp.bFixedAspectRatio)
-			{
-				cameraComp.Camera.SetViewportSize(m_LastViewportSize);
-			}
-		});
+			cameraComp.Camera.SetViewportSize(m_LastViewportSize);
+		}
 	}
 
 }

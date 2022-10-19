@@ -21,8 +21,16 @@ namespace ZeoEngine {
 		
 	}
 
+	/** @param Name - Both C# method name and C++ function name */
 #define ZE_ADD_INTERNAL_CALL(Name) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name, Name)
 #define EXPAND_PARAM_TYPE(...) "(" #__VA_ARGS__ ")"
+/**
+ * @param Name - C# method name
+ * @param OverloadName - C++ function name
+ * @param ... - Overload params with no space between
+ *				Correct: int,bool,float
+ *				Wrong: int, bool, float
+ */
 #define ZE_ADD_INTERNAL_CALL_OVERLOAD(Name, OverloadName, ...) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name EXPAND_PARAM_TYPE(__VA_ARGS__), OverloadName)
 
 	static MonoString* Entity_GetName(UUID entityID)
@@ -102,18 +110,28 @@ namespace ZeoEngine {
 
 	static void MeshRendererComponent_SetMeshAsset(UUID entityID, AssetHandle meshAsset)
 	{
-		// TODO:
 		Entity entity = ScriptEngine::GetEntityByID(entityID);
-		auto& meshComp = entity.GetComponent<MeshRendererComponent>();
-		meshComp.MeshAsset = meshAsset;
-		entity.UpdateBounds();
-		const auto mesh = meshComp.GetMesh();
-		meshComp.Instance = mesh ? mesh->CreateInstance(entity.GetScene()) : nullptr;
+		entity.PatchComponentSingleField<MeshRendererComponent>("MeshAsset"_hs, [meshAsset](MeshRendererComponent& meshComp)
+		{
+			meshComp.MeshAsset = meshAsset;
+		});
 	}
 
 	static void* MeshRendererComponent_GetInstance(UUID entityID)
 	{
 		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().Instance.get();
+	}
+
+	static AssetHandle MeshRendererComponent_GetMaterialAsset(UUID entityID, U32 index)
+	{
+		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MaterialAssets[index];
+	}
+
+	static void MeshRendererComponent_SetMaterialAsset(UUID entityID, U32 index, AssetHandle materialAsset)
+	{
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		auto& meshComp = entity.GetComponent<MeshRendererComponent>();
+		meshComp.MaterialAssets[index] = materialAsset;
 	}
 
 	static bool Input_IsKeyPressed(KeyCode keycode)
@@ -136,17 +154,17 @@ namespace ZeoEngine {
 		return Input::IsMouseButtonReleased(mousecode);
 	}
 
-	static void* AssetLibrary_LoadAssetByPath(MonoString* path)
+	static void* AssetLibrary_LoadAssetByPath(MonoString* path, bool bForceLoad)
 	{
 		char* str = mono_string_to_utf8(path);
-		const auto asset = AssetLibrary::LoadAsset<IAsset>(str).get();
+		const auto asset = AssetLibrary::LoadAsset<IAsset>(str, bForceLoad).get();
 		mono_free(str);
 		return asset;
 	}
 
-	static void* AssetLibrary_LoadAssetByHandle(AssetHandle handle)
+	static void* AssetLibrary_LoadAssetByHandle(AssetHandle handle, bool bForceLoad)
 	{
-		return AssetLibrary::LoadAsset<IAsset>(handle).get();
+		return AssetLibrary::LoadAsset<IAsset>(handle, bForceLoad).get();
 	}
 
 	static MonoString* Asset_GetName(AssetHandle handle)
@@ -159,20 +177,6 @@ namespace ZeoEngine {
 	{
 		const auto* asset = static_cast<IAsset*>(assetPtr);
 		*handle = asset ? asset->GetHandle() : 0;
-	}
-
-	static U64 MeshInstance_GetMaterial(void* meshInstance, U32 index)
-	{
-		const auto* instance = static_cast<MeshInstance*>(meshInstance);
-		return instance ? instance->GetMaterial(index) : 0;
-	}
-
-	static void MeshInstance_SetMaterial(void* meshInstance, U32 index, AssetHandle materialAsset)
-	{
-		auto* instance = static_cast<MeshInstance*>(meshInstance);
-		if (!instance) return;
-
-		instance->SetMaterial(index, materialAsset);
 	}
 
 	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
@@ -203,6 +207,8 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetMeshAsset);
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMeshAsset);
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetInstance);
+		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetMaterialAsset);
+		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMaterialAsset);
 #pragma endregion
 
 #pragma region Input
@@ -213,15 +219,14 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Asset
-		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByPath, string);
-		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByHandle, ulong);
+		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByPath, string,bool);
+		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByHandle, ulong,bool);
 		ZE_ADD_INTERNAL_CALL(Asset_GetName);
 		ZE_ADD_INTERNAL_CALL(Asset_GetHandle);
 #pragma endregion
 
 #pragma region Mesh
-		ZE_ADD_INTERNAL_CALL(MeshInstance_GetMaterial);
-		ZE_ADD_INTERNAL_CALL(MeshInstance_SetMaterial);
+
 #pragma endregion
 
 	}

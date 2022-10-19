@@ -16,8 +16,8 @@ namespace ZeoEngine {
 	{
 		if (ImGui::TransparentButton(ICON_FA_CAMERA))
 		{
-			const auto inspectorPanel = g_Editor->GetPanel<InspectorPanel>(INSPECTOR);
-			inspectorPanel->GetAssetViewPanel()->Snapshot(256);
+			const auto* inspectorPanel = g_Editor->GetPanel<InspectorPanel>(INSPECTOR);
+			inspectorPanel->GetAssetViewPanel().Snapshot(256);
 		}
 		if (ImGui::IsItemHovered())
 		{
@@ -25,7 +25,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	TextureAssetView::TextureAssetView(const Ref<EditorPreviewWorldBase>& world)
+	TextureAssetView::TextureAssetView(const EditorPreviewWorldBase* world)
 		: m_EditorWorld(world)
 	{
 	}
@@ -53,7 +53,7 @@ namespace ZeoEngine {
 			ImGui::GetColorU32({ 1.0f, 1.0f, 1.0f, 0.1f }));
 
 		// Texture
-		const auto texture = std::static_pointer_cast<Texture2D>(m_EditorWorld.lock()->GetAsset());
+		const auto texture = std::static_pointer_cast<Texture2D>(m_EditorWorld->GetAsset());
 		ImGui::Image(texture->GetTextureID(), displaySize, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 
 		// Display texture info at the bottom center

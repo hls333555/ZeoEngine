@@ -6,14 +6,9 @@
 
 #include "Engine/Asset/Asset.h"
 #include "Engine/Core/Core.h"
-#include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
-
-	class EditorCamera;
-	class SystemBase;
-	class WorldBase;
 
 	/** A scene context which shares among copied scenes. */
 	struct SceneContext
@@ -27,21 +22,19 @@ namespace ZeoEngine {
 	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
-	class Scene : public std::enable_shared_from_this<Scene>
+	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
-		friend class LevelViewPanel;
+		friend class SceneObserverSystemBase;
 
 	public:
-		Scene() = default;
-		virtual ~Scene();
+		explicit Scene(Scope<SceneObserverSystemBase> sceneObserverSystem = nullptr);
+		~Scene();
 
-		virtual void OnAttach(const Ref<WorldBase>& world) {}
-		void OnUpdate(DeltaTime dt) const;
-		virtual void OnEvent(Event& e) {}
+		void OnUpdate();
 
 		/** Copy function which processes member copy. */
-		virtual void Copy(const Ref<Scene>& other);
+		void Copy(const Ref<Scene>& other);
 
 		// We cannot copy Scene through copy constructor as it is a deleted function
 		// So we construct a new scene and call our "copy" function instead
@@ -53,24 +46,27 @@ namespace ZeoEngine {
 			return newScene;
 		}
 
-		const auto& GetSystems() const { return m_Systems; }
-		const auto& GetContext() const { return m_Context; }
+		SceneContext* GetContext() const { return m_Context.get(); }
 
 		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
-		Entity GetEntityByUUID(UUID uuid);
+		Entity GetEntityByUUID(UUID uuid) const;
 		Entity GetEntityByName(std::string_view name);
-		SizeT GetEntityCount() const { return m_Registry.alive(); }
+		SizeT GetEntityCount() const { return alive(); }
 
-		/** Called after all data have been loaded. */
-		virtual void PostLoad() {}
+		Entity GetMainCameraEntity();
 
+		template<typename... Component, typename... Exclude, typename Func>
+		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {}) const
+		{
+			view<Component...>(exclude).each(std::forward<Func>(func));
+		}
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
 		{
-			m_Registry.view<Component...>(exclude).each(std::forward<Func>(func));
+			view<Component...>(exclude).each(std::forward<Func>(func));
 		}
 
 		struct DefaultCompare
@@ -79,67 +75,56 @@ namespace ZeoEngine {
 			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const { return true; }
 		};
 
+		// TODO:
 		template<typename... Owned, typename... Include, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
 		void ForEachComponentGroup(entt::get_t<Include...> include, Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
 		{
-			auto group = m_Registry.group<Owned...>(include, exclude);
+			auto compGroup = group<Owned...>(include, exclude);
 			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
 			{
-				group.sort<Owned..., Include...>(std::move(compareFunc));
+				compGroup.sort<Owned..., Include...>(std::move(compareFunc));
 			}
-			group.each(std::forward<Func>(func));
+			compGroup.each(std::forward<Func>(func));
 		}
 
 		template<typename... Owned, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
 		void ForEachComponentGroup(Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
 		{
-			auto group = m_Registry.group<Owned...>(exclude);
+			auto compGroup = group<Owned...>(exclude);
 			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
 			{
-				group.sort<Owned...>(std::move(compareFunc));
+				compGroup.sort<Owned...>(std::move(compareFunc));
 			}
-			group.each(std::forward<Func>(func));
-		}
-
-		template<typename Component, auto Candidate, typename Type>
-		void BindOnComponentConstruct(Type&& valueOrInstance)
-		{
-			m_Registry.on_construct<Component>().connect<Candidate>(std::forward<Type>(valueOrInstance));
-		}
-
-		template<typename Component, auto Candidate, typename Type>
-		void UnbindOnComponentConstruct(Type&& valueOrInstance)
-		{
-			m_Registry.on_construct<Component>().disconnect<Candidate>(std::forward<Type>(valueOrInstance));
-		}
-
-	protected:
-		template<typename T, typename ... Args>
-		void RegisterSystem(Args&& ... args)
-		{
-			static_assert(std::is_base_of_v<SystemBase, T>, "System type must be a SystemBase type!");
-
-			Ref<T> system = CreateRef<T>(std::forward<Args>(args)...);
-			system->OnCreate();
-			m_Systems.emplace_back(std::move(system));
+			compGroup.each(std::forward<Func>(func));
 		}
 
 	private:
+		// TODO: Hide more parent methods
+		using entt::registry::ctx;
+		using entt::registry::view;
+		using entt::registry::group;
+		using entt::registry::create;
+		using entt::registry::destroy;
+		using entt::registry::valid;
+		using entt::registry::emplace;
+		using entt::registry::erase;
+		using entt::registry::remove;
+		using entt::registry::get;
+		using entt::registry::all_of;
+		using entt::registry::patch;
+		using entt::registry::on_construct;
+		using entt::registry::on_update;
+		using entt::registry::on_destroy;
+
 		void SortEntities();
 
-	public:
-		entt::sink<entt::sigh<void(const Ref<Scene>&)>> m_OnSceneCopied{ m_OnSceneCopiedDel };
 	private:
-		entt::registry m_Registry;
-
-		std::unordered_map<UUID, Entity> m_Entities;
-		/** Systems are shared among copied scenes. */
-		std::vector<Ref<SystemBase>> m_Systems;
-
+		Scope<SceneObserverSystemBase> m_SceneObserverSystem;
 		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
 
+		std::unordered_map<UUID, Entity> m_Entities;
 		U32 m_CurrentEntityIndex = 0;
-		entt::sigh<void(const Ref<Scene>&)> m_OnSceneCopiedDel;
+
 	};
 
 	class Level : public AssetBase<Level>
@@ -147,11 +132,11 @@ namespace ZeoEngine {
 	public:
 		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewLevel.zasset"; }
 
-		const Ref<Scene>& GetScene() const { return m_Scene; }
-		void SetScene(const Ref<Scene>& scene) { m_Scene = scene; }
+		Scene* GetScene() const { return m_Scene; }
+		void SetScene(Scene* scene) { m_Scene = scene; }
 
 	private:
-		Ref<Scene> m_Scene;
+		Scene* m_Scene = nullptr;
 	};
 
 }

@@ -12,37 +12,9 @@
 
 namespace ZeoEngine {
 
-	MeshEntryInstance::MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const Ref<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize)
-		: Drawable(vao, ubo), EntryPtr(&entry), SceneContext(sceneContext), MaterialRef(material)
+	MeshEntryInstance::MeshEntryInstance(const SceneContext* sceneContext, const MeshEntry& entry, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo)
+		: Drawable(vao, ubo, sceneContext), EntryPtr(&entry)
 	{
-		// The following will be done after mesh asset deserialization if bIsDeserialize is true
-		if (!bIsDeserialize)
-		{
-			BindAndSubmitTechniques(material);
-		}
-	}
-
-	MeshEntryInstance::~MeshEntryInstance()
-	{
-		MaterialRef->m_OnMaterialInitialized.disconnect(this);
-	}
-
-	void MeshEntryInstance::BindAndSubmitTechniques(const Ref<Material>& material)
-	{
-		SubmitTechniques(material);
-		// Connect callback on new material for this instance
-		material->m_OnMaterialInitialized.connect<&MeshEntryInstance::SubmitTechniques>(this);
-	}
-
-	void MeshEntryInstance::SubmitTechniques(const Ref<Material>& material)
-	{
-		auto techniques = material->GetRenderTechniques();
-		PrepareTechniques(techniques.size());
-		for (auto& technique : techniques)
-		{
-			technique.UpdateContext(SceneContext, material);
-			AddTechnique(std::move(technique));
-		}
 	}
 
 	Mesh::Mesh(std::string resourcePath)
@@ -60,9 +32,9 @@ namespace ZeoEngine {
 		LoadFromMeshScene(meshScene);
 	}
 
-	Ref<MeshInstance> Mesh::CreateInstance(const Ref<Scene>& sceneContext, bool bIsDeserialize)
+	Ref<MeshInstance> Mesh::CreateInstance(const Scene& scene)
 	{
-		return CreateRef<MeshInstance>(sceneContext, SharedFromThis(), bIsDeserialize);
+		return CreateRef<MeshInstance>(scene.GetContext(), SharedFromThis());
 	}
 
 	Ref<Mesh> Mesh::GetDefaultCubeMesh()
@@ -188,24 +160,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	MeshInstance::MeshInstance(const Ref<Scene>& sceneContext, const Ref<Mesh>& mesh, bool bIsDeserialize)
+	MeshInstance::MeshInstance(const SceneContext* sceneContext, const Ref<Mesh>& mesh)
 		: m_MeshPtr(mesh)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
-		// Copy default materials
-		m_MaterialAssets = mesh->GetDefaultMaterialAssets();
 		const auto& entries = m_MeshPtr->GetMeshEntries();
 		// Allocate space first so that every element's address remains unchanged
 		m_EntryInstances.reserve(entries.size());
 		for (const auto& entry : entries)
 		{
-			const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entry.MaterialIndex]);
-			m_EntryInstances.emplace_back(sceneContext, entry, material, mesh->GetVAO(), m_ModelUniformBuffer, bIsDeserialize);
+			m_EntryInstances.emplace_back(sceneContext, entry, mesh->GetVAO(), m_ModelUniformBuffer);
 		}
 	}
 
 	MeshInstance::MeshInstance(const MeshInstance& other)
-		: m_MeshPtr(other.m_MeshPtr), m_MaterialAssets(other.m_MaterialAssets)
+		: m_MeshPtr(other.m_MeshPtr)
 	{
 		m_ModelUniformBuffer = UniformBuffer::Create(sizeof(ModelData), static_cast<U32>(UniformBufferBinding::Model));
 		const auto& entries = m_MeshPtr->GetMeshEntries();
@@ -215,77 +184,22 @@ namespace ZeoEngine {
 		for (SizeT i = 0; i < size; ++i)
 		{
 			const auto& entry = entries[i];
-			const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entry.MaterialIndex]);
-			m_EntryInstances.emplace_back(other.m_EntryInstances[i].SceneContext, entry, material, m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
+			m_EntryInstances.emplace_back(other.m_EntryInstances[i].GetSceneContext(), entry, m_MeshPtr->GetVAO(), m_ModelUniformBuffer);
 		}
 	}
 
-	void MeshInstance::Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy)
-	{
-		// Copy construct mesh instance
-		meshComp.Instance = CreateRef<MeshInstance>(*meshInstanceToCopy);
-	}
-
-	AssetHandle MeshInstance::GetMaterial(U32 index) const
-	{
-		if (index >= m_MaterialAssets.size()) return {};
-
-		return m_MaterialAssets[index];
-	}
-
-	void MeshInstance::SetMaterial(U32 index, AssetHandle materialAsset)
-	{
-		if (index >= m_MaterialAssets.size()) return;
-
-		const AssetHandle oldMaterialAsset = m_MaterialAssets[index];
-		if (materialAsset == oldMaterialAsset) return;
-
-		m_MaterialAssets[index] = materialAsset;
-		OnMaterialChanged(index, oldMaterialAsset);
-	}
-
-	void MeshInstance::OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset)
-	{
-		for (auto& entryInstance : m_EntryInstances)
-		{
-			if (entryInstance.EntryPtr->MaterialIndex == index)
-			{
-				if (const auto lastMaterial = AssetLibrary::LoadAsset<Material>(lastMaterialAsset))
-				{
-					// Disconnect callback on old material for all referenced instances
-					lastMaterial->m_OnMaterialInitialized.disconnect<&MeshEntryInstance::SubmitTechniques>(entryInstance);
-				}
-				SubmitTechniques(entryInstance);
-			}
-		}
-	}
-
-	void MeshInstance::SubmitTechniques(MeshEntryInstance& entryInstance) const
-	{
-		const auto material = AssetLibrary::LoadAsset<Material>(m_MaterialAssets[entryInstance.EntryPtr->MaterialIndex]);
-		if (!material) return;
-
-		entryInstance.BindAndSubmitTechniques(material);
-	}
-
-	void MeshInstance::SubmitAllTechniques()
-	{
-		for (auto& entryInstance : m_EntryInstances)
-		{
-			SubmitTechniques(entryInstance);
-		}
-	}
-
-	void MeshInstance::Submit(const Mat4& transform, I32 entityID)
+	void MeshInstance::Submit(const Mat4& transform, const std::vector<AssetHandle>& materialAssets, I32 entityID)
 	{
 		m_ModelBuffer.Transform = transform;
 		m_ModelBuffer.NormalMatrix = glm::transpose(glm::inverse(transform));
 		m_ModelBuffer.EntityID = entityID;
 		m_ModelUniformBuffer->SetData(&m_ModelBuffer);
 
-		for (auto& entryInstance : m_EntryInstances)
+		for (SizeT i = 0; i < m_EntryInstances.size(); ++i)
 		{
-			entryInstance.Submit();
+			auto& entryInstance = m_EntryInstances[i];
+			const auto materialIndex = entryInstance.EntryPtr->MaterialIndex;
+			entryInstance.Submit(materialAssets[materialIndex]);
 		}
 	}
 

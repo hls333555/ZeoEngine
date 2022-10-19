@@ -7,11 +7,31 @@ namespace ZeoEngine {
 
 	using namespace Reflection;
 
+	std::string GetMeshRendererComponentSequenceContainerElementName(IComponent* comp, U32 fieldID, U32 index)
+	{
+		if (fieldID == "MaterialSlots"_hs)
+		{
+			const auto* meshComp = static_cast<MeshRendererComponent*>(comp);
+			const auto mesh = AssetLibrary::LoadAsset<Mesh>(meshComp->MeshAsset);
+			return mesh->GetMaterialNames()[index];
+		}
+		return {};
+	}
+
+	std::string GetMeshDetailComponentSequenceContainerElementName(IComponent* comp, U32 fieldID, U32 index)
+	{
+		if (fieldID == "MaterialSlots"_hs)
+		{
+			const auto* meshComp = static_cast<MeshDetailComponent*>(comp);
+			return meshComp->LoadedMesh->GetMaterialNames()[index];
+		}
+		return {};
+	}
+
 	void TypeRegistry::Init()
 	{
 		RegisterBasicTypes();
 		RegisterComponents();
-		RegisterComponentHelpers();
 		RegisterComponentSerializerExtenders();
 	}
 
@@ -25,8 +45,6 @@ namespace ZeoEngine {
 #pragma region Core
 		RegisterComponent<CoreComponent>("Core", Inherent, HideComponentHeader)
 			.Field<&CoreComponent::Name>("Name");
-
-		RegisterComponent<IDComponent>("ID", Inherent, Transient);
 
 		RegisterComponent<TransformComponent>("Transform", Inherent)
 			.Field<&TransformComponent::Translation>("Translation")
@@ -64,43 +82,14 @@ namespace ZeoEngine {
 
 		RegisterComponent<MeshRendererComponent>("Mesh Renderer", std::make_pair(Category, "Rendering"))
 			.Field<&MeshRendererComponent::MeshAsset>("MeshAsset", std::make_pair(AssetType, Mesh::TypeID()))
-			.Field<true, &MeshRendererComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, CustomElementName, std::make_pair(AssetType, Material::TypeID()));
+			.Field<&MeshRendererComponent::MaterialAssets>("MaterialSlots", FixedSizeContainer, std::make_pair(CustomElementName, &GetMeshRendererComponentSequenceContainerElementName), std::make_pair(AssetType, Material::TypeID()));
 
 		RegisterComponent<MeshDetailComponent>("Mesh Detail", Inherent, HideComponentHeader)
-			.Field<true, &MeshDetailComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, CustomElementName, std::make_pair(AssetType, Material::TypeID()));
+			.Field<true, &MeshDetailComponent::GetMaterialAssets>("MaterialSlots", FixedSizeContainer, std::make_pair(CustomElementName, &GetMeshDetailComponentSequenceContainerElementName), std::make_pair(AssetType, Material::TypeID()));
 
 		RegisterComponent<MaterialDetailComponent>("Material Detail", Inherent, HideComponentHeader)
 			.Field<true, &MaterialDetailComponent::GetShaderVariant>("ShaderVariant", HiddenInEditor)
 			.Field<true, &MaterialDetailComponent::GetShaderAsset>("ShaderAsset", std::make_pair(AssetType, Shader::TypeID()));
-
-		RegisterEnum<Light::ShadowType>()
-			.Field<Light::ShadowType::HardShadow>("HardShadow")
-			.Field<Light::ShadowType::PCF>("PCF")
-			.Field<Light::ShadowType::PCSS>("PCSS");
-
-		RegisterComponent<LightComponentBase>("LightComponentBase", Inherent)
-			.Field<true, &LightComponentBase::GetColor>("Color")
-			.Field<true, &LightComponentBase::GetIntensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
-			.Field<true, &LightComponentBase::IsCastShadow>("CastShadow")
-			.Field<true, &LightComponentBase::GetShadowType>("ShadowType", std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponentBase::GetDepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponentBase::GetNormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &LightComponentBase::GetFilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
-			.Field<true, &LightComponentBase::GetLightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"));
-
-		RegisterComponent<DirectionalLightComponent, LightComponentBase>("DirectionalLight", std::make_pair(Category, "Rendering"))
-			.Field<true, &DirectionalLightComponent::GetCascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &DirectionalLightComponent::GetCascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &DirectionalLightComponent::GetMaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<true, &DirectionalLightComponent::GetCascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"));
-
-		RegisterComponent<PointLightComponent, LightComponentBase>("PointLight", std::make_pair(Category, "Rendering"))
-			.Field<true, &PointLightComponent::GetRange>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f));
-
-		RegisterComponent<SpotLightComponent, PointLightComponent>("SpotLight", std::make_pair(Category, "Rendering"))
-			.Field<true, &SpotLightComponent::GetCutoff>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f));
-
-		RegisterComponent<BillboardComponent>("Billboard", Inherent, Transient);
 
 		RegisterEnum<SamplerType>()
 			.Field<SamplerType::BilinearRepeat>("BilinearRepeat")
@@ -112,6 +101,34 @@ namespace ZeoEngine {
 			.Field<true, &TextureDetailComponent::IsSRGB>("SRGB")
 			.Field<&TextureDetailComponent::SamplerType>("SamplerType")
 			.Field<true, &TextureDetailComponent::ShouldGenerateMipmaps>("GenerateMipmaps");
+
+		RegisterEnum<ShadowType>()
+			.Field<ShadowType::HardShadow>("HardShadow")
+			.Field<ShadowType::PCF>("PCF")
+			.Field<ShadowType::PCSS>("PCSS");
+
+		RegisterComponent<LightComponentBase>("LightComponentBase", Inherent)
+			.Field<&LightComponentBase::Color>("Color")
+			.Field<&LightComponentBase::Intensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
+			.Field<&LightComponentBase::bCastShadow>("CastShadow")
+			.Field<&LightComponentBase::ShadowType>("ShadowType", std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&LightComponentBase::DepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&LightComponentBase::NormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&LightComponentBase::FilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
+			.Field<&LightComponentBase::LightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"));
+
+		RegisterComponent<DirectionalLightComponent, LightComponentBase>("DirectionalLight", std::make_pair(Category, "Rendering"))
+			.Field<&DirectionalLightComponent::CascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&DirectionalLightComponent::CascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&DirectionalLightComponent::MaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
+			.Field<&DirectionalLightComponent::CascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"));
+
+		RegisterComponent<PointLightComponent, LightComponentBase>("PointLight", std::make_pair(Category, "Rendering"))
+			.Field<&PointLightComponent::Range>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f));
+
+		RegisterComponent<SpotLightComponent, PointLightComponent>("SpotLight", std::make_pair(Category, "Rendering"))
+			.Field<&SpotLightComponent::CutoffAngle>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f));
+
 #pragma endregion
 
 #pragma region Scripts
@@ -195,10 +212,6 @@ namespace ZeoEngine {
 			.Field<&CircleCollider2DComponent::RestitutionThreshold>("RestitutionThreshold", std::make_pair(Category, "Physics Material"), std::make_pair(Tooltip, u8"弹力阈值，速度高于该值时的碰撞将会反弹"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f));
 #pragma endregion
 
-#pragma region Misc
-		RegisterComponent<BoundsComponent>("Bounds", Inherent, Transient);
-#pragma endregion
-
 #ifndef DOCTEST_CONFIG_DISABLE
 		RegisterEnum<TestComponent::TestEnum>()
 			.Field<TestComponent::TestEnum::TestEnum1>("TestEnum1")
@@ -252,22 +265,6 @@ namespace ZeoEngine {
 			.Field<&TestComponent::MeshAssetVecVar>("MeshAssetVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(AssetType, Mesh::TypeID()), std::make_pair(HideCondition, "ShowSequenceContainers == false"));
 #endif
 
-	}
-
-	void TypeRegistry::RegisterComponentHelpers()
-	{
-		ComponentHelperRegistry::RegisterComponentHelper<TransformComponentHelper, TransformComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<CameraComponentHelper, CameraComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<ScriptComponentHelper, ScriptComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<ParticleSystemComponentHelper, ParticleSystemComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<ParticleSystemDetailComponentHelper, ParticleSystemDetailComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<MeshRendererComponentHelper, MeshRendererComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<MeshDetailComponentHelper, MeshDetailComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<MaterialDetailComponentHelper, MaterialDetailComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<TextureDetailComponentHelper, TextureDetailComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<DirectionalLightComponentHelper, DirectionalLightComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<PointLightComponentHelper, PointLightComponent>();
-		ComponentHelperRegistry::RegisterComponentHelper<SpotLightComponentHelper, SpotLightComponent>();
 	}
 
 	void TypeRegistry::RegisterComponentSerializerExtenders()

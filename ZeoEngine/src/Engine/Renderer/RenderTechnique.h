@@ -15,9 +15,9 @@ namespace ZeoEngine {
 		const std::string& GetName() const { return m_Name; }
 		bool IsActive() const { return m_bActive; }
 
+		const auto& GetRenderSteps() const { return m_Steps; }
+
 		void AddStep(RenderStep step);
-		void UpdateContext(const Weak<Scene>& sceneContext, const Ref<Material>& material);
-		void Submit(const Drawable& drawable);
 
 	private:
 		std::string m_Name;

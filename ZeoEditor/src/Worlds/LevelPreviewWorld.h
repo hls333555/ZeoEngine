@@ -17,8 +17,7 @@ namespace ZeoEngine {
 
 		virtual void OnAttach() override;
 
-		virtual void LoadAsset(const std::string& path) override;
-		virtual void OnAssetSaveAs(const std::string& path) override;
+		virtual bool IsRuntime() const override { return m_SceneState != SceneState::Edit; }
 
 		void StopScene();
 
@@ -33,13 +32,18 @@ namespace ZeoEngine {
 		void OnDeleteEntity();
 
 	private:
-		virtual Ref<Scene> CreateScene() override;
+		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
 		virtual void PostSceneCreate(const Ref<Scene>& scene) override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
+
+		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 
 		virtual Scope<InspectorBase> CreateInspector() override;
 
 		void ActivateEntityInspector(Entity entity, Entity lastEntity);
+
+		void OnRuntimeStart() const;
+		void OnRuntimeStop() const;
 
 	private:
 		SceneState m_SceneState = SceneState::Edit;

@@ -8,7 +8,7 @@ namespace ZeoEngine {
 	class AssetPreviewSceneRendererBase : public SceneRenderer
 	{
 	public:
-		virtual void OnAttach(const Ref<WorldBase>& world) override;
+		virtual void OnAttach(WorldBase* world) override;
 
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() override;
@@ -22,19 +22,19 @@ namespace ZeoEngine {
 	class MaterialPreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) override;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
 	};
 
 	class MeshPreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) override;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
 	};
 
 	class ParticlePreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) override;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
 	};
 
 }

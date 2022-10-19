@@ -21,7 +21,8 @@ namespace ZeoEngine {
 	public:
 		explicit RenderTask(const RenderStep* step);
 
-		bool HasSameMaterial(const RenderStep* step) const;
+		const RenderStep* GetRenderStep() const { return m_Step; }
+
 		void AddSubTask(SubRenderTask subTask);
 		void Execute() const;
 

@@ -21,17 +21,13 @@ namespace ZeoEngine {
 		: ViewPanelBase(std::move(panelName))
 	{
 		UpdateWorld(g_Editor->GetLevelWorld());
-
-		// Call these manually as delegates are bound after the initial scene creation
-		BindCameraComponentConstructionDelegate(GetEditorWorld()->GetActiveScene());
-		UpdateViewportSizeOnSceneCameras();
 	}
 
 	void LevelViewPanel::OnAttach()
 	{
 		ViewPanelBase::OnAttach();
 
-		m_LevelWorld = std::dynamic_pointer_cast<LevelPreviewWorld>(GetEditorWorld());
+		m_LevelWorld = dynamic_cast<LevelPreviewWorld*>(GetEditorWorld());
 		GetEditorWorld()->GetSceneRenderer()->m_PostSceneRender.connect<&LevelViewPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
@@ -41,11 +37,10 @@ namespace ZeoEngine {
 
 		ViewPanelBase::ProcessRender();
 
-		const auto levelWorld = m_LevelWorld.lock();
-		RenderGizmo(levelWorld);
+		RenderGizmo();
 
 		ImGui::SetCursorPos(startPos);
-		RenderToolbar(levelWorld);
+		RenderToolbar();
 	}
 
 	void LevelViewPanel::ProcessEvent(Event& e)
@@ -57,77 +52,49 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnMouseButtonPressed));
 	}
 
-	void LevelViewPanel::OnWorldChanged(const Ref<EditorPreviewWorldBase>& world, const Ref<EditorPreviewWorldBase>& lastWorld)
-	{
-		ViewPanelBase::OnWorldChanged(world, lastWorld);
-
-		if (lastWorld)
-		{
-			lastWorld->m_OnActiveSceneChanged.disconnect<&LevelViewPanel::OnActiveSceneChanged>(this);
-		}
-
-		world->m_OnActiveSceneChanged.connect<&LevelViewPanel::OnActiveSceneChanged>(this);
-	}
-
-	void LevelViewPanel::OnActiveSceneChanged(const Ref<Scene>& scene, const Ref<Scene>& lastScene)
-	{
-		if (lastScene)
-		{
-			scene->UnbindOnComponentConstruct<CameraComponent, &ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
-		}
-		BindCameraComponentConstructionDelegate(scene);
-	}
-
-	void LevelViewPanel::BindCameraComponentConstructionDelegate(const Ref<Scene>& scene)
-	{
-		scene->BindOnComponentConstruct<CameraComponent, &ViewPanelBase::UpdateViewportSizeOnSceneCameras>(this);
-	}
-
-	void LevelViewPanel::RenderToolbar(const Ref<LevelPreviewWorld>& levelWorld) const
+	void LevelViewPanel::RenderToolbar() const
 	{
 		// Place buttons at window center
-		float indent = levelWorld->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
+		float indent = m_LevelWorld->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
 			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
 		ImGui::Indent(indent);
 
 		// Toggle play / stop
-		if (ImGui::TransparentButton(levelWorld->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
+		if (ImGui::TransparentButton(m_LevelWorld->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
 		{
-			switch (levelWorld->GetSceneState())
+			if (m_LevelWorld->IsRuntime())
 			{
-				case SceneState::Edit:
-					levelWorld->OnScenePlay();
-					break;
-				case SceneState::Play:
-				case SceneState::Pause:
-					levelWorld->OnSceneStop();
-					break;
+				m_LevelWorld->OnSceneStop();
+			}
+			else
+			{
+				m_LevelWorld->OnScenePlay();
 			}
 		}
 
 		// Toggle pause / resume
-		switch (levelWorld->GetSceneState())
+		switch (m_LevelWorld->GetSceneState())
 		{
 			case SceneState::Play:
 				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PAUSE))
 				{
-					levelWorld->OnScenePause();
+					m_LevelWorld->OnScenePause();
 				}
 				break;
 			case SceneState::Pause:
 				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
-					levelWorld->OnSceneResume();
+					m_LevelWorld->OnSceneResume();
 				}
 				break;
 		}
 	}
 
-	void LevelViewPanel::RenderGizmo(const Ref<LevelPreviewWorld>& levelWorld)
+	void LevelViewPanel::RenderGizmo()
 	{
-		Entity selectedEntity = levelWorld->GetContextEntity();
+		Entity selectedEntity = m_LevelWorld->GetContextEntity();
 		m_bGizmoVisible = selectedEntity && m_GizmoType != -1;
 		if (m_bGizmoVisible)
 		{
@@ -138,7 +105,7 @@ namespace ZeoEngine {
 			ImGuizmo::SetRect(viewportBounds[0].x, viewportBounds[0].y, viewportSize.x, viewportSize.y);
 
 			// Editor camera
-			const auto& editorCamera = levelWorld->GetEditorCamera();
+			const auto& editorCamera = m_LevelWorld->GetEditorCamera();
 			const Mat4& cameraProjection = editorCamera.GetProjection();
 			Mat4 cameraView = editorCamera.GetViewMatrix();
 
@@ -176,7 +143,6 @@ namespace ZeoEngine {
 
 	bool LevelViewPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
-		const auto levelWorld = m_LevelWorld.lock();
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 
@@ -189,9 +155,9 @@ namespace ZeoEngine {
 				{
 					if (bIsAltPressed)
 					{
-						if (levelWorld->GetSceneState() == SceneState::Edit)
+						if (!m_LevelWorld->IsRuntime())
 						{
-							levelWorld->OnScenePlay();
+							m_LevelWorld->OnScenePlay();
 							return true;
 						}
 					}
@@ -200,18 +166,18 @@ namespace ZeoEngine {
 				// Toggle pause / resume
 				case Key::Pause:
 				{
-					switch (levelWorld->GetSceneState())
+					switch (m_LevelWorld->GetSceneState())
 					{
-						case SceneState::Play:	levelWorld->OnScenePause();	return true;
-						case SceneState::Pause:	levelWorld->OnSceneResume();	return true;
+						case SceneState::Play:	m_LevelWorld->OnScenePause();	return true;
+						case SceneState::Pause:	m_LevelWorld->OnSceneResume(); return true;
 					}
 				}
 				// Toggle stop
 				case Key::Escape:
 				{
-					if (levelWorld->GetSceneState() > SceneState::Edit)
+					if (m_LevelWorld->IsRuntime())
 					{
-						levelWorld->OnSceneStop();
+						m_LevelWorld->OnSceneStop();
 						return true;
 					}
 					break;
@@ -259,14 +225,14 @@ namespace ZeoEngine {
 				}
 				case Key::Delete:
 				{
-					levelWorld->OnDeleteEntity();
+					m_LevelWorld->OnDeleteEntity();
 					return true;
 				}
 				case Key::D:
 				{
 					if (bIsCtrlPressed)
 					{
-						levelWorld->OnDuplicateEntity();
+						m_LevelWorld->OnDuplicateEntity();
 						return true;
 					}
 					break;
@@ -289,7 +255,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	void LevelViewPanel::ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer)
+	void LevelViewPanel::ReadPixelDataFromIDBuffer(FrameBuffer& frameBuffer)
 	{
 		auto [mx, my] = GetMouseViewportPosition();
 		Vec2 viewportSize = GetViewportBounds()[1] - GetViewportBounds()[0];
@@ -298,8 +264,8 @@ namespace ZeoEngine {
 		if (mx >= 0.0f && my >= 0.0f && mx < viewportSize.x && my < viewportSize.y)
 		{
 			Vec4 pixel;
-			frameBuffer->ReadPixel(1, static_cast<I32>(mx), static_cast<I32>(my), glm::value_ptr(pixel));
-			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity(static_cast<entt::entity>(pixel.x), GetEditorWorld()->GetActiveScene());
+			frameBuffer.ReadPixel(1, static_cast<I32>(mx), static_cast<I32>(my), glm::value_ptr(pixel));
+			m_HoveredEntity = pixel.x == -1 ? Entity{} : Entity{ static_cast<entt::entity>(pixel.x), GetEditorWorld()->GetActiveScene() };
 
 			auto& Stats = Renderer::GetStats();
 			Stats.HoveredEntity = m_HoveredEntity;

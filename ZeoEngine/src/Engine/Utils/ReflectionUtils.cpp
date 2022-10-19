@@ -49,8 +49,16 @@ namespace ZeoEngine {
 
 	bool ReflectionUtils::DoesComponentContainAnyField(U32 compID)
 	{
-		const auto dataList = entt::resolve(compID).data();
+		const auto compType = entt::resolve(compID);
+		if (!compType) return false;
+
+		const auto dataList = compType.data();
 		return dataList.begin() != dataList.end();
+	}
+
+	bool ReflectionUtils::IsComponentRegistered(U32 compID)
+	{
+		return static_cast<bool>(entt::resolve(compID));
 	}
 
 	const char* ReflectionUtils::GetEnumDisplayName(const entt::meta_any& enumValue)
@@ -98,14 +106,14 @@ namespace ZeoEngine {
 		return compType.func("has"_hs).invoke({}, entt::forward_as_meta(registry), entity);
 	}
 
+	void ReflectionUtils::PatchComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity)
+	{
+		compType.func("patch"_hs).invoke({}, entt::forward_as_meta(registry), entity);
+	}
+
 	entt::meta_any ReflectionUtils::CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance)
 	{
 		return compType.func("copy"_hs).invoke({}, entt::forward_as_meta(dstRegistry), dstEntity, entt::forward_as_meta(compInstance));
-	}
-
-	void ReflectionUtils::BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry)
-	{
-		compType.func("bind_on_destroy"_hs).invoke({}, entt::forward_as_meta(registry));
 	}
 
 }

@@ -25,8 +25,8 @@ namespace ZeoEngine {
 				.func<&Reflection::remove<Component>, entt::as_void_t>("remove"_hs)
 				.func<&Reflection::get<Component>, entt::as_ref_t>("get"_hs)
 				.func<&Reflection::has<Component>>("has"_hs)
+				.func<&Reflection::patch<Component>, entt::as_void_t>("patch"_hs)
 				.func<&Reflection::copy<Component>, entt::as_ref_t>("copy"_hs)
-				.func<&Reflection::bind_on_destroy<Component>, entt::as_void_t>("bind_on_destroy"_hs)
 				.func<&Component::GetIcon>("get_icon"_hs);
 
 			ScriptRegistry::RegisterMonoComponent(GetMonoComponentName().data(), entt::type_hash<Component>::value());
@@ -123,7 +123,6 @@ namespace ZeoEngine {
 	private:
 		static void RegisterBasicTypes();
 		static void RegisterComponents();
-		static void RegisterComponentHelpers();
 		static void RegisterComponentSerializerExtenders();
 	};
 

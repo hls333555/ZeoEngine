@@ -11,15 +11,9 @@ namespace ZeoEngine {
 	class AssetLibrary
 	{
 	public:
-		enum class DeserializeMode
-		{
-			Normal, // The asset will be deserialized only the first time LoadAsset is called
-			Ignore, // The asset will not be deserialized every time LoadAsset is called
-			Force // The asset will be deserialized every time LoadAsset is called
-		};
-
+		/** If bForceLoad is true, asset will be deserialized every time LoadAsset is called, otherwise, asset will be deserialized only the first time LoadAsset is called */
 		template<typename T>
-		static Ref<T> LoadAsset(AssetHandle handle, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
+		static Ref<T> LoadAsset(AssetHandle handle, bool bForceLoad = false, void* payload = nullptr)
 		{
 			static_assert(std::is_same_v<IAsset, T> || std::is_base_of_v<AssetBase<T>, T>, "Asset class T must be derived from 'AssetBase'!");
 
@@ -35,7 +29,7 @@ namespace ZeoEngine {
 			if (HasAsset(handle))
 			{
 				asset = s_LoadedAssets[handle];
-				if (deserializeMode == DeserializeMode::Force)
+				if (bForceLoad)
 				{
 					AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
 				}
@@ -46,11 +40,7 @@ namespace ZeoEngine {
 				if (asset)
 				{
 					asset->SetHandle(handle);
-					bool res = true;
-					if (deserializeMode != DeserializeMode::Ignore)
-					{
-						res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
-					}
+					bool res = AssetManager::Get().GetAssetSerializerByAssetType(metadata->TypeID)->Deserialize(metadata, asset, payload);
 					if (res)
 					{
 						s_LoadedAssets[handle] = asset;
@@ -62,9 +52,9 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		static Ref<T> LoadAsset(const std::string& path, DeserializeMode deserializeMode = DeserializeMode::Normal, void* payload = nullptr)
+		static Ref<T> LoadAsset(const std::string& path, bool bForceLoad = false, void* payload = nullptr)
 		{
-			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), deserializeMode, payload);
+			return LoadAsset<T>(AssetRegistry::Get().GetAssetHandleFromPath(path), bForceLoad, payload);
 		}
 
 		template<typename T, typename... Args>

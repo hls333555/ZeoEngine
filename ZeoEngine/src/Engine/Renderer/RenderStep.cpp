@@ -1,9 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/RenderStep.h"
 
+#include "Engine/Renderer/Drawable.h"
 #include "Engine/Renderer/Bindable.h"
 #include "Engine/Renderer/SceneRenderer.h"
-#include "Engine/Renderer/RenderGraph.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Utils/EngineUtils.h"
@@ -18,12 +18,6 @@ namespace ZeoEngine {
 	void RenderStep::AddBindable(const Ref<Bindable>& bindable)
 	{
 		m_Bindables.emplace_back(bindable);
-	}
-
-	void RenderStep::SetContext(const Weak<Scene>& sceneContext, const Ref<Material>& material)
-	{
-		m_SceneContext = sceneContext;
-		m_MaterialRef = material;
 	}
 
 	void RenderStep::Bind() const
@@ -42,21 +36,15 @@ namespace ZeoEngine {
 		}
 	}
 
-	void RenderStep::LinkRenderQueuePass()
+	RenderStepInstance::RenderStepInstance(const RenderStep* step, const SceneContext* sceneContext)
+		: m_Step(step)
 	{
-		m_RenderQueuePass = EngineUtils::GetRenderPassFromContext<RenderQueuePass>(m_SceneContext.lock(), m_RenderQueuePassName);
+		m_RenderQueuePass = EngineUtils::GetRenderPassFromContext<RenderQueuePass>(sceneContext, m_Step->m_RenderQueuePassName);
 	}
 
-	void RenderStep::Submit(const Drawable& drawable)
+	void RenderStepInstance::Submit(const Drawable& drawable) const
 	{
-		if (!m_RenderQueuePass)
-		{
-			LinkRenderQueuePass();
-		}
-		if (m_RenderQueuePass)
-		{
-			m_RenderQueuePass->AddTask(&drawable, this);
-		}
+		m_RenderQueuePass->AddTask(&drawable, m_Step);
 	}
 
 }

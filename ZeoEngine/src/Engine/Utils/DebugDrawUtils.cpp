@@ -11,21 +11,21 @@
 
 namespace ZeoEngine {
 
-	void DebugDrawUtils::DrawPoint(const Ref<Scene>& sceneContext, const Vec3& position, const Vec3& color, float size, float duration)
+	void DebugDrawUtils::DrawPoint(const Scene& scene, const Vec3& position, const Vec3& color, float size, float duration)
 	{
-		dd::point(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(position), glm::value_ptr(color), size, static_cast<I32>(duration * 1000.0f));
+		dd::point(scene.GetContext()->DebugDrawContext, glm::value_ptr(position), glm::value_ptr(color), size, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawLine(const Ref<Scene>& sceneContext, const Vec3& from, const Vec3& to, const Vec3& color, float duration)
+	void DebugDrawUtils::DrawLine(const Scene& scene, const Vec3& from, const Vec3& to, const Vec3& color, float duration)
 	{
-		dd::line(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
+		dd::line(scene.GetContext()->DebugDrawContext, glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawBox(const Ref<Scene>& sceneContext, const Vec3& center, const Vec3& extent, const Vec3& color, const Vec3& rotation, float duration)
+	void DebugDrawUtils::DrawBox(const Scene& scene, const Vec3& center, const Vec3& extent, const Vec3& color, const Vec3& rotation, float duration)
 	{
 		if (rotation == Vec3(0.0f))
 		{
-			dd::box(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), extent.x, extent.y, extent.z, static_cast<I32>(duration * 1000.0f));
+			dd::box(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), extent.x, extent.y, extent.z, static_cast<I32>(duration * 1000.0f));
 		}
 		else
 		{
@@ -46,44 +46,44 @@ namespace ZeoEngine {
 			points[6][0] = point.x; points[6][1] = point.y; points[6][2] = point.z;
 			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(extent.x, -extent.y, extent.z, 1.0f));
 			points[7][0] = point.x; points[7][1] = point.y; points[7][2] = point.z;
-			dd::box(sceneContext->GetContext()->DebugDrawContext, points, glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
+			dd::box(scene.GetContext()->DebugDrawContext, points, glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
 		}
 	}
 
-	void DebugDrawUtils::DrawCircle(const Ref<Scene>& sceneContext, const Vec3& center, const Vec3& planeNormal, const Vec3& color, float radius, float segaments, float duration)
+	void DebugDrawUtils::DrawCircle(const Scene& scene, const Vec3& center, const Vec3& planeNormal, const Vec3& color, float radius, float segaments, float duration)
 	{
-		dd::circle(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawSphereBounds(const Ref<Scene>& sceneContext, const Vec3& center, const Vec3& color, float radius, float segaments, float duration)
+	void DebugDrawUtils::DrawSphereBounds(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float segaments, float duration)
 	{
-		dd::circle(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 1.0f, 0.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
-		dd::circle(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 1.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
-		dd::circle(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 0.0f, 1.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 1.0f, 0.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 1.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 0.0f, 1.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawSphere(const Ref<Scene>& sceneContext, const Vec3& center, const Vec3& color, float radius, float duration)
+	void DebugDrawUtils::DrawSphere(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float duration)
 	{
-		dd::sphere(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), radius, static_cast<I32>(duration * 1000.0f));
+		dd::sphere(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), radius, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawArrow(const Ref<Scene>& sceneContext, const Vec3& from, const Vec3& to, const Vec3& color, float size, float duration)
+	void DebugDrawUtils::DrawArrow(const Scene& scene, const Vec3& from, const Vec3& to, const Vec3& color, float size, float duration)
 	{
-		dd::arrow(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), size, static_cast<I32>(duration * 1000.0f));
+		dd::arrow(scene.GetContext()->DebugDrawContext, glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), size, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawCone(const Ref<Scene>& sceneContext, const Vec3& apex, const Vec3& direction, const Vec3& color, float baseRadius, float apexRadius, float duration)
+	void DebugDrawUtils::DrawCone(const Scene& scene, const Vec3& apex, const Vec3& direction, const Vec3& color, float baseRadius, float apexRadius, float duration)
 	{
-		dd::cone(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(apex), glm::value_ptr(direction), glm::value_ptr(color), baseRadius, apexRadius, static_cast<I32>(duration * 1000.0f));
+		dd::cone(scene.GetContext()->DebugDrawContext, glm::value_ptr(apex), glm::value_ptr(direction), glm::value_ptr(color), baseRadius, apexRadius, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawPlane(const Ref<Scene>& sceneContext, const Vec3& center, const Vec3& planeNormal, const Vec3& planeColor, const Vec3& normalVecColor, float planeScale, float normalVecScale, float duration)
+	void DebugDrawUtils::DrawPlane(const Scene& scene, const Vec3& center, const Vec3& planeNormal, const Vec3& planeColor, const Vec3& normalVecColor, float planeScale, float normalVecScale, float duration)
 	{
-		dd::plane(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(planeColor), glm::value_ptr(normalVecColor), planeScale, normalVecScale, static_cast<I32>(duration * 1000.0f));
+		dd::plane(scene.GetContext()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(planeColor), glm::value_ptr(normalVecColor), planeScale, normalVecScale, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawFrustum(const Ref<Scene>& sceneContext, const Mat4& invClipMatrix, const Vec3& color, float duration)
+	void DebugDrawUtils::DrawFrustum(const Scene& scene, const Mat4& invClipMatrix, const Vec3& color, float duration)
 	{
-		dd::frustum(sceneContext->GetContext()->DebugDrawContext, glm::value_ptr(invClipMatrix), glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
+		dd::frustum(scene.GetContext()->DebugDrawContext, glm::value_ptr(invClipMatrix), glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
 	}
 }

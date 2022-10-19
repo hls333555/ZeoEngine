@@ -51,6 +51,11 @@ namespace ZeoEngine {
 		memcpy(GetValueRaw(), value, size);
 	}
 
+	void ComponentFieldInstance::OnFieldValueChanged(U32 fieldID)
+	{
+		m_Entity.PatchComponentByID(m_ComponentID, fieldID);
+	}
+
 	entt::meta_any ComponentFieldInstance::GetValueInternal() const
 	{
 		return m_Data.get(m_Entity.GetComponentByID(m_ComponentID));

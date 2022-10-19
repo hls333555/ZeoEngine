@@ -9,7 +9,7 @@
 
 namespace ZeoEngine {
 
-	struct FieldParser
+	class FieldParser
 	{
 	public:
 		bool ShouldHideField(entt::meta_data data, entt::meta_any& instance);

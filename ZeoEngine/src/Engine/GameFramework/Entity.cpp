@@ -27,13 +27,14 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().GetTransform();
 	}
 
-	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale) const
+	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
 	{
-		auto& transformComp = GetComponent<TransformComponent>();
-		transformComp.Translation = translation;
-		transformComp.Rotation = glm::degrees(rotation);
-		transformComp.Scale = scale;
-		UpdateBounds();
+		PatchComponent<TransformComponent>([&translation, &rotation, &scale](TransformComponent& transformComp)
+		{
+			transformComp.Translation = translation;
+			transformComp.Rotation = glm::degrees(rotation);
+			transformComp.Scale = scale;
+		});
 	}
 
 	const Vec3& Entity::GetTranslation() const
@@ -41,9 +42,12 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().Translation;
 	}
 
-	void Entity::SetTranslation(const Vec3& translation) const
+	void Entity::SetTranslation(const Vec3& translation)
 	{
-		GetComponent<TransformComponent>().Translation = translation;
+		PatchComponent<TransformComponent>([&translation](TransformComponent& transformComp)
+		{
+			transformComp.Translation = translation;
+		});
 	}
 
 	Vec3 Entity::GetRotation() const
@@ -51,9 +55,12 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().GetRotationInRadians();
 	}
 
-	void Entity::SetRotation(const Vec3& rotation) const
+	void Entity::SetRotation(const Vec3& rotation)
 	{
-		GetComponent<TransformComponent>().Rotation = glm::degrees(rotation);
+		PatchComponent<TransformComponent>([&rotation](TransformComponent& transformComp)
+		{
+			transformComp.Rotation = glm::degrees(rotation);
+		});
 	}
 
 	const Vec3& Entity::GetScale() const
@@ -61,9 +68,12 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().Scale;
 	}
 
-	void Entity::SetScale(const Vec3& scale) const
+	void Entity::SetScale(const Vec3& scale)
 	{
-		GetComponent<TransformComponent>().Scale = scale;
+		PatchComponent<TransformComponent>([&scale](TransformComponent& transformComp)
+		{
+			transformComp.Scale = scale;
+		});
 	}
 
 	Vec3 Entity::GetForwardVector() const
@@ -81,50 +91,40 @@ namespace ZeoEngine {
 		return Math::GetUpVector(GetRotation());
 	}
 
+	void Entity::UpdateBounds() const
+	{
+		auto& boundsComp = GetComponent<BoundsComponent>();
+		Box boundingBox;
+		for (const auto& [compID, func] : boundsComp.BoundsCalculationFuncs)
+		{
+			boundingBox += func(*this).GetBox();
+		}
+		boundsComp.Bounds = boundingBox.bIsValid ? boundingBox : GetDefaultBounds();
+	}
+
+	BoxSphereBounds Entity::GetDefaultBounds() const
+	{
+		const auto& transformComp = GetComponent<TransformComponent>();
+		return { transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f };
+	}
+
 	const BoxSphereBounds& Entity::GetBounds() const
 	{
 		return GetComponent<BoundsComponent>().Bounds;
 	}
 
-	void Entity::UpdateBounds() const
-	{
-		if (!HasComponent<TransformComponent>()) return;
-
-		Box boundingBox;
-		// For each component, accumulate its bounding box
-		for (const auto compID : GetOrderedComponentIDs())
-		{
-			if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compID))
-			{
-				auto* comp = GetComponentByID(compID).try_cast<IComponent>();
-				boundingBox += helper->GetBounds(comp).GetBox();
-			}
-		}
-		// If we create a new empty entity, give it a default bounds
-		GetComponent<BoundsComponent>().Bounds = boundingBox.bIsValid ? boundingBox : GetDefaultBounds();
-	}
-
-	BoxSphereBounds Entity::GetDefaultBounds() const
-	{
-		auto& transformComp = GetComponent<TransformComponent>();
-		return { transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f };
-	}
-
 	bool Entity::IsValid() const
 	{
-		if (const auto scene = m_Scene.lock())
-		{
-			return scene->m_Registry.valid(*this);
-		}
-		return false;
+		return m_Scene.expired() ? false : m_Scene.lock()->valid(m_EntityHandle);
 	}
 
-	entt::meta_any Entity::AddComponentByID(U32 compID, bool bIsDeserialize)
+	entt::meta_any Entity::AddComponentByID(U32 compID, bool bIsDeserialize) // TODO: bIsDeserialized
 	{
-		auto compType = entt::resolve(compID);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to add component with invalid component ID = {0}!", compID);
+			ZE_CORE_WARN("Failed to add component with unregistered component ID = {0}!", compID);
 			return {};
 		}
 
@@ -134,58 +134,49 @@ namespace ZeoEngine {
 			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", compName);
 			return {};
 		}
-		auto compInstance = ReflectionUtils::ConstructComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
+		auto compInstance = ReflectionUtils::ConstructComponent(compType, *m_Scene.lock(), m_EntityHandle);
 		auto* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
-		// Call this before OnComponentAdded so that newly added component can be queried within OnComponentAdded
 		AddComponentID(compID);
-		if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compID))
-		{
-			helper->OnComponentAdded(comp, bIsDeserialize);
-			// All bounds will be updated after deserialization
-			if (!bIsDeserialize)
-			{
-				UpdateBounds();
-			}
-			ReflectionUtils::BindOnComponentDestroy(compType, m_Scene.lock()->m_Registry);
-		}
 		
 		return compInstance;
 	}
 
 	void Entity::RemoveComponentByID(U32 compID)
 	{
-		auto compType = entt::resolve(compID);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to remove component with invalid component ID = {0}!", compID);
+			ZE_CORE_WARN("Failed to remove component with unregistered component ID = {0}!", compID);
 			return;
 		}
 
 		RemoveComponentID(compID);
-		UpdateBounds();
-		ReflectionUtils::RemoveComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
+		ReflectionUtils::RemoveComponent(compType, *m_Scene.lock(), m_EntityHandle);
 	}
 
 	entt::meta_any Entity::GetComponentByID(U32 compID) const
 	{
-		auto compType = entt::resolve(compID);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to get component with invalid component ID = {0}!", compID);
+			ZE_CORE_WARN("Failed to get component with unregistered component ID = {0}!", compID);
 			return {};
 		}
 
-		return ReflectionUtils::GetComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
+		return ReflectionUtils::GetComponent(compType, *m_Scene.lock(), m_EntityHandle);
 	}
 
 	bool Entity::HasComponentByID(U32 compID) const
 	{
-		auto compType = entt::resolve(compID);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType) return false;
 
-		auto bHas = ReflectionUtils::HasComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle);
+		auto bHas = ReflectionUtils::HasComponent(compType, *m_Scene.lock(), m_EntityHandle);
 		return bHas.cast<bool>();
 	}
 
@@ -195,15 +186,28 @@ namespace ZeoEngine {
 		{
 			return GetComponentByID(compID);
 		}
-		else
-		{
-			return AddComponentByID(compID, bIsDeserialize);
-		}
+		return AddComponentByID(compID, bIsDeserialize);
 	}
 
-	void Entity::CopyAllComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs)
+	void Entity::PatchComponentByID(U32 compID, U32 fieldID)
 	{
-		for (const auto compID : srcEntity.GetOrderedComponentIDs())
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
+		if (!compType)
+		{
+			ZE_CORE_WARN("Failed to patch component with unregistered component ID = {0}!", compID);
+			return;
+		}
+
+		auto& changeComp = AddComponent<FieldChangeComponent>();
+		changeComp.FieldID = fieldID;
+		ReflectionUtils::PatchComponent(compType, *m_Scene.lock(), m_EntityHandle);
+		RemoveComponent<FieldChangeComponent>();
+	}
+
+	void Entity::CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs)
+	{
+		for (const auto compID : srcEntity.GetRegisteredComponentIDs())
 		{
 			if (std::find(ignoredCompIDs.cbegin(), ignoredCompIDs.cend(), compID) == ignoredCompIDs.cend())
 			{
@@ -214,44 +218,42 @@ namespace ZeoEngine {
 
 	void Entity::CopyComponentByID(U32 compID, Entity srcEntity)
 	{
-		auto compType = entt::resolve(compID);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to copy component with invalid component ID = {0}!", compID);
+			ZE_CORE_WARN("Failed to copy component with unregistered component ID = {0}!", compID);
 			return;
 		}
 
 		auto srcCompInstance = srcEntity.GetComponentByID(compID);
-		auto* srcComp = srcCompInstance.try_cast<IComponent>();
-		auto compInstance = ReflectionUtils::CopyComponent(compType, m_Scene.lock()->m_Registry, m_EntityHandle, srcCompInstance);
-		if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compID))
-		{
-			auto* comp = compInstance.try_cast<IComponent>();
-			ZE_CORE_ASSERT(comp);
-			helper->OnComponentCopied(comp, srcComp);
-			ReflectionUtils::BindOnComponentDestroy(compType, m_Scene.lock()->m_Registry);
-		}
+		auto compInstance = ReflectionUtils::CopyComponent(compType, *m_Scene.lock(), m_EntityHandle, srcCompInstance);
+		auto* comp = compInstance.try_cast<IComponent>();
+		ZE_CORE_ASSERT(comp);
+		comp->OwnerEntity = *this;
 	}
 
-	const std::vector<U32>& Entity::GetOrderedComponentIDs() const
+	const std::vector<U32>& Entity::GetRegisteredComponentIDs() const
 	{
 		return GetComponent<CoreComponent>().OrderedComponents;
 	}
 
-	void Entity::AddComponentID(U32 id)
+	void Entity::AddComponentID(U32 compID)
 	{
+		if (!ReflectionUtils::IsComponentRegistered(compID)) return;
+
 		auto& coreComp = GetComponent<CoreComponent>();
-		coreComp.OrderedComponents.push_back(id);
+		coreComp.OrderedComponents.push_back(compID);
 	}
 
-	void Entity::RemoveComponentID(U32 id)
+	void Entity::RemoveComponentID(U32 compID)
 	{
-		if (!HasComponent<CoreComponent>()) return;
+		ZE_CORE_ASSERT(HasComponent<CoreComponent>());
 
 		auto& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.erase(
 			std::remove_if(coreComp.OrderedComponents.begin(), coreComp.OrderedComponents.end(),
-				[id](U32 compID) { return compID == id; }),
+				[compID](U32 inCompID) { return inCompID == compID; }),
 			coreComp.OrderedComponents.end());
 	}
 

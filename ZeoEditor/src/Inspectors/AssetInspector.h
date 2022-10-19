@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	class AssetInspector : public ComponentInspector
 	{
 	public:
-		AssetInspector(const Ref<AssetPreviewWorldBase>& world, U32 compID);
+		AssetInspector(AssetPreviewWorldBase* world, U32 compID);
 
 		virtual void Draw(Entity entity) override final;
 
@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw(Entity entity) {}
 
 	private:
-		Weak<AssetPreviewWorldBase> m_AssetWorld;
+		AssetPreviewWorldBase* m_AssetWorld = nullptr;
 	};
 
 }

@@ -85,25 +85,25 @@ namespace ZeoEngine {
 
 	void ParticleTemplateAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		const auto particleWorld = g_Editor->GetOrCreateWorld<ParticlePreviewWorld>("Particle");
+		auto* particleWorld = g_Editor->GetOrCreateWorld<ParticlePreviewWorld>("Particle");
 		g_Editor->InspectAsset(path, particleWorld, bIsFromAssetBrowser);
 	}
 
 	void Texture2DAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		const auto textureWorld = g_Editor->GetOrCreateWorld<TexturePreviewWorld>("Texture");
+		auto* textureWorld = g_Editor->GetOrCreateWorld<TexturePreviewWorld>("Texture");
 		g_Editor->InspectAsset(path, textureWorld, bIsFromAssetBrowser);
 	}
 
 	void MeshAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		const auto meshWorld = g_Editor->GetOrCreateWorld<MeshPreviewWorld>("Mesh");
+		auto* meshWorld = g_Editor->GetOrCreateWorld<MeshPreviewWorld>("Mesh");
 		g_Editor->InspectAsset(path, meshWorld, bIsFromAssetBrowser);
 	}
 
 	void MaterialAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		const auto materialWorld = g_Editor->GetOrCreateWorld<MaterialPreviewWorld>("Material");
+		auto* materialWorld = g_Editor->GetOrCreateWorld<MaterialPreviewWorld>("Material");
 		g_Editor->InspectAsset(path, materialWorld, bIsFromAssetBrowser);
 	}
 

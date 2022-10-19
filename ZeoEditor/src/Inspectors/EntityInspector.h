@@ -10,7 +10,7 @@ namespace ZeoEngine {
 	class EntityInspector : public InspectorBase
 	{
 	public:
-		explicit EntityInspector(const Ref<EditorPreviewWorldBase>& world);
+		explicit EntityInspector(EditorPreviewWorldBase* world);
 
 		virtual void Draw(Entity entity) override;
 

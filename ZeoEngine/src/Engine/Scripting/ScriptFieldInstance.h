@@ -46,7 +46,7 @@ namespace ZeoEngine {
 		T GetValue() const
 		{
 			T value;
-			if (SceneUtils::IsRuntime())
+			if (SceneUtils::IsLevelRuntime())
 			{
 				GetRuntimeValueInternal(&value);
 			}
@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		template<>
 		std::string GetValue() const
 		{
-			if (SceneUtils::IsRuntime())
+			if (SceneUtils::IsLevelRuntime())
 			{
 				std::string value;
 				GetRuntimeValueInternal(value);
@@ -72,7 +72,7 @@ namespace ZeoEngine {
 		template<typename T>
 		void SetValue(T&& value)
 		{
-			if (SceneUtils::IsRuntime())
+			if (SceneUtils::IsLevelRuntime())
 			{
 				SetRuntimeValueInternal(&value);
 			}
@@ -85,7 +85,7 @@ namespace ZeoEngine {
 		template<>
 		void SetValue(const std::string& value)
 		{
-			if (SceneUtils::IsRuntime())
+			if (SceneUtils::IsLevelRuntime())
 			{
 				SetRuntimeValueInternal(value);
 			}

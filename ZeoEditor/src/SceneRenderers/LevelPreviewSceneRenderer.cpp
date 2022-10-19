@@ -1,17 +1,18 @@
 #include "SceneRenderers/LevelPreviewSceneRenderer.h"
 
-#include "Engine/GameFramework/Systems.h"
+#include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/RenderSystems.h"
 #include "Engine/Renderer/RenderGraph.h"
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Worlds/LevelPreviewWorld.h"
 
 namespace ZeoEngine {
 
-	void LevelPreviewSceneRenderer::OnAttach(const Ref<WorldBase>& world)
+	void LevelPreviewSceneRenderer::OnAttach(WorldBase* world)
 	{
 		SceneRenderer::OnAttach(world);
 
-		m_LevelWorld = std::dynamic_pointer_cast<LevelPreviewWorld>(world);
+		m_LevelWorld = dynamic_cast<LevelPreviewWorld*>(world);
 	}
 
 	Scope<RenderGraph> LevelPreviewSceneRenderer::CreateRenderGraph()
@@ -19,37 +20,32 @@ namespace ZeoEngine {
 		return CreateScope<ForwardRenderGraph>();
 	}
 
-	Scope<RenderSystemBase> LevelPreviewSceneRenderer::CreateRenderSystem(const Ref<WorldBase>& world)
+	Scope<RenderSystemBase> LevelPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
 	{
 		return CreateScope<RenderSystem>(world);
 	}
 
 	void LevelPreviewSceneRenderer::OnRenderScene()
 	{
-		const auto levelWorld = m_LevelWorld.lock();
-		switch (levelWorld->GetSceneState())
+		if (m_LevelWorld->IsRuntime())
 		{
-			case SceneState::Edit:
-				BeginScene(levelWorld->GetEditorCamera());
-				GetRenderGraph().ToggleRenderPassActive("Grid", true);
-				GetRenderSystem()->OnRenderEditor();
-				break;
-			case SceneState::Play:
-			case SceneState::Pause:
-				auto [sceneCamera, transform] = GetRenderSystem()->GetActiveSceneCamera();
-				if (sceneCamera)
-				{
-					BeginScene(*sceneCamera, transform);
-				}
-				else
-				{
-					BeginScene(levelWorld->GetEditorCamera());
-				}
-				GetRenderGraph().ToggleRenderPassActive("Grid", false);
+			if (const Entity cameraEntity = m_LevelWorld->GetActiveScene()->GetMainCameraEntity())
+			{
+				const SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+				const Mat4& cameraTransform = cameraEntity.GetTransform();
+				BeginScene(camera, cameraTransform);
 				GetRenderSystem()->OnRenderRuntime();
-				break;
+			}
+			GetRenderGraph().ToggleRenderPassActive("Grid", false);
+			EndScene();
 		}
-		EndScene();
+		else
+		{
+			BeginScene(m_LevelWorld->GetEditorCamera());
+			GetRenderSystem()->OnRenderEditor();
+			GetRenderGraph().ToggleRenderPassActive("Grid", true);
+			EndScene();
+		}
 	}
 
 }

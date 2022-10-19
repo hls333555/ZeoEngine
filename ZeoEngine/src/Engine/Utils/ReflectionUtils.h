@@ -12,6 +12,8 @@ namespace ZeoEngine {
 		static FieldType MetaTypeToFieldType(entt::meta_type type);
 		static bool DoesComponentContainAnyField(U32 compID);
 
+		static bool IsComponentRegistered(U32 compID);
+
 		template<typename T>
 		static bool IsTypeEqual(entt::meta_type type)
 		{
@@ -80,8 +82,9 @@ namespace ZeoEngine {
 		static void RemoveComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		static entt::meta_any GetComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		static entt::meta_any HasComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
+		static void PatchComponent(entt::meta_type compType, entt::registry& registry, entt::entity entity);
 		static entt::meta_any CopyComponent(entt::meta_type compType, entt::registry& dstRegistry, entt::entity dstEntity, entt::meta_any& compInstance);
-		static void BindOnComponentDestroy(entt::meta_type compType, entt::registry& registry);
+
 	};
 	
 }

@@ -6,7 +6,6 @@
 #include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
-#include "Engine/GameFramework/ComponentHelpers.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Engine/Utils/ReflectionUtils.h"
@@ -213,33 +212,22 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ComponentSerializer::Deserialize(const YAML::Node& compNode, entt::meta_any compInstance)
+	void ComponentSerializer::Deserialize(const YAML::Node& compNode, entt::meta_any compInstance, Entity entity)
 	{
-		if (!compInstance) return;
-
-		const auto preprocessedFields = PreprocessFields(compInstance);
-		for (const auto data : preprocessedFields)
+		DeserializeInternal(compNode, compInstance.as_ref(), [&compInstance, &entity](U32 fieldID)
 		{
-			const char* fieldName = ReflectionUtils::GetMetaObjectName(data);
-			const auto& fieldNode = compNode[fieldName];
-			// Evaluate serialized field only
-			if (fieldNode)
-			{
-				auto fieldInstance = data.get(compInstance);
-				EvaluateDeserializeField(fieldNode, fieldInstance);
-				if (auto* helper = ComponentHelperRegistry::GetComponentHelper(compInstance.type().id()))
-				{
-					auto* comp = compInstance.try_cast<IComponent>();
-					helper->PostFieldDeserialize(comp, data.id());
-				}
-			}
-		}
+			const U32 compID = compInstance.type().id();
+			entity.PatchComponentByID(compID, fieldID);
+		});
+	}
 
-		if (auto* extender = ComponentSerializerExtenderRegistry::GetComponentSerializerExtender(compInstance.type().id()))
+	void ComponentSerializer::Deserialize(const YAML::Node& compNode, entt::meta_any compInstance, const AssetSerializerBase* assetSerializer)
+	{
+		DeserializeInternal(compNode, compInstance.as_ref(), [&compInstance, assetSerializer](U32 fieldID)
 		{
 			auto* comp = compInstance.try_cast<IComponent>();
-			extender->Deserialize(compNode, comp);
-		}
+			assetSerializer->PostFieldDeserialize(comp, fieldID);
+		});
 	}
 
 	void ComponentSerializer::EvaluateDeserializeField(const YAML::Node& fieldNode, entt::meta_any& fieldInstance)
@@ -274,6 +262,7 @@ namespace ZeoEngine {
 		auto seqView = seqInstance.as_sequence_container();
 		// Clear elements first
 		seqView.clear();
+		// TODO: Resize instead of insert every time
 		for (const auto& elementNode : seqNode)
 		{
 			auto it = seqView.insert(seqView.end(), seqView.value_type().construct());
@@ -378,13 +367,11 @@ namespace ZeoEngine {
 	// SceneSerializer ///////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 	
-	void SceneSerializer::Serialize(YAML::Node& node, const Ref<Scene>& scene)
+	void SceneSerializer::Serialize(YAML::Node& node, Scene& scene)
 	{
-		if (!scene) return;
-
-		scene->ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
+		scene.ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
 		{
-			const Entity entity = { entityID, scene };
+			const Entity entity{ entityID, scene.shared_from_this() };
 			if (!entity) return;
 
 			YAML::Node entityNode;
@@ -399,7 +386,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	void SceneSerializer::Deserialize(const YAML::Node& node, const Ref<Scene>& scene)
+	void SceneSerializer::Deserialize(const YAML::Node& node, Scene& scene)
 	{
 		if (auto entities = node["Entities"])
 		{
@@ -420,7 +407,7 @@ namespace ZeoEngine {
 	{
 		entityNode["Entity"] = entity.GetUUID();
 		// Do not call entt::registry::visit() as the order is reversed
-		for (const auto compID : entity.GetOrderedComponentIDs())
+		for (const auto compID : entity.GetRegisteredComponentIDs())
 		{
 			auto compInstance = entity.GetComponentByID(compID);
 			// Do not serialize transient component
@@ -436,10 +423,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	void SceneSerializer::DeserializeEntity(const YAML::Node& entityNode, const Ref<Scene>& scene)
+	void SceneSerializer::DeserializeEntity(const YAML::Node& entityNode, Scene& scene)
 	{
 		const UUID uuid = entityNode["Entity"].as<UUID>();
-		Entity deserializedEntity = scene->CreateEntityWithUUID(uuid);
+		Entity deserializedEntity = scene.CreateEntityWithUUID(uuid);
 
 		if (auto components = entityNode["Components"])
 		{
@@ -456,7 +443,7 @@ namespace ZeoEngine {
 					// Deserialize component
 					ComponentSerializer cs;
 					// We must pass by reference here for component to be deserialized properly
-					cs.Deserialize(component, compInstance.as_ref());
+					cs.Deserialize(component, compInstance.as_ref(), deserializedEntity);
 				}
 			}
 		}

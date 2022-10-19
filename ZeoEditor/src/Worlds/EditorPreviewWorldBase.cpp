@@ -29,6 +29,11 @@ namespace ZeoEngine {
 		WorldBase::OnUpdate(dt);
 	}
 
+	void EditorPreviewWorldBase::LoadAsset(const std::string& path, bool bForce)
+	{
+		SetAsset(LoadAssetImpl(path, bForce));
+	}
+
 	void EditorPreviewWorldBase::SaveAsset(const std::string& path) const
 	{
 		Timer timer;
@@ -40,15 +45,21 @@ namespace ZeoEngine {
 
 	void EditorPreviewWorldBase::SaveAssetAs()
 	{
-		auto saveAssetPanel = g_Editor->GetPanel<SaveAssetPanel>(SAVE_ASSET);
+		auto* saveAssetPanel = g_Editor->GetPanel<SaveAssetPanel>(SAVE_ASSET);
 		if (!saveAssetPanel)
 		{
-			saveAssetPanel = g_Editor->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAsset()->GetTypeID(), SharedFromBase<EditorPreviewWorldBase>());
+			saveAssetPanel = g_Editor->CreatePanel<SaveAssetPanel>(SAVE_ASSET, GetAsset()->GetTypeID(), this);
 		}
 		else
 		{
 			saveAssetPanel->Toggle(true);
 		}
+	}
+
+	void EditorPreviewWorldBase::OnAssetSaveAs(const std::string& path)
+	{
+		// We must force load asset to replace current preview one
+		LoadAsset(path, true);
 	}
 
 	void EditorPreviewWorldBase::SetContextEntity(Entity entity)

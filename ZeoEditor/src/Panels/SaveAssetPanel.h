@@ -9,7 +9,7 @@ namespace ZeoEngine {
 	class SaveAssetPanel : public OpenAssetPanel
 	{
 	public:
-		SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, const Ref<EditorPreviewWorldBase>& world);
+		SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, EditorPreviewWorldBase* world);
 
 	private:
 		virtual void OnPanelOpen() override;
@@ -26,7 +26,7 @@ namespace ZeoEngine {
 		void SaveAndClose(const std::string& path);
 
 	private:
-		Weak<EditorPreviewWorldBase> m_World;
+		EditorPreviewWorldBase* m_World = nullptr;
 
 		char m_NameBuffer[MAX_PATH_SIZE];
 		bool m_bHasKeyboardFocused = false;

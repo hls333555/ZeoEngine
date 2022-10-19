@@ -12,7 +12,6 @@
 #include "Engine/GameFramework/SceneCamera.h"
 #include "Engine/GameFramework/ParticleSystem.h"
 #include "Engine/Renderer/Texture.h"
-#include "Engine/Renderer/Light.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Math/BoxSphereBounds.h"
@@ -22,15 +21,17 @@ namespace ZeoEngine {
 	class Texture2D;
 	class ScriptableEntity;
 
-	extern std::vector<AssetHandle> g_AssetVectorPlaceholder;
-
 	struct IComponent
 	{
 		Entity OwnerEntity;
 
 		IComponent() = default;
 		IComponent(const IComponent&) = default;
+		IComponent(IComponent&&) = default;
 		virtual ~IComponent() = default;
+
+		IComponent& operator=(const IComponent&) = default;
+		IComponent& operator=(IComponent&&) = default;
 
 		static const char* GetIcon() { return ICON_FA_CIRCLE_NOTCH; }
 	};
@@ -91,9 +92,6 @@ namespace ZeoEngine {
 		std::vector<Vec4> ColorVecVar;
 		std::vector<AssetHandle> TextureAssetVecVar;
 		std::vector<AssetHandle> MeshAssetVecVar;
-
-		TestComponent() = default;
-		TestComponent(const TestComponent&) = default;
 	};
 #endif
 
@@ -102,10 +100,8 @@ namespace ZeoEngine {
 		std::string Name;
 
 		U32 EntityIndex;
+		/** Stores list of registered component IDs in order */
 		std::vector<U32> OrderedComponents;
-
-		CoreComponent() = default;
-		CoreComponent(const CoreComponent&) = default;
 	};
 
 	struct IDComponent : public IComponent
@@ -113,7 +109,6 @@ namespace ZeoEngine {
 		UUID ID;
 
 		IDComponent() = default;
-		IDComponent(const IDComponent&) = default;
 		IDComponent(UUID uuid)
 			: ID(uuid) {}
 	};
@@ -125,7 +120,6 @@ namespace ZeoEngine {
 		Vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(const Vec3& translation)
 			: Translation(translation) {}
 
@@ -140,7 +134,23 @@ namespace ZeoEngine {
 				rotation *
 				glm::scale(Mat4(1.0f), Scale);
 		}
+	};
 
+	struct BoundsComponent : public IComponent
+	{
+		BoxSphereBounds Bounds;
+		std::unordered_map<U32, std::function<BoxSphereBounds(Entity)>> BoundsCalculationFuncs;
+	};
+
+	struct BillboardComponent : public IComponent
+	{
+		Ref<Texture2D> TextureAsset;
+		Vec2 Size{ 0.5f, 0.5f };
+	};
+
+	struct FieldChangeComponent : public IComponent
+	{
+		U32 FieldID = 0;
 	};
 
 #pragma region 2D
@@ -152,7 +162,6 @@ namespace ZeoEngine {
 		I32 SortingOrder = 0;
 
 		SpriteRendererComponent() = default;
-		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const Vec4& color)
 			: TintColor(color) {}
 		SpriteRendererComponent(AssetHandle textureAsset, const Vec4& tintColor = Vec4(1.0f), const Vec2& textureTiling = { 1.0f, 1.0f })
@@ -161,7 +170,6 @@ namespace ZeoEngine {
 		Ref<Texture2D> GetTexture() const { return AssetLibrary::LoadAsset<Texture2D>(TextureAsset); }
 
 		static const char* GetIcon() { return ICON_FA_GHOST; }
-
 	};
 
 	struct CircleRendererComponent : public IComponent
@@ -171,11 +179,7 @@ namespace ZeoEngine {
 		float Fade = 0.005f;
 		I32 SortingOrder = 0;
 
-		CircleRendererComponent() = default;
-		CircleRendererComponent(const CircleRendererComponent&) = default;
-
 		static const char* GetIcon() { return ICON_FA_CIRCLE; }
-
 	};
 
 	struct Rigidbody2DComponent : public IComponent
@@ -189,9 +193,6 @@ namespace ZeoEngine {
 		bool bFixedRotation = false;
 
 		void* RuntimeBody = nullptr;
-
-		Rigidbody2DComponent() = default;
-		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
 	};
 
 	struct BoxCollider2DComponent : public IComponent
@@ -206,9 +207,6 @@ namespace ZeoEngine {
 		float RestitutionThreshold = 0.5f;
 
 		void* RuntimeFixture = nullptr;
-
-		BoxCollider2DComponent() = default;
-		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
 	};
 
 	struct CircleCollider2DComponent : public IComponent
@@ -223,9 +221,6 @@ namespace ZeoEngine {
 		float RestitutionThreshold = 0.5f;
 
 		void* RuntimeFixture = nullptr;
-
-		CircleCollider2DComponent() = default;
-		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
 #pragma endregion
 
@@ -234,9 +229,6 @@ namespace ZeoEngine {
 		SceneCamera Camera;
 		bool bIsPrimary = true;
 		bool bFixedAspectRatio = false;
-
-		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
 
 		static const char* GetIcon() { return ICON_FA_CAMERA; }
 
@@ -249,7 +241,6 @@ namespace ZeoEngine {
 		float& GetOrthographicSize() { return Camera.m_OrthographicSize; }
 		float& GetOrthographicNearClip() { return Camera.m_OrthographicNear; }
 		float& GetOrthographicFarClip() { return Camera.m_OrthographicFar; }
-
 	};
 
 	struct NativeScriptComponent : public IComponent
@@ -274,9 +265,6 @@ namespace ZeoEngine {
 	{
 		std::string ClassName;
 
-		ScriptComponent() = default;
-		ScriptComponent(const ScriptComponent&) = default;
-
 		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
 	};
 
@@ -286,9 +274,6 @@ namespace ZeoEngine {
 		Vec3 PositionOffset{ 0.0f };
 
 		Ref<ParticleSystemInstance> Instance;
-
-		ParticleSystemComponent() = default;
-		ParticleSystemComponent(const ParticleSystemComponent&) = default;
 
 		static const char* GetIcon() { return ICON_FA_FIRE_ALT; }
 	};
@@ -319,23 +304,36 @@ namespace ZeoEngine {
 		Ref<Texture2D>& GetTexture() const { return ParticleTemplateAsset->Texture; }
 		Vec2& GetSubImageSize() const { return ParticleTemplateAsset->SubImageSize; }
 		U32& GetMaxParticles() const { return ParticleTemplateAsset->MaxParticles; }
-
 	};
 	
 	struct MeshRendererComponent : public IComponent
 	{
-		AssetHandle MeshAsset;
+		AssetHandle MeshAsset = 0;
+		std::vector<AssetHandle> MaterialAssets;
 
 		Ref<MeshInstance> Instance;
 
 		MeshRendererComponent() = default;
 		MeshRendererComponent(AssetHandle meshAsset)
 			: MeshAsset(meshAsset) {}
-		MeshRendererComponent(const MeshRendererComponent&) = default;
+		MeshRendererComponent(const MeshRendererComponent& other)
+			: IComponent(other)
+			, MeshAsset(other.MeshAsset), MaterialAssets(other.MaterialAssets), Instance(CreateRef<MeshInstance>(*other.Instance))
+		{
+		}
+		MeshRendererComponent(MeshRendererComponent&&) = default;
 
-		Ref<Mesh> GetMesh() const { return AssetLibrary::LoadAsset<Mesh>(MeshAsset); }
-
-		std::vector<AssetHandle>& GetMaterialAssets() const { return Instance ? Instance->GetMaterialAssets() : g_AssetVectorPlaceholder; }
+		MeshRendererComponent& operator=(const MeshRendererComponent& other)
+		{
+			if (&other != this)
+			{
+				MeshAsset = other.MeshAsset;
+				MaterialAssets = other.MaterialAssets;
+				Instance = CreateRef<MeshInstance>(*other.Instance);
+			}
+			return *this;
+		}
+		MeshRendererComponent& operator=(MeshRendererComponent&&) = default;
 
 		static const char* GetIcon() { return ICON_FA_CUBE; }
 	};
@@ -348,62 +346,8 @@ namespace ZeoEngine {
 		MeshDetailComponent() = default;
 		MeshDetailComponent(const Ref<Mesh>& mesh)
 			: LoadedMesh(mesh) {}
-		MeshDetailComponent(const MeshDetailComponent&) = default;
 
-		std::vector<AssetHandle>& GetMaterialAssets() const { return LoadedMesh ? LoadedMesh->GetDefaultMaterialAssets() : g_AssetVectorPlaceholder; }
-	};
-
-	struct LightComponentBase : public IComponent
-	{
-		Ref<Light> LightSource;
-
-		Vec4& GetColor() const { return LightSource->m_Color; }
-		float& GetIntensity() const { return LightSource->m_Intensity; }
-		bool& IsCastShadow() const { return LightSource->m_bCastShadow; }
-		Light::ShadowType& GetShadowType() const { return LightSource->m_ShadowType; }
-		float& GetDepthBias() const { return LightSource->m_DepthBias; }
-		float& GetNormalBias() const { return LightSource->m_NormalBias; }
-		float& GetLightSize() const { return LightSource->m_LightSize; }
-		float& GetFilterSize() const { return LightSource->m_FilterSize; }
-	};
-
-	struct DirectionalLightComponent : public LightComponentBase
-	{
-		DirectionalLightComponent() = default;
-		DirectionalLightComponent(const DirectionalLightComponent&) = default;
-
-		static const char* GetIcon() { return ICON_FA_SUN; }
-
-		Ref<DirectionalLight> GetDirectionalLight() const { return std::static_pointer_cast<DirectionalLight>(LightSource); }
-
-		U32& GetCascadeCount() const { return GetDirectionalLight()->m_CascadeCount; }
-		float& GetCascadeBlendThreshold() const { return GetDirectionalLight()->m_CascadeBlendThreshold; }
-		float& GetMaxShadowDistance() const { return GetDirectionalLight()->m_MaxShadowDistance; }
-		float& GetCascadeSplitLambda() const { return GetDirectionalLight()->m_CascadeSplitLambda; }
-	};
-
-	struct PointLightComponent : public LightComponentBase
-	{
-		PointLightComponent() = default;
-		PointLightComponent(const PointLightComponent&) = default;
-
-		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
-
-		Ref<PointLight> GetPointLight() const { return std::static_pointer_cast<PointLight>(LightSource); }
-
-		float& GetRange() const { return GetPointLight()->m_Range; }
-	};
-
-	struct SpotLightComponent : public PointLightComponent
-	{
-		SpotLightComponent() = default;
-		SpotLightComponent(const SpotLightComponent&) = default;
-
-		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
-
-		Ref<SpotLight> GetSpotLight() const { return std::static_pointer_cast<SpotLight>(LightSource); }
-		
-		float& GetCutoff() const { return GetSpotLight()->m_CutoffAngle; }
+		std::vector<AssetHandle>& GetMaterialAssets() const { return LoadedMesh->GetDefaultMaterialAssets(); }
 	};
 
 	struct MaterialDetailComponent : public IComponent
@@ -413,27 +357,9 @@ namespace ZeoEngine {
 		MaterialDetailComponent() = default;
 		MaterialDetailComponent(const Ref<Material>& material)
 			: LoadedMaterial(material) {}
-		MaterialDetailComponent(const MaterialDetailComponent&) = default;
 
 		AssetHandle& GetShaderAsset() const { return LoadedMaterial->m_ShaderInstance->m_ShaderAsset; }
 		U32& GetShaderVariant() const { return LoadedMaterial->m_ShaderInstance->m_ShaderVariantID; }
-	};
-
-	struct BillboardComponent : public IComponent
-	{
-		Ref<Texture2D> TextureAsset;
-		Vec2 Size{ 0.5f, 0.5f };
-
-		BillboardComponent() = default;
-		BillboardComponent(const BillboardComponent&) = default;
-	};
-
-	struct BoundsComponent : public IComponent
-	{
-		BoxSphereBounds Bounds;
-
-		BoundsComponent() = default;
-		BoundsComponent(const BoundsComponent&) = default;
 	};
 
 	struct TextureDetailComponent : public IComponent
@@ -444,10 +370,55 @@ namespace ZeoEngine {
 		TextureDetailComponent() = default;
 		TextureDetailComponent(const Ref<Texture2D>& texture)
 			: LoadedTexture(texture) {}
-		TextureDetailComponent(const TextureDetailComponent&) = default;
 
 		bool& IsSRGB() const { return LoadedTexture->m_bIsSRGB; }
 		bool& ShouldGenerateMipmaps() const { return LoadedTexture->m_bShouldGenerateMipmaps; }
+	};
+
+	enum class ShadowType
+	{
+		HardShadow = 0,
+		PCF,
+		PCSS,
+	};
+
+	struct LightComponentBase : public IComponent
+	{
+		Vec4 Color{ 1.0f };
+		float Intensity = 1.0f;
+		bool bCastShadow = false;
+		ShadowType ShadowType = ShadowType::HardShadow;
+		float DepthBias = 0.002f;
+		float NormalBias = 30.0f;
+		float FilterSize = 20.0f;
+		float LightSize = 150.0f;
+	};
+
+	struct DirectionalLightComponent : public LightComponentBase
+	{
+		U32 CascadeCount = 4;
+		float CascadeBlendThreshold = 0.5f;
+		float MaxShadowDistance = 100.0f;
+		float CascadeSplitLambda = 0.85f;
+
+		static const char* GetIcon() { return ICON_FA_SUN; }
+	};
+
+	struct PointLightComponent : public LightComponentBase
+	{
+		float Range = 1.0f;
+
+		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+	};
+
+	struct SpotLightComponent : public PointLightComponent
+	{
+		/** Half the angle of the spot light cone stored in degrees */
+		float CutoffAngle = 30.0f;
+
+		float GetCutoffInRadians() const { return glm::radians(CutoffAngle); }
+
+		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
 	};
 
 }

@@ -203,9 +203,36 @@ namespace ZeoEngine {
 	{
 	public:
 		void Serialize(YAML::Node& compNode, entt::meta_any compInstance);
-		void Deserialize(const YAML::Node& compNode, entt::meta_any compInstance);
+		void Deserialize(const YAML::Node& compNode, entt::meta_any compInstance, Entity entity);
+		void Deserialize(const YAML::Node& compNode, entt::meta_any compInstance, const AssetSerializerBase* assetSerializer);
 
 	private:
+		template<typename Func>
+		void DeserializeInternal(const YAML::Node& compNode, entt::meta_any compInstance, Func func)
+		{
+			if (!compInstance) return;
+
+			const auto preprocessedFields = PreprocessFields(compInstance);
+			for (const auto data : preprocessedFields)
+			{
+				const char* fieldName = ReflectionUtils::GetMetaObjectName(data);
+				const auto& fieldNode = compNode[fieldName];
+				// Evaluate serialized field only
+				if (fieldNode)
+				{
+					auto fieldInstance = data.get(compInstance);
+					EvaluateDeserializeField(fieldNode, fieldInstance);
+					func(data.id());
+				}
+			}
+
+			if (auto* extender = ComponentSerializerExtenderRegistry::GetComponentSerializerExtender(compInstance.type().id()))
+			{
+				auto* comp = compInstance.try_cast<IComponent>();
+				extender->Deserialize(compNode, comp);
+			}
+		}
+
 		/** Reverse order so that serialized and deserialized fields are in correct order. */
 		std::deque<entt::meta_data> PreprocessFields(const entt::meta_any& compInstance);
 
@@ -284,14 +311,14 @@ namespace ZeoEngine {
 	class SceneSerializer
 	{
 	public:
-		static void Serialize(YAML::Node& node, const Ref<Scene>& scene);
+		static void Serialize(YAML::Node& node, Scene& scene);
 		static void SerializeRuntime();
-		static void Deserialize(const YAML::Node& node, const Ref<Scene>& scene);
+		static void Deserialize(const YAML::Node& node, Scene& scene);
 		static void DeserializeRuntime();
 
 	private:
 		static void SerializeEntity(YAML::Node& entityNode, const Entity entity);
-		static void DeserializeEntity(const YAML::Node& entityNode, const Ref<Scene>& scene);
+		static void DeserializeEntity(const YAML::Node& entityNode, Scene& scene);
 	};
 
 }

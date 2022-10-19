@@ -24,21 +24,16 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		virtual void OnWorldChanged(const Ref<EditorPreviewWorldBase>& world, const Ref<EditorPreviewWorldBase>& lastWorld) override;
-		void OnActiveSceneChanged(const Ref<Scene>& scene, const Ref<Scene>& lastScene);
-
-		void BindCameraComponentConstructionDelegate(const Ref<Scene>& scene);
-
-		void RenderToolbar(const Ref<LevelPreviewWorld>& levelWorld) const;
-		void RenderGizmo(const Ref<LevelPreviewWorld>& levelWorld);
+		void RenderToolbar() const;
+		void RenderGizmo();
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e) const;
 
-		void ReadPixelDataFromIDBuffer(const Ref<FrameBuffer>& frameBuffer);
+		void ReadPixelDataFromIDBuffer(FrameBuffer& frameBuffer);
 
 	private:
-		Weak<LevelPreviewWorld> m_LevelWorld;
+		LevelPreviewWorld* m_LevelWorld = nullptr;
 
 		ImGuizmo::OPERATION m_GizmoType = ImGuizmo::TRANSLATE;
 		bool m_bGizmoVisible = false;

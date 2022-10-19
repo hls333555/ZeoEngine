@@ -76,16 +76,16 @@ namespace ZeoEngine {
 	void LevelAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const Ref<Level> level = std::static_pointer_cast<Level>(asset);
-		const auto& scene = level->GetScene();
-		SceneSerializer::Serialize(node, scene);
+		Scene* scene = level->GetScene();
+		SceneSerializer::Serialize(node, *scene);
 	}
 
 	bool LevelAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const Ref<Level> level = std::static_pointer_cast<Level>(asset);
-		const auto& scene = *static_cast<Ref<Scene>*>(payload);
+		auto* scene = static_cast<Scene*>(payload);
 		level->SetScene(scene);
-		SceneSerializer::Deserialize(node, scene);
+		SceneSerializer::Deserialize(node, *scene);
 		return true;
 	}
 
@@ -107,7 +107,7 @@ namespace ZeoEngine {
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, ParticleSystemDetailComponent(particleTemplate));
+		cs.Deserialize(node, ParticleSystemDetailComponent(particleTemplate), this);
 		return true;
 	}
 
@@ -135,7 +135,7 @@ namespace ZeoEngine {
 
 		const auto texture = std::static_pointer_cast<Texture2D>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, TextureDetailComponent(texture));
+		cs.Deserialize(node, TextureDetailComponent(texture), this);
 		return true;
 	}
 
@@ -163,7 +163,7 @@ namespace ZeoEngine {
 
 		const auto mesh = std::static_pointer_cast<Mesh>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, MeshDetailComponent(mesh));
+		cs.Deserialize(node, MeshDetailComponent(mesh), this);
 		return true;
 	}
 
@@ -205,8 +205,17 @@ namespace ZeoEngine {
 	{
 		const auto material = std::static_pointer_cast<Material>(asset);
 		ComponentSerializer cs;
-		cs.Deserialize(node, MaterialDetailComponent(material));
+		cs.Deserialize(node, MaterialDetailComponent(material), this);
 		return true;
+	}
+
+	void MaterialAssetSerializer::PostFieldDeserialize(IComponent* comp, U32 fieldID) const
+	{
+		const auto* materialComp = static_cast<MaterialDetailComponent*>(comp);
+		if (fieldID == "ShaderAsset"_hs)
+		{
+			materialComp->LoadedMaterial->NotifyShaderAssetChange();
+		}
 	}
 
 	void MaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const

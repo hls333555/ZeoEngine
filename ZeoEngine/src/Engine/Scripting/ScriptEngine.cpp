@@ -312,14 +312,14 @@ namespace ZeoEngine {
 		return s_Data->CoreAssemblyImage;
 	}
 
-	const Ref<Scene>& ScriptEngine::GetSceneContext()
+	Scene& ScriptEngine::GetSceneContext()
 	{
-		return s_Data->SceneContext;
+		return *s_Data->SceneContext;
 	}
 
-	void ScriptEngine::SetSceneContext(const Ref<Scene>& scene)
+	void ScriptEngine::SetSceneContext(Ref<Scene> scene)
 	{
-		s_Data->SceneContext = scene;
+		s_Data->SceneContext = std::move(scene);
 	}
 
 	MonoObject* ScriptEngine::GetMonoInstanceFromHandle(U32 handle)
@@ -464,18 +464,14 @@ namespace ZeoEngine {
 
 	Entity ScriptEngine::GetEntityByID(UUID entityID)
 	{
-		const auto& scene = GetSceneContext();
-		ZE_CORE_ASSERT(scene);
-		const Entity entity = scene->GetEntityByUUID(entityID);
+		const Entity entity = GetSceneContext().GetEntityByUUID(entityID);
 		ZE_CORE_ASSERT(entity);
 		return entity;
 	}
 
 	Entity ScriptEngine::GetEntityByName(std::string_view name)
 	{
-		const auto& scene = GetSceneContext();
-		ZE_CORE_ASSERT(scene);
-		return scene->GetEntityByName(name);
+		return GetSceneContext().GetEntityByName(name);
 	}
 
 	void ScriptEngine::LoadAssemblyClasses()
@@ -648,7 +644,7 @@ namespace ZeoEngine {
 
 	void* ScriptFieldInstance::GetValueRaw() const
 	{
-		if (SceneUtils::IsRuntime())
+		if (SceneUtils::IsLevelRuntime())
 		{
 			GetRuntimeValueInternal(RuntimeBuffer);
 			return RuntimeBuffer;
@@ -658,7 +654,7 @@ namespace ZeoEngine {
 
 	void ScriptFieldInstance::SetValueRaw(const void* value) const
 	{
-		if (SceneUtils::IsRuntime())
+		if (SceneUtils::IsLevelRuntime())
 		{
 			SetRuntimeValueInternal(value);
 		}

@@ -12,7 +12,7 @@
 
 namespace ZeoEngine {
 
-	EntityInspector::EntityInspector(const Ref<EditorPreviewWorldBase>& world)
+	EntityInspector::EntityInspector(EditorPreviewWorldBase* world)
 	{
 		world->m_OnContextEntityChanged.connect<&EntityInspector::OnSelectedEntityChanged>(this);
 		CategorizeComponents();
@@ -75,7 +75,7 @@ namespace ZeoEngine {
 		}
 		ImGui::PopID();
 
-		// The following part will not have entity id pushed into ImGui!
+		// The following part will not have entity ID pushed into ImGui!
 		ImGui::Separator();
 
 		// Add component button
@@ -150,7 +150,7 @@ namespace ZeoEngine {
 		m_ComponentInspectors.clear();
 
 		// Process components on this entity
-		for (const auto compID : entity.GetOrderedComponentIDs())
+		for (const auto compID : entity.GetRegisteredComponentIDs())
 		{
 			// Skip if there is no field registered
 			if (!ReflectionUtils::DoesComponentContainAnyField(compID)) continue;

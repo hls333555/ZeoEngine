@@ -47,6 +47,16 @@
         }
 
         public MeshInstance Instance => new MeshInstance(InternalCalls.MeshRendererComponent_GetInstance(Entity.ID));
+
+        public AssetHandle GetMaterial(uint index)
+        {
+            return InternalCalls.MeshRendererComponent_GetMaterialAsset(Entity.ID, index);
+        }
+
+        public void SetMaterial(uint index, AssetHandle materialAsset)
+        {
+            InternalCalls.MeshRendererComponent_SetMaterialAsset(Entity.ID, index, materialAsset);
+        }
     }
 
 }

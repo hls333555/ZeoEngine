@@ -122,14 +122,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<LevelPreviewWorld> Editor::GetLevelWorld() const
+	LevelPreviewWorld* Editor::GetLevelWorld() const
 	{
 		return GetWorld<LevelPreviewWorld>("Level");
 	}
 
 	void Editor::NewLevel()
 	{
-		auto levelWorld = GetLevelWorld();
+		auto* levelWorld = GetLevelWorld();
 		if (levelWorld)
 		{
 			levelWorld->NewScene();
@@ -138,14 +138,14 @@ namespace ZeoEngine {
 		{
 			levelWorld = CreateWorld<LevelPreviewWorld>("Level");
 		}
-		Ref<Scene> scene = levelWorld->GetActiveScene();
-		Ref<Level> level = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath(), AssetLibrary::DeserializeMode::Force, &scene);
+		Scene* scene = levelWorld->GetActiveScene().get();
+		Ref<Level> level = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath(), true, scene);
 		levelWorld->SetAsset(std::move(level));
 	}
 
 	void Editor::LoadLevel()
 	{
-		auto openAssetPanel = GetPanel<OpenAssetPanel>(OPEN_ASSET);
+		auto* openAssetPanel = GetPanel<OpenAssetPanel>(OPEN_ASSET);
 		if (!openAssetPanel)
 		{
 			openAssetPanel = CreatePanel<OpenAssetPanel>(OPEN_ASSET, Level::TypeID());
@@ -159,7 +159,8 @@ namespace ZeoEngine {
 	void Editor::LoadLevel(const std::string& path) const
 	{
 		Timer timer;
-		GetLevelWorld()->LoadAsset(path);
+		// An empty scene is created every time, so we have to deserialize every time
+		GetLevelWorld()->LoadAsset(path, true);
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
@@ -198,17 +199,17 @@ namespace ZeoEngine {
 
 	void Editor::InspectLevelEntity() const
 	{
-		const auto inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
+		auto* inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
 		inspectorPanel->UpdateWorld(GetLevelWorld(), false);
 		inspectorPanel->ToggleAssetView(false);
 	}
 
-	void Editor::InspectAsset(const std::string& path, const Ref<AssetPreviewWorldBase>& world, bool bIsFromAssetBrowser, bool bFromHistory) const
+	void Editor::InspectAsset(const std::string& path, AssetPreviewWorldBase* world, bool bIsFromAssetBrowser, bool bFromHistory) const
 	{
-		const auto inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
+		auto* inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
 
 		// If last world is level world, clear selected entity and re-add history data
-		const auto inspectorWorld = inspectorPanel->GetEditorWorld();
+		auto* inspectorWorld = inspectorPanel->GetEditorWorld();
 		if (inspectorWorld == GetLevelWorld())
 		{
 			if (const Entity selectedEntity = inspectorWorld->GetContextEntity())
@@ -225,11 +226,10 @@ namespace ZeoEngine {
 		}
 
 		Timer timer;
-		world->LoadAsset(path);
-		world->PostAssetLoad();
+		world->LoadAsset(path, false);
+		world->FocusContextEntity(true);
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 
-		world->GetActiveScene()->PostLoad();
 		inspectorPanel->UpdateWorld(world, true);
 		inspectorPanel->ToggleAssetView(true);
 		// If we inspect asset from the Content Browser Panel, the history will be cleared
@@ -241,7 +241,7 @@ namespace ZeoEngine {
 
 	void Editor::ClearInspect() const
 	{
-		const auto inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
+		const auto* inspectorPanel = GetPanel<InspectorPanel>(INSPECTOR);
 		inspectorPanel->GetEditorWorld()->SetContextEntity({});
 		inspectorPanel->ToggleAssetView(false);
 	}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-
 namespace ZeoEngine {
 
 	class Scene;
@@ -9,8 +7,8 @@ namespace ZeoEngine {
 	class SceneUtils
 	{
 	public:
-		static bool IsRuntime();
-		static Ref<Scene> GetActiveGameScene();
+		static bool IsLevelRuntime();
+		static Scene& GetActiveGameScene();
 		static void OpenLevel(const std::string& path);
 	};
 	

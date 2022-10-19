@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		RenderGraph();
 		virtual ~RenderGraph();
 
-		const Ref<FrameBuffer>& GetBackFrameBuffer() const { return m_BackFBO; }
+		Ref<FrameBuffer> GetBackFrameBuffer() const { return m_BackFBO; }
 
 		void Init();
 		void Start() const;

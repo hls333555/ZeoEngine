@@ -11,13 +11,15 @@ namespace ZeoEngine {
 
 	class EditorPreviewWorldBase;
 	class FrameBuffer;
+	struct CameraComponent;
+	class Scene;
 
 	class ViewPanelBase : public PanelBase
 	{
 	public:
 		using PanelBase::PanelBase;
 
-		void UpdateWorld(const Ref<EditorPreviewWorldBase>& world);
+		void UpdateWorld(EditorPreviewWorldBase* world);
 		
 		/**
 		 * Snapshot current viewport and save as thumbnail cache.
@@ -32,15 +34,15 @@ namespace ZeoEngine {
 
 		std::pair<float, float> GetMouseViewportPosition() const;
 
-		void UpdateViewportSizeOnSceneCameras() const;
+		void OnCameraComponentAdded(Scene& scene, entt::entity e) const;
 
 	protected:
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		virtual void OnWorldChanged(const Ref<EditorPreviewWorldBase>& world, const Ref<EditorPreviewWorldBase>& lastWorld);
+		virtual void OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld);
 
-		Ref<EditorPreviewWorldBase> GetEditorWorld() const { return m_EditorWorld.lock(); }
+		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) override;
@@ -50,14 +52,17 @@ namespace ZeoEngine {
 		bool OnMouseScroll(MouseScrolledEvent& e) const;
 		bool OnKeyPressed(KeyPressedEvent& e) const;
 
-		void OnViewportResize(const Ref<EditorPreviewWorldBase>& editorWorld, const Vec2& size) const;
+		void OnViewportResize(const Vec2& size) const;
+
+		/** Resize non-FixedAspectRatio camera. */
+		void UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const;
 
 	public:
 		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };
 
 	private:
-		Weak<EditorPreviewWorldBase> m_EditorWorld;
-		Weak<FrameBuffer> m_FrameBuffer;
+		EditorPreviewWorldBase* m_EditorWorld = nullptr;
+		Ref<FrameBuffer> m_FrameBuffer;
 
 		Vec2 m_ViewportBounds[2];
 		Vec2 m_LastViewportSize{ 0.0f };

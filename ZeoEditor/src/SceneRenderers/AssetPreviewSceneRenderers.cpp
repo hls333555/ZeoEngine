@@ -1,16 +1,16 @@
 #include "SceneRenderers/AssetPreviewSceneRenderers.h"
 
 #include "Worlds/EditorPreviewWorldBase.h"
-#include "Engine/GameFramework/Systems.h"
+#include "Engine/GameFramework/RenderSystems.h"
 #include "Engine/Renderer/RenderGraph.h"
 
 namespace ZeoEngine {
 
-	void AssetPreviewSceneRendererBase::OnAttach(const Ref<WorldBase>& world)
+	void AssetPreviewSceneRendererBase::OnAttach(WorldBase* world)
 	{
 		SceneRenderer::OnAttach(world);
 
-		m_EditorCamera = &std::dynamic_pointer_cast<EditorPreviewWorldBase>(world)->GetEditorCamera();
+		m_EditorCamera = &dynamic_cast<EditorPreviewWorldBase*>(world)->GetEditorCamera();
 	}
 
 	Scope<RenderGraph> AssetPreviewSceneRendererBase::CreateRenderGraph()
@@ -25,17 +25,17 @@ namespace ZeoEngine {
 		EndScene();
 	}
 
-	Scope<RenderSystemBase> MaterialPreviewSceneRenderer::CreateRenderSystem(const Ref<WorldBase>& world)
+	Scope<RenderSystemBase> MaterialPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
 	{
 		return CreateScope<MaterialPreviewRenderSystem>(world);
 	}
 
-	Scope<RenderSystemBase> MeshPreviewSceneRenderer::CreateRenderSystem(const Ref<WorldBase>& world)
+	Scope<RenderSystemBase> MeshPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
 	{
 		return CreateScope<MeshPreviewRenderSystem>(world);
 	}
 
-	Scope<RenderSystemBase> ParticlePreviewSceneRenderer::CreateRenderSystem(const Ref<WorldBase>& world)
+	Scope<RenderSystemBase> ParticlePreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
 	{
 		return CreateScope<ParticlePreviewRenderSystem>(world);
 	}

@@ -2,65 +2,143 @@
 
 #include "Engine/GameFramework/World.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Events/Event.h"
 
 class b2World;
 
 namespace ZeoEngine {
 
-	class SceneRenderer;
 	class SceneCamera;
 
 	class ISystem
 	{
 	public:
-		explicit ISystem(const Ref<WorldBase>& world);
+		explicit ISystem(WorldBase* world);
 		virtual ~ISystem() = default;
 
 	protected:
-		Ref<WorldBase> GetWorld() const { return m_World.lock(); }
+		WorldBase* GetWorld() const { return m_World; }
 		Ref<Scene> GetScene() const { return GetWorld()->GetActiveScene(); }
 
 	private:
-		Weak<WorldBase> m_World;
+		WorldBase* m_World = nullptr;
 	};
 
 	class SystemBase : public ISystem
 	{
 	public:
-		explicit SystemBase(const Ref<WorldBase>& world);
+		using ISystem::ISystem;
 
 		virtual void OnCreate() {}
-		void OnUpdate(DeltaTime dt) const;
-
-		void BindUpdateFuncToEditor();
-		void BindUpdateFuncToRuntime();
+		virtual void OnUpdate(DeltaTime dt) {}
 
 		virtual void OnRuntimeStart() {}
 		virtual void OnRuntimeStop() {}
-	private:
-		virtual void OnUpdateEditor(DeltaTime dt) {}
-		virtual void OnUpdateRuntime(DeltaTime dt) {}
-
-	private:
-		entt::delegate<void(DeltaTime)> m_UpdateFuncDel;
 	};
 
-	class RenderSystemBase : public ISystem
+	class SceneObserverSystemBase
 	{
 	public:
-		explicit RenderSystemBase(const Ref<WorldBase>& world);
-		
-		virtual void OnRenderEditor() = 0;
-		virtual void OnRenderRuntime() {}
+		virtual ~SceneObserverSystemBase() = default;
 
-		std::pair<SceneCamera*, Mat4> GetActiveSceneCamera() const;
+		void SetScene(Scene* scene) { m_Scene = scene; }
+
+		virtual void OnBind() = 0;
+		virtual void OnUnbind() = 0;
+		virtual void OnUpdate(Scene& scene) {}
 
 	protected:
-		Ref<SceneRenderer> GetSceneRenderer() const { return m_SceneRenderer.lock(); }
+		template<typename Component, auto FreeFunc>
+		void BindOnComponentAdded()
+		{
+			m_Scene->on_construct<Component>().template connect<FreeFunc>();
+		}
+
+		template<typename Component, auto Func, typename Type>
+		void BindOnComponentAdded(Type&& instance)
+		{
+			m_Scene->on_construct<Component>().template connect<Func>(std::forward<Type>(instance));
+		}
+
+		template<typename Component>
+		void UnbindOnComponentAdded()
+		{
+			m_Scene->on_construct<Component>().disconnect();
+		}
+
+		template<typename Component, auto FreeFunc>
+		void BindOnComponentUpdated()
+		{
+			m_Scene->on_update<Component>().template connect<FreeFunc>();
+		}
+
+		template<typename Component>
+		void UnbindOnComponentUpdated()
+		{
+			m_Scene->on_update<Component>().disconnect();
+		}
+
+		template<typename Component, auto FreeFunc>
+		void BindOnComponentDestroy()
+		{
+			m_Scene->on_destroy<Component>().template connect<FreeFunc>();
+		}
+
+		template<typename Component>
+		void UnbindOnComponentDestroy()
+		{
+			m_Scene->on_destroy<Component>().disconnect();
+		}
+
+		template<typename... Matcher>
+		[[nodiscard]] Scope<entt::observer> CreateObserver(entt::basic_collector<Matcher...>)
+		{
+			return CreateScope<entt::observer>(*m_Scene, entt::basic_collector<Matcher...>{});
+		}
 
 	private:
-		Weak<SceneRenderer> m_SceneRenderer;
+		Scene* m_Scene = nullptr;
+	};
+
+	class LevelObserverSystem : public SceneObserverSystemBase
+	{
+	public:
+		virtual void OnBind() override;
+		virtual void OnUnbind() override;
+		virtual void OnUpdate(Scene& scene) override;
+
+	private:
+		Scope<entt::observer> m_CameraObserver;
+		Scope<entt::observer> m_BoundsObserver;
+	};
+
+	class MeshPreviewObserverSystem : public SceneObserverSystemBase
+	{
+	public:
+		virtual void OnBind() override;
+		virtual void OnUnbind() override;
+		virtual void OnUpdate(Scene& scene) override;
+
+	private:
+		Scope<entt::observer> m_BoundsObserver;
+	};
+
+	class TexturePreviewObserverSystem : public SceneObserverSystemBase
+	{
+	public:
+		virtual void OnBind() override;
+		virtual void OnUnbind() override;
+
+	};
+
+	class MaterialPreviewObserverSystem : public SceneObserverSystemBase
+	{
+	public:
+		virtual void OnBind() override;
+		virtual void OnUnbind() override;
+		virtual void OnUpdate(Scene& scene) override;
+
+	private:
+		Scope<entt::observer> m_BoundsObserver;
 	};
 
 	class ParticleUpdateSystem : public SystemBase
@@ -68,11 +146,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdateEditor(DeltaTime dt) override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
-
-	private:
-		virtual void OnUpdateImpl(DeltaTime dt);
+		virtual void OnUpdate(DeltaTime dt) override;
 	};
 
 	class ParticlePreviewUpdateSystem : public ParticleUpdateSystem
@@ -80,8 +154,7 @@ namespace ZeoEngine {
 	public:
 		using ParticleUpdateSystem::ParticleUpdateSystem;
 
-	private:
-		virtual void OnUpdateImpl(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 	};
 
 	class ScriptSystem : public SystemBase
@@ -89,19 +162,10 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
-	};
-
-	class NativeScriptSystem : public SystemBase
-	{
-	public:
-		using SystemBase::SystemBase;
-
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
-		void OnEvent(Event& e);
 	};
 
 	class PhysicsSystem : public SystemBase
@@ -109,7 +173,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
@@ -120,62 +184,13 @@ namespace ZeoEngine {
 	public:
 		using PhysicsSystem::PhysicsSystem;
 
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
 
 	private:
 		b2World* m_PhysicsWorld = nullptr;
-	};
-
-	class RenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-		virtual void OnRenderRuntime() override;
-
-	private:
-		void RenderLights(bool bIsEditor);
-		void RenderMeshes();
-	};
-
-	class RenderSystem2D : public RenderSystem
-	{
-	public:
-		using RenderSystem::RenderSystem;
-
-		virtual void OnRenderEditor() override;
-		virtual void OnRenderRuntime() override;
-
-	private:
-		void OnRenderImpl();
-	};
-
-	class ParticlePreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-	};
-
-	class MeshPreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
-	};
-
-	class MaterialPreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
 	};
 
 }

@@ -12,7 +12,6 @@ namespace ZeoEngine {
 	public:
 		PanelBase() = delete;
 		explicit PanelBase(std::string panelName);
-	protected:
 		virtual ~PanelBase() = default;
 
 	public:

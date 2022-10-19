@@ -8,7 +8,7 @@
 
 namespace ZeoEngine {
 
-	SaveAssetPanel::SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, const Ref<EditorPreviewWorldBase>& world)
+	SaveAssetPanel::SaveAssetPanel(std::string panelName, AssetTypeID assetTypeID, EditorPreviewWorldBase* world)
 		: OpenAssetPanel(std::move(panelName), assetTypeID)
 		, m_World(world)
 	{
@@ -17,7 +17,7 @@ namespace ZeoEngine {
 	void SaveAssetPanel::OnPanelOpen()
 	{
 		m_bHasKeyboardFocused = false;
-		const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+		const AssetHandle handle = m_World->GetAsset()->GetHandle();
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
 		SetSelectedDirectory(PathUtils::GetParentPath(metadata->Path));
@@ -56,7 +56,7 @@ namespace ZeoEngine {
 		{
 			if (ImGui::Button("Save"))
 			{
-				const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+				const AssetHandle handle = m_World->GetAsset()->GetHandle();
 				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 				std::string name = m_NameBuffer;
 				const std::string extension = PathUtils::GetPathExtension(name);
@@ -164,16 +164,15 @@ namespace ZeoEngine {
 
 	void SaveAssetPanel::SaveAndClose(const std::string& path)
 	{
-		const auto world = m_World.lock();
-		world->SaveAsset(path);
-		const AssetHandle handle = m_World.lock()->GetAsset()->GetHandle();
+		m_World->SaveAsset(path);
+		const AssetHandle handle = m_World->GetAsset()->GetHandle();
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		if (path != metadata->Path)
 		{
-			world->OnAssetSaveAs(path);
+			m_World->OnAssetSaveAs(path);
 		}
 		Toggle(false);
-		const auto contentBrowser = g_Editor->GetPanel<ContentBrowserPanel>(CONTENT_BROWSER);
+		auto* contentBrowser = g_Editor->GetPanel<ContentBrowserPanel>(CONTENT_BROWSER);
 		// Jump and focus new saved asset
 		contentBrowser->SetSelectedPath(path);
 	}

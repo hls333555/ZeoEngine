@@ -4,13 +4,13 @@
 #include "Engine/Renderer/DebugDrawRenderInterface.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/RenderGraph.h"
-#include "Engine/GameFramework/Systems.h"
 #include "Engine/Renderer/EditorCamera.h"
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/Light.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/GameFramework/World.h"
+#include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/RenderSystems.h"
 
 namespace ZeoEngine {
 
@@ -18,21 +18,21 @@ namespace ZeoEngine {
 
 	SceneRenderer::~SceneRenderer()
 	{
-		DDRenderInterface::Shutdown(m_SceneContext);
+		m_Ddri->Shutdown();
 	}
 
-	void SceneRenderer::OnAttach(const Ref<WorldBase>& world)
+	void SceneRenderer::OnAttach(WorldBase* world)
 	{
 		m_RenderDocRef = &Application::Get().GetRenderDoc();
 
 		m_QuadBatcher.Init();
 
-		m_Ddri = DDRenderInterface::Create(shared_from_this());
+		m_Ddri = DDRenderInterface::Create(this);
 		m_RenderGraph = CreateRenderGraph();
 		m_RenderGraph->Init();
 		m_RenderSystem = CreateRenderSystem(world);
 
-		UpdateSceneContext(world->GetActiveScene());
+		UpdateSceneContext(world->GetActiveScene().get());
 		world->m_OnActiveSceneChanged.connect<&SceneRenderer::UpdateSceneContext>(this);
 
 		m_GlobalUniformBuffer = UniformBuffer::Create(sizeof(GlobalData), UniformBufferBinding::Global);
@@ -50,13 +50,13 @@ namespace ZeoEngine {
 		{
 			PrepareScene();
 			OnRenderScene();
-			m_PostSceneRenderDel.publish(GetFrameBuffer());
+			m_PostSceneRenderDel.publish(*GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
 		m_RenderDocRef->StopFrameCapture();
 	}
 
-	void SceneRenderer::UpdateSceneContext(const Ref<Scene>& scene)
+	void SceneRenderer::UpdateSceneContext(const Scene* scene)
 	{
 		m_SceneContext = scene->GetContext();
 		// Recreate ddri context when a new scene is created
@@ -70,7 +70,7 @@ namespace ZeoEngine {
 		m_LightUniformBuffer->Bind();
 		m_ShadowCameraUniformBuffer->Bind();
 
-		const auto& fbo = GetFrameBuffer();
+		const auto fbo = GetFrameBuffer();
 		m_GlobalBuffer.ScreenSize = { fbo->GetSpec().Width, fbo->GetSpec().Height };
 		m_GlobalUniformBuffer->SetData(&m_GlobalBuffer);
 
@@ -110,7 +110,7 @@ namespace ZeoEngine {
 	void SceneRenderer::FlushScene() const
 	{
 		m_QuadBatcher.FlushBatch();
-		DDRenderInterface::Flush(m_SceneContext, EngineUtils::GetTimeInSeconds() * 1000.0f);
+		m_Ddri->Flush(EngineUtils::GetTimeInSeconds() * 1000.0f);
 	}
 
 	void SceneRenderer::OnViewportResize(U32 width, U32 height) const
@@ -119,52 +119,52 @@ namespace ZeoEngine {
 		m_RenderGraph->OnViewportResize(width, height);
 	}
 
-	void SceneRenderer::SetupDirectionalLight(const Vec3& rotation, const Ref<DirectionalLight>& directionalLight)
+	void SceneRenderer::SetupDirectionalLight(const Vec3& rotation, const DirectionalLightComponent& lightComp)
 	{
-		m_LightBuffer.DirectionalLightBuffer.Color = directionalLight->GetColor();
-		m_LightBuffer.DirectionalLightBuffer.Intensity = directionalLight->GetIntensity();
-		const auto direction = directionalLight->CalculateDirection(rotation);
+		m_LightBuffer.DirectionalLightBuffer.Color = lightComp.Color;
+		m_LightBuffer.DirectionalLightBuffer.Intensity = lightComp.Intensity;
+		const auto direction = Math::GetForwardVector(rotation);
 		m_LightBuffer.DirectionalLightBuffer.Direction = direction;
-		m_LightBuffer.DirectionalLightBuffer.bCastShadow = directionalLight->IsCastShadow();
-		m_LightBuffer.DirectionalLightBuffer.DepthBias = directionalLight->GetDepthBias();
-		m_LightBuffer.DirectionalLightBuffer.NormalBias = directionalLight->GetNormalBias();
-		m_LightBuffer.DirectionalLightBuffer.FilterSize = directionalLight->GetFilterSize();
-		m_LightBuffer.DirectionalLightBuffer.LightSize = directionalLight->GetLightSize();
-		m_LightBuffer.DirectionalLightBuffer.CascadeCount = directionalLight->GetCascadeCount();
-		m_LightBuffer.DirectionalLightBuffer.CascadeBlendThreshold = directionalLight->GetCascadeBlendThreshold();
+		m_LightBuffer.DirectionalLightBuffer.bCastShadow = lightComp.bCastShadow;
+		m_LightBuffer.DirectionalLightBuffer.DepthBias = lightComp.DepthBias;
+		m_LightBuffer.DirectionalLightBuffer.NormalBias = lightComp.NormalBias;
+		m_LightBuffer.DirectionalLightBuffer.FilterSize = lightComp.FilterSize;
+		m_LightBuffer.DirectionalLightBuffer.LightSize = lightComp.LightSize;
+		m_LightBuffer.DirectionalLightBuffer.CascadeCount = lightComp.CascadeCount;
+		m_LightBuffer.DirectionalLightBuffer.CascadeBlendThreshold = lightComp.CascadeBlendThreshold;
 
 		// TODO: No need update every frame
-		UpdateCascadeData(directionalLight, direction);
+		UpdateCascadeData(lightComp, direction);
 	}
 
-	void SceneRenderer::AddPointLight(const Vec3& position, const Ref<PointLight>& pointLight)
+	void SceneRenderer::AddPointLight(const Vec3& position, const PointLightComponent& lightComp)
 	{
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Color = pointLight->GetColor();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Intensity = pointLight->GetIntensity();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Color = lightComp.Color;
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Intensity = lightComp.Intensity;
 		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Position = position;
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = pointLight->GetRange();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = pointLight->IsCastShadow();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = pointLight->GetDepthBias();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = pointLight->GetNormalBias();
-		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].LightSize = pointLight->GetLightSize();
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].Radius = lightComp.Range;
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].bCastShadow = lightComp.bCastShadow;
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].DepthBias = lightComp.DepthBias;
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].NormalBias = lightComp.NormalBias;
+		m_LightBuffer.PointLightBuffer[m_LightBuffer.NumPointLights].LightSize = lightComp.LightSize;
 		++m_LightBuffer.NumPointLights;
 	}
 
-	void SceneRenderer::AddSpotLight(const Vec3& position, const Vec3& rotation, const Ref<SpotLight>& spotLight)
+	void SceneRenderer::AddSpotLight(const Vec3& position, const Vec3& rotation, const SpotLightComponent& lightComp)
 	{
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Color = spotLight->GetColor();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Intensity = spotLight->GetIntensity();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Color = lightComp.Color;
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Intensity = lightComp.Intensity;
 		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Position = position;
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Radius = spotLight->GetRange();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = spotLight->CalculateDirection(rotation);
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(spotLight->GetCutoffInRadians());
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = spotLight->IsCastShadow();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = spotLight->GetDepthBias();
-		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = spotLight->GetLightSize();
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Radius = lightComp.Range;
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Direction = Math::GetForwardVector(rotation);
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].Cutoff = cos(lightComp.GetCutoffInRadians());
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].bCastShadow = lightComp.bCastShadow;
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].DepthBias = lightComp.DepthBias;
+		m_LightBuffer.SpotLightBuffer[m_LightBuffer.NumSpotLights].LightSize = lightComp.LightSize;
 		++m_LightBuffer.NumSpotLights;
 	}
 
-	void SceneRenderer::UpdateCascadeData(const Ref<DirectionalLight>& directionalLight, const Vec3& direction)
+	void SceneRenderer::UpdateCascadeData(const DirectionalLightComponent& lightComp, const Vec3& direction)
 	{
 		float shadowMapSize = SceneSettings::ShadowMapResolution;
 
@@ -175,13 +175,13 @@ namespace ZeoEngine {
 		float cascadeSplits[SceneSettings::MaxCascades];
 		{
 			float minZ = nearClip;
-			float maxZ = glm::clamp(directionalLight->GetMaxShadowDistance(), nearClip, farClip);
+			float maxZ = glm::clamp(lightComp.MaxShadowDistance, nearClip, farClip);
 
 			float range = maxZ - minZ;
 			float ratio = maxZ / minZ;
 
-			float cascadeSplitLambda = directionalLight->GetCascadeSplitLambda();
-			U32 cascadeCount = directionalLight->GetCascadeCount();
+			float cascadeSplitLambda = lightComp.CascadeSplitLambda;
+			U32 cascadeCount = lightComp.CascadeCount;
 
 			// Calculate split depths based on view camera frustum
 			// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
@@ -204,7 +204,7 @@ namespace ZeoEngine {
 		Mat4 invCameraMatrix = glm::inverse(m_CameraBuffer.GetViewProjection());
 
 		// Calculate orthographic projection matrix for each cascade
-		for (U32 i = 0; i < directionalLight->GetCascadeCount(); ++i)
+		for (U32 i = 0; i < lightComp.CascadeCount; ++i)
 		{
 			float lastSplitDist = i == 0 ? 0.0f : cascadeSplits[i - 1];
 			float splitDist = cascadeSplits[i];
@@ -303,11 +303,11 @@ namespace ZeoEngine {
 		m_ShadowCameraUniformBuffer->SetData(&m_ShadowCameraBuffer);
 	}
 
-	void SceneRenderer::DrawMesh(const Mat4& transform, const Ref<MeshInstance>& mesh, I32 entityID)
+	void SceneRenderer::DrawMesh(const Mat4& transform, const Ref<MeshInstance>& mesh, const std::vector<AssetHandle>& materialAssets, I32 entityID)
 	{
 		if (!mesh) return;
 
-		mesh->Submit(transform, entityID);
+		mesh->Submit(transform, materialAssets, entityID);
 		Renderer::GetStats().MeshVertexCount += mesh->GetMesh()->GetVertexCount();
 	}
 

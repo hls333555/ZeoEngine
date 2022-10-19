@@ -12,14 +12,14 @@ namespace ZeoEngine {
 
 	struct InspectHistoryData
 	{
-		Weak<EditorPreviewWorldBase> World;
+		EditorPreviewWorldBase* World = nullptr;
 		Entity LevelSelectedEntity;
 		std::string AssetPath;
 
-		InspectHistoryData(const Ref<EditorPreviewWorldBase>& world, Entity levelSelectedEntity)
+		InspectHistoryData(EditorPreviewWorldBase* world, Entity levelSelectedEntity)
 			: World(world), LevelSelectedEntity(levelSelectedEntity) {}
-		InspectHistoryData(const Ref<EditorPreviewWorldBase>& world, const std::string& assetPath)
-			: World(world), AssetPath(assetPath) {}
+		InspectHistoryData(EditorPreviewWorldBase* world, std::string assetPath)
+			: World(world), AssetPath(std::move(assetPath)) {}
 	};
 
 	class InspectorPanel : public PanelBase
@@ -27,10 +27,10 @@ namespace ZeoEngine {
 	public:
 		explicit InspectorPanel(std::string panelName);
 
-		Ref<EditorPreviewWorldBase> GetEditorWorld() const { return m_EditorWorld.lock(); }
-		Ref<AssetViewPanel> GetAssetViewPanel() const { return m_AssetViewPanel; }
+		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
+		AssetViewPanel& GetAssetViewPanel() const { return *m_AssetViewPanel; }
 
-		void UpdateWorld(const Ref<EditorPreviewWorldBase>& world, bool bIncludeAssetViewPanel);
+		void UpdateWorld(EditorPreviewWorldBase* world, bool bIncludeAssetViewPanel);
 		void ToggleAssetView(bool bShow) const;
 
 		void AddInspectHistory(InspectHistoryData data) { m_InspectHistory.push(std::move(data)); }
@@ -45,13 +45,13 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		void RenderDetailsPanel(const Ref<EditorPreviewWorldBase>& editorWorld, Entity selectedEntity);
+		void RenderDetailsPanel(Entity selectedEntity);
 		void BuildDockspaceLayout(ImGuiID dockspaceID);
 
 	private:
-		Weak<EditorPreviewWorldBase> m_EditorWorld;
+		EditorPreviewWorldBase* m_EditorWorld = nullptr;
 
-		Ref<AssetViewPanel> m_AssetViewPanel;
+		Scope<AssetViewPanel> m_AssetViewPanel;
 		/** Flag for details panel to update once for last selected entity which fixes a issue where field caches cannot be applied when an empty entity is selected */
 		bool m_bShouldDrawWhenNoEntitySelected = true;
 

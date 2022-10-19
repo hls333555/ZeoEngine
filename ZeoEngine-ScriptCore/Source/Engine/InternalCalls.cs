@@ -63,6 +63,12 @@ namespace ZeoEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern IntPtr MeshRendererComponent_GetInstance(ulong entityID);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern AssetHandle MeshRendererComponent_GetMaterialAsset(ulong entityID, uint index);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void MeshRendererComponent_SetMaterialAsset(ulong entityID, uint index, AssetHandle materialAsset);
+
         #endregion
 
         #region Input
@@ -84,10 +90,10 @@ namespace ZeoEngine
         #region Asset
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(string path);
+        internal static extern IntPtr AssetLibrary_LoadAsset(string path, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(AssetHandle handle);
+        internal static extern IntPtr AssetLibrary_LoadAsset(AssetHandle handle, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern string Asset_GetName(AssetHandle handle);
@@ -99,11 +105,7 @@ namespace ZeoEngine
 
         #region Mesh
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern AssetHandle MeshInstance_GetMaterial(IntPtr meshInstance, uint index);
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void MeshInstance_SetMaterial(IntPtr meshInstance, uint index, AssetHandle materialAsset);
 
         #endregion
         

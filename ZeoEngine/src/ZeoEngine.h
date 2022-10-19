@@ -19,7 +19,6 @@
 
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/GameFramework/ScriptableEntity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/ReflectionCore.h"
 

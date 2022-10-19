@@ -257,7 +257,6 @@ namespace ZeoEngine {
 
 	public:
 		Material();
-		Material(Material&&) = default; // Defined as RenderTechnique cannot be copied
 		virtual ~Material();
 
 		static constexpr const char* GetTemplatePath() { return "Engine/materials/NewMaterial.zasset"; }
@@ -266,7 +265,7 @@ namespace ZeoEngine {
 		AssetHandle GetShaderAsset() const { return m_ShaderInstance->GetShaderAsset(); }
 		Ref<Shader> GetShader() const { return m_ShaderInstance->GetShader(); }
 		void SetShaderAsset(AssetHandle shaderAsset);
-		void OnShaderChanged(AssetHandle shaderAsset, AssetHandle lastShaderAsset);
+		void NotifyShaderAssetChange();
 		U32 GetShaderVariant() const { return m_ShaderInstance->GetShaderVariant(); }
 		void SetShaderVariant(U32 ID) const { m_ShaderInstance->SetShaderVariant(ID); }
 		void SetShaderVariantByMacro(const std::string& name, U32 value) const { m_ShaderInstance->SetShaderVariantByMacro(name, value); }
@@ -293,10 +292,11 @@ namespace ZeoEngine {
 		void InitRenderTechniques();
 
 	public:
-		entt::sink<entt::sigh<void(const Ref<Material>&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
+		entt::sink<entt::sigh<void(const Material&)>> m_OnMaterialInitialized{ m_OnMaterialInitializedDel };
 
 	private:
 		Ref<ShaderInstance> m_ShaderInstance;
+		AssetHandle m_LastShaderAsset = 0;
 
 		/** Macro fields first, uniform fields second and ordered by category */
 		std::vector<Ref<DynamicUniformFieldBase>> m_DynamicFields;
@@ -314,7 +314,7 @@ namespace ZeoEngine {
 
 		std::vector<RenderTechnique> m_Techniques;
 
-		entt::sigh<void(const Ref<Material>&)> m_OnMaterialInitializedDel;
+		entt::sigh<void(const Material&)> m_OnMaterialInitializedDel;
 	};
 
 }

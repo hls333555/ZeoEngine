@@ -39,8 +39,8 @@ namespace ZeoEngine {
 		static MonoDomain* GetAppDomain();
 		static MonoImage* GetCoreAssemblyImage();
 
-		static const Ref<Scene>& GetSceneContext();
-		static void SetSceneContext(const Ref<Scene>& scene);
+		static Scene& GetSceneContext();
+		static void SetSceneContext(Ref<Scene> scene);
 
 		static MonoObject* GetMonoInstanceFromHandle(U32 handle);
 

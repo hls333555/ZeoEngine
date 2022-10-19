@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Engine/Core/Core.h"
-
 namespace ZeoEngine {
 
 	class EditorPreviewWorldBase;
@@ -18,13 +16,13 @@ namespace ZeoEngine {
 	class TextureAssetView : public AssetView
 	{
 	public:
-		explicit TextureAssetView(const Ref<EditorPreviewWorldBase>& world);
+		explicit TextureAssetView(const EditorPreviewWorldBase* world);
 
 		virtual void Draw() override;
 		virtual void DrawToolBar() override;
 
 	private:
-		Weak<EditorPreviewWorldBase> m_EditorWorld;
+		const EditorPreviewWorldBase* m_EditorWorld;
 	};
 	
 }

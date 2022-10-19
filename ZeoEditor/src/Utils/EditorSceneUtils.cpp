@@ -9,14 +9,14 @@
 
 namespace ZeoEngine {
 
-	bool SceneUtils::IsRuntime()
+	bool SceneUtils::IsLevelRuntime()
 	{
 		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
 	}
 
-	Ref<Scene> SceneUtils::GetActiveGameScene()
+	Scene& SceneUtils::GetActiveGameScene()
 	{
-		return g_Editor->GetLevelWorld()->GetActiveScene();
+		return *g_Editor->GetLevelWorld()->GetActiveScene();
 	}
 
 	void SceneUtils::OpenLevel(const std::string& path)
@@ -29,49 +29,49 @@ namespace ZeoEngine {
 		return g_Editor->GetLevelWorld()->GetEditorCamera();
 	}
 
-	Entity EditorSceneUtils::CreateAndPlaceEntity(const Ref<Scene>& scene, const std::string& name)
+	Entity EditorSceneUtils::CreateAndPlaceEntity(Scene& scene, const std::string& name)
 	{
 		const EditorCamera& editorCamera = GetEditorCamera();
 		const Vec3 position = editorCamera.GetPosition() + editorCamera.GetForwardVector() * 2.0f;
-		return scene->CreateEntity(name, position);
+		return scene.CreateEntity(name, position);
 	}
 
-	Entity EditorSceneUtils::CreateAndPlaceCube(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlaceCube(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Cube");
 		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCubeMesh()->GetHandle());
 		return entity;
 	}
 
-	Entity EditorSceneUtils::CreateAndPlaceSphere(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlaceSphere(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
 		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
 		return entity;
 	}
 
-	Entity EditorSceneUtils::CreateAndPlacePlane(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlacePlane(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Plane");
 		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultPlaneMesh()->GetHandle());
 		return entity;
 	}
 
-	Entity EditorSceneUtils::CreateAndPlaceDirectionalLight(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlaceDirectionalLight(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Directional Light");
 		entity.AddComponent<DirectionalLightComponent>();
 		return entity;
 	}
 
-	Entity EditorSceneUtils::CreateAndPlacePointLight(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlacePointLight(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Point Light");
 		entity.AddComponent<PointLightComponent>();
 		return entity;
 	}
 
-	Entity EditorSceneUtils::CreateAndPlaceSpotLight(const Ref<Scene>& scene)
+	Entity EditorSceneUtils::CreateAndPlaceSpotLight(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Spot Light");
 		entity.AddComponent<SpotLightComponent>();

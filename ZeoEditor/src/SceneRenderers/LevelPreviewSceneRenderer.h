@@ -10,16 +10,16 @@ namespace ZeoEngine {
 	class LevelPreviewSceneRenderer : public SceneRenderer
 	{
 	public:
-		virtual void OnAttach(const Ref<WorldBase>& world) override;
+		virtual void OnAttach(WorldBase* world) override;
 
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() override;
-		virtual Scope<RenderSystemBase> CreateRenderSystem(const Ref<WorldBase>& world) override;
+		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
 
 		virtual void OnRenderScene() override;
 
 	private:
-		Weak<LevelPreviewWorld> m_LevelWorld;
+		LevelPreviewWorld* m_LevelWorld = nullptr;
 
 	};
 

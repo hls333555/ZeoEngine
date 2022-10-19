@@ -39,35 +39,36 @@ namespace ZeoEngine {
 		const FileWatcher& GetFileWatcher() const { return *m_FileWatcher; }
 
 		template<typename T, typename ... Args>
-		Ref<T> CreateWorld(std::string worldName, Args&& ... args)
+		T* CreateWorld(std::string worldName, Args&& ... args)
 		{
 			if (GetWorld(worldName))
 			{
 				ZE_CORE_ERROR("Failed to create {0}! World already exists!", worldName);
-				return {};
+				return nullptr;
 			}
 
-			Ref<T> world = CreateRef<T>(worldName, std::forward<Args>(args)...);
-			m_Worlds.emplace(std::move(worldName), world);
+			auto worldPtr = CreateScope<T>(worldName, std::forward<Args>(args)...);
+			auto* world = worldPtr.get();
+			m_Worlds.emplace(std::move(worldName), std::move(worldPtr));
 			world->OnAttach();
 			return world;
 		}
 
 		template<typename WorldClass = EditorPreviewWorldBase>
-		Ref<WorldClass> GetWorld(const std::string& worldName) const
+		WorldClass* GetWorld(const std::string& worldName) const
 		{
 			static_assert(std::is_base_of_v<EditorPreviewWorldBase, WorldClass>, "WorldClass must be derived from 'EditorPreviewWorldBase'!");
 
 			const auto it = m_Worlds.find(worldName);
-			if (it == m_Worlds.end()) return {};
+			if (it == m_Worlds.end()) return nullptr;
 
-			return std::dynamic_pointer_cast<WorldClass>(it->second);
+			return dynamic_cast<WorldClass*>(it->second.get());
 		}
 
 		template<typename T, typename ... Args>
-		Ref<T> GetOrCreateWorld(const std::string& worldName, Args&& ... args)
+		T* GetOrCreateWorld(const std::string& worldName, Args&& ... args)
 		{
-			auto world = GetWorld<T>(worldName);
+			auto* world = GetWorld<T>(worldName);
 			if (!world)
 			{
 				return CreateWorld<T>(worldName, std::forward<Args>(args)...);
@@ -76,7 +77,7 @@ namespace ZeoEngine {
 			return world;
 		}
 
-		Ref<LevelPreviewWorld> GetLevelWorld() const;
+		LevelPreviewWorld* GetLevelWorld() const;
 
 		void NewLevel();
 		void LoadLevel();
@@ -91,7 +92,7 @@ namespace ZeoEngine {
 		EditorMenu& CreateMenu(std::string menuName);
 
 		template<typename T, typename ... Args>
-		Ref<T> CreatePanel(std::string panelName, Args&& ... args)
+		T* CreatePanel(std::string panelName, Args&& ... args)
 		{
 			if (GetPanel(panelName))
 			{
@@ -99,17 +100,18 @@ namespace ZeoEngine {
 				return {};
 			}
 
-			Ref<T> panel = CreateRef<T>(panelName, std::forward<Args>(args)...);
-			m_Panels.emplace(std::move(panelName), panel);
+			auto panelPtr = CreateScope<T>(panelName, std::forward<Args>(args)...);
+			auto* panel = panelPtr.get();
+			m_Panels.emplace(std::move(panelName), std::move(panelPtr));
 			panel->OnAttach();
 			panel->Toggle(true);
 			return panel;
 		}
 
 		template<typename T, typename ... Args>
-		Ref<T> OpenPanel(const std::string& panelName, Args&& ... args)
+		T* OpenPanel(const std::string& panelName, Args&& ... args)
 		{
-			Ref<T> panel = GetPanel<T>(panelName);
+			auto* panel = GetPanel<T>(panelName);
 			if (!panel)
 			{
 				panel = CreatePanel<T>(panelName, std::forward<Args>(args)...);
@@ -120,18 +122,18 @@ namespace ZeoEngine {
 		}
 
 		template<typename PanelClass = PanelBase>
-		Ref<PanelClass> GetPanel(const std::string& panelName) const
+		PanelClass* GetPanel(const std::string& panelName) const
 		{
 			static_assert(std::is_base_of_v<PanelBase, PanelClass>, "PanelClass must be derived from 'PanelBase'!");
 
 			const auto it = m_Panels.find(panelName);
-			if (it == m_Panels.end()) return {};
+			if (it == m_Panels.end()) return nullptr;
 
-			return std::dynamic_pointer_cast<PanelClass>(it->second);
+			return dynamic_cast<PanelClass*>(it->second.get());
 		}
 
 		void InspectLevelEntity() const;
-		void InspectAsset(const std::string& path, const Ref<AssetPreviewWorldBase>& world, bool bIsFromAssetBrowser, bool bFromHistory = false) const;
+		void InspectAsset(const std::string& path, AssetPreviewWorldBase* world, bool bIsFromAssetBrowser, bool bFromHistory = false) const;
 		void ClearInspect() const;
 
 	private:
@@ -150,10 +152,10 @@ namespace ZeoEngine {
 		std::set<std::string> m_PendingReloadResourceAssets;
 		std::mutex m_Mutex;
 
-		std::unordered_map<std::string, Ref<EditorPreviewWorldBase>> m_Worlds;
+		std::unordered_map<std::string, Scope<EditorPreviewWorldBase>> m_Worlds;
 
 		std::vector<Scope<EditorMenu>> m_Menus;
-		std::unordered_map<std::string, Ref<PanelBase>> m_Panels;
+		std::unordered_map<std::string, Scope<PanelBase>> m_Panels;
 
 		bool m_bShouldRebuildDockspaceLayout = false;
 	};

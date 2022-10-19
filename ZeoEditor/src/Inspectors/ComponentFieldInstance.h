@@ -4,6 +4,7 @@
 
 #include <entt.hpp>
 
+#include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Entity.h"
 
 namespace ZeoEngine {
@@ -44,29 +45,33 @@ namespace ZeoEngine {
 		template<typename T>
 		T GetValue() const
 		{
+			auto v = GetValueInternal();
 			if constexpr (std::is_same_v<T, bool>)
 			{
-				if (!GetValueInternal().try_cast<bool>())
+				if (!v.try_cast<bool>())
 				{
-					return GetValueInternal().cast<std::vector<bool>::reference>();
+					return v.cast<std::vector<bool>::reference>();
 				}
 			}
-			return GetValueInternal().cast<T>();
+			return v.cast<T>();
 		}
 
 		template<typename T>
 		void SetValue(T&& value)
 		{
+			auto v = GetValueInternal();
 			if constexpr (std::is_same_v<T, bool&>)
 			{
-				if (!GetValueInternal().try_cast<bool>())
+				if (!v.try_cast<bool>())
 				{
-					GetValueInternal().cast<std::vector<bool>::reference&>() = value;
+					v.cast<std::vector<bool>::reference&>() = value;
 					return;
 				}
 			}
-			GetValueInternal().cast<std::decay_t<T>&>() = value;
+			v.cast<std::decay_t<T>&>() = value;
 		}
+
+		void OnFieldValueChanged(U32 fieldID);
 
 		virtual entt::meta_any GetValueInternal() const;
 

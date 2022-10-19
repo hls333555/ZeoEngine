@@ -2,95 +2,168 @@
 
 #include <entt.hpp>
 
-#if 0
-#include <deque>
+#include "Engine/GameFramework/Scene.h"
+
+using namespace entt::literals;
+
 namespace entt {
 
-	/**
-	 * @brief Meta sequence container traits for `std::deque`s of any type.
-	 * @tparam Type The type of elements.
-	 * @tparam Args Other arguments.
-	 */
-	template<typename Type, typename... Args>
-	struct meta_sequence_container_traits<std::deque<Type, Args...>>
-		: meta_container_traits<
-		std::deque<Type, Args...>,
-		basic_container,
-		basic_dynamic_container,
-		basic_sequence_container,
-		dynamic_sequence_container
-		>
-	{};
+    /** Custom mixin support our scene as registry. */
+    template<typename Type>
+    class zeo_sigh_storage_mixin final : public Type {
+        using basic_iterator = typename Type::basic_iterator;
 
-}
-#endif
+        template<typename Func>
+        void notify_destruction(basic_iterator first, basic_iterator last, Func func) {
+            ENTT_ASSERT(owner != nullptr, "Invalid pointer to registry");
 
-namespace ZeoEngine::Reflection {
+            for (; first != last; ++first) {
+                const auto entt = *first;
+                destruction.publish(*owner, entt);
+                const auto it = Type::find(entt);
+                func(it, it + 1u);
+            }
+        }
 
-	// Properties are bound to certain component and do not support inheritance
-	enum PropertyType
-	{
-		Name,						// [value_type: const char*] Name of component or field.
-		Inherent,					// [key_only, non-inheritable] This component cannot be added or removed within the editor.
-		Tooltip,					// [value_type: const char*] Tooltip of component or field.
-		Struct,						// [key_only] This field has sub-fields and will display a special TreeNode.
-		HideComponentHeader,		// [key_only] This component will not display the collapsing header.
-		Category,					// [value_type: const char*] Category of component or field.
-		HiddenInEditor,				// [key_only] Should hide this field in the editor?
-		HideCondition,				// [value_type: const char*] Hide this field if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
-		Transient,					// [key_only] If set, this component or data will not get serialized.
+        void swap_and_pop(basic_iterator first, basic_iterator last) final {
+            notify_destruction(std::move(first), std::move(last), [this](auto... args) { Type::swap_and_pop(args...); });
+        }
 
-		DragSensitivity,			// [value_type: float] Speed of dragging.
-		ClampMin,					// [value_type: type_dependent] Min value.
-		ClampMax,					// [value_type: type_dependent] Max value.
-		ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, input value will not get clamped.
-		FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
-		CustomElementName,			// [key_only] Container's element name are retrieved from ComponentHelper.
-		AssetType,					// [value_type: AssetTypeID] Type ID of asset.
+        void in_place_pop(basic_iterator first, basic_iterator last) final {
+            notify_destruction(std::move(first), std::move(last), [this](auto... args) { Type::in_place_pop(args...); });
+        }
 
+        basic_iterator try_emplace(const typename Type::entity_type entt, const bool force_back, const void* value) final {
+            ENTT_ASSERT(owner != nullptr, "Invalid pointer to registry");
+            Type::try_emplace(entt, force_back, value);
+            construction.publish(*owner, entt);
+            return Type::find(entt);
+        }
+
+    public:
+        using entity_type = typename Type::entity_type;
+
+        using Type::Type;
+
+        [[nodiscard]] auto on_construct() ENTT_NOEXCEPT {
+            return sink{ construction };
+        }
+
+        [[nodiscard]] auto on_update() ENTT_NOEXCEPT {
+            return sink{ update };
+        }
+
+        [[nodiscard]] auto on_destroy() ENTT_NOEXCEPT {
+            return sink{ destruction };
+        }
+
+        template<typename... Args>
+        decltype(auto) emplace(const entity_type entt, Args &&...args) {
+            ENTT_ASSERT(owner != nullptr, "Invalid pointer to registry");
+            Type::emplace(entt, std::forward<Args>(args)...);
+            construction.publish(*owner, entt);
+            return this->get(entt);
+        }
+
+        template<typename... Func>
+        decltype(auto) patch(const entity_type entt, Func &&...func) {
+            ENTT_ASSERT(owner != nullptr, "Invalid pointer to registry");
+            Type::patch(entt, std::forward<Func>(func)...);
+            update.publish(*owner, entt);
+            return this->get(entt);
+        }
+
+        template<typename It, typename... Args>
+        void insert(It first, It last, Args &&...args) {
+            ENTT_ASSERT(owner != nullptr, "Invalid pointer to registry");
+            Type::insert(first, last, std::forward<Args>(args)...);
+
+            for (auto it = construction.empty() ? last : first; it != last; ++it) {
+                construction.publish(*owner, *it);
+            }
+        }
+
+        void bind(any value) ENTT_NOEXCEPT final {
+            auto* reg = static_cast<ZeoEngine::Scene*>(any_cast<registry>(&value));
+            owner = reg ? reg : owner;
+            Type::bind(std::move(value));
+        }
+
+    private:
+        sigh<void(ZeoEngine::Scene&, const entity_type)> construction{};
+        sigh<void(ZeoEngine::Scene&, const entity_type)> destruction{};
+        sigh<void(ZeoEngine::Scene&, const entity_type)> update{};
+        ZeoEngine::Scene* owner{};
+    };
+
+	template<typename Type>
+	struct storage_traits<entity, Type> {
+		using storage_type =zeo_sigh_storage_mixin<basic_storage<entity, Type>>;
 	};
 
-	template<typename T>
-	T& emplace(entt::registry& registry, entt::entity entity)
-	{
-		return registry.emplace<T>(entity);
-	}
-	template<typename T>
-	void remove(entt::registry& registry, entt::entity entity)
-	{
-		registry.remove<T>(entity);
-	}
-	template<typename T>
-	T& get(entt::registry& registry, entt::entity entity)
-	{
-		return registry.get<T>(entity);
-	}
-	template<typename T>
-	bool has(entt::registry& registry, entt::entity entity) // NOTE: Do not register it by ref!
-	{
-		return registry.all_of<T>(entity);
-	}
+}
 
-	template<typename T>
-	T& copy(entt::registry& dstRegistry, entt::entity dstEntity, const entt::meta_any& comp)
-	{
-		return dstRegistry.emplace_or_replace<T>(dstEntity, comp.cast<T>());
-	}
+namespace ZeoEngine {
 
-	template<typename T>
-	void on_destroy(entt::registry& registry, entt::entity entity)
-	{
-		T& comp = registry.get<T>(entity);
-		if (auto* helper = ComponentHelperRegistry::GetComponentHelper(entt::type_hash<T>::value()))
-		{
-			helper->OnComponentDestroy(&comp);
-		}
-	}
+    using CustomSequenceContainerElementNameFunc = std::string(*)(struct IComponent* component, U32 fieldID, U32 elementIndex);
 
-	template<typename T>
-	void bind_on_destroy(entt::registry& registry)
-	{
-		registry.on_destroy<T>().template connect<&on_destroy<T>>();
-	}
+    namespace Reflection {
+
+        // Properties are bound to certain component and do not support inheritance
+        enum PropertyType
+        {
+            Name,						// [value_type: const char*] Name of component or field.
+            Inherent,					// [key_only] This component cannot be added or removed within the editor.
+            Tooltip,					// [value_type: const char*] Tooltip of component or field.
+            Struct,						// [key_only] This field has sub-fields and will display a special TreeNode.
+            HideComponentHeader,		// [key_only] This component will not display the collapsing header.
+            Category,					// [value_type: const char*] Category of component or field.
+            HiddenInEditor,				// [key_only] Should hide this field in the editor?
+            HideCondition,				// [value_type: const char*] Hide this field if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
+            Transient,					// [key_only] If set, this component or data will not get serialized.
+
+            DragSensitivity,			// [value_type: float] Speed of dragging.
+            ClampMin,					// [value_type: type_dependent] Min value.
+            ClampMax,					// [value_type: type_dependent] Max value.
+            ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, input value will not get clamped.
+            FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
+            CustomElementName,			// [value_type: CustomSequenceContainerElementNameFunc] Container's element name are retrieved from a free function.
+            AssetType,					// [value_type: AssetTypeID] Type ID of asset.
+
+        };
+
+        template<typename T>
+        T& emplace(entt::registry& registry, entt::entity entity)
+        {
+            return registry.emplace<T>(entity);
+        }
+        template<typename T>
+        void remove(entt::registry& registry, entt::entity entity)
+        {
+            registry.remove<T>(entity);
+        }
+        template<typename T>
+        T& get(entt::registry& registry, entt::entity entity)
+        {
+            return registry.get<T>(entity);
+        }
+        template<typename T>
+        bool has(entt::registry& registry, entt::entity entity) // NOTE: Do not register it by ref!
+        {
+            return registry.all_of<T>(entity);
+        }
+
+        template<typename T>
+        void patch(entt::registry& registry, entt::entity entity)
+        {
+            registry.patch<T>(entity);
+        }
+
+        template<typename T>
+        T& copy(entt::registry& dstRegistry, entt::entity dstEntity, const entt::meta_any& comp)
+        {
+            return dstRegistry.emplace_or_replace<T>(dstEntity, comp.cast<T>());
+        }
+    }
 
 }

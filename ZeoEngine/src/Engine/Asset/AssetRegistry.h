@@ -47,6 +47,7 @@ namespace ZeoEngine {
 		bool bHasAnySubDirectory = false;
 	};
 
+	// TODO: No shared_ptr
 	struct AssetMetadata : public PathMetadata, public std::enable_shared_from_this<AssetMetadata>
 	{
 		using PathMetadata::PathMetadata;

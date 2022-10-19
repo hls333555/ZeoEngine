@@ -18,7 +18,7 @@ namespace ZeoEngine {
 	class Material;
 	class UniformBuffer;
 	struct MeshRendererComponent;
-	class Scene;
+	struct SceneContext;
 
 	struct MeshVertex
 	{
@@ -40,19 +40,12 @@ namespace ZeoEngine {
 	struct MeshEntryInstance : public Drawable
 	{
 		const MeshEntry* EntryPtr;
-		const Weak<Scene> SceneContext;
-		const Ref<Material> MaterialRef;
 
-		MeshEntryInstance(const Weak<Scene>& sceneContext, const MeshEntry& entry, const Ref<Material>& material, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo, bool bIsDeserialize = false);
-		MeshEntryInstance(MeshEntryInstance&&) = default; // Once destructor is defined, we must also define a move constructor in order for it to be used instead of the copy constructor (which is deleted in the base class)
-		virtual ~MeshEntryInstance();
+		MeshEntryInstance(const SceneContext* sceneContext, const MeshEntry& entry, const Ref<VertexArray>& vao, const Ref<UniformBuffer>& ubo);
 
 		virtual U32 GetBaseVertex() const override { return EntryPtr->BaseVertex; }
 		virtual U32 GetBaseIndex() const override { return EntryPtr->BaseIndex; }
 		virtual U32 GetIndexCount() const override { return EntryPtr->IndexCount; }
-
-		void BindAndSubmitTechniques(const Ref<Material>& material);
-		void SubmitTechniques(const Ref<Material>& material);
 	};
 
 	class Mesh : public AssetBase<Mesh>
@@ -60,7 +53,7 @@ namespace ZeoEngine {
 	public:
 		explicit Mesh(std::string resourcePath);
 
-		[[nodiscard]] Ref<class MeshInstance> CreateInstance(const Ref<Scene>& sceneContext, bool bIsDeserialize = false);
+		[[nodiscard]] Ref<class MeshInstance> CreateInstance(const Scene& scene);
 
 		static Ref<Mesh> GetDefaultCubeMesh();
 		static Ref<Mesh> GetDefaultSphereMesh();
@@ -100,23 +93,12 @@ namespace ZeoEngine {
 	class MeshInstance
 	{
 	public:
-		MeshInstance(const Ref<Scene>& sceneContext, const Ref<Mesh>& mesh, bool bIsDeserialize);
+		MeshInstance(const SceneContext* sceneContext, const Ref<Mesh>& mesh);
 		MeshInstance(const MeshInstance& other);
 
-		static void Copy(MeshRendererComponent& meshComp, const Ref<MeshInstance>& meshInstanceToCopy);
-
 		const Ref<Mesh>& GetMesh() const { return m_MeshPtr; }
-		const auto& GetMeshEntryInstances() const { return m_EntryInstances; }
-		auto& GetMeshEntryInstances() { return m_EntryInstances; }
-		auto& GetMaterialAssets() { return m_MaterialAssets; }
-		AssetHandle GetMaterial(U32 index) const;
-		void SetMaterial(U32 index, AssetHandle materialAsset);
-		void OnMaterialChanged(U32 index, AssetHandle lastMaterialAsset);
 
-		void SubmitTechniques(MeshEntryInstance& entryInstance) const;
-		void SubmitAllTechniques();
-
-		void Submit(const Mat4& transform, I32 entityID);
+		void Submit(const Mat4& transform, const std::vector<AssetHandle>& materialAssets, I32 entityID);
 
 	private:
 		Ref<Mesh> m_MeshPtr;
@@ -132,6 +114,6 @@ namespace ZeoEngine {
 		ModelData m_ModelBuffer;
 		Ref<UniformBuffer> m_ModelUniformBuffer;
 		std::vector<MeshEntryInstance> m_EntryInstances;
-		std::vector<AssetHandle> m_MaterialAssets;
 	};
+
 }

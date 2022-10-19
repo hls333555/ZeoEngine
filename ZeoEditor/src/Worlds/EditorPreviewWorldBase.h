@@ -18,11 +18,11 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 		virtual void OnUpdate(DeltaTime dt) override;
 
-		virtual void LoadAsset(const std::string& path) = 0;
+		void LoadAsset(const std::string& path, bool bForce);
+		
 		void SaveAsset(const std::string& path) const;
 		void SaveAssetAs();
-		/** You should force load asset to replace current preview one here. */
-		virtual void OnAssetSaveAs(const std::string& path) = 0;
+		void OnAssetSaveAs(const std::string& path);
 
 		EditorCamera& GetEditorCamera() { return m_EditorCamera; }
 
@@ -35,6 +35,8 @@ namespace ZeoEngine {
 		virtual AssetView* GetAssetView() const { return nullptr; }
 
 	private:
+		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) = 0;
+
 		virtual Scope<InspectorBase> CreateInspector() = 0;
 
 	public:

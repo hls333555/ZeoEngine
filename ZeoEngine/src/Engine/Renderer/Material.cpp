@@ -162,8 +162,23 @@ namespace ZeoEngine {
 		if (shaderAsset != lastShaderAsset)
 		{
 			m_ShaderInstance->SetShader(shaderAsset);
-			OnShaderChanged(shaderAsset, lastShaderAsset);
+			NotifyShaderAssetChange();
 		}
+	}
+
+	void Material::NotifyShaderAssetChange()
+	{
+		if (const auto lastShader = AssetLibrary::LoadAsset<Shader>(m_LastShaderAsset))
+		{
+			lastShader->m_OnAssetReloaded.disconnect(this);
+		}
+		const auto shaderAsset = GetShaderAsset();
+		const auto shader = AssetLibrary::LoadAsset<Shader>(shaderAsset);
+		ZE_CORE_ASSERT(shader); // Setting invalid shader is not allowed
+		shader->m_OnAssetReloaded.connect<&Material::ReloadShaderDataAndDeserialize>(this);
+		ReloadShaderDataAndDeserialize();
+
+		m_LastShaderAsset = shaderAsset;
 	}
 
 	void Material::SnapshotDynamicFields()
@@ -237,7 +252,7 @@ namespace ZeoEngine {
 		ConstructDynamicFields();
 		InitRenderTechniques();
 
-		m_OnMaterialInitializedDel.publish(SharedFromThis());
+		m_OnMaterialInitializedDel.publish(*this);
 	}
 
 	void Material::InitUniformBuffers()
@@ -358,18 +373,6 @@ namespace ZeoEngine {
 			}
 			m_Techniques.emplace_back(std::move(shade));
 		}
-	}
-
-	void Material::OnShaderChanged(AssetHandle shaderAsset, AssetHandle lastShaderAsset)
-	{
-		if (const auto lastShader = AssetLibrary::LoadAsset<Shader>(lastShaderAsset))
-		{
-			lastShader->m_OnAssetReloaded.disconnect(this);
-		}
-		const auto shader = AssetLibrary::LoadAsset<Shader>(shaderAsset);
-		ZE_CORE_ASSERT(shaderAsset); // Setting invalid shader is not allowed
-		shader->m_OnAssetReloaded.connect<&Material::ReloadShaderDataAndDeserialize>(this);
-		ReloadShaderDataAndDeserialize();
 	}
 
 }

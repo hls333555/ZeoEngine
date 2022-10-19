@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		void DrawEntityNode(Entity entity) const;
 
 	private:
-		Weak<EditorPreviewWorldBase> m_EditorWorld;
+		EditorPreviewWorldBase* m_EditorWorld = nullptr;
 
 		TextFilter m_Filter;
 

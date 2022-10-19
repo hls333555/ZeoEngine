@@ -47,7 +47,7 @@ namespace ZeoEngine {
 	{
 		if (!m_bSelected)
 		{
-			if (const auto panel = g_Editor->GetPanel(m_MenuItemName))
+			if (auto* panel = g_Editor->GetPanel(m_MenuItemName))
 			{
 				m_bSelected = panel->GetShowPtr();
 			}

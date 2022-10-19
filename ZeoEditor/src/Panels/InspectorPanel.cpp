@@ -11,15 +11,20 @@ namespace ZeoEngine {
 
 	InspectorPanel::InspectorPanel(std::string panelName)
 		: PanelBase(std::move(panelName))
-		, m_EditorWorld(std::static_pointer_cast<EditorPreviewWorldBase>(g_Editor->GetLevelWorld()))
+		, m_EditorWorld(g_Editor->GetLevelWorld())
 	{
 		SetPadding({ 0.0f, 0.0f });
-		m_AssetViewPanel = CreateRef<AssetViewPanel>(ASSET_VIEW);
+		m_AssetViewPanel = CreateScope<AssetViewPanel>(ASSET_VIEW);
 		m_AssetViewPanel->OnAttach();
 	}
 
-	void InspectorPanel::UpdateWorld(const Ref<EditorPreviewWorldBase>& world, bool bIncludeAssetViewPanel)
+	void InspectorPanel::UpdateWorld(EditorPreviewWorldBase* world, bool bIncludeAssetViewPanel)
 	{
+		if (m_EditorWorld != g_Editor->GetLevelWorld())
+		{
+			m_EditorWorld->SetActive(false);
+		}
+		world->SetActive(true);
 		m_EditorWorld = world;
 		if (bIncludeAssetViewPanel)
 		{
@@ -37,12 +42,12 @@ namespace ZeoEngine {
 		const auto& lastData = m_InspectHistory.top();
 		if (lastData.AssetPath.empty())
 		{
-			lastData.World.lock()->SetContextEntity(lastData.LevelSelectedEntity);
+			lastData.World->SetContextEntity(lastData.LevelSelectedEntity);
 			g_Editor->InspectLevelEntity();
 		}
 		else
 		{
-			g_Editor->InspectAsset(lastData.AssetPath, std::dynamic_pointer_cast<AssetPreviewWorldBase>(lastData.World.lock()), false, true);
+			g_Editor->InspectAsset(lastData.AssetPath, dynamic_cast<AssetPreviewWorldBase*>(lastData.World), false, true);
 		}
 		m_InspectHistory.pop();
 	}
@@ -71,11 +76,10 @@ namespace ZeoEngine {
 		BuildDockspaceLayout(dockspaceID);
 		ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
-		const auto editorWorld = GetEditorWorld();
-		if (const Entity selectedEntity = editorWorld->GetContextEntity())
+		if (const Entity selectedEntity = m_EditorWorld->GetContextEntity())
 		{
 			m_AssetViewPanel->OnImGuiRender();
-			RenderDetailsPanel(editorWorld, selectedEntity);
+			RenderDetailsPanel(selectedEntity);
 
 			m_bShouldDrawWhenNoEntitySelected = true;
 		}
@@ -83,7 +87,7 @@ namespace ZeoEngine {
 		{
 			m_bShouldDrawWhenNoEntitySelected = false;
 
-			RenderDetailsPanel(editorWorld, selectedEntity);
+			RenderDetailsPanel(selectedEntity);
 		}
 	}
 
@@ -95,10 +99,10 @@ namespace ZeoEngine {
 		}
 	}
 
-	void InspectorPanel::RenderDetailsPanel(const Ref<EditorPreviewWorldBase>& editorWorld, Entity selectedEntity)
+	void InspectorPanel::RenderDetailsPanel(Entity selectedEntity)
 	{
 		ImGui::Begin(DETAILS, nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
-		editorWorld->GetInspector().Draw(selectedEntity);
+		m_EditorWorld->GetInspector().Draw(selectedEntity);
 		ImGui::End();
 	}
 

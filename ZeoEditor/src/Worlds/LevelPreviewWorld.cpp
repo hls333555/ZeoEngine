@@ -2,54 +2,58 @@
 
 #include "Core/Editor.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Inspectors/EntityInspector.h"
-#include "Scenes/LevelPreviewScene.h"
+#include "Panels/LevelViewPanel.h"
 #include "SceneRenderers/LevelPreviewSceneRenderer.h"
 
 namespace ZeoEngine {
 
+	class LevelPreviewObserverSystem : public LevelObserverSystem
+	{
+	public:
+		virtual void OnBind() override;
+	};
+
+	void LevelPreviewObserverSystem::OnBind()
+	{
+		LevelObserverSystem::OnBind();
+
+		const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW);
+		BindOnComponentAdded<CameraComponent, &ViewPanelBase::OnCameraComponentAdded>(*levelView);
+	}
+
 	void LevelPreviewWorld::OnAttach()
 	{
+		// Register systems before scene construction to receive the first OnActiveSceneChanged delegate call
+		RegisterSystem<ParticleUpdateSystem>(this);
+		RegisterSystem<PhysicsSystem>(this);
+
+		RegisterSystem<ScriptSystem>(this);
+
 		EditorPreviewWorldBase::OnAttach();
 
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
 	}
 
-	void LevelPreviewWorld::LoadAsset(const std::string& path)
-	{
-		StopScene();
-		NewScene();
-		Ref<Scene> scene = GetActiveScene();
-		// An empty scene is created every time, so we have to deserialize every time
-		Ref<Level> level = AssetLibrary::LoadAsset<Level>(path, AssetLibrary::DeserializeMode::Force, &scene);
-		SetAsset(std::move(level));
-		GetActiveScene()->PostLoad();
-	}
-
-	void LevelPreviewWorld::OnAssetSaveAs(const std::string& path)
-	{
-		LoadAsset(path);
-	}
-
 	void LevelPreviewWorld::StopScene()
 	{
-		if (m_SceneState != SceneState::Edit)
+		if (IsRuntime())
 		{
 			OnSceneStop();
 		}
 	}
 
-	Ref<Scene> LevelPreviewWorld::CreateScene()
-	{
-		SetContextEntity({});
-		m_SceneForEdit = CreateRef<LevelPreviewScene>();
-		return m_SceneForEdit;
-	}
-
 	void LevelPreviewWorld::PostSceneCreate(const Ref<Scene>& scene)
 	{
+		m_SceneForEdit = scene;
 		SetContextEntity({});
+	}
+
+	Scope<SceneObserverSystemBase> LevelPreviewWorld::CreateSceneObserverSystem()
+	{
+		return CreateScope<LevelPreviewObserverSystem>();
 	}
 
 	Ref<SceneRenderer> LevelPreviewWorld::CreateSceneRenderer()
@@ -57,9 +61,17 @@ namespace ZeoEngine {
 		return CreateRef<LevelPreviewSceneRenderer>();
 	}
 
+	Ref<IAsset> LevelPreviewWorld::LoadAssetImpl(const std::string& path, bool bForce)
+	{
+		StopScene();
+		NewScene();
+		Scene& scene = *GetActiveScene();
+		return AssetLibrary::LoadAsset<Level>(path, bForce, &scene);
+	}
+
 	Scope<InspectorBase> LevelPreviewWorld::CreateInspector()
 	{
-		return CreateScope<EntityInspector>(SharedFromBase<LevelPreviewWorld>());
+		return CreateScope<EntityInspector>(this);
 	}
 
 	void LevelPreviewWorld::ActivateEntityInspector(Entity entity, Entity lastEntity)
@@ -73,27 +85,19 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<LevelPreviewScene>();
+		auto sceneForPlay = m_SceneForEdit->Copy<Scene>(CreateScope<LevelObserverSystem>());
 		SetContextEntity({});
-		for (const auto& system : GetActiveScene()->GetSystems())
-		{
-			system->BindUpdateFuncToRuntime();
-		}
 		SetActiveScene(std::move(sceneForPlay));
-		GetActiveScene<LevelPreviewScene>()->OnRuntimeStart();
+		OnRuntimeStart();
 		GetEditorCamera().SetEnableUpdate(false);
 	}
 
 	void LevelPreviewWorld::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
-		for (const auto& system : GetActiveScene()->GetSystems())
-		{
-			system->BindUpdateFuncToEditor();
-		}
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
-		GetActiveScene<LevelPreviewScene>()->OnRuntimeStop();
+		OnRuntimeStop();
 		GetEditorCamera().SetEnableUpdate(true);
 	}
 
@@ -109,7 +113,7 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnDuplicateEntity()
 	{
-		if (m_SceneState != SceneState::Edit) return;
+		if (IsRuntime()) return;
 
 		const Entity selectedEntity = GetContextEntity();
 		if (selectedEntity)
@@ -121,13 +125,29 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnDeleteEntity()
 	{
-		if (m_SceneState != SceneState::Edit) return;
+		if (IsRuntime()) return;
 
 		const Entity selectedEntity = GetContextEntity();
 		if (selectedEntity)
 		{
 			GetActiveScene()->DestroyEntity(selectedEntity);
 			SetContextEntity({});
+		}
+	}
+
+	void LevelPreviewWorld::OnRuntimeStart() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnRuntimeStart();
+		}
+	}
+
+	void LevelPreviewWorld::OnRuntimeStop() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnRuntimeStop();
 		}
 	}
 

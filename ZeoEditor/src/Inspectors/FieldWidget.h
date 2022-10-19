@@ -156,21 +156,13 @@ namespace ZeoEngine {
 			SetValue(value);
 
 			const U32 fieldID = fieldInstance->GetFieldID();
-			U32 elementIndex = 0;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
-			{
-				elementIndex = fieldInstance->GetIndex();
-			}
 			if constexpr (std::is_same_v<FieldInstance, ScriptFieldInstance>)
 			{
 				// TODO: ScriptComponent field callbacks
 			}
 			else
 			{
-				if (auto* helper = ComponentHelperRegistry::GetComponentHelper(fieldInstance->GetComponentID()))
-				{
-					helper->PostComponentFieldValueEditChange(fieldInstance->GetComponent(), fieldID, oldValueBuffer, elementIndex);
-				}
+				fieldInstance->OnFieldValueChanged(fieldID);
 			}
 
 			EngineUtils::FreeFieldBuffer(oldValueBuffer);
@@ -458,21 +450,13 @@ namespace ZeoEngine {
 			fieldInstance->SetValue(valueStr);
 
 			const U32 fieldID = fieldInstance->GetFieldID();
-			U32 elementIndex = 0;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
-			{
-				elementIndex = fieldInstance->GetIndex();
-			}
 			if constexpr (std::is_same_v<FieldInstance, ScriptFieldInstance>)
 			{
 				// TODO: ScriptComponent field callbacks
 			}
 			else
 			{
-				if (auto* helper = ComponentHelperRegistry::GetComponentHelper(fieldInstance->GetComponentID()))
-				{
-					helper->PostComponentFieldValueEditChange(fieldInstance->GetComponent(), fieldID, &oldValueStr, elementIndex);
-				}
+				fieldInstance->OnFieldValueChanged(fieldID);
 			}
 		}
 	};
@@ -573,6 +557,8 @@ namespace ZeoEngine {
 			auto seqView = GetSequenceView();
 			const FieldType type = ReflectionUtils::MetaTypeToFieldType(seqView.value_type());
 			const bool bIsElementBufferBased = Utils::IsFieldTypeBufferBased(type);
+			// No need to detect size change for non-buffer-based type
+			// as it uses template to draw each element
 			if (bIsElementBufferBased)
 			{
 				const auto seqSize = static_cast<U32>(seqView.size());
@@ -590,12 +576,9 @@ namespace ZeoEngine {
 				ImGui::AlignTextToFramePadding();
 
 				std::string elementName;
-				if (ReflectionUtils::DoesPropertyExist(Reflection::CustomElementName, fieldInstance->GetFieldData()))
+				if (const auto func = ReflectionUtils::GetPropertyValue<CustomSequenceContainerElementNameFunc>(Reflection::CustomElementName, fieldInstance->GetFieldData()))
 				{
-					if (auto* helper = ComponentHelperRegistry::GetComponentHelper(fieldInstance->GetComponentID()))
-					{
-						elementName = helper->GetCustomSequenceContainerElementName(fieldInstance->GetComponent(), i);
-					}
+					elementName = (*func)(fieldInstance->GetComponent(), fieldInstance->GetFieldID(), i);
 				}
 				else
 				{
@@ -746,7 +729,7 @@ namespace ZeoEngine {
 			const auto seqView = GetSequenceView();
 			const auto size = seqView.size();
 			const FieldType type = ReflectionUtils::MetaTypeToFieldType(seqView.value_type());
-			if (!Utils::IsFieldTypeBufferBased(type))
+			if (Utils::IsFieldTypeBufferBased(type))
 			{
 				m_ElementFieldWidgets.reserve(size);
 				for (SizeT i = 0; i < size; ++i)
