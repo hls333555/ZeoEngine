@@ -27,7 +27,6 @@ namespace ZeoEngine {
 
 	public:
 		static void Init();
-		static void OnUpdate();
 		static void Shutdown();
 
 		static void LoadCoreAssembly(const std::string& path);

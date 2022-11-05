@@ -132,7 +132,6 @@ namespace ZeoEngine {
 
 		std::string CoreAssemblyPath;
 		std::string AppAssemblyPath;
-		bool bPendingReloadAssembly = false;
 		entt::sink<entt::sigh<void()>> OnScriptReloaded{ OnScriptReloadedDel };
 		entt::sigh<void()> OnScriptReloadedDel;
 
@@ -200,15 +199,6 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void ScriptEngine::OnUpdate()
-	{
-		if (s_Data->bPendingReloadAssembly)
-		{
-			ReloadAssembly();
-			s_Data->bPendingReloadAssembly = false;
-		}
-	}
-
 	void ScriptEngine::Shutdown()
 	{
 		ShutdownMono();
@@ -263,7 +253,10 @@ namespace ZeoEngine {
 		if (PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->CoreAssemblyPath) ||
 			PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->AppAssemblyPath))
 		{
-			s_Data->bPendingReloadAssembly = true;
+			Application::Get().SubmitToMainThread([]()
+			{
+				ReloadAssembly();
+			});
 		}
 	}
 

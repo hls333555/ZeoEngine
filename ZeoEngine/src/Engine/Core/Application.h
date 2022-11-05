@@ -64,6 +64,8 @@ namespace ZeoEngine {
 
 		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
 
+		void SubmitToMainThread(const std::function<void()>& func);
+
 	private:
 		void Run();
 		void PropagateEvent(Event& e);
@@ -71,6 +73,8 @@ namespace ZeoEngine {
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowFocusChanged(WindowFocusChangedEvent& e);
+
+		void ExecuteMainThreadQueue();
 
 	private:
 		ApplicationSpecification m_Spec;
@@ -81,6 +85,9 @@ namespace ZeoEngine {
 
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer;
+
+		std::vector<std::function<void()>> m_MainThreadQueue;
+		std::mutex m_MainThreadQueueMutex;
 
 		bool m_bRunning = true;
 		bool m_bMinimized = false;

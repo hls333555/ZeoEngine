@@ -82,9 +82,6 @@ namespace ZeoEngine {
 
 	void Editor::OnUpdate(DeltaTime dt)
 	{
-		// TODO:
-		ScriptEngine::OnUpdate();
-
 		for (const auto& [name, panel] : m_Panels)
 		{
 			panel->OnUpdate(dt);
@@ -94,8 +91,6 @@ namespace ZeoEngine {
 		{
 			world->OnUpdate(dt);
 		}
-
-		HotReloadAsset();
 	}
 
 	void Editor::OnImGuiRender()
@@ -332,25 +327,17 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Editor::OnFileModified(const std::string& path)
+	void Editor::OnFileModified(const std::string& path) const
 	{
 		// Only process resource asset hot-reloading
 		const std::string assetPath = path + AssetRegistry::GetEngineAssetExtension();
 		if (!AssetRegistry::Get().GetAssetMetadata(assetPath)) return;
 
-		// We should not process reloading on a separate thread as rendering may break
-		m_PendingReloadResourceAssets.emplace(assetPath);
-	}
-
-	void Editor::HotReloadAsset()
-	{
-		std::unique_lock<std::mutex> lock(m_Mutex);
-		for (auto it = m_PendingReloadResourceAssets.begin(); it != m_PendingReloadResourceAssets.end();)
+		Application::Get().SubmitToMainThread([assetPath]()
 		{
 			// FileWatcher uses absolute path
-			AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(*it));
-			it = m_PendingReloadResourceAssets.erase(it);
-		}
+			AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(assetPath));
+		});
 	}
 
 }

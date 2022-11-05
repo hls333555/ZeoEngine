@@ -94,6 +94,13 @@ namespace ZeoEngine {
 		layer->OnAttach();
 	}
 
+	void Application::SubmitToMainThread(const std::function<void()>& func)
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		m_MainThreadQueue.emplace_back(func);
+	}
+
 	void Application::Run()
 	{
 		while (m_bRunning)
@@ -104,6 +111,8 @@ namespace ZeoEngine {
 			float time = m_Window->GetTimeInSeconds();
 			DeltaTime dt = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+			ExecuteMainThreadQueue();
 
 			// Stop updating layers if window is minimized
 			if (!m_bMinimized)
@@ -187,6 +196,17 @@ namespace ZeoEngine {
 			m_ActiveWindow = e.GetWindow();
 		}
 		return false;
+	}
+
+	void Application::ExecuteMainThreadQueue()
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		for (auto& func : m_MainThreadQueue)
+		{
+			func();
+		}
+		m_MainThreadQueue.clear();
 	}
 
 }

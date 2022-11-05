@@ -142,15 +142,10 @@ namespace ZeoEngine {
 		void BuildDockWindows(ImGuiID dockspaceID);
 		void RenderMainMenuBar() const;
 
-		/** Called from file watcher callback on a separate thread. */
-		void OnFileModified(const std::string& path);
-		void HotReloadAsset();
+		void OnFileModified(const std::string& path) const;
 
 	private:
 		Scope<FileWatcher> m_FileWatcher;
-
-		std::set<std::string> m_PendingReloadResourceAssets;
-		std::mutex m_Mutex;
 
 		std::unordered_map<std::string, Scope<EditorPreviewWorldBase>> m_Worlds;
 
