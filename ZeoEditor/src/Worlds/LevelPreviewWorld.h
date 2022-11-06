@@ -28,6 +28,8 @@ namespace ZeoEngine {
 		void OnScenePause();
 		void OnSceneResume();
 
+		void OnSceneStep(I32 frames = 1) { m_StepFrames = frames; }
+
 		void OnDuplicateEntity();
 		void OnDeleteEntity();
 
@@ -45,10 +47,14 @@ namespace ZeoEngine {
 		void OnRuntimeStart() const;
 		void OnRuntimeStop() const;
 
+		virtual bool IsRunning() override { return m_SceneState == SceneState::Play || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
+
 	private:
 		SceneState m_SceneState = SceneState::Edit;
 
 		Ref<Scene> m_SceneForEdit;
+
+		I32 m_StepFrames = 0;
 	};
 	
 }

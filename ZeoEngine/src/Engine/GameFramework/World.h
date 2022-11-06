@@ -61,6 +61,9 @@ namespace ZeoEngine {
 
 		void NewSceneRenderer();
 
+		// For internal use purpose
+		virtual bool IsRunning() { return false; }
+
 	public:
 		entt::sink<entt::sigh<void(Scene*, Scene*)>> m_OnActiveSceneChanged{ m_OnActiveSceneChangedDel };
 

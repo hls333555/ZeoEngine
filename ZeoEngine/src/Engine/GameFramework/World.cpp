@@ -28,9 +28,22 @@ namespace ZeoEngine {
 
 		if (!m_bActive) return;
 
-		for (const auto& system : m_Systems)
+		if (IsRuntime())
 		{
-			system->OnUpdate(dt);
+			if (IsRunning())
+			{
+				for (const auto& system : m_Systems)
+				{
+					system->OnUpdateRuntime(dt);
+				}
+			}
+		}
+		else
+		{
+			for (const auto& system : m_Systems)
+			{
+				system->OnUpdateEditor(dt);
+			}
 		}
 
 		m_ActiveScene->OnUpdate();

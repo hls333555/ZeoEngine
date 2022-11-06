@@ -459,7 +459,7 @@ namespace ZeoEngine {
 		UnbindOnComponentUpdated<TextureDetailComponent>();
 	}
 
-	void ParticleUpdateSystem::OnUpdate(DeltaTime dt)
+	void ParticleUpdateSystem::OnUpdateEditor(DeltaTime dt)
 	{
 		GetScene()->ForEachComponentView<ParticleSystemComponent>([dt](auto e, auto& particleComp)
 		{
@@ -470,7 +470,12 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ParticlePreviewUpdateSystem::OnUpdate(DeltaTime dt)
+	void ParticleUpdateSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		OnUpdateEditor(dt);
+	}
+
+	void ParticlePreviewUpdateSystem::OnUpdateEditor(DeltaTime dt)
 	{
 		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([dt](auto e, auto& particlePreviewComp)
 		{
@@ -481,10 +486,13 @@ namespace ZeoEngine {
 		});
 	}
 
-	void ScriptSystem::OnUpdate(DeltaTime dt)
+	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		if (!GetWorld()->IsRuntime()) return;
+		OnUpdateEditor(dt);		
+	}
 
+	void ScriptSystem::OnUpdateRuntime(DeltaTime dt)
+	{
 		GetScene()->ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
 		{
 			const Entity entity{ e, GetScene() };
@@ -508,11 +516,9 @@ namespace ZeoEngine {
 		ScriptEngine::SetSceneContext(GetScene());
 	}
 
-	void PhysicsSystem::OnUpdate(DeltaTime dt)
+	void PhysicsSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		if (!GetWorld()->IsRuntime()) return;
-
-
+		
 	}
 
 	void PhysicsSystem::OnRuntimeStart()
@@ -525,10 +531,8 @@ namespace ZeoEngine {
 
 	}
 
-	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
+	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
 	{
-		if (!GetWorld()->IsRuntime()) return;
-
 		const I32 velocityIterations = 6;
 		const I32 positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);

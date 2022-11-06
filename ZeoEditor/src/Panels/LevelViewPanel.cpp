@@ -72,21 +72,27 @@ namespace ZeoEngine {
 			}
 		}
 
+		ImGui::SameLine();
+
 		// Toggle pause / resume
 		switch (m_LevelWorld->GetSceneState())
 		{
 			case SceneState::Play:
-				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PAUSE))
 				{
 					m_LevelWorld->OnScenePause();
 				}
 				break;
 			case SceneState::Pause:
-				ImGui::SameLine();
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
 					m_LevelWorld->OnSceneResume();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::TransparentButton(ICON_FA_STEP_FORWARD))
+				{
+					m_LevelWorld->OnSceneStep();
 				}
 				break;
 		}
@@ -146,7 +152,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 
-		// Global responsing shotcuts
+		// Global shortcuts
 		{
 			switch (e.GetKeyCode())
 			{
@@ -160,6 +166,16 @@ namespace ZeoEngine {
 							m_LevelWorld->OnScenePlay();
 							return true;
 						}
+					}
+					break;
+				}
+				// Step a frame
+				case Key::F10:
+				{
+					if (m_LevelWorld->GetSceneState() == SceneState::Pause)
+					{
+						m_LevelWorld->OnSceneStep();
+						return true;
 					}
 					break;
 				}

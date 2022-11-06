@@ -29,7 +29,8 @@ namespace ZeoEngine {
 		using ISystem::ISystem;
 
 		virtual void OnCreate() {}
-		virtual void OnUpdate(DeltaTime dt) {}
+		virtual void OnUpdateEditor(DeltaTime dt) {}
+		virtual void OnUpdateRuntime(DeltaTime dt) {}
 
 		virtual void OnRuntimeStart() {}
 		virtual void OnRuntimeStop() {}
@@ -146,7 +147,8 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateEditor(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 	};
 
 	class ParticlePreviewUpdateSystem : public ParticleUpdateSystem
@@ -154,7 +156,8 @@ namespace ZeoEngine {
 	public:
 		using ParticleUpdateSystem::ParticleUpdateSystem;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateEditor(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 	};
 
 	class ScriptSystem : public SystemBase
@@ -162,7 +165,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
@@ -173,7 +176,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
@@ -184,7 +187,7 @@ namespace ZeoEngine {
 	public:
 		using PhysicsSystem::PhysicsSystem;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
