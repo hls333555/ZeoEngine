@@ -5,6 +5,8 @@
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/tabledefs.h>
+#include <mono/metadata/mono-debug.h>
+#include <mono/metadata/threads.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptRegistry.h"
@@ -67,7 +69,7 @@ namespace ZeoEngine {
 		    return buffer;
 		}
 
-		static MonoAssembly* LoadMonoAssembly(const std::string& assemblyPath)
+		static MonoAssembly* LoadMonoAssembly(const std::string& assemblyPath, bool bLoadPDB = false)
 		{
 		    U32 fileSize = 0;
 		    char* fileData = ReadBytes(assemblyPath, &fileSize);
@@ -82,6 +84,22 @@ namespace ZeoEngine {
 		        // Log some error message using the errorMessage data
 		        return nullptr;
 		    }
+
+#ifdef ZE_DEBUG
+			if (bLoadPDB)
+			{
+				std::filesystem::path pdbPath = assemblyPath;
+				pdbPath.replace_extension(".pdb");
+				if (std::filesystem::exists(pdbPath))
+				{
+					U32 pdbFileSize = 0;
+					const char* pdbFileData = ReadBytes(pdbPath.string(), &pdbFileSize);
+					mono_debug_open_image_from_memory(image, reinterpret_cast<const mono_byte*>(pdbFileData), pdbFileSize);
+					ZE_CORE_INFO("Loaded PDB {}", pdbPath);
+					delete[] pdbFileData;
+				}
+			}
+#endif
 
 		    MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.c_str(), &status, 0);
 		    mono_image_close(image);
@@ -140,6 +158,9 @@ namespace ZeoEngine {
 
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
+
+		// TODO: Configuable
+		bool bEnableDebugging = true;
 
 		Ref<Scene> SceneContext;
 
@@ -211,11 +232,34 @@ namespace ZeoEngine {
 	{
 		mono_set_assemblies_path("mono/lib");
 
+#ifdef ZE_DEBUG // TODO: Enable debugging will crash in release build, don't know why...
+		// Init debugger before jit init
+		if (s_Data->bEnableDebugging)
+		{
+			constexpr int argc = 2;
+			const char* argv[argc] = {
+				"--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
+				"--soft-breakpoints"
+			};
+			mono_jit_parse_options(argc, const_cast<char**>(argv));
+			mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+		}
+#endif
+
 		MonoDomain* rootDomain = mono_jit_init("ZeoEngineJitRuntime");
 	    ZE_CORE_ASSERT(rootDomain);
 
 	    // Store the root domain pointer
 	    s_Data->RootDomain = rootDomain;
+
+#ifdef ZE_DEBUG
+		if (s_Data->bEnableDebugging)
+		{
+			mono_debug_domain_create(s_Data->RootDomain);
+		}
+#endif
+
+		mono_thread_set_main(mono_thread_current());
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -237,14 +281,14 @@ namespace ZeoEngine {
 	    mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssemblyPath = path;
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path);
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 	}
 
 	void ScriptEngine::LoadAppAssembly(const std::string& path)
 	{
 		s_Data->AppAssemblyPath = path;
-		s_Data->AppAssembly = Utils::LoadMonoAssembly(path);
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 	}
 
@@ -805,7 +849,8 @@ namespace ZeoEngine {
 
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params) const
 	{
-		return mono_runtime_invoke(method, instance, params, nullptr);
+		MonoObject* exception = nullptr;
+		return mono_runtime_invoke(method, instance, params, &exception);
 	}
 
 	ScriptInstance::ScriptInstance(const Ref<ScriptClass>& scriptClass, Entity entity)
