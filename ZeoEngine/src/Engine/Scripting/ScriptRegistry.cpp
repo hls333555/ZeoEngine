@@ -179,6 +179,29 @@ namespace ZeoEngine {
 		*handle = asset ? asset->GetHandle() : 0;
 	}
 
+	enum class LogLevel
+	{
+		Trace,
+		Info,
+		Warn,
+		Error,
+		Critical
+	};
+
+	static void Log_LogMessage(LogLevel level, MonoString* message)
+	{
+		char* msg = mono_string_to_utf8(message);
+		switch (level)
+		{
+			case LogLevel::Trace:		ZE_TRACE(msg); break;
+			case LogLevel::Info:		ZE_INFO(msg); break;
+			case LogLevel::Warn:		ZE_WARN(msg); break;
+			case LogLevel::Error:		ZE_ERROR(msg); break;
+			case LogLevel::Critical:	ZE_CRITICAL(msg); break;
+		}
+		mono_free(msg);
+	}
+
 	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
 	std::unordered_map<std::string, U32> ScriptRegistry::s_RegisteredMonoComponentNames;
 
@@ -227,6 +250,10 @@ namespace ZeoEngine {
 
 #pragma region Mesh
 
+#pragma endregion
+		
+#pragma region Log
+		ZE_ADD_INTERNAL_CALL(Log_LogMessage);
 #pragma endregion
 
 	}

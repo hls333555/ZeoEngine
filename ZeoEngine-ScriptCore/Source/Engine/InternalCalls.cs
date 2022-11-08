@@ -110,6 +110,13 @@ namespace ZeoEngine
 
 
         #endregion
+
+        #region Misc
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Log_LogMessage(Log.Level level, string formattedMessage);
+
+        #endregion
         
     }
 }
