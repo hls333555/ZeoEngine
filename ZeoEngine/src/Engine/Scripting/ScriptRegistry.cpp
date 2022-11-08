@@ -103,9 +103,9 @@ namespace ZeoEngine {
 		ScriptEngine::GetEntityByID(entityID).SetScale(*scale);
 	}
 
-	static AssetHandle MeshRendererComponent_GetMeshAsset(UUID entityID)
+	static void MeshRendererComponent_GetMeshAsset(UUID entityID, AssetHandle* outMeshAsset)
 	{
-		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MeshAsset;
+		*outMeshAsset = ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MeshAsset;
 	}
 
 	static void MeshRendererComponent_SetMeshAsset(UUID entityID, AssetHandle meshAsset)
@@ -122,9 +122,9 @@ namespace ZeoEngine {
 		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().Instance.get();
 	}
 
-	static AssetHandle MeshRendererComponent_GetMaterialAsset(UUID entityID, U32 index)
+	static void MeshRendererComponent_GetMaterialAsset(UUID entityID, U32 index, AssetHandle* outMaterialAsset)
 	{
-		return ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MaterialAssets[index];
+		*outMaterialAsset =  ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MaterialAssets[index];
 	}
 
 	static void MeshRendererComponent_SetMaterialAsset(UUID entityID, U32 index, AssetHandle materialAsset)

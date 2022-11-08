@@ -42,7 +42,11 @@
     {
         public AssetHandle MeshAsset
         {
-            get => InternalCalls.MeshRendererComponent_GetMeshAsset(Entity.ID);
+            get
+            {
+                InternalCalls.MeshRendererComponent_GetMeshAsset(Entity.ID, out AssetHandle meshAsset);
+                return meshAsset;
+            }
             set => InternalCalls.MeshRendererComponent_SetMeshAsset(Entity.ID, value);
         }
 
@@ -50,7 +54,8 @@
 
         public AssetHandle GetMaterial(uint index)
         {
-            return InternalCalls.MeshRendererComponent_GetMaterialAsset(Entity.ID, index);
+            InternalCalls.MeshRendererComponent_GetMaterialAsset(Entity.ID, index, out AssetHandle materialAsset);
+            return materialAsset;
         }
 
         public void SetMaterial(uint index, AssetHandle materialAsset)

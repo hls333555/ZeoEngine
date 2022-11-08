@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace ZeoEngine
 {
+    // NOTE: In most cases, if the function has a custom return type such as AssetHandle,
+    // you should use an "out" parameter to return it instead!
     public static class InternalCalls
     {
         #region Entity
@@ -55,7 +57,7 @@ namespace ZeoEngine
         #region MeshRendererComponent
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern AssetHandle MeshRendererComponent_GetMeshAsset(ulong entityID);
+        internal static extern void MeshRendererComponent_GetMeshAsset(ulong entityID, out AssetHandle meshAsset);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void MeshRendererComponent_SetMeshAsset(ulong entityID, AssetHandle meshAsset);
@@ -64,7 +66,7 @@ namespace ZeoEngine
         internal static extern IntPtr MeshRendererComponent_GetInstance(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern AssetHandle MeshRendererComponent_GetMaterialAsset(ulong entityID, uint index);
+        internal static extern void MeshRendererComponent_GetMaterialAsset(ulong entityID, uint index, out AssetHandle materialAsset);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void MeshRendererComponent_SetMaterialAsset(ulong entityID, uint index, AssetHandle materialAsset);
