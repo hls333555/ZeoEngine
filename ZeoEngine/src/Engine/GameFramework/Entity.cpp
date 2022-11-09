@@ -1,139 +1,259 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Entity.h"
 
-#include "Engine/Core/ReflectionHelper.h"
+#include "Engine/GameFramework/TypeRegistry.h"
+#include "Engine/Utils/ReflectionUtils.h"
 #include "Engine/GameFramework/Components.h"
 
 namespace ZeoEngine {
 	
-	Entity::Entity(entt::entity handle, Scene* scene)
+	Entity::Entity(entt::entity handle, const Ref<Scene>& scene)
 		: m_EntityHandle(handle), m_Scene(scene)
 	{
 	}
 
-	bool Entity::IsValid() const
+	UUID Entity::GetUUID() const
 	{
-		return m_Scene->m_Registry.valid(*this);
+		return GetComponent<IDComponent>().ID;
 	}
 
-	std::string Entity::GetEntityName() const
+	const std::string& Entity::GetName() const
 	{
 		return GetComponent<CoreComponent>().Name;
 	}
 
-	glm::mat4 Entity::GetEntityTransform() const
+	Mat4 Entity::GetTransform() const
 	{
 		return GetComponent<TransformComponent>().GetTransform();
 	}
 
-	glm::vec3 Entity::GetEntityTranslation() const
+	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		PatchComponent<TransformComponent>([&translation, &rotation, &scale](TransformComponent& transformComp)
+		{
+			transformComp.Translation = translation;
+			transformComp.Rotation = glm::degrees(rotation);
+			transformComp.Scale = scale;
+		});
+	}
+
+	const Vec3& Entity::GetTranslation() const
 	{
 		return GetComponent<TransformComponent>().Translation;
 	}
 
-	glm::vec3 Entity::GetEntityRotation() const
+	void Entity::SetTranslation(const Vec3& translation)
 	{
-		return GetComponent<TransformComponent>().Rotation;
+		PatchComponent<TransformComponent>([&translation](TransformComponent& transformComp)
+		{
+			transformComp.Translation = translation;
+		});
 	}
 
-	glm::vec3 Entity::GetEntityScale() const
+	Vec3 Entity::GetRotation() const
+	{
+		return GetComponent<TransformComponent>().GetRotationInRadians();
+	}
+
+	void Entity::SetRotation(const Vec3& rotation)
+	{
+		PatchComponent<TransformComponent>([&rotation](TransformComponent& transformComp)
+		{
+			transformComp.Rotation = glm::degrees(rotation);
+		});
+	}
+
+	const Vec3& Entity::GetScale() const
 	{
 		return GetComponent<TransformComponent>().Scale;
 	}
 
-	entt::meta_any Entity::AddComponentById(entt::id_type compId)
+	void Entity::SetScale(const Vec3& scale)
 	{
-		auto compType = entt::resolve(compId);
+		PatchComponent<TransformComponent>([&scale](TransformComponent& transformComp)
+		{
+			transformComp.Scale = scale;
+		});
+	}
+
+	Vec3 Entity::GetForwardVector() const
+	{
+		return Math::GetForwardVector(GetRotation());
+	}
+
+	Vec3 Entity::GetRightVector() const
+	{
+		return Math::GetRightVector(GetRotation());
+	}
+
+	Vec3 Entity::GetUpVector() const
+	{
+		return Math::GetUpVector(GetRotation());
+	}
+
+	void Entity::UpdateBounds() const
+	{
+		auto& boundsComp = GetComponent<BoundsComponent>();
+		Box boundingBox;
+		for (const auto& [compID, func] : boundsComp.BoundsCalculationFuncs)
+		{
+			boundingBox += func(*this).GetBox();
+		}
+		boundsComp.Bounds = boundingBox.bIsValid ? boundingBox : GetDefaultBounds();
+	}
+
+	BoxSphereBounds Entity::GetDefaultBounds() const
+	{
+		const auto& transformComp = GetComponent<TransformComponent>();
+		return { transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f };
+	}
+
+	const BoxSphereBounds& Entity::GetBounds() const
+	{
+		return GetComponent<BoundsComponent>().Bounds;
+	}
+
+	bool Entity::IsValid() const
+	{
+		return m_Scene.expired() ? false : m_Scene.lock()->valid(m_EntityHandle);
+	}
+
+	entt::meta_any Entity::AddComponentByID(U32 compID, bool bIsDeserialize) // TODO: bIsDeserialized
+	{
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to add component with invalid component ID = {0}!", compId);
+			ZE_CORE_WARN("Failed to add component with unregistered component ID = {0}!", compID);
 			return {};
 		}
 
-		if (HasComponentById(compId))
+		if (HasComponentByID(compID))
 		{
-			auto compName = GetMetaObjectDisplayName(compType);
-			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", *compName);
+			const char* compName = ReflectionUtils::GetMetaObjectName(compType);
+			ZE_CORE_WARN("Failed to add {0} because current entity already contains the same component!", compName);
 			return {};
 		}
-		auto compInstance = compType.construct(std::ref(m_Scene->m_Registry), m_EntityHandle);
-		IComponent* comp = compInstance.try_cast<IComponent>();
+		auto compInstance = ReflectionUtils::ConstructComponent(compType, *m_Scene.lock(), m_EntityHandle);
+		auto* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
-		if (comp->ComponentHelper)
-		{
-			comp->ComponentHelper->SetOwnerEntity(*this);
-			comp->ComponentHelper->OnComponentAdded();
-			Reflection::BindOnDestroy(compType, m_Scene->m_Registry);
-		}
-		AddComponentId(compId);
+		AddComponentID(compID);
 		
 		return compInstance;
 	}
 
-	void Entity::RemoveComponentById(entt::id_type compId)
+	void Entity::RemoveComponentByID(U32 compID)
 	{
-		auto compType = entt::resolve(compId);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to remove component with invalid component ID = {0}!", compId);
+			ZE_CORE_WARN("Failed to remove component with unregistered component ID = {0}!", compID);
 			return;
 		}
 
-		RemoveComponentId(compId);
-		Reflection::RemoveComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		RemoveComponentID(compID);
+		ReflectionUtils::RemoveComponent(compType, *m_Scene.lock(), m_EntityHandle);
 	}
 
-	entt::meta_any Entity::GetComponentById(entt::id_type compId) const
+	entt::meta_any Entity::GetComponentByID(U32 compID) const
 	{
-		auto compType = entt::resolve(compId);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
-			ZE_CORE_WARN("Failed to get component with invalid component ID = {0}!", compId);
+			ZE_CORE_WARN("Failed to get component with unregistered component ID = {0}!", compID);
 			return {};
 		}
 
-		return Reflection::GetComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		return ReflectionUtils::GetComponent(compType, *m_Scene.lock(), m_EntityHandle);
 	}
 
-	bool Entity::HasComponentById(entt::id_type compId) const
+	bool Entity::HasComponentByID(U32 compID) const
 	{
-		auto compType = entt::resolve(compId);
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
 		if (!compType) return false;
 
-		auto bHas = Reflection::HasComponent(compType, m_Scene->m_Registry, m_EntityHandle);
+		auto bHas = ReflectionUtils::HasComponent(compType, *m_Scene.lock(), m_EntityHandle);
 		return bHas.cast<bool>();
 	}
 
-	entt::meta_any Entity::GetOrAddComponentById(entt::id_type compId)
+	entt::meta_any Entity::GetOrAddComponentByID(U32 compID, bool bIsDeserialize)
 	{
-		if (HasComponentById(compId))
+		if (HasComponentByID(compID))
 		{
-			return GetComponentById(compId);
+			return GetComponentByID(compID);
 		}
-		else
+		return AddComponentByID(compID, bIsDeserialize);
+	}
+
+	void Entity::PatchComponentByID(U32 compID, U32 fieldID)
+	{
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
+		if (!compType)
 		{
-			return AddComponentById(compId);
+			ZE_CORE_WARN("Failed to patch component with unregistered component ID = {0}!", compID);
+			return;
+		}
+
+		auto& changeComp = AddComponent<FieldChangeComponent>();
+		changeComp.FieldID = fieldID;
+		ReflectionUtils::PatchComponent(compType, *m_Scene.lock(), m_EntityHandle);
+		RemoveComponent<FieldChangeComponent>();
+	}
+
+	void Entity::CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs)
+	{
+		for (const auto compID : srcEntity.GetRegisteredComponentIDs())
+		{
+			if (std::find(ignoredCompIDs.cbegin(), ignoredCompIDs.cend(), compID) == ignoredCompIDs.cend())
+			{
+				CopyComponentByID(compID, srcEntity);
+			}
 		}
 	}
 
-	const std::vector<glm::uint32_t>& Entity::GetOrderedComponentIds() const
+	void Entity::CopyComponentByID(U32 compID, Entity srcEntity)
+	{
+		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		const auto compType = entt::resolve(compID);
+		if (!compType)
+		{
+			ZE_CORE_WARN("Failed to copy component with unregistered component ID = {0}!", compID);
+			return;
+		}
+
+		auto srcCompInstance = srcEntity.GetComponentByID(compID);
+		auto compInstance = ReflectionUtils::CopyComponent(compType, *m_Scene.lock(), m_EntityHandle, srcCompInstance);
+		auto* comp = compInstance.try_cast<IComponent>();
+		ZE_CORE_ASSERT(comp);
+		comp->OwnerEntity = *this;
+	}
+
+	const std::vector<U32>& Entity::GetRegisteredComponentIDs() const
 	{
 		return GetComponent<CoreComponent>().OrderedComponents;
 	}
 
-	void Entity::AddComponentId(uint32_t Id)
+	void Entity::AddComponentID(U32 compID)
 	{
-		CoreComponent& coreComp = GetComponent<CoreComponent>();
-		coreComp.OrderedComponents.push_back(Id);
+		if (!ReflectionUtils::IsComponentRegistered(compID)) return;
+
+		auto& coreComp = GetComponent<CoreComponent>();
+		coreComp.OrderedComponents.push_back(compID);
 	}
 
-	void Entity::RemoveComponentId(uint32_t Id)
+	void Entity::RemoveComponentID(U32 compID)
 	{
-		CoreComponent& coreComp = GetComponent<CoreComponent>();
+		ZE_CORE_ASSERT(HasComponent<CoreComponent>());
+
+		auto& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.erase(
 			std::remove_if(coreComp.OrderedComponents.begin(), coreComp.OrderedComponents.end(),
-				[Id](uint32_t componentId) { return componentId == Id; }),
+				[compID](U32 inCompID) { return inCompID == compID; }),
 			coreComp.OrderedComponents.end());
 	}
 

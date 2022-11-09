@@ -1,110 +1,48 @@
 #pragma once
 
-#include "Panels/PanelBase.h"
+#include "Panels/AssetBrowserPanelBase.h"
 
-#include "Engine/Core/Core.h"
-#include "Engine/Events/KeyEvent.h"
-#include "Engine/Core/EngineTypes.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Engine/Events/ApplicationEvent.h"
 
 namespace ZeoEngine {
 
-	struct PathSpec;
-
-	enum class ContentBrowserViewType
-	{
-		Tiles,
-		List,
-	};
-
-	class ContentBrowserPanel : public PanelBase
+	class ContentBrowserPanel : public AssetBrowserPanelBase
 	{
 	public:
-		using PanelBase::PanelBase;
+		using AssetBrowserPanelBase::AssetBrowserPanelBase;
 
 		virtual void OnAttach() override;
 
 	private:
-		virtual void ProcessRender() override;
-		virtual void ProcessEvent(Event& e);
-
-		bool OnKeyPressed(KeyPressedEvent& e);
+		virtual void ProcessEvent(Event& e) override;
 
 		void InitAssetTypeFilters();
 
-		void DrawTopBar();
-		void DrawLeftColumn();
-		void DrawColumnSplitter(float contentWidth);
-		void DrawRightColumn();
+		virtual void DrawTopBar() override;
+		virtual bool IsAnyFilterActive() const override { return AssetBrowserPanelBase::IsAnyFilterActive() || m_bIsAnyTypeFilterActive; }
+		virtual bool ShouldUpdateFilterCache() const override { return AssetBrowserPanelBase::ShouldUpdateFilterCache() || m_bIsTypeFilterChanged; }
+		virtual bool PassFilter(const Ref<PathMetadata>& metadata) const override;
+		virtual void ClearAllFilters() override;
+		virtual void DrawWindowContextMenuImpl(float thumbnailWidth) override;
+		virtual void DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset) override;
+		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata) override;
 
-		void DrawDirectoryTree();
-		void DrawDirectoryTreeRecursively(const std::string& baseDirectory);
+		bool OnFileDropped(WindowFileDroppedEvent& e);
+		void ImportAsset(const std::string& path);
+		virtual void ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding) override;
 
-		void DrawDirectoryNavigator();
-		void DrawPathsInDirectory();
-		void DrawFilteredAssetsInDirectoryRecursively();
-		void DrawWindowContextMenu();
-
-		/** Clear type filter and search filter. */
-		void ClearAllFilters();
-
-		/** Try to find an available path name in current directory by appending suffix to it. */
-		std::string GetAvailableNewPathName(const char* baseName, bool bIsAsset);
-
-		void DrawSelectablePath(const std::string& path);
-		void DrawTilePath(const std::string& path);
-
-		void DrawPathTooltip(const Ref<PathSpec>& spec);
-		void DrawPathContextMenu(const std::string& path);
-		void ProcessAssetDragging(const Ref<PathSpec>& spec, float thumbnailRounding);
-		void SubmitPathRenaming(char* renameBuffer, int32_t maxPathSize, const Ref<PathSpec>& spec, bool& bHasKeyboardFocused);
-
-		void HandleRightColumnDirectoryOpen(const std::string& directory);
-		void HandleRightColumnAssetOpen(const std::string& path);
-
-		void RequestPathCreation(const std::string& path, AssetTypeId typeId);
-		void RequestPathDeletion(const std::string& path);
-		void RequestPathRenaming(const std::string& path);
-		void RequestPathOpen(const std::string& path);
-
-		void ProcessPathDeletion(const std::string& path);
-		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeId typeId);
+		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
 
 	private:
-		float m_LeftColumnWidth = 200.0f;
-		uint32_t m_LeftColumnWindowId;
-
-		ContentBrowserViewType m_ViewType = ContentBrowserViewType::Tiles;
-
-		/** Selected directory in the left column */
-		std::string m_SelectedDirectory;
-		/** Selected directory/asset in the right column */
-		std::string m_SelectedPath;
-
-		/** Directory waiting for opening */
-		std::string m_DirectoryToOpen;
-		/** Directory or asset waiting for renaming */
-		std::string m_PathToRename;
-		/** Directory or asset waiting for creation */
-		std::string m_PathToCreate;
-		/** Directory or asset waiting for deletion */
-		std::string m_PathToDelete;
-
-		struct AssetTypeFilterSpec
+		struct AssetTypeFilterInfo
 		{
-			AssetTypeId TypeId;
+			AssetTypeID TypeID;
 			const char* TypeName;
 			bool bIsFilterActive = false;
 		};
-		std::vector<AssetTypeFilterSpec> m_AssetTypeFilters;
+		std::vector<AssetTypeFilterInfo> m_AssetTypeInfos;
 		bool m_bIsAnyTypeFilterActive = false;
 		bool m_bIsTypeFilterChanged = false;
-
-		TextFilter m_Filter;
-
-		/** Filter cache */
-		std::vector<std::string> m_FilteredPaths;
-		bool m_bShouldUpdateFilterCache = false;
 	};
 
 }

@@ -6,13 +6,12 @@
 
 namespace ZeoEngine {
 
-	EditorMenu::EditorMenu(const std::string& menuName, const Ref<EditorBase>& contextEditor)
-		: m_MenuName(menuName)
-		, m_ContextEditor(contextEditor)
+	EditorMenu::EditorMenu(std::string menuName)
+		: m_MenuName(std::move(menuName))
 	{
 	}
 
-	void EditorMenu::OnImGuiRender()
+	void EditorMenu::OnImGuiRender() const
 	{
 		if (ImGui::BeginMenu(m_MenuName.c_str(), m_bEnabled))
 		{
@@ -22,7 +21,7 @@ namespace ZeoEngine {
 		}
 	}  
 
-	void EditorMenu::OnEvent(Event& e)
+	void EditorMenu::OnEvent(Event& e) const
 	{
 		for (const auto& menuItem : m_MenuItems)
 		{
@@ -30,7 +29,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void EditorMenu::RenderMenuItems()
+	void EditorMenu::RenderMenuItems() const
 	{
 		for (const auto& menuItem : m_MenuItems)
 		{

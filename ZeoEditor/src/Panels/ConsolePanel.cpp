@@ -1,6 +1,6 @@
 #include "Panels/ConsolePanel.h"
 
-#include "Engine/ImGui/EditorLog.h"
+#include "Engine/ImGui/EditorConsole.h"
 
 namespace ZeoEngine {
 
@@ -8,14 +8,12 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+		SetPadding(ImGui::GetStyle().WindowPadding);
 	}
 
 	void ConsolePanel::ProcessRender()
 	{
-		EditorLog::s_EditorLog.Draw();
-
-		// TODO: Console command
+		EditorConsole::s_Instance.Draw();
 	}
 
 }

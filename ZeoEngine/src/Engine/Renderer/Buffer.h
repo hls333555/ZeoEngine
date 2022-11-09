@@ -1,6 +1,11 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "Engine/Core/Assert.h"
+#include "Engine/Renderer/Bindable.h"
+#include "Engine/Renderer/BufferResource.h"
+#include "Engine/Renderer/Texture.h"
 
 namespace ZeoEngine {
 
@@ -13,7 +18,7 @@ namespace ZeoEngine {
 		Bool
 	};
 
-	static uint32_t ShaderDataTypeSize(ShaderDataType type)
+	static U32 ShaderDataTypeSize(ShaderDataType type)
 	{
 		switch (type)
 		{
@@ -38,8 +43,8 @@ namespace ZeoEngine {
 	{
 		std::string Name;
 		ShaderDataType Type;
-		uint32_t Size;
-		size_t Offset;
+		U32 Size;
+		SizeT Offset;
 		bool bNormalized;
 
 		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
@@ -47,7 +52,7 @@ namespace ZeoEngine {
 		{
 		}
 
-		uint32_t GetComponentCount() const
+		U32 GetComponentCount() const
 		{
 			switch (Type)
 			{
@@ -81,7 +86,7 @@ namespace ZeoEngine {
 		}
 
 		const std::vector<BufferElement>& GetElements() const { return m_Elements; }
-		uint32_t GetStride() const { return m_Stride; }
+		U32 GetStride() const { return m_Stride; }
 
 		std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
 		std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
@@ -91,7 +96,7 @@ namespace ZeoEngine {
 	private:
 		void CalculateOffsetAndStride()
 		{
-			size_t offset = 0;
+			SizeT offset = 0;
 			for (auto& element : m_Elements)
 			{
 				element.Offset = offset;
@@ -102,67 +107,49 @@ namespace ZeoEngine {
 
 	private:
 		std::vector<BufferElement> m_Elements;
-		uint32_t m_Stride = 0;
+		U32 m_Stride = 0;
 
 	};
 
-	class VertexBuffer
+	class VertexBuffer : public Bindable
 	{
 	public:
 		virtual ~VertexBuffer() = default;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
-		virtual void SetData(const void* data, uint32_t size) = 0;
+		virtual void SetData(const void* data, U32 size) = 0;
 
 		// Instead of constructor, passing variables to static create fucntion can prevent from casting to different types on class instantiation
 
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(U32 size);
+		static Ref<VertexBuffer> Create(void* vertices, U32 size);
 
 	};
 
 	// Note: Currently ZeoEngine only supports 32-bit index buffers
-	class IndexBuffer
+	class IndexBuffer : public Bindable
 	{
 	public:
 		virtual ~IndexBuffer() = default;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual U32 GetCount() const = 0;
 
-		virtual uint32_t GetCount() const = 0;
+		static Ref<IndexBuffer> Create(U32 count);
+		static Ref<IndexBuffer> Create(U32* indices, U32 count);
 
-		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
-
-	};
-
-	enum class FrameBufferTextureFormat
-	{
-		None = 0,
-
-		// Color
-		RGBA8,
-		RED_INTEGER,
-
-		// Depth/stencil
-		DEPTH24STENCIL8,
-		
-		// Defaults
-		Depth = DEPTH24STENCIL8
 	};
 
 	struct FrameBufferTextureSpec
 	{
 		FrameBufferTextureSpec() = default;
-		FrameBufferTextureSpec(FrameBufferTextureFormat format)
-			: TextureFormat(format) {}
+		FrameBufferTextureSpec(TextureFormat format, std::vector<SamplerType> samplers = { SamplerType::PointClamp }, U32 textureArraySize = 1)
+			: TextureFormat(format), TextureSamplers(std::move(samplers)), TextureArraySize(textureArraySize) {}
 
-		FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
+		TextureFormat TextureFormat = TextureFormat::None;
+		std::vector<SamplerType> TextureSamplers;
+		U32 TextureArraySize = 1;
 	};
 
 	struct FrameBufferAttachmentSpec
@@ -176,43 +163,61 @@ namespace ZeoEngine {
 
 	struct FrameBufferSpec
 	{
-		uint32_t Width = 0, Height = 0;
+		U32 Width = 1280, Height = 720;
+		bool bFixedSize = false;
 		FrameBufferAttachmentSpec Attachments;
-		uint32_t Samples = 1;
+		U32 Samples = 1;
 
 		bool bSwapChainTarget = false;
 	};
 
-	class FrameBuffer
+	class FrameBuffer : public Bindable, public BufferResource
 	{
 	public:
 		virtual ~FrameBuffer() = default;
 
+		virtual U32 GetFrameBufferID() const = 0;
 		virtual const FrameBufferSpec& GetSpec() const = 0;
 
-		virtual void* GetColorAttachment(uint32_t index = 0) const = 0;
+		virtual const Ref<Texture>& GetColorAttachment(U32 index = 0) const = 0;
+		virtual const Ref<Texture>& GetDepthAttachment() const = 0;
 
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
+		virtual void Resize(U32 width, U32 height) = 0;
 
-		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual void ReadPixel(U32 attachmentIndex, I32 x, I32 y, void* outPixelData) = 0;
 
-		virtual int32_t ReadPixel(uint32_t attachmentIndex, int32_t x, int32_t y) = 0;
+		virtual void ClearColorAttachment(U32 attachmentIndex, I32 clearValue) = 0;
+		virtual void ClearColorAttachment(U32 attachmentIndex, const Vec4& clearValue) = 0;
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int32_t clearValue) = 0;
+		virtual void BlitColorTo(const Ref<FrameBuffer>& targetFBO, U32 attachmentIndex, U32 targetAttachmentIndex) = 0;
+		virtual void BlitDepthTo(const Ref<FrameBuffer>& targetFBO, bool bIncludeStencil = true) = 0;
 
-		virtual void Snapshot(const std::string& imagePath, uint32_t captureWidth) = 0;
+		virtual void Snapshot(const std::string& imagePath, U32 captureWidth) = 0;
 
-		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec);
+		static Ref<FrameBuffer> Create(const FrameBufferSpec& spec, I32 textureBindingAttachmentIndex = -1, U32 textureBindingSlot = 0);
 	};
 
-	class UniformBuffer
+	// TODO: Refactor when changed to deferred rendering
+	namespace UniformBufferBinding
+	{
+		static constexpr U32 Global = 0;
+		static constexpr U32 Camera = 1;
+		static constexpr U32 Model = 2;
+		static constexpr U32 Light = 3;
+
+		static constexpr U32 ShadowCamera = 4;
+		static constexpr U32 Grid = 5;
+
+	}
+
+	class UniformBuffer : public Bindable
 	{
 	public:
 		virtual ~UniformBuffer() = default;
-		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
 
-		static Ref<UniformBuffer> Create(uint32_t size, uint32_t binding);
+		virtual void SetData(const void* data, U32 size = 0, U32 offset = 0) = 0;
+
+		static Ref<UniformBuffer> Create(U32 size, U32 binding);
 	};
 
 }

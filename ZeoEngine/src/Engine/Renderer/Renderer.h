@@ -1,10 +1,33 @@
 #pragma once
 
-#include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/OrthographicCamera.h"
-#include "Engine/Renderer/Shader.h"
+#include "Engine/GameFramework/Entity.h"
+#include "Engine/Renderer/RendererAPI.h"
 
 namespace ZeoEngine {
+
+	struct RendererStats
+	{
+		U32 DrawCalls = 0;
+		U32 QuadCount = 0;
+		U32 MeshVertexCount = 0;
+
+		Entity HoveredEntity;
+
+		U32 GetTotalVertexCount() const { return QuadCount * 4 + MeshVertexCount; }
+
+		void Reset()
+		{
+			DrawCalls = 0;
+			QuadCount = 0;
+			MeshVertexCount = 0;
+			HoveredEntity = {};
+		}
+	};
+
+	struct RendererData
+	{
+		RendererStats Stats;
+	};
 
 	class Renderer
 	{
@@ -12,23 +35,15 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void OnWindowResize(uint32_t width, uint32_t height);
-
-		static void BeginScene(OrthographicCamera& camera);
-		static void EndScene();
-
-		static void Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
-
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
+		static void OnWindowResize(U32 width, U32 height);
+
+		static RendererStats& GetStats();
+		static void ResetStats();
+
 	private:
-		struct SceneData
-		{
-			glm::mat4 ViewProjectionMatrix;
-		};
-
-		static Scope<SceneData> s_SceneData;
-
+		static RendererData s_Data;
 	};
 
 }

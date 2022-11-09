@@ -28,7 +28,7 @@ namespace ZeoEngine {
 		RecalculateProjection();
 	}
 
-	void SceneCamera::SetViewportSize(const glm::vec2& size)
+	void SceneCamera::SetViewportSize(const Vec2& size)
 	{
 		m_AspectRatio = size.x / size.y;
 		RecalculateProjection();
@@ -38,7 +38,7 @@ namespace ZeoEngine {
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+			m_Projection = glm::perspective(glm::radians(m_PerspectiveFOV), m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
 		}
 		else
 		{

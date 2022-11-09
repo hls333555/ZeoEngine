@@ -2,7 +2,7 @@
 
 namespace ZeoEngine {
 
-	using MouseCode = uint16_t;
+	using MouseCode = U16;
 
 	namespace Mouse
 	{

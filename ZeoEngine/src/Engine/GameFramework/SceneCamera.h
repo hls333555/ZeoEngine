@@ -6,6 +6,8 @@ namespace ZeoEngine {
 
 	class SceneCamera : public Camera
 	{
+		friend struct CameraComponent;
+
 	public:
 		enum class ProjectionType
 		{
@@ -16,10 +18,13 @@ namespace ZeoEngine {
 		SceneCamera();
 		virtual ~SceneCamera() = default;
 
+		virtual float GetNearClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveNear : m_OrthographicNear; }
+		virtual float GetFarClip() const override { return m_ProjectionType == ProjectionType::Perspective ? m_PerspectiveFar : m_OrthographicFar; }
+
 		void SetPerspective(float verticalFOV, float nearClip, float farClip);
 		void SetOrthographic(float size, float nearClip, float farClip);
 
-		void SetViewportSize(const glm::vec2& size);
+		void SetViewportSize(const Vec2& size);
 
 		ProjectionType GetProjectionType() const { return m_ProjectionType; }
 		void SetProjectionType(ProjectionType type) { m_ProjectionType = type; RecalculateProjection(); }
@@ -38,13 +43,12 @@ namespace ZeoEngine {
 		float GetOrthographicFarClip() const { return m_OrthographicFar; }
 		void SetOrthographicFarClip(float farClip) { m_OrthographicFar = farClip; RecalculateProjection(); }
 
-	private:
 		void RecalculateProjection();
 
 	private:
 		ProjectionType m_ProjectionType = ProjectionType::Orthographic;
 
-		float m_PerspectiveFOV = glm::radians(45.0f);
+		float m_PerspectiveFOV = 90.0f;
 		float m_PerspectiveNear = 0.01f, m_PerspectiveFar = 1000.0f;
 
 		float m_OrthographicSize = 6.0f;

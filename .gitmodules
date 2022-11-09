@@ -16,3 +16,9 @@
 [submodule "ZeoEngine/vendor/ImGuizmo"]
 	path = ZeoEngine/vendor/ImGuizmo
 	url = https://github.com/hls333555/ImGuizmo.git
+[submodule "ZeoEngine/vendor/Box2D"]
+	path = ZeoEngine/vendor/Box2D
+	url = git@github.com:hls333555/box2d.git
+[submodule "ZeoEngine/vendor/assimp"]
+	path = ZeoEngine/vendor/assimp
+	url = git@github.com:hls333555/assimp.git

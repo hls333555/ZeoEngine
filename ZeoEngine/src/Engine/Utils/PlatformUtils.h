@@ -3,16 +3,13 @@
 #include <optional>
 #include <string>
 
-#include "Engine/Core/EngineTypes.h"
-
 namespace ZeoEngine {
 
 	class FileDialogs
 	{
 	public:
-		// These return empty strings if cancelled
-		static std::optional<std::string> OpenFile();
-		static std::optional<std::string> SaveFile();
+		static std::vector<std::string> Open(bool bAllowMultiSelect);
+		static std::optional<std::string> Save();
 
 	private:
 		static std::string GetSupportedFileFilter();
@@ -22,7 +19,10 @@ namespace ZeoEngine {
 	{
 	public:
 		/** Open the file explorer and select the path. */
-		static void ShowInExplorer(const std::string& path);
+		static void ShowInExplorer(const std::string& filepath);
+
+		/** Open the file using the default program. */
+		static void OpenFile(const std::string& filepath);
 	};
 
 }

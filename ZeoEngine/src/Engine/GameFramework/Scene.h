@@ -1,89 +1,142 @@
 #pragma once
 
 #include <entt.hpp>
+#define DEBUG_DRAW_EXPLICIT_CONTEXT
+#include <debug_draw.hpp>
 
-#include "Engine/Core/Asset.h"
+#include "Engine/Asset/Asset.h"
 #include "Engine/Core/Core.h"
-#include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
-#include "Engine/Core/AssetLibrary.h"
 
 namespace ZeoEngine {
 
-	 class EditorCamera;
+	/** A scene context which shares among copied scenes. */
+	struct SceneContext
+	{
+		dd::ContextHandle DebugDrawContext = nullptr;
+	};
 
-	class Scene
+	template<typename... Component>
+	inline constexpr entt::get_t<Component...> IncludeComponents{};
+
+	template<typename... Component>
+	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
+
+	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
-		friend class SceneSerializer;
-		friend class ViewPanelBase;
-		friend class SceneOutlinePanel;
-		friend class ISystem;
-		friend class RenderSystem;
+		friend class SceneObserverSystemBase;
 
 	public:
-		Scene() = default;
-		virtual ~Scene() = default;
+		explicit Scene(Scope<SceneObserverSystemBase> sceneObserverSystem = nullptr);
+		~Scene();
 
-		virtual void OnUpdate(DeltaTime dt) {}
-		virtual void OnRender(const EditorCamera& camera) {}
-		virtual void OnEvent(Event& e) {}
+		void OnUpdate();
 
-		/**
-		 * Create an entity with default components.
-		 * 
-		 * @param bIsInternal - If true, this entity will not show in SceneOutlinePanel.
-		 */
-		Entity CreateEntity(const std::string& name = "Entity", bool bIsInternal = false);
+		/** Copy function which processes member copy. */
+		void Copy(const Ref<Scene>& other);
+
+		// We cannot copy Scene through copy constructor as it is a deleted function
+		// So we construct a new scene and call our "copy" function instead
+		template<typename T, typename ... Args>
+		Ref<T> Copy(Args&& ... args)
+		{
+			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
+			newScene->Copy(shared_from_this());
+			return newScene;
+		}
+
+		SceneContext* GetContext() const { return m_Context.get(); }
+
+		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
+		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
+		Entity GetEntityByUUID(UUID uuid) const;
+		Entity GetEntityByName(std::string_view name);
+		SizeT GetEntityCount() const { return alive(); }
 
-		/** Called after all data have been loaded. */
-		virtual void PostLoad() {}
+		Entity GetMainCameraEntity();
+
+		template<typename... Component, typename... Exclude, typename Func>
+		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {}) const
+		{
+			view<Component...>(exclude).each(std::forward<Func>(func));
+		}
+		template<typename... Component, typename... Exclude, typename Func>
+		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
+		{
+			view<Component...>(exclude).each(std::forward<Func>(func));
+		}
+
+		struct DefaultCompare
+		{
+			template<typename... Component>
+			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const { return true; }
+		};
+
+		// TODO:
+		template<typename... Owned, typename... Include, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
+		void ForEachComponentGroup(entt::get_t<Include...> include, Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
+		{
+			auto compGroup = group<Owned...>(include, exclude);
+			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
+			{
+				compGroup.sort<Owned..., Include...>(std::move(compareFunc));
+			}
+			compGroup.each(std::forward<Func>(func));
+		}
+
+		template<typename... Owned, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
+		void ForEachComponentGroup(Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
+		{
+			auto compGroup = group<Owned...>(exclude);
+			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
+			{
+				compGroup.sort<Owned...>(std::move(compareFunc));
+			}
+			compGroup.each(std::forward<Func>(func));
+		}
 
 	private:
-		/** Create an entity with no default components. */
-		Entity CreateEmptyEntity();
+		// TODO: Hide more parent methods
+		using entt::registry::ctx;
+		using entt::registry::view;
+		using entt::registry::group;
+		using entt::registry::create;
+		using entt::registry::destroy;
+		using entt::registry::valid;
+		using entt::registry::emplace;
+		using entt::registry::erase;
+		using entt::registry::remove;
+		using entt::registry::get;
+		using entt::registry::all_of;
+		using entt::registry::patch;
+		using entt::registry::on_construct;
+		using entt::registry::on_update;
+		using entt::registry::on_destroy;
 
 		void SortEntities();
 
-	protected:
-		entt::registry m_Registry;
-
 	private:
-		uint32_t m_EntityCount = 0;
+		Scope<SceneObserverSystemBase> m_SceneObserverSystem;
+		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
+
+		std::unordered_map<UUID, Entity> m_Entities;
+		U32 m_CurrentEntityIndex = 0;
+
 	};
 
-	class SceneAsset : public AssetBase<SceneAsset>
+	class Level : public AssetBase<Level>
 	{
-	private:
-		explicit SceneAsset(const std::string& path);
-
 	public:
-		static Ref<SceneAsset> Create(const std::string& path);
+		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewLevel.zasset"; }
 
-		const Ref<Scene>& GetScene() const { return m_Scene; }
-		/** Update scene reference and deserialize scene data. */
-		void UpdateScene(const Ref<Scene>& scene) { m_Scene = scene; Deserialize(); }
-		/** Clear scene referenece. */
-		void ClearScene() { m_Scene.reset(); }
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		virtual void Reload() override;
+		Scene* GetScene() const { return m_Scene; }
+		void SetScene(Scene* scene) { m_Scene = scene; }
 
 	private:
-		Ref<Scene> m_Scene;
+		Scene* m_Scene = nullptr;
 	};
-
-	struct SceneAssetLoader final : AssetLoader<SceneAssetLoader, SceneAsset>
-	{
-		AssetHandle<SceneAsset> load(const std::string& path) const
-		{
-			return SceneAsset::Create(path);
-		}
-	};
-
-	class SceneAssetLibrary : public AssetLibrary<SceneAssetLibrary, SceneAsset, SceneAssetLoader>{};
 
 }

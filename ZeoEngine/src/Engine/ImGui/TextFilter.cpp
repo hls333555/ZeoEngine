@@ -7,7 +7,7 @@
 
 namespace ZeoEngine {
 
-	void ImStrncpy(char* dst, const char* src, size_t count)
+	void ImStrncpy(char* dst, const char* src, SizeT count)
 	{
 		if (count < 1) return;
 
@@ -34,26 +34,21 @@ namespace ZeoEngine {
 		}
 	}
 
-	bool TextFilter::Draw(const char* label, const char* hint, float width)
+	void TextFilter::Draw(const char* label, const char* hint, float width, ImGuiInputTextCallback inputCallback, void* callbackData)
 	{
-		if (width != 0.0f)
+		if (width <= 0.0f)
 		{
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() - ImGui::GetFramePadding().x);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		}
-		bIsInputBufferChanged = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf));
-		ImGui::SameLine();
-		ImGui::HelpMarker(
-			R"(Filter usage:
-	""			display all lines
-	"xxx"		display lines containing "xxx"
-	"-xxx"		hide lines containing "xxx"
-	"xxx yyy"	display lines containing "xxx" and "yyy"
-	"xxx -yyy"	display lines containing "xxx" but not "yyy")");
+		ImGuiInputTextFlags flags = inputCallback
+			? ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory
+			: 0;
+		bIsInputBufferChanged = ImGui::InputTextWithHint(label, hint, InputBuf, IM_ARRAYSIZE(InputBuf), flags | ImGuiInputTextFlags_AutoSelectAll, inputCallback, callbackData);
+
 		if (bIsInputBufferChanged)
 		{
 			Build();
 		}
-		return bIsInputBufferChanged;
 	}
 
 	void TextFilter::DrawEmptyText()

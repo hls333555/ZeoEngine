@@ -1,76 +1,90 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Shader.h"
 
+#include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Engine/Profile/BenchmarkTimer.h"
 
 namespace ZeoEngine {
-	
-	Ref<Shader> Shader::Create(const std::string& filePath)
+
+	Ref<Shader> Shader::Create(std::string resourcePath)
 	{
+		Ref<Shader> shader;
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(filePath);
-		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-			return nullptr;
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				shader = CreateRef<OpenGLShader>(std::move(resourcePath));
+				break;
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
 		}
-	}
 
-	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-	{
-		switch (Renderer::GetAPI())
-		{
-		case RendererAPI::API::None:
-			ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
-			return nullptr;
-		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
-		default:
-			ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
-			return nullptr;
-		}
-	}
-
-	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
-	{
-		ZE_CORE_ASSERT(!Exists(name), "Trying to add the shader which already exists!");
-		m_Shaders[name] = shader;
-	}
-
-	void ShaderLibrary::Add(const Ref<Shader>& shader)
-	{
-		const std::string& name = shader->GetName();
-		Add(name, shader);
-	}
-
-	Ref<Shader> ShaderLibrary::Load(const std::string& filePath)
-	{
-		auto shader = Shader::Create(filePath);
-		Add(shader);
+		shader->ParseAndCompile();
 		return shader;
 	}
 
-	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filePath)
+	Ref<Shader> Shader::Create(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
-		auto shader = Shader::Create(filePath);
-		Add(name, shader);
+		Ref<Shader> shader;
+		switch (Renderer::GetAPI())
+		{
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				shader = CreateRef<OpenGLShader>(vertexSrc, fragmentSrc);
+				break;
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
+		}
+		// TODO:
+		//shader->Compile();
 		return shader;
 	}
 
-	Ref<Shader> ShaderLibrary::Get(const std::string& name)
+	Ref<ShaderInstance> Shader::CreateInstance()
 	{
-		ZE_CORE_ASSERT(Exists(name), "Shader not found!");
-		return m_Shaders[name];
+		return CreateRef<ShaderInstance>(SharedFromThis());
 	}
 
-	bool ShaderLibrary::Exists(const std::string& name) const
+	void Shader::Reload()
 	{
-		return m_Shaders.find(name) != m_Shaders.end();
+		ClearCache();
+		Timer timer;
+		if (ParseAndCompile())
+		{
+			const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
+			ZE_CORE_WARN("Reloading shader \"{0}\" took {1} ms", metadata->Path, timer.ElapsedMillis());
+		}
+	}
+
+	void ShaderInstance::Bind() const
+	{
+		const auto shader = GetShader();
+		shader->SetActiveRendererIDByID(m_ShaderVariantID);
+		shader->Bind();
+	}
+
+	Ref<Shader> ShaderInstance::GetShader() const
+	{
+		return AssetLibrary::LoadAsset<Shader>(m_ShaderAsset);
+	}
+
+	void ShaderInstance::SetShaderVariantByMacro(const std::string& name, U32 value)
+	{
+		const auto variant = GetShader()->GetVariantByID(m_ShaderVariantID);
+		ZE_CORE_ASSERT(variant);
+		// Fetch current macro combination and update it with our value to generate the new variant ID
+		ShaderVariantData tempData(variant->Data->Macros);
+		tempData.SetMacro(name, std::to_string(value));
+		m_ShaderVariantID = tempData.GetID();
 	}
 
 }

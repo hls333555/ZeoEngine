@@ -8,8 +8,8 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize;
-		m_PanelSpec.InitialSize = { { 300.0f, 200.0f } };
+		SetFlags(ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize);
+		SetInitialSize({ 300.0f, 200.0f });
 
 		m_LogoTexture = Texture2D::Create("resources/textures/Logo_96x.png");
 	}

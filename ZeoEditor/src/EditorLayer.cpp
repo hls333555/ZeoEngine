@@ -1,54 +1,56 @@
 #include "EditorLayer.h"
 
-#include "Core/EditorManager.h"
-#include "Editors/SceneEditor.h"
+#include "Core/Editor.h"
 #include "Core/EditorTypes.h"
-#include "Engine/Core/AssetManager.h"
-#include "Engine/Core/AssetRegistry.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/ThumbnailManager.h"
-#include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Profile/Profiler.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace ZeoEngine {
 
 	EditorLayer::EditorLayer()
-		: EngineLayer("Editor")
+		: Layer("Editor")
 	{
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		EngineLayer::OnAttach();
-
+		// TODO:
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
 		AssetRegistry::Get().Init();
 
-		EditorManager::Get().CreateEditor<SceneEditor>(SCENE_EDITOR);
+		m_Editor = CreateScope<Editor>();
+		m_Editor->OnAttach();
 		
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
 	{
-		EngineLayer::OnUpdate(dt);
+		ZE_PROFILE_FUNC();
 
-		// TODO: Check
-		Renderer2D::ResetStats();
-		EditorManager::Get().OnUpdate(dt);
+		Renderer::ResetStats();
+
+		m_Editor->OnUpdate(dt);
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
+		ZE_PROFILE_FUNC();
+
 #if ZE_SHOW_IMGUI_DEMO
 		static bool bShow = false;
 		ImGui::ShowDemoWindow(&bShow);
 #endif
 
-		EditorManager::Get().OnImGuiRender();
+		m_Editor->OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		EditorManager::Get().OnEvent(event);
+		m_Editor->OnEvent(event);
 	}
 
 }

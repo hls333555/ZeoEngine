@@ -2,14 +2,14 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Renderer/Texture.h"
 #include "Engine/Core/DeltaTime.h"
-#include "Engine/Utils/PathUtils.h"
-#include "Engine/GameFramework/Entity.h"
-#include "Engine/Core/Asset.h"
-#include "Engine/Core/AssetLibrary.h"
+#include "Engine/Asset/Asset.h"
 
 namespace ZeoEngine {
+
+	struct ParticleSystemComponent;
+	class Entity;
+	class Texture2D;
 
 	enum class ParticleVariationType
 	{
@@ -40,11 +40,11 @@ namespace ZeoEngine {
 		ParticleVariationType VariationType = ParticleVariationType::Constant;
 	};
 
-	using ParticleInt = ParticleVariation<int32_t>;
+	using ParticleInt = ParticleVariation<I32>;
 	using ParticleFloat = ParticleVariation<float>;
-	using ParticleVec2 = ParticleVariation<glm::vec2>;
-	using ParticleVec3 = ParticleVariation<glm::vec3>;
-	using ParticleColor = ParticleVariation<glm::vec4>;
+	using ParticleVec2 = ParticleVariation<Vec2>;
+	using ParticleVec3 = ParticleVariation<Vec3>;
+	using ParticleColor = ParticleVariation<Vec4>;
 
 	struct BurstData
 	{
@@ -59,15 +59,15 @@ namespace ZeoEngine {
 
 	class ParticleSystemInstance;
 
-	class ParticleTemplateAsset : public std::enable_shared_from_this<ParticleTemplateAsset>, public AssetBase<ParticleTemplateAsset>
+	class ParticleTemplate : public AssetBase<ParticleTemplate>
 	{
-	private:
-		explicit ParticleTemplateAsset(const std::string& path);
-
 	public:
-		static Ref<ParticleTemplateAsset> Create(const std::string& path);
+		ParticleTemplate();
 
-		size_t GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
+		// TODO:
+		static constexpr const char* GetTemplatePath() { return "Engine/levels/NewParticleTemplate.zasset"; }
+
+		SizeT GetParticleSystemInstanceCount() const { return ParticleSystemInstances.size(); }
 
 		void AddParticleSystemInstance(const Ref<ParticleSystemInstance>& psInstance)
 		{
@@ -83,18 +83,13 @@ namespace ZeoEngine {
 			}
 		}
 
-		void ResimulateAllParticleSystemInstances();
-
-		virtual void Serialize(const std::string& path) override;
-		virtual void Deserialize() override;
-
-		virtual void Reload() override;
+		void ResimulateAllParticleSystemInstances() const;
 
 	public:
 		bool bIsLocalSpace = false;
 
 		/** <= 0 means infinite loop */
-		int32_t LoopCount = 0;
+		I32 LoopCount = 0;
 		float LoopDuration = 1.0f;
 
 		/** Number of particles to spawn per second in total, < 0 means nothing */
@@ -114,22 +109,22 @@ namespace ZeoEngine {
 		 * How much velocity one particle will inherit from emitter. This param is only useful when bIsLocalSpace is false.
 		 * This value should be in [(0.0, 0.0), (1.0, 1.0)]
 		 */
-		glm::vec3 InheritVelocityRatio{ 0.0f };
+		Vec3 InheritVelocityRatio{ 0.0f };
 
 		ParticleColor ColorBegin, ColorEnd;
 
 		ParticleFloat Lifetime;
 
-		AssetHandle<Texture2DAsset> Texture;
+		Ref<Texture2D> Texture;
 		/**
 		 * Defines how to divide texture into sub-images for UV animation.
 		 * This variable contains number of columns in x and number of rows in y.
 		 * By default, subUV animation will animate from left-up sub-image to right-down sub-image uniformly during particle's lifetime.
 		 * Thus, you can change lifetime to control the animation speed.
 		 */
-		glm::vec2 SubImageSize{ 0.0f };
+		Vec2 SubImageSize{ 0.0f };
 
-		uint32_t MaxParticles = 500;
+		U32 MaxParticles = 500;
 
 	private:
 		/** Caches all alive instances this template has instantiated, used to sync updates on value change */
@@ -137,16 +132,14 @@ namespace ZeoEngine {
 
 	};
 
-	struct ParticleSystemComponent;
-
 	class ParticleSystemInstance
 	{
-		friend class ParticleViewPanel;
-		friend class ParticleTemplateAsset;
+		friend class ParticleEditorViewPanel;
+		friend class ParticleTemplate;
 		friend class ParticleTemplateDataWidget;
 
 	private:
-		ParticleSystemInstance(const AssetHandle<ParticleTemplateAsset>& particleTemplate, Entity ownerEntity, const glm::vec3& positionOffset = glm::vec3{ 0.0f });
+		ParticleSystemInstance(const Ref<ParticleTemplate>& particleTemplate, Entity* ownerEntity, const Vec3& positionOffset = Vec3{ 0.0f });
 
 	public:
 		/**
@@ -156,7 +149,7 @@ namespace ZeoEngine {
 		 */
 		static void Create(ParticleSystemComponent& particleComp);
 
-		AssetHandle<ParticleTemplateAsset>& GetParticleTemplate() { return m_ParticleTemplate; }
+		const Ref<ParticleTemplate>& GetParticleTemplate() { return m_ParticleTemplate; }
 
 		void OnUpdate(DeltaTime dt);
 		void OnRender();
@@ -164,55 +157,9 @@ namespace ZeoEngine {
 		void Activate();
 		void Deactivate();
 
+		Entity* GetOwnerEntity() const;
+
 	private:
-		// Burst data specification
-		struct BurstDataSpec
-		{
-			float Time;
-			int32_t Amount;
-			bool bIsProcessed;
-		};
-
-		// Emitter specification
-		struct EmitterSpec
-		{
-			bool bIsLocalSpace;
-			int32_t LoopCount;
-			bool bIsInfiniteLoop;
-			float LoopDuration;
-			float SpawnRate;
-			std::vector<BurstDataSpec> BurstList;
-			AssetHandle<Texture2DAsset> Texture;
-			glm::vec2 SubImageSize{ 0.0f };
-			glm::vec2 TilingFactor{ 1.0f };
-			glm::vec3 InheritVelocityRatio{ 0.0f };
-			uint32_t MaxParticles;
-		};
-
-		// Particle runtime properties
-		struct Particle
-		{
-			glm::vec3 Position{ 0.0f };
-
-			glm::vec3 Rotation{ 0.0f };
-			glm::vec3 RotationRate{ 0.0f };
-
-			glm::vec3 SizeBegin{ 1.0f }, SizeEnd{ 1.0f };
-			glm::vec3 Size{ 1.0f };
-
-			glm::vec3 Velocity{ 0.0f };
-
-			glm::vec4 ColorBegin{ 1.0f }, ColorEnd{ 1.0f };
-			glm::vec4 Color{ 1.0f };
-
-			float Lifetime = 1.0f;
-			float LifeRemaining = 1.0f;
-
-			glm::vec2 UvOffset{ 0.0f };
-
-			bool bActive = false;
-		};
-
 		void TogglePause();
 		bool IsPause() const { return m_bPauseUpdate; }
 		void Resimulate();
@@ -222,6 +169,7 @@ namespace ZeoEngine {
 		void Reevaluate();
 		void EvaluateEmitterProperties();
 		void ReevaluateBurstList();
+		struct Particle;
 		void EvaluateParticleProperties(Particle& particle);
 
 		bool Emit();
@@ -231,22 +179,72 @@ namespace ZeoEngine {
 		entt::sigh<void()> m_OnSystemFinishedDel;
 	public:
 		/** Called when this particle system is about to be destroyed */
-		entt::sink<void()> m_OnSystemFinished{ m_OnSystemFinishedDel };
+		entt::sink<entt::sigh<void()>> m_OnSystemFinished{ m_OnSystemFinishedDel };
 
 	private:
-		AssetHandle<ParticleTemplateAsset> m_ParticleTemplate;
+		// Burst data specification
+		struct BurstDataSpec
+		{
+			float Time;
+			I32 Amount;
+			bool bIsProcessed;
+		};
+
+		// Emitter specification
+		struct EmitterSpec
+		{
+			bool bIsLocalSpace;
+			I32 LoopCount;
+			bool bIsInfiniteLoop;
+			float LoopDuration;
+			float SpawnRate;
+			std::vector<BurstDataSpec> BurstList;
+			Ref<Texture2D> Texture;
+			Vec2 SubImageSize{ 0.0f };
+			Vec2 TilingFactor{ 1.0f };
+			Vec3 InheritVelocityRatio{ 0.0f };
+			U32 MaxParticles;
+		};
+
+		// Particle runtime properties
+		struct Particle
+		{
+			Vec3 Position{ 0.0f };
+
+			Vec3 Rotation{ 0.0f };
+			Vec3 RotationRate{ 0.0f };
+
+			Vec3 SizeBegin{ 1.0f }, SizeEnd{ 1.0f };
+			Vec3 Size{ 1.0f };
+
+			Vec3 Velocity{ 0.0f };
+
+			Vec4 ColorBegin{ 1.0f }, ColorEnd{ 1.0f };
+			Vec4 Color{ 1.0f };
+
+			float Lifetime = 1.0f;
+			float LifeRemaining = 1.0f;
+
+			Vec2 UvOffset{ 0.0f };
+
+			bool bActive = false;
+		};
+
+		struct Impl;
+		Scope<Impl> m_Impl;
+
+		Ref<ParticleTemplate> m_ParticleTemplate;
 
 		EmitterSpec m_EmitterSpec;
 		std::vector<Particle> m_ParticlePool;
-		int32_t m_PoolIndex;
+		I32 m_PoolIndex;
 
-		uint32_t m_ActiveParticleCount = 0;
+		U32 m_ActiveParticleCount = 0;
 
 		/** Particle's spawn offset from owner entity's translation */
-		glm::vec3 m_PositionOffset{ 0.0f };
-		/** Entity that contains the ParticleSystemComponent or ParticleSystemPreviewComponent */
-		Entity m_OwnerEntity;
-		glm::vec3 m_OwnerLastPosition{ 0.0f };
+		Vec3 m_PositionOffset{ 0.0f };
+		
+		Vec3 m_OwnerLastPosition{ 0.0f };
 
 		/** This equals to Lifetime / (SubImageSize.x * SubImageSize.y) */
 		float m_UvAnimationInterval = 0.0f;
@@ -267,15 +265,5 @@ namespace ZeoEngine {
 #endif
 
 	};
-
-	struct ParticleTemplateAssetLoader final : AssetLoader<ParticleTemplateAssetLoader, ParticleTemplateAsset>
-	{
-		AssetHandle<ParticleTemplateAsset> load(const std::string& path) const
-		{
-			return ParticleTemplateAsset::Create(path);
-		}
-	};
-	
-	class ParticleTemplateAssetLibrary : public AssetLibrary<ParticleTemplateAssetLibrary, ParticleTemplateAsset, ParticleTemplateAssetLoader>{};
 
 }

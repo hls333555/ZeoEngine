@@ -9,12 +9,15 @@
 #include <shellapi.h> // NOTE: Include required windows.h before it
 
 #include "Engine/Core/Application.h"
-#include "Engine/Core/AssetManager.h"
+#include "Engine/Asset/AssetManager.h"
+#include "Engine/Utils/PathUtils.h"
 
 namespace ZeoEngine {
 
-	std::optional<std::string> FileDialogs::OpenFile()
+	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect)
 	{
+		std::vector<std::string> outPaths;
+
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
 		ZeroMemory(&ofn, sizeof(OPENFILENAME));
@@ -22,18 +25,35 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedFileFilter();
+		const std::string filterStr = GetSupportedFileFilter();
 		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
 		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER | (bAllowMultiSelect ? OFN_ALLOWMULTISELECT : 0);
 		if (GetOpenFileNameA(&ofn) == TRUE)
 		{
-			return ofn.lpstrFile;
+			auto p = ofn.lpstrFile;
+			const std::string basePath = p;
+			p += basePath.size() + 1;
+			if (*p == 0)
+			{
+				// There is only one string, being the full path to the file
+				outPaths.emplace_back(basePath.c_str());
+			}
+			else
+			{
+				// Multiple files follow the directory
+				while (*p != 0)
+				{
+					std::string fileName = p;
+					outPaths.emplace_back((basePath + "\\" + fileName).c_str());
+					p += fileName.size() + 1;
+				}
+			}
 		}
-		return {};
+		return outPaths;
 	}
 
-	std::optional<std::string> FileDialogs::SaveFile()
+	std::optional<std::string> FileDialogs::Save()
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -75,11 +95,17 @@ namespace ZeoEngine {
 		return ss.str();
 	}
 
-	void PlatformUtils::ShowInExplorer(const std::string& path)
+	void PlatformUtils::ShowInExplorer(const std::string& filepath)
 	{
 		std::wstringstream params;
-		params << "/select," << path.c_str();
+		params << "/select," << PathUtils::GetCanonicalPath(filepath).c_str(); // Use canonical path here, path separator must be "\\"
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
+	}
+
+	void PlatformUtils::OpenFile(const std::string& filepath)
+	{
+		std::string path = PathUtils::GetCanonicalPath(filepath); // Use canonical path here, path separator must be "\\"
+		ShellExecute(0, 0, std::wstring(path.begin(), path.end()).c_str(), 0, 0, SW_SHOW);
 	}
 
 }

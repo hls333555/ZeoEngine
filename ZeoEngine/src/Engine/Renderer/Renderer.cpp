@@ -1,48 +1,34 @@
 #include "ZEpch.h"
 #include "Engine/Renderer/Renderer.h"
 
-#include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 namespace ZeoEngine {
 
-	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
+	RendererData Renderer::s_Data;
 
 	void Renderer::Init()
 	{
-		ZE_PROFILE_FUNCTION();
-
 		RenderCommand::Init();
-		Renderer2D::Init();
 	}
 
 	void Renderer::Shutdown()
 	{
-		Renderer2D::Shutdown();
 	}
 
-	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+	void Renderer::OnWindowResize(U32 width, U32 height)
 	{
 		RenderCommand::SetViewport(0, 0, width, height);
 	}
 
-	void Renderer::BeginScene(OrthographicCamera& camera)
+	RendererStats& Renderer::GetStats()
 	{
-		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+		return s_Data.Stats;
 	}
 
-	void Renderer::EndScene()
+	void Renderer::ResetStats()
 	{
-
-	}
-
-	void Renderer::Submit(const Ref<Shader> shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
-	{
-		shader->Bind();
-		shader->SetMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
-		shader->SetMat4("u_Transform", transform);
-
-		vertexArray->Bind();
-		RenderCommand::DrawIndexed(vertexArray);
+		s_Data.Stats.Reset();
 	}
 
 }

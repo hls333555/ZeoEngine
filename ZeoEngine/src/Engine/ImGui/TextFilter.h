@@ -13,6 +13,12 @@ namespace ZeoEngine {
 	};
 
 	// Helper: Parse and apply text filters.
+	//	Filter usage:
+	//	""			display all lines
+	//	"xxx"		display lines containing "xxx"
+	//	"-xxx"		hide lines containing "xxx"
+	//	"xxx yyy"	display lines containing "xxx" and "yyy"
+	//	"xxx -yyy"	display lines containing "xxx" but not "yyy")"
 	struct TextFilter
 	{
 		// [Internal]
@@ -40,7 +46,7 @@ namespace ZeoEngine {
 		char                MinWordSize;    // Minimum number of characters before a word is used for matching, can help improve UX by avoiding mass matching against 1 or 2 characters
 
 		TextFilter(const char* default_filter = "", TextFilterMode default_filter_mode = TextFilterMode_And);
-		bool Draw(const char* label = "Filter (inc -exc)", const char* hint = "Search", float width = 0.0f);  // Helper calling InputText+Build
+		void Draw(const char* label = "Filter (inc -exc)", const char* hint = "Search", float width = 0.0f, ImGuiInputTextCallback inputCallback = 0, void* callbackData = nullptr);  // Helper calling InputText+Build
 		void DrawEmptyText();
 		bool PassFilter(const char* text, const char* text_end = NULL) const;
 		void Build();

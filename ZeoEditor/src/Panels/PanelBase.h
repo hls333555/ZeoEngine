@@ -7,14 +7,11 @@
 
 namespace ZeoEngine {
 
-	class EditorBase;
-
 	class PanelBase
 	{
 	public:
 		PanelBase() = delete;
-		PanelBase(const char* panelName, const Ref<EditorBase>& contextEditor);
-	protected:
+		explicit PanelBase(std::string panelName);
 		virtual ~PanelBase() = default;
 
 	public:
@@ -24,39 +21,39 @@ namespace ZeoEngine {
 		void OnImGuiRender();
 		void OnEvent(Event& e);
 
-		template<typename T = EditorBase>
-		Ref<T> GetContextEditor()
-		{
-			if constexpr (std::is_same<T, EditorBase>::value)
-			{
-				return m_ContextEditor;
-			}
-			else
-			{
-				return std::dynamic_pointer_cast<T>(m_ContextEditor);
-			}
-		}
+		const std::string& GetPanelName() const { return m_PanelName; }
+
+		void SetFlags(ImGuiWindowFlags flags) { m_PanelSpec.WindowFlags = flags; }
+		void SetDisableClose(bool bDisable) { m_PanelSpec.bDisableClose = bDisable; }
+		void SetPadding(const Vec2& padding) { m_PanelSpec.Padding = padding; }
+		void SetInitialSize(const Vec2& size) { m_PanelSpec.InitialSize = size; }
 
 		bool* GetShowPtr() { return &m_bShow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
 
-		void Open();
+		void FocusPanel();
+
+		void Toggle(bool bShow);
+
 
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
+		virtual void ProcessDockspaceRender() {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
 
-	protected:
-		PanelSpec m_PanelSpec;
+		virtual std::string GetPanelTitle() const { return m_PanelName; }
+
+		virtual void OnPanelOpen() {}
 
 	private:
 		std::string m_PanelName;
-		Ref<EditorBase> m_ContextEditor;
+		PanelSpec m_PanelSpec;
 
 		bool m_bShow = true;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;
+		bool m_bShouldFocusPanel = false;
 	};
 
 }

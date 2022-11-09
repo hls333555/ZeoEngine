@@ -1,44 +1,39 @@
 #pragma once
 
-#include <entt.hpp>
+#include <glm/glm.hpp>
 
 namespace ZeoEngine {
 
-	using AssetTypeId = uint32_t;
+	using U8 = uint8_t;
+	using U16 = uint16_t;
+	using U32 = uint32_t;
+	using U64 = uint64_t;
 
-	template<typename AssetClass>
-	using AssetHandle = entt::resource_handle<AssetClass>;
+	using I8 = int8_t;
+	using I16 = int16_t;
+	using I32 = int32_t;
+	using I64 = int64_t;
 
-	template<typename AssetLoaderClass, typename AssetClass>
-	using AssetLoader = entt::resource_loader<AssetLoaderClass, AssetClass>;
+	using SizeT = size_t;
 
-	template<typename T>
-	bool operator==(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
+	using Vec2 = glm::vec2;
+	using Vec3 = glm::vec3;
+	using UVec3 = glm::uvec3;
+	using Vec4 = glm::vec4;
+
+	using Mat2 = glm::mat2;
+	using Mat3 = glm::mat3;
+	using Mat4 = glm::mat4;
+
+	enum class FieldType
 	{
-		return (!lhs && !rhs) || (lhs && rhs && std::addressof(*lhs) == std::addressof(*rhs));
-	}
-	template<typename T>
-	bool operator!=(const AssetHandle<T>& lhs, const AssetHandle<T>& rhs)
-	{
-		return !(lhs == rhs);
-	}
-
-	class AssetPath
-	{
-	public:
-		AssetPath() = default;
-		AssetPath(const char* path);
-		AssetPath(const std::string& path);
-
-		const std::string& GetPath() const { return m_RelativePath; }
-		std::string GetName() const;
-
-		bool IsEmpty() { return m_RelativePath.empty(); }
-
-		uint32_t ToId() const { return entt::hashed_string{ m_RelativePath.c_str() }; }
-
-	private:
-		std::string m_RelativePath;
+		None = 0,
+		Bool, I8, U8, I16, U16, I32, U32, I64, U64,
+		Float, Double,
+		Vec2, Vec3, Vec4,
+		Enum, String,
+		SeqCon, AssCon,
+		Asset, Entity,
 	};
 
 }

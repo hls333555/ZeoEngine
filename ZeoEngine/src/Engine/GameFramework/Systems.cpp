@@ -1,19 +1,467 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Systems.h"
 
+#include <box2d/b2_world.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_fixture.h>
+#include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_circle_shape.h>
+
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/SceneRenderer.h"
+#include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/GameFramework/World.h"
+#include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
 
-	ISystem::ISystem(Scene* scene)
-		: m_Scene(scene)
+	ISystem::ISystem(WorldBase* world)
+		: m_World(world)
 	{
 	}
 
-	void RenderSystem::OnUpdate(DeltaTime dt)
+	// TODO: Move to class static functions
+	static void OnCameraComponentAdded(Scene& scene, entt::entity e)
 	{
-		ForEachView<ParticleSystemComponent>([dt](auto entity, auto& particleComp)
+		Entity entity{ e, scene.shared_from_this() };
+		auto& billboardComp = entity.AddComponent<BillboardComponent>();
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
+	}
+
+	static void OnCameraComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		entity.RemoveComponentIfExist<BillboardComponent>();
+	}
+
+	static void OnMeshRendererComponentAdded(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		const auto& meshComp = entity.GetComponent<MeshRendererComponent>();
+		// Invoke update callback for ctor with MeshAsset provided but not for copy ctor
+		if (meshComp.MeshAsset && !meshComp.Instance)
+		{
+			entity.PatchComponentSingleField<MeshRendererComponent>("MeshAsset"_hs);
+		}
+		auto& boundsComp = entity.GetComponent<BoundsComponent>();
+		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshRendererComponent>::value()] = [](Entity entity)
+		{
+			const auto& transformComp = entity.GetComponent<TransformComponent>();
+			const auto& meshComp = entity.GetComponent<MeshRendererComponent>();
+			const auto mesh = AssetLibrary::LoadAsset<Mesh>(meshComp.MeshAsset);
+			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		};
+	}
+
+	static void OnMeshRendererComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		auto& meshComp = entity.GetComponent<MeshRendererComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "MeshAsset"_hs)
+		{
+			auto& meshInstance = meshComp.Instance;
+			const auto mesh = AssetLibrary::LoadAsset<Mesh>(meshComp.MeshAsset);
+			if (mesh)
+			{
+				// Copy default materials
+				// For deserialization phase, materials will be deserialized and overwritten later
+				meshComp.MaterialAssets = mesh->GetDefaultMaterialAssets();
+				meshInstance = mesh->CreateInstance(scene);
+			}
+			else
+			{
+				meshInstance = nullptr;
+				meshComp.MaterialAssets.clear();
+			}
+			// Update bounds immediately so that focusing after loading should work properly
+			entity.UpdateBounds();
+		}
+	}
+
+	static void OnMeshRendererComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		if (entity.HasComponent<BoundsComponent>())
+		{
+			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+			{
+				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<MeshRendererComponent>::value());
+			});
+		}
+	}
+
+	static void OnMeshDetailComponentAdded(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		auto& boundsComp = entity.GetComponent<BoundsComponent>();
+		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshDetailComponent>::value()] = [](Entity entity)
+		{
+			const auto& transformComp = entity.GetComponent<TransformComponent>();
+			const auto& meshComp = entity.GetComponent<MeshDetailComponent>();
+			const auto& mesh = meshComp.LoadedMesh;
+			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+		};
+	}
+
+	static void OnMeshDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		auto& meshComp = entity.GetComponent<MeshDetailComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "LoadedMesh"_hs)
+		{
+			meshComp.Instance = meshComp.LoadedMesh->CreateInstance(scene);
+			// Update bounds immediately so that focusing after loading should work properly
+			entity.UpdateBounds();
+		}
+	}
+
+	static void OnMeshDetailComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		if (entity.HasComponent<BoundsComponent>())
+		{
+			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+			{
+				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<MeshDetailComponent>::value());
+			});
+		}
+	}
+
+	static void OnMaterialDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		const auto& materialComp = entity.GetComponent<MaterialDetailComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ShaderAsset"_hs)
+		{
+			materialComp.LoadedMaterial->NotifyShaderAssetChange();
+		}
+	}
+
+	static void OnTextureDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		const auto& textureComp = entity.GetComponent<TextureDetailComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "SRGB"_hs || changeComp.FieldID == "GenerateMipmaps"_hs)
+		{
+			textureComp.LoadedTexture->Invalidate();
+		}
+		else if (changeComp.FieldID == "SamplerType"_hs)
+		{
+			textureComp.LoadedTexture->ChangeSampler(textureComp.SamplerType);
+		}
+	}
+
+	static void OnScriptComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ClassName"_hs)
+		{
+			ScriptEngine::OnScriptClassChanged(entity);
+		}
+	}
+
+	static void OnScriptComponentDestroy(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		ScriptEngine::OnDestroyEntity(entity);
+	}
+
+	static void OnDirectionalLightComponentAdded(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		auto& billboardComp = entity.AddComponent<BillboardComponent>();
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
+		entity.PatchComponent<BoundsComponent>([](BoundsComponent boundsComp)
+		{
+			boundsComp.BoundsCalculationFuncs[entt::type_hash<DirectionalLightComponent>::value()] = [](Entity entity)
+			{
+				const auto& transformComp = entity.GetComponent<TransformComponent>();
+				const Sphere sphere{ transformComp.Translation, 0.0f };
+				return sphere;
+			};
+		});
+	}
+
+	static void OnDirectionalLightComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		auto& lightComp = entity.GetComponent<DirectionalLightComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ShadowType"_hs)
+		{
+			const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(scene.GetContext(), "ScreenSpaceShadow");
+			const auto shadowShader = shadowPass->GetShadowShader();
+			shadowShader->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(lightComp.ShadowType));
+		}
+	}
+
+	static void OnDirectionalLightComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		entity.RemoveComponentIfExist<BillboardComponent>();
+		if (entity.HasComponent<BoundsComponent>())
+		{
+			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+			{
+				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<DirectionalLightComponent>::value());
+			});
+		}
+	}
+
+	static void OnPointLightComponentAdded(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		auto& billboardComp = entity.AddComponent<BillboardComponent>();
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
+		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+		{
+			boundsComp.BoundsCalculationFuncs[entt::type_hash<PointLightComponent>::value()] = [](Entity entity)
+			{
+				const auto& transformComp = entity.GetComponent<TransformComponent>();
+				const auto& lightComp = entity.GetComponent<PointLightComponent>();
+				const Sphere sphere{ transformComp.Translation, lightComp.Range };
+				return sphere;
+			};
+		});		
+	}
+
+	static void OnPointLightComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		auto& lightComp = entity.GetComponent<PointLightComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ShadowType"_hs)
+		{
+			// TODO:
+		}
+		else if (changeComp.FieldID == "Range"_hs)
+		{
+			entity.PatchComponent<BoundsComponent>();
+		}
+	}
+
+	static void OnPointLightComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		entity.RemoveComponentIfExist<BillboardComponent>();
+		if (entity.HasComponent<BoundsComponent>())
+		{
+			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+			{
+				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<PointLightComponent>::value());
+			});
+		}
+	}
+
+	static void OnSpotLightComponentAdded(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		auto& billboardComp = entity.AddComponent<BillboardComponent>();
+		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
+		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+		{
+			boundsComp.BoundsCalculationFuncs[entt::type_hash<SpotLightComponent>::value()] = [](Entity entity)
+			{
+			   const auto& transformComp = entity.GetComponent<TransformComponent>();
+			   const auto& lightComp = entity.GetComponent<SpotLightComponent>();
+			   const Sphere sphere{ transformComp.Translation, lightComp.Range * 0.5f };
+			   return sphere;
+			};
+		});
+	}
+
+	static void OnSpotLightComponentFieldChanged(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		auto& lightComp = entity.GetComponent<SpotLightComponent>();
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ShadowType"_hs)
+		{
+			// TODO:
+		}
+		else if (changeComp.FieldID == "Range"_hs)
+		{
+			entity.PatchComponent<BoundsComponent>();
+		}
+	}
+
+	static void OnSpotLightComponentDestroy(Scene& scene, entt::entity e)
+	{
+		Entity entity{ e, scene.shared_from_this() };
+		entity.RemoveComponentIfExist<BillboardComponent>();
+		if (entity.HasComponent<BoundsComponent>())
+		{
+			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
+			{
+				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<SpotLightComponent>::value());
+			});
+		}	
+	}
+
+	void LevelObserverSystem::OnBind()
+	{
+		BindOnComponentAdded<CameraComponent, &OnCameraComponentAdded>();
+		BindOnComponentDestroy<CameraComponent, &OnCameraComponentDestroy>();
+
+		BindOnComponentAdded<MeshRendererComponent, &OnMeshRendererComponentAdded>();
+		BindOnComponentUpdated<MeshRendererComponent, &OnMeshRendererComponentFieldChanged>();
+		BindOnComponentDestroy<MeshRendererComponent, &OnMeshRendererComponentDestroy>();
+
+		BindOnComponentUpdated<ScriptComponent, &OnScriptComponentFieldChanged>();
+		BindOnComponentDestroy<ScriptComponent, &OnScriptComponentDestroy>();
+
+		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
+		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
+		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
+
+		BindOnComponentAdded<PointLightComponent, &OnPointLightComponentAdded>();
+		BindOnComponentUpdated<PointLightComponent, &OnPointLightComponentFieldChanged>();
+		BindOnComponentDestroy<PointLightComponent, &OnPointLightComponentDestroy>();
+
+		BindOnComponentAdded<SpotLightComponent, &OnSpotLightComponentAdded>();
+		BindOnComponentUpdated<SpotLightComponent, &OnSpotLightComponentFieldChanged>();
+		BindOnComponentDestroy<SpotLightComponent, &OnSpotLightComponentDestroy>();
+
+		m_CameraObserver = CreateObserver(entt::collector.update<CameraComponent>());
+		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
+	}
+
+	void LevelObserverSystem::OnUnbind()
+	{
+		UnbindOnComponentAdded<CameraComponent>();
+		UnbindOnComponentDestroy<CameraComponent>();
+
+		UnbindOnComponentAdded<MeshRendererComponent>();
+		UnbindOnComponentUpdated<MeshRendererComponent>();
+		UnbindOnComponentDestroy<MeshRendererComponent>();
+
+		UnbindOnComponentUpdated<ScriptComponent>();
+		UnbindOnComponentDestroy<ScriptComponent>();
+
+		UnbindOnComponentAdded<DirectionalLightComponent>();
+		UnbindOnComponentUpdated<DirectionalLightComponent>();
+		UnbindOnComponentDestroy<DirectionalLightComponent>();
+
+		UnbindOnComponentAdded<PointLightComponent>();
+		UnbindOnComponentUpdated<PointLightComponent>();
+		UnbindOnComponentDestroy<PointLightComponent>();
+
+		UnbindOnComponentAdded<SpotLightComponent>();
+		UnbindOnComponentUpdated<SpotLightComponent>();
+		UnbindOnComponentDestroy<SpotLightComponent>();
+
+		m_CameraObserver->disconnect();
+		m_BoundsObserver->disconnect();
+	}
+
+	void LevelObserverSystem::OnUpdate(Scene& scene)
+	{
+		m_CameraObserver->each([&scene](const entt::entity e)
+		{
+			const Entity entity{ e, scene.shared_from_this() };
+			auto& cameraComp = entity.GetComponent<CameraComponent>();
+			cameraComp.Camera.RecalculateProjection();
+		});
+
+		m_BoundsObserver->each([&scene](const auto e)
+		{
+			const Entity entity{ e, scene.shared_from_this() };
+			entity.UpdateBounds();
+		});
+	}
+
+	void MeshPreviewObserverSystem::OnBind()
+	{
+		BindOnComponentAdded<MeshDetailComponent, &OnMeshDetailComponentAdded>();
+		BindOnComponentUpdated<MeshDetailComponent, &OnMeshDetailComponentFieldChanged>();
+		BindOnComponentDestroy<MeshDetailComponent, &OnMeshDetailComponentDestroy>();
+
+		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
+		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
+		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
+
+		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
+	}
+
+	void MeshPreviewObserverSystem::OnUnbind()
+	{
+		UnbindOnComponentAdded<MeshDetailComponent>();
+		UnbindOnComponentUpdated<MeshDetailComponent>();
+		UnbindOnComponentDestroy<MeshDetailComponent>();
+
+		UnbindOnComponentAdded<DirectionalLightComponent>();
+		UnbindOnComponentUpdated<DirectionalLightComponent>();
+		UnbindOnComponentDestroy<DirectionalLightComponent>();
+
+		m_BoundsObserver->disconnect();
+	}
+
+	void MeshPreviewObserverSystem::OnUpdate(Scene& scene)
+	{
+		m_BoundsObserver->each([&scene](const auto e)
+		{
+			const Entity entity{ e, scene.shared_from_this() };
+			entity.UpdateBounds();
+		});
+	}
+
+		void MaterialPreviewObserverSystem::OnBind()
+	{
+		BindOnComponentUpdated<MaterialDetailComponent, &OnMaterialDetailComponentFieldChanged>();
+
+		BindOnComponentAdded<MeshRendererComponent, &OnMeshRendererComponentAdded>();
+		BindOnComponentUpdated<MeshRendererComponent, &OnMeshRendererComponentFieldChanged>();
+		BindOnComponentDestroy<MeshRendererComponent, &OnMeshRendererComponentDestroy>();
+
+		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
+		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
+		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
+
+		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
+	}
+
+	void MaterialPreviewObserverSystem::OnUnbind()
+	{
+		UnbindOnComponentUpdated<MaterialDetailComponent>();
+
+		UnbindOnComponentAdded<MeshRendererComponent>();
+		UnbindOnComponentUpdated<MeshRendererComponent>();
+		UnbindOnComponentDestroy<MeshRendererComponent>();
+
+		UnbindOnComponentAdded<DirectionalLightComponent>();
+		UnbindOnComponentUpdated<DirectionalLightComponent>();
+		UnbindOnComponentDestroy<DirectionalLightComponent>();
+
+		m_BoundsObserver->disconnect();
+	}
+
+	void MaterialPreviewObserverSystem::OnUpdate(Scene& scene)
+	{
+		m_BoundsObserver->each([&scene](const auto e)
+		{
+			const Entity entity{ e, scene.shared_from_this() };
+			entity.UpdateBounds();
+		});
+	}
+
+	void TexturePreviewObserverSystem::OnBind()
+	{
+		BindOnComponentUpdated<TextureDetailComponent, &OnTextureDetailComponentFieldChanged>();
+	}
+
+	void TexturePreviewObserverSystem::OnUnbind()
+	{
+		UnbindOnComponentUpdated<TextureDetailComponent>();
+	}
+
+	void ParticleUpdateSystem::OnUpdateEditor(DeltaTime dt)
+	{
+		GetScene()->ForEachComponentView<ParticleSystemComponent>([dt](auto e, auto& particleComp)
 		{
 			if (particleComp.Instance)
 			{
@@ -22,139 +470,157 @@ namespace ZeoEngine {
 		});
 	}
 
-	void RenderSystem::OnRenderEditor(const EditorCamera& camera)
+	void ParticleUpdateSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		Renderer2D::BeginScene(camera);
-		{
-			OnRender();
-		}
-		Renderer2D::EndScene();
+		OnUpdateEditor(dt);
 	}
 
-	void RenderSystem::OnRenderRuntime()
+	void ParticlePreviewUpdateSystem::OnUpdateEditor(DeltaTime dt)
 	{
-		Camera* mainCamera = nullptr;
-		glm::mat4 cameraTransform;
+		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([dt](auto e, auto& particlePreviewComp)
 		{
-			auto cameraView = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
-			for (auto entity : cameraView)
+			if (particlePreviewComp.Instance)
 			{
-				auto [transformComp, cameraComp] = cameraView.get<TransformComponent, CameraComponent>(entity);
-				if (cameraComp.bIsPrimary)
-				{
-					mainCamera = &cameraComp.Camera;
-					cameraTransform = transformComp.GetTransform();
-					break;
-				}
-			}
-		}
-		if (mainCamera)
-		{
-			Renderer2D::BeginScene(*mainCamera, cameraTransform);
-			{
-				OnRender();
-			}
-			Renderer2D::EndScene();
-		}
-	}
-
-	void RenderSystem::OnRender()
-	{
-		auto spriteGroup = m_Scene->m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-
-		// Sort sprite entities
-		spriteGroup.sort([&](const entt::entity lhs, const entt::entity rhs)
-		{
-			const auto& lSpriteComp = spriteGroup.get<SpriteRendererComponent>(lhs);
-			const auto& rSpriteComp = spriteGroup.get<SpriteRendererComponent>(rhs);
-			return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
-		});
-
-		// Render sprites
-		for (auto entity : spriteGroup)
-		{
-			auto [transformComp, spriteComp] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<int32_t>(entity));
-		}
-
-		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
-		{
-			if (particleComp.Instance)
-			{
-				particleComp.Instance->OnRender();
+				particlePreviewComp.Instance->OnUpdate(dt);
 			}
 		});
 	}
 
-	static void RemoveParticleSystemInstance(ParticleSystemComponent& particleComp)
+	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		if (particleComp.Template)
+		OnUpdateEditor(dt);		
+	}
+
+	void ScriptSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		GetScene()->ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
 		{
-			particleComp.Template->RemoveParticleSystemInstance(particleComp.Instance);
+			const Entity entity{ e, GetScene() };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		});
+	}
+
+	void ScriptSystem::OnRuntimeStart()
+	{
+		ScriptEngine::SetSceneContext(GetScene());
+		GetScene()->ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
+		{
+			const Entity entity{ e, GetScene() };
+			ScriptEngine::InstantiateEntityClass(entity);
+			ScriptEngine::OnCreateEntity(entity);
+		});
+	}
+
+	void ScriptSystem::OnRuntimeStop()
+	{
+		ScriptEngine::SetSceneContext(GetScene());
+	}
+
+	void PhysicsSystem::OnUpdateRuntime(DeltaTime dt)
+	{
+		
+	}
+
+	void PhysicsSystem::OnRuntimeStart()
+	{
+
+	}
+
+	void PhysicsSystem::OnRuntimeStop()
+	{
+
+	}
+
+	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
+	{
+		const I32 velocityIterations = 6;
+		const I32 positionIterations = 2;
+		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
+
+		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		{
+			const Entity entity = { e, GetScene() };
+			auto& transformComp = entity.GetComponent<TransformComponent>();
+
+			// Retrieve transform from Box2D
+			const b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
+			const auto& position = body->GetPosition();
+			transformComp.Translation.x = position.x;
+			transformComp.Translation.y = position.y;
+			transformComp.Rotation.z = glm::degrees(body->GetAngle());
+		});
+	}
+
+	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
+	{
+		switch (bodyType)
+		{
+			case Rigidbody2DComponent::BodyType::Static:	return b2_staticBody;
+			case Rigidbody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
+			case Rigidbody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
 		}
+
+		ZE_CORE_ASSERT(false, "Unknown body type!");
+		return b2_staticBody;
 	}
 
-	void RenderSystem::OnDestroy()
+	void PhysicsSystem2D::OnRuntimeStart()
 	{
-		ForEachView<ParticleSystemComponent>([](auto entity, auto& particleComp)
+		const b2Vec2 gravity = { 0.0f, -9.8f };
+		m_PhysicsWorld = new b2World(gravity);
+		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
 		{
-			RemoveParticleSystemInstance(particleComp);
-		});
-	}
+			const Entity entity{ e, GetScene() };
+			const auto& transformComp = entity.GetComponent<TransformComponent>();
 
-	void ParticlePreviewRenderSystem::OnUpdate(DeltaTime dt)
-	{
-		ForEachView<ParticleSystemPreviewComponent>([dt](auto entity, auto& particlePreviewComp)
-		{
-			particlePreviewComp.Instance->OnUpdate(dt);
-		});
-	}
+			b2BodyDef bodyDef;
+			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
+			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
+			bodyDef.angle = glm::radians(transformComp.Rotation.z);
 
-	void ParticlePreviewRenderSystem::OnRender(const EditorCamera& camera)
-	{
-		Renderer2D::BeginScene(camera);
-		{
-			ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
+			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+			body->SetFixedRotation(rb2dComp.bFixedRotation);
+			rb2dComp.RuntimeBody = body;
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
-				particlePreviewComp.Instance->OnRender();
-			});
-		}
-		Renderer2D::EndScene();
-	}
+				const auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
 
-	void ParticlePreviewRenderSystem::OnDestroy()
-	{
-		ForEachView<ParticleSystemPreviewComponent>([](auto entity, auto& particlePreviewComp)
-		{
-			RemoveParticleSystemInstance(particlePreviewComp);
-		});
-	}
+				b2PolygonShape boxShape;
+				boxShape.SetAsBox(bc2dComp.Size.x * transformComp.Scale.x, bc2dComp.Size.y * transformComp.Scale.y);
 
-	void NativeScriptSystem::OnUpdate(DeltaTime dt)
-	{
-		ForEachView<NativeScriptComponent>([=](auto entity, auto& nativeScriptComp)
-		{
-			// TODO: Move to OnBeginPlay
-			if (!nativeScriptComp.Instance)
-			{
-				nativeScriptComp.Instance = nativeScriptComp.InstantiateScript();
-				nativeScriptComp.Instance->m_Entity = Entity{ entity, m_Scene };
-				nativeScriptComp.Instance->OnCreate();
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &boxShape;
+				fixtureDef.density = bc2dComp.Density;
+				fixtureDef.friction = bc2dComp.Friction;
+				fixtureDef.restitution = bc2dComp.Restitution;
+				fixtureDef.restitutionThreshold = bc2dComp.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
 			}
 
-			nativeScriptComp.Instance->OnUpdate(dt);
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				const auto& cc2dComp = entity.GetComponent<CircleCollider2DComponent>();
+
+				b2CircleShape circleShape;
+				circleShape.m_p.Set(cc2dComp.Offset.x, cc2dComp.Offset.y);
+				circleShape.m_radius = cc2dComp.Radius;
+
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &circleShape;
+				fixtureDef.density = cc2dComp.Density;
+				fixtureDef.friction = cc2dComp.Friction;
+				fixtureDef.restitution = cc2dComp.Restitution;
+				fixtureDef.restitutionThreshold = cc2dComp.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
 		});
 	}
 
-	void NativeScriptSystem::OnEvent(Event& e)
+	void PhysicsSystem2D::OnRuntimeStop()
 	{
-		ForEachView<NativeScriptComponent>([&e](auto entity, auto& nativeScriptComp)
-		{
-			if (nativeScriptComp.Instance)
-			{
-				nativeScriptComp.Instance->OnEvent(e);
-			}
-		});
+		delete m_PhysicsWorld;
+		m_PhysicsWorld = nullptr;
 	}
 
 }

@@ -3,14 +3,11 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
-#include "Engine/Utils/PathUtils.h"
-#include "Engine/Core/Serializer.h"
+#include "Engine/Asset/AssetLibrary.h"
 
 namespace ZeoEngine {
 
-	Ref<Texture2D> Texture2D::s_DefaultBackgroundTexture;
-
-	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
+	Ref<Texture2D> Texture2D::Create(U32 width, U32 height, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -18,14 +15,63 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(width, height);
+				return CreateRef<OpenGLTexture2D>(width, height, format, bindingSlot, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::string& path, bool bAutoGenerateMipmaps)
+	Ref<Texture2D> Texture2D::Create(U32 hexColor, bool bIsSRGB, std::optional<U32> bindingSlot)
+	{
+		auto texture = Create(1, 1, bIsSRGB ? TextureFormat::SRGB8 : TextureFormat::RGB8, bindingSlot);
+		texture->SetData(&hexColor, 3);
+		return texture;
+	}
+
+	Ref<Texture2D> Texture2D::Create(std::string resourcePath, std::optional<U32> bindingSlot)
+	{
+		Ref<Texture2D> texture;
+		switch (Renderer::GetAPI())
+		{
+			case RendererAPI::API::None:
+				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				texture = CreateRef<OpenGLTexture2D>(std::move(resourcePath), bindingSlot);
+				break;
+			default:
+				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
+				return nullptr;
+		}
+
+		return texture;
+	}
+
+	Ref<Texture2D> Texture2D::GetWhiteTexture()
+	{
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0xffffff);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
+	}
+
+	Ref<Texture2D> Texture2D::GetDefaultMaterialTexture()
+	{
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0x808080);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
+	}
+
+	Ref<Texture2D> Texture2D::GetAssetBackgroundTexture()
+	{
+		static AssetHandle handle = AssetLibrary::CreateMemoryOnlyAsset<Texture2D>(0x151414);
+		return AssetLibrary::LoadAsset<Texture2D>(handle);
+	}
+
+	Ref<Texture2D> Texture2D::GetCheckerboardTexture()
+	{
+		return AssetLibrary::LoadAsset<Texture2D>("assets/textures/Checkerboard.png.zasset");
+	}
+
+	Ref<Texture2DArray> Texture2DArray::Create(U32 width, U32 height, U32 arraySize, TextureFormat format, std::optional<U32> bindingSlot, SamplerType type)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -33,56 +79,11 @@ namespace ZeoEngine {
 				ZE_CORE_ASSERT(false, "RendererAPI is currently not supported!");
 				return nullptr;
 			case RendererAPI::API::OpenGL:
-				return CreateRef<OpenGLTexture2D>(path, bAutoGenerateMipmaps);
+				return CreateRef<OpenGLTexture2DArray>(width, height, arraySize, format, bindingSlot, type);
 			default:
 				ZE_CORE_ASSERT(false, "Unknown RendererAPI!");
 				return nullptr;
 		}
-	}
-
-	Texture2DAsset::Texture2DAsset(const std::string& path)
-		: AssetBase(path)
-	{
-		Reload();
-	}
-
-	Ref<Texture2DAsset> Texture2DAsset::Create(const std::string& path)
-	{
-		// A way to allow std::make_shared() to access Texture2DAsset's private constructor
-		class Texture2DAssetEnableShared : public Texture2DAsset
-		{
-		public:
-			explicit Texture2DAssetEnableShared(const std::string& path)
-				: Texture2DAsset(path) {}
-		};
-
-		return CreateRef<Texture2DAssetEnableShared>(path);
-	}
-
-	void Texture2DAsset::Reload()
-	{
-		auto texturePath = PathUtils::GetResourcePathFromAssetPath(GetPath());
-		ZE_CORE_ASSERT(PathUtils::DoesPathExist(texturePath));
-		m_Texture = Texture2D::Create(texturePath);
-		Deserialize(); // Do not call it in constructor if it contains shared_from_this()
-	}
-
-	void Texture2DAsset::Serialize(const std::string& path)
-	{
-		if (path.empty()) return;
-
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-		ImportableAssetSerializer::Serialize(GetPath(), TypeId(), {}); // TODO: Update component instance here
-	}
-
-	void Texture2DAsset::Deserialize()
-	{
-		if (GetPath().empty()) return;
-
-		ImportableAssetSerializer::Deserialize(GetPath(), TypeId(), {});  // TODO: Update component instance here
 	}
 
 }

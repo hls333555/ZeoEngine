@@ -15,13 +15,14 @@ namespace ZeoEngine {
 
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
 		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override;
+		virtual void SetIndexBufferData(const void* data, U32 size) const override;
 
 		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const override { return m_VBOs; }
 		virtual const Ref<IndexBuffer>& GetIndexBuffer() const override { return m_IBO; }
 
 	private:
-		uint32_t m_RendererID;
-		uint32_t m_VertexBufferIndex = 0;
+		U32 m_RendererID;
+		U32 m_VertexBufferIndex = 0;
 		std::vector<Ref<VertexBuffer>> m_VBOs;
 		Ref<IndexBuffer> m_IBO;
 

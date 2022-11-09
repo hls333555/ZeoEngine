@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Engine/GameFramework/EngineLayer.h"
+#include "Engine/Core/Layer.h"
 
 #include "Engine/Events/Event.h"
 
 namespace ZeoEngine {
 
-	class EditorLayer : public EngineLayer
+	class Editor;
+
+	class EditorLayer : public Layer
 	{
 	public:
 		EditorLayer();
@@ -15,6 +17,9 @@ namespace ZeoEngine {
 		virtual void OnUpdate(DeltaTime dt) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
+
+	private:
+		Scope<Editor> m_Editor;
 	};
 
 }

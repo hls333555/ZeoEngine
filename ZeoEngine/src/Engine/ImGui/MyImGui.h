@@ -1,6 +1,9 @@
 #pragma once
 
 #include <imgui.h>
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include <imgui_internal.h>
 
 namespace ImGui {
@@ -22,33 +25,19 @@ namespace ImGui {
 	IMGUI_API bool TransparentSmallButton(const char* label);
 	IMGUI_API bool TransparentButton(const char* label, const ImVec2& size = ImVec2(0, 0));
 	/** This button does not contain label text, but it reserves space for 2 lines of wrapped text */
-	IMGUI_API bool TileImageButton(ImTextureID user_texture_id, bool bIsDisabled, const ImVec2& size, float rounding, bool bIsSelected, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
-	IMGUI_API bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bIsDisabled, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col);
+	IMGUI_API bool TileImageButton(ImTextureID user_texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), int frame_padding = -1, const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
+	IMGUI_API bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& tint_col);
 
 	IMGUI_API void HelpMarker(const char* desc);
-
-	IMGUI_API ImRect GetWindowWorkRect();
 
 	IMGUI_API ImVec2 GetFramePadding();
 
 	IMGUI_API void VSplitter(const char* str_id, ImVec2* size);
 
-	IMGUI_API void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4 & border_col = ImVec4(0, 0, 0, 0));
+	IMGUI_API void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4 & border_col = ImVec4(0, 0, 0, 0), ImDrawFlags flags = 0);
 
 	IMGUI_API void AssetThumbnail(ImTextureID thumbnailTextureID, float thumbnailSize, float rounding, bool bShouldDrawBackground, ImTextureID backgroundTextureID = nullptr);
-}
 
-namespace ZeoEngine {
-	
-	struct ImVec2Data
-	{
-		ImVec2 Data;
-		ImGuiCond Condition{ ImGuiCond_FirstUseEver };
-
-		bool operator==(const ImVec2Data& other) const
-		{
-			return Data.x == other.Data.x && Data.y == other.Data.y && Condition == other.Condition;
-		}
-	};
-
+	/** Version that modifies the hightlight style for drop target. */
+	IMGUI_API const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding = 0.0f, ImGuiDragDropFlags flags = 0);
 }

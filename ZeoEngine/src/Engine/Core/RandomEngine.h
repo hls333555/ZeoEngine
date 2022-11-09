@@ -25,14 +25,14 @@ namespace ZeoEngine {
 			return s_Distribution(s_RandomEngine) * (upper - lower) + lower;
 		}
 		/** Returns a random int number in [0, upper). */
-		static int32_t RandInt(int32_t upper)
+		static I32 RandInt(I32 upper)
 		{
-			return upper > 0 ? glm::min(static_cast<int32_t>(glm::trunc(RandFloat() * upper)), upper - 1) : 0;
+			return upper > 0 ? glm::min(static_cast<I32>(glm::trunc(RandFloat() * upper)), upper - 1) : 0;
 		}
 		/** Returns a random int number in [lower, upper]. */
-		static int32_t RandIntInRange(int32_t lower, int32_t upper)
+		static I32 RandIntInRange(I32 lower, I32 upper)
 		{
-			const int32_t range = (upper - lower) + 1;
+			const I32 range = (upper - lower) + 1;
 			return lower + RandInt(range);
 		}
 

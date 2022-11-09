@@ -10,8 +10,8 @@ namespace ZeoEngine {
 	{
 		PanelBase::OnAttach();
 
-		m_PanelSpec.WindowFlags = ImGuiWindowFlags_NoCollapse;
-		m_PanelSpec.Padding = ImGui::GetStyle().WindowPadding;
+		SetFlags(ImGuiWindowFlags_NoCollapse);
+		SetPadding(ImGui::GetStyle().WindowPadding);
 	}
 
 	void PreferencesPanel::ProcessRender()

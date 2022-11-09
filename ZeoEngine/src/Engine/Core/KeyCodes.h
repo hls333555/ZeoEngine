@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Engine/Core/EngineTypes.h"
+
 namespace ZeoEngine {
 
-	using KeyCode = uint16_t;
+	using KeyCode = U16;
 
 	namespace Key
 	{

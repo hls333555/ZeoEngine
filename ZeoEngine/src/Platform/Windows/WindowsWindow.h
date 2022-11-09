@@ -4,8 +4,6 @@
 
 #include "Engine/Renderer/GraphicsContext.h"
 
-#include <GLFW/glfw3.h>
-
 namespace ZeoEngine {
 
 	class WindowsWindow : public Window
@@ -14,8 +12,10 @@ namespace ZeoEngine {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		virtual uint32_t GetWidth() const override { return m_Data.Width; }
-		virtual uint32_t GetHeight() const override { return m_Data.Height; }
+		virtual U32 GetWidth() const override { return m_Data.Width; }
+		virtual U32 GetHeight() const override { return m_Data.Height; }
+
+		virtual float GetTimeInSeconds() const override;
 
 		virtual void OnUpdate() override;
 
@@ -31,13 +31,13 @@ namespace ZeoEngine {
 		virtual void Shutdown();
 
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_Window = nullptr;
 		Scope<GraphicsContext> m_Context;
 
 		struct WindowData
 		{
 			std::string Title;
-			uint32_t Width, Height;
+			U32 Width, Height;
 			bool bVSync;
 
 			EventCallbackFn EventCallback;

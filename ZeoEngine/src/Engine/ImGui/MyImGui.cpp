@@ -1,15 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/ImGui/MyImGui.h"
 
-#include <imgui_internal.h>
 #include <IconsFontAwesome5.h>
 
 namespace ImGui {
-
-	static ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
-	static ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
-	static ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs) { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
-	static ImVec2 operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
 
 	void TextCentered(const char* fmt, ...)
 	{
@@ -115,7 +109,7 @@ namespace ImGui {
 		BeginGroup();
 		PushID(label);
 		PushMultiItemsWidthsWithLabels(components, CalcTextSize("X").x, CalcItemWidth());
-		size_t type_size = GDataTypeInfo[data_type].Size;
+		ZeoEngine::SizeT type_size = GDataTypeInfo[data_type].Size;
 		for (int i = 0; i < components; ++i)
 		{
 			PushID(i);
@@ -176,7 +170,7 @@ namespace ImGui {
 		return pressed;
 	}
 
-	bool TileImageButton(ImTextureID user_texture_id, bool bIsDisabled, const ImVec2& size, float rounding, bool bIsSelected, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	bool TileImageButton(ImTextureID user_texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& tint_col)
 	{
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = g.CurrentWindow;
@@ -193,7 +187,7 @@ namespace ImGui {
 		{
 			PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		}
-		bool pressed = TileImageButtonEx(id, user_texture_id, bIsDisabled, size, rounding, uv0, uv1, padding, bg_col, tint_col);
+		bool pressed = TileImageButtonEx(id, user_texture_id, bDrawImageBackground, bIsDisabled, bIsSelected, size, rounding, uv0, uv1, padding, tint_col);
 		if (!bIsSelected)
 		{
 			PopStyleColor();
@@ -201,7 +195,7 @@ namespace ImGui {
 		return pressed;
 	}
 
-	bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bIsDisabled, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col)
+	bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& tint_col)
 	{
 		ImGuiContext& g = *GImGui;
 		ImGuiWindow* window = GetCurrentWindow();
@@ -209,8 +203,8 @@ namespace ImGui {
 			return false;
 
 		// Limit the wrapped text up to 2 lines
-		const int32_t maxTextLine = 2;
-		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (3 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
+		const ZeoEngine::I32 maxTextLine = 2;
+		const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size + ImVec2{ padding.x * 2, padding.y * (4 + maxTextLine - 1) } + ImVec2{ 0, g.FontSize * maxTextLine });
 		ItemSize(bb);
 
 		// Some of the "disabled" code are copied from ImGui::Selectable
@@ -238,13 +232,30 @@ namespace ImGui {
 		bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
 		// Render
-		const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
 		RenderNavHighlight(bb, id);
-		RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
-		if (bg_col.w > 0.0f)
-			window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, GetColorU32(bg_col));
-		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (2 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
-		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y });
+		ImU32 col;
+		if (bDrawImageBackground)
+		{
+			col = GetColorU32(bIsSelected || held ? ImVec4{ 0.0f, 0.6f, 1.0f, 1.0f } : hovered ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+			float shadowSize = 2.0f;
+			float borderSize = bIsSelected ? 2.5f : 1.5f;
+			// Draw shadow
+			window->DrawList->AddRect(bb.Min + ImVec2(1, 1), bb.Max + ImVec2(1, 1), GetColorU32({ 0.05f, 0.05f, 0.05f, 1.0f }), rounding, 0, shadowSize);
+			// Draw outline (hovered/selected)
+			window->DrawList->AddRect(bb.Min, bb.Max, col, rounding, 0, borderSize);
+			// Draw up black background
+			window->DrawList->AddRectFilled(bb.Min, bb.Min + padding * 2 + size, GetColorU32({ 0.1f, 0.1f, 0.1f, 1.0f }), rounding, ImDrawFlags_RoundCornersTop);
+			// Draw down grey background
+			window->DrawList->AddRectFilled(bb.Min + ImVec2{ 0, size.y + padding.y * 2 }, bb.Max, GetColorU32({ 0.19f, 0.19f, 0.19f, 1.0f }), rounding, ImDrawFlags_RoundCornersBottom);
+		}
+		else
+		{
+			col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+			RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+		}
+		// Draw icon image
+		window->DrawList->AddImageRounded(texture_id, bb.Min + padding, bb.Max - ImVec2{ padding.x, padding.y * (3 + maxTextLine - 1) + g.FontSize * 2 }, uv0, uv1, GetColorU32(tint_col), rounding);
+		SetCursorScreenPos(bb.Min + padding + ImVec2{ 0, size.y + padding.y * 2 });
 
 		if (bIsDisabled && !disabled_global)
 			EndDisabled();
@@ -267,13 +278,6 @@ namespace ImGui {
 		}
 	}
 
-	ImRect GetWindowWorkRect()
-	{
-		ImGuiContext& g = *GImGui;
-		ImGuiWindow* window = g.CurrentWindow;
-		return window->WorkRect;
-	}
-
 	ImVec2 GetFramePadding()
 	{
 		return GImGui->Style.FramePadding;
@@ -282,7 +286,7 @@ namespace ImGui {
 	void VSplitter(const char* str_id, ImVec2* size)
 	{
 		ImVec2 screen_pos = GetCursorScreenPos();
-		InvisibleButton(str_id, ImVec2(3, -1));
+		InvisibleButton(str_id, ImVec2(3, size->y == 0 ? -1 : size->y));
 		ImVec2 end_pos = screen_pos + GetItemRectSize();
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;
@@ -299,7 +303,7 @@ namespace ImGui {
 		}
 	}
 
-	void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	void ImageRounded(ImTextureID user_texture_id, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col, ImDrawFlags flags)
 	{
 		ImGuiWindow* window = GetCurrentWindow();
 		if (window->SkipItems)
@@ -314,12 +318,12 @@ namespace ImGui {
 
 		if (border_col.w > 0.0f)
 		{
-			window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), rounding);
-			window->DrawList->AddImageRounded(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col), rounding);
+			window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), rounding, flags);
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col), rounding, flags);
 		}
 		else
 		{
-			window->DrawList->AddImageRounded(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col), rounding);
+			window->DrawList->AddImageRounded(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col), rounding, flags);
 		}
 	}
 
@@ -340,6 +344,43 @@ namespace ImGui {
 			{ thumbnailSize, thumbnailSize }, rounding,
 			{ 0.0f, 1.0f }, { 1.0f, 0.0f },
 			{ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.2039f, 0.2039f, 0.2039f, bShouldDrawBackground ? 1.0f : 0.0f});
+	}
+
+	const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding, ImGuiDragDropFlags flags)
+	{
+		ImGuiContext& g = *GImGui;
+		ImGuiWindow* window = g.CurrentWindow;
+		ImGuiPayload& payload = g.DragDropPayload;
+		IM_ASSERT(g.DragDropActive);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
+		IM_ASSERT(payload.DataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?
+		if (type != NULL && !payload.IsDataType(type))
+			return NULL;
+
+		// Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
+		// NB: We currently accept NULL id as target. However, overlapping targets requires a unique ID to function!
+		const bool was_accepted_previously = (g.DragDropAcceptIdPrev == g.DragDropTargetId);
+		ImRect r = g.DragDropTargetRect;
+		float r_surface = r.GetWidth() * r.GetHeight();
+		if (r_surface <= g.DragDropAcceptIdCurrRectSurface)
+		{
+			g.DragDropAcceptFlags = flags;
+			g.DragDropAcceptIdCurr = g.DragDropTargetId;
+			g.DragDropAcceptIdCurrRectSurface = r_surface;
+		}
+
+		// Render default drop visuals
+		// FIXME-DRAGDROP: Settle on a proper default visuals for drop target.
+		payload.Preview = was_accepted_previously;
+		flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
+		if (!(flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
+			window->DrawList->AddRect(r.Min - ImVec2(2.f, 2.f), r.Max + ImVec2(2.f, 2.f), GetColorU32(ImGuiCol_DragDropTarget), highlightRounding, 0, 1.0f);
+
+		g.DragDropAcceptFrameCount = g.FrameCount;
+		payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
+		if (!payload.Delivery && !(flags & ImGuiDragDropFlags_AcceptBeforeDelivery))
+			return NULL;
+
+		return &payload;
 	}
 
 }

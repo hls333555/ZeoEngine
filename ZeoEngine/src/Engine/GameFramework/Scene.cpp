@@ -1,99 +1,128 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Scene.h"
 
+#include "Engine/GameFramework/Systems.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Core/Serializer.h"
 
 namespace ZeoEngine {
 
-	Entity Scene::CreateEntity(const std::string& name, bool bIsInternal)
+	Scene::Scene(Scope<SceneObserverSystemBase> sceneObserverSystem)
+		: m_SceneObserverSystem(std::move(sceneObserverSystem))
 	{
-		Entity entity = CreateEmptyEntity();
+		m_SceneObserverSystem->SetScene(this);
+		m_SceneObserverSystem->OnBind();
+	}
+
+	Scene::~Scene()
+	{
+		m_SceneObserverSystem->OnUnbind();
+	}
+
+	void Scene::OnUpdate()
+	{
+		m_SceneObserverSystem->OnUpdate(*this);
+	}
+
+	void Scene::Copy(const Ref<Scene>& other)
+	{
+		m_Context = other->m_Context;
+		other->ForEachComponentView<CoreComponent>([this, &other](auto entityID, auto& coreComp)
+		{
+			const Entity entity{ entityID, other };
+			// Clone a new "empty" entity
+			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+			// Copy components to that entity
+			newEntity.CopyAllRegisteredComponents(entity);
+		});
+	}
+
+	Entity Scene::CreateEntity(const std::string& name, const Vec3& translation)
+	{
+		return CreateEntityWithUUID(UUID(), name, translation);
+	}
+
+	Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name, const Vec3& translation)
+	{
+		Entity entity{ create(), shared_from_this() };
 
 		auto& coreComp = entity.AddComponent<CoreComponent>();
 		{
 			coreComp.Name = name;
-			coreComp.CreationId = m_EntityCount - 1;
-			coreComp.bIsInternal = bIsInternal;
+			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
-		entity.AddComponent<TransformComponent>();
+		entity.AddComponent<IDComponent>(uuid);
+		entity.AddComponent<TransformComponent>(translation);
+		entity.AddComponent<BoundsComponent>();
 
-		// No need to sort on first entity
-		if (m_EntityCount > 1)
+		// No need to sort if there is only one entity
+		if (GetEntityCount() > 1)
 		{
 			SortEntities();
 		}
-
+		m_Entities[uuid] = entity;
 		return entity;
 	}
 
-	Entity Scene::CreateEmptyEntity()
+	Entity Scene::DuplicateEntity(Entity entity)
 	{
-		Entity entity{ m_Registry.create(), this };
-		++m_EntityCount;
-		return entity;
+		Entity newEntity = CreateEntity(entity.GetName());
+		// Copy all components but IDComponent(UUID)
+		newEntity.CopyAllRegisteredComponents(entity, { entt::type_hash<IDComponent>::value() });
+		return newEntity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
-		m_Registry.destroy(entity);
+		const auto uuid = entity.GetUUID();
+		destroy(entity);
+		m_Entities.erase(uuid);
 		SortEntities();
+	}
+
+	Entity Scene::GetEntityByUUID(UUID uuid) const
+	{
+		if (m_Entities.find(uuid) != m_Entities.end())
+		{
+			return m_Entities.at(uuid);
+		}
+		return {};
+	}
+
+	Entity Scene::GetEntityByName(std::string_view name)
+	{
+		Entity entity;
+		ForEachComponentView<CoreComponent>([&](auto e, auto& coreComp)
+		{
+			if (coreComp.Name == name)
+			{
+				entity = { e, shared_from_this() };
+			}
+		});
+		return entity;
+	}
+
+	Entity Scene::GetMainCameraEntity()
+	{
+		Entity entity;
+		ForEachComponentView<CameraComponent>([&](auto e, auto& cameraComp)
+		{
+			if (cameraComp.bIsPrimary)
+			{
+				entity = { e, shared_from_this() };
+			}
+		});
+		return entity;
 	}
 
 	void Scene::SortEntities()
 	{
-		// Sort entities by creation order
+		// Sort entities by creation index
 		// We assume that every entity has the CoreComponent which will never get removed
-		m_Registry.sort<CoreComponent>([](const auto& lhs, const auto& rhs)
+		sort<CoreComponent>([](const auto& lhs, const auto& rhs)
 		{
-			return lhs.CreationId < rhs.CreationId;
+			return lhs.EntityIndex < rhs.EntityIndex;
 		});
-	}
-
-	SceneAsset::SceneAsset(const std::string& path)
-		: AssetBase(path)
-	{
-	}
-
-	Ref<SceneAsset> SceneAsset::Create(const std::string& path)
-	{
-		// A way to allow std::make_shared() to access SceneAsset's private constructor
-		class SceneAssetEnableShared : public SceneAsset
-		{
-		public:
-			explicit SceneAssetEnableShared(const std::string& path)
-				: SceneAsset(path) {}
-		};
-
-		return CreateRef<SceneAssetEnableShared>(path);
-	}
-
-	void SceneAsset::Reload()
-	{
-		Deserialize();
-		m_Scene->PostLoad();
-	}
-
-	void SceneAsset::Serialize(const std::string& path)
-	{
-		if (path.empty()) return;
-
-		if (path != GetPath())
-		{
-			SetPath(path);
-		}
-
-		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Serialize(GetPath(), m_Scene);
-	}
-
-	void SceneAsset::Deserialize()
-	{
-		if (GetPath().empty()) return;
-
-		ZE_CORE_ASSERT(m_Scene);
-		SceneSerializer::Deserialize(GetPath(), m_Scene);
 	}
 
 }

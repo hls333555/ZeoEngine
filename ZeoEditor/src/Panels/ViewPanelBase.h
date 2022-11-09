@@ -1,68 +1,72 @@
 #pragma once
 
+#include <entt.hpp>
+
 #include "Panels/PanelBase.h"
 
-#include <glm/glm.hpp>
-
 #include "Engine/Events/KeyEvent.h"
-#include "Engine/Renderer/EditorCamera.h"
+#include "Engine/Events/MouseEvent.h"
 
 namespace ZeoEngine {
+
+	class EditorPreviewWorldBase;
+	class FrameBuffer;
+	struct CameraComponent;
+	class Scene;
 
 	class ViewPanelBase : public PanelBase
 	{
 	public:
 		using PanelBase::PanelBase;
 
-		virtual void OnAttach() override;
+		void UpdateWorld(EditorPreviewWorldBase* world);
 		
 		/**
 		 * Snapshot current viewport and save as thumbnail cache.
 		 * 
-		 * @param assetPath - Path of asset
 		 * @param imageWidth - If non-zero, it will snapshot a centered square area using this provided imageWidth
 		 * @param bOverwriteThumbnail - If true, it will always do a capture no matter the existance of local cache
 		 */
-		void Snapshot(const std::string& assetPath, uint32_t imageWidth = 0, bool bOverwriteThumbnail = true);
+		void Snapshot(U32 imageWidth = 0, bool bOverwriteThumbnail = true) const;
 
-		const glm::vec2* GetViewportBounds() const { return m_ViewportBounds; }
-		glm::vec2 GetViewportSize() const;
+		const Vec2* GetViewportBounds() const { return m_ViewportBounds; }
+		Vec2 GetViewportSize() const;
 
-		std::pair<float, float> GetMouseViewportPosition();
+		std::pair<float, float> GetMouseViewportPosition() const;
+
+		void OnCameraComponentAdded(Scene& scene, entt::entity e) const;
 
 	protected:
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
+		virtual void OnWorldChanged(EditorPreviewWorldBase* world, EditorPreviewWorldBase* lastWorld);
+
+		EditorPreviewWorldBase* GetEditorWorld() const { return m_EditorWorld; }
+
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) override;
 
-		virtual void RenderToolbar() {};
+		virtual std::string GetPanelTitle() const override;
 
-		bool OnMouseScroll(MouseScrolledEvent& e);
-		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseScroll(MouseScrolledEvent& e) const;
+		bool OnKeyPressed(KeyPressedEvent& e) const;
 
-		void SetViewportBounds(float x, float y, float width, float height);
+		void OnViewportResize(const Vec2& size) const;
 
-		void OnViewportResize(const glm::vec2& size);
+		/** Resize non-FixedAspectRatio camera. */
+		void UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const;
 
-		void PostSceneCreate();
-
-		void UpdateViewportSizeOnSceneCameras();
-
-	protected:
-		EditorCamera m_EditorCamera;
-		glm::vec2 m_ViewportBounds[2];
+	public:
+		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };
 
 	private:
-		glm::vec2 m_LastViewportSize{ 0.0f };
+		EditorPreviewWorldBase* m_EditorWorld = nullptr;
+		Ref<FrameBuffer> m_FrameBuffer;
 
-		struct SnapshotSpec
-		{
-			std::string AssetPath;
-			std::string ThumbnailPath;
-			uint32_t ImageWidth;
-		} m_SnapshotSpec;
+		Vec2 m_ViewportBounds[2];
+		Vec2 m_LastViewportSize{ 0.0f };
+		entt::sigh<void(U32, U32)> m_OnViewportResizeDel;
 
 	};
 

@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
-#include <functional>
 #include <ostream>
 
 #include "Engine/Core/CoreMacros.h"
+
+struct GLFWwindow;
 
 namespace ZeoEngine {
 
@@ -17,7 +18,7 @@ namespace ZeoEngine {
 	{
 		None = 0,
 		// Application events
-		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved,
+		WindowClose, WindowResize, WindowFocusChanged, WindowMoved, WindowFileDropped,
 		AppTick, AppUpdate, AppRender,
 		// Keyboard events
 		KeyPressed, KeyReleased, KeyTyped,
@@ -44,6 +45,11 @@ namespace ZeoEngine {
 	class Event
 	{
 	public:
+		explicit Event(GLFWwindow* window)
+			: m_Window(window) {}
+
+		GLFWwindow* GetWindow() const { return m_Window; }
+
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
@@ -64,6 +70,8 @@ namespace ZeoEngine {
 		 */
 		bool m_bHandled = false;
 
+	private:
+		GLFWwindow* m_Window = nullptr;
 	};
 
 	class EventDispatcher

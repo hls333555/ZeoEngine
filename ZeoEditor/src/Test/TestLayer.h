@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Engine/GameFramework/EngineLayer.h"
+#include "Engine/Core/Layer.h"
 
 namespace ZeoEngine {
 
-	class TestLayer : public EngineLayer
+	class TestLayer : public Layer
 	{
 	public:
 		TestLayer();
