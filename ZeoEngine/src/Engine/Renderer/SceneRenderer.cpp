@@ -58,7 +58,7 @@ namespace ZeoEngine {
 
 	void SceneRenderer::UpdateSceneContext(const Scene* scene)
 	{
-		m_SceneContext = scene->GetContext();
+		m_SceneContext = scene->GetContextShared();
 		// Recreate ddri context when a new scene is created
 		m_Ddri->Init(m_SceneContext);
 	}

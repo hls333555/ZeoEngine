@@ -11,6 +11,7 @@
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/World.h"
+#include "Engine/Physics/PhysXScene.h"
 #include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
@@ -194,7 +195,7 @@ namespace ZeoEngine {
 		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
 		if (changeComp.FieldID == "ShadowType"_hs)
 		{
-			const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(scene.GetContext(), "ScreenSpaceShadow");
+			const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(scene.GetContextShared(), "ScreenSpaceShadow");
 			const auto shadowShader = shadowPass->GetShadowShader();
 			shadowShader->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(lightComp.ShadowType));
 		}
@@ -518,17 +519,17 @@ namespace ZeoEngine {
 
 	void PhysicsSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		
+		GetScene()->GetPhysicsScene()->Simulate(dt);
 	}
 
 	void PhysicsSystem::OnRuntimeStart()
 	{
-
+		GetScene()->CreatePhysicsScene();
 	}
 
 	void PhysicsSystem::OnRuntimeStop()
 	{
-
+		GetScene()->DestroyPhysicsScene();
 	}
 
 	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)

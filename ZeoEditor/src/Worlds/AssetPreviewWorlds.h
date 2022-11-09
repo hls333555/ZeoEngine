@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		using AssetPreviewWorldBase::AssetPreviewWorldBase;
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 		virtual Entity CreatePreviewEntity(Scene& scene) override;
 
@@ -60,7 +60,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 		virtual Entity CreatePreviewEntity(Scene& scene) override;
 
@@ -76,7 +76,7 @@ namespace ZeoEngine {
 		using AssetPreviewWorldBase::AssetPreviewWorldBase;
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 		virtual Entity CreatePreviewEntity(Scene& scene) override;
 
@@ -94,7 +94,7 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
+		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 		virtual Entity CreatePreviewEntity(Scene& scene) override;
 

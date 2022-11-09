@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		}
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() = 0;
+		virtual Ref<Scene> CreateScene() = 0;
 		virtual void PostSceneCreate(const Ref<Scene>& scene) {}
 		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
 

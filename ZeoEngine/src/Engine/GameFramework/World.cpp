@@ -56,7 +56,7 @@ namespace ZeoEngine {
 
 	void WorldBase::NewScene()
 	{
-		const Ref<Scene> scene = CreateRef<Scene>(CreateSceneObserverSystem());
+		const Ref<Scene> scene = CreateScene();
 		ScriptEngine::SetSceneContext(scene);
 		SetActiveScene(scene);
 		PostSceneCreate(scene); // TODO:

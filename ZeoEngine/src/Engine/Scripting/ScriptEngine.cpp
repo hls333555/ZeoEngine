@@ -188,6 +188,8 @@ namespace ZeoEngine {
 		ScriptRegistry::RegisterFunctions();
 		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
 
+		ZE_CORE_TRACE("Script engine intialized");
+
 #if Test
 		Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 

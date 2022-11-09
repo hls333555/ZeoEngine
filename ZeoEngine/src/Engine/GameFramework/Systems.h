@@ -43,6 +43,8 @@ namespace ZeoEngine {
 
 		void SetScene(Scene* scene) { m_Scene = scene; }
 
+		virtual Scope<SceneObserverSystemBase> Clone() = 0;
+
 		virtual void OnBind() = 0;
 		virtual void OnUnbind() = 0;
 		virtual void OnUpdate(Scene& scene) {}
@@ -103,6 +105,8 @@ namespace ZeoEngine {
 	class LevelObserverSystem : public SceneObserverSystemBase
 	{
 	public:
+		virtual Scope<SceneObserverSystemBase> Clone() override { return CreateScope<LevelObserverSystem>(); }
+
 		virtual void OnBind() override;
 		virtual void OnUnbind() override;
 		virtual void OnUpdate(Scene& scene) override;
@@ -115,6 +119,8 @@ namespace ZeoEngine {
 	class MeshPreviewObserverSystem : public SceneObserverSystemBase
 	{
 	public:
+		virtual Scope<SceneObserverSystemBase> Clone() override { return CreateScope<MeshPreviewObserverSystem>(); }
+
 		virtual void OnBind() override;
 		virtual void OnUnbind() override;
 		virtual void OnUpdate(Scene& scene) override;
@@ -126,14 +132,17 @@ namespace ZeoEngine {
 	class TexturePreviewObserverSystem : public SceneObserverSystemBase
 	{
 	public:
+		virtual Scope<SceneObserverSystemBase> Clone() override { return CreateScope<TexturePreviewObserverSystem>(); }
+
 		virtual void OnBind() override;
 		virtual void OnUnbind() override;
-
 	};
 
 	class MaterialPreviewObserverSystem : public SceneObserverSystemBase
 	{
 	public:
+		virtual Scope<SceneObserverSystemBase> Clone() override { return CreateScope<MaterialPreviewObserverSystem>(); }
+
 		virtual void OnBind() override;
 		virtual void OnUnbind() override;
 		virtual void OnUpdate(Scene& scene) override;
@@ -193,7 +202,7 @@ namespace ZeoEngine {
 		virtual void OnRuntimeStop() override;
 
 	private:
-		b2World* m_PhysicsWorld = nullptr;
+		b2World* m_PhysicsWorld = nullptr; // TODO: Move to scene
 	};
 
 }

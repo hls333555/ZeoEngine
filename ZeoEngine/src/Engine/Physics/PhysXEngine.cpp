@@ -6,16 +6,58 @@
 
 namespace ZeoEngine {
 
+	void PhysXErrorCallback::reportError(physx::PxErrorCode::Enum code, const char* message, const char* file, int line)
+	{
+		const char* errorMessage = nullptr;
+
+		switch (code)
+		{
+			case physx::PxErrorCode::eNO_ERROR:				errorMessage = "No Error"; break;
+			case physx::PxErrorCode::eDEBUG_INFO:			errorMessage = "Info"; break;
+			case physx::PxErrorCode::eDEBUG_WARNING:		errorMessage = "Warning"; break;
+			case physx::PxErrorCode::eINVALID_PARAMETER:	errorMessage = "Invalid Parameter"; break;
+			case physx::PxErrorCode::eINVALID_OPERATION:	errorMessage = "Invalid Operation"; break;
+			case physx::PxErrorCode::eOUT_OF_MEMORY:		errorMessage = "Out Of Memory"; break;
+			case physx::PxErrorCode::eINTERNAL_ERROR:		errorMessage = "Internal Error"; break;
+			case physx::PxErrorCode::eABORT:				errorMessage = "Abort"; break;
+			case physx::PxErrorCode::ePERF_WARNING:			errorMessage = "Performance Warning"; break;
+			case physx::PxErrorCode::eMASK_ALL:				errorMessage = "Unknown Error"; break;
+		}
+
+		switch (code)
+		{
+			case physx::PxErrorCode::eNO_ERROR:
+			case physx::PxErrorCode::eDEBUG_INFO:
+				ZE_CORE_INFO("[PhysX]: {0}: {1} at {2} ({3})", errorMessage, message, file, line);
+				break;
+			case physx::PxErrorCode::eDEBUG_WARNING:
+			case physx::PxErrorCode::ePERF_WARNING:
+				ZE_CORE_WARN("[PhysX]: {0}: {1} at {2} ({3})", errorMessage, message, file, line);
+				break;
+			case physx::PxErrorCode::eINVALID_PARAMETER:
+			case physx::PxErrorCode::eINVALID_OPERATION:
+			case physx::PxErrorCode::eINTERNAL_ERROR:
+				ZE_CORE_ERROR("[PhysX]: {0}: {1} at {2} ({3})", errorMessage, message, file, line);
+				break;
+			case physx::PxErrorCode::eOUT_OF_MEMORY:
+				ZE_CORE_CRITICAL("[PhysX]: {0}: {1} at {2} ({3})", errorMessage, message, file, line);
+				break;
+			case physx::PxErrorCode::eABORT:
+			case physx::PxErrorCode::eMASK_ALL:
+				ZE_CORE_ERROR("[PhysX]: {0}: {1} at {2} ({3})", errorMessage, message, file, line);
+				ZE_CORE_ASSERT(false);
+				break;
+		}
+	}
+
 	struct PhysXData
 	{
-		physx::PxDefaultErrorCallback DefaultErrorCallback;
+		PhysXErrorCallback ErrorCallback;
 		physx::PxDefaultAllocator DefaultAllocator;
 		physx::PxDefaultCpuDispatcher* CPUDispatcher = nullptr;
 
 		physx::PxFoundation* Foundation = nullptr;
 		physx::PxPhysics* Physics = nullptr;
-
-		physx::PxTolerancesScale TolerancesScale;
 	};
 
 	static PhysXData* s_Data = nullptr;
@@ -24,7 +66,7 @@ namespace ZeoEngine {
 	{
 		s_Data = new PhysXData();
 
-		s_Data->Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, s_Data->DefaultAllocator, s_Data->DefaultErrorCallback);
+		s_Data->Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, s_Data->DefaultAllocator, s_Data->ErrorCallback);
 		ZE_CORE_ASSERT(s_Data->Foundation, "Failed to create PhysX Foundation!");
 
 		PhysXDebugger::Init();
@@ -35,7 +77,9 @@ namespace ZeoEngine {
 		bool bTrackMemoryAllocations = false;
 #endif
 
-		s_Data->Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Data->Foundation, s_Data->TolerancesScale, bTrackMemoryAllocations, PhysXDebugger::GetDebugger());
+		physx::PxTolerancesScale tolerancesScale;
+		tolerancesScale.speed = 980.0f;
+		s_Data->Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Data->Foundation, tolerancesScale, bTrackMemoryAllocations, PhysXDebugger::GetDebugger());
 		ZE_CORE_ASSERT(s_Data->Physics, "Failed to create PhysX Physics!");
 
 		bool bExtentionsLoaded = PxInitExtensions(*s_Data->Physics, PhysXDebugger::GetDebugger());
@@ -74,9 +118,14 @@ namespace ZeoEngine {
 		return *s_Data->Foundation;
 	}
 
-	physx::PxTolerancesScale& PhysXEngine::GetTolerancesScale()
+	physx::PxPhysics& PhysXEngine::GetPhysics()
 	{
-		return s_Data->TolerancesScale;
+		return *s_Data->Physics;
+	}
+
+	physx::PxCpuDispatcher* PhysXEngine::GetCPUDispatcher()
+	{
+		return s_Data->CPUDispatcher;
 	}
 
 }

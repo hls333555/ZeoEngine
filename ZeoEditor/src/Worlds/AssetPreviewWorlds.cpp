@@ -39,9 +39,11 @@ namespace ZeoEngine {
 	}
 
 #pragma region MaterialPreviewWorld
-	Scope<SceneObserverSystemBase> MaterialPreviewWorld::CreateSceneObserverSystem()
+	Ref<Scene> MaterialPreviewWorld::CreateScene()
 	{
-		return CreateScope<MaterialPreviewObserverSystem>();
+		SceneSpec spec;
+		spec.SceneObserverSystem = CreateScope<MaterialPreviewObserverSystem>();
+		return CreateRef<Scene>(std::move(spec));
 	}
 
 	Ref<SceneRenderer> MaterialPreviewWorld::CreateSceneRenderer()
@@ -86,9 +88,11 @@ namespace ZeoEngine {
 		GetEditorCamera().SetFarClip(10000.0f);
 	}
 
-	Scope<SceneObserverSystemBase> MeshPreviewWorld::CreateSceneObserverSystem()
+	Ref<Scene> MeshPreviewWorld::CreateScene()
 	{
-		return CreateScope<MeshPreviewObserverSystem>();
+		SceneSpec spec;
+		spec.SceneObserverSystem = CreateScope<MeshPreviewObserverSystem>();
+		return CreateRef<Scene>(std::move(spec));
 	}
 
 	Ref<SceneRenderer> MeshPreviewWorld::CreateSceneRenderer()
@@ -126,9 +130,11 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region TexturePreviewWorld
-	Scope<SceneObserverSystemBase> TexturePreviewWorld::CreateSceneObserverSystem()
+	Ref<Scene> TexturePreviewWorld::CreateScene()
 	{
-		return CreateScope<TexturePreviewObserverSystem>();
+		SceneSpec spec;
+		spec.SceneObserverSystem = CreateScope<TexturePreviewObserverSystem>();
+		return CreateRef<Scene>(std::move(spec));
 	}
 
 	Ref<SceneRenderer> TexturePreviewWorld::CreateSceneRenderer()
@@ -169,7 +175,7 @@ namespace ZeoEngine {
 		AssetPreviewWorldBase::OnAttach();
 	}
 
-	Scope<SceneObserverSystemBase> ParticlePreviewWorld::CreateSceneObserverSystem()
+	Ref<Scene> ParticlePreviewWorld::CreateScene()
 	{
 		ZE_CORE_ASSERT(false);
 		return {};

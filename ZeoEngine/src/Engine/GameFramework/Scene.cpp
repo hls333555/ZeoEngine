@@ -4,37 +4,76 @@
 #include "Engine/GameFramework/Systems.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Physics/PhysXScene.h"
 
 namespace ZeoEngine {
 
-	Scene::Scene(Scope<SceneObserverSystemBase> sceneObserverSystem)
-		: m_SceneObserverSystem(std::move(sceneObserverSystem))
+	SceneSpec SceneSpec::Clone()
 	{
-		m_SceneObserverSystem->SetScene(this);
-		m_SceneObserverSystem->OnBind();
+		SceneSpec spec;
+		spec.SceneObserverSystem = SceneObserverSystem->Clone();
+		spec.bIsPhysicalScene = bIsPhysicalScene;
+		return spec;
+	}
+
+	Scene::Scene(SceneSpec spec)
+		: m_Spec(std::move(spec))
+		, m_ContextShared(CreateRef<SceneContext>())
+	{
+		m_Spec.SceneObserverSystem->SetScene(this);
+		m_Spec.SceneObserverSystem->OnBind();
+
+		if (m_Spec.bIsPhysicalScene)
+		{
+			
+		}
 	}
 
 	Scene::~Scene()
 	{
-		m_SceneObserverSystem->OnUnbind();
+		m_Spec.SceneObserverSystem->OnUnbind();
 	}
 
 	void Scene::OnUpdate()
 	{
-		m_SceneObserverSystem->OnUpdate(*this);
+		m_Spec.SceneObserverSystem->OnUpdate(*this);
 	}
 
-	void Scene::Copy(const Ref<Scene>& other)
+	Ref<Scene> Scene::Copy()
 	{
-		m_Context = other->m_Context;
-		other->ForEachComponentView<CoreComponent>([this, &other](auto entityID, auto& coreComp)
+		auto newScene = CreateRef<Scene>(m_Spec.Clone());
+		newScene->m_ContextShared = m_ContextShared;
+		ForEachComponentView<CoreComponent>([this, &newScene](auto entityID, auto& coreComp)
 		{
-			const Entity entity{ entityID, other };
+			const Entity entity{ entityID, shared_from_this() };
 			// Clone a new "empty" entity
-			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+			auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
 			// Copy components to that entity
 			newEntity.CopyAllRegisteredComponents(entity);
 		});
+		return newScene;
+	}
+
+	void Scene::CreatePhysicsScene()
+	{
+		if (m_Spec.bIsPhysicalScene)
+		{
+			AddContext<PhysXScene>();
+		}
+	}
+
+	PhysXScene* Scene::GetPhysicsScene()
+	{
+		if (!HasContext<PhysXScene>()) return nullptr;
+		return &GetContext<PhysXScene>();
+	}
+
+	void Scene::DestroyPhysicsScene()
+	{
+		if (HasContext<PhysXScene>())
+		{
+			RemoveContext<PhysXScene>();
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, const Vec3& translation)

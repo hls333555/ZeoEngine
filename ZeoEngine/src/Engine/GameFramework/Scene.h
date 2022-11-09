@@ -10,6 +10,8 @@
 
 namespace ZeoEngine {
 
+	class PhysXScene;
+
 	/** A scene context which shares among copied scenes. */
 	struct SceneContext
 	{
@@ -22,31 +24,35 @@ namespace ZeoEngine {
 	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
+	struct SceneSpec
+	{
+		Scope<class SceneObserverSystemBase> SceneObserverSystem;
+		bool bIsPhysicalScene = false;
+
+		SceneSpec Clone();
+	};
+
 	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
 		friend class SceneObserverSystemBase;
 
 	public:
-		explicit Scene(Scope<SceneObserverSystemBase> sceneObserverSystem = nullptr);
+		explicit Scene(SceneSpec spec);
 		~Scene();
 
 		void OnUpdate();
 
-		/** Copy function which processes member copy. */
-		void Copy(const Ref<Scene>& other);
-
 		// We cannot copy Scene through copy constructor as it is a deleted function
-		// So we construct a new scene and call our "copy" function instead
-		template<typename T, typename ... Args>
-		Ref<T> Copy(Args&& ... args)
-		{
-			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
-			newScene->Copy(shared_from_this());
-			return newScene;
-		}
+		// So we construct a new scene and do the copy ourselves
+		Ref<Scene> Copy();
 
-		SceneContext* GetContext() const { return m_Context.get(); }
+		SceneContext* GetContextShared() const { return m_ContextShared.get(); }
+
+		void CreatePhysicsScene();
+		/** PhyXScene only exists at runtime when bIsPhysicalScene is true. */
+		PhysXScene* GetPhysicsScene();
+		void DestroyPhysicsScene();
 
 		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
@@ -57,6 +63,32 @@ namespace ZeoEngine {
 		SizeT GetEntityCount() const { return alive(); }
 
 		Entity GetMainCameraEntity();
+
+		template<typename T, typename... Args>
+		T& AddContext(Args&&... args)
+		{
+			ZE_CORE_ASSERT(!HasContext<T>(), "Scene already has context!");
+			return ctx().emplace<T>(std::forward<Args>(args)...);
+		}
+
+		template<typename T>
+		bool RemoveContext()
+		{
+			return ctx().erase<T>();
+		}
+
+		template<typename T>
+		T& GetContext()
+		{
+			ZE_CORE_ASSERT(HasContext<T>(), "Scene does not have context!");
+			return ctx().at<T>();
+		}
+
+		template<typename T>
+		bool HasContext() const
+		{
+			return ctx().contains<T>();
+		}
 
 		template<typename... Component, typename... Exclude, typename Func>
 		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {}) const
@@ -119,8 +151,8 @@ namespace ZeoEngine {
 		void SortEntities();
 
 	private:
-		Scope<SceneObserverSystemBase> m_SceneObserverSystem;
-		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
+		SceneSpec m_Spec;
+		Ref<SceneContext> m_ContextShared;
 
 		std::unordered_map<UUID, Entity> m_Entities;
 		U32 m_CurrentEntityIndex = 0;

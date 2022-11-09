@@ -34,7 +34,7 @@ namespace ZeoEngine {
 
 	Ref<MeshInstance> Mesh::CreateInstance(const Scene& scene)
 	{
-		return CreateRef<MeshInstance>(scene.GetContext(), SharedFromThis());
+		return CreateRef<MeshInstance>(scene.GetContextShared(), SharedFromThis());
 	}
 
 	Ref<Mesh> Mesh::GetDefaultCubeMesh()

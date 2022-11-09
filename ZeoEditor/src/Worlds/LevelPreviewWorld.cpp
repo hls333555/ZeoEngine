@@ -51,9 +51,12 @@ namespace ZeoEngine {
 		SetContextEntity({});
 	}
 
-	Scope<SceneObserverSystemBase> LevelPreviewWorld::CreateSceneObserverSystem()
+	Ref<Scene> LevelPreviewWorld::CreateScene()
 	{
-		return CreateScope<LevelPreviewObserverSystem>();
+		SceneSpec spec;
+		spec.SceneObserverSystem = CreateScope<LevelPreviewObserverSystem>();
+		spec.bIsPhysicalScene = true;
+		return CreateRef<Scene>(std::move(spec));
 	}
 
 	Ref<SceneRenderer> LevelPreviewWorld::CreateSceneRenderer()
@@ -85,7 +88,7 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<Scene>(CreateScope<LevelObserverSystem>());
+		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
 		OnRuntimeStart();

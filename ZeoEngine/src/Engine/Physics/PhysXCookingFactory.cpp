@@ -16,7 +16,7 @@ namespace ZeoEngine {
 	{
 		s_Data = new PhysXCookingData();
 
-		physx::PxCookingParams cookingParams(PhysXEngine::GetTolerancesScale());
+		physx::PxCookingParams cookingParams(PhysXEngine::GetPhysics().getTolerancesScale());
 		s_Data->Cooking = PxCreateCooking(PX_PHYSICS_VERSION, PhysXEngine::GetFoundation(), cookingParams);
 		ZE_CORE_ASSERT(s_Data->Cooking, "Failed to create PhysX Cooking!");
 	}
