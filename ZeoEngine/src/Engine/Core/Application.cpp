@@ -54,6 +54,7 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
+		PhysicsEngine::Shutdown();
 		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 
