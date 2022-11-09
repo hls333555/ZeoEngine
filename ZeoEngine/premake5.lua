@@ -27,7 +27,8 @@ project "ZeoEngine"
 	{
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE", -- If this is defined, glfw3.h will not include gl.h which conflicts with glad.h
-		'IMGUI_USER_CONFIG="Engine/ImGui/MyImGuiConfig.h"'
+		'IMGUI_USER_CONFIG="Engine/ImGui/MyImGuiConfig.h"',
+		"PX_PHYSX_STATIC_LIB"
 	}
 
 	includedirs
@@ -48,6 +49,7 @@ project "ZeoEngine"
 		"%{IncludeDir.magic_enum}",
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.optick}",
+		"%{IncludeDir.PhysX}",
 		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.stb_image}",
@@ -66,6 +68,14 @@ project "ZeoEngine"
 		"ImGui",
 		"%{Library.mono}",
 		"optick",
+		"%{Library.PhysX}",
+		"%{Library.PhysXCharacterKinematic}",
+		"%{Library.PhysXCommon}",
+		"%{Library.PhysXCooking}",
+		"%{Library.PhysXExtensions}",
+		"%{Library.PhysXFoundation}",
+		"%{Library.PhysXPvd}",
+		"%{Library.PhysXVehicle}",
 		"yaml-cpp",
 	}
 
@@ -96,9 +106,14 @@ project "ZeoEngine"
 		}
 
 	filter "configurations:Release"
-		defines "ZE_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+		defines
+		{
+			"ZE_RELEASE",
+			"NDEBUG" -- PhysX Requires This
+		}
 
 		links
 		{

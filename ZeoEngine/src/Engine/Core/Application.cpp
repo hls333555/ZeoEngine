@@ -8,6 +8,7 @@
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/TypeRegistry.h"
 #include "Engine/ImGui/ImGuiLayer.h"
+#include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Profile/Profiler.h"
 
 extern "C"
@@ -41,6 +42,7 @@ namespace ZeoEngine {
 		RandomEngine::Init();
 		Renderer::Init();
 		ScriptEngine::Init();
+		PhysicsEngine::Init();
 		TypeRegistry::Init();
 		
 		// m_ImGuiLayer does not need to be unique pointer

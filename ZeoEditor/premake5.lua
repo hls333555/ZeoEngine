@@ -32,6 +32,7 @@ project "ZeoEditor"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.magic_enum}",
 		"%{IncludeDir.optick}",
+		"%{IncludeDir.PhysX}",
 		"%{IncludeDir.renderdoc}",
 		"%{IncludeDir.spdlog}",
 		"%{IncludeDir.yaml_cpp}",
@@ -51,9 +52,14 @@ project "ZeoEditor"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "ZE_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+		defines
+		{
+			"ZE_RELEASE",
+			"NDEBUG" -- PhysX Requires This
+		}
 
 	filter "configurations:Dist"
 		defines "ZE_DIST"
