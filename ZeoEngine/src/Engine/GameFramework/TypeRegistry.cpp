@@ -186,14 +186,14 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Physics
-		RegisterEnum<Rigidbody2DComponent::BodyType>()
-			.Field<Rigidbody2DComponent::BodyType::Static>("Static")
-			.Field<Rigidbody2DComponent::BodyType::Dynamic>("Dynamic")
-			.Field<Rigidbody2DComponent::BodyType::Kinematic>("Kinematic");
+		RegisterEnum<RigidBody2DComponent::BodyType>()
+			.Field<RigidBody2DComponent::BodyType::Static>("Static")
+			.Field<RigidBody2DComponent::BodyType::Dynamic>("Dynamic")
+			.Field<RigidBody2DComponent::BodyType::Kinematic>("Kinematic");
 
-		RegisterComponent<Rigidbody2DComponent>("Rigidbody 2D", std::make_pair(Category, "Physics"))
-			.Field<&Rigidbody2DComponent::Type>("Type")
-			.Field<&Rigidbody2DComponent::bFixedRotation>("FixedRotation");
+		RegisterComponent<RigidBody2DComponent>("RigidBody 2D", std::make_pair(Category, "Physics"))
+			.Field<&RigidBody2DComponent::Type>("Type")
+			.Field<&RigidBody2DComponent::bFixedRotation>("FixedRotation");
 
 		RegisterComponent<BoxCollider2DComponent>("Box Collider 2D", std::make_pair(Category, "Physics"))
 			.Field<&BoxCollider2DComponent::Offset>("Offset")
@@ -210,6 +210,18 @@ namespace ZeoEngine {
 			.Field<&CircleCollider2DComponent::Friction>("Friction", std::make_pair(Category, "Physics Material"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
 			.Field<&CircleCollider2DComponent::Restitution>("Restitution", std::make_pair(Category, "Physics Material"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
 			.Field<&CircleCollider2DComponent::RestitutionThreshold>("RestitutionThreshold", std::make_pair(Category, "Physics Material"), std::make_pair(Tooltip, u8"弹力阈值，速度高于该值时的碰撞将会反弹"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f));
+
+		RegisterEnum<RigidBodyComponent::BodyType>()
+			.Field<RigidBodyComponent::BodyType::Static>("Static")
+			.Field<RigidBodyComponent::BodyType::Dynamic>("Dynamic");
+
+		RegisterComponent<RigidBodyComponent>("RigidBody", std::make_pair(Category, "Physics"))
+			.Field<&RigidBodyComponent::Type>("Type")
+			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic")
+			.Field<&RigidBodyComponent::Mass>("Mass")
+			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping")
+			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping")
+			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity");
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE

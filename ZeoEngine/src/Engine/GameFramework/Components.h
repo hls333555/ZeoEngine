@@ -182,7 +182,7 @@ namespace ZeoEngine {
 		static const char* GetIcon() { return ICON_FA_CIRCLE; }
 	};
 
-	struct Rigidbody2DComponent : public IComponent
+	struct RigidBody2DComponent : public IComponent
 	{
 		enum class BodyType
 		{
@@ -419,6 +419,21 @@ namespace ZeoEngine {
 		float GetCutoffInRadians() const { return glm::radians(CutoffAngle); }
 
 		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+	};
+
+	struct RigidBodyComponent : public IComponent
+	{
+		enum class BodyType
+		{
+			Static = 0, Dynamic
+		};
+
+		BodyType Type = BodyType::Static;
+		bool bIsKinematic = false;
+		float Mass = 1.0f;
+		float LinearDamping = 0.01f;
+		float AngularDamping = 0.05f;
+		bool bEnableGravity = true;
 	};
 
 }

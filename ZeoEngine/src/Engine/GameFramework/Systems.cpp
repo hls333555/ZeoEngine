@@ -524,7 +524,12 @@ namespace ZeoEngine {
 
 	void PhysicsSystem::OnRuntimeStart()
 	{
-		GetScene()->CreatePhysicsScene();
+		auto* physicsScene = GetScene()->CreatePhysicsScene();
+		GetScene()->ForEachComponentView<RigidBodyComponent>([this, physicsScene](auto e, RigidBodyComponent& rigidBodyComp)
+		{
+			const Entity entity{ e, GetScene() };
+			physicsScene->CreateActor(entity);
+		});
 	}
 
 	void PhysicsSystem::OnRuntimeStop()
@@ -538,7 +543,7 @@ namespace ZeoEngine {
 		const I32 positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
 
-		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		GetScene()->ForEachComponentView<RigidBody2DComponent>([this](auto e, auto& rb2dComp)
 		{
 			const Entity entity = { e, GetScene() };
 			auto& transformComp = entity.GetComponent<TransformComponent>();
@@ -552,13 +557,13 @@ namespace ZeoEngine {
 		});
 	}
 
-	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
+	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
 	{
 		switch (bodyType)
 		{
-			case Rigidbody2DComponent::BodyType::Static:	return b2_staticBody;
-			case Rigidbody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
-			case Rigidbody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
+			case RigidBody2DComponent::BodyType::Static:	return b2_staticBody;
+			case RigidBody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
+			case RigidBody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
 		}
 
 		ZE_CORE_ASSERT(false, "Unknown body type!");
@@ -569,13 +574,13 @@ namespace ZeoEngine {
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
-		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		GetScene()->ForEachComponentView<RigidBody2DComponent>([this](auto e, auto& rb2dComp)
 		{
 			const Entity entity{ e, GetScene() };
 			const auto& transformComp = entity.GetComponent<TransformComponent>();
 
 			b2BodyDef bodyDef;
-			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
+			bodyDef.type = RigidBody2DTypeToBox2DBody(rb2dComp.Type);
 			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
 			bodyDef.angle = glm::radians(transformComp.Rotation.z);
 

@@ -49,7 +49,7 @@ namespace ZeoEngine {
 
 		SceneContext* GetContextShared() const { return m_ContextShared.get(); }
 
-		void CreatePhysicsScene();
+		PhysXScene* CreatePhysicsScene();
 		/** PhyXScene only exists at runtime when bIsPhysicalScene is true. */
 		PhysXScene* GetPhysicsScene();
 		void DestroyPhysicsScene();

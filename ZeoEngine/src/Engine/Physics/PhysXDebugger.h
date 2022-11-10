@@ -1,6 +1,6 @@
 #pragma once
 
-#include <PxPhysicsAPI.h>
+#include <pvd/PxPvd.h>
 
 namespace ZeoEngine {
 

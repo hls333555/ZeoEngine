@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXScene.h"
 
+#include "Engine/GameFramework/Components.h"
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
@@ -24,6 +25,8 @@ namespace ZeoEngine {
 
 	PhysXScene::~PhysXScene()
 	{
+		m_Actors.clear();
+
 		m_PhysicsScene->release();
 		m_PhysicsScene = nullptr;
 	}
@@ -34,6 +37,29 @@ namespace ZeoEngine {
 		{
 			
 		}
+	}
+
+	Ref<PhysXActor> PhysXScene::GetActor(Entity entity) const
+	{
+		const auto it = m_Actors.find(entity.GetUUID());
+		if (it == m_Actors.end()) return nullptr;
+		return it->second;
+	}
+
+	Ref<PhysXActor> PhysXScene::CreateActor(Entity entity)
+	{
+		auto foundActor = GetActor(entity);
+		if (foundActor) return foundActor;
+
+		auto actor = CreateRef<PhysXActor>(entity);
+		// TODO: Entity hierarchy
+		if (entity.HasComponent<RigidBodyComponent>())
+		{
+			
+		}
+		m_Actors.emplace(entity.GetUUID(), actor);
+		m_PhysicsScene->addActor(actor->GetRigidActor());
+		return actor;
 	}
 
 	bool PhysXScene::Advance(DeltaTime dt)
