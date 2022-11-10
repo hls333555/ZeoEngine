@@ -54,8 +54,16 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
-		PhysicsEngine::Shutdown();
+		for (auto* layer : m_LayerStack)
+		{
+			layer->OnDetach();
+			delete layer;
+		}
+
 		ScriptEngine::Shutdown();
+		// Clear scene references (so that physics scene can be destroyed) before physics engine shutdown
+		// This fixes a crash when closing application during physics simulation
+		PhysicsEngine::Shutdown();
 		Renderer::Shutdown();
 
 		delete m_Profiler;

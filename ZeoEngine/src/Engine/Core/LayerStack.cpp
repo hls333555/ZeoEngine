@@ -3,15 +3,6 @@
 
 namespace ZeoEngine {
 
-	LayerStack::~LayerStack()
-	{
-		for (auto* layer : m_Layers)
-		{
-			layer->OnDetach();
-			delete layer;
-		}
-	}
-
 	void LayerStack::PushLayer(Layer* layer)
 	{
 		m_Layers.emplace(m_Layers.cbegin() + m_LayerInsertIndex, layer);

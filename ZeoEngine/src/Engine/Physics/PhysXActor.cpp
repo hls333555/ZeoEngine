@@ -1,9 +1,10 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXActor.h"
 
+#include "Engine/GameFramework/Components.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
-#include "Engine/GameFramework/Components.h"
+#include "Engine/Physics/PhysXShapes.h"
 
 namespace ZeoEngine {
 
@@ -11,6 +12,19 @@ namespace ZeoEngine {
 		: m_Entity(entity)
 	{
 		CreateRigidActor();
+	}
+
+	PhysXActor::~PhysXActor()
+	{
+		for (const auto& collider : m_Colliders)
+		{
+			collider->DetachFromActor(m_RigidActor);
+			collider->Release();
+		}
+		m_Colliders.clear();
+
+		m_RigidActor->release();
+		m_RigidActor = nullptr;
 	}
 
 	bool PhysXActor::IsDynamic() const
@@ -33,6 +47,11 @@ namespace ZeoEngine {
 		}
 
 		m_RigidActor->is<physx::PxRigidDynamic>()->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, bIsKinematic);
+	}
+
+	bool PhysXActor::IsSleeping() const
+	{
+		return IsDynamic() ? m_RigidActor->is<physx::PxRigidDynamic>()->isSleeping() : false;
 	}
 
 	bool PhysXActor::IsGravityEnabled() const
@@ -217,12 +236,22 @@ namespace ZeoEngine {
 	{
 		if (!IsDynamic() || IsKinematic())
 		{
-			ZE_CORE_WARN("Trying to add force to a non-dynamic or kinematic physics actor."); // TODO: Kinematic
+			ZE_CORE_WARN("Trying to add force to a non-dynamic or kinematic physics actor.");
 			return;
 		}
 
 		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
 		rigidDynamic->addForce(PhysXUtils::ToPhysXVector(force), static_cast<physx::PxForceMode::Enum>(forceMode));
+	}
+
+	void PhysXActor::AddCollider(ColliderType type)
+	{
+		switch (type)
+		{
+			case ColliderType::Box:
+				m_Colliders.emplace_back(CreateScope<PhysXBoxColliderShape>(m_Entity, *this));
+				break;
+		}
 	}
 
 	void PhysXActor::CreateRigidActor()
@@ -244,12 +273,31 @@ namespace ZeoEngine {
 			SetGravityEnabled(rigidBodyComp.bEnableGravity);
 			SetLinearDamping(rigidBodyComp.LinearDamping);
 			SetAngularDamping(rigidBodyComp.AngularDamping);
+
+			auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+			rigidDynamic->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, rigidBodyComp.CollisionDetection == RigidBodyComponent::CollisionDetectionType::Continuous);
+			rigidDynamic->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_SPECULATIVE_CCD, rigidBodyComp.CollisionDetection == RigidBodyComponent::CollisionDetectionType::ContinuousSpeculative);
 		}
+
+		if (m_Entity.HasComponent<BoxColliderComponent>())
+		{
+			AddCollider(ColliderType::Box);
+		}
+
+		m_RigidActor->userData = this;
 
 #ifdef ZE_DEBUG
 		const auto& coreComp = m_Entity.GetComponent<CoreComponent>();
 		m_RigidActor->setName(coreComp.Name.c_str());
 #endif
+	}
+
+	void PhysXActor::SynchronizeTransform()
+	{
+		const auto actorPose = m_RigidActor->getGlobalPose();
+		const Vec3 translation = PhysXUtils::FromPhysXVector(actorPose.p);
+		const Vec3 rotation = glm::eulerAngles(PhysXUtils::FromPhysXQuat(actorPose.q));
+		m_Entity.SetTransform(translation, rotation, m_Entity.GetScale());
 	}
 
 }

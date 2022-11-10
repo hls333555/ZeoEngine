@@ -7,12 +7,15 @@
 
 namespace ZeoEngine {
 
-	struct RigidBodyComponent;
+	class PhysXColliderShapeBase;
 
 	class PhysXActor
 	{
+		friend class PhysXScene;
+
 	public:
 		PhysXActor(Entity entity);
+		~PhysXActor();
 
 		Entity GetEntity() const { return m_Entity; }
 
@@ -21,6 +24,8 @@ namespace ZeoEngine {
 		bool IsDynamic() const;
 		bool IsKinematic() const;
 		void SetKinematic(bool bIsKinematic) const;
+
+		bool IsSleeping() const;
 
 		bool IsGravityEnabled() const;
 		void SetGravityEnabled(bool bEnable) const;
@@ -44,13 +49,17 @@ namespace ZeoEngine {
 
 		void AddForce(const Vec3& force, ForceMode forceMode) const;
 
+		void AddCollider(ColliderType type);
+
 	private:
 		void CreateRigidActor();
+		void SynchronizeTransform();
 
 	private:
 		Entity m_Entity;
 
 		physx::PxRigidActor* m_RigidActor = nullptr;
+		std::vector<Scope<PhysXColliderShapeBase>> m_Colliders;
 	};
 
 }

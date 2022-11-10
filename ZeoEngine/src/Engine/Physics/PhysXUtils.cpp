@@ -27,6 +27,11 @@ namespace ZeoEngine {
 		return { pos, quat };
 	}
 
+	physx::PxTransform PhysXUtils::ToPhysXTransform(const Vec3& translation, const Vec3& rotation)
+	{
+		return physx::PxTransform(ToPhysXVector(translation), ToPhysXQuat(Quat(rotation)));
+	}
+
 	physx::PxQuat PhysXUtils::ToPhysXQuat(const Quat& quat)
 	{
 		return physx::PxQuat(quat.x, quat.y, quat.z, quat.w);

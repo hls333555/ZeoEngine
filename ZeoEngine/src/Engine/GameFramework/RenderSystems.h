@@ -32,6 +32,7 @@ namespace ZeoEngine {
 	private:
 		void RenderLights(bool bIsEditor) const;
 		void RenderMeshes() const;
+		void RenderPhysicsDebug(bool bIsEditor) const;
 	};
 
 	class RenderSystem2D : public RenderSystem

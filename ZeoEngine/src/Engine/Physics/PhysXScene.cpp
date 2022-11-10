@@ -5,6 +5,7 @@
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
+#include "Engine/Physics/PhysXActor.h"
 
 namespace ZeoEngine {
 
@@ -13,10 +14,14 @@ namespace ZeoEngine {
 		auto& physics = PhysXEngine::GetPhysics();
 		const auto& settings = PhysicsEngine::GetSettings();
 		m_SubStepTime = settings.FixedDeltaTime;
+
 		physx::PxSceneDesc sceneDesc(physics.getTolerancesScale());
 		sceneDesc.gravity = PhysXUtils::ToPhysXVector(settings.Gravity);
 		sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader; // TODO:
 		sceneDesc.cpuDispatcher = PhysXEngine::GetCPUDispatcher();
+		sceneDesc.flags |= physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS;
+		sceneDesc.flags |= physx::PxSceneFlag::eENABLE_CCD | physx::PxSceneFlag::eENABLE_PCM;
+		//sceneDesc.flags |= physx::PxSceneFlag::eENABLE_ENHANCED_DETERMINISM;
 
 		ZE_CORE_ASSERT(sceneDesc.isValid());
 
@@ -35,31 +40,50 @@ namespace ZeoEngine {
 	{
 		if (Advance(dt))
 		{
-			
+			U32 numActiveActors;
+			auto** activeActors = m_PhysicsScene->getActiveActors(numActiveActors);
+			for (uint32_t i = 0; i < numActiveActors; ++i)
+			{
+				auto* actor = static_cast<PhysXActor*>(activeActors[i]->userData);
+				if (actor && !actor->IsSleeping())
+				{
+					actor->SynchronizeTransform();
+				}
+			}
 		}
 	}
 
-	Ref<PhysXActor> PhysXScene::GetActor(Entity entity) const
+	PhysXActor* PhysXScene::GetActor(Entity entity) const
 	{
 		const auto it = m_Actors.find(entity.GetUUID());
 		if (it == m_Actors.end()) return nullptr;
-		return it->second;
+		return it->second.get();
 	}
 
-	Ref<PhysXActor> PhysXScene::CreateActor(Entity entity)
+	PhysXActor* PhysXScene::CreateActor(Entity entity)
 	{
 		auto foundActor = GetActor(entity);
 		if (foundActor) return foundActor;
 
-		auto actor = CreateRef<PhysXActor>(entity);
+		auto actor = CreateScope<PhysXActor>(entity);
+		auto* actorPtr = actor.get();
 		// TODO: Entity hierarchy
 		if (entity.HasComponent<RigidBodyComponent>())
 		{
 			
 		}
-		m_Actors.emplace(entity.GetUUID(), actor);
-		m_PhysicsScene->addActor(actor->GetRigidActor());
-		return actor;
+		m_Actors.emplace(entity.GetUUID(), std::move(actor));
+		m_PhysicsScene->addActor(actorPtr->GetRigidActor());
+		return actorPtr;
+	}
+
+	void PhysXScene::DestroyActor(Entity entity)
+	{
+		if (const auto* actor = GetActor(entity))
+		{
+			m_PhysicsScene->removeActor(actor->GetRigidActor());
+		}
+		m_Actors.erase(entity.GetUUID());
 	}
 
 	bool PhysXScene::Advance(DeltaTime dt)

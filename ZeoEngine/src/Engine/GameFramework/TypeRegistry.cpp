@@ -107,7 +107,7 @@ namespace ZeoEngine {
 			.Field<ShadowType::PCF>("PCF")
 			.Field<ShadowType::PCSS>("PCSS");
 
-		RegisterComponent<LightComponentBase>("LightComponentBase", Inherent)
+		RegisterComponent<LightComponentBase>("Light Base", Inherent)
 			.Field<&LightComponentBase::Color>("Color")
 			.Field<&LightComponentBase::Intensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
 			.Field<&LightComponentBase::bCastShadow>("CastShadow")
@@ -117,16 +117,16 @@ namespace ZeoEngine {
 			.Field<&LightComponentBase::FilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
 			.Field<&LightComponentBase::LightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"));
 
-		RegisterComponent<DirectionalLightComponent, LightComponentBase>("DirectionalLight", std::make_pair(Category, "Rendering"))
+		RegisterComponent<DirectionalLightComponent, LightComponentBase>("Directional Light", std::make_pair(Category, "Rendering"))
 			.Field<&DirectionalLightComponent::CascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false"))
 			.Field<&DirectionalLightComponent::CascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"))
 			.Field<&DirectionalLightComponent::MaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
 			.Field<&DirectionalLightComponent::CascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"));
 
-		RegisterComponent<PointLightComponent, LightComponentBase>("PointLight", std::make_pair(Category, "Rendering"))
+		RegisterComponent<PointLightComponent, LightComponentBase>("Point Light", std::make_pair(Category, "Rendering"))
 			.Field<&PointLightComponent::Range>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f));
 
-		RegisterComponent<SpotLightComponent, PointLightComponent>("SpotLight", std::make_pair(Category, "Rendering"))
+		RegisterComponent<SpotLightComponent, PointLightComponent>("Spot Light", std::make_pair(Category, "Rendering"))
 			.Field<&SpotLightComponent::CutoffAngle>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f));
 
 #pragma endregion
@@ -215,13 +215,32 @@ namespace ZeoEngine {
 			.Field<RigidBodyComponent::BodyType::Static>("Static")
 			.Field<RigidBodyComponent::BodyType::Dynamic>("Dynamic");
 
+		RegisterEnum<RigidBodyComponent::CollisionDetectionType>()
+			.Field<RigidBodyComponent::CollisionDetectionType::Discrete>("Discrete")
+			.Field<RigidBodyComponent::CollisionDetectionType::Continuous>("Continuous")
+			.Field<RigidBodyComponent::CollisionDetectionType::ContinuousSpeculative>("ContinuousSpeculative");
+
 		RegisterComponent<RigidBodyComponent>("RigidBody", std::make_pair(Category, "Physics"))
 			.Field<&RigidBodyComponent::Type>("Type")
-			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic")
-			.Field<&RigidBodyComponent::Mass>("Mass")
-			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping")
-			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping")
-			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity");
+			.Field<&RigidBodyComponent::CollisionDetection>("CollisionDetection")
+			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic", std::make_pair(HideCondition, "Type == Static"))
+			.Field<&RigidBodyComponent::Mass>("Mass", std::make_pair(HideCondition, "Type == Static"))
+			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, "Type == Static"))
+			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping", std::make_pair(HideCondition, "Type == Static"))
+			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity", std::make_pair(HideCondition, "Type == Static"));
+
+		RegisterComponent<PhysicsMaterialDetailComponent>("Physics Material Detail", Inherent, HideComponentHeader)
+			.Field<true, &PhysicsMaterialDetailComponent::GetStaticFriction>("StaticFriction")
+			.Field<true, &PhysicsMaterialDetailComponent::GetDynamicFriction>("DynamicFriction")
+			.Field<true, &PhysicsMaterialDetailComponent::GetBounciness>("Bounciness");
+
+		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
+			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&ColliderComponentBase::bIsTrigger>("IsTrigger");
+
+		RegisterComponent<BoxColliderComponent, ColliderComponentBase>("Box Collider", std::make_pair(Category, "Physics"))
+			.Field<&BoxColliderComponent::Size>("Size")
+			.Field<&BoxColliderComponent::Offset>("Offset");
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE

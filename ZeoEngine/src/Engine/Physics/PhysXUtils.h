@@ -13,6 +13,7 @@ namespace ZeoEngine {
 		static const physx::PxVec3& ToPhysXVector(const Vec3& vector);
 		static const physx::PxVec4& ToPhysXVector(const Vec4& vector);
 		static physx::PxTransform ToPhysXTransform(const Mat4& transform);
+		static physx::PxTransform ToPhysXTransform(const Vec3& translation, const Vec3& rotation);
 		static physx::PxQuat ToPhysXQuat(const Quat& quat);
 
 		static Vec3 FromPhysXVector(const physx::PxVec3& vector);

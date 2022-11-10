@@ -77,9 +77,7 @@ namespace ZeoEngine {
 		bool bTrackMemoryAllocations = false;
 #endif
 
-		physx::PxTolerancesScale tolerancesScale;
-		tolerancesScale.speed = 980.0f;
-		s_Data->Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Data->Foundation, tolerancesScale, bTrackMemoryAllocations, PhysXDebugger::GetDebugger());
+		s_Data->Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Data->Foundation, physx::PxTolerancesScale(), bTrackMemoryAllocations, PhysXDebugger::GetDebugger());
 		ZE_CORE_ASSERT(s_Data->Physics, "Failed to create PhysX Physics!");
 
 		bool bExtentionsLoaded = PxInitExtensions(*s_Data->Physics, PhysXDebugger::GetDebugger());

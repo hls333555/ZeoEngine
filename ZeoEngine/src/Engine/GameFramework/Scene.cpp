@@ -114,6 +114,14 @@ namespace ZeoEngine {
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		auto* physicsScene = GetPhysicsScene();
+		if (physicsScene)
+		{
+			if (entity.HasComponent<RigidBodyComponent>())
+			{
+				physicsScene->DestroyActor(entity);
+			}
+		}
 		const auto uuid = entity.GetUUID();
 		destroy(entity);
 		m_Entities.erase(uuid);

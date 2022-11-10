@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		friend class PhysXCookingFactory;
 		friend class PhysXScene;
 		friend class PhysXActor;
+		friend class PhysXColliderShapeBase;
 
 	public:
 		static void Init();

@@ -30,13 +30,13 @@ namespace ZeoEngine {
 
 	Profiler::Profiler()
 	{
-		Console::Get().RegisterCommand("p.StartCPUCapture", [this](const std::vector<std::string>& params)
+		Console::Get().RegisterCommand("profile.StartCPUCapture", [this](const std::vector<std::string>& params)
 		{
 			std::string captureName = params.empty() ? "capture" : params[0];
 			m_Optick.StartCapture(std::move(captureName));
 		}, "Start capturing frames for Optick. Param1(optional): Name of the capture");
 
-		Console::Get().RegisterCommand("p.StopCPUCapture", [this](const std::vector<std::string>&)
+		Console::Get().RegisterCommand("profile.StopCPUCapture", [this](const std::vector<std::string>&)
 		{
 			m_Optick.StopCapture();
 		}, "Stop capturing frames for Optick.");

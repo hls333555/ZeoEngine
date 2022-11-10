@@ -10,4 +10,9 @@ namespace ZeoEngine {
 		Acceleration
 	};
 
+	enum class ColliderType
+	{
+		Box, Sphere, Capsule, ConvexMesh, TriangleMesh
+	};
+
 }

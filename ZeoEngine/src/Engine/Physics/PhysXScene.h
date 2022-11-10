@@ -5,16 +5,21 @@
 
 namespace ZeoEngine {
 
+	class PhysXActor;
+
 	class PhysXScene
 	{
 	public:
 		PhysXScene();
+		// TODO: Scene context require this to be move constructible
+		PhysXScene(PhysXScene&&) = default;
 		~PhysXScene();
 
 		void Simulate(DeltaTime dt);
 
-		Ref<PhysXActor> GetActor(Entity entity) const;
-		Ref<PhysXActor> CreateActor(Entity entity);
+		PhysXActor* GetActor(Entity entity) const;
+		PhysXActor* CreateActor(Entity entity);
+		void DestroyActor(Entity entity);
 
 	private:
 		bool Advance(DeltaTime dt);
@@ -24,7 +29,7 @@ namespace ZeoEngine {
 		physx::PxScene* m_PhysicsScene = nullptr;
 
 		/** Map from entity ID to PhysX actor */
-		std::unordered_map<UUID, Ref<PhysXActor>> m_Actors;
+		std::unordered_map<UUID, Scope<PhysXActor>> m_Actors;
 
 		float m_SubStepTime;
 		float m_AccumulatedDeltaTime = 0.0f;

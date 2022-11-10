@@ -23,31 +23,25 @@ namespace ZeoEngine {
 
 	void DebugDrawUtils::DrawBox(const Scene& scene, const Vec3& center, const Vec3& extent, const Vec3& color, const Vec3& rotation, float duration)
 	{
-		if (rotation == Vec3(0.0f))
-		{
-			dd::box(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), extent.x, extent.y, extent.z, static_cast<I32>(duration * 1000.0f));
-		}
-		else
-		{
-			ddVec3 points[8];
-			auto point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(-extent.x, extent.y, extent.z, 1.0f));
-			points[0][0] = point.x; points[0][1] = point.y; points[0][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(-extent.x, extent.y, -extent.z, 1.0f));
-			points[1][0] = point.x; points[1][1] = point.y; points[1][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(extent.x, extent.y, -extent.z, 1.0f));
-			points[2][0] = point.x; points[2][1] = point.y; points[2][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(extent.x, extent.y, extent.z, 1.0f));
-			points[3][0] = point.x; points[3][1] = point.y; points[3][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(-extent.x, -extent.y, extent.z, 1.0f));
-			points[4][0] = point.x; points[4][1] = point.y; points[4][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(-extent.x, -extent.y, -extent.z, 1.0f));
-			points[5][0] = point.x; points[5][1] = point.y; points[5][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(extent.x, -extent.y, -extent.z, 1.0f));
-			points[6][0] = point.x; points[6][1] = point.y; points[6][2] = point.z;
-			point = center + Vec3(glm::toMat4(glm::quat(rotation)) * Vec4(extent.x, -extent.y, extent.z, 1.0f));
-			points[7][0] = point.x; points[7][1] = point.y; points[7][2] = point.z;
-			dd::box(scene.GetContextShared()->DebugDrawContext, points, glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
-		}
+		ddVec3 points[8];
+		Mat4 transform = glm::translate(Mat4(1.0f), center) * glm::toMat4(Quat(rotation)) * glm::scale(Mat4(1.0f), Vec3(extent.x, extent.y, extent.z));
+		auto point = transform * Vec4(-0.5f, 0.5f, 0.5f, 1);
+		points[0][0] = point.x; points[0][1] = point.y; points[0][2] = point.z;
+		point = transform * Vec4(-0.5f, 0.5f, -0.5f, 1);
+		points[1][0] = point.x; points[1][1] = point.y; points[1][2] = point.z;
+		point = transform * Vec4(0.5f, 0.5f, -0.5f, 1);
+		points[2][0] = point.x; points[2][1] = point.y; points[2][2] = point.z;
+		point = transform * Vec4(0.5f, 0.5f, 0.5f, 1);
+		points[3][0] = point.x; points[3][1] = point.y; points[3][2] = point.z;
+		point = transform * Vec4(-0.5f, -0.5f, 0.5f, 1);
+		points[4][0] = point.x; points[4][1] = point.y; points[4][2] = point.z;
+		point = transform * Vec4(-0.5f, -0.5f, -0.5f, 1);
+		points[5][0] = point.x; points[5][1] = point.y; points[5][2] = point.z;
+		point = transform * Vec4(0.5f, -0.5f, -0.5f, 1);
+		points[6][0] = point.x; points[6][1] = point.y; points[6][2] = point.z;
+		point = transform * Vec4(0.5f, -0.5f, 0.5f, 1);
+		points[7][0] = point.x; points[7][1] = point.y; points[7][2] = point.z;
+		dd::box(scene.GetContextShared()->DebugDrawContext, points, glm::value_ptr(color), static_cast<I32>(duration * 1000.0f));
 	}
 
 	void DebugDrawUtils::DrawCircle(const Scene& scene, const Vec3& center, const Vec3& planeNormal, const Vec3& color, float radius, float segaments, float duration)

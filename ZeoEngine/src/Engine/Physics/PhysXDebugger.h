@@ -4,6 +4,12 @@
 
 namespace ZeoEngine {
 
+	enum class PhysXDebugType
+	{
+		LiveDebug,
+		DebugToFile
+	};
+
 	class PhysXDebugger
 	{
 		friend class PhysXEngine;
@@ -12,7 +18,8 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void StartDebugging(const std::string& filepath, bool bIsNetworking = false);
+		static void StartDebugging();
+		static void StartDebugging(const std::string& filepath);
 		static void StopDebugging();
 
 	private:

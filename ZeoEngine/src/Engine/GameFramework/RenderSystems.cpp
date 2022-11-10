@@ -5,6 +5,8 @@
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Utils/DebugDrawUtils.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Core/Console.h"
+#include "Engine/Core/ConsoleVariables.h"
 
 namespace ZeoEngine {
 
@@ -22,6 +24,7 @@ namespace ZeoEngine {
 
 		RenderLights(true);
 		RenderMeshes();
+		RenderPhysicsDebug(true);
 
 		// Render billboards
 		GetScene()->ForEachComponentGroup<BillboardComponent>(IncludeComponents<TransformComponent>, [this](auto e, const BillboardComponent& billboardComp, const TransformComponent& transformComp)
@@ -49,6 +52,7 @@ namespace ZeoEngine {
 	{
 		RenderLights(false);
 		RenderMeshes();
+		RenderPhysicsDebug(false);
 	}
 
 	void RenderSystem::RenderLights(bool bIsEditor) const
@@ -122,11 +126,24 @@ namespace ZeoEngine {
 		GetScene()->ForEachComponentGroup<MeshRendererComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, const MeshRendererComponent& meshComp, const TransformComponent& transformComp/*, const BoundsComponent& boundsComp*/)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.MaterialAssets, static_cast<I32>(entity));
-			//DebugDrawUtils::DrawSphereBounds(GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
+			//DebugDrawUtils::DrawSphereBounds(*GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
 		});
 	}
 
-	void RenderSystem2D::OnRenderEditor()
+	void RenderSystem::RenderPhysicsDebug(bool bIsEditor) const
+	{
+		GetScene()->ForEachComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>, [this, bIsEditor](auto e, const BoxColliderComponent& boxComp, const TransformComponent& transformComp)
+		{
+			const Entity entity{ e, GetScene() };
+			// Draw collider visualizer in editor or when console variable is set
+			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
+			{
+				DebugDrawUtils::DrawBox(*GetScene(), entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
+			}
+		});
+	}
+
+	void RenderSystem2D::OnRenderEditor() 
 	{
 		// Render sprites
 		GetScene()->ForEachComponentGroup<TransformComponent>(IncludeComponents<SpriteRendererComponent>, [](auto entity, const TransformComponent& transformComp, const SpriteRendererComponent& spriteComp)
@@ -178,7 +195,7 @@ namespace ZeoEngine {
 		GetScene()->ForEachComponentGroup<MeshDetailComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, const MeshDetailComponent& meshComp, const TransformComponent& transformComp/*, const BoundsComponent& boundsComp*/)
 		{
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.Instance->GetMesh()->GetDefaultMaterialAssets());
-			//DebugDrawUtils::DrawSphereBounds(GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
+			//DebugDrawUtils::DrawSphereBounds(*GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
 		});
 	}
 

@@ -15,11 +15,13 @@
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Math/BoxSphereBounds.h"
+#include "Engine/Physics/PhysicsMaterial.h"
 
 namespace ZeoEngine {
 
 	class Texture2D;
 	class ScriptableEntity;
+	class PhysicsMaterial;
 
 	struct IComponent
 	{
@@ -129,7 +131,7 @@ namespace ZeoEngine {
 
 		Mat4 GetTransform() const
 		{
-			const Mat4 rotation = glm::toMat4(glm::quat(GetRotationInRadians()));
+			const Mat4 rotation = glm::toMat4(Quat(GetRotationInRadians()));
 			return glm::translate(Mat4(1.0f), Translation) *
 				rotation *
 				glm::scale(Mat4(1.0f), Scale);
@@ -428,12 +430,39 @@ namespace ZeoEngine {
 			Static = 0, Dynamic
 		};
 
+		enum class CollisionDetectionType
+		{
+			Discrete, Continuous, ContinuousSpeculative
+		};
+
 		BodyType Type = BodyType::Static;
+		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
 		bool bIsKinematic = false;
 		float Mass = 1.0f;
 		float LinearDamping = 0.01f;
 		float AngularDamping = 0.05f;
 		bool bEnableGravity = true;
+	};
+
+	struct PhysicsMaterialDetailComponent : public IComponent
+	{
+		Ref<PhysicsMaterial> LoadedPhysicsMaterial;
+
+		float& GetStaticFriction() const { return LoadedPhysicsMaterial->m_StaticFriction; }
+		float& GetDynamicFriction() const { return LoadedPhysicsMaterial->m_DynamicFriction; }
+		float& GetBounciness() const { return LoadedPhysicsMaterial->m_Bounciness; }
+	};
+
+	struct ColliderComponentBase : public IComponent
+	{
+		AssetHandle PhysicsMaterialAsset;
+		bool bIsTrigger = false;
+	};
+
+	struct BoxColliderComponent : public ColliderComponentBase
+	{
+		Vec3 Size{ 1.0f, 1.0f, 1.0f };
+		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
 	};
 
 }

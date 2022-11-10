@@ -2,6 +2,7 @@
 #include "Engine/Physics/PhysXDebugger.h"
 
 #include "Engine/Physics/PhysXEngine.h"
+#include "Engine/Core/Console.h"
 
 namespace ZeoEngine {
 
@@ -20,6 +21,15 @@ namespace ZeoEngine {
 
 		s_Data->Debugger = PxCreatePvd(PhysXEngine::GetFoundation());
 		ZE_CORE_ASSERT(s_Data->Debugger, "Failed to create PhysX PVD!");
+
+		Console::Get().RegisterCommand("physics.StartDebugger", [](const std::vector<std::string>&)
+		{
+			StartDebugging();
+		}, "Start Nvidia physics debugger.");
+		Console::Get().RegisterCommand("physics.StopDebugger", [](const std::vector<std::string>&)
+		{
+			StopDebugging();
+		}, "Stop Nvidia physics debugger.");
 #endif
 	}
 
@@ -34,22 +44,23 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void PhysXDebugger::StartDebugging(const std::string& filepath, bool bIsNetworking)
+	void PhysXDebugger::StartDebugging()
 	{
 #ifdef ZE_DEBUG
 		StopDebugging();
 
-		if (!bIsNetworking)
-		{
-			s_Data->Transport = physx::PxDefaultPvdFileTransportCreate((filepath + ".pxd2").c_str());
-			s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
-		}
-		else
-		{
-			const char* host = "127.0.0.1";
-			s_Data->Transport = physx::PxDefaultPvdSocketTransportCreate(host, 5425, 1000);
-			s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
-		}
+		s_Data->Transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
+		s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
+#endif
+	}
+
+	void PhysXDebugger::StartDebugging(const std::string& filepath)
+	{
+#ifdef ZE_DEBUG
+		StopDebugging();
+
+		s_Data->Transport = physx::PxDefaultPvdFileTransportCreate((filepath + ".pxd2").c_str());
+		s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
 #endif
 	}
 

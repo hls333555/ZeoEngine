@@ -7,10 +7,14 @@
 #include <box2d/b2_polygon_shape.h>
 #include <box2d/b2_circle_shape.h>
 
+#include "Engine/Core/Console.h"
+#include "Engine/Core/ConsoleVariables.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/World.h"
+#include "Engine/Physics/PhysicsEngine.h"
+#include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXScene.h"
 #include "Engine/Renderer/RenderPass.h"
 
@@ -530,11 +534,35 @@ namespace ZeoEngine {
 			const Entity entity{ e, GetScene() };
 			physicsScene->CreateActor(entity);
 		});
+
+#ifdef ZE_DEBUG
+		const auto& settings = PhysicsEngine::GetSettings();
+		if (settings.bDebugOnPlay)
+		{
+			if (settings.DebugType == PhysXDebugType::LiveDebug)
+			{
+				PhysXDebugger::StartDebugging();
+			}
+			else
+			{
+				// TODO: PhysX debugger output path
+				PhysXDebugger::StartDebugging(AssetRegistry::GetProjectDirectory());
+			}
+		}
+#endif
 	}
 
 	void PhysicsSystem::OnRuntimeStop()
 	{
+		Console::Get().SetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS, {});
+
+#ifdef ZE_DEBUG
+		if (PhysicsEngine::GetSettings().bDebugOnPlay)
+		{
+			PhysXDebugger::StopDebugging();
+		}
 		GetScene()->DestroyPhysicsScene();
+#endif
 	}
 
 	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
