@@ -334,6 +334,7 @@ namespace ZeoEngine {
 
 		m_CameraObserver = CreateObserver(entt::collector.update<CameraComponent>());
 		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
+		m_PhysicsObserver = CreateObserver(entt::collector.update<TransformComponent>().where<RigidBodyComponent>());
 	}
 
 	void LevelObserverSystem::OnUnbind()
@@ -362,6 +363,7 @@ namespace ZeoEngine {
 
 		m_CameraObserver->disconnect();
 		m_BoundsObserver->disconnect();
+		m_PhysicsObserver->disconnect();
 	}
 
 	void LevelObserverSystem::OnUpdate(Scene& scene)
@@ -377,6 +379,19 @@ namespace ZeoEngine {
 		{
 			const Entity entity{ e, scene.shared_from_this() };
 			entity.UpdateBounds();
+		});
+
+		m_PhysicsObserver->each([&scene](const auto e)
+		{
+			if (const auto* physicsScene = scene.GetPhysicsScene())
+			{
+				const Entity entity{ e, scene.shared_from_this() };
+				if (const auto* actor = physicsScene->GetActor(entity))
+				{
+					// Set transform back to physics actor
+					actor->SetTransform(entity.GetTransform());
+				}
+			}
 		});
 	}
 

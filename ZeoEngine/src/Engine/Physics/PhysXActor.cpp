@@ -27,6 +27,43 @@ namespace ZeoEngine {
 		m_RigidActor = nullptr;
 	}
 
+	void PhysXActor::SetTranslation(const Vec3& translation, bool bAutoWake) const
+	{
+		if (!IsDynamic())
+		{
+			ZE_CORE_WARN("Trying to move a non-dynamic physics actor.");
+			return;
+		}
+
+		auto transform = m_RigidActor->getGlobalPose();
+		transform.p = PhysXUtils::ToPhysXVector(translation);
+		m_RigidActor->setGlobalPose(transform, bAutoWake);
+	}
+
+	void PhysXActor::SetRotation(const Vec3& rotation, bool bAutoWake) const
+	{
+		if (!IsDynamic())
+		{
+			ZE_CORE_WARN("Trying to move a non-dynamic physics actor.");
+			return;
+		}
+
+		auto transform = m_RigidActor->getGlobalPose();
+		transform.q = PhysXUtils::ToPhysXQuat(Quat(rotation));
+		m_RigidActor->setGlobalPose(transform, bAutoWake);
+	}
+
+	void PhysXActor::SetTransform(const Mat4& transform, bool bAutoWake) const
+	{
+		if (!IsDynamic())
+		{
+			ZE_CORE_WARN("Trying to move a non-dynamic physics actor.");
+			return;
+		}
+
+		m_RigidActor->setGlobalPose(PhysXUtils::ToPhysXTransform(transform), bAutoWake);
+	}
+
 	bool PhysXActor::IsDynamic() const
 	{
 		const auto& rigidBodyComp = m_Entity.GetComponent<RigidBodyComponent>();
@@ -304,7 +341,13 @@ namespace ZeoEngine {
 		const auto actorPose = m_RigidActor->getGlobalPose();
 		const Vec3 translation = PhysXUtils::FromPhysXVector(actorPose.p);
 		const Vec3 rotation = glm::eulerAngles(PhysXUtils::FromPhysXQuat(actorPose.q));
-		m_Entity.SetTransform(translation, rotation, m_Entity.GetScale());
+		auto& transformComp = m_Entity.GetComponent<TransformComponent>();
+		transformComp.Translation = translation;
+		transformComp.Rotation = glm::degrees(rotation);
+		// Queue an update for bounds calculation as we do not call patch on TransformComponent
+		// In fact, we do not need to set transform back to physics actor as synchronization is just done
+		// See PhysicsObserver in LevelObserverSystem
+		m_Entity.PatchComponent<BoundsComponent>();
 	}
 
 }

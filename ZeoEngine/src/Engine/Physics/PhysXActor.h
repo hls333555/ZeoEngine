@@ -21,6 +21,10 @@ namespace ZeoEngine {
 
 		physx::PxRigidActor& GetRigidActor() const { return *m_RigidActor; }
 
+		void SetTranslation(const Vec3& translation, bool bAutoWake = true) const;
+		void SetRotation(const Vec3& rotation, bool bAutoWake = true) const;
+		void SetTransform(const Mat4& transform, bool bAutoWake = true) const;
+
 		bool IsDynamic() const;
 		bool IsKinematic() const;
 		void SetKinematic(bool bIsKinematic) const;
