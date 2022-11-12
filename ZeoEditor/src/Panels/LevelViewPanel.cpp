@@ -27,7 +27,6 @@ namespace ZeoEngine {
 	{
 		ViewPanelBase::OnAttach();
 
-		m_LevelWorld = dynamic_cast<LevelPreviewWorld*>(GetEditorWorld());
 		GetEditorWorld()->GetSceneRenderer()->m_PostSceneRender.connect<&LevelViewPanel::ReadPixelDataFromIDBuffer>(this);
 	}
 
@@ -52,22 +51,49 @@ namespace ZeoEngine {
 		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnMouseButtonPressed));
 	}
 
-	void LevelViewPanel::RenderToolbar() const
+	void LevelViewPanel::RenderToolbar()
 	{
+		auto* levelWorld = static_cast<LevelPreviewWorld*>(GetEditorWorld());
+
 		// Place buttons at window center
-		float indent = m_LevelWorld->GetSceneState() == SceneState::Pause
-			? (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() * 2) * 0.5f - ImGui::GetFramePadding().x * 2
-			: (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
+		float indent = levelWorld->GetSceneState() == SceneState::Pause
+			? (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() * 2) * 0.5f - ImGui::GetFramePadding().x * 2 // 3 buttons
+			: (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x; // 2 buttons
 
 		ImGui::Indent(indent);
 
-		switch (m_LevelWorld->GetSceneState())
+		auto Stop = [levelWorld]()
 		{
-		case SceneState::Edit:
+			// Stop simulate / play
+			if (ImGui::TransparentButton(ICON_FA_STOP))
+			{
+				if (levelWorld->IsSimulation())
+				{
+					levelWorld->OnSceneStopSimulation();
+				}
+				else
+				{
+					levelWorld->StopScene();
+				}
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Stop the scene (Esc)");
+			}
+		};
+
+		switch (levelWorld->GetSceneState())
+		{
+			case SceneState::Edit:
 				// Play
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
-					m_LevelWorld->OnScenePlay();
+					levelWorld->OnScenePlay();
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Play the scene (Alt-P)");
 				}
 
 				ImGui::SameLine();
@@ -75,52 +101,45 @@ namespace ZeoEngine {
 				// Simulate
 				if (ImGui::TransparentButton(ICON_FA_PLAY_CIRCLE))
 				{
-					m_LevelWorld->OnSceneStartSimulation();
+					levelWorld->OnSceneStartSimulation();
+				}
+
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Simulate the scene (Ctrl-P)");
 				}
 
 				break;
 			case SceneState::Play:
-				// Stop simulate / play
-				if (ImGui::TransparentButton(ICON_FA_STOP))
-				{
-					if (m_LevelWorld->IsSimulation())
-					{
-						m_LevelWorld->OnSceneStopSimulation();
-					}
-					else
-					{
-						m_LevelWorld->StopScene();
-					}
-				}
+				Stop();
 
 				ImGui::SameLine();
 
 				// Pause
 				if (ImGui::TransparentButton(ICON_FA_PAUSE))
 				{
-					m_LevelWorld->OnScenePause();
+					levelWorld->OnScenePause();
+				}
+
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Pause the scene (Pause)");
 				}
 				break;
 			case SceneState::Pause:
-				// Stop simulate / play
-				if (ImGui::TransparentButton(ICON_FA_STOP))
-				{
-					if (m_LevelWorld->IsSimulation())
-					{
-						m_LevelWorld->OnSceneStopSimulation();
-					}
-					else
-					{
-						m_LevelWorld->StopScene();
-					}
-				}
+				Stop();
 
 				ImGui::SameLine();
 
 				// Resume
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
-					m_LevelWorld->OnSceneResume();
+					levelWorld->OnSceneResume();
+				}
+
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Resume the scene (Pause)");
 				}
 
 				ImGui::SameLine();
@@ -128,15 +147,77 @@ namespace ZeoEngine {
 				// Step one frame
 				if (ImGui::TransparentButton(ICON_FA_STEP_FORWARD))
 				{
-					m_LevelWorld->OnSceneStep();
+					levelWorld->OnSceneStep();
+				}
+
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Step one frame (F10)");
 				}
 				break;
+		}
+
+		ImGui::SameLine();
+		
+		// Edit bar
+		if (levelWorld->GetSceneState() == SceneState::Edit || levelWorld->IsSimulation())
+		{
+			// Align to the right
+			indent = ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() * 4;
+			ImGui::Indent(indent);
+			if (ImGui::ActiveTransparentButton(ICON_FA_ARROWS_ALT, m_GizmoType == ImGuizmo::TRANSLATE))
+			{
+				SetTranslationGizmo();
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Translation (W)");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::ActiveTransparentButton(ICON_FA_SYNC_ALT, m_GizmoType == ImGuizmo::ROTATE))
+			{
+				SetRotationGizmo();
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Rotation (E)");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::ActiveTransparentButton(ICON_FA_EXTERNAL_LINK_SQUARE_ALT, m_GizmoType == ImGuizmo::SCALE))
+			{
+				SetScaleGizmo();
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("Scale (R)");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::TransparentButton(m_GizmoMode == ImGuizmo::LOCAL ? ICON_FA_DICE_D6 : ICON_FA_GLOBE))
+			{
+				ToggleGizmoMode();
+			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltipWithPadding("World Space / Local Space (T)");
+			}
 		}
 	}
 
 	void LevelViewPanel::RenderGizmo()
 	{
-		Entity selectedEntity = m_LevelWorld->GetContextEntity();
+		auto* levelWorld = static_cast<LevelPreviewWorld*>(GetEditorWorld());
+
+		Entity selectedEntity = levelWorld->GetContextEntity();
 		m_bGizmoVisible = selectedEntity && m_GizmoType != -1;
 		if (m_bGizmoVisible)
 		{
@@ -147,12 +228,12 @@ namespace ZeoEngine {
 			ImGuizmo::SetRect(viewportBounds[0].x, viewportBounds[0].y, viewportSize.x, viewportSize.y);
 
 			// Editor camera
-			const auto& editorCamera = m_LevelWorld->GetEditorCamera();
+			const auto& editorCamera = levelWorld->GetEditorCamera();
 			const Mat4& cameraProjection = editorCamera.GetProjection();
 			Mat4 cameraView = editorCamera.GetViewMatrix();
 
 			// Selected entity
-			auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
+			const auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
 			Mat4 entityTransform = transformComp.GetTransform();
 
 			// Snapping
@@ -167,7 +248,7 @@ namespace ZeoEngine {
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				m_GizmoType, ImGuizmo::LOCAL,
+				m_GizmoType, m_GizmoMode,
 				glm::value_ptr(entityTransform),
 				nullptr, bSnap ? snapValues : nullptr);
 
@@ -185,6 +266,8 @@ namespace ZeoEngine {
 
 	bool LevelViewPanel::OnKeyPressed(KeyPressedEvent& e)
 	{
+		auto* levelWorld = static_cast<LevelPreviewWorld*>(GetEditorWorld());
+
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 
@@ -195,16 +278,16 @@ namespace ZeoEngine {
 				// Toggle play
 				case Key::P:
 				{
-					if (!m_LevelWorld->IsRuntime())
+					if (!levelWorld->IsRuntime())
 					{
 						if (bIsAltPressed)
 						{
-							m_LevelWorld->OnScenePlay();
+							levelWorld->OnScenePlay();
 							return true;
 						}
 						if (bIsCtrlPressed)
 						{
-							m_LevelWorld->OnSceneStartSimulation();
+							levelWorld->OnSceneStartSimulation();
 							return true;
 						}
 					}
@@ -213,9 +296,9 @@ namespace ZeoEngine {
 				// Step a frame
 				case Key::F10:
 				{
-					if (m_LevelWorld->GetSceneState() == SceneState::Pause)
+					if (levelWorld->GetSceneState() == SceneState::Pause)
 					{
-						m_LevelWorld->OnSceneStep();
+						levelWorld->OnSceneStep();
 						return true;
 					}
 					break;
@@ -223,24 +306,24 @@ namespace ZeoEngine {
 				// Toggle pause / resume
 				case Key::Pause:
 				{
-					switch (m_LevelWorld->GetSceneState())
+					switch (levelWorld->GetSceneState())
 					{
-						case SceneState::Play:	m_LevelWorld->OnScenePause();	return true;
-						case SceneState::Pause:	m_LevelWorld->OnSceneResume();	return true;
+						case SceneState::Play:	levelWorld->OnScenePause();	return true;
+						case SceneState::Pause:	levelWorld->OnSceneResume();	return true;
 					}
 				}
 				// Toggle stop
 				case Key::Escape:
 				{
-					if (m_LevelWorld->IsRuntime())
+					if (levelWorld->IsRuntime())
 					{
-						if (m_LevelWorld->IsSimulation())
+						if (levelWorld->IsSimulation())
 						{
-							m_LevelWorld->OnSceneStopSimulation();
+							levelWorld->OnSceneStopSimulation();
 						}
 						else
 						{
-							m_LevelWorld->OnSceneStop();
+							levelWorld->OnSceneStop();
 						}
 						return true;
 					}
@@ -257,46 +340,45 @@ namespace ZeoEngine {
 
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
 
-		// Panel responsing shotcuts
+		// Panel responsing shortcuts
 		{
-			bool bCanSwitchGizmo = !ImGuizmo::IsUsing();
 			switch (e.GetKeyCode())
 			{
 				case Key::W:
 				{
-					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::TRANSLATE; return true;
+					SetTranslationGizmo();
+					return true;
 				}
 				case Key::E:
 				{
-					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::ROTATE; return true;
+					SetRotationGizmo();
+					return true;
 				}
 				case Key::R:
 				{
-					if (bCanSwitchGizmo) m_GizmoType = ImGuizmo::SCALE; return true;
+					SetScaleGizmo();
+					return true;
 				}
 				case Key::Space:
 				{
-					if (bCanSwitchGizmo)
-					{
-						switch (m_GizmoType)
-						{
-							case ImGuizmo::TRANSLATE:	m_GizmoType = ImGuizmo::ROTATE;		break;
-							case ImGuizmo::ROTATE:		m_GizmoType = ImGuizmo::SCALE;		break;
-							case ImGuizmo::SCALE:		m_GizmoType = ImGuizmo::TRANSLATE;	break;
-						}
-					}
+					ToggleGizmoType();
+					return true;
+				}
+				case Key::T:
+				{
+					ToggleGizmoMode();
 					return true;
 				}
 				case Key::Delete:
 				{
-					m_LevelWorld->OnDeleteEntity();
+					levelWorld->OnDeleteEntity();
 					return true;
 				}
 				case Key::D:
 				{
 					if (bIsCtrlPressed)
 					{
-						m_LevelWorld->OnDuplicateEntity();
+						levelWorld->OnDuplicateEntity();
 						return true;
 					}
 					break;
@@ -310,6 +392,7 @@ namespace ZeoEngine {
 	bool LevelViewPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e) const
 	{
 		if (IsPanelHovered() &&
+			!ImGui::IsAnyItemHovered() && // We definitely do not want to deselect entity when clicking on transform buttons
 			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
 			(!m_bGizmoVisible || (m_bGizmoVisible && !ImGuizmo::IsOver())))
 		{
@@ -317,6 +400,51 @@ namespace ZeoEngine {
 		}
 
 		return false;
+	}
+
+	void LevelViewPanel::SetTranslationGizmo()
+	{
+		if (!ImGuizmo::IsUsing())
+		{
+			m_GizmoType = ImGuizmo::TRANSLATE;
+		}
+	}
+
+	void LevelViewPanel::SetRotationGizmo()
+	{
+		if (!ImGuizmo::IsUsing())
+		{
+			m_GizmoType = ImGuizmo::ROTATE;
+		}
+	}
+
+	void LevelViewPanel::SetScaleGizmo()
+	{
+		if (!ImGuizmo::IsUsing())
+		{
+			m_GizmoType = ImGuizmo::SCALE;
+		}
+	}
+
+	void LevelViewPanel::ToggleGizmoType()
+	{
+		if (!ImGuizmo::IsUsing())
+		{
+			switch (m_GizmoType)
+			{
+				case ImGuizmo::TRANSLATE:	m_GizmoType = ImGuizmo::ROTATE;		break;
+				case ImGuizmo::ROTATE:		m_GizmoType = ImGuizmo::SCALE;		break;
+				case ImGuizmo::SCALE:		m_GizmoType = ImGuizmo::TRANSLATE;	break;
+			}
+		}
+	}
+
+	void LevelViewPanel::ToggleGizmoMode()
+	{
+		if (!ImGuizmo::IsUsing())
+		{
+			m_GizmoMode = m_GizmoMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+		}
 	}
 
 	void LevelViewPanel::ReadPixelDataFromIDBuffer(FrameBuffer& frameBuffer)

@@ -11,7 +11,6 @@
 namespace ZeoEngine {
 
 	class FrameBuffer;
-	class LevelPreviewWorld;
 
 	class LevelViewPanel : public ViewPanelBase
 	{
@@ -24,8 +23,14 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 		virtual void ProcessEvent(Event& e) override;
 
-		void RenderToolbar() const;
+		void RenderToolbar();
 		void RenderGizmo();
+
+		void SetTranslationGizmo();
+		void SetRotationGizmo();
+		void SetScaleGizmo();
+		void ToggleGizmoType();
+		void ToggleGizmoMode();
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e) const;
@@ -33,9 +38,8 @@ namespace ZeoEngine {
 		void ReadPixelDataFromIDBuffer(FrameBuffer& frameBuffer);
 
 	private:
-		LevelPreviewWorld* m_LevelWorld = nullptr;
-
 		ImGuizmo::OPERATION m_GizmoType = ImGuizmo::TRANSLATE;
+		ImGuizmo::MODE m_GizmoMode = ImGuizmo::WORLD;
 		bool m_bGizmoVisible = false;
 
 		Entity m_HoveredEntity;
