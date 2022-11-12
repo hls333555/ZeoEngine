@@ -55,41 +55,77 @@ namespace ZeoEngine {
 	void LevelViewPanel::RenderToolbar() const
 	{
 		// Place buttons at window center
-		float indent = m_LevelWorld->GetSceneState() > SceneState::Edit ? ImGui::GetContentRegionAvail().x * 0.5f - ImGui::GetFrameHeightWithSpacing() :
-			(ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
+		float indent = m_LevelWorld->GetSceneState() == SceneState::Pause
+			? (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize() * 2) * 0.5f - ImGui::GetFramePadding().x * 2
+			: (ImGui::GetContentRegionAvail().x - ImGui::GetFontSize()) * 0.5f - ImGui::GetFramePadding().x;
+
 		ImGui::Indent(indent);
 
-		// Toggle play / stop
-		if (ImGui::TransparentButton(m_LevelWorld->GetSceneState() > SceneState::Edit ? ICON_FA_STOP : ICON_FA_PLAY))
-		{
-			if (m_LevelWorld->IsRuntime())
-			{
-				m_LevelWorld->OnSceneStop();
-			}
-			else
-			{
-				m_LevelWorld->OnScenePlay();
-			}
-		}
-
-		ImGui::SameLine();
-
-		// Toggle pause / resume
 		switch (m_LevelWorld->GetSceneState())
 		{
+		case SceneState::Edit:
+				// Play
+				if (ImGui::TransparentButton(ICON_FA_PLAY))
+				{
+					m_LevelWorld->OnScenePlay();
+				}
+
+				ImGui::SameLine();
+
+				// Simulate
+				if (ImGui::TransparentButton(ICON_FA_PLAY_CIRCLE))
+				{
+					m_LevelWorld->OnSceneStartSimulation();
+				}
+
+				break;
 			case SceneState::Play:
+				// Stop simulate / play
+				if (ImGui::TransparentButton(ICON_FA_STOP))
+				{
+					if (m_LevelWorld->IsSimulation())
+					{
+						m_LevelWorld->OnSceneStopSimulation();
+					}
+					else
+					{
+						m_LevelWorld->StopScene();
+					}
+				}
+
+				ImGui::SameLine();
+
+				// Pause
 				if (ImGui::TransparentButton(ICON_FA_PAUSE))
 				{
 					m_LevelWorld->OnScenePause();
 				}
 				break;
 			case SceneState::Pause:
+				// Stop simulate / play
+				if (ImGui::TransparentButton(ICON_FA_STOP))
+				{
+					if (m_LevelWorld->IsSimulation())
+					{
+						m_LevelWorld->OnSceneStopSimulation();
+					}
+					else
+					{
+						m_LevelWorld->StopScene();
+					}
+				}
+
+				ImGui::SameLine();
+
+				// Resume
 				if (ImGui::TransparentButton(ICON_FA_PLAY))
 				{
 					m_LevelWorld->OnSceneResume();
 				}
 
 				ImGui::SameLine();
+
+				// Step one frame
 				if (ImGui::TransparentButton(ICON_FA_STEP_FORWARD))
 				{
 					m_LevelWorld->OnSceneStep();
@@ -159,11 +195,16 @@ namespace ZeoEngine {
 				// Toggle play
 				case Key::P:
 				{
-					if (bIsAltPressed)
+					if (!m_LevelWorld->IsRuntime())
 					{
-						if (!m_LevelWorld->IsRuntime())
+						if (bIsAltPressed)
 						{
 							m_LevelWorld->OnScenePlay();
+							return true;
+						}
+						if (bIsCtrlPressed)
+						{
+							m_LevelWorld->OnSceneStartSimulation();
 							return true;
 						}
 					}
@@ -185,7 +226,7 @@ namespace ZeoEngine {
 					switch (m_LevelWorld->GetSceneState())
 					{
 						case SceneState::Play:	m_LevelWorld->OnScenePause();	return true;
-						case SceneState::Pause:	m_LevelWorld->OnSceneResume(); return true;
+						case SceneState::Pause:	m_LevelWorld->OnSceneResume();	return true;
 					}
 				}
 				// Toggle stop
@@ -193,7 +234,14 @@ namespace ZeoEngine {
 				{
 					if (m_LevelWorld->IsRuntime())
 					{
-						m_LevelWorld->OnSceneStop();
+						if (m_LevelWorld->IsSimulation())
+						{
+							m_LevelWorld->OnSceneStopSimulation();
+						}
+						else
+						{
+							m_LevelWorld->OnSceneStop();
+						}
 						return true;
 					}
 					break;

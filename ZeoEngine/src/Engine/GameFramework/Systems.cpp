@@ -565,6 +565,16 @@ namespace ZeoEngine {
 #endif
 	}
 
+	void PhysicsSystem::OnSimulationStart()
+	{
+		OnRuntimeStart();
+	}
+
+	void PhysicsSystem::OnSimulationStop()
+	{
+		OnRuntimeStop();
+	}
+
 	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
 	{
 		const I32 velocityIterations = 6;
@@ -655,6 +665,16 @@ namespace ZeoEngine {
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
+	}
+
+	void PhysicsSystem2D::OnSimulationStart()
+	{
+		OnRuntimeStart();
+	}
+
+	void PhysicsSystem2D::OnSimulationStop()
+	{
+		OnRuntimeStop();
 	}
 
 }

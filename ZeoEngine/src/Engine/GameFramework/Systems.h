@@ -34,6 +34,8 @@ namespace ZeoEngine {
 
 		virtual void OnRuntimeStart() {}
 		virtual void OnRuntimeStop() {}
+		virtual void OnSimulationStart() {}
+		virtual void OnSimulationStop() {}
 	};
 
 	class SceneObserverSystemBase
@@ -189,6 +191,8 @@ namespace ZeoEngine {
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
+		virtual void OnSimulationStart() override;
+		virtual void OnSimulationStop() override;
 	};
 
 	class PhysicsSystem2D : public PhysicsSystem
@@ -200,6 +204,8 @@ namespace ZeoEngine {
 
 		virtual void OnRuntimeStart() override;
 		virtual void OnRuntimeStop() override;
+		virtual void OnSimulationStart() override;
+		virtual void OnSimulationStop() override;
 
 	private:
 		b2World* m_PhysicsWorld = nullptr; // TODO: Move to scene

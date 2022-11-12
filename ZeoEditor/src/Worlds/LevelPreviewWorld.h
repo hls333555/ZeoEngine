@@ -18,6 +18,8 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 		virtual bool IsRuntime() const override { return m_SceneState != SceneState::Edit; }
+		/** Returns true if current runtime is simulation. Calling it when SceneState == Edit is meaningless. */
+		bool IsSimulation() const { return m_bIsSimulation; }
 
 		void StopScene();
 
@@ -25,6 +27,8 @@ namespace ZeoEngine {
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void OnSceneStartSimulation();
+		void OnSceneStopSimulation();
 		void OnScenePause();
 		void OnSceneResume();
 
@@ -46,11 +50,14 @@ namespace ZeoEngine {
 
 		void OnRuntimeStart() const;
 		void OnRuntimeStop() const;
+		void OnSimulationStart() const;
+		void OnSimulationStop() const;
 
 		virtual bool IsRunning() override { return m_SceneState == SceneState::Play || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
 
 	private:
 		SceneState m_SceneState = SceneState::Edit;
+		bool m_bIsSimulation = false;
 
 		Ref<Scene> m_SceneForEdit;
 

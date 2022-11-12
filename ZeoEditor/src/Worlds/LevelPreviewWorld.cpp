@@ -88,6 +88,7 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		m_bIsSimulation = false;
 		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
@@ -102,6 +103,24 @@ namespace ZeoEngine {
 		SetActiveScene(m_SceneForEdit);
 		OnRuntimeStop();
 		GetEditorCamera().SetEnableUpdate(true);
+	}
+
+	void LevelPreviewWorld::OnSceneStartSimulation()
+	{
+		m_SceneState = SceneState::Play;
+		m_bIsSimulation = true;
+		auto sceneForSimulate = m_SceneForEdit->Copy();
+		SetContextEntity({});
+		SetActiveScene(std::move(sceneForSimulate));
+		OnSimulationStart();
+	}
+
+	void LevelPreviewWorld::OnSceneStopSimulation()
+	{
+		m_SceneState = SceneState::Edit;
+		SetContextEntity({});
+		SetActiveScene(m_SceneForEdit);
+		OnSimulationStop();
 	}
 
 	void LevelPreviewWorld::OnScenePause()
@@ -151,6 +170,22 @@ namespace ZeoEngine {
 		for (const auto& system : GetSystems())
 		{
 			system->OnRuntimeStop();
+		}
+	}
+
+	void LevelPreviewWorld::OnSimulationStart() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnSimulationStart();
+		}
+	}
+
+	void LevelPreviewWorld::OnSimulationStop() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnSimulationStop();
 		}
 	}
 
