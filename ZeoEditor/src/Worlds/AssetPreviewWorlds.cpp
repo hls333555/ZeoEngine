@@ -63,10 +63,10 @@ namespace ZeoEngine {
 	Ref<IAsset> MaterialPreviewWorld::LoadAssetImpl(const std::string& path, bool bForce)
 	{
 		auto& materialComp = GetContextEntity().GetComponent<MaterialDetailComponent>();
-		Ref<IAsset> material = materialComp.LoadedMaterial = AssetLibrary::LoadAsset<Material>(path, bForce);
+		materialComp.LoadedMaterial = AssetLibrary::LoadAsset<Material>(path, bForce);
 		auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-		meshComp.MaterialAssets[0] = material->GetHandle();
-		return material;
+		meshComp.MaterialAssets[0] = materialComp.LoadedMaterial->GetHandle();
+		return materialComp.LoadedMaterial;
 	}
 
 	Scope<InspectorBase> MaterialPreviewWorld::CreateInspector()
@@ -214,6 +214,42 @@ namespace ZeoEngine {
 	Scope<AssetView> ParticlePreviewWorld::CreateAssetView()
 	{
 		return CreateScope<AssetView>();
+	}
+#pragma endregion
+
+#pragma region PhysicsMaterialPreviewWorld
+	Ref<Scene> PhysicsMaterialPreviewWorld::CreateScene()
+	{
+		return CreateRef<Scene>(SceneSpec());
+	}
+
+	Ref<SceneRenderer> PhysicsMaterialPreviewWorld::CreateSceneRenderer()
+	{
+		return nullptr;
+	}
+
+	Entity PhysicsMaterialPreviewWorld::CreatePreviewEntity(Scene& scene)
+	{
+		Entity previewPhysicsMaterialEntity = scene.CreateEntity("Preview Physics Material");
+		previewPhysicsMaterialEntity.AddComponent<PhysicsMaterialDetailComponent>();
+		return previewPhysicsMaterialEntity;
+	}
+
+	Ref<IAsset> PhysicsMaterialPreviewWorld::LoadAssetImpl(const std::string& path, bool bForce)
+	{
+		auto& physicsMaterialComp = GetContextEntity().GetComponent<PhysicsMaterialDetailComponent>();
+		physicsMaterialComp.LoadedPhysicsMaterial = AssetLibrary::LoadAsset<PhysicsMaterial>(path, bForce);
+		return physicsMaterialComp.LoadedPhysicsMaterial;
+	}
+
+	Scope<InspectorBase> PhysicsMaterialPreviewWorld::CreateInspector()
+	{
+		return CreateScope<AssetInspector>(this, entt::type_hash<PhysicsMaterialDetailComponent>::value());
+	}
+
+	Scope<AssetView> PhysicsMaterialPreviewWorld::CreateAssetView()
+	{
+		return nullptr;
 	}
 #pragma endregion
 

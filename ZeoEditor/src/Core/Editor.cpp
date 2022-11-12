@@ -226,7 +226,7 @@ namespace ZeoEngine {
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 
 		inspectorPanel->UpdateWorld(world, true);
-		inspectorPanel->ToggleAssetView(true);
+		inspectorPanel->ToggleAssetView(world->GetAssetView());
 		// If we inspect asset from the Content Browser Panel, the history will be cleared
 		if (!bIsFromAssetBrowser && !bFromHistory)
 		{

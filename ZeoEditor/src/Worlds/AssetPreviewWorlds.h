@@ -103,5 +103,21 @@ namespace ZeoEngine {
 		virtual Scope<InspectorBase> CreateInspector() override;
 		virtual Scope<AssetView> CreateAssetView() override;
 	};
+
+	class PhysicsMaterialPreviewWorld : public AssetPreviewWorldBase
+	{
+	public:
+		using AssetPreviewWorldBase::AssetPreviewWorldBase;
+
+	private:
+		virtual Ref<Scene> CreateScene() override;
+		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
+		virtual Entity CreatePreviewEntity(Scene& scene) override;
+
+		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
+
+		virtual Scope<InspectorBase> CreateInspector() override;
+		virtual Scope<AssetView> CreateAssetView() override;
+	};
 	
 }

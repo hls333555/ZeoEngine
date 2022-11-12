@@ -140,5 +140,13 @@ namespace ZeoEngine {
 		virtual void PostFieldDeserialize(IComponent* comp, U32 fieldID) const override;
 		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
 	};
+
+	class PhysicsMaterialAssetSerializer : public AssetSerializerBase
+	{
+	private:
+		virtual void SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const override;
+		virtual bool DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const override;
+		virtual void ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const override;
+	};
 	
 }

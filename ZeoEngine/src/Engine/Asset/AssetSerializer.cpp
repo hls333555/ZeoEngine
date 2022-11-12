@@ -235,4 +235,25 @@ namespace ZeoEngine {
 	}
 #pragma endregion
 
+#pragma region PhysicsMaterialAssetSerializer
+	void PhysicsMaterialAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	{
+		const auto physicsMaterial = std::static_pointer_cast<PhysicsMaterial>(asset);
+		ComponentSerializer cs;
+		cs.Serialize(node, PhysicsMaterialDetailComponent(physicsMaterial));
+	}
+
+	bool PhysicsMaterialAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	{
+		const auto physicsMaterial = std::static_pointer_cast<PhysicsMaterial>(asset);
+		ComponentSerializer cs;
+		cs.Deserialize(node, PhysicsMaterialDetailComponent(physicsMaterial), this);
+		return true;
+	}
+
+	void PhysicsMaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	{
+	}
+#pragma endregion
+
 }

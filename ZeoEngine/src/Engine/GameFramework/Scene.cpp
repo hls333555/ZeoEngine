@@ -20,23 +20,27 @@ namespace ZeoEngine {
 		: m_Spec(std::move(spec))
 		, m_ContextShared(CreateRef<SceneContext>())
 	{
-		m_Spec.SceneObserverSystem->SetScene(this);
-		m_Spec.SceneObserverSystem->OnBind();
-
-		if (m_Spec.bIsPhysicalScene)
+		if (m_Spec.SceneObserverSystem)
 		{
-			
+			m_Spec.SceneObserverSystem->SetScene(this);
+			m_Spec.SceneObserverSystem->OnBind();
 		}
 	}
 
 	Scene::~Scene()
 	{
-		m_Spec.SceneObserverSystem->OnUnbind();
+		if (m_Spec.SceneObserverSystem)
+		{
+			m_Spec.SceneObserverSystem->OnUnbind();
+		}
 	}
 
 	void Scene::OnUpdate()
 	{
-		m_Spec.SceneObserverSystem->OnUpdate(*this);
+		if (m_Spec.SceneObserverSystem)
+		{
+			m_Spec.SceneObserverSystem->OnUpdate(*this);
+		}
 	}
 
 	Ref<Scene> Scene::Copy()

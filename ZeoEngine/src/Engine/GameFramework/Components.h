@@ -448,6 +448,10 @@ namespace ZeoEngine {
 	{
 		Ref<PhysicsMaterial> LoadedPhysicsMaterial;
 
+		PhysicsMaterialDetailComponent() = default;
+		PhysicsMaterialDetailComponent(const Ref<PhysicsMaterial>& physicsMaterial)
+			: LoadedPhysicsMaterial(physicsMaterial) {}
+
 		float& GetStaticFriction() const { return LoadedPhysicsMaterial->m_StaticFriction; }
 		float& GetDynamicFriction() const { return LoadedPhysicsMaterial->m_DynamicFriction; }
 		float& GetBounciness() const { return LoadedPhysicsMaterial->m_Bounciness; }
@@ -462,6 +466,12 @@ namespace ZeoEngine {
 	struct BoxColliderComponent : public ColliderComponentBase
 	{
 		Vec3 Size{ 1.0f, 1.0f, 1.0f };
+		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
+	};
+
+	struct SphereColliderComponent : public ColliderComponentBase
+	{
+		float Radius = 0.5f;
 		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
 	};
 

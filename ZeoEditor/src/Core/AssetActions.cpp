@@ -113,4 +113,10 @@ namespace ZeoEngine {
 		PlatformUtils::OpenFile(resourcePath);
 	}
 
+	void PhysicsMaterialAssetActions::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
+	{
+		auto* physicsMaterialWorld = g_Editor->GetOrCreateWorld<PhysicsMaterialPreviewWorld>("Physics Material");
+		g_Editor->InspectAsset(path, physicsMaterialWorld, bIsFromAssetBrowser);
+	}
+
 }

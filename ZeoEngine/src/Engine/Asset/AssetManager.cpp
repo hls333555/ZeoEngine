@@ -8,6 +8,7 @@
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Physics/PhysicsMaterial.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Shader.h"
@@ -29,6 +30,7 @@ namespace ZeoEngine {
 		RegisterAssetFactory(Mesh::TypeID(), CreateScope<MeshAssetFactory>());
 		RegisterAssetFactory(Material::TypeID(), CreateScope<MaterialAssetFactory>());
 		RegisterAssetFactory(Shader::TypeID(), CreateScope<ShaderAssetFactory>());
+		RegisterAssetFactory(PhysicsMaterial::TypeID(), CreateScope<PhysicsMaterialAssetFactory>());
 
 		RegisterAssetActions(Level::TypeID(), CreateScope<LevelAssetActions>());
 		RegisterAssetActions(ParticleTemplate::TypeID(), CreateScope<ParticleTemplateAssetActions>());
@@ -36,6 +38,7 @@ namespace ZeoEngine {
 		RegisterAssetActions(Mesh::TypeID(), CreateScope<MeshAssetActions>());
 		RegisterAssetActions(Material::TypeID(), CreateScope<MaterialAssetActions>());
 		RegisterAssetActions(Shader::TypeID(), CreateScope<ShaderAssetActions>());
+		RegisterAssetActions(PhysicsMaterial::TypeID(), CreateScope<PhysicsMaterialAssetActions>());
 
 		RegisterAssetSerializer(Level::TypeID(), CreateScope<LevelAssetSerializer>());
 		RegisterAssetSerializer(ParticleTemplate::TypeID(), CreateScope<ParticleTemplateAssetSerializer>());
@@ -43,6 +46,7 @@ namespace ZeoEngine {
 		RegisterAssetSerializer(Mesh::TypeID(), CreateScope<MeshAssetSerializer>());
 		RegisterAssetSerializer(Material::TypeID(), CreateScope<MaterialAssetSerializer>());
 		RegisterAssetSerializer(Shader::TypeID(), CreateScope<ShaderAssetSerializer>());
+		RegisterAssetSerializer(PhysicsMaterial::TypeID(), CreateScope<PhysicsMaterialAssetSerializer>());
 
 		InitSupportedFileExtensions();
 	}

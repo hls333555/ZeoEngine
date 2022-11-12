@@ -8,6 +8,7 @@
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Scene.h"
 #include "Engine/GameFramework/ParticleSystem.h"
+#include "Engine/Physics/PhysicsMaterial.h"
 #include "Engine/Renderer/Mesh.h"
 
 namespace ZeoEngine {
@@ -177,6 +178,11 @@ namespace ZeoEngine {
 	Ref<IAsset> ShaderAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
 	{
 		return Shader::Create(metadata->GetResourceFileSystemPath());
+	}
+
+	Ref<IAsset> PhysicsMaterialAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	{
+		return CreateRef<PhysicsMaterial>();
 	}
 
 }

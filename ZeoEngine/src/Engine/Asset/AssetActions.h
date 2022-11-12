@@ -70,4 +70,10 @@ namespace ZeoEngine {
 		virtual void OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const override;
 	};
 
+	class PhysicsMaterialAssetActions : public AssetActionsBase
+	{
+	public:
+		virtual void OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const override;
+	};
+
 }

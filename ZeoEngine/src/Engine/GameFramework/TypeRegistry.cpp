@@ -232,7 +232,7 @@ namespace ZeoEngine {
 		RegisterComponent<PhysicsMaterialDetailComponent>("Physics Material Detail", Inherent, HideComponentHeader)
 			.Field<true, &PhysicsMaterialDetailComponent::GetStaticFriction>("StaticFriction")
 			.Field<true, &PhysicsMaterialDetailComponent::GetDynamicFriction>("DynamicFriction")
-			.Field<true, &PhysicsMaterialDetailComponent::GetBounciness>("Bounciness");
+			.Field<true, &PhysicsMaterialDetailComponent::GetBounciness>("Bounciness", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f));
 
 		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
 			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
@@ -241,6 +241,10 @@ namespace ZeoEngine {
 		RegisterComponent<BoxColliderComponent, ColliderComponentBase>("Box Collider", std::make_pair(Category, "Physics"))
 			.Field<&BoxColliderComponent::Size>("Size")
 			.Field<&BoxColliderComponent::Offset>("Offset");
+
+		RegisterComponent<SphereColliderComponent, ColliderComponentBase>("Sphere Collider", std::make_pair(Category, "Physics"))
+			.Field<&SphereColliderComponent::Radius>("Radius")
+			.Field<&SphereColliderComponent::Offset>("Offset");
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE

@@ -99,4 +99,12 @@ namespace ZeoEngine {
 		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
 	};
 
+	class PhysicsMaterialAssetFactory : public AssetFactoryBase
+	{
+	public:
+		virtual const char* GetAssetTypeName() const override { return "Physics Material"; }
+		virtual bool ShouldShowInContextMenu() const override { return true; }
+		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+	};
+
 }
