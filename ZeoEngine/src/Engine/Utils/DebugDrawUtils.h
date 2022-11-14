@@ -20,7 +20,9 @@ namespace ZeoEngine {
 		/** Add a wireframe sphere consisting of three perpendicular circles to the debug draw queue. */
 		static void DrawSphereBounds(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float segaments = 32, float duration = 0.0f);
 		/** Add a wireframe Y-Axis sphere to the debug draw queue. */
-		static void DrawSphere(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float duration = 0.0f);
+		static void DrawSphere(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float duration = 0.0f);\
+		/** Add a wireframe capsule */
+		static void DrawCapsule(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float height, const Vec3& rotation = Vec3(0.0f), float segaments = 32, float duration = 0.0f);
 		/**
 		 * Add a 3D line with an arrow-like end to the debug draw queue.
 		 * @param size - Defines the arrow head size

@@ -9,6 +9,12 @@
 
 #include "Engine/GameFramework/Scene.h"
 
+namespace dd {
+
+	void capsule(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx, ) ddVec3_In center, ddVec3_In planeNormal, ddVec3_In planeDirection, ddVec3_In color, const float radius, const float height, const float numSteps, const int durationMillis, const bool depthEnabled = true);
+
+}
+
 namespace ZeoEngine {
 
 	void DebugDrawUtils::DrawPoint(const Scene& scene, const Vec3& position, const Vec3& color, float size, float duration)
@@ -59,6 +65,18 @@ namespace ZeoEngine {
 	void DebugDrawUtils::DrawSphere(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float duration)
 	{
 		dd::sphere(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(color), radius, static_cast<I32>(duration * 1000.0f));
+	}
+
+	void DebugDrawUtils::DrawCapsule(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float height, const Vec3& rotation, float segaments, float duration)
+	{
+		const Mat4 rotationMatrix = glm::toMat4(Quat(rotation));
+		const Vec4 up = rotationMatrix * Vec4{ 0.0f, 1.0f, 0.0f, 0.0f };
+		const Vec4 right = rotationMatrix * Vec4{ 1.0f, 0.0f, 0.0f, 0.0f };
+		const Vec4 front = rotationMatrix * Vec4{ 0.0f, 0.0f, -1.0f, 0.0f };
+		dd::capsule(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(right), glm::value_ptr(up), glm::value_ptr(color), radius, height, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::capsule(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(front), glm::value_ptr(up), glm::value_ptr(color), radius, height, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center + height * 0.5f * Vec3(up)), glm::value_ptr(up), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center - height * 0.5f * Vec3(up)), glm::value_ptr(up), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
 	}
 
 	void DebugDrawUtils::DrawArrow(const Scene& scene, const Vec3& from, const Vec3& to, const Vec3& color, float size, float duration)

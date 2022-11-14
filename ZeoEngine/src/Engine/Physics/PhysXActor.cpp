@@ -291,6 +291,9 @@ namespace ZeoEngine {
 			case ColliderType::Sphere:
 				m_Colliders.emplace_back(CreateScope<PhysXSphereColliderShape>(m_Entity, *this));
 				break;
+			case ColliderType::Capsule:
+				m_Colliders.emplace_back(CreateScope<PhysXCapsuleColliderShape>(m_Entity, *this));
+				break;
 		}
 	}
 
@@ -326,6 +329,10 @@ namespace ZeoEngine {
 		if (m_Entity.HasComponent<SphereColliderComponent>())
 		{
 			AddCollider(ColliderType::Sphere);
+		}
+		if (m_Entity.HasComponent<CapsuleColliderComponent>())
+		{
+			AddCollider(ColliderType::Capsule);
 		}
 
 		m_RigidActor->userData = this;

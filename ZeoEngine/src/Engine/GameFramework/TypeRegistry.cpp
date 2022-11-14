@@ -245,6 +245,11 @@ namespace ZeoEngine {
 		RegisterComponent<SphereColliderComponent, ColliderComponentBase>("Sphere Collider", std::make_pair(Category, "Physics"))
 			.Field<&SphereColliderComponent::Radius>("Radius")
 			.Field<&SphereColliderComponent::Offset>("Offset");
+
+		RegisterComponent<CapsuleColliderComponent, ColliderComponentBase>("Capsule Collider", std::make_pair(Category, "Physics"))
+			.Field<&CapsuleColliderComponent::Radius>("Radius")
+			.Field<&CapsuleColliderComponent::Height>("Height")
+			.Field<&CapsuleColliderComponent::Offset>("Offset");
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE

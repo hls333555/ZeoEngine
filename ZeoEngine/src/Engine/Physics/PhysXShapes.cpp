@@ -58,4 +58,23 @@ namespace ZeoEngine {
 		actor->detachShape(*m_Shape);
 	}
 
+	PhysXCapsuleColliderShape::PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor)
+	{
+		const auto& capsuleComp = entity.GetComponent<CapsuleColliderComponent>();
+		SetPhysicsMaterial(capsuleComp.PhysicsMaterialAsset);
+
+		const auto& scale = entity.GetScale();
+		float radiusScale = glm::max(scale.x, scale.z);
+		auto geometry = physx::PxCapsuleGeometry(capsuleComp.Radius * radiusScale, (capsuleComp.Height / 2.0f) * scale.y);
+		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), geometry, GetPhysicsMaterial());
+		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !capsuleComp.bIsTrigger);
+		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, capsuleComp.bIsTrigger);
+		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(capsuleComp.Offset, Vec3(0.0f, 0.0f, physx::PxHalfPi))); // PhysX's capsule is horizontal
+	}
+
+	void PhysXCapsuleColliderShape::DetachFromActor(physx::PxRigidActor* actor)
+	{
+		actor->detachShape(*m_Shape);
+	}
+
 }

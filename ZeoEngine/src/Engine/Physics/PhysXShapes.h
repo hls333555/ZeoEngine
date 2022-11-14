@@ -46,4 +46,15 @@ namespace ZeoEngine {
 		physx::PxShape* m_Shape = nullptr;
 	};
 
+	class PhysXCapsuleColliderShape : public PhysXColliderShapeBase
+	{
+	public:
+		PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor);
+
+		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
+
+	private:
+		physx::PxShape* m_Shape = nullptr;
+	};
+
 }

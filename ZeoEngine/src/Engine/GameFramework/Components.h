@@ -475,4 +475,11 @@ namespace ZeoEngine {
 		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
 	};
 
+	struct CapsuleColliderComponent : public ColliderComponentBase
+	{
+		float Radius = 0.5f;
+		float Height = 1.0f;
+		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
+	};
+
 }

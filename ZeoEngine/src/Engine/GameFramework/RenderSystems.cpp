@@ -148,7 +148,17 @@ namespace ZeoEngine {
 			// Draw collider visualizer in editor or when console variable is set
 			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
 			{
-				DebugDrawUtils::DrawSphere(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
+				DebugDrawUtils::DrawSphereBounds(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
+			}
+		});
+
+		GetScene()->ForEachComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>, [this, bIsEditor](auto e, const CapsuleColliderComponent& capsuleComp, const TransformComponent& transformComp)
+		{
+			const Entity entity{ e, GetScene() };
+			// Draw collider visualizer in editor or when console variable is set
+			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
+			{
+				DebugDrawUtils::DrawCapsule(*GetScene(), entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
 			}
 		});
 	}
