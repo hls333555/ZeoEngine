@@ -42,6 +42,7 @@ namespace ZeoEngine {
 		virtual Entity GetContextEntity() const { return {}; }
 
 		virtual bool IsRuntime() const { return false; }
+		virtual bool IsSimulation() const { return false; }
 
 	protected:
 		template<typename T, typename ... Args>

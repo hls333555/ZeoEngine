@@ -19,7 +19,7 @@ namespace ZeoEngine {
 
 		virtual bool IsRuntime() const override { return m_SceneState != SceneState::Edit; }
 		/** Returns true if current runtime is simulation. Calling it when SceneState == Edit is meaningless. */
-		bool IsSimulation() const { return m_bIsSimulation; }
+		virtual bool IsSimulation() const override { return m_bIsSimulation; }
 
 		void StopScene();
 

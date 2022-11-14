@@ -248,7 +248,7 @@ namespace ZeoEngine {
 
 	void Entity::RemoveComponentID(U32 compID)
 	{
-		ZE_CORE_ASSERT(HasComponent<CoreComponent>());
+		if (!HasComponent<CoreComponent>()) return;
 
 		auto& coreComp = GetComponent<CoreComponent>();
 		coreComp.OrderedComponents.erase(

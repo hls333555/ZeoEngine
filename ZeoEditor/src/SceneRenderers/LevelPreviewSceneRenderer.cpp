@@ -29,19 +29,26 @@ namespace ZeoEngine {
 	{
 		if (m_LevelWorld->IsRuntime())
 		{
-			const Entity cameraEntity = m_LevelWorld->GetActiveScene()->GetMainCameraEntity();
-			if (!cameraEntity || m_LevelWorld->IsSimulation())
+			GetRenderGraph().ToggleRenderPassActive("Grid", false);
+			if (m_LevelWorld->IsSimulation())
 			{
 				BeginScene(m_LevelWorld->GetEditorCamera());
 			}
 			else
 			{
+				const Entity cameraEntity = m_LevelWorld->GetActiveScene()->GetMainCameraEntity();
+				if (!cameraEntity)
+				{
+					EndScene();
+					ZE_CORE_ERROR("No active camera for rendering!");
+					return;
+				}
+
 				const SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
 				const Mat4& cameraTransform = cameraEntity.GetTransform();
 				BeginScene(camera, cameraTransform);
 			}
 			GetRenderSystem()->OnRenderRuntime();
-			GetRenderGraph().ToggleRenderPassActive("Grid", false);
 			EndScene();
 		}
 		else

@@ -20,8 +20,11 @@ namespace ZeoEngine {
 	{
 		LevelObserverSystem::OnBind();
 
-		const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW);
-		BindOnComponentAdded<CameraComponent, &ViewPanelBase::OnCameraComponentAdded>(*levelView);
+		// Level View Panel is not created yet when the very first scene creates
+		if (const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW))
+		{
+			BindOnComponentAdded<CameraComponent, &ViewPanelBase::OnCameraComponentAdded>(*levelView);
+		}
 	}
 
 	void LevelPreviewWorld::OnAttach()

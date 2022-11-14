@@ -508,11 +508,13 @@ namespace ZeoEngine {
 
 	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
 	{
-		OnUpdateEditor(dt);		
+		OnUpdateEditor(dt);
 	}
 
 	void ScriptSystem::OnUpdateRuntime(DeltaTime dt)
 	{
+		if (GetWorld()->IsSimulation()) return;
+
 		GetScene()->ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
 		{
 			const Entity entity{ e, GetScene() };
