@@ -39,20 +39,6 @@ namespace ZeoEngine {
 		stbi_image_free(images[3].pixels);
 	}
 
-	void Window::LockMouse(GLFWwindow* window, bool bLock)
-	{
-		glfwSetInputMode(window, GLFW_CURSOR, bLock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
-		ImGuiIO& io = ImGui::GetIO();
-		if (bLock)
-		{
-			io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-		}
-		else
-		{
-			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
-		}
-	}
-
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
 		Init(props);

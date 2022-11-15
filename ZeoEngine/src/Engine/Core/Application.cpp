@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		m_Profiler = new Profiler();
 
 		m_Window = Window::Create(WindowProps(spec.Name));
-		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
+		m_Window->SetEventCallback([this](Event& e) {return OnEvent(e); });
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
 		// TODO:
@@ -73,9 +73,9 @@ namespace ZeoEngine {
 	void Application::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
-		dispatcher.Dispatch<WindowFocusChangedEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowFocusChanged));
+		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e){ return OnWindowClose(e); });
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
+		dispatcher.Dispatch<WindowFocusChangedEvent>([this](WindowFocusChangedEvent& e) { return OnWindowFocusChanged(e); });
 
 		PropagateEvent(e);
 	}

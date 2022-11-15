@@ -47,8 +47,8 @@ namespace ZeoEngine {
 		ViewPanelBase::ProcessEvent(e);
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnKeyPressed));
-		dispatcher.Dispatch<MouseButtonPressedEvent>(ZE_BIND_EVENT_FUNC(LevelViewPanel::OnMouseButtonPressed));
+		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) { return OnKeyPressed(e); });
+		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& e) { return OnMouseButtonPressed(e); });
 	}
 
 	void LevelViewPanel::RenderToolbar()
@@ -271,7 +271,7 @@ namespace ZeoEngine {
 		bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
 
-		// Global shortcuts
+		// TODO: Global shortcuts
 		{
 			switch (e.GetKeyCode())
 			{
@@ -340,7 +340,8 @@ namespace ZeoEngine {
 
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
 
-		// Panel responsing shortcuts
+		const auto& editorCamera = levelWorld->GetEditorCamera();
+		if (!editorCamera.IsManipulating())
 		{
 			switch (e.GetKeyCode())
 			{
@@ -391,15 +392,19 @@ namespace ZeoEngine {
 
 	bool LevelViewPanel::OnMouseButtonPressed(MouseButtonPressedEvent& e) const
 	{
-		if (IsPanelHovered() &&
-			!ImGui::IsAnyItemHovered() && // We definitely do not want to deselect entity when clicking on transform buttons
-			e.GetMouseButton() == Mouse::ButtonLeft && !Input::IsKeyPressed(Key::CameraControl) &&
-			(!m_bGizmoVisible || (m_bGizmoVisible && !ImGuizmo::IsOver())))
-		{
-			GetEditorWorld()->SetContextEntity(m_HoveredEntity);
-		}
+		if (!IsPanelHovered()) return false;
 
-		return false;
+		// We definitely do not want to deselect entity when clicking on transform buttons
+		if (ImGui::IsAnyItemHovered()) return false;
+
+		if (e.GetMouseButton() != Mouse::ButtonLeft) return false;
+
+		if (Input::IsKeyPressed(Key::CameraControl)) return false;
+
+		if (m_bGizmoVisible && ImGuizmo::IsOver()) return false;
+
+		GetEditorWorld()->SetContextEntity(m_HoveredEntity);
+		return true;
 	}
 
 	void LevelViewPanel::SetTranslationGizmo()

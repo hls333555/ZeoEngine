@@ -94,7 +94,10 @@ namespace ZeoEngine {
 					ImGui::EndMenu();
 				}
 
-				m_EditorWorld->SetContextEntity(newEntity);
+				if (newEntity)
+				{
+					m_EditorWorld->SetContextEntity(newEntity);
+				}
 
 				ImGui::EndPopup();
 			}

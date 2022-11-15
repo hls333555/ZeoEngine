@@ -171,4 +171,14 @@ namespace ZeoEngine::Math {
 		return target;
 	}
 
+	bool IsNearlyEqual(float x, float y, float errorTolerance)
+	{
+		return glm::abs(x - y) <= errorTolerance;
+	}
+
+	bool IsNearlyEqual(double x, double y, double errorTolerance)
+	{
+		return  glm::abs(x - y) <= errorTolerance;
+	}
+
 }

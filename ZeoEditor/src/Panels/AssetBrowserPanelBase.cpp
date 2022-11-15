@@ -59,7 +59,7 @@ namespace ZeoEngine {
 	void AssetBrowserPanelBase::ProcessEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(AssetBrowserPanelBase::OnKeyPressed));
+		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) { return OnKeyPressed(e); });
 	}
 
 	bool AssetBrowserPanelBase::OnKeyPressed(KeyPressedEvent& e)

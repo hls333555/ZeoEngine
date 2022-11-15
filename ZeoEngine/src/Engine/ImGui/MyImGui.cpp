@@ -392,4 +392,15 @@ namespace ImGui {
 		return &payload;
 	}
 
+	void SetMouseEnabled(const bool bEnable)
+	{
+		if (bEnable)
+		{
+			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		}
+		else
+		{
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		}
+	}
 }

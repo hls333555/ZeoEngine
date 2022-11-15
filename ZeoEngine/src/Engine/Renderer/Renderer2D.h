@@ -2,12 +2,10 @@
 
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/EditorCamera.h"
-#include "Engine/Renderer/OrthographicCamera.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Renderer/SubTexture2D.h"
 #include "Engine/Renderer/VertexArray.h"
 #include "Engine/Renderer/Shader.h"
-#include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/EngineTypes.h"
 
@@ -102,7 +100,6 @@ namespace ZeoEngine {
 
 		static void BeginScene(const Camera& camera, const Mat4& transform);
 		static void BeginScene(const EditorCamera& camera);
-		static void BeginScene(const OrthographicCamera& camera); // TODO: Remove
 		static void EndScene();
 	private:
 		static void Flush();

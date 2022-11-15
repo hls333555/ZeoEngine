@@ -30,8 +30,8 @@ Entities:
       - Component: 2499860363
         Color: [1, 1, 1, 1]
         Intensity: 1
-        CastShadow: false
-        ShadowType: HardShadow
+        CastShadow: true
+        ShadowType: PCSS
         DepthBias: 0.00200000009
         NormalBias: 30
         FilterSize: 20

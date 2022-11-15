@@ -16,11 +16,10 @@ namespace ZeoEngine {
 		EditorCamera() = default;
 		EditorCamera(float fovy, float aspectRatio, float nearClip, float farClip);
 
-		void SetEnableUpdate(bool bEnable) { m_bEnableUpdate = bEnable; }
-
 		void OnUpdate(DeltaTime dt);
 
-		void SetViewportHovered(bool bHovered) { m_bIsViewportHovered = bHovered; }
+		void SetEnableManipulation(bool bEnable) { m_bEnableManipulation = bEnable; }
+		bool IsManipulating() const { return m_bIsManipulating; }
 
 		void StartFocusEntity(Entity entity, bool bIsTeleport);
 
@@ -51,11 +50,6 @@ namespace ZeoEngine {
 		void UpdateProjection();
 		void UpdateView();
 
-		void ProcessOrbitControl(const Vec2& delta);
-		void ProcessPanControl(const Vec2& delta);
-		void ProcessZoomControl(const Vec2& delta);
-		void ProcessFpsControl(const Vec2& delta, float dt);
-
 		void MousePan(const Vec2& delta);
 		void MouseRotate(const Vec2& delta);
 		void MouseZoom(float delta);
@@ -66,15 +60,14 @@ namespace ZeoEngine {
 		float CalculateRotationSpeed() const;
 		float CalculateZoomSpeed() const;
 
-		bool IsControlModeReady(U8 mode);
-		void EnterControlMode(U8 mode);
-		void LeaveControlMode(U8 mode);
 		void SetOrbitMode();
 		void SetFpsMode();
-		void SetMouseLock(bool bLock);
+		void StartManipulating();
+		void StopManipulating();
 
 	private:
-		bool m_bEnableUpdate = true;
+		bool m_bEnableManipulation = true;
+		bool m_bIsManipulating = false;
 
 		bool m_bStartLerpToFocus = false;
 		Vec3 m_FocusTargetFocalPoint;
@@ -93,21 +86,15 @@ namespace ZeoEngine {
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
 
 		Vec2 m_InitialMousePosition{ 0.0f };
-		enum CameraControlMode : U8
+		enum class CameraMode
 		{
-			CameraControl_None = 0,
-			CameraControl_OrbitRotate = ZE_BIT(0),
-			CameraControl_Pan = ZE_BIT(1),
-			CameraControl_FPS = ZE_BIT(2),
-			CameraControl_Zoom = ZE_BIT(3),
+			None,
+			OrbitRotate,
+			Pan,
+			FPS ,
+			Zoom,
 		};
-		U8 m_CameraControlModes = 0;
-		bool m_bEnableControls[4];
-		bool m_bIsFirstPress = true;
-		bool m_bIsRightMouseDragged = false;
-
-		bool m_bIsViewportHovered = false;
-		bool m_bLastIsViewportHovered = false;
+		CameraMode m_CameraMode;
 	};
 
 }

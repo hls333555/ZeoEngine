@@ -96,7 +96,6 @@ namespace ZeoEngine {
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
 		OnRuntimeStart();
-		GetEditorCamera().SetEnableUpdate(false);
 	}
 
 	void LevelPreviewWorld::OnSceneStop()
@@ -105,7 +104,6 @@ namespace ZeoEngine {
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
 		OnRuntimeStop();
-		GetEditorCamera().SetEnableUpdate(true);
 	}
 
 	void LevelPreviewWorld::OnSceneStartSimulation()
