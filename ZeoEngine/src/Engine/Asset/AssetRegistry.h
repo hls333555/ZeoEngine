@@ -4,7 +4,6 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/Core/DeltaTime.h"
 #include "Engine/Asset/Asset.h"
 #include "Engine/Utils/PathUtils.h"
 
