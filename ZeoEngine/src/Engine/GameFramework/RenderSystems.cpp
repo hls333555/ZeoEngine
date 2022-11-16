@@ -18,217 +18,291 @@ namespace ZeoEngine {
 
 	static Vec3 s_DebugDrawColor = { 0.7f, 0.7f, 0.7f };
 
-	void RenderSystem::OnRenderEditor()
+	void BillboardRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		ZE_PROFILE_FUNC("RenderSystem::OnRenderEditor");
-
-		RenderLights(true);
-		RenderMeshes();
-		RenderPhysicsDebug(true);
-
-		// Render billboards
-		GetScene()->ForEachComponentGroup<BillboardComponent>(IncludeComponents<TransformComponent>, [this](auto e, const BillboardComponent& billboardComp, const TransformComponent& transformComp)
+		auto billboardGroup = GetScene()->GetComponentGroup<BillboardComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : billboardGroup)
 		{
+			auto [billboardComp, transformComp] = billboardGroup.get(e);
 			if (billboardComp.TextureAsset)
 			{
-				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, Vec4(1.0f), static_cast<I32>(e));
+				Entity entity{ e, GetScene() };
+				Vec4 tintColor{ 1.0f };
+				if (entity.HasComponent<DirectionalLightComponent>())
+				{
+					tintColor = entity.GetComponent<DirectionalLightComponent>().Color;
+				}
+				if (entity.HasComponent<PointLightComponent>())
+				{
+					tintColor = entity.GetComponent<PointLightComponent>().Color;
+				}
+				if (entity.HasComponent<SpotLightComponent>())
+				{
+					tintColor = entity.GetComponent<SpotLightComponent>().Color;
+				}
+				GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
 			}
-		}, ExcludeComponents<DirectionalLightComponent, PointLightComponent, SpotLightComponent>);
+		}
+	}
 
-		// Render camera frustums
-		GetScene()->ForEachComponentGroup<CameraComponent>(IncludeComponents<TransformComponent>, [this](auto entity, const CameraComponent& cameraComp, const TransformComponent& transformComp)
+	void CameraVisualizerRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto cameraGroup = GetScene()->GetComponentGroup<CameraComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : cameraGroup)
 		{
+			Entity entity{ e, GetScene() };
 			// TODO: Replace this with FrameBuffer texture
 			// Draw frustum visualizer when selected
 			if (GetWorld()->GetContextEntity() == entity)
 			{
+				auto [cameraComp, transformComp] = cameraGroup.get(e);
 				const Mat4 invMatrix = transformComp.GetTransform() * glm::inverse(cameraComp.Camera.GetProjection());
 				DebugDrawUtils::DrawFrustum(*GetScene(), invMatrix, s_DebugDrawColor);
 			}
-		});
+		}
 	}
 
-	void RenderSystem::OnRenderRuntime()
+	void MeshRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		RenderLights(false);
-		RenderMeshes();
-		RenderPhysicsDebug(false);
-	}
-
-	void RenderSystem::RenderLights(bool bIsEditor) const
-	{
-		GetScene()->ForEachComponentGroup<DirectionalLightComponent>(IncludeComponents<TransformComponent, BillboardComponent>, [this, bIsEditor](auto entity, const DirectionalLightComponent& lightComp, const TransformComponent& transformComp, const BillboardComponent& billboardComp)
+		auto meshGroup = GetScene()->GetComponentGroup<MeshRendererComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : meshGroup)
 		{
+			auto [meshComp, transformComp] = meshGroup.get(e);
+			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.MaterialAssets, static_cast<I32>(e));
+		}
+	}
+
+	void MeshRenderSystem::OnRenderRuntime()
+	{
+		OnRenderEditor(false);
+	}
+
+	void DirectionalLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto directionalLightGroup = GetScene()->GetComponentGroup<DirectionalLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : directionalLightGroup)
+		{
+			auto [lightComp, transformComp] = directionalLightGroup.get(e);
 			const Vec3 rotationRad = transformComp.GetRotationInRadians();
 			GetSceneRenderer()->SetupDirectionalLight(rotationRad, lightComp);
 
-			if (bIsEditor)
+			Entity entity{ e, GetScene() };
+			// Draw arrow visualizer when selected
+			if (!bIsAssetPreview && GetWorld()->GetContextEntity() == entity)
 			{
-				// Draw arrow visualizer when selected
-				if (GetWorld()->GetContextEntity() == entity)
-				{
-					const auto forward = Math::GetForwardVector(rotationRad);
-					const auto endPosition = transformComp.Translation + glm::normalize(forward);
-					DebugDrawUtils::DrawArrow(*GetScene(), transformComp.Translation, endPosition, s_DebugDrawColor, 0.25f);
-				}
-				if (billboardComp.TextureAsset)
-				{
-					const Vec4 tintColor = lightComp.Color;
-					GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(entity));
-				}
+				const auto forward = Math::GetForwardVector(rotationRad);
+				const auto endPosition = transformComp.Translation + glm::normalize(forward);
+				DebugDrawUtils::DrawArrow(*GetScene(), transformComp.Translation, endPosition, s_DebugDrawColor, 0.25f);
 			}
-		});
+		}
+	}
 
-		GetScene()->ForEachComponentGroup<PointLightComponent>(IncludeComponents<TransformComponent, BillboardComponent>, [this, bIsEditor](auto entity, const PointLightComponent& lightComp, const TransformComponent& transformComp, const BillboardComponent& billboardComp)
+	void DirectionalLightRenderSystem::OnRenderRuntime()
+	{
+		auto directionalLightGroup = GetScene()->GetComponentGroup<DirectionalLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : directionalLightGroup)
 		{
+			auto [lightComp, transformComp] = directionalLightGroup.get(e);
+			const Vec3 rotationRad = transformComp.GetRotationInRadians();
+			GetSceneRenderer()->SetupDirectionalLight(rotationRad, lightComp);
+		}
+	}
+
+	void PointLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto pointLightGroup = GetScene()->GetComponentGroup<PointLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : pointLightGroup)
+		{
+			auto [lightComp, transformComp] = pointLightGroup.get(e);
 			GetSceneRenderer()->AddPointLight(transformComp.Translation, lightComp);
 
-			if (bIsEditor)
+			Entity entity{ e, GetScene() };
+			// Draw sphere visualizer when selected
+			if (!bIsAssetPreview && GetWorld()->GetContextEntity() == entity)
 			{
-				// Draw sphere visualizer when selected
-				if (GetWorld()->GetContextEntity() == entity)
-				{
-					DebugDrawUtils::DrawSphereBounds(*GetScene(), transformComp.Translation, s_DebugDrawColor, lightComp.Range);
-				}
-				if (billboardComp.TextureAsset)
-				{
-					const Vec4 tintColor = lightComp.Color;
-					GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(entity));
-				}
+				DebugDrawUtils::DrawSphereBounds(*GetScene(), transformComp.Translation, s_DebugDrawColor, lightComp.Range);
 			}
-		});
+		}
+	}
 
-		GetScene()->ForEachComponentGroup<SpotLightComponent>(IncludeComponents<TransformComponent, BillboardComponent>, [this, bIsEditor](auto entity, const SpotLightComponent& lightComp, const TransformComponent& transformComp, const BillboardComponent& billboardComp)
+	void PointLightRenderSystem::OnRenderRuntime()
+	{
+		auto pointLightGroup = GetScene()->GetComponentGroup<PointLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : pointLightGroup)
 		{
+			auto [lightComp, transformComp] = pointLightGroup.get(e);
+			GetSceneRenderer()->AddPointLight(transformComp.Translation, lightComp);
+		}
+	}
+
+	void SpotLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto spotLightGroup = GetScene()->GetComponentGroup<SpotLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : spotLightGroup)
+		{
+			auto [lightComp, transformComp] = spotLightGroup.get(e);
 			const Vec3 rotationRad = transformComp.GetRotationInRadians();
 			GetSceneRenderer()->AddSpotLight(transformComp.Translation, rotationRad, lightComp);
 
-			if (bIsEditor)
+			Entity entity{ e, GetScene() };
+			// Draw cone visualizer when selected
+			if (!bIsAssetPreview && GetWorld()->GetContextEntity() == entity)
 			{
-				// Draw cone visualizer when selected
-				if (GetWorld()->GetContextEntity() == entity)
-				{
-					const auto direction = Math::GetForwardVector(rotationRad) * lightComp.Range;
-					const auto radius = tan(lightComp.GetCutoffInRadians()) * lightComp.Range;
-					DebugDrawUtils::DrawCone(*GetScene(), transformComp.Translation, direction, s_DebugDrawColor, radius, 0.0f);
-				}
-				if (billboardComp.TextureAsset)
-				{
-					const Vec4 tintColor = lightComp.Color;
-					GetSceneRenderer()->DrawBillboard(transformComp.Translation, billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(entity));
-				}
+				const auto direction = Math::GetForwardVector(rotationRad) * lightComp.Range;
+				const auto radius = tan(lightComp.GetCutoffInRadians()) * lightComp.Range;
+				DebugDrawUtils::DrawCone(*GetScene(), transformComp.Translation, direction, s_DebugDrawColor, radius, 0.0f);
 			}
-		});
+		}
 	}
 
-	void RenderSystem::RenderMeshes() const
+	void SpotLightRenderSystem::OnRenderRuntime()
 	{
-		GetScene()->ForEachComponentGroup<MeshRendererComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, const MeshRendererComponent& meshComp, const TransformComponent& transformComp/*, const BoundsComponent& boundsComp*/)
+		auto spotLightGroup = GetScene()->GetComponentGroup<SpotLightComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : spotLightGroup)
 		{
-			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.MaterialAssets, static_cast<I32>(entity));
-			//DebugDrawUtils::DrawSphereBounds(*GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
-		});
+			auto [lightComp, transformComp] = spotLightGroup.get(e);
+			const Vec3 rotationRad = transformComp.GetRotationInRadians();
+			GetSceneRenderer()->AddSpotLight(transformComp.Translation, rotationRad, lightComp);
+		}
 	}
 
-	void RenderSystem::RenderPhysicsDebug(bool bIsEditor) const
+	void PhysicsDebugRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		GetScene()->ForEachComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>, [this, bIsEditor](auto e, const BoxColliderComponent& boxComp, const TransformComponent& transformComp)
+		auto boxGroup = GetScene()->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : boxGroup)
 		{
+			auto [boxComp, transformComp] = boxGroup.get(e);
 			const Entity entity{ e, GetScene() };
-			// Draw collider visualizer in editor or when console variable is set
-			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
+			DebugDrawUtils::DrawBox(*GetScene(), entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
+		}
+
+		auto sphereGroup = GetScene()->GetComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : sphereGroup)
+		{
+			auto [sphereComp, transformComp] = sphereGroup.get(e);
+			const Entity entity{ e, GetScene() };
+			DebugDrawUtils::DrawSphereBounds(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
+		}
+
+		auto capsuleGroup = GetScene()->GetComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : capsuleGroup)
+		{
+			auto [capsuleComp, transformComp] = capsuleGroup.get(e);
+			const Entity entity{ e, GetScene() };
+			DebugDrawUtils::DrawCapsule(*GetScene(), entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
+		}
+	}
+
+	void PhysicsDebugRenderSystem::OnRenderRuntime()
+	{
+		bool bShouldDrawCollider = static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS));
+
+		auto boxGroup = GetScene()->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : boxGroup)
+		{
+			auto [boxComp, transformComp] = boxGroup.get(e);
+			const Entity entity{ e, GetScene() };
+			if (bShouldDrawCollider)
 			{
 				DebugDrawUtils::DrawBox(*GetScene(), entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
 			}
-		});
+		}
 
-		GetScene()->ForEachComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>, [this, bIsEditor](auto e, const SphereColliderComponent& sphereComp, const TransformComponent& transformComp)
+		auto sphereGroup = GetScene()->GetComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : sphereGroup)
 		{
+			auto [sphereComp, transformComp] = sphereGroup.get(e);
 			const Entity entity{ e, GetScene() };
-			// Draw collider visualizer in editor or when console variable is set
-			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
+			if (bShouldDrawCollider)
 			{
 				DebugDrawUtils::DrawSphereBounds(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
 			}
-		});
+		}
 
-		GetScene()->ForEachComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>, [this, bIsEditor](auto e, const CapsuleColliderComponent& capsuleComp, const TransformComponent& transformComp)
+		auto capsuleGroup = GetScene()->GetComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : capsuleGroup)
 		{
+			auto [capsuleComp, transformComp] = capsuleGroup.get(e);
 			const Entity entity{ e, GetScene() };
-			// Draw collider visualizer in editor or when console variable is set
-			if (bIsEditor || static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)))
+			if (bShouldDrawCollider)
 			{
 				DebugDrawUtils::DrawCapsule(*GetScene(), entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
 			}
-		});
+		}
 	}
 
-	void RenderSystem2D::OnRenderEditor() 
+	void ParticleSystemRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		// Render sprites
-		GetScene()->ForEachComponentGroup<TransformComponent>(IncludeComponents<SpriteRendererComponent>, [](auto entity, const TransformComponent& transformComp, const SpriteRendererComponent& spriteComp)
+		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
+		for (const auto e : particleView)
 		{
-			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<I32>(entity));
-		}, ExcludeComponents<>,
-		[](std::tuple<TransformComponent&, SpriteRendererComponent&> lhs, std::tuple<TransformComponent&, SpriteRendererComponent&> rhs)
-		{
-			const auto& lSpriteComp = std::get<1>(lhs);
-			const auto& rSpriteComp = std::get<1>(rhs);
-			return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
-		});
-
-		// Render circles
-		GetScene()->ForEachComponentGroup<CircleRendererComponent>(IncludeComponents<TransformComponent>, [](auto entity, const CircleRendererComponent& circleComp, const TransformComponent& transformComp)
-		{
-			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<I32>(entity));
-		});
-
-		// Render particle systems
-		GetScene()->ForEachComponentView<ParticleSystemComponent>([](auto entity, const ParticleSystemComponent& particleComp)
-		{
+			auto [particleComp] = particleView.get(e);
 			if (particleComp.Instance)
 			{
 				particleComp.Instance->OnRender();
 			}
-		});
+		}
 	}
 
-	void RenderSystem2D::OnRenderRuntime()
+	void ParticleSystemRenderSystem::OnRenderRuntime()
 	{
-		OnRenderEditor();
+		OnRenderEditor(false);
 	}
 
-	void ParticlePreviewRenderSystem::OnRenderEditor()
+	void SpriteRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([](auto entity, const ParticleSystemDetailComponent& particlePreviewComp)
+		auto spriteGroup = GetScene()->GetComponentGroup<SpriteRendererComponent>(IncludeComponents<TransformComponent>);
+		spriteGroup.sort<SpriteRendererComponent, TransformComponent>([](std::tuple<SpriteRendererComponent&, TransformComponent&> lhs, std::tuple<SpriteRendererComponent&, TransformComponent&> rhs)
 		{
-			particlePreviewComp.Instance->OnRender();
+			const auto& lSpriteComp = std::get<0>(lhs);
+			const auto& rSpriteComp = std::get<0>(rhs);
+			return lSpriteComp.SortingOrder < rSpriteComp.SortingOrder;
 		});
+		for (const auto e : spriteGroup)
+		{
+			auto [spriteComp, transformComp] = spriteGroup.get(e);
+			Renderer2D::DrawSprite(transformComp.GetTransform(), spriteComp, static_cast<I32>(e));
+		}
 	}
 
-	void MeshPreviewRenderSystem::OnRenderEditor()
+	void SpriteRenderSystem::OnRenderRuntime()
 	{
-		GetScene()->ForEachComponentGroup<DirectionalLightComponent>(IncludeComponents<TransformComponent>, [this](auto entity, const DirectionalLightComponent& lightComp, const TransformComponent& transformComp)
+		OnRenderEditor(false);
+	}
+
+	void CircleRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto circleGroup = GetScene()->GetComponentGroup<CircleRendererComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : circleGroup)
 		{
-			GetSceneRenderer()->SetupDirectionalLight(transformComp.GetRotationInRadians(), lightComp);
-		});
-		GetScene()->ForEachComponentGroup<MeshDetailComponent>(IncludeComponents<TransformComponent/*, BoundsComponent*/>, [this](auto entity, const MeshDetailComponent& meshComp, const TransformComponent& transformComp/*, const BoundsComponent& boundsComp*/)
+			auto [circleComp, transformComp] = circleGroup.get(e);
+			Renderer2D::DrawCircle(transformComp.GetTransform(), circleComp.Color, circleComp.Thickness, circleComp.Fade, static_cast<I32>(e));
+		}
+	}
+
+	void CircleRenderSystem::OnRenderRuntime()
+	{
+		OnRenderEditor(false);
+	}
+
+	void ParticlePreviewRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto particleView = GetScene()->GetComponentView<ParticleSystemDetailComponent>();
+		for (const auto e : particleView)
 		{
+			auto [particleComp] = particleView.get(e);
+			particleComp.Instance->OnRender();
+		}
+	}
+
+	void MeshPreviewRenderSystem::OnRenderEditor(bool bIsAssetPreview)
+	{
+		auto meshGroup = GetScene()->GetComponentGroup<MeshDetailComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : meshGroup)
+		{
+			auto [meshComp, transformComp] = meshGroup.get(e);
 			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.Instance->GetMesh()->GetDefaultMaterialAssets());
-			//DebugDrawUtils::DrawSphereBounds(*GetScene(), boundsComp.Bounds.Origin, s_DebugDrawColor, boundsComp.Bounds.SphereRadius);
-		});
-	}
-
-	void MaterialPreviewRenderSystem::OnRenderEditor()
-	{
-		GetScene()->ForEachComponentGroup<DirectionalLightComponent>(IncludeComponents<TransformComponent>, [this](auto entity, const DirectionalLightComponent& lightComp, const TransformComponent& transformComp)
-		{
-			GetSceneRenderer()->SetupDirectionalLight(transformComp.GetRotationInRadians(), lightComp);
-		});
-		GetScene()->ForEachComponentGroup<MeshRendererComponent>(IncludeComponents<TransformComponent>, [this](auto entity, const MeshRendererComponent& meshComp, const TransformComponent& transformComp)
-		{
-			GetSceneRenderer()->DrawMesh(transformComp.GetTransform(), meshComp.Instance, meshComp.MaterialAssets);
-		});
+		}
 	}
 	
 }

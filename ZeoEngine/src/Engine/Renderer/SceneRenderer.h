@@ -51,24 +51,33 @@ namespace ZeoEngine {
 		Ref<FrameBuffer> GetFrameBuffer() const { return m_RenderGraph->GetBackFrameBuffer(); }
 		const RenderGraph& GetRenderGraph() const { return *m_RenderGraph; }
 		RenderGraph& GetRenderGraph() { return *m_RenderGraph; }
-		const Scope<RenderSystemBase>& GetRenderSystem() const { return m_RenderSystem; }
 
 		Mat4 GetViewProjectionMatrix() const { return m_CameraBuffer.GetViewProjection(); }
 
 		void OnViewportResize(U32 width, U32 height) const;
 
 	protected:
+		template<typename T, typename ... Args>
+		void RegisterRenderSystem(Args&& ... args)
+		{
+			static_assert(std::is_base_of_v<RenderSystemBase, T>, "RenderSystem type must be a RenderSystemBase type!");
+
+			auto system = CreateScope<T>(std::forward<Args>(args)...);
+			m_RenderSystems.emplace_back(std::move(system));
+		}
+
 		void BeginScene(const EditorCamera& camera);
 		void BeginScene(const Camera& camera, const Mat4& transform);
+		void RenderEditor(bool bIsAssetPreview) const;
+		void RenderRuntime() const;
 		void EndScene();
 
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() = 0;
-		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) = 0;
 
 		void UpdateSceneContext(const Scene* scene);
 		void PrepareScene();
-		virtual void OnRenderScene() = 0;
+		virtual void RenderScene() = 0;
 		void FlushScene() const;
 		
 		void UpdateCascadeData(const DirectionalLightComponent& lightComp, const Vec3& direction);
@@ -78,11 +87,9 @@ namespace ZeoEngine {
 		entt::sink<entt::sigh<void(FrameBuffer&)>> m_PostSceneRender{ m_PostSceneRenderDel };
 
 	private:
-		RenderDoc* m_RenderDocRef = nullptr;
-
 		SceneContext* m_SceneContext = nullptr;
 		Scope<RenderGraph> m_RenderGraph;
-		Scope<RenderSystemBase> m_RenderSystem;
+		std::vector<Scope<RenderSystemBase>> m_RenderSystems;
 		const Camera* m_ActiveCamera = nullptr;
 
 		Ref<DDRenderInterface> m_Ddri;

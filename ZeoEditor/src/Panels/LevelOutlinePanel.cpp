@@ -31,11 +31,12 @@ namespace ZeoEngine {
 		if (ImGui::BeginChild("SceneOutlineEntityList", entityListSize))
 		{
 			// Display entities in creation order, the order is updated when a new entity is created or destroyed
-			scene.ForEachComponentView<CoreComponent>([this, &sceneRef](auto entityID, auto& coreComp)
+			const auto coreView = scene.GetComponentView<CoreComponent>();
+			for (const auto e : coreView)
 			{
-				const Entity entity{ entityID, sceneRef };
+				const Entity entity{ e, sceneRef };
 				DrawEntityNode(entity);
-			});
+			}
 
 			// Deselect entity when blank space is clicked
 			// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click

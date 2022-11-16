@@ -90,44 +90,27 @@ namespace ZeoEngine {
 			return ctx().contains<T>();
 		}
 
-		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {}) const
+		template<typename... Component, typename... Exclude>
+		auto GetComponentView(entt::exclude_t<Exclude...> exclude = {}) const
 		{
-			view<Component...>(exclude).each(std::forward<Func>(func));
+			return view<Component...>(exclude);
 		}
-		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
+		template<typename... Component, typename... Exclude>
+		auto GetComponentView(entt::exclude_t<Exclude...> exclude = {})
 		{
-			view<Component...>(exclude).each(std::forward<Func>(func));
-		}
-
-		struct DefaultCompare
-		{
-			template<typename... Component>
-			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const { return true; }
-		};
-
-		// TODO:
-		template<typename... Owned, typename... Include, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(entt::get_t<Include...> include, Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
-		{
-			auto compGroup = group<Owned...>(include, exclude);
-			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
-			{
-				compGroup.sort<Owned..., Include...>(std::move(compareFunc));
-			}
-			compGroup.each(std::forward<Func>(func));
+			return view<Component...>(exclude);
 		}
 
-		template<typename... Owned, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
+		template<typename... Owned, typename... Include, typename... Exclude>
+		auto GetComponentGroup(entt::get_t<Include...> include, entt::exclude_t<Exclude...> exclude = {})
 		{
-			auto compGroup = group<Owned...>(exclude);
-			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
-			{
-				compGroup.sort<Owned...>(std::move(compareFunc));
-			}
-			compGroup.each(std::forward<Func>(func));
+			return group<Owned...>(include, exclude);
+		}
+
+		template<typename... Owned, typename... Exclude>
+		void GetComponentGroup(entt::exclude_t<Exclude...> exclude = {})
+		{
+			return group<Owned...>(exclude);
 		}
 
 	private:

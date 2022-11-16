@@ -12,6 +12,14 @@ namespace ZeoEngine {
 	{
 		SceneRenderer::OnAttach(world);
 
+		RegisterRenderSystem<BillboardRenderSystem>(world);
+		RegisterRenderSystem<CameraVisualizerRenderSystem>(world);
+		RegisterRenderSystem<PhysicsDebugRenderSystem>(world);
+		RegisterRenderSystem<MeshRenderSystem>(world);
+		RegisterRenderSystem<DirectionalLightRenderSystem>(world);
+		RegisterRenderSystem<PointLightRenderSystem>(world);
+		RegisterRenderSystem<SpotLightRenderSystem>(world);
+
 		m_LevelWorld = dynamic_cast<LevelPreviewWorld*>(world);
 	}
 
@@ -20,12 +28,7 @@ namespace ZeoEngine {
 		return CreateScope<ForwardRenderGraph>();
 	}
 
-	Scope<RenderSystemBase> LevelPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
-	{
-		return CreateScope<RenderSystem>(world);
-	}
-
-	void LevelPreviewSceneRenderer::OnRenderScene()
+	void LevelPreviewSceneRenderer::RenderScene()
 	{
 		if (m_LevelWorld->IsRuntime())
 		{
@@ -48,13 +51,13 @@ namespace ZeoEngine {
 				const Mat4& cameraTransform = cameraEntity.GetTransform();
 				BeginScene(camera, cameraTransform);
 			}
-			GetRenderSystem()->OnRenderRuntime();
+			RenderRuntime();
 			EndScene();
 		}
 		else
 		{
 			BeginScene(m_LevelWorld->GetEditorCamera());
-			GetRenderSystem()->OnRenderEditor();
+			RenderEditor(false);
 			GetRenderGraph().ToggleRenderPassActive("Grid", true);
 			EndScene();
 		}

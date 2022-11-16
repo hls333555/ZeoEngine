@@ -32,6 +32,8 @@ namespace ZeoEngine {
 		{
 			if (IsRunning())
 			{
+				ZE_PROFILE_FUNC("Systems: OnUpdateRuntime");
+
 				for (const auto& system : m_Systems)
 				{
 					system->OnUpdateRuntime(dt);
@@ -40,16 +42,24 @@ namespace ZeoEngine {
 		}
 		else
 		{
+			ZE_PROFILE_FUNC("Systems: OnUpdateEditor");
+
 			for (const auto& system : m_Systems)
 			{
 				system->OnUpdateEditor(dt);
 			}
 		}
 
-		m_ActiveScene->OnUpdate();
+		{
+			ZE_PROFILE_FUNC("Scene: OnUpdate");
+
+			m_ActiveScene->OnUpdate();
+		}
 
 		if (m_SceneRenderer)
 		{
+			ZE_PROFILE_FUNC("SceneRenderer: OnRender");
+
 			m_SceneRenderer->OnRender();
 		}
 	}

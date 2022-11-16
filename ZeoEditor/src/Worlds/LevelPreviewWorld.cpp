@@ -29,13 +29,11 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnAttach()
 	{
-		// Register systems before scene construction to receive the first OnActiveSceneChanged delegate call
+		EditorPreviewWorldBase::OnAttach();
+
 		RegisterSystem<ParticleUpdateSystem>(this);
 		RegisterSystem<PhysicsSystem>(this);
-
 		RegisterSystem<ScriptSystem>(this);
-
-		EditorPreviewWorldBase::OnAttach();
 
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
 	}

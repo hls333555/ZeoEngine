@@ -18,26 +18,34 @@ namespace ZeoEngine {
 		return CreateScope<AssetPreviewRenderGraph>();
 	}
 
-	void AssetPreviewSceneRendererBase::OnRenderScene()
+	void AssetPreviewSceneRendererBase::RenderScene()
 	{
 		BeginScene(*m_EditorCamera);
-		GetRenderSystem()->OnRenderEditor();
+		RenderEditor(true);
 		EndScene();
 	}
 
-	Scope<RenderSystemBase> MaterialPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
+	void MaterialPreviewSceneRenderer::OnAttach(WorldBase* world)
 	{
-		return CreateScope<MaterialPreviewRenderSystem>(world);
+		AssetPreviewSceneRendererBase::OnAttach(world);
+
+		RegisterRenderSystem<DirectionalLightRenderSystem>(world);
+		RegisterRenderSystem<MeshRenderSystem>(world);
 	}
 
-	Scope<RenderSystemBase> MeshPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
+	void MeshPreviewSceneRenderer::OnAttach(WorldBase* world)
 	{
-		return CreateScope<MeshPreviewRenderSystem>(world);
+		AssetPreviewSceneRendererBase::OnAttach(world);
+
+		RegisterRenderSystem<DirectionalLightRenderSystem>(world);
+		RegisterRenderSystem<MeshPreviewRenderSystem>(world);
 	}
 
-	Scope<RenderSystemBase> ParticlePreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
+	void ParticlePreviewSceneRenderer::OnAttach(WorldBase* world)
 	{
-		return CreateScope<ParticlePreviewRenderSystem>(world);
+		AssetPreviewSceneRendererBase::OnAttach(world);
+
+		RegisterRenderSystem<ParticlePreviewRenderSystem>(world);
 	}
 
 }

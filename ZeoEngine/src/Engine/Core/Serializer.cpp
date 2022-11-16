@@ -369,15 +369,16 @@ namespace ZeoEngine {
 	
 	void SceneSerializer::Serialize(YAML::Node& node, Scene& scene)
 	{
-		scene.ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
+		const auto coreView = scene.GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
 		{
-			const Entity entity{ entityID, scene.shared_from_this() };
+			const Entity entity{ e, scene.shared_from_this() };
 			if (!entity) return;
 
 			YAML::Node entityNode;
 			SerializeEntity(entityNode, entity);
 			node["Entities"].push_back(entityNode);
-		});
+		}
 	}
 
 	void SceneSerializer::SerializeRuntime()

@@ -23,14 +23,11 @@ namespace ZeoEngine {
 
 	void SceneRenderer::OnAttach(WorldBase* world)
 	{
-		m_RenderDocRef = &Application::Get().GetRenderDoc();
-
 		m_QuadBatcher.Init();
 
 		m_Ddri = DDRenderInterface::Create(this);
 		m_RenderGraph = CreateRenderGraph();
 		m_RenderGraph->Init();
-		m_RenderSystem = CreateRenderSystem(world);
 
 		UpdateSceneContext(world->GetActiveScene().get());
 		world->m_OnActiveSceneChanged.connect<&SceneRenderer::UpdateSceneContext>(this);
@@ -45,15 +42,25 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNC();
 
-		m_RenderDocRef->StartFrameCapture();
+		auto& renderDoc = Application::Get().GetRenderDoc();
+		renderDoc.StartFrameCapture();
 		m_RenderGraph->Start();
 		{
-			PrepareScene();
-			OnRenderScene();
+			{
+				ZE_PROFILE_FUNC("SceneRenderer: PrepareScene");
+
+				PrepareScene();
+			}
+
+			{
+				ZE_PROFILE_FUNC("SceneRenderer: RenderScene");
+
+				RenderScene();
+			}
 			m_PostSceneRenderDel.publish(*GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
-		m_RenderDocRef->StopFrameCapture();
+		renderDoc.StopFrameCapture();
 	}
 
 	void SceneRenderer::UpdateSceneContext(const Scene* scene)
@@ -84,6 +91,8 @@ namespace ZeoEngine {
 
 	void SceneRenderer::BeginScene(const EditorCamera& camera)
 	{
+		ZE_PROFILE_FUNC();
+
 		m_CameraBuffer.View = camera.GetViewMatrix();
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraBuffer.Position = camera.GetPosition();
@@ -93,6 +102,8 @@ namespace ZeoEngine {
 
 	void SceneRenderer::BeginScene(const Camera& camera, const Mat4& transform)
 	{
+		ZE_PROFILE_FUNC();
+
 		m_CameraBuffer.View = glm::inverse(transform);
 		m_CameraBuffer.Projection = camera.GetProjection();
 		m_CameraBuffer.Position = Math::GetTranslationFromTransform(transform);
@@ -100,8 +111,30 @@ namespace ZeoEngine {
 		m_ActiveCamera = &camera;
 	}
 
+	void SceneRenderer::RenderEditor(bool bIsAssetPreview) const
+	{
+		ZE_PROFILE_FUNC();
+
+		for (const auto& system : m_RenderSystems)
+		{
+			system->OnRenderEditor(bIsAssetPreview);
+		}
+	}
+
+	void SceneRenderer::RenderRuntime() const
+	{
+		ZE_PROFILE_FUNC();
+
+		for (const auto& system : m_RenderSystems)
+		{
+			system->OnRenderRuntime();
+		}
+	}
+
 	void SceneRenderer::EndScene()
 	{
+		ZE_PROFILE_FUNC();
+
 		UploadLightData();
 		m_RenderGraph->Execute();
 		FlushScene();

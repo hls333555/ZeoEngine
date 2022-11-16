@@ -149,10 +149,12 @@ namespace ZeoEngine {
 		// Resize editor camera
 		m_EditorWorld->GetEditorCamera().SetViewportSize(size.x, size.y);
 
-		m_EditorWorld->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto e, auto& cameraComp)
+		const auto cameraView = m_EditorWorld->GetActiveScene()->GetComponentView<CameraComponent>();
+		for (const auto e : cameraView)
 		{
+			auto [cameraComp] = cameraView.get(e);
 			UpdateViewportSizeOnSceneCamera(cameraComp);
-		});
+		}
 	}
 
 	void ViewPanelBase::UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const

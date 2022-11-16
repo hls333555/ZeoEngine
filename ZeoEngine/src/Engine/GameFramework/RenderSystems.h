@@ -11,7 +11,7 @@ namespace ZeoEngine {
 	public:
 		explicit RenderSystemBase(WorldBase* world);
 
-		virtual void OnRenderEditor() = 0;
+		virtual void OnRenderEditor(bool bIsAssetPreview) = 0;
 		virtual void OnRenderRuntime() {}
 
 	protected:
@@ -21,26 +21,91 @@ namespace ZeoEngine {
 		SceneRenderer* m_SceneRenderer = nullptr;
 	};
 
-	class RenderSystem : public RenderSystemBase
+	class BillboardRenderSystem : public RenderSystemBase
 	{
 	public:
 		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnRenderEditor() override;
-		virtual void OnRenderRuntime() override;
-
-	private:
-		void RenderLights(bool bIsEditor) const;
-		void RenderMeshes() const;
-		void RenderPhysicsDebug(bool bIsEditor) const;
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
 	};
 
-	class RenderSystem2D : public RenderSystem
+	class CameraVisualizerRenderSystem : public RenderSystemBase
 	{
 	public:
-		using RenderSystem::RenderSystem;
+		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnRenderEditor() override;
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+	};
+
+	class MeshRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class DirectionalLightRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class PointLightRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class SpotLightRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class PhysicsDebugRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class ParticleSystemRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class SpriteRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
+		virtual void OnRenderRuntime() override;
+	};
+
+	class CircleRenderSystem : public RenderSystemBase
+	{
+	public:
+		using RenderSystemBase::RenderSystemBase;
+
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
 		virtual void OnRenderRuntime() override;
 	};
 
@@ -49,7 +114,7 @@ namespace ZeoEngine {
 	public:
 		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnRenderEditor() override;
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
 	};
 
 	class MeshPreviewRenderSystem : public RenderSystemBase
@@ -57,15 +122,7 @@ namespace ZeoEngine {
 	public:
 		using RenderSystemBase::RenderSystemBase;
 
-		virtual void OnRenderEditor() override;
-	};
-
-	class MaterialPreviewRenderSystem : public RenderSystemBase
-	{
-	public:
-		using RenderSystemBase::RenderSystemBase;
-
-		virtual void OnRenderEditor() override;
+		virtual void OnRenderEditor(bool bIsAssetPreview) override;
 	};
 	
 }

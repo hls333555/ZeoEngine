@@ -39,6 +39,8 @@ namespace ZeoEngine {
 	{
 		if (m_Spec.SceneObserverSystem)
 		{
+			ZE_PROFILE_FUNC("SceneObserverSystem: OnUpdate");
+
 			m_Spec.SceneObserverSystem->OnUpdate(*this);
 		}
 	}
@@ -47,14 +49,15 @@ namespace ZeoEngine {
 	{
 		auto newScene = CreateRef<Scene>(m_Spec.Clone());
 		newScene->m_ContextShared = m_ContextShared;
-		ForEachComponentView<CoreComponent>([this, &newScene](auto entityID, auto& coreComp)
+		const auto coreView = GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
 		{
-			const Entity entity{ entityID, shared_from_this() };
+			const Entity entity{ e, shared_from_this() };
 			// Clone a new "empty" entity
 			auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
 			// Copy components to that entity
 			newEntity.CopyAllRegisteredComponents(entity);
-		});
+		}
 		return newScene;
 	}
 
@@ -143,35 +146,39 @@ namespace ZeoEngine {
 
 	Entity Scene::GetEntityByName(std::string_view name)
 	{
-		Entity entity;
-		ForEachComponentView<CoreComponent>([&](auto e, auto& coreComp)
+		const auto coreView = GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
 		{
+			auto [coreComp] = coreView.get(e);
 			if (coreComp.Name == name)
 			{
-				entity = { e, shared_from_this() };
+				Entity entity{ e, shared_from_this() };
+				return entity;
 			}
-		});
-		return entity;
+		}
+		return {};
 	}
 
 	Entity Scene::GetMainCameraEntity()
 	{
-		Entity entity;
-		ForEachComponentView<CameraComponent>([&](auto e, auto& cameraComp)
+		const auto cameraView = GetComponentView<CameraComponent>();
+		for (const auto e : cameraView)
 		{
+			auto [cameraComp] = cameraView.get(e);
 			if (cameraComp.bIsPrimary)
 			{
-				entity = { e, shared_from_this() };
+				Entity entity{ e, shared_from_this() };
+				return entity;
 			}
-		});
-		return entity;
+		}
+		return {};
 	}
 
 	void Scene::SortEntities()
 	{
 		// Sort entities by creation index
 		// We assume that every entity has the CoreComponent which will never get removed
-		sort<CoreComponent>([](const auto& lhs, const auto& rhs)
+		sort<CoreComponent>([](const CoreComponent& lhs, const CoreComponent& rhs)
 		{
 			return lhs.EntityIndex < rhs.EntityIndex;
 		});

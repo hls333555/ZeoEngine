@@ -14,7 +14,6 @@
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/World.h"
 #include "Engine/Physics/PhysicsEngine.h"
-#include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXScene.h"
 #include "Engine/Renderer/RenderPass.h"
 
@@ -481,13 +480,15 @@ namespace ZeoEngine {
 
 	void ParticleUpdateSystem::OnUpdateEditor(DeltaTime dt)
 	{
-		GetScene()->ForEachComponentView<ParticleSystemComponent>([dt](auto e, auto& particleComp)
+		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
+		for (const auto e : particleView)
 		{
+			auto [particleComp] = particleView.get(e);
 			if (particleComp.Instance)
 			{
 				particleComp.Instance->OnUpdate(dt);
 			}
-		});
+		}
 	}
 
 	void ParticleUpdateSystem::OnUpdateRuntime(DeltaTime dt)
@@ -497,13 +498,15 @@ namespace ZeoEngine {
 
 	void ParticlePreviewUpdateSystem::OnUpdateEditor(DeltaTime dt)
 	{
-		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([dt](auto e, auto& particlePreviewComp)
+		auto particleView = GetScene()->GetComponentView<ParticleSystemDetailComponent>();
+		for (const auto e : particleView)
 		{
-			if (particlePreviewComp.Instance)
+			auto [particleComp] = particleView.get(e);
+			if (particleComp.Instance)
 			{
-				particlePreviewComp.Instance->OnUpdate(dt);
+				particleComp.Instance->OnUpdate(dt);
 			}
-		});
+		}
 	}
 
 	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
@@ -515,22 +518,24 @@ namespace ZeoEngine {
 	{
 		if (GetWorld()->IsSimulation()) return;
 
-		GetScene()->ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
+		auto scriptView = GetScene()->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
 		{
 			const Entity entity{ e, GetScene() };
 			ScriptEngine::OnUpdateEntity(entity, dt);
-		});
+		}
 	}
 
 	void ScriptSystem::OnRuntimeStart()
 	{
 		ScriptEngine::SetSceneContext(GetScene());
-		GetScene()->ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
+		auto scriptView = GetScene()->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
 		{
 			const Entity entity{ e, GetScene() };
 			ScriptEngine::InstantiateEntityClass(entity);
 			ScriptEngine::OnCreateEntity(entity);
-		});
+		}
 	}
 
 	void ScriptSystem::OnRuntimeStop()
@@ -545,12 +550,14 @@ namespace ZeoEngine {
 
 	void PhysicsSystem::OnRuntimeStart()
 	{
-		auto* physicsScene = GetScene()->CreatePhysicsScene();
-		GetScene()->ForEachComponentView<RigidBodyComponent>([this, physicsScene](auto e, RigidBodyComponent& rigidBodyComp)
+		const auto scene = GetScene();
+		auto* physicsScene = scene->CreatePhysicsScene();
+		auto rigidBodyView = scene->GetComponentView<RigidBodyComponent>();
+		for (const auto e : rigidBodyView)
 		{
-			const Entity entity{ e, GetScene() };
+			const Entity entity{ e, scene };
 			physicsScene->CreateActor(entity);
-		});
+		}
 
 #ifdef ZE_DEBUG
 		const auto& settings = PhysicsEngine::GetSettings();
@@ -598,18 +605,17 @@ namespace ZeoEngine {
 		const I32 positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
 
-		GetScene()->ForEachComponentView<RigidBody2DComponent>([this](auto e, auto& rb2dComp)
+		auto rb2dGroup = GetScene()->GetComponentGroup<RigidBody2DComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : rb2dGroup)
 		{
-			const Entity entity = { e, GetScene() };
-			auto& transformComp = entity.GetComponent<TransformComponent>();
-
+			auto [rb2dComp, transformComp] = rb2dGroup.get(e);
 			// Retrieve transform from Box2D
 			const b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
 			const auto& position = body->GetPosition();
 			transformComp.Translation.x = position.x;
 			transformComp.Translation.y = position.y;
 			transformComp.Rotation.z = glm::degrees(body->GetAngle());
-		});
+		}
 	}
 
 	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
@@ -629,11 +635,10 @@ namespace ZeoEngine {
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
-		GetScene()->ForEachComponentView<RigidBody2DComponent>([this](auto e, auto& rb2dComp)
+		auto rb2dGroup = GetScene()->GetComponentGroup<RigidBody2DComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : rb2dGroup)
 		{
-			const Entity entity{ e, GetScene() };
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
-
+			auto [rb2dComp, transformComp] = rb2dGroup.get(e);
 			b2BodyDef bodyDef;
 			bodyDef.type = RigidBody2DTypeToBox2DBody(rb2dComp.Type);
 			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
@@ -643,6 +648,7 @@ namespace ZeoEngine {
 			body->SetFixedRotation(rb2dComp.bFixedRotation);
 			rb2dComp.RuntimeBody = body;
 
+			const Entity entity{ e, GetScene() };
 			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
 				const auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
@@ -675,7 +681,7 @@ namespace ZeoEngine {
 				fixtureDef.restitutionThreshold = cc2dComp.RestitutionThreshold;
 				body->CreateFixture(&fixtureDef);
 			}
-		});
+		}
 	}
 
 	void PhysicsSystem2D::OnRuntimeStop()

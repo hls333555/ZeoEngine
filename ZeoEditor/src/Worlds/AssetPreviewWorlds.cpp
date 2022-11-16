@@ -170,9 +170,9 @@ namespace ZeoEngine {
 #pragma region ParticlePreviewWorld
 	void ParticlePreviewWorld::OnAttach()
 	{
-		RegisterSystem<ParticlePreviewUpdateSystem>(this);
-
 		AssetPreviewWorldBase::OnAttach();
+
+		RegisterSystem<ParticlePreviewUpdateSystem>(this);
 	}
 
 	Ref<Scene> ParticlePreviewWorld::CreateScene()

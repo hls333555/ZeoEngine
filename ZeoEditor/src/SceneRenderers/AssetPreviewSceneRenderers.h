@@ -13,7 +13,7 @@ namespace ZeoEngine {
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() override;
 
-		virtual void OnRenderScene() override;
+		virtual void RenderScene() override;
 
 	private:
 		EditorCamera* m_EditorCamera = nullptr;
@@ -22,19 +22,19 @@ namespace ZeoEngine {
 	class MaterialPreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
+		virtual void OnAttach(WorldBase* world) override;
 	};
 
 	class MeshPreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
+		virtual void OnAttach(WorldBase* world) override;
 	};
 
 	class ParticlePreviewSceneRenderer : public AssetPreviewSceneRendererBase
 	{
 	private:
-		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
+		virtual void OnAttach(WorldBase* world) override;
 	};
 
 }
