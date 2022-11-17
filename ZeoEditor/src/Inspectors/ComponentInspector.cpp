@@ -76,7 +76,7 @@ namespace ZeoEngine {
 					for (const auto fieldID : fieldIDs)
 					{
 						entt::meta_data data = compType.data(fieldID);
-						if (!m_FieldParser.ShouldHideField(data, compInstance))
+						if (!ShouldHideField(data, compInstance))
 						{
 							bShouldDisplayCategoryTree = !category.empty();
 							visibleFields.push_back(data);
@@ -141,6 +141,18 @@ namespace ZeoEngine {
 		const char* category = categoryName ? *categoryName : "";
 		// Reverse data display order and categorize them
 		m_PreprocessedFields[category].push_front(data.id());
+	}
+
+	bool ComponentInspector::ShouldHideField(entt::meta_data data, entt::meta_any& instance) const
+	{
+		auto bIsHiddenInEditor = ReflectionUtils::DoesPropertyExist(Reflection::HiddenInEditor, data);
+		if (bIsHiddenInEditor) return true;
+
+		auto hideCondition = ReflectionUtils::GetPropertyValue<HideConditionFunc>(Reflection::HideCondition, data);
+		// HideCondition property is not set, show this data normally
+		if (!hideCondition) return false;
+
+		return (*hideCondition)(instance.try_cast<IComponent>());
 	}
 
 	void ComponentInspector::DrawFieldWidget(entt::meta_data data, Entity entity)
