@@ -93,6 +93,8 @@ namespace ZeoEngine {
 			RemoveComponent<FieldChangeComponent>();
 		}
 
+		Scene& GetScene() const { return *m_Scene.lock(); }
+
 		UUID GetUUID() const;
 		const std::string& GetName() const;
 		Mat4 GetTransform() const;

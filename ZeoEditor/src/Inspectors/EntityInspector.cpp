@@ -98,6 +98,14 @@ namespace ZeoEngine {
 			// Categorize components
 			m_CategorizedComponents[categoryName].push_back(compType.info().hash());
 		}
+
+		for (auto& [category, compIDs] : m_CategorizedComponents)
+		{
+			std::sort(compIDs.begin(), compIDs.end(), [](const U32 lhs, const U32 rhs)
+			{
+				return strcmp(ReflectionUtils::GetMetaObjectName(entt::resolve(lhs)), ReflectionUtils::GetMetaObjectName(entt::resolve(rhs))) < 0;
+			});
+		}
 	}
 
 	void EntityInspector::DrawAddComponentButton(Entity entity)
@@ -109,30 +117,78 @@ namespace ZeoEngine {
 		if (ImGui::Button(ICON_FA_PLUS_CIRCLE "  Add Component"))
 		{
 			ImGui::OpenPopup("AddComponent");
+			m_bHasComponentFilterKeyboardFocused = false;
 		}
 
-		// TODO: Sort and searchable
 		if (ImGui::BeginPopupWithPadding("AddComponent"))
 		{
+			if (!m_bHasComponentFilterKeyboardFocused)
+			{
+				ImGui::SetKeyboardFocusHere();
+				m_bHasComponentFilterKeyboardFocused = true;
+
+			}
+			const char* hint = "Search Component";
+			//static float width = ImGui::CalcTextSize(hint).x + ImGui::GetFramePadding().x * 2;
+			m_Filter.Draw("##EntityInspectorAddComponentFilter", hint, 150.0f);
+
 			for (const auto& [category, compIDs] : m_CategorizedComponents)
 			{
-				if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
+				if (m_Filter.IsActive())
 				{
+					// Filter is active, store visible components first
+					std::vector<U32> visibleCompIDs;
 					for (const auto compID : compIDs)
 					{
-						if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compID)))
+						if (m_Filter.PassFilter(ReflectionUtils::GetComponentDisplayNameFull(compID)))
 						{
-							const auto compInstance = entity.AddComponentByID(compID);
-							// Instance may be null as AddComponentByID() failed
-							if (compInstance)
-							{
-								RebuildComponentInspectors(entity);
-							}
+							visibleCompIDs.emplace_back(compID);
 						}
 					}
 
-					ImGui::TreePop();
+					// If no component is visible, no need to draw tree node
+					if (!visibleCompIDs.empty())
+					{
+						if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen))
+						{
+							for (const auto compID : visibleCompIDs)
+							{
+								if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compID)))
+								{
+									const auto compInstance = entity.AddComponentByID(compID);
+									// Instance may be null as AddComponentByID() failed
+									if (compInstance)
+									{
+										RebuildComponentInspectors(entity);
+									}
+								}
+							}
+
+							ImGui::TreePop();
+						}
+					}
 				}
+				else // Filter is not active, just iterate and draw
+				{
+					if (ImGui::TreeNodeEx(category.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth))
+					{
+						for (const auto compID : compIDs)
+						{
+							if (ImGui::Selectable(ReflectionUtils::GetComponentDisplayNameFull(compID)))
+							{
+								const auto compInstance = entity.AddComponentByID(compID);
+								// Instance may be null as AddComponentByID() failed
+								if (compInstance)
+								{
+									RebuildComponentInspectors(entity);
+								}
+							}
+						}
+
+						ImGui::TreePop();
+					}
+				}
+				
 			}
 
 			ImGui::EndPopup();

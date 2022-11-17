@@ -19,7 +19,7 @@ namespace ZeoEngine {
 
 	void LevelOutlinePanel::ProcessRender()
 	{
-		m_Filter.Draw("##SceneOutlineAssetFilter", "Search entities");
+		m_Filter.Draw("##LevelOutlineEntityFilter", "Search entities");
 		
 		ImGui::Separator();
 
@@ -114,7 +114,7 @@ namespace ZeoEngine {
 	{
 		std::string entityNameStr = entity.GetName();
 		const char* entityName = entityNameStr.c_str();
-		if (!m_Filter.IsActive() || m_Filter.IsActive() && m_Filter.PassFilter(entityName))
+		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName))
 		{
 			auto selectedEntity = m_EditorWorld->GetContextEntity();
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
