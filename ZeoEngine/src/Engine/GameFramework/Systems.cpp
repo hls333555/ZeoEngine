@@ -526,7 +526,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ScriptSystem::OnRuntimeStart()
+	void ScriptSystem::OnPlayStart()
 	{
 		ScriptEngine::SetSceneContext(GetScene());
 		auto scriptView = GetScene()->GetComponentView<ScriptComponent>();
@@ -538,7 +538,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ScriptSystem::OnRuntimeStop()
+	void ScriptSystem::OnPlayStop()
 	{
 		ScriptEngine::SetSceneContext(GetScene());
 	}
@@ -548,7 +548,7 @@ namespace ZeoEngine {
 		GetScene()->GetPhysicsScene()->Simulate(dt);
 	}
 
-	void PhysicsSystem::OnRuntimeStart()
+	void PhysicsSystem::OnPlayStart()
 	{
 		const auto scene = GetScene();
 		auto* physicsScene = scene->CreatePhysicsScene();
@@ -576,10 +576,8 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void PhysicsSystem::OnRuntimeStop()
+	void PhysicsSystem::OnPlayStop()
 	{
-		Console::Get().SetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS, {});
-
 #ifdef ZE_DEBUG
 		if (PhysicsEngine::GetSettings().bDebugOnPlay)
 		{
@@ -591,12 +589,12 @@ namespace ZeoEngine {
 
 	void PhysicsSystem::OnSimulationStart()
 	{
-		OnRuntimeStart();
+		OnPlayStart();
 	}
 
 	void PhysicsSystem::OnSimulationStop()
 	{
-		OnRuntimeStop();
+		OnPlayStop();
 	}
 
 	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
@@ -631,7 +629,7 @@ namespace ZeoEngine {
 		return b2_staticBody;
 	}
 
-	void PhysicsSystem2D::OnRuntimeStart()
+	void PhysicsSystem2D::OnPlayStart()
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
@@ -684,7 +682,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void PhysicsSystem2D::OnRuntimeStop()
+	void PhysicsSystem2D::OnPlayStop()
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
@@ -692,12 +690,32 @@ namespace ZeoEngine {
 
 	void PhysicsSystem2D::OnSimulationStart()
 	{
-		OnRuntimeStart();
+		OnPlayStart();
 	}
 
 	void PhysicsSystem2D::OnSimulationStop()
 	{
-		OnRuntimeStop();
+		OnPlayStop();
+	}
+
+	void CommandSystem::OnPlayStart()
+	{
+		Console::Get().ResetAllVariableValues(CommandType::EditOnly);
+	}
+
+	void CommandSystem::OnPlayStop()
+	{
+		Console::Get().ResetAllVariableValues(CommandType::RuntimeOnly);
+	}
+
+	void CommandSystem::OnSimulationStart()
+	{
+		OnPlayStart();
+	}
+
+	void CommandSystem::OnSimulationStop()
+	{
+		OnPlayStop();
 	}
 
 }

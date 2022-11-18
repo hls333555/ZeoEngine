@@ -110,7 +110,7 @@ namespace ZeoEngine {
 				}
 
 				break;
-			case SceneState::Play:
+			case SceneState::Run:
 				Stop();
 
 				ImGui::SameLine();
@@ -308,7 +308,7 @@ namespace ZeoEngine {
 				{
 					switch (levelWorld->GetSceneState())
 					{
-						case SceneState::Play:	levelWorld->OnScenePause();	return true;
+						case SceneState::Run:	levelWorld->OnScenePause();	return true;
 						case SceneState::Pause:	levelWorld->OnSceneResume();	return true;
 					}
 				}

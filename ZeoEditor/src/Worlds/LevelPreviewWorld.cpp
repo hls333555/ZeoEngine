@@ -33,6 +33,7 @@ namespace ZeoEngine {
 
 		RegisterSystem<ParticleUpdateSystem>(this);
 		RegisterSystem<PhysicsSystem>(this);
+		RegisterSystem<CommandSystem>(this);
 		RegisterSystem<ScriptSystem>(this);
 
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
@@ -88,12 +89,12 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnScenePlay()
 	{
-		m_SceneState = SceneState::Play;
+		m_SceneState = SceneState::Run;
 		m_bIsSimulation = false;
 		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
-		OnRuntimeStart();
+		OnPlayStart();
 	}
 
 	void LevelPreviewWorld::OnSceneStop()
@@ -101,12 +102,12 @@ namespace ZeoEngine {
 		m_SceneState = SceneState::Edit;
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
-		OnRuntimeStop();
+		OnPlayStop();
 	}
 
 	void LevelPreviewWorld::OnSceneStartSimulation()
 	{
-		m_SceneState = SceneState::Play;
+		m_SceneState = SceneState::Run;
 		m_bIsSimulation = true;
 		auto sceneForSimulate = m_SceneForEdit->Copy();
 		SetContextEntity({});
@@ -129,7 +130,7 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnSceneResume()
 	{
-		m_SceneState = SceneState::Play;
+		m_SceneState = SceneState::Run;
 	}
 
 	void LevelPreviewWorld::OnDuplicateEntity()
@@ -156,19 +157,19 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelPreviewWorld::OnRuntimeStart() const
+	void LevelPreviewWorld::OnPlayStart() const
 	{
 		for (const auto& system : GetSystems())
 		{
-			system->OnRuntimeStart();
+			system->OnPlayStart();
 		}
 	}
 
-	void LevelPreviewWorld::OnRuntimeStop() const
+	void LevelPreviewWorld::OnPlayStop() const
 	{
 		for (const auto& system : GetSystems())
 		{
-			system->OnRuntimeStop();
+			system->OnPlayStop();
 		}
 	}
 

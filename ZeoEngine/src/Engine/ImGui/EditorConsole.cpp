@@ -6,6 +6,7 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Core/Console.h"
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -411,6 +412,8 @@ namespace ZeoEngine {
 			CommandCallbackData.ActiveIdx = -1;
 		}
 
+		bool bIsRuntime = SceneUtils::IsLevelRuntime();
+
 		// Prefilter when input changes
 		if (CommandFilter.bIsInputBufferChanged)
 		{
@@ -426,7 +429,9 @@ namespace ZeoEngine {
 			{
 				const char* lineStart = buf + CommandCallbackData.CommandLineOffsets[lineNum];
 				const char* lineEnd = (lineNum + 1 < CommandCallbackData.CommandLineOffsets.Size) ? (buf + CommandCallbackData.CommandLineOffsets[lineNum + 1] - 1) : bufEnd;
-				if (CommandFilter.IsActive() && CommandFilter.PassFilter(lineStart, lineEnd))
+				CommandType type = Console::Get().GetCommandType({ lineStart, lineEnd });
+				bool bPassCommandTypeFilter = type == CommandType::Default || bIsRuntime && type == CommandType::RuntimeOnly || !bIsRuntime && type == CommandType::EditOnly;
+				if (CommandFilter.IsActive() && bPassCommandTypeFilter && CommandFilter.PassFilter(lineStart, lineEnd))
 				{
 					CommandCallbackData.FilteredCommandLines.push_back(lineNum);
 					MaxCommandLineWidth = glm::max(MaxCommandLineWidth, ImGui::CalcTextSize(lineStart, lineEnd).x);

@@ -11,7 +11,7 @@ namespace ZeoEngine {
 
 	bool SceneUtils::IsLevelRuntime()
 	{
-		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
+		return g_Editor->GetLevelWorld()->IsRuntime();
 	}
 
 	Scene& SceneUtils::GetActiveGameScene()

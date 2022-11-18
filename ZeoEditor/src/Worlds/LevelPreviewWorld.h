@@ -7,7 +7,8 @@ namespace ZeoEngine {
 	enum class SceneState
 	{
 		Edit = 0,
-		Play = 1, Pause = 2
+		Run = 1, // Can be play or simulate
+		Pause = 2 // Can be play or simulate
 	};
 
 	class LevelPreviewWorld : public EditorPreviewWorldBase
@@ -48,12 +49,12 @@ namespace ZeoEngine {
 
 		void ActivateEntityInspector(Entity entity, Entity lastEntity);
 
-		void OnRuntimeStart() const;
-		void OnRuntimeStop() const;
+		void OnPlayStart() const;
+		void OnPlayStop() const;
 		void OnSimulationStart() const;
 		void OnSimulationStop() const;
 
-		virtual bool IsRunning() override { return m_SceneState == SceneState::Play || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
+		virtual bool IsRunning() override { return m_SceneState == SceneState::Run || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
 
 	private:
 		SceneState m_SceneState = SceneState::Edit;

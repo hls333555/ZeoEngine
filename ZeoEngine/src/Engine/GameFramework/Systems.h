@@ -32,8 +32,8 @@ namespace ZeoEngine {
 		virtual void OnUpdateEditor(DeltaTime dt) {}
 		virtual void OnUpdateRuntime(DeltaTime dt) {}
 
-		virtual void OnRuntimeStart() {}
-		virtual void OnRuntimeStop() {}
+		virtual void OnPlayStart() {}
+		virtual void OnPlayStop() {}
 		virtual void OnSimulationStart() {}
 		virtual void OnSimulationStop() {}
 	};
@@ -179,8 +179,8 @@ namespace ZeoEngine {
 
 		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
-		virtual void OnRuntimeStart() override;
-		virtual void OnRuntimeStop() override;
+		virtual void OnPlayStart() override;
+		virtual void OnPlayStop() override;
 	};
 
 	class PhysicsSystem : public SystemBase
@@ -190,8 +190,8 @@ namespace ZeoEngine {
 
 		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
-		virtual void OnRuntimeStart() override;
-		virtual void OnRuntimeStop() override;
+		virtual void OnPlayStart() override;
+		virtual void OnPlayStop() override;
 		virtual void OnSimulationStart() override;
 		virtual void OnSimulationStop() override;
 	};
@@ -203,13 +203,24 @@ namespace ZeoEngine {
 
 		virtual void OnUpdateRuntime(DeltaTime dt) override;
 
-		virtual void OnRuntimeStart() override;
-		virtual void OnRuntimeStop() override;
+		virtual void OnPlayStart() override;
+		virtual void OnPlayStop() override;
 		virtual void OnSimulationStart() override;
 		virtual void OnSimulationStop() override;
 
 	private:
 		b2World* m_PhysicsWorld = nullptr; // TODO: Move to scene
+	};
+
+	class CommandSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnPlayStart() override;
+		virtual void OnPlayStop() override;
+		virtual void OnSimulationStart() override;
+		virtual void OnSimulationStop() override;
 	};
 
 }

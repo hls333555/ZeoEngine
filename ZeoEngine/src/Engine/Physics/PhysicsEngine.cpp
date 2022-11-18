@@ -13,7 +13,7 @@ namespace ZeoEngine {
 	{
 		PhysXEngine::Init();
 
-		Console::Get().RegisterVariable(CVAR_PHYSICS_DRAWCOLLIDERS, 0, "0: Disable, 1: Enable");
+		Console::Get().RegisterVariable(CVAR_PHYSICS_DRAWCOLLIDERS, 0, "0: Disable, 1: Enable", CommandType::RuntimeOnly);
 
 		ZE_CORE_TRACE("Physics engine intialized");
 	}
