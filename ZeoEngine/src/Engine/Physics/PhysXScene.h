@@ -22,6 +22,8 @@ namespace ZeoEngine {
 		void DestroyActor(Entity entity);
 
 	private:
+		void CreateRegions() const;
+
 		bool Advance(DeltaTime dt);
 		void EvaluateSubSteps(DeltaTime dt);
 

@@ -4,6 +4,7 @@
 #include "Engine/Core/Console.h"
 #include "Engine/Core/ConsoleVariables.h"
 #include "Engine/Physics/PhysXEngine.h"
+#include "Engine/Physics/PhysicsLayer.h"
 
 namespace ZeoEngine {
 
@@ -13,7 +14,10 @@ namespace ZeoEngine {
 	{
 		PhysXEngine::Init();
 
-		Console::Get().RegisterVariable(CVAR_PHYSICS_DRAWCOLLIDERS, 0, "0: Disable, 1: Enable", CommandType::RuntimeOnly);
+		PhysicsLayerManager::AddLayer("Default");
+
+		Console::Get().RegisterVariable(CVAR_PHYSICS_DRAWCOLLIDERS, 0, "0: Hide, 1: Show", CommandType::RuntimeOnly);
+		Console::Get().RegisterVariable(CVAR_PHYSICS_DRAWWORLDBOUNDS, 0, "0: Hide, 1: Show. Note that world bounds are only useful if BroadphaseAlgorithm is set to MultiBoxPrune.");
 
 		ZE_CORE_TRACE("Physics engine intialized");
 	}

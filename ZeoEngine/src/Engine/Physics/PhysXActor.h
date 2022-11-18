@@ -8,6 +8,7 @@
 namespace ZeoEngine {
 
 	class PhysXColliderShapeBase;
+	struct RigidBodyComponent;
 
 	class PhysXActor
 	{
@@ -57,6 +58,7 @@ namespace ZeoEngine {
 
 	private:
 		void CreateRigidActor();
+		void SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const;
 		void SynchronizeTransform();
 
 	private:

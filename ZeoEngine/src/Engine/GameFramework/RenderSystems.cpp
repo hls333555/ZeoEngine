@@ -7,6 +7,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Console.h"
 #include "Engine/Core/ConsoleVariables.h"
+#include "Engine/Physics/PhysicsEngine.h"
 
 namespace ZeoEngine {
 
@@ -168,66 +169,62 @@ namespace ZeoEngine {
 
 	void PhysicsDebugRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto boxGroup = GetScene()->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
-		for (const auto e : boxGroup)
-		{
-			auto [boxComp, transformComp] = boxGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			DebugDrawUtils::DrawBox(*GetScene(), entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
-		}
-
-		auto sphereGroup = GetScene()->GetComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>);
-		for (const auto e : sphereGroup)
-		{
-			auto [sphereComp, transformComp] = sphereGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			DebugDrawUtils::DrawSphereBounds(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
-		}
-
-		auto capsuleGroup = GetScene()->GetComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>);
-		for (const auto e : capsuleGroup)
-		{
-			auto [capsuleComp, transformComp] = capsuleGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			DebugDrawUtils::DrawCapsule(*GetScene(), entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
-		}
+		DrawColliders(true);
+		DrawWorldBounds();
 	}
 
 	void PhysicsDebugRenderSystem::OnRenderRuntime()
 	{
-		bool bShouldDrawCollider = static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS));
+		DrawColliders(static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWCOLLIDERS)));
+		DrawWorldBounds();
+	}
 
-		auto boxGroup = GetScene()->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
+	void PhysicsDebugRenderSystem::DrawColliders(bool bDraw)
+	{
+		const auto scene = GetScene();
+		auto boxGroup = scene->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
 		for (const auto e : boxGroup)
 		{
 			auto [boxComp, transformComp] = boxGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			if (bShouldDrawCollider)
+			const Entity entity{ e, scene };
+			if (bDraw)
 			{
-				DebugDrawUtils::DrawBox(*GetScene(), entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
+				DebugDrawUtils::DrawBox(*scene, entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
 			}
 		}
 
-		auto sphereGroup = GetScene()->GetComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>);
+		auto sphereGroup = scene->GetComponentGroup<SphereColliderComponent>(IncludeComponents<TransformComponent>);
 		for (const auto e : sphereGroup)
 		{
 			auto [sphereComp, transformComp] = sphereGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			if (bShouldDrawCollider)
+			const Entity entity{ e, scene };
+			if (bDraw)
 			{
-				DebugDrawUtils::DrawSphereBounds(*GetScene(), entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
+				DebugDrawUtils::DrawSphereBounds(*scene, entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
 			}
 		}
 
-		auto capsuleGroup = GetScene()->GetComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>);
+		auto capsuleGroup = scene->GetComponentGroup<CapsuleColliderComponent>(IncludeComponents<TransformComponent>);
 		for (const auto e : capsuleGroup)
 		{
 			auto [capsuleComp, transformComp] = capsuleGroup.get(e);
-			const Entity entity{ e, GetScene() };
-			if (bShouldDrawCollider)
+			const Entity entity{ e, scene };
+			if (bDraw)
 			{
-				DebugDrawUtils::DrawCapsule(*GetScene(), entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
+				DebugDrawUtils::DrawCapsule(*scene, entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
 			}
+		}
+	}
+
+	void PhysicsDebugRenderSystem::DrawWorldBounds() const
+	{
+		if (static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWWORLDBOUNDS)))
+		{
+			const auto& settings = PhysicsEngine::GetSettings();
+			const Box box{ settings.WorldBoundsMin, settings.WorldBoundsMax };
+			Vec3 center, extents;
+			box.GetCenterAndExtents(center, extents);
+			DebugDrawUtils::DrawBox(*GetScene(), center, extents, Vec3{ 0.0f, 0.5f, 1.0f });
 		}
 	}
 

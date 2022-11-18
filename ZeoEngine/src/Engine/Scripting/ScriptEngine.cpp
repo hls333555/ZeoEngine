@@ -468,6 +468,43 @@ namespace ZeoEngine {
 		}
 	}
 
+	void ScriptEngine::OnCollisionBegin(Entity entity, Entity otherEntity, const CollisionInfo& collisionInfo)
+	{
+		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
+		{
+			instance->InvokeOnCollisionBegin(otherEntity, collisionInfo);
+		}
+	}
+
+	void ScriptEngine::OnCollisionEnd(Entity entity, Entity otherEntity, const CollisionInfo& collisionInfo)
+	{
+		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
+		{
+			instance->InvokeOnCollisionEnd(otherEntity, collisionInfo);
+		}
+	}
+
+	void ScriptEngine::OnTriggerBegin(Entity entity, Entity otherEntity)
+	{
+		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
+		{
+			instance->InvokeOnTriggerBegin(otherEntity);
+		}
+	}
+
+	void ScriptEngine::OnTriggerEnd(Entity entity, Entity otherEntity)
+	{
+		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
+		{
+			instance->InvokeOnTriggerEnd(otherEntity);
+		}
+	}
+
+	bool ScriptEngine::IsEntityScriptClassValid(Entity entity)
+	{
+		return entity.HasComponent<ScriptComponent>() && EntityClassExists(entity.GetComponent<ScriptComponent>().ClassName);
+	}
+
 	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
 	{
 		return s_Data->EntityClasses.find(fullClassName) != s_Data->EntityClasses.end();
@@ -863,6 +900,10 @@ namespace ZeoEngine {
 		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = m_ScriptClass->GetMethod("OnCreate", 0);
 		m_OnUpdateMethod = m_ScriptClass->GetMethod("OnUpdate", 1);
+		m_OnCollisionBeginMethod = m_ScriptClass->GetMethod("OnCollisionBegin", 2);
+		m_OnCollisionEndMethod = m_ScriptClass->GetMethod("OnCollisionEnd", 2);
+		m_OnTriggerBeginMethod = m_ScriptClass->GetMethod("OnTriggerBegin", 1);
+		m_OnTriggerEndMethod = m_ScriptClass->GetMethod("OnTriggerEnd", 1);
 
 		// Call entity ctor
 		auto entityID = entity.GetUUID();
@@ -896,6 +937,48 @@ namespace ZeoEngine {
 		{
 			void* param = &dt;
 			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnUpdateMethod, &param);
+		}
+	}
+
+	void ScriptInstance::InvokeOnCollisionBegin(Entity otherEntity, const CollisionInfo& collisionInfo) const
+	{
+		if (m_OnCollisionBeginMethod)
+		{
+			UUID otherEntityID = otherEntity.GetUUID();
+			void* param[] = { &otherEntityID };
+			ZE_CORE_ASSERT(false); // TODO:
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnCollisionBeginMethod, param);
+		}
+	}
+
+	void ScriptInstance::InvokeOnCollisionEnd(Entity otherEntity, const CollisionInfo& collisionInfo) const
+	{
+		if (m_OnCollisionEndMethod)
+		{
+			UUID otherEntityID = otherEntity.GetUUID();
+			void* param[] = { &otherEntityID };
+			ZE_CORE_ASSERT(false); // TODO:
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnCollisionEndMethod, param);
+		}
+	}
+
+	void ScriptInstance::InvokeOnTriggerBegin(Entity otherEntity) const
+	{
+		if (m_OnTriggerBeginMethod)
+		{
+			UUID otherEntityID = otherEntity.GetUUID();
+			void* param = &otherEntityID;
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnTriggerBeginMethod, &param);
+		}
+	}
+
+	void ScriptInstance::InvokeOnTriggerEnd(Entity otherEntity) const
+	{
+		if (m_OnTriggerEndMethod)
+		{
+			UUID otherEntityID = otherEntity.GetUUID();
+			void* param = &otherEntityID;
+			m_ScriptClass->InvokeMethod(GetMonoInstance(), m_OnTriggerEndMethod, &param);
 		}
 	}
 

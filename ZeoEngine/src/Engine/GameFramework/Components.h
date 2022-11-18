@@ -437,6 +437,7 @@ namespace ZeoEngine {
 
 		BodyType Type = BodyType::Static;
 		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
+		U32 LayerID = 0;
 		bool bIsKinematic = false;
 		float Mass = 1.0f;
 		float LinearDamping = 0.01f;
@@ -465,21 +466,21 @@ namespace ZeoEngine {
 
 	struct BoxColliderComponent : public ColliderComponentBase
 	{
-		Vec3 Size{ 1.0f, 1.0f, 1.0f };
-		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
+		Vec3 Size{ 1.0f };
+		Vec3 Offset{ 0.0f };
 	};
 
 	struct SphereColliderComponent : public ColliderComponentBase
 	{
 		float Radius = 0.5f;
-		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
+		Vec3 Offset{ 0.0f };
 	};
 
 	struct CapsuleColliderComponent : public ColliderComponentBase
 	{
 		float Radius = 0.5f;
 		float Height = 1.0f;
-		Vec3 Offset{ 0.0f, 0.0f, 0.0f };
+		Vec3 Offset{ 0.0f };
 	};
 
 }

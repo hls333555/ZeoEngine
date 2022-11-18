@@ -1,7 +1,6 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/Entity.h"
 
-#include "Engine/GameFramework/TypeRegistry.h"
 #include "Engine/Utils/ReflectionUtils.h"
 #include "Engine/GameFramework/Components.h"
 

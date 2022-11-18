@@ -19,6 +19,7 @@ namespace ZeoEngine {
 			physicsMaterial = CreateRef<PhysicsMaterial>();
 		}
 		m_PhysicsMaterial = PhysXEngine::GetPhysics().createMaterial(physicsMaterial->GetStaticFriction(), physicsMaterial->GetDynamicFriction(), physicsMaterial->GetBounciness());
+		m_PhysicsMaterial->userData = physicsMaterial.get();
 	}
 
 	PhysXBoxColliderShape::PhysXBoxColliderShape(Entity entity, const PhysXActor& actor)
@@ -32,6 +33,12 @@ namespace ZeoEngine {
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !boxComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, boxComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(boxComp.Offset, Vec3(0.0f)));
+		m_Shape->userData = this;
+	}
+
+	void PhysXBoxColliderShape::SetCollisionFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setSimulationFilterData(filterData);
 	}
 
 	void PhysXBoxColliderShape::DetachFromActor(physx::PxRigidActor* actor)
@@ -51,6 +58,12 @@ namespace ZeoEngine {
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !sphereComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, sphereComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(sphereComp.Offset, Vec3(0.0f)));
+		m_Shape->userData = this;
+	}
+
+	void PhysXSphereColliderShape::SetCollisionFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setSimulationFilterData(filterData);
 	}
 
 	void PhysXSphereColliderShape::DetachFromActor(physx::PxRigidActor* actor)
@@ -70,6 +83,12 @@ namespace ZeoEngine {
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !capsuleComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, capsuleComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(capsuleComp.Offset, Vec3(0.0f, 0.0f, physx::PxHalfPi))); // PhysX's capsule is horizontal
+		m_Shape->userData = this;
+	}
+
+	void PhysXCapsuleColliderShape::SetCollisionFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setSimulationFilterData(filterData);
 	}
 
 	void PhysXCapsuleColliderShape::DetachFromActor(physx::PxRigidActor* actor)

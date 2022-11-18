@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		bool IsConsoleVariable(const std::string& key);
 		CommandType GetCommandType(const std::string& key);
 
-		void ResetAllVariableValues(CommandType typeToReset);
+		void ResetAllVariableValues();
 
 	private:
 		struct CommandData

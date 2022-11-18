@@ -80,6 +80,10 @@ namespace ZeoEngine {
 
 		virtual void OnRenderEditor(bool bIsAssetPreview) override;
 		virtual void OnRenderRuntime() override;
+
+	private:
+		void DrawColliders(bool bDraw);
+		void DrawWorldBounds() const;
 	};
 
 	class ParticleSystemRenderSystem : public RenderSystemBase

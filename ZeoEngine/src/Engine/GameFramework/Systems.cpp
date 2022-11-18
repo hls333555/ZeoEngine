@@ -700,12 +700,12 @@ namespace ZeoEngine {
 
 	void CommandSystem::OnPlayStart()
 	{
-		Console::Get().ResetAllVariableValues(CommandType::EditOnly);
+		Console::Get().ResetAllVariableValues();
 	}
 
 	void CommandSystem::OnPlayStop()
 	{
-		Console::Get().ResetAllVariableValues(CommandType::RuntimeOnly);
+		Console::Get().ResetAllVariableValues();
 	}
 
 	void CommandSystem::OnSimulationStart()

@@ -17,6 +17,7 @@ namespace ZeoEngine {
 		physx::PxMaterial& GetPhysicsMaterial() const { return *m_PhysicsMaterial; }
 		void SetPhysicsMaterial(AssetHandle physicsMaterialAsset);
 
+		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) = 0;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) = 0;
 		void Release() { m_PhysicsMaterial->release(); }
 
@@ -29,6 +30,7 @@ namespace ZeoEngine {
 	public:
 		PhysXBoxColliderShape(Entity entity, const PhysXActor& actor);
 
+		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:
@@ -40,6 +42,7 @@ namespace ZeoEngine {
 	public:
 		PhysXSphereColliderShape(Entity entity, const PhysXActor& actor);
 
+		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:
@@ -51,6 +54,7 @@ namespace ZeoEngine {
 	public:
 		PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor);
 
+		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:

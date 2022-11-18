@@ -5,6 +5,7 @@
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
 #include "Engine/Physics/PhysXShapes.h"
+#include "Engine/Physics/PhysicsLayer.h"
 
 namespace ZeoEngine {
 
@@ -335,12 +336,27 @@ namespace ZeoEngine {
 			AddCollider(ColliderType::Capsule);
 		}
 
+		SetCollisionFilterData(rigidBodyComp);
+
 		m_RigidActor->userData = this;
 
 #ifdef ZE_DEBUG
 		const auto& coreComp = m_Entity.GetComponent<CoreComponent>();
 		m_RigidActor->setName(coreComp.Name.c_str());
 #endif
+	}
+
+	void PhysXActor::SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const
+	{
+		const PhysicsLayer& layer = PhysicsLayerManager::GetLayer(rigidBodyComp.LayerID);
+		physx::PxFilterData filterData;
+		filterData.word0 = ZE_BIT(layer.LayerID);
+		filterData.word1 = layer.CollidesWith;
+		filterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
+		for (const auto& collider : m_Colliders)
+		{
+			collider->SetCollisionFilterData(filterData);
+		}
 	}
 
 	void PhysXActor::SynchronizeTransform()

@@ -59,4 +59,16 @@ namespace ZeoEngine {
 		return *reinterpret_cast<const Quat*>(&quat);
 	}
 
+	physx::PxBroadPhaseType::Enum PhysXUtils::ToPhysXBroadphaseType(BroadphaseType type)
+	{
+		switch (type)
+		{
+			case BroadphaseType::SweepAndPrune: return physx::PxBroadPhaseType::eSAP;
+			case BroadphaseType::MultiBoxPrune: return physx::PxBroadPhaseType::eMBP;
+			case BroadphaseType::AutomaticBoxPrune: return physx::PxBroadPhaseType::eABP;
+		}
+
+		return physx::PxBroadPhaseType::eABP;
+	}
+
 }

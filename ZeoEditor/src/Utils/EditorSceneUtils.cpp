@@ -14,6 +14,12 @@ namespace ZeoEngine {
 		return g_Editor->GetLevelWorld()->IsRuntime();
 	}
 
+	bool SceneUtils::IsLevelPlaying()
+	{
+		const auto levelWorld = g_Editor->GetLevelWorld();
+		return levelWorld->IsRuntime() && !levelWorld->IsSimulation();
+	}
+
 	Scene& SceneUtils::GetActiveGameScene()
 	{
 		return *g_Editor->GetLevelWorld()->GetActiveScene();

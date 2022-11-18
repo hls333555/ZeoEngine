@@ -87,11 +87,11 @@ namespace ZeoEngine {
 		return m_Commands.find(key) != m_Commands.end() ? m_Commands[key].Type : CommandType::Default;
 	}
 
-	void Console::ResetAllVariableValues(CommandType typeToReset)
+	void Console::ResetAllVariableValues()
 	{
 		for (auto& [key, command] : m_Commands)
 		{
-			if (command.IsVariable() && typeToReset == command.Type)
+			if (command.IsVariable())
 			{
 				command.CurrentValue = command.DefaultValue;
 			}
