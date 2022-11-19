@@ -1,8 +1,10 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXEngine.h"
 
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Physics/PhysXDebugger.h"
 #include "Engine/Physics/PhysXCookingFactory.h"
+#include "Engine/Physics/PhysicsMaterial.h"
 
 namespace ZeoEngine {
 
@@ -58,6 +60,8 @@ namespace ZeoEngine {
 
 		physx::PxFoundation* Foundation = nullptr;
 		physx::PxPhysics* Physics = nullptr;
+
+		AssetHandle DefaultPhysicsMaterialAsset;
 	};
 
 	static PhysXData* s_Data = nullptr;
@@ -86,6 +90,8 @@ namespace ZeoEngine {
 		s_Data->CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
 
 		PhysXCookingFactory::Init();
+
+		s_Data->DefaultPhysicsMaterialAsset = AssetLibrary::CreateMemoryOnlyAsset<PhysicsMaterial>();
 	}
 
 	void PhysXEngine::Shutdown()
@@ -124,6 +130,11 @@ namespace ZeoEngine {
 	physx::PxCpuDispatcher* PhysXEngine::GetCPUDispatcher()
 	{
 		return s_Data->CPUDispatcher;
+	}
+
+	Ref<PhysicsMaterial> PhysXEngine::GetDefaultPhysicsMaterial()
+	{
+		return AssetLibrary::LoadAsset<PhysicsMaterial>(s_Data->DefaultPhysicsMaterialAsset);
 	}
 
 }

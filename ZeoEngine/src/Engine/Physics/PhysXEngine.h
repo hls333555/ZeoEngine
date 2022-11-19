@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		friend class PhysXCookingFactory;
 		friend class PhysXScene;
 		friend class PhysXActor;
+		friend class PhysicsMaterial;
 		friend class PhysXColliderShapeBase;
 
 	public:
@@ -26,6 +27,7 @@ namespace ZeoEngine {
 		static physx::PxFoundation& GetFoundation();
 		static physx::PxPhysics& GetPhysics();
 		static physx::PxCpuDispatcher* GetCPUDispatcher();
+		static Ref<PhysicsMaterial> GetDefaultPhysicsMaterial();
 	};
 
 }

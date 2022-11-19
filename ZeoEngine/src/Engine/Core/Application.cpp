@@ -60,9 +60,11 @@ namespace ZeoEngine {
 			delete layer;
 		}
 
-		ScriptEngine::Shutdown();
 		// Clear scene references (so that physics scene can be destroyed) before physics engine shutdown
 		// This fixes a crash when closing application during physics simulation
+		ScriptEngine::Shutdown();
+		// Clear assets especially PhysicsMaterial, so that releasing it won't crash
+		AssetLibrary::Clear();
 		PhysicsEngine::Shutdown();
 		Renderer::Shutdown();
 

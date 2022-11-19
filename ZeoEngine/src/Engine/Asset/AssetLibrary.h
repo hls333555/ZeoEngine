@@ -10,6 +10,8 @@ namespace ZeoEngine {
 
 	class AssetLibrary
 	{
+		friend class Application;
+
 	public:
 		/** If bForceLoad is true, asset will be deserialized every time LoadAsset is called, otherwise, asset will be deserialized only the first time LoadAsset is called */
 		template<typename T>
@@ -109,6 +111,13 @@ namespace ZeoEngine {
 		static bool HasAsset(const std::string& path)
 		{
 			return HasAsset(AssetRegistry::Get().GetAssetHandleFromPath(path));
+		}
+
+	private:
+		static void Clear()
+		{
+			s_LoadedAssets.clear();
+			s_MemoryAssets.clear();
 		}
 
 	private:

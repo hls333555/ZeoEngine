@@ -1,7 +1,6 @@
 #pragma once
 
 #include <PxShape.h>
-#include <PxMaterial.h>
 
 #include "Engine/GameFramework/Entity.h"
 
@@ -14,15 +13,12 @@ namespace ZeoEngine {
 	public:
 		virtual ~PhysXColliderShapeBase() = default;
 
-		physx::PxMaterial& GetPhysicsMaterial() const { return *m_PhysicsMaterial; }
-		void SetPhysicsMaterial(AssetHandle physicsMaterialAsset);
-
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) = 0;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) = 0;
-		void Release() { m_PhysicsMaterial->release(); }
+		void Release() {}
 
-	private:
-		physx::PxMaterial* m_PhysicsMaterial = nullptr;
+	protected:
+		const physx::PxMaterial& GetPhysicsMaterial(AssetHandle physicsMaterialAsset) const;
 	};
 
 	class PhysXBoxColliderShape : public PhysXColliderShapeBase
