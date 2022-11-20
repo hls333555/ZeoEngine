@@ -429,13 +429,16 @@ namespace ZeoEngine {
 	void PhysXActor::SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const
 	{
 		const PhysicsLayer& layer = PhysicsLayerManager::GetLayer(rigidBodyComp.LayerID);
-		physx::PxFilterData filterData;
-		filterData.word0 = ZE_BIT(layer.LayerID);
-		filterData.word1 = layer.CollidesWith;
-		filterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
+		physx::PxFilterData collisionFilterData;
+		collisionFilterData.word0 = ZE_BIT(layer.LayerID);
+		collisionFilterData.word1 = layer.CollidesWith;
+		collisionFilterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
+		physx::PxFilterData queryFilterData;
+		queryFilterData.word0 = ZE_BIT(layer.LayerID);
 		for (const auto& collider : m_Colliders)
 		{
-			collider->SetCollisionFilterData(filterData);
+			collider->SetCollisionFilterData(collisionFilterData);
+			collider->SetQueryFilterData(queryFilterData);
 		}
 	}
 

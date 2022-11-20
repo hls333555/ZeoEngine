@@ -44,6 +44,11 @@ namespace ZeoEngine {
 		m_Shape->setSimulationFilterData(filterData);
 	}
 
+	void PhysXBoxColliderShape::SetQueryFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setQueryFilterData(filterData);
+	}
+
 	void PhysXBoxColliderShape::DetachFromActor(physx::PxRigidActor* actor)
 	{
 		actor->detachShape(*m_Shape);
@@ -55,7 +60,7 @@ namespace ZeoEngine {
 
 		const auto& scale = entity.GetScale();
 		float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
-		auto geometry = physx::PxSphereGeometry(largestScale * sphereComp.Radius);
+		auto geometry = physx::PxSphereGeometry(sphereComp.Radius * largestScale);
 		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), geometry, GetPhysicsMaterial(sphereComp.PhysicsMaterialAsset));
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !sphereComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, sphereComp.bIsTrigger);
@@ -66,6 +71,12 @@ namespace ZeoEngine {
 	void PhysXSphereColliderShape::SetCollisionFilterData(const physx::PxFilterData& filterData)
 	{
 		m_Shape->setSimulationFilterData(filterData);
+		m_Shape->setQueryFilterData(filterData);
+	}
+
+	void PhysXSphereColliderShape::SetQueryFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setQueryFilterData(filterData);
 	}
 
 	void PhysXSphereColliderShape::DetachFromActor(physx::PxRigidActor* actor)
@@ -90,6 +101,12 @@ namespace ZeoEngine {
 	void PhysXCapsuleColliderShape::SetCollisionFilterData(const physx::PxFilterData& filterData)
 	{
 		m_Shape->setSimulationFilterData(filterData);
+		m_Shape->setQueryFilterData(filterData);
+	}
+
+	void PhysXCapsuleColliderShape::SetQueryFilterData(const physx::PxFilterData& filterData)
+	{
+		m_Shape->setQueryFilterData(filterData);
 	}
 
 	void PhysXCapsuleColliderShape::DetachFromActor(physx::PxRigidActor* actor)

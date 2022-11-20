@@ -14,6 +14,7 @@ namespace ZeoEngine {
 		virtual ~PhysXColliderShapeBase() = default;
 
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) = 0;
+		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) = 0;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) = 0;
 		void Release() {}
 
@@ -27,6 +28,7 @@ namespace ZeoEngine {
 		PhysXBoxColliderShape(Entity entity, const PhysXActor& actor);
 
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
+		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:
@@ -39,6 +41,7 @@ namespace ZeoEngine {
 		PhysXSphereColliderShape(Entity entity, const PhysXActor& actor);
 
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
+		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:
@@ -51,6 +54,7 @@ namespace ZeoEngine {
 		PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor);
 
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
+		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
 
 	private:

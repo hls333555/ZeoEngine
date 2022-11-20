@@ -37,7 +37,8 @@ namespace ZeoEngine {
 		static U32 AddLayer(const std::string& name, bool bDefaultSetCollisions = true);
 		static void RemoveLayer(U32 layerID);
 		static PhysicsLayer& GetLayer(U32 layerID);
-		static PhysicsLayer& GetLayer(const std::string& layerName);
+		static I32 GetLayer(const std::string& layerName);
+		static I32 GetLayerMask(const std::vector<std::string>& layerNames);
 
 		static void SetLayerName(U32 layerID, const std::string& name);
 		static void SetLayerCollision(U32 layerID, U32 otherLayerID, bool bShouldCollide);

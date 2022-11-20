@@ -65,7 +65,7 @@ namespace ZeoEngine {
 	{
 		if (m_Spec.bIsPhysicalScene)
 		{
-			return &AddContext<PhysXScene>();
+			return &AddContext<PhysXScene>(this);
 		}
 		return nullptr;
 	}

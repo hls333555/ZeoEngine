@@ -7,6 +7,7 @@
 #include "Engine/Physics/PhysXUtils.h"
 #include "Engine/Physics/PhysXActor.h"
 #include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/Utils/DebugDrawUtils.h"
 #include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
@@ -181,6 +182,37 @@ namespace ZeoEngine {
 	{
 	}
 
+	/**
+	 * Whenever the scene query intersects a shape, filtering is performed in the following order:
+	 * For non-batched queries only:
+	 * First, fixed function filtering is performed, query's QueriesFor will be used to test against shape's layer ID, discarding non-passed shapes
+	 * Second, PhysXQueryFilterCallback::preFilter will be invoked in which query's BlockingHitLayerMask will be used to test against shape's layer ID to determine whether current hit is blocking or not
+	 * For further information, take a look at https://gameworksdocs.nvidia.com/PhysX/4.1/documentation/physxguide/Manual/SceneQueries.html
+	 */
+	class PhysXQueryFilterCallback : public physx::PxQueryFilterCallback
+	{
+	public:
+		physx::PxQueryHitType::Enum preFilter(const physx::PxFilterData& filterData, const physx::PxShape* shape, const physx::PxRigidActor* actor, physx::PxHitFlags& queryFlags) override;
+		physx::PxQueryHitType::Enum postFilter(const physx::PxFilterData& filterData, const physx::PxQueryHit& hit) override;
+	};
+
+	physx::PxQueryHitType::Enum PhysXQueryFilterCallback::preFilter(const physx::PxFilterData& filterData, const physx::PxShape* shape, const physx::PxRigidActor* actor, physx::PxHitFlags& queryFlags)
+	{
+		const auto shapeFilterData = shape->getQueryFilterData();
+		if (filterData.word1 & shapeFilterData.word0)
+		{
+			return physx::PxQueryHitType::eBLOCK;
+		}
+
+		return physx::PxQueryHitType::eTOUCH;
+	}
+
+	physx::PxQueryHitType::Enum PhysXQueryFilterCallback::postFilter(const physx::PxFilterData& filterData, const physx::PxQueryHit& hit)
+	{
+		ZE_CORE_ASSERT(false);
+		return physx::PxQueryHitType::eNONE; // Generally, this function is never called as we do not provide the physx::PxQueryFlag::ePOSTFILTER flag
+	}
+
 	static physx::PxFilterFlags FilterShader(physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0, physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1, physx::PxPairFlags& pairFlags, const void* constantBlock, physx::PxU32 constantBlockSize)
 	{
 		if (physx::PxFilterObjectIsTrigger(attributes0) || physx::PxFilterObjectIsTrigger(attributes1))
@@ -209,8 +241,10 @@ namespace ZeoEngine {
 
 	static PhysXBroadPhaseCallback s_BroadPhaseCallback;
 	static PhysXSimulationEventCallback s_SimulationEventCallback;
+	static PhysXQueryFilterCallback s_QueryFilterCallback;
 
-	PhysXScene::PhysXScene()
+	PhysXScene::PhysXScene(Scene* scene)
+		: m_Scene(scene)
 	{
 		auto& physics = PhysXEngine::GetPhysics();
 		const auto& settings = PhysicsEngine::GetSettings();
@@ -235,6 +269,10 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(sceneDesc.isValid());
 
 		m_PhysicsScene = physics.createScene(sceneDesc);
+		if (auto* pvdClient = m_PhysicsScene->getScenePvdClient())
+		{
+			pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+		}
 
 		CreateRegions();
 	}
@@ -295,6 +333,103 @@ namespace ZeoEngine {
 			m_PhysicsScene->removeActor(actor->GetRigidActor());
 		}
 		m_Actors.erase(entity.GetUUID());
+	}
+
+	bool PhysXScene::Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit* outHit, bool bDrawDebug, float duration)
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxRaycastBuffer hitInfo;
+		physx::PxQueryFilterData filterData;
+		filterData.data.word0 = filter.QueriesFor;
+		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
+		bool bResult = m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData);
+		if (bResult)
+		{
+			const auto* actor = static_cast<PhysXActor*>(hitInfo.block.actor->userData);
+			outHit->HitEntity = actor->GetEntity().GetUUID();
+			outHit->Position = PhysXUtils::FromPhysXVector(hitInfo.block.position);
+			outHit->Normal = PhysXUtils::FromPhysXVector(hitInfo.block.normal);
+			outHit->Distance = hitInfo.block.distance;
+			if (bDrawDebug)
+			{
+				DebugDrawUtils::DrawPoint(*m_Scene, outHit->Position, Vec3(1.0f, 0.0f, 0.0f), 20, duration);
+			}
+		}
+		if (bDrawDebug)
+		{
+			const Vec3 target = origin + direction * maxDistance;
+			DebugDrawUtils::DrawArrow(*m_Scene, origin, target, Vec3{ 1.0f }, 0.1f, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::RaycastMulti(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, std::vector<RaycastHit>& outHits, bool bDrawDebug, float duration)
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxRaycastHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		auto hitInfo = RaycastMultiInternal(origin, direction, maxDistance, filter, hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		if (bDrawDebug)
+		{
+			const Vec3 target = origin + direction * maxDistance;
+			DebugDrawUtils::DrawArrow(*m_Scene, origin, target, Vec3{ 1.0f }, 0.1f, duration);
+		}
+		if (!hitInfo.hasAnyHits()) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		if (hitInfo.hasBlock)
+		{
+			const auto& block = hitInfo.block;
+			const auto* actor = static_cast<PhysXActor*>(block.actor->userData);
+			auto* collider = static_cast<PhysXColliderShapeBase*>(block.shape->userData);
+			RaycastHit hit;
+			hit.bIsBlockingHit = true;
+			hit.HitEntity = actor->GetEntity().GetUUID();
+			hit.HitCollider = collider;
+			hit.Position = PhysXUtils::FromPhysXVector(block.position);
+			hit.Normal = PhysXUtils::FromPhysXVector(block.normal);
+			hit.Distance = block.distance;
+			if (bDrawDebug)
+			{
+				DebugDrawUtils::DrawPoint(*m_Scene, hit.Position, Vec3(1.0f, 0.0f, 0.0f), 20, duration);
+			}
+			outHits.emplace_back(hit);
+		}
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			const auto& touch = hitInfo.touches[i];
+
+			const auto* actor = static_cast<PhysXActor*>(touch.actor->userData);
+			auto* collider = static_cast<PhysXColliderShapeBase*>(touch.shape->userData);
+			RaycastHit hit;
+			hit.bIsBlockingHit = false;
+			hit.HitEntity = actor->GetEntity().GetUUID();
+			hit.HitCollider = collider;
+			hit.Position = PhysXUtils::FromPhysXVector(touch.position);
+			hit.Normal = PhysXUtils::FromPhysXVector(touch.normal);
+			hit.Distance = touch.distance;
+			if (bDrawDebug)
+			{
+				DebugDrawUtils::DrawPoint(*m_Scene, hit.Position, Vec3(0.0f, 1.0f, 0.0f), 20, duration);
+			}
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	physx::PxRaycastBuffer PhysXScene::RaycastMultiInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastHit* hitBuffer, U32 maxHits)
+	{
+		physx::PxRaycastBuffer hitInfo(hitBuffer, maxHits);
+		physx::PxQueryFilterData filterData;
+		filterData.data.word0 = filter.QueriesFor;
+		filterData.data.word1 = filter.BlockingHitLayerMask;
+		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type)) | physx::PxQueryFlag::ePREFILTER;
+		m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
+		return hitInfo;
 	}
 
 	void PhysXScene::CreateRegions() const

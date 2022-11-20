@@ -41,17 +41,34 @@ namespace ZeoEngine {
 		return layerID >= s_Layers.size() ? s_NullLayer : s_Layers[layerID];
 	}
 
-	PhysicsLayer& PhysicsLayerManager::GetLayer(const std::string& layerName)
+	I32 PhysicsLayerManager::GetLayer(const std::string& layerName)
 	{
-		for (auto& layer : s_Layers)
+		for (const auto& layer : s_Layers)
 		{
 			if (layer.Name == layerName)
 			{
-				return layer;
+				return layer.LayerID;
 			}
 		}
 
-		return s_NullLayer;
+		return -1;
+	}
+
+	I32 PhysicsLayerManager::GetLayerMask(const std::vector<std::string>& layerNames)
+	{
+		I32 mask = 0;
+		for (const auto& name : layerNames)
+		{
+			for (const auto& layer : s_Layers)
+			{
+				if (layer.Name == name)
+				{
+					mask |= ZE_BIT(layer.LayerID);
+					break;
+				}
+			}
+		}
+		return mask;
 	}
 
 	void PhysicsLayerManager::SetLayerName(U32 layerID, const std::string& name)

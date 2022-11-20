@@ -181,6 +181,7 @@ namespace ZeoEngine {
 
 	void PhysicsDebugRenderSystem::DrawColliders(bool bDraw)
 	{
+		// The debug drawing should be in sync with PhysXColliderShapeBase's geometry
 		const auto scene = GetScene();
 		auto boxGroup = scene->GetComponentGroup<BoxColliderComponent>(IncludeComponents<TransformComponent>);
 		for (const auto e : boxGroup)
@@ -189,7 +190,7 @@ namespace ZeoEngine {
 			const Entity entity{ e, scene };
 			if (bDraw)
 			{
-				DebugDrawUtils::DrawBox(*scene, entity.GetTranslation() + boxComp.Offset, entity.GetScale() * boxComp.Size, s_DebugDrawColor, entity.GetRotation());
+				DebugDrawUtils::DrawBox(*scene, entity.GetTranslation() + boxComp.Offset, boxComp.Size * entity.GetScale(), s_DebugDrawColor, entity.GetRotation());
 			}
 		}
 
@@ -200,7 +201,9 @@ namespace ZeoEngine {
 			const Entity entity{ e, scene };
 			if (bDraw)
 			{
-				DebugDrawUtils::DrawSphereBounds(*scene, entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius);
+				const auto& scale = entity.GetScale();
+				float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
+				DebugDrawUtils::DrawSphereBounds(*scene, entity.GetTranslation() + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius * largestScale);
 			}
 		}
 
@@ -211,7 +214,9 @@ namespace ZeoEngine {
 			const Entity entity{ e, scene };
 			if (bDraw)
 			{
-				DebugDrawUtils::DrawCapsule(*scene, entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius, capsuleComp.Height, entity.GetRotation());
+				const auto& scale = entity.GetScale();
+				float radiusScale = glm::max(scale.x, scale.z);
+				DebugDrawUtils::DrawCapsule(*scene, entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius * radiusScale, capsuleComp.Height * scale.y, entity.GetRotation());
 			}
 		}
 	}

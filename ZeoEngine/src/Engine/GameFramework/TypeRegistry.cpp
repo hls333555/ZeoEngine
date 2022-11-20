@@ -261,6 +261,7 @@ namespace ZeoEngine {
 		RegisterComponent<RigidBodyComponent>("RigidBody", std::make_pair(Category, "Physics"))
 			.Field<&RigidBodyComponent::Type>("Type")
 			.Field<&RigidBodyComponent::CollisionDetection>("CollisionDetection")
+			.Field<&RigidBodyComponent::LayerID>("LayerID")
 			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::Mass>("Mass", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
