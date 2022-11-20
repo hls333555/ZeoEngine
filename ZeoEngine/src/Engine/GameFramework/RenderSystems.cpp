@@ -221,10 +221,7 @@ namespace ZeoEngine {
 		if (static_cast<bool>(*Console::Get().GetVariableValue(CVAR_PHYSICS_DRAWWORLDBOUNDS)))
 		{
 			const auto& settings = PhysicsEngine::GetSettings();
-			const Box box{ settings.WorldBoundsMin, settings.WorldBoundsMax };
-			Vec3 center, extents;
-			box.GetCenterAndExtents(center, extents);
-			DebugDrawUtils::DrawBox(*GetScene(), center, extents, Vec3{ 0.0f, 0.5f, 1.0f });
+			DebugDrawUtils::DrawBox(*GetScene(), settings.WorldBoundsCenter, settings.WorldBoundsExtent, Vec3{ 0.0f, 0.5f, 1.0f });
 		}
 	}
 

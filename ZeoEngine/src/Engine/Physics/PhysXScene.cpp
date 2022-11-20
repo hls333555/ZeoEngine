@@ -218,14 +218,19 @@ namespace ZeoEngine {
 
 		physx::PxSceneDesc sceneDesc(physics.getTolerancesScale());
 		sceneDesc.gravity = PhysXUtils::ToPhysXVector(settings.Gravity);
-		sceneDesc.broadPhaseType = PhysXUtils::ToPhysXBroadphaseType(settings.BroadphaseAlgorithm);
+		sceneDesc.broadPhaseType = static_cast<physx::PxBroadPhaseType::Enum>(settings.BroadphaseAlgorithm);
 		sceneDesc.broadPhaseCallback = &s_BroadPhaseCallback;
+		sceneDesc.frictionType = static_cast<physx::PxFrictionType::Enum>(settings.FrictionModel);
+		sceneDesc.solverType = static_cast<physx::PxSolverType::Enum>(settings.SolverModel);
 		sceneDesc.filterShader = FilterShader;
 		sceneDesc.simulationEventCallback = &s_SimulationEventCallback;
 		sceneDesc.cpuDispatcher = PhysXEngine::GetCPUDispatcher();
 		sceneDesc.flags |= physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS;
 		sceneDesc.flags |= physx::PxSceneFlag::eENABLE_CCD | physx::PxSceneFlag::eENABLE_PCM;
-		//sceneDesc.flags |= physx::PxSceneFlag::eENABLE_ENHANCED_DETERMINISM;
+		if (settings.bEnableEnhancedDeterminism)
+		{
+			sceneDesc.flags |= physx::PxSceneFlag::eENABLE_ENHANCED_DETERMINISM;
+		}
 
 		ZE_CORE_ASSERT(sceneDesc.isValid());
 
@@ -300,7 +305,7 @@ namespace ZeoEngine {
 
 		const auto& settings = PhysicsEngine::GetSettings();
 		auto* regionBounds = new physx::PxBounds3[settings.WorldBoundsSubdivisions * settings.WorldBoundsSubdivisions];
-		const physx::PxBounds3 globalBounds(PhysXUtils::ToPhysXVector(settings.WorldBoundsMin), PhysXUtils::ToPhysXVector(settings.WorldBoundsMax));
+		const physx::PxBounds3 globalBounds = physx::PxBounds3::centerExtents(PhysXUtils::ToPhysXVector(settings.WorldBoundsCenter), PhysXUtils::ToPhysXVector(settings.WorldBoundsExtent));
 		const U32 regionCount = physx::PxBroadPhaseExt::createRegionsFromWorldBounds(regionBounds, globalBounds, settings.WorldBoundsSubdivisions);
 		for (U32 i = 0; i < regionCount; i++)
 		{

@@ -443,6 +443,15 @@ namespace ZeoEngine {
 		float LinearDamping = 0.01f;
 		float AngularDamping = 0.05f;
 		bool bEnableGravity = true;
+
+		bool bLockPositionX = false;
+		bool bLockPositionY = false;
+		bool bLockPositionZ = false;
+		bool bLockRotationX = false;
+		bool bLockRotationY = false;
+		bool bLockRotationZ = false;
+
+		bool bReceiveSleepEvents = false;
 	};
 
 	struct PhysicsMaterialDetailComponent : public IComponent

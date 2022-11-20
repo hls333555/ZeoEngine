@@ -1,10 +1,8 @@
 #pragma once
 
-#include <PxBroadPhase.h>
-#include <foundation/PxVec4.h>
+#include <PxSceneDesc.h>
 #include <foundation/PxTransform.h>
 
-#include "Engine/Physics/PhysicsTypes.h"
 #include "Engine/Core/EngineTypes.h"
 
 namespace ZeoEngine {
@@ -22,8 +20,6 @@ namespace ZeoEngine {
 		static Vec4 FromPhysXVector(const physx::PxVec4& vector);
 		static Mat4 FromPhysXTransform(const physx::PxTransform& transform);
 		static Quat FromPhysXQuat(const physx::PxQuat& quat);
-
-		static physx::PxBroadPhaseType::Enum ToPhysXBroadphaseType(BroadphaseType type);
 
 	};
 	

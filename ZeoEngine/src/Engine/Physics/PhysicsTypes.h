@@ -10,9 +10,28 @@ namespace ZeoEngine {
 
 	enum class BroadphaseType
 	{
-		SweepAndPrune,
+		SweepAndPrune = 0,
 		MultiBoxPrune,
 		AutomaticBoxPrune
+	};
+
+	enum class FrictionType
+	{
+		Patch = 0,
+		OneDirectional,
+		TwoDirectional
+	};
+
+	enum class SolverType
+	{
+		ProjectedGaussSeidel,
+		TemporalGaussSeidel
+	};
+
+	enum class ActorLockFlag
+	{
+		TranslationX = ZE_BIT(0), TranslationY = ZE_BIT(1), TranslationZ = ZE_BIT(2), Translation = TranslationX | TranslationY | TranslationZ,
+		RotationX = ZE_BIT(3), RotationY = ZE_BIT(4), RotationZ = ZE_BIT(5), Rotation = RotationX | RotationY | RotationZ
 	};
 
 	enum class ForceMode

@@ -3,6 +3,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Physics/PhysXEngine.h"
+#include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
 #include "Engine/Physics/PhysXShapes.h"
 #include "Engine/Physics/PhysicsLayer.h"
@@ -65,6 +66,18 @@ namespace ZeoEngine {
 		m_RigidActor->setGlobalPose(PhysXUtils::ToPhysXTransform(transform), bAutoWake);
 	}
 
+	void PhysXActor::SetKinematicTarget(const Vec3& targetPosition, const Vec3& targetRotation) const
+	{
+		if (!IsKinematic())
+		{
+			ZE_CORE_WARN("Trying to set kinematic target for a non-kinematic actor.");
+			return;
+		}
+
+		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+		rigidDynamic->setKinematicTarget(PhysXUtils::ToPhysXTransform(targetPosition, targetRotation));
+	}
+
 	bool PhysXActor::IsDynamic() const
 	{
 		const auto& rigidBodyComp = m_Entity.GetComponent<RigidBodyComponent>();
@@ -92,6 +105,22 @@ namespace ZeoEngine {
 		return IsDynamic() ? m_RigidActor->is<physx::PxRigidDynamic>()->isSleeping() : false;
 	}
 
+	void PhysXActor::WakeUp() const
+	{
+		if (IsDynamic())
+		{
+			m_RigidActor->is<physx::PxRigidDynamic>()->wakeUp();
+		}
+	}
+
+	void PhysXActor::PutToSleep() const
+	{
+		if (IsDynamic())
+		{
+			m_RigidActor->is<physx::PxRigidDynamic>()->putToSleep();
+		}
+	}
+
 	bool PhysXActor::IsGravityEnabled() const
 	{
 		return !m_RigidActor->getActorFlags().isSet(physx::PxActorFlag::eDISABLE_GRAVITY);
@@ -112,6 +141,18 @@ namespace ZeoEngine {
 
 		const auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
 		return rigidDynamic->getMass();
+	}
+
+	float PhysXActor::GetInverseMass() const
+	{
+		if (!IsDynamic())
+		{
+			ZE_CORE_WARN("Trying to get inverse mass of non-dynamic physics actor.");
+			return 0.0f;
+		}
+
+		const auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+		return rigidDynamic->getInvMass();
 	}
 
 	void PhysXActor::SetMass(float mass) const
@@ -270,6 +311,23 @@ namespace ZeoEngine {
 		rigidDynamic->setMaxAngularVelocity(maxVelocity);
 	}
 
+	void PhysXActor::SetLockFlag(ActorLockFlag flag, bool bValue, bool bForceWake)
+	{
+		if (!IsDynamic()) return;
+
+		if (bValue)
+		{
+			m_LockFlags |= static_cast<U8>(flag);
+		}
+		else
+		{
+			m_LockFlags &= ~static_cast<U8>(flag);
+		}
+
+		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+		rigidDynamic->setRigidDynamicLockFlags(static_cast<physx::PxRigidDynamicLockFlags>(m_LockFlags));
+	}
+
 	void PhysXActor::AddForce(const Vec3& force, ForceMode forceMode) const
 	{
 		if (!IsDynamic() || IsKinematic())
@@ -282,20 +340,16 @@ namespace ZeoEngine {
 		rigidDynamic->addForce(PhysXUtils::ToPhysXVector(force), static_cast<physx::PxForceMode::Enum>(forceMode));
 	}
 
-	void PhysXActor::AddCollider(ColliderType type)
+	void PhysXActor::AddTorque(const glm::vec3& torque, ForceMode forceMode) const
 	{
-		switch (type)
+		if (!IsDynamic() || IsKinematic())
 		{
-			case ColliderType::Box:
-				m_Colliders.emplace_back(CreateScope<PhysXBoxColliderShape>(m_Entity, *this));
-				break;
-			case ColliderType::Sphere:
-				m_Colliders.emplace_back(CreateScope<PhysXSphereColliderShape>(m_Entity, *this));
-				break;
-			case ColliderType::Capsule:
-				m_Colliders.emplace_back(CreateScope<PhysXCapsuleColliderShape>(m_Entity, *this));
-				break;
+			ZE_CORE_WARN("Trying to add torque to a non-dynamic or kinematic physics actor.");
+			return;
 		}
+
+		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+		rigidDynamic->addTorque(PhysXUtils::ToPhysXVector(torque), static_cast<physx::PxForceMode::Enum>(forceMode));
 	}
 
 	void PhysXActor::CreateRigidActor()
@@ -311,6 +365,7 @@ namespace ZeoEngine {
 		else
 		{
 			m_RigidActor = physics.createRigidDynamic(transform);
+			m_RigidActor->setActorFlag(physx::PxActorFlag::eSEND_SLEEP_NOTIFIES, rigidBodyComp.bReceiveSleepEvents);
 
 			SetKinematic(rigidBodyComp.bIsKinematic);
 			SetMass(rigidBodyComp.Mass);
@@ -318,9 +373,18 @@ namespace ZeoEngine {
 			SetLinearDamping(rigidBodyComp.LinearDamping);
 			SetAngularDamping(rigidBodyComp.AngularDamping);
 
+			SetLockFlag(ActorLockFlag::TranslationX, rigidBodyComp.bLockPositionX);
+			SetLockFlag(ActorLockFlag::TranslationY, rigidBodyComp.bLockPositionY);
+			SetLockFlag(ActorLockFlag::TranslationZ, rigidBodyComp.bLockPositionZ);
+			SetLockFlag(ActorLockFlag::RotationX, rigidBodyComp.bLockRotationX);
+			SetLockFlag(ActorLockFlag::RotationY, rigidBodyComp.bLockRotationY);
+			SetLockFlag(ActorLockFlag::RotationZ, rigidBodyComp.bLockRotationZ);
+
 			auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
 			rigidDynamic->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, rigidBodyComp.CollisionDetection == RigidBodyComponent::CollisionDetectionType::Continuous);
 			rigidDynamic->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_SPECULATIVE_CCD, rigidBodyComp.CollisionDetection == RigidBodyComponent::CollisionDetectionType::ContinuousSpeculative);
+			const auto& settings = PhysicsEngine::GetSettings();
+			rigidDynamic->setSolverIterationCounts(settings.SolverPositionIterations, settings.SolverVelocityIterations);
 		}
 
 		if (m_Entity.HasComponent<BoxColliderComponent>())
@@ -344,6 +408,22 @@ namespace ZeoEngine {
 		const auto& coreComp = m_Entity.GetComponent<CoreComponent>();
 		m_RigidActor->setName(coreComp.Name.c_str());
 #endif
+	}
+
+	void PhysXActor::AddCollider(ColliderType type)
+	{
+		switch (type)
+		{
+			case ColliderType::Box:
+				m_Colliders.emplace_back(CreateScope<PhysXBoxColliderShape>(m_Entity, *this));
+				break;
+			case ColliderType::Sphere:
+				m_Colliders.emplace_back(CreateScope<PhysXSphereColliderShape>(m_Entity, *this));
+				break;
+			case ColliderType::Capsule:
+				m_Colliders.emplace_back(CreateScope<PhysXCapsuleColliderShape>(m_Entity, *this));
+				break;
+		}
 	}
 
 	void PhysXActor::SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const
