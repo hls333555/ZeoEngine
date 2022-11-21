@@ -23,8 +23,14 @@ namespace ZeoEngine {
 		PhysXActor* CreateActor(Entity entity);
 		void DestroyActor(Entity entity);
 
-		bool Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit* outHit, bool bDrawDebug = false, float duration = 2.0f);
-		bool RaycastMulti(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, std::vector<RaycastHit>& outHits, bool bDrawDebug = false, float duration = 2.0f);
+		bool Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit& outHit, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool RaycastMulti(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, std::vector<RaycastHit>& outHits, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool BoxSweep(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool BoxSweepMulti(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool SphereSweep(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool SphereSweepMulti(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool CapsuleSweep(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug = false, float duration = 2.0f) const;
+		bool CapsuleSweepMulti(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug = false, float duration = 2.0f) const;
 
 	private:
 		void CreateRegions() const;
@@ -32,7 +38,11 @@ namespace ZeoEngine {
 		bool Advance(DeltaTime dt);
 		void EvaluateSubSteps(DeltaTime dt);
 
-		physx::PxRaycastBuffer RaycastMultiInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastHit* hitBuffer, U32 maxHits);
+		bool RaycastInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastBuffer& hitInfo) const;
+		bool SweepInternal(const physx::PxGeometry& geometry, const Vec3& center, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const;
+		bool BoxSweepInternal(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const;
+		bool SphereSweepInternal(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const;
+		bool CapsuleSweepInternal(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const;
 
 	private:
 		Scene* m_Scene = nullptr;

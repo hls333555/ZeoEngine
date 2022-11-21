@@ -243,6 +243,26 @@ namespace ZeoEngine {
 	static PhysXSimulationEventCallback s_SimulationEventCallback;
 	static PhysXQueryFilterCallback s_QueryFilterCallback;
 
+	namespace Utils	{
+
+		static void ExtractHit(const Scene* scene, RaycastHit& outHit, bool bIsBlockingHit, const physx::PxLocationHit& hit, bool bDrawDebug, float duration)
+		{
+			const auto* actor = static_cast<PhysXActor*>(hit.actor->userData);
+			auto* collider = static_cast<PhysXColliderShapeBase*>(hit.shape->userData);
+			outHit.bIsBlockingHit = bIsBlockingHit;
+			outHit.HitEntity = actor->GetEntity().GetUUID();
+			outHit.HitCollider = collider;
+			outHit.Position = PhysXUtils::FromPhysXVector(hit.position);
+			outHit.Normal = PhysXUtils::FromPhysXVector(hit.normal);
+			outHit.Distance = hit.distance;
+			if (bDrawDebug)
+			{
+				DebugDrawUtils::DrawPoint(*scene, outHit.Position, bIsBlockingHit ? Vec3(1.0f, 0.0f, 0.0f) : Vec3(0.0f, 1.0f, 0.0f), 20, duration);
+			}
+		}
+		
+	}
+
 	PhysXScene::PhysXScene(Scene* scene)
 		: m_Scene(scene)
 	{
@@ -335,26 +355,15 @@ namespace ZeoEngine {
 		m_Actors.erase(entity.GetUUID());
 	}
 
-	bool PhysXScene::Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit* outHit, bool bDrawDebug, float duration)
+	bool PhysXScene::Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit& outHit, bool bDrawDebug, float duration) const
 	{
 		ZE_PROFILE_FUNC();
 
 		physx::PxRaycastBuffer hitInfo;
-		physx::PxQueryFilterData filterData;
-		filterData.data.word0 = filter.QueriesFor;
-		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
-		bool bResult = m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData);
+		bool bResult = RaycastInternal(origin, direction, maxDistance, filter, hitInfo);
 		if (bResult)
 		{
-			const auto* actor = static_cast<PhysXActor*>(hitInfo.block.actor->userData);
-			outHit->HitEntity = actor->GetEntity().GetUUID();
-			outHit->Position = PhysXUtils::FromPhysXVector(hitInfo.block.position);
-			outHit->Normal = PhysXUtils::FromPhysXVector(hitInfo.block.normal);
-			outHit->Distance = hitInfo.block.distance;
-			if (bDrawDebug)
-			{
-				DebugDrawUtils::DrawPoint(*m_Scene, outHit->Position, Vec3(1.0f, 0.0f, 0.0f), 20, duration);
-			}
+			Utils::ExtractHit(m_Scene, outHit, true, hitInfo.block, bDrawDebug, duration);
 		}
 		if (bDrawDebug)
 		{
@@ -365,71 +374,244 @@ namespace ZeoEngine {
 		return bResult;
 	}
 
-	bool PhysXScene::RaycastMulti(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, std::vector<RaycastHit>& outHits, bool bDrawDebug, float duration)
+	bool PhysXScene::RaycastMulti(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, std::vector<RaycastHit>& outHits, bool bDrawDebug, float duration) const
 	{
 		ZE_PROFILE_FUNC();
 
 		physx::PxRaycastHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
-		auto hitInfo = RaycastMultiInternal(origin, direction, maxDistance, filter, hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		physx::PxRaycastBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = RaycastInternal(origin, direction, maxDistance, filter, hitInfo);
 		if (bDrawDebug)
 		{
 			const Vec3 target = origin + direction * maxDistance;
 			DebugDrawUtils::DrawArrow(*m_Scene, origin, target, Vec3{ 1.0f }, 0.1f, duration);
 		}
-		if (!hitInfo.hasAnyHits()) return false;
+		if (!bResult) return false;
 
 		outHits.clear();
 		outHits.reserve(hitInfo.getNbAnyHits());
 		if (hitInfo.hasBlock)
 		{
-			const auto& block = hitInfo.block;
-			const auto* actor = static_cast<PhysXActor*>(block.actor->userData);
-			auto* collider = static_cast<PhysXColliderShapeBase*>(block.shape->userData);
 			RaycastHit hit;
-			hit.bIsBlockingHit = true;
-			hit.HitEntity = actor->GetEntity().GetUUID();
-			hit.HitCollider = collider;
-			hit.Position = PhysXUtils::FromPhysXVector(block.position);
-			hit.Normal = PhysXUtils::FromPhysXVector(block.normal);
-			hit.Distance = block.distance;
-			if (bDrawDebug)
-			{
-				DebugDrawUtils::DrawPoint(*m_Scene, hit.Position, Vec3(1.0f, 0.0f, 0.0f), 20, duration);
-			}
+			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
 		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
 		{
-			const auto& touch = hitInfo.touches[i];
-
-			const auto* actor = static_cast<PhysXActor*>(touch.actor->userData);
-			auto* collider = static_cast<PhysXColliderShapeBase*>(touch.shape->userData);
 			RaycastHit hit;
-			hit.bIsBlockingHit = false;
-			hit.HitEntity = actor->GetEntity().GetUUID();
-			hit.HitCollider = collider;
-			hit.Position = PhysXUtils::FromPhysXVector(touch.position);
-			hit.Normal = PhysXUtils::FromPhysXVector(touch.normal);
-			hit.Distance = touch.distance;
-			if (bDrawDebug)
-			{
-				DebugDrawUtils::DrawPoint(*m_Scene, hit.Position, Vec3(0.0f, 1.0f, 0.0f), 20, duration);
-			}
+			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
 
 		return true;
 	}
 
-	physx::PxRaycastBuffer PhysXScene::RaycastMultiInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastHit* hitBuffer, U32 maxHits)
+	bool PhysXScene::BoxSweep(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug, float duration) const
 	{
-		physx::PxRaycastBuffer hitInfo(hitBuffer, maxHits);
+		ZE_PROFILE_FUNC();
+
+		physx::PxSweepBuffer hitInfo;
+		bool bResult = BoxSweepInternal(center, extent, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(m_Scene, outHit, true, hitInfo.block, bDrawDebug, duration);
+		}
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawBox(*m_Scene, center, extent, Vec3{ 1.0f }, rotation, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawBox(*m_Scene, target, extent, Vec3{ 1.0f }, rotation, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::BoxSweepMulti(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxSweepHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxSweepBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = BoxSweepInternal(center, extent, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawBox(*m_Scene, center, extent, Vec3{ 1.0f }, rotation, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawBox(*m_Scene, target, extent, Vec3{ 1.0f }, rotation, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		if (hitInfo.hasBlock)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::SphereSweep(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxSweepBuffer hitInfo;
+		bool bResult = SphereSweepInternal(center, radius, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(m_Scene, outHit, true, hitInfo.block, bDrawDebug, duration);
+		}
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawSphere(*m_Scene, center, Vec3{ 1.0f }, radius, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawSphere(*m_Scene, target, Vec3{ 1.0f }, radius, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::SphereSweepMulti(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxSweepHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxSweepBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = SphereSweepInternal(center, radius, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawSphere(*m_Scene, center, Vec3{ 1.0f }, radius, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawSphere(*m_Scene, target, Vec3{ 1.0f }, radius, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		if (hitInfo.hasBlock)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::CapsuleSweep(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+		physx::PxSweepBuffer hitInfo;
+		bool bResult = CapsuleSweepInternal(center, radius, height, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(m_Scene, outHit, true, hitInfo.block, bDrawDebug, duration);
+		}
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawCapsule(*m_Scene, center, Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawCapsule(*m_Scene, target, Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::CapsuleSweepMulti(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, std::vector<SweepHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxSweepHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxSweepBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = CapsuleSweepInternal(center, radius, height, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			const Vec3 target = center + sweepDirection * sweepDistance;
+			DebugDrawUtils::DrawCapsule(*m_Scene, center, Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+			DebugDrawUtils::DrawArrow(*m_Scene, center, target, Vec3{ 1.0f }, 0.1f, duration);
+			DebugDrawUtils::DrawCapsule(*m_Scene, target, Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		if (hitInfo.hasBlock)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			RaycastHit hit;
+			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::RaycastInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastBuffer& hitInfo) const
+	{
 		physx::PxQueryFilterData filterData;
 		filterData.data.word0 = filter.QueriesFor;
-		filterData.data.word1 = filter.BlockingHitLayerMask;
-		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type)) | physx::PxQueryFlag::ePREFILTER;
-		m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
-		return hitInfo;
+		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
+		if (hitInfo.maxNbTouches)
+		{
+			filterData.data.word1 = filter.BlockingHitLayerMask;
+			filterData.flags |= physx::PxQueryFlag::ePREFILTER;
+		}
+		return m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
+	}
+
+	bool PhysXScene::SweepInternal(const physx::PxGeometry& geometry, const Vec3& center, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const
+	{
+		physx::PxQueryFilterData filterData;
+		filterData.data.word0 = filter.QueriesFor;
+		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
+		if (hitInfo.maxNbTouches)
+		{
+			filterData.data.word1 = filter.BlockingHitLayerMask;
+			filterData.flags |= physx::PxQueryFlag::ePREFILTER;
+		}
+		return m_PhysicsScene->sweep(geometry, PhysXUtils::ToPhysXTransform(center, rotation), PhysXUtils::ToPhysXVector(glm::normalize(sweepDirection)), sweepDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
+	}
+
+	bool PhysXScene::BoxSweepInternal(const Vec3& center, const Vec3& extent, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const
+	{
+		const physx::PxBoxGeometry box(extent.x * 0.5f, extent.y * 0.5f, extent.z * 0.5f);
+		return SweepInternal(box, center, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+	}
+
+	bool PhysXScene::SphereSweepInternal(const Vec3& center, float radius, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const
+	{
+		const physx::PxSphereGeometry sphere(radius);
+		return SweepInternal(sphere, center, Vec3{ 0.0f }, sweepDirection, sweepDistance, filter, hitInfo);
+	}
+
+	bool PhysXScene::CapsuleSweepInternal(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const
+	{
+		const physx::PxCapsuleGeometry capsule(radius, height * 0.5f);
+		return SweepInternal(capsule, center, rotation, sweepDirection, sweepDistance, filter, hitInfo);
 	}
 
 	void PhysXScene::CreateRegions() const

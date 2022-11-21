@@ -73,6 +73,8 @@ namespace ZeoEngine {
 		float Distance;
 	};
 
+	using SweepHit = RaycastHit;
+
 	enum class QueryFlag : U16
 	{
 		Static = ZE_BIT(0), Dynamic = ZE_BIT(1), Both = Static | Dynamic
