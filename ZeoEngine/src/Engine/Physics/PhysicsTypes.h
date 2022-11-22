@@ -3,7 +3,7 @@
 #include "Engine/Asset/Asset.h"
 
 #define PHYSICS_MAX_CONTACT_POINTS 16
-#define PHYSICS_MAX_RAYCAST_HITS 256
+#define PHYSICS_MAX_RAYCAST_HITS 256 // TODO: May need to figure out a proper value
 
 namespace ZeoEngine {
 
@@ -63,11 +63,15 @@ namespace ZeoEngine {
 		ContactInfo Contacts[PHYSICS_MAX_CONTACT_POINTS];
 	};
 
-	struct RaycastHit
+	struct OverlapHit
 	{
-		bool bIsBlockingHit = false;
 		UUID HitEntity;
 		PhysXColliderShapeBase* HitCollider = nullptr;
+	};
+
+	struct RaycastHit : public OverlapHit
+	{
+		bool bIsBlockingHit = false;
 		Vec3 Position;
 		Vec3 Normal;
 		float Distance;
@@ -84,7 +88,7 @@ namespace ZeoEngine {
 	{
 		QueryFlag Type = QueryFlag::Both;
 		I32 QueriesFor = 0; // Bitfield that contains a set of layer bits for which query targets
-		I32 BlockingHitLayerMask = 0; // Bitfield that contains a set of layer bits which are considered to be blocking hits. Only used for multi queries
+		I32 BlockingHitLayerMask = 0; // Bitfield that contains a set of layer bits which are considered to be blocking hits. Only used for multi non-overlap queries
 	};
 
 }

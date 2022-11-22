@@ -260,6 +260,14 @@ namespace ZeoEngine {
 				DebugDrawUtils::DrawPoint(*scene, outHit.Position, bIsBlockingHit ? Vec3(1.0f, 0.0f, 0.0f) : Vec3(0.0f, 1.0f, 0.0f), 20, duration);
 			}
 		}
+
+		static void ExtractHit(OverlapHit& outHit, const physx::PxOverlapHit& hit)
+		{
+			const auto* actor = static_cast<PhysXActor*>(hit.actor->userData);
+			auto* collider = static_cast<PhysXColliderShapeBase*>(hit.shape->userData);
+			outHit.HitEntity = actor->GetEntity().GetUUID();
+			outHit.HitCollider = collider;
+		}
 		
 	}
 
@@ -447,13 +455,13 @@ namespace ZeoEngine {
 		outHits.reserve(hitInfo.getNbAnyHits());
 		if (hitInfo.hasBlock)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
 		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
@@ -502,13 +510,13 @@ namespace ZeoEngine {
 		outHits.reserve(hitInfo.getNbAnyHits());
 		if (hitInfo.hasBlock)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
 		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
@@ -519,6 +527,7 @@ namespace ZeoEngine {
 	bool PhysXScene::CapsuleSweep(const Vec3& center, float radius, float height, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, SweepHit& outHit, bool bDrawDebug, float duration) const
 	{
 		ZE_PROFILE_FUNC();
+
 		physx::PxSweepBuffer hitInfo;
 		bool bResult = CapsuleSweepInternal(center, radius, height, rotation, sweepDirection, sweepDistance, filter, hitInfo);
 		if (bResult)
@@ -556,14 +565,143 @@ namespace ZeoEngine {
 		outHits.reserve(hitInfo.getNbAnyHits());
 		if (hitInfo.hasBlock)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, true, hitInfo.block, bDrawDebug, duration);
 			outHits.emplace_back(hit);
 		}
 		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
 		{
-			RaycastHit hit;
+			SweepHit hit;
 			Utils::ExtractHit(m_Scene, hit, false, hitInfo.touches[i], bDrawDebug, duration);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::BoxOverlapAny(const Vec3& center, const Vec3& extent, const Vec3& rotation, const QueryFilter& filter, OverlapHit& outHit, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapBuffer hitInfo;
+		bool bResult = BoxOverlapInternal(center, extent, rotation, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(outHit, hitInfo.block);
+		}
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawBox(*m_Scene, center, extent, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, rotation, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::BoxOverlapMulti(const Vec3& center, const Vec3& extent, const Vec3& rotation, const QueryFilter& filter, std::vector<OverlapHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxOverlapBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = BoxOverlapInternal(center, extent, rotation, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawBox(*m_Scene, center, extent, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, rotation, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			OverlapHit hit;
+			Utils::ExtractHit(hit, hitInfo.touches[i]);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::SphereOverlapAny(const Vec3& center, float radius, const QueryFilter& filter, OverlapHit& outHit, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapBuffer hitInfo;
+		bool bResult = SphereOverlapInternal(center, radius, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(outHit, hitInfo.block);
+		}
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawSphere(*m_Scene, center, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, radius, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::SphereOverlapMulti(const Vec3& center, float radius, const QueryFilter& filter, std::vector<OverlapHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxOverlapBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = SphereOverlapInternal(center, radius, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawSphere(*m_Scene, center, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, radius, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			OverlapHit hit;
+			Utils::ExtractHit(hit, hitInfo.touches[i]);
+			outHits.emplace_back(hit);
+		}
+
+		return true;
+	}
+
+	bool PhysXScene::CapsuleOverlapAny(const Vec3& center, float radius, float height, const Vec3& rotation, const QueryFilter& filter, OverlapHit& outHit, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapBuffer hitInfo;
+		bool bResult = CapsuleOverlapInternal(center, radius, height, rotation, filter, hitInfo);
+		if (bResult)
+		{
+			Utils::ExtractHit(outHit, hitInfo.block);
+		}
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawCapsule(*m_Scene, center, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+		}
+
+		return bResult;
+	}
+
+	bool PhysXScene::CapsuleOverlapMulti(const Vec3& center, float radius, float height, const Vec3& rotation, const QueryFilter& filter, std::vector<OverlapHit>& outHits, bool bDrawDebug, float duration) const
+	{
+		ZE_PROFILE_FUNC();
+
+		physx::PxOverlapHit hitBuffer[PHYSICS_MAX_RAYCAST_HITS];
+		physx::PxOverlapBuffer hitInfo(hitBuffer, PHYSICS_MAX_RAYCAST_HITS);
+		bool bResult = CapsuleOverlapInternal(center, radius, height, rotation, filter, hitInfo);
+		if (bDrawDebug)
+		{
+			DebugDrawUtils::DrawCapsule(*m_Scene, center, bResult ? Vec3(0.0f, 1.0f, 0.0f) : Vec3{ 1.0f }, radius, height, rotation, 32, duration);
+		}
+		if (!bResult) return false;
+
+		outHits.clear();
+		outHits.reserve(hitInfo.getNbAnyHits());
+		for (U32 i = 0; i < hitInfo.nbTouches; ++i)
+		{
+			OverlapHit hit;
+			Utils::ExtractHit(hit, hitInfo.touches[i]);
 			outHits.emplace_back(hit);
 		}
 
@@ -612,6 +750,36 @@ namespace ZeoEngine {
 	{
 		const physx::PxCapsuleGeometry capsule(radius, height * 0.5f);
 		return SweepInternal(capsule, center, rotation, sweepDirection, sweepDistance, filter, hitInfo);
+	}
+
+	bool PhysXScene::OverlapInternal(const physx::PxGeometry& geometry, const Vec3& center, const Vec3& rotation, const QueryFilter& filter, physx::PxOverlapBuffer& hitInfo) const
+	{
+		physx::PxQueryFilterData filterData;
+		filterData.data.word0 = filter.QueriesFor;
+		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
+		if (!hitInfo.maxNbTouches)
+		{
+			filterData.flags |= physx::PxQueryFlag::eANY_HIT; // Overlap only supports AnyHit if no touch buffer provided
+		}
+		return m_PhysicsScene->overlap(geometry, PhysXUtils::ToPhysXTransform(center, rotation), hitInfo, filterData);
+	}
+
+	bool PhysXScene::BoxOverlapInternal(const Vec3& center, const Vec3& extent, const Vec3& rotation, const QueryFilter& filter, physx::PxOverlapBuffer& hitInfo) const
+	{
+		const physx::PxBoxGeometry box(extent.x * 0.5f, extent.y * 0.5f, extent.z * 0.5f);
+		return OverlapInternal(box, center, rotation, filter, hitInfo);
+	}
+
+	bool PhysXScene::SphereOverlapInternal(const Vec3& center, float radius, const QueryFilter& filter, physx::PxOverlapBuffer& hitInfo) const
+	{
+		const physx::PxSphereGeometry sphere(radius);
+		return OverlapInternal(sphere, center, Vec3{ 0.0f }, filter, hitInfo);
+	}
+
+	bool PhysXScene::CapsuleOverlapInternal(const Vec3& center, float radius, float height, const Vec3& rotation, const QueryFilter& filter, physx::PxOverlapBuffer& hitInfo) const
+	{
+		const physx::PxCapsuleGeometry capsule(radius, height * 0.5f);
+		return OverlapInternal(capsule, center, rotation, filter, hitInfo);
 	}
 
 	void PhysXScene::CreateRegions() const
