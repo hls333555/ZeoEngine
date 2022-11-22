@@ -128,6 +128,11 @@ namespace ZeoEngine {
 			{
 				physicsScene->DestroyActor(entity);
 			}
+
+			if (entity.HasComponent<CharacterControllerComponent>())
+			{
+				physicsScene->DestroyCharacterController(entity);
+			}
 		}
 		const auto uuid = entity.GetUUID();
 		destroy(entity);

@@ -392,7 +392,7 @@ namespace ImGui {
 		return &payload;
 	}
 
-	void SetMouseEnabled(const bool bEnable)
+	void SetMouseEnabled(bool bEnable)
 	{
 		if (bEnable)
 		{
@@ -403,4 +403,17 @@ namespace ImGui {
 			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
 		}
 	}
+
+	void SetKeyboardNavEnabled(bool bEnable)
+	{
+		if (bEnable)
+		{
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		}
+		else
+		{
+			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+		}
+	}
+
 }

@@ -1,6 +1,15 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXScene.h"
 
+#include <PxScene.h>
+#include <characterkinematic/PxControllerManager.h>
+#include <PxPhysics.h>
+#include <PxRigidActor.h>
+#include <PxMaterial.h>
+#include <PxSimulationEventCallback.h>
+#include <extensions/PxBroadPhaseExt.h>
+
+#include "PhysXCharacterController.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXEngine.h"
@@ -108,26 +117,30 @@ namespace ZeoEngine {
 			{
 				if (bActor0ScriptClassValid)
 				{
+					collisionInfo.OtherEntity = actor1->GetEntity().GetUUID();
 					collisionInfo.OtherCollider = collider1;
-					ScriptEngine::OnCollisionBegin(actor0->GetEntity(), actor1->GetEntity(), collisionInfo);
+					ScriptEngine::OnCollisionBegin(actor0->GetEntity(), collisionInfo);
 				}
 				if (bActor1ScriptClassValid)
 				{
+					collisionInfo.OtherEntity = actor0->GetEntity().GetUUID();
 					collisionInfo.OtherCollider = collider0;
-					ScriptEngine::OnCollisionBegin(actor1->GetEntity(), actor0->GetEntity(), collisionInfo);
+					ScriptEngine::OnCollisionBegin(actor1->GetEntity(), collisionInfo);
 				}
 			}
 			else if (contactPair.events & physx::PxPairFlag::eNOTIFY_TOUCH_LOST)
 			{
 				if (bActor0ScriptClassValid)
 				{
+					collisionInfo.OtherEntity = actor1->GetEntity().GetUUID();
 					collisionInfo.OtherCollider = collider1;
-					ScriptEngine::OnCollisionEnd(actor0->GetEntity(), actor1->GetEntity(), collisionInfo);
+					ScriptEngine::OnCollisionEnd(actor0->GetEntity(), collisionInfo);
 				}
 				if (bActor1ScriptClassValid)
 				{
+					collisionInfo.OtherEntity = actor0->GetEntity().GetUUID();
 					collisionInfo.OtherCollider = collider0;
-					ScriptEngine::OnCollisionEnd(actor1->GetEntity(), actor0->GetEntity(), collisionInfo);
+					ScriptEngine::OnCollisionEnd(actor1->GetEntity(), collisionInfo);
 				}
 			}
 		}
@@ -299,8 +312,12 @@ namespace ZeoEngine {
 		m_PhysicsScene = physics.createScene(sceneDesc);
 		if (auto* pvdClient = m_PhysicsScene->getScenePvdClient())
 		{
-			pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+			pvdClient->setScenePvdFlags(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS | physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES | physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS);
 		}
+		m_PhysicsControllerManager = PxCreateControllerManager(*m_PhysicsScene);
+		// Turn off as stated in https://gameworksdocs.nvidia.com/PhysX/4.1/documentation/physxguide/Manual/CharacterControllers.html#overlap-recovery-module
+		// When penetration happens, turn on this again
+		m_PhysicsControllerManager->setPreciseSweeps(false);
 
 		CreateRegions();
 	}
@@ -308,13 +325,32 @@ namespace ZeoEngine {
 	PhysXScene::~PhysXScene()
 	{
 		m_Actors.clear();
+		m_CharacterControllers.clear();
 
+		m_PhysicsControllerManager->release();
+		m_PhysicsControllerManager = nullptr;
 		m_PhysicsScene->release();
 		m_PhysicsScene = nullptr;
 	}
 
 	void PhysXScene::Simulate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
+		// TODO: PhysXActor::OnFixedUpdate
+
+		{
+			ZE_PROFILE_FUNC("Update character controllers");
+
+			// TODO: Test this, should be not depending on framerate
+			// Compute overlap information to automatically separate overlapping characters in the next controller move call
+			m_PhysicsControllerManager->computeInteractions(dt);
+			for (const auto& controller : m_CharacterControllers)
+			{
+				controller->OnUpdate(dt);
+			}
+		}
+
 		if (Advance(dt))
 		{
 			U32 numActiveActors;
@@ -327,19 +363,30 @@ namespace ZeoEngine {
 					actor->SynchronizeTransform();
 				}
 			}
+
+			for (const auto& controller : m_CharacterControllers)
+			{
+				controller->SynchronizeTransform();
+			}
 		}
 	}
 
 	PhysXActor* PhysXScene::GetActor(Entity entity) const
 	{
-		const auto it = m_Actors.find(entity.GetUUID());
-		if (it == m_Actors.end()) return nullptr;
-		return it->second.get();
+		for (const auto& actor : m_Actors)
+		{
+			if (actor->GetEntity() == entity)
+			{
+				return actor.get();
+			}
+		}
+
+		return nullptr;
 	}
 
 	PhysXActor* PhysXScene::CreateActor(Entity entity)
 	{
-		auto foundActor = GetActor(entity);
+		auto* foundActor = GetActor(entity);
 		if (foundActor) return foundActor;
 
 		auto actor = CreateScope<PhysXActor>(entity);
@@ -349,18 +396,70 @@ namespace ZeoEngine {
 		{
 			
 		}
-		m_Actors.emplace(entity.GetUUID(), std::move(actor));
+		m_Actors.emplace_back(std::move(actor));
 		m_PhysicsScene->addActor(actorPtr->GetRigidActor());
 		return actorPtr;
 	}
 
 	void PhysXScene::DestroyActor(Entity entity)
 	{
-		if (const auto* actor = GetActor(entity))
+		for (auto it = m_Actors.begin(); it != m_Actors.end(); ++it)
 		{
-			m_PhysicsScene->removeActor(actor->GetRigidActor());
+			const auto& actor = *it;
+			if (actor->GetEntity() == entity)
+			{
+				m_PhysicsScene->removeActor(actor->GetRigidActor());
+				m_Actors.erase(it);
+				return;
+			}
 		}
-		m_Actors.erase(entity.GetUUID());
+	}
+
+	PhysXCharacterController* PhysXScene::GetCharacterController(Entity entity) const
+	{
+		for (const auto& controller : m_CharacterControllers)
+		{
+			if (controller->GetEntity() == entity)
+			{
+				return controller.get();
+			}
+		}
+
+		return nullptr;
+	}
+
+	PhysXCharacterController* PhysXScene::CreateCharacterController(Entity entity)
+	{
+		auto* foundController = GetCharacterController(entity);
+		if (foundController) return foundController;
+
+		auto controller = CreateScope<PhysXCharacterController>(entity, m_PhysicsControllerManager);
+		auto* controllerPtr = controller.get();
+		m_CharacterControllers.emplace_back(std::move(controller));
+		return controllerPtr;
+	}
+
+	void PhysXScene::DestroyCharacterController(Entity entity)
+	{
+		for (auto it = m_CharacterControllers.begin(); it != m_CharacterControllers.end(); ++it)
+		{
+			const auto& controller = *it;
+			if (controller->GetEntity() == entity)
+			{
+				m_CharacterControllers.erase(it);
+				return;
+			}
+		}
+	}
+
+	Vec3 PhysXScene::GetGravity() const
+	{
+		return PhysXUtils::FromPhysXVector(m_PhysicsScene->getGravity());
+	}
+
+	void PhysXScene::SetGravity(const Vec3& gravity) const
+	{
+		m_PhysicsScene->setGravity(PhysXUtils::ToPhysXVector(gravity));
 	}
 
 	bool PhysXScene::Raycast(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, RaycastHit& outHit, bool bDrawDebug, float duration) const

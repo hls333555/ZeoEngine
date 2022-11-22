@@ -1,6 +1,10 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXCookingFactory.h"
 
+#include <PxPhysicsVersion.h>
+#include <PxPhysics.h>
+#include <cooking/PxCooking.h>
+
 #include "Engine/Physics/PhysXEngine.h"
 
 namespace ZeoEngine {

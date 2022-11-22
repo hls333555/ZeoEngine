@@ -14,6 +14,7 @@
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/World.h"
 #include "Engine/Physics/PhysicsEngine.h"
+#include "Engine/Physics/PhysXCharacterController.h"
 #include "Engine/Physics/PhysXScene.h"
 #include "Engine/Renderer/RenderPass.h"
 
@@ -333,7 +334,8 @@ namespace ZeoEngine {
 
 		m_CameraObserver = CreateObserver(entt::collector.update<CameraComponent>());
 		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
-		m_PhysicsObserver = CreateObserver(entt::collector.update<TransformComponent>().where<RigidBodyComponent>());
+		m_PhysicsActorObserver = CreateObserver(entt::collector.update<TransformComponent>().where<RigidBodyComponent>());
+		m_PhysicsControllerObserver = CreateObserver(entt::collector.update<TransformComponent>().where<CharacterControllerComponent>());
 	}
 
 	void LevelObserverSystem::OnUnbind()
@@ -362,7 +364,8 @@ namespace ZeoEngine {
 
 		m_CameraObserver->disconnect();
 		m_BoundsObserver->disconnect();
-		m_PhysicsObserver->disconnect();
+		m_PhysicsActorObserver->disconnect();
+		m_PhysicsControllerObserver->disconnect();
 	}
 
 	void LevelObserverSystem::OnUpdate(Scene& scene)
@@ -380,7 +383,7 @@ namespace ZeoEngine {
 			entity.UpdateBounds();
 		});
 
-		m_PhysicsObserver->each([&scene](const auto e)
+		m_PhysicsActorObserver->each([&scene](const auto e)
 		{
 			if (const auto* physicsScene = scene.GetPhysicsScene())
 			{
@@ -389,6 +392,20 @@ namespace ZeoEngine {
 				{
 					// Set transform back to physics actor
 					actor->SetTransform(entity.GetTransform());
+				}
+			}
+		});
+
+		m_PhysicsControllerObserver->each([&scene](const auto e)
+		{
+			if (const auto* physicsScene = scene.GetPhysicsScene())
+			{
+				const Entity entity{ e, scene.shared_from_this() };
+				if (const auto* controller = physicsScene->GetCharacterController(entity))
+				{
+					// Set transform back to physics character controller
+					const auto& controllerComp = entity.GetComponent<CharacterControllerComponent>();
+					controller->SetTranslation(entity.GetTranslation() + controllerComp.Offset);
 				}
 			}
 		});
@@ -552,11 +569,19 @@ namespace ZeoEngine {
 	{
 		const auto scene = GetScene();
 		auto* physicsScene = scene->CreatePhysicsScene();
+
 		auto rigidBodyView = scene->GetComponentView<RigidBodyComponent>();
 		for (const auto e : rigidBodyView)
 		{
 			const Entity entity{ e, scene };
 			physicsScene->CreateActor(entity);
+		}
+
+		auto characterControllerView = scene->GetComponentView<CharacterControllerComponent>();
+		for (const auto e : characterControllerView)
+		{
+			const Entity entity{ e, scene };
+			physicsScene->CreateCharacterController(entity);
 		}
 
 #ifdef ZE_DEBUG

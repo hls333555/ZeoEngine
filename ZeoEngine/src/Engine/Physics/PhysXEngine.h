@@ -1,6 +1,13 @@
 #pragma once
 
-#include <PxPhysicsAPI.h>
+#include <foundation/PxErrorCallback.h>
+
+namespace physx
+{
+	class PxCpuDispatcher;
+	class PxPhysics;
+	class PxFoundation;
+}
 
 namespace ZeoEngine {
 
@@ -17,7 +24,7 @@ namespace ZeoEngine {
 		friend class PhysXScene;
 		friend class PhysXActor;
 		friend class PhysicsMaterial;
-		friend class PhysXColliderShapeBase;
+		friend class PhysXUtils;
 
 	public:
 		static void Init();

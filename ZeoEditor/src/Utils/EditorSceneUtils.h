@@ -14,6 +14,7 @@ namespace ZeoEngine {
 		static Entity CreateAndPlaceEntity(Scene& scene, const std::string& name = "New Entity");
 		static Entity CreateAndPlaceCube(Scene& scene);
 		static Entity CreateAndPlaceSphere(Scene& scene);
+		static Entity CreateAndPlaceCapsule(Scene& scene);
 		static Entity CreateAndPlacePlane(Scene& scene);
 		static Entity CreateAndPlaceDirectionalLight(Scene& scene);
 		static Entity CreateAndPlacePointLight(Scene& scene);

@@ -12,6 +12,7 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Application.h"
+#include "Engine/ImGui/EditorConsole.h"
 #include "Worlds/LevelPreviewWorld.h"
 #include "Engine/Renderer/SceneRenderer.h"
 
@@ -333,6 +334,19 @@ namespace ZeoEngine {
 				{
 					// TODO:
 					Application::Get().GetRenderDoc().ToggleEnableCapture();
+					break;
+				}
+				// Toggle console command input
+				case Key::GraveAccent:
+				{
+					if (ImGui::GetActiveID() == EditorConsole::s_Instance.ConsoleInputItemID)
+					{
+						ImGui::ClearActiveID();
+					}
+					else
+					{
+						EditorConsole::s_Instance.bRequestKeyboardFocus = true;
+					}
 					break;
 				}
 			}

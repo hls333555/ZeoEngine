@@ -1,6 +1,8 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXDebugger.h"
 
+#include <pvd/PxPvdTransport.h>
+
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Core/Console.h"
 

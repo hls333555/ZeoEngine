@@ -1,6 +1,11 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXEngine.h"
 
+#include <PxFoundation.h>
+#include <PxPhysics.h>
+#include <PxPhysicsVersion.h>
+#include <extensions/PxExtensionsAPI.h>
+
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Physics/PhysXDebugger.h"
 #include "Engine/Physics/PhysXCookingFactory.h"

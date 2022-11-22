@@ -296,6 +296,16 @@ namespace ZeoEngine {
 			.Field<&CapsuleColliderComponent::Radius>("Radius")
 			.Field<&CapsuleColliderComponent::Height>("Height")
 			.Field<&CapsuleColliderComponent::Offset>("Offset");
+
+		RegisterComponent<CharacterControllerComponent>("Character Controller", std::make_pair(Category, "Physics"))
+			.Field<&CharacterControllerComponent::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&CharacterControllerComponent::Radius>("Radius")
+			.Field<&CharacterControllerComponent::Height>("Height")
+			.Field<&CharacterControllerComponent::Offset>("Offset")
+			.Field<&CharacterControllerComponent::LayerID>("LayerID")
+			.Field<&CharacterControllerComponent::SlopeLimitAngle>("SlopeLimitAngle", std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 180.0f))
+			.Field<&CharacterControllerComponent::SkinThickness>("SkinThickness", std::make_pair(ClampMin, 0.0001f))
+			.Field<&CharacterControllerComponent::StepOffset>("StepOffset", std::make_pair(ClampMin, 0.0f));
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE

@@ -2,6 +2,7 @@
 
 #include "Core/Editor.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Core/Input.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Inspectors/EntityInspector.h"
@@ -91,6 +92,9 @@ namespace ZeoEngine {
 	{
 		m_SceneState = SceneState::Run;
 		m_bIsSimulation = false;
+		Input::SetCursorMode(CursorMode::Locked);
+		ImGui::SetMouseEnabled(false);
+		ImGui::SetKeyboardNavEnabled(false);
 		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
@@ -100,6 +104,9 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		Input::SetCursorMode(CursorMode::Normal);
+		ImGui::SetMouseEnabled(true);
+		ImGui::SetKeyboardNavEnabled(true);
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
 		OnPlayStop();

@@ -1,6 +1,9 @@
 #pragma once
 
-#include <pvd/PxPvd.h>
+namespace physx
+{
+	class PxPvd;
+}
 
 namespace ZeoEngine {
 

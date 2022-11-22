@@ -1,6 +1,11 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysXActor.h"
 
+#include <PxRigidStatic.h>
+#include <PxRigidDynamic.h>
+#include <PxPhysics.h>
+#include <extensions/PxRigidBodyExt.h>
+
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysicsEngine.h"
@@ -21,7 +26,6 @@ namespace ZeoEngine {
 		for (const auto& collider : m_Colliders)
 		{
 			collider->DetachFromActor(m_RigidActor);
-			collider->Release();
 		}
 		m_Colliders.clear();
 
@@ -80,8 +84,7 @@ namespace ZeoEngine {
 
 	bool PhysXActor::IsDynamic() const
 	{
-		const auto& rigidBodyComp = m_Entity.GetComponent<RigidBodyComponent>();
-		return rigidBodyComp.Type == RigidBodyComponent::BodyType::Dynamic;
+		return m_RigidActor->is<physx::PxRigidDynamic>();
 	}
 
 	bool PhysXActor::IsKinematic() const
@@ -400,7 +403,7 @@ namespace ZeoEngine {
 			AddCollider(ColliderType::Capsule);
 		}
 
-		SetCollisionFilterData(rigidBodyComp);
+		SetFilterData(rigidBodyComp);
 
 		m_RigidActor->userData = this;
 
@@ -426,7 +429,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void PhysXActor::SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const
+	void PhysXActor::SetFilterData(const RigidBodyComponent& rigidBodyComp) const
 	{
 		const PhysicsLayer& layer = PhysicsLayerManager::GetLayer(rigidBodyComp.LayerID);
 		physx::PxFilterData collisionFilterData;
@@ -435,6 +438,7 @@ namespace ZeoEngine {
 		collisionFilterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
 		physx::PxFilterData queryFilterData;
 		queryFilterData.word0 = ZE_BIT(layer.LayerID);
+
 		for (const auto& collider : m_Colliders)
 		{
 			collider->SetCollisionFilterData(collisionFilterData);

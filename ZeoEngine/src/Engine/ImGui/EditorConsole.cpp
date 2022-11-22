@@ -330,14 +330,17 @@ namespace ZeoEngine {
 		const char* bufEnd = CommandCallbackData.CommandBuffer.end();
 
 		CommandFilter.Draw("##CommandTextFilter", "Input Console Command", 0, CommandInputCallback, &CommandCallbackData);
+		ConsoleInputItemID = ImGui::GetItemID();
 		// Restore focus to the input box if we just clicked an item
-		if (CommandCallbackData.ClickedIdx > -1)
+		if (CommandCallbackData.ClickedIdx > -1 || bRequestKeyboardFocus)
 		{
 			// NOTE: We do not reset the 'clickedIdx' here because
 			// we want to let the callback handle it in order to
 			// modify the buffer, therefore we simply restore keyboard input instead
 			// so that callback will be invoked next frame
 			ImGui::SetKeyboardFocusHere(-1);
+
+			bRequestKeyboardFocus = false;
 		}
 		if (ImGui::IsItemDeactivated() && ImGui::IsKeyPressed(ImGuiKey_Enter))
 		{

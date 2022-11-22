@@ -9,6 +9,8 @@
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Physics/PhysXCharacterController.h"
+#include "Engine/Physics/PhysXScene.h"
 
 namespace ZeoEngine {
 
@@ -134,6 +136,26 @@ namespace ZeoEngine {
 		meshComp.MaterialAssets[index] = materialAsset;
 	}
 
+	static bool CharacterControllerComponent_IsGrounded(UUID entityID)
+	{
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
+		ZE_CORE_ASSERT(physicsScene);
+		const auto* controller = physicsScene->GetCharacterController(entity);
+		ZE_CORE_ASSERT(controller);
+		return controller->IsGrounded();
+	}
+
+	static void CharacterControllerComponent_Move(UUID entityID, Vec3* displacement)
+	{
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
+		ZE_CORE_ASSERT(physicsScene);
+		auto* controller = physicsScene->GetCharacterController(entity);
+		ZE_CORE_ASSERT(controller);
+		controller->Move(*displacement);
+	}
+
 	static bool Input_IsKeyPressed(KeyCode keycode)
 	{
 		return Input::IsKeyPressed(keycode);
@@ -177,6 +199,20 @@ namespace ZeoEngine {
 	{
 		const auto* asset = static_cast<IAsset*>(assetPtr);
 		*handle = asset ? asset->GetHandle() : 0;
+	}
+
+	static void Physics_GetGravity(Vec3* outGravity)
+	{
+		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
+		ZE_CORE_ASSERT(physicsScene);
+		*outGravity = physicsScene->GetGravity();
+	}
+
+	static void Physics_SetGravity(Vec3* gravity)
+	{
+		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
+		ZE_CORE_ASSERT(physicsScene);
+		physicsScene->SetGravity(*gravity);
 	}
 
 	enum class LogLevel
@@ -234,6 +270,11 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMaterialAsset);
 #pragma endregion
 
+#pragma region CharacterControllerComponent
+		ZE_ADD_INTERNAL_CALL(CharacterControllerComponent_IsGrounded);
+		ZE_ADD_INTERNAL_CALL(CharacterControllerComponent_Move);
+#pragma endregion
+
 #pragma region Input
 		ZE_ADD_INTERNAL_CALL(Input_IsKeyPressed);
 		ZE_ADD_INTERNAL_CALL(Input_IsKeyReleased);
@@ -250,6 +291,11 @@ namespace ZeoEngine {
 
 #pragma region Mesh
 
+#pragma endregion
+
+#pragma region Physics
+		ZE_ADD_INTERNAL_CALL(Physics_GetGravity);
+		ZE_ADD_INTERNAL_CALL(Physics_SetGravity);
 #pragma endregion
 		
 #pragma region Log

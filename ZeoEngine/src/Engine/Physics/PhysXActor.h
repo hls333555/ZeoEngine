@@ -1,9 +1,12 @@
 #pragma once
 
-#include <PxRigidActor.h>
-
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Physics/PhysicsTypes.h"
+
+namespace physx
+{
+	class PxRigidActor;
+}
 
 namespace ZeoEngine {
 
@@ -15,7 +18,7 @@ namespace ZeoEngine {
 		friend class PhysXScene;
 
 	public:
-		PhysXActor(Entity entity);
+		explicit PhysXActor(Entity entity);
 		~PhysXActor();
 
 		Entity GetEntity() const { return m_Entity; }
@@ -66,7 +69,7 @@ namespace ZeoEngine {
 	private:
 		void CreateRigidActor();
 		void AddCollider(ColliderType type);
-		void SetCollisionFilterData(const RigidBodyComponent& rigidBodyComp) const;
+		void SetFilterData(const RigidBodyComponent& rigidBodyComp) const;
 		void SynchronizeTransform();
 
 	private:

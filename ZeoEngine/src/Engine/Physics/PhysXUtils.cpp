@@ -3,6 +3,9 @@
 
 #include <glm/gtx/quaternion.hpp>
 
+#include "Engine/Physics/PhysXEngine.h"
+#include "Engine/Physics/PhysicsMaterial.h"
+#include "Engine/Asset/AssetLibrary.h"
 #include "Engine/Math/Math.h"
 
 namespace ZeoEngine {
@@ -17,6 +20,11 @@ namespace ZeoEngine {
 		return *reinterpret_cast<const physx::PxVec4*>(&vector);
 	}
 
+	physx::PxExtendedVec3 PhysXUtils::ToPhysXExtendedVector(const Vec3& vector)
+	{
+		return { vector.x, vector.y, vector.z };
+	}
+
 	physx::PxTransform PhysXUtils::ToPhysXTransform(const Mat4& transform)
 	{
 		glm::vec3 translation, rotation, scale;
@@ -29,12 +37,12 @@ namespace ZeoEngine {
 
 	physx::PxTransform PhysXUtils::ToPhysXTransform(const Vec3& translation, const Vec3& rotation)
 	{
-		return physx::PxTransform(ToPhysXVector(translation), ToPhysXQuat(Quat(rotation)));
+		return { ToPhysXVector(translation), ToPhysXQuat(Quat(rotation)) };
 	}
 
 	physx::PxQuat PhysXUtils::ToPhysXQuat(const Quat& quat)
 	{
-		return physx::PxQuat(quat.x, quat.y, quat.z, quat.w);
+		return { quat.x, quat.y, quat.z, quat.w };
 	}
 
 	Vec3 PhysXUtils::FromPhysXVector(const physx::PxVec3& vector)
@@ -47,6 +55,11 @@ namespace ZeoEngine {
 		return *reinterpret_cast<const Vec4*>(&vector);
 	}
 
+	Vec3 PhysXUtils::FromPhysXExtendedVector(const physx::PxExtendedVec3& vector)
+	{
+		return { vector.x, vector.y, vector.z };
+	}
+
 	Mat4 PhysXUtils::FromPhysXTransform(const physx::PxTransform& transform)
 	{
 		const Quat rotation = FromPhysXQuat(transform.q);
@@ -57,6 +70,21 @@ namespace ZeoEngine {
 	Quat PhysXUtils::FromPhysXQuat(const physx::PxQuat& quat)
 	{
 		return *reinterpret_cast<const Quat*>(&quat);
+	}
+
+	physx::PxMaterial* PhysXUtils::ToPhysXMaterial(AssetHandle physicsMaterialAsset)
+	{
+		const auto physicsMaterial = AssetLibrary::LoadAsset<PhysicsMaterial>(physicsMaterialAsset);
+		if (physicsMaterial)
+		{
+			return physicsMaterial->m_PhysicsMaterial;
+		}
+		else
+		{
+			const auto defaultPhysicsMaterial = PhysXEngine::GetDefaultPhysicsMaterial();
+			ZE_CORE_ASSERT(defaultPhysicsMaterial);
+			return defaultPhysicsMaterial->m_PhysicsMaterial;
+		}
 	}
 
 }

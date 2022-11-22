@@ -116,7 +116,8 @@ namespace ZeoEngine {
 	private:
 		Scope<entt::observer> m_CameraObserver;
 		Scope<entt::observer> m_BoundsObserver;
-		Scope<entt::observer> m_PhysicsObserver;
+		Scope<entt::observer> m_PhysicsActorObserver;
+		Scope<entt::observer> m_PhysicsControllerObserver;
 	};
 
 	class MeshPreviewObserverSystem : public SceneObserverSystemBase

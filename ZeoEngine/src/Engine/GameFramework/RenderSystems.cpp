@@ -219,6 +219,19 @@ namespace ZeoEngine {
 				DebugDrawUtils::DrawCapsule(*scene, entity.GetTranslation() + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius * radiusScale, capsuleComp.Height * scale.y, entity.GetRotation());
 			}
 		}
+
+		auto controllerGroup = scene->GetComponentGroup<CharacterControllerComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : controllerGroup)
+		{
+			auto [controllerComp, transformComp] = controllerGroup.get(e);
+			const Entity entity{ e, scene };
+			if (bDraw)
+			{
+				const auto& scale = entity.GetScale();
+				float radiusScale = glm::max(scale.x, scale.z);
+				DebugDrawUtils::DrawCapsule(*scene, entity.GetTranslation() + controllerComp.Offset, s_DebugDrawColor, controllerComp.Radius * radiusScale + controllerComp.SkinThickness, controllerComp.Height * scale.y, entity.GetRotation());
+			}
+		}
 	}
 
 	void PhysicsDebugRenderSystem::DrawWorldBounds() const

@@ -55,8 +55,11 @@ namespace ZeoEngine {
 
 		[[nodiscard]] Ref<class MeshInstance> CreateInstance(const Scene& scene);
 
+		// All these built-in meshes have an extent of 1m
+		// To export meshes from blender with correct scale and rotation, see https://www.immersivelimit.com/tutorials/blender-to-unity-export-correct-scale-rotation#:~:text=By%20default%2C%20Blender%20exports%20.,89.98%20and%20scale%20of%20100
 		static Ref<Mesh> GetDefaultCubeMesh();
 		static Ref<Mesh> GetDefaultSphereMesh();
+		static Ref<Mesh> GetDefaultCapsuleMesh();
 		static Ref<Mesh> GetDefaultPlaneMesh();
 
 		const Ref<VertexArray>& GetVAO() const { return m_VAO; }

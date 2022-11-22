@@ -492,4 +492,17 @@ namespace ZeoEngine {
 		Vec3 Offset{ 0.0f };
 	};
 
+	struct CharacterControllerComponent : public IComponent
+	{
+		AssetHandle PhysicsMaterialAsset;
+		float Radius = 0.5f;
+		float Height = 1.0f;
+		Vec3 Offset{ 0.0f };
+		U32 LayerID = 0;
+
+		float SlopeLimitAngle = 45.0f; // In degrees
+		float SkinThickness = 0.05f;
+		float StepOffset = 0.3f;
+	};
+
 }

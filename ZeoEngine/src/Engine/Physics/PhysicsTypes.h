@@ -8,6 +8,7 @@
 namespace ZeoEngine {
 
 	class PhysXColliderShapeBase;
+	class PhysXCharacterController;
 
 	enum class BroadphaseType
 	{
@@ -58,14 +59,26 @@ namespace ZeoEngine {
 
 	struct CollisionInfo
 	{
+		UUID OtherEntity = 0;
 		PhysXColliderShapeBase* OtherCollider = nullptr;
 		U32 NumContacts = 0;
 		ContactInfo Contacts[PHYSICS_MAX_CONTACT_POINTS];
 	};
 
+	struct CharacterControllerHit
+	{
+		UUID HitEntity = 0;
+		PhysXColliderShapeBase* HitCollider = nullptr; // Not available when colliding with other character controller
+		PhysXCharacterController* HitController = nullptr; // Only available when colliding with other character controller
+		Vec3 Position;
+		Vec3 Normal;
+		Vec3 MoveDirection;
+		float MoveLength;
+	};
+
 	struct OverlapHit
 	{
-		UUID HitEntity;
+		UUID HitEntity = 0;
 		PhysXColliderShapeBase* HitCollider = nullptr;
 	};
 
@@ -89,6 +102,13 @@ namespace ZeoEngine {
 		QueryFlag Type = QueryFlag::Both;
 		I32 QueriesFor = 0; // Bitfield that contains a set of layer bits for which query targets
 		I32 BlockingHitLayerMask = 0; // Bitfield that contains a set of layer bits which are considered to be blocking hits. Only used for multi non-overlap queries
+	};
+
+	enum class CharacterControllerCollisionFlag
+	{
+		Sides = ZE_BIT(0),
+		Above = ZE_BIT(1),
+		Below = ZE_BIT(2)
 	};
 
 }

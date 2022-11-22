@@ -1,6 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/Physics/PhysicsMaterial.h"
 
+#include <PxMaterial.h>
+#include <PxPhysics.h>
+
 #include "Engine/Physics/PhysXEngine.h"
 
 namespace ZeoEngine {

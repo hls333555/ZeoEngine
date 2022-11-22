@@ -64,4 +64,17 @@
         }
     }
 
+    public class CharacterControllerComponent : IComponent
+    {
+        public bool bIsGrounded
+        {
+            get => InternalCalls.CharacterControllerComponent_IsGrounded(Entity.ID);
+        }
+
+        public void Move(Vector3 displacement)
+        {
+            InternalCalls.CharacterControllerComponent_Move(Entity.ID, ref displacement);
+        }
+    }
+
 }

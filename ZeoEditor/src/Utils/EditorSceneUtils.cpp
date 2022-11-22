@@ -56,6 +56,13 @@ namespace ZeoEngine {
 		return entity;
 	}
 
+	Entity EditorSceneUtils::CreateAndPlaceCapsule(Scene& scene)
+	{
+		Entity entity = CreateAndPlaceEntity(scene, "Capsule");
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCapsuleMesh()->GetHandle());
+		return entity;
+	}
+
 	Entity EditorSceneUtils::CreateAndPlacePlane(Scene& scene)
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Plane");

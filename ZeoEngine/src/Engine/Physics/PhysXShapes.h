@@ -1,8 +1,14 @@
 #pragma once
 
-#include <PxShape.h>
-
 #include "Engine/GameFramework/Entity.h"
+
+namespace physx
+{
+	class PxShape;
+	class PxMaterial;
+	class PxRigidActor;
+	struct PxFilterData;
+}
 
 namespace ZeoEngine {
 
@@ -16,10 +22,6 @@ namespace ZeoEngine {
 		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) = 0;
 		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) = 0;
 		virtual void DetachFromActor(physx::PxRigidActor* actor) = 0;
-		void Release() {}
-
-	protected:
-		const physx::PxMaterial& GetPhysicsMaterial(AssetHandle physicsMaterialAsset) const;
 	};
 
 	class PhysXBoxColliderShape : public PhysXColliderShapeBase

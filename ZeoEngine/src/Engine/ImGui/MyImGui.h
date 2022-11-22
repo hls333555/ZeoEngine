@@ -42,5 +42,7 @@ namespace ImGui {
 	/** Version that modifies the hightlight style for drop target. */
 	IMGUI_API const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding = 0.0f, ImGuiDragDropFlags flags = 0);
 
-	IMGUI_API void SetMouseEnabled(const bool bEnable);
+	IMGUI_API void SetMouseEnabled(bool bEnable);
+	IMGUI_API void SetKeyboardNavEnabled(bool bEnable);
+
 }

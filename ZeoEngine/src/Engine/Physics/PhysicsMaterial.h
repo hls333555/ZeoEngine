@@ -1,15 +1,18 @@
 #pragma once
 
-#include <PxMaterial.h>
-
 #include "Engine/Asset/Asset.h"
+
+namespace physx
+{
+	class PxMaterial;
+}
 
 namespace ZeoEngine {
 
 	class PhysicsMaterial : public AssetBase<PhysicsMaterial>
 	{
 		friend struct PhysicsMaterialDetailComponent;
-		friend class PhysXColliderShapeBase;
+		friend class PhysXUtils;
 
 	public:
 		PhysicsMaterial();

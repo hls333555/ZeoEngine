@@ -4,27 +4,10 @@
 #include <extensions/PxRigidActorExt.h>
 
 #include "Engine/GameFramework/Components.h"
-#include "Engine/Physics/PhysicsMaterial.h"
-#include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysXActor.h"
 #include "Engine/Physics/PhysXUtils.h"
 
 namespace ZeoEngine {
-
-	const physx::PxMaterial& PhysXColliderShapeBase::GetPhysicsMaterial(AssetHandle physicsMaterialAsset) const
-	{
-		const auto physicsMaterial = AssetLibrary::LoadAsset<PhysicsMaterial>(physicsMaterialAsset);
-		if (physicsMaterial)
-		{
-			return *physicsMaterial->m_PhysicsMaterial;
-		}
-		else
-		{
-			const auto defaultPhysicsMaterial = PhysXEngine::GetDefaultPhysicsMaterial();
-			ZE_CORE_ASSERT(defaultPhysicsMaterial);
-			return *defaultPhysicsMaterial->m_PhysicsMaterial;
-		}
-	}
 
 	PhysXBoxColliderShape::PhysXBoxColliderShape(Entity entity, const PhysXActor& actor)
 	{
@@ -32,7 +15,7 @@ namespace ZeoEngine {
 
 		Vec3 scaledSize = entity.GetScale() * boxComp.Size;
 		auto box = physx::PxBoxGeometry(scaledSize.x * 0.5f, scaledSize.y * 0.5f, scaledSize.z * 0.5f);
-		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), box, GetPhysicsMaterial(boxComp.PhysicsMaterialAsset));
+		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), box, *PhysXUtils::ToPhysXMaterial(boxComp.PhysicsMaterialAsset));
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !boxComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, boxComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(boxComp.Offset, Vec3(0.0f)));
@@ -61,7 +44,7 @@ namespace ZeoEngine {
 		const auto& scale = entity.GetScale();
 		float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
 		auto sphere = physx::PxSphereGeometry(sphereComp.Radius * largestScale);
-		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), sphere, GetPhysicsMaterial(sphereComp.PhysicsMaterialAsset));
+		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), sphere, *PhysXUtils::ToPhysXMaterial(sphereComp.PhysicsMaterialAsset));
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !sphereComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, sphereComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(sphereComp.Offset, Vec3(0.0f)));
@@ -91,7 +74,7 @@ namespace ZeoEngine {
 		const auto& scale = entity.GetScale();
 		float radiusScale = glm::max(scale.x, scale.z);
 		auto capsule = physx::PxCapsuleGeometry(capsuleComp.Radius * radiusScale, (capsuleComp.Height * 0.5f) * scale.y);
-		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), capsule, GetPhysicsMaterial(capsuleComp.PhysicsMaterialAsset));
+		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), capsule, *PhysXUtils::ToPhysXMaterial(capsuleComp.PhysicsMaterialAsset));
 		m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !capsuleComp.bIsTrigger);
 		m_Shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, capsuleComp.bIsTrigger);
 		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(capsuleComp.Offset, Vec3(0.0f, 0.0f, physx::PxHalfPi))); // PhysX's capsule is horizontal

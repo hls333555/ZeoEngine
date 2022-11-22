@@ -73,6 +73,16 @@ namespace ZeoEngine
 
         #endregion
 
+        #region CharacterControllerComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool CharacterControllerComponent_IsGrounded(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void CharacterControllerComponent_Move(ulong entityID, ref Vector3 displacement);
+
+        #endregion
+
         #region Input
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -108,6 +118,16 @@ namespace ZeoEngine
         #region Mesh
 
 
+
+        #endregion
+
+        #region Physics
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Physics_GetGravity(out Vector3 gravity);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Physics_SetGravity(ref Vector3 gravity);
 
         #endregion
 

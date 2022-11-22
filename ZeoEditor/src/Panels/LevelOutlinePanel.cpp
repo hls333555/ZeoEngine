@@ -67,6 +67,11 @@ namespace ZeoEngine {
 						newEntity = EditorSceneUtils::CreateAndPlaceSphere(scene);
 					}
 
+					if (ImGui::MenuItem(ICON_FA_CAPSULES "  Capsule"))
+					{
+						newEntity = EditorSceneUtils::CreateAndPlaceCapsule(scene);
+					}
+
 					if (ImGui::MenuItem(ICON_FA_SQUARE "  Plane"))
 					{
 						newEntity = EditorSceneUtils::CreateAndPlacePlane(scene);
