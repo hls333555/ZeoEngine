@@ -353,6 +353,7 @@ namespace ZeoEngine {
 		}
 
 		if ((!IsPanelFocused() && !IsPanelHovered()) || e.GetRepeatCount() > 0) return false;
+		if (levelWorld->IsRuntime() && !levelWorld->IsSimulation()) return false;
 
 		const auto& editorCamera = levelWorld->GetEditorCamera();
 		if (!editorCamera.IsManipulating())

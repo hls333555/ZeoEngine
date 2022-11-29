@@ -41,6 +41,8 @@ namespace ZeoEngine {
 
 		bool IsGravityEnabled() const;
 		void SetGravityEnabled(bool bEnable) const;
+		bool IsSimulationEnabled() const;
+		void SetSimulationEnabled(bool bEnable) const;
 
 		float GetMass() const;
 		float GetInverseMass() const;
@@ -69,7 +71,6 @@ namespace ZeoEngine {
 	private:
 		void CreateRigidActor();
 		void AddCollider(ColliderType type);
-		void SetFilterData(const RigidBodyComponent& rigidBodyComp) const;
 		void SynchronizeTransform();
 
 	private:

@@ -260,9 +260,9 @@ namespace ZeoEngine {
 
 		RegisterComponent<RigidBodyComponent>("RigidBody", std::make_pair(Category, "Physics"))
 			.Field<&RigidBodyComponent::Type>("Type")
-			.Field<&RigidBodyComponent::CollisionDetection>("CollisionDetection")
-			.Field<&RigidBodyComponent::LayerID>("LayerID")
 			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::bDisableSimulation>("DisableSimulation")
+			.Field<&RigidBodyComponent::CollisionDetection>("CollisionDetection")
 			.Field<&RigidBodyComponent::Mass>("Mass", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
@@ -282,6 +282,10 @@ namespace ZeoEngine {
 
 		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
 			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer")
+			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&ColliderComponentBase::bEnableSimulation>("EnableSimulation")
+			.Field<&ColliderComponentBase::bEnableQuery>("EnableQuery")
 			.Field<&ColliderComponentBase::bIsTrigger>("IsTrigger");
 
 		RegisterComponent<BoxColliderComponent, ColliderComponentBase>("Box Collider", std::make_pair(Category, "Physics"))
@@ -299,10 +303,11 @@ namespace ZeoEngine {
 
 		RegisterComponent<CharacterControllerComponent>("Character Controller", std::make_pair(Category, "Physics"))
 			.Field<&CharacterControllerComponent::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer")
+			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup")
 			.Field<&CharacterControllerComponent::Radius>("Radius")
 			.Field<&CharacterControllerComponent::Height>("Height")
 			.Field<&CharacterControllerComponent::Offset>("Offset")
-			.Field<&CharacterControllerComponent::LayerID>("LayerID")
 			.Field<&CharacterControllerComponent::SlopeLimitAngle>("SlopeLimitAngle", std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 180.0f))
 			.Field<&CharacterControllerComponent::SkinThickness>("SkinThickness", std::make_pair(ClampMin, 0.0001f))
 			.Field<&CharacterControllerComponent::StepOffset>("StepOffset", std::make_pair(ClampMin, 0.0f));

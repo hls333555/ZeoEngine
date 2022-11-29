@@ -11,7 +11,6 @@
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
 #include "Engine/Physics/PhysXShapes.h"
-#include "Engine/Physics/PhysicsLayer.h"
 
 namespace ZeoEngine {
 
@@ -132,6 +131,16 @@ namespace ZeoEngine {
 	void PhysXActor::SetGravityEnabled(bool bEnable) const
 	{
 		m_RigidActor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, !bEnable);
+	}
+
+	bool PhysXActor::IsSimulationEnabled() const
+	{
+		return !m_RigidActor->getActorFlags().isSet(physx::PxActorFlag::eDISABLE_SIMULATION);
+	}
+
+	void PhysXActor::SetSimulationEnabled(bool bEnable) const
+	{
+		m_RigidActor->setActorFlag(physx::PxActorFlag::eDISABLE_SIMULATION, !bEnable);
 	}
 
 	float PhysXActor::GetMass() const
@@ -369,6 +378,7 @@ namespace ZeoEngine {
 		{
 			m_RigidActor = physics.createRigidDynamic(transform);
 			m_RigidActor->setActorFlag(physx::PxActorFlag::eSEND_SLEEP_NOTIFIES, rigidBodyComp.bReceiveSleepEvents);
+			m_RigidActor->setActorFlag(physx::PxActorFlag::eDISABLE_SIMULATION, rigidBodyComp.bDisableSimulation);
 
 			SetKinematic(rigidBodyComp.bIsKinematic);
 			SetMass(rigidBodyComp.Mass);
@@ -403,8 +413,6 @@ namespace ZeoEngine {
 			AddCollider(ColliderType::Capsule);
 		}
 
-		SetFilterData(rigidBodyComp);
-
 		m_RigidActor->userData = this;
 
 #ifdef ZE_DEBUG
@@ -426,23 +434,6 @@ namespace ZeoEngine {
 			case ColliderType::Capsule:
 				m_Colliders.emplace_back(CreateScope<PhysXCapsuleColliderShape>(m_Entity, *this));
 				break;
-		}
-	}
-
-	void PhysXActor::SetFilterData(const RigidBodyComponent& rigidBodyComp) const
-	{
-		const PhysicsLayer& layer = PhysicsLayerManager::GetLayer(rigidBodyComp.LayerID);
-		physx::PxFilterData collisionFilterData;
-		collisionFilterData.word0 = ZE_BIT(layer.LayerID);
-		collisionFilterData.word1 = layer.CollidesWith;
-		collisionFilterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
-		physx::PxFilterData queryFilterData;
-		queryFilterData.word0 = ZE_BIT(layer.LayerID);
-
-		for (const auto& collider : m_Colliders)
-		{
-			collider->SetCollisionFilterData(collisionFilterData);
-			collider->SetQueryFilterData(queryFilterData);
 		}
 	}
 

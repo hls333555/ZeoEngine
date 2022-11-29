@@ -4,6 +4,7 @@
 
 namespace physx
 {
+	class PxGeometry;
 	class PxShape;
 	class PxMaterial;
 	class PxRigidActor;
@@ -13,54 +14,43 @@ namespace physx
 namespace ZeoEngine {
 
 	class PhysXActor;
+	struct ColliderComponentBase;
+	struct RigidBodyComponent;
 
 	class PhysXColliderShapeBase
 	{
 	public:
 		virtual ~PhysXColliderShapeBase() = default;
 
-		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) = 0;
-		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) = 0;
-		virtual void DetachFromActor(physx::PxRigidActor* actor) = 0;
+		bool IsSimulationEnabled() const;
+		void SetSimulationEnabled(bool bEnable) const;
+		bool IsQueryEnabled() const;
+		void SetQueryEnabled(bool bEnable) const;
+		void DetachFromActor(physx::PxRigidActor* actor) const;
+
+	protected:
+		void CreateShape(const PhysXActor& actor, const physx::PxGeometry& geometry, const ColliderComponentBase& colliderComp, const RigidBodyComponent& rigidBodyComp, const Vec3& translation, const Vec3& rotation = Vec3{ 0.0f });
+
+	private:
+		physx::PxShape* m_Shape = nullptr;
 	};
 
 	class PhysXBoxColliderShape : public PhysXColliderShapeBase
 	{
 	public:
 		PhysXBoxColliderShape(Entity entity, const PhysXActor& actor);
-
-		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
-		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
-		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
-
-	private:
-		physx::PxShape* m_Shape = nullptr;
 	};
 
 	class PhysXSphereColliderShape : public PhysXColliderShapeBase
 	{
 	public:
 		PhysXSphereColliderShape(Entity entity, const PhysXActor& actor);
-
-		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
-		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
-		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
-
-	private:
-		physx::PxShape* m_Shape = nullptr;
 	};
 
 	class PhysXCapsuleColliderShape : public PhysXColliderShapeBase
 	{
 	public:
 		PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor);
-
-		virtual void SetCollisionFilterData(const physx::PxFilterData& filterData) override;
-		virtual void SetQueryFilterData(const physx::PxFilterData& filterData) override;
-		virtual void DetachFromActor(physx::PxRigidActor* actor) override;
-
-	private:
-		physx::PxShape* m_Shape = nullptr;
 	};
 
 }

@@ -436,9 +436,8 @@ namespace ZeoEngine {
 		};
 
 		BodyType Type = BodyType::Static;
-		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
-		U32 LayerID = 0;
 		bool bIsKinematic = false;
+		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
 		float Mass = 1.0f;
 		float LinearDamping = 0.01f;
 		float AngularDamping = 0.05f;
@@ -452,6 +451,7 @@ namespace ZeoEngine {
 		bool bLockRotationZ = false;
 
 		bool bReceiveSleepEvents = false;
+		bool bDisableSimulation = false;
 	};
 
 	struct PhysicsMaterialDetailComponent : public IComponent
@@ -470,7 +470,11 @@ namespace ZeoEngine {
 	struct ColliderComponentBase : public IComponent
 	{
 		AssetHandle PhysicsMaterialAsset;
+		bool bEnableSimulation = true;
+		bool bEnableQuery = true;
 		bool bIsTrigger = false;
+		U32 CollisionLayer = 0;
+		U32 CollidesWithGroup = 0;
 	};
 
 	struct BoxColliderComponent : public ColliderComponentBase
@@ -495,10 +499,11 @@ namespace ZeoEngine {
 	struct CharacterControllerComponent : public IComponent
 	{
 		AssetHandle PhysicsMaterialAsset;
+		U32 CollisionLayer = 0;
+		U32 CollidesWithGroup = 0;
 		float Radius = 0.5f;
 		float Height = 1.0f;
 		Vec3 Offset{ 0.0f };
-		U32 LayerID = 0;
 
 		float SlopeLimitAngle = 45.0f; // In degrees
 		float SkinThickness = 0.05f;

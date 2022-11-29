@@ -5,8 +5,8 @@
 #include <characterkinematic/PxControllerManager.h>
 #include <PxRigidDynamic.h>
 
+#include "Engine/Physics/CollisionLayer.h"
 #include "Engine/Physics/PhysXActor.h"
-#include "Engine/Physics/PhysicsLayer.h"
 #include "Engine/Physics/PhysXUtils.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptEngine.h"
@@ -152,18 +152,20 @@ namespace ZeoEngine {
 
 	void PhysXCharacterController::SetFilterData(const CharacterControllerComponent& controllerComp)
 	{
-		const PhysicsLayer& layer = PhysicsLayerManager::GetLayer(controllerComp.LayerID);
-		physx::PxFilterData collisionFilterData; // For other character controllers
-		collisionFilterData.word0 = ZE_BIT(layer.LayerID);
-		collisionFilterData.word1 = layer.CollidesWith;
+		const U32 collisionLayerBit = ZE_BIT(controllerComp.CollisionLayer);
+		const U32 collisionGroupBits = CollisionLayerManager::GetGroupLayerMask(controllerComp.CollidesWithGroup);
+
+		physx::PxFilterData simulationFilterData; // For other character controllers
+		simulationFilterData.word0 = collisionLayerBit;
+		simulationFilterData.word1 = collisionGroupBits;
 		physx::PxFilterData queryFilterData; // For other static/dynamic colliders as character controller uses overlap query against them
-		queryFilterData.word0 = ZE_BIT(layer.LayerID);
+		queryFilterData.word0 = collisionLayerBit;
 
 		auto* shape = Utils::GetColliderShape(*m_Controller);
-		shape->setSimulationFilterData(collisionFilterData);
+		shape->setSimulationFilterData(simulationFilterData);
 		shape->setQueryFilterData(queryFilterData);
 
-		m_FilterData.word0 = layer.CollidesWith;
+		m_FilterData.word0 = collisionGroupBits;
 		m_ControllerFilters.mFilterData = &m_FilterData;
 		// TODO: Filter static/dynamic
 		//QueryFlag flag = QueryFlag::Both;

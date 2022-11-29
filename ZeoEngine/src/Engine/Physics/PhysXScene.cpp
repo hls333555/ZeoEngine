@@ -241,7 +241,8 @@ namespace ZeoEngine {
 			pairFlags |= physx::PxPairFlag::eDETECT_CCD_CONTACT;
 		}
 
-		if ((filterData0.word0 & filterData1.word1) || (filterData1.word0 & filterData0.word1))
+		// Collision will only happen if the pair's collision layers are in each other's collision group
+		if ((filterData0.word0 & filterData1.word1) && (filterData1.word0 & filterData0.word1))
 		{
 			pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
 			pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_LOST;
@@ -810,11 +811,11 @@ namespace ZeoEngine {
 	bool PhysXScene::RaycastInternal(const Vec3& origin, const Vec3& direction, float maxDistance, const QueryFilter& filter, physx::PxRaycastBuffer& hitInfo) const
 	{
 		physx::PxQueryFilterData filterData;
-		filterData.data.word0 = filter.QueriesFor;
+		filterData.data.word0 = filter.QueriesForGroup;
 		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
 		if (hitInfo.maxNbTouches)
 		{
-			filterData.data.word1 = filter.BlockingHitLayerMask;
+			filterData.data.word1 = filter.BlockingHitGroup;
 			filterData.flags |= physx::PxQueryFlag::ePREFILTER;
 		}
 		return m_PhysicsScene->raycast(PhysXUtils::ToPhysXVector(origin), PhysXUtils::ToPhysXVector(glm::normalize(direction)), maxDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
@@ -823,11 +824,11 @@ namespace ZeoEngine {
 	bool PhysXScene::SweepInternal(const physx::PxGeometry& geometry, const Vec3& center, const Vec3& rotation, const Vec3& sweepDirection, float sweepDistance, const QueryFilter& filter, physx::PxSweepBuffer& hitInfo) const
 	{
 		physx::PxQueryFilterData filterData;
-		filterData.data.word0 = filter.QueriesFor;
+		filterData.data.word0 = filter.QueriesForGroup;
 		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
 		if (hitInfo.maxNbTouches)
 		{
-			filterData.data.word1 = filter.BlockingHitLayerMask;
+			filterData.data.word1 = filter.BlockingHitGroup;
 			filterData.flags |= physx::PxQueryFlag::ePREFILTER;
 		}
 		return m_PhysicsScene->sweep(geometry, PhysXUtils::ToPhysXTransform(center, rotation), PhysXUtils::ToPhysXVector(glm::normalize(sweepDirection)), sweepDistance, hitInfo, physx::PxHitFlags(physx::PxHitFlag::eDEFAULT), filterData, &s_QueryFilterCallback);
@@ -854,7 +855,7 @@ namespace ZeoEngine {
 	bool PhysXScene::OverlapInternal(const physx::PxGeometry& geometry, const Vec3& center, const Vec3& rotation, const QueryFilter& filter, physx::PxOverlapBuffer& hitInfo) const
 	{
 		physx::PxQueryFilterData filterData;
-		filterData.data.word0 = filter.QueriesFor;
+		filterData.data.word0 = filter.QueriesForGroup;
 		filterData.flags = physx::PxQueryFlags(static_cast<U16>(filter.Type));
 		if (!hitInfo.maxNbTouches)
 		{

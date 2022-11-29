@@ -100,8 +100,8 @@ namespace ZeoEngine {
 	struct QueryFilter
 	{
 		QueryFlag Type = QueryFlag::Both;
-		I32 QueriesFor = 0; // Bitfield that contains a set of layer bits for which query targets
-		I32 BlockingHitLayerMask = 0; // Bitfield that contains a set of layer bits which are considered to be blocking hits. Only used for multi non-overlap queries
+		U32 QueriesForGroup = 0; // Group ID that contains a set of layers for which query targets
+		U32 BlockingHitGroup = 0; // Group ID that contains a set of layers which are considered to be blocking hits. Only used for multi non-overlap queries
 	};
 
 	enum class CharacterControllerCollisionFlag
