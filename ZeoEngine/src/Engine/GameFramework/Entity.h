@@ -96,9 +96,15 @@ namespace ZeoEngine {
 		Scene& GetScene() const { return *m_Scene.lock(); }
 
 		UUID GetUUID() const;
+		Entity GetParentEntity() const;
+		const std::vector<UUID>& GetChildren() const;
+		bool HasAnyChildren() const;
 		const std::string& GetName() const;
 		Mat4 GetTransform() const;
+		Mat4 GetWorldTransform() const;
+		void GetWorldTransform(Vec3& outTranslation, Vec3& outRotation, Vec3& outScale) const;
 		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
+		void SetTransform(const Mat4& transform);
 		const Vec3& GetTranslation() const;
 		void SetTranslation(const Vec3& translation);
 		Vec3 GetRotation() const;
@@ -111,6 +117,30 @@ namespace ZeoEngine {
 
 		void UpdateBounds() const;
 		const BoxSphereBounds& GetBounds() const;
+
+		bool IsAncestorOf(Entity entity) const
+		{
+			const auto& children = GetChildren();
+
+			if (children.empty()) return false;
+
+			for (const UUID child : children)
+			{
+				if (child == entity.GetUUID()) return true;
+			}
+
+			for (const UUID child : children)
+			{
+				if (GetScene().GetEntityByUUID(child).IsAncestorOf(entity)) return true;
+			}
+
+			return false;
+		}
+
+		bool IsDescendantOf(Entity entity) const
+		{
+			return entity.IsAncestorOf(*this);
+		}
 
 		/** Returns true if entity is still alive. */
 		bool IsValid() const;

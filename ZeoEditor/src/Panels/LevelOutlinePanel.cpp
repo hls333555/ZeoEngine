@@ -35,7 +35,10 @@ namespace ZeoEngine {
 			for (const auto e : coreView)
 			{
 				const Entity entity{ e, sceneRef };
-				DrawEntityNode(entity);
+				if (!entity.GetParentEntity())
+				{
+					DrawEntityNode(entity);
+				}
 			}
 
 			// Deselect entity when blank space is clicked
@@ -112,19 +115,36 @@ namespace ZeoEngine {
 
 		ImGui::Separator();
 
-		ImGui::Text(" %d entitie(s)", scene.GetEntityCount());
+		ImGui::Text(" %d entities", scene.GetEntityCount());
 	}
 
 	void LevelOutlinePanel::DrawEntityNode(Entity entity) const
 	{
-		std::string entityNameStr = entity.GetName();
-		const char* entityName = entityNameStr.c_str();
-		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName))
+		const char* entityName = entity.GetName().c_str();
+		
+		auto doesAnyChildrenPassFilter = [&]()
+		{
+			for (const UUID child : entity.GetChildren())
+			{
+				const auto scene = m_EditorWorld->GetActiveScene();
+				Entity childEntity = scene->GetEntityByUUID(child);
+				if (m_Filter.PassFilter(childEntity.GetName().c_str()))
+				{
+					return true;
+				}
+			}
+			return false;
+		};
+		
+		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName) || doesAnyChildrenPassFilter())
 		{
 			auto selectedEntity = m_EditorWorld->GetContextEntity();
+			bool bHasAnyChildren = entity.HasAnyChildren();
 			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+			flags |= bHasAnyChildren ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Bullet;
 			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(U64)(U32)entity, flags, entityName);
+
 			// Display UUID when hovered
 			if (ImGui::IsItemHovered())
 			{
@@ -139,6 +159,35 @@ namespace ZeoEngine {
 				m_EditorWorld->FocusContextEntity();
 			}
 
+			// Drag an entity to attach
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{
+				ImGui::Text(entity.GetComponent<CoreComponent>().Name.c_str());
+				ImGui::SetDragDropPayload("DragDropLevelEntity", &entity, sizeof(Entity));
+				ImGui::EndDragDropSource();
+			}
+
+			// Drop to attach the dragged entity
+			if (ImGui::BeginDragDropTarget())
+			{
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragDropLevelEntity", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+				if (payload)
+				{
+					const auto scene = m_EditorWorld->GetActiveScene();
+					const Entity& droppedEntity = *static_cast<Entity*>(payload->Data);
+					if (entity == droppedEntity.GetParentEntity())
+					{
+						scene->UnparentEntity(droppedEntity);
+					}
+					else
+					{
+						scene->ParentEntity(droppedEntity, entity);
+					}
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+
 			bool bIsCurrentEntitySelected = selectedEntity == entity;
 			bool bWillDestroyEntity = false;
 			// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
@@ -149,7 +198,14 @@ namespace ZeoEngine {
 
 			if (bIsTreeExpanded)
 			{
-				// TODO: Display child entities
+				if (bHasAnyChildren)
+				{
+					// Display child entities
+					for (const UUID child : entity.GetChildren())
+					{
+						DrawEntityNode(m_EditorWorld->GetActiveScene()->GetEntityByUUID(child));
+					}
+				}
 
 				ImGui::TreePop();
 			}

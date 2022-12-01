@@ -115,6 +115,13 @@ namespace ZeoEngine {
 			: ID(uuid) {}
 	};
 
+	struct RelationshipComponent : public IComponent
+	{
+		UUID ParentEntity = 0;
+		std::vector<UUID> ChildEntities;
+	};
+
+	// Stores local transform
 	struct TransformComponent : public IComponent
 	{
 		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
@@ -131,9 +138,8 @@ namespace ZeoEngine {
 
 		Mat4 GetTransform() const
 		{
-			const Mat4 rotation = glm::toMat4(Quat(GetRotationInRadians()));
 			return glm::translate(Mat4(1.0f), Translation) *
-				rotation *
+				glm::toMat4(Quat(GetRotationInRadians())) *
 				glm::scale(Mat4(1.0f), Scale);
 		}
 	};

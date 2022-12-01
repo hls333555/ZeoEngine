@@ -84,6 +84,8 @@ namespace ZeoEngine {
 		RegisterComponent<CoreComponent>("Core", Inherent, HideComponentHeader)
 			.Field<&CoreComponent::Name>("Name");
 
+		RegisterComponent<RelationshipComponent>("Relationship", Inherent);
+
 		RegisterComponent<TransformComponent>("Transform", Inherent)
 			.Field<&TransformComponent::Translation>("Translation")
 			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)

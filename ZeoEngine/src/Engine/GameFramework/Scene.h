@@ -56,6 +56,8 @@ namespace ZeoEngine {
 
 		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
+		void ParentEntity(Entity entity, Entity parent);
+		void UnparentEntity(Entity entity);
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 		Entity GetEntityByUUID(UUID uuid) const;

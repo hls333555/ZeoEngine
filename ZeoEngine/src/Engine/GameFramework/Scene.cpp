@@ -8,6 +8,33 @@
 
 namespace ZeoEngine {
 
+	namespace Utils {
+
+		static void ToLocalSpaceTransform(Entity entity)
+		{
+			const Entity parent = entity.GetParentEntity();
+			if (!parent) return;
+
+			const Mat4 parentTransform = parent.GetWorldTransform();
+			const Mat4 localTransform = glm::inverse(parentTransform) * entity.GetTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(localTransform, translation, rotation, scale);
+			entity.SetTransform(translation, rotation, scale);
+		}
+
+		static void ToWorldSpaceTransform(Entity entity)
+		{
+			const Entity parent = entity.GetParentEntity();
+			if (!parent) return;
+
+			const Mat4 worldTransform = entity.GetWorldTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(worldTransform, translation, rotation, scale);
+			entity.SetTransform(translation, rotation, scale);
+		}
+
+	}
+
 	SceneSpec SceneSpec::Clone()
 	{
 		SceneSpec spec;
@@ -99,6 +126,7 @@ namespace ZeoEngine {
 			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
 		entity.AddComponent<IDComponent>(uuid);
+		entity.AddComponent<RelationshipComponent>();
 		entity.AddComponent<TransformComponent>(translation);
 		entity.AddComponent<BoundsComponent>();
 
@@ -111,14 +139,55 @@ namespace ZeoEngine {
 		return entity;
 	}
 
+	// TODO: Rule: KeepRelative, KeepWorld, SnapTo
+	void Scene::ParentEntity(Entity entity, Entity parent)
+	{
+		if (parent.IsDescendantOf(entity))
+		{
+			ZE_CORE_WARN("Parent entity {0} cannot become the child of its descendant entity {1}", entity.GetName(), parent.GetName());
+			return;
+		}
+
+		if (Entity previousParent = entity.GetParentEntity())
+		{
+			UnparentEntity(entity);
+		}
+
+		auto& childComp = entity.GetComponent<RelationshipComponent>();
+		childComp.ParentEntity = parent.GetUUID();
+		auto& parentComp = parent.GetComponent<RelationshipComponent>();
+		parentComp.ChildEntities.emplace_back(entity.GetUUID());
+
+		Utils::ToLocalSpaceTransform(entity);
+	}
+
+	// TODO: Rule: KeepRelative, KeepWorld
+	void Scene::UnparentEntity(Entity entity)
+	{
+		const Entity parent = entity.GetParentEntity();
+		if (!parent) return;
+
+		auto& parentComp = parent.GetComponent<RelationshipComponent>();
+		auto& parentChildren = parentComp.ChildEntities;
+		parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), entity.GetUUID()), parentChildren.end());
+
+		Utils::ToWorldSpaceTransform(entity);
+
+		auto& childComp = entity.GetComponent<RelationshipComponent>();
+		childComp.ParentEntity = 0;
+	}
+
+	// TODO: Should duplicate submesh entities
 	Entity Scene::DuplicateEntity(Entity entity)
 	{
 		Entity newEntity = CreateEntity(entity.GetName());
-		// Copy all components but IDComponent(UUID)
-		newEntity.CopyAllRegisteredComponents(entity, { entt::type_hash<IDComponent>::value() });
+		const Mat4 worldTransform = entity.GetWorldTransform();
+		newEntity.CopyAllRegisteredComponents(entity, { entt::type_hash<IDComponent>::value(), entt::type_hash<RelationshipComponent>::value() });
+		newEntity.SetTransform(worldTransform);
 		return newEntity;
 	}
 
+	// TODO: Should destroy submesh entities
 	void Scene::DestroyEntity(Entity entity)
 	{
 		auto* physicsScene = GetPhysicsScene();
@@ -134,6 +203,12 @@ namespace ZeoEngine {
 				physicsScene->DestroyCharacterController(entity);
 			}
 		}
+
+		for (const UUID child : entity.GetChildren())
+		{
+			UnparentEntity(GetEntityByUUID(child));
+		}
+
 		const auto uuid = entity.GetUUID();
 		destroy(entity);
 		m_Entities.erase(uuid);

@@ -51,10 +51,9 @@ namespace ZeoEngine {
 		auto& boundsComp = entity.GetComponent<BoundsComponent>();
 		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshRendererComponent>::value()] = [](Entity entity)
 		{
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
 			const auto& meshComp = entity.GetComponent<MeshRendererComponent>();
 			const auto mesh = AssetLibrary::LoadAsset<Mesh>(meshComp.MeshAsset);
-			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+			return mesh ? mesh->GetBounds().TransformBy(entity.GetWorldTransform()) : BoxSphereBounds{};
 		};
 	}
 
@@ -102,10 +101,9 @@ namespace ZeoEngine {
 		auto& boundsComp = entity.GetComponent<BoundsComponent>();
 		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshDetailComponent>::value()] = [](Entity entity)
 		{
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
 			const auto& meshComp = entity.GetComponent<MeshDetailComponent>();
 			const auto& mesh = meshComp.LoadedMesh;
-			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+			return mesh ? mesh->GetBounds().TransformBy(entity.GetWorldTransform()) : BoxSphereBounds{};
 		};
 	}
 
@@ -181,12 +179,12 @@ namespace ZeoEngine {
 		Entity entity{ e, scene.shared_from_this() };
 		auto& billboardComp = entity.AddComponent<BillboardComponent>();
 		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
-		entity.PatchComponent<BoundsComponent>([](BoundsComponent boundsComp)
+		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<DirectionalLightComponent>::value()] = [](Entity entity)
 			{
-				const auto& transformComp = entity.GetComponent<TransformComponent>();
-				const Sphere sphere{ transformComp.Translation, 0.0f };
+				const Mat4 worldTransform = entity.GetWorldTransform();
+				const Sphere sphere{ Math::GetTranslationFromTransform(worldTransform), 0.0f };
 				return sphere;
 			};
 		});
@@ -227,9 +225,9 @@ namespace ZeoEngine {
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<PointLightComponent>::value()] = [](Entity entity)
 			{
-				const auto& transformComp = entity.GetComponent<TransformComponent>();
+				const Mat4 worldTransform = entity.GetWorldTransform();
 				const auto& lightComp = entity.GetComponent<PointLightComponent>();
-				const Sphere sphere{ transformComp.Translation, lightComp.Range };
+				const Sphere sphere{ Math::GetTranslationFromTransform(worldTransform), lightComp.Range };
 				return sphere;
 			};
 		});		
@@ -272,9 +270,9 @@ namespace ZeoEngine {
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<SpotLightComponent>::value()] = [](Entity entity)
 			{
-			   const auto& transformComp = entity.GetComponent<TransformComponent>();
+				const Mat4 worldTransform = entity.GetWorldTransform();
 			   const auto& lightComp = entity.GetComponent<SpotLightComponent>();
-			   const Sphere sphere{ transformComp.Translation, lightComp.Range * 0.5f };
+			   const Sphere sphere{ Math::GetTranslationFromTransform(worldTransform), lightComp.Range * 0.5f };
 			   return sphere;
 			};
 		});

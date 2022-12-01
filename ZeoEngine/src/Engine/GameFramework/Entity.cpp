@@ -16,6 +16,22 @@ namespace ZeoEngine {
 		return GetComponent<IDComponent>().ID;
 	}
 
+	Entity Entity::GetParentEntity() const
+	{
+		const UUID parentID = GetComponent<RelationshipComponent>().ParentEntity;
+		return GetScene().GetEntityByUUID(parentID);
+	}
+
+	const std::vector<UUID>& Entity::GetChildren() const
+	{
+		return GetComponent<RelationshipComponent>().ChildEntities;
+	}
+
+	bool Entity::HasAnyChildren() const
+	{
+		return !GetComponent<RelationshipComponent>().ChildEntities.empty();
+	}
+
 	const std::string& Entity::GetName() const
 	{
 		return GetComponent<CoreComponent>().Name;
@@ -26,6 +42,23 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().GetTransform();
 	}
 
+	Mat4 Entity::GetWorldTransform() const
+	{
+		Mat4 parentTransform{ 1.0f };
+		if (const Entity parent = GetParentEntity())
+		{
+			parentTransform = parent.GetWorldTransform();
+		}
+
+		return parentTransform * GetTransform();
+	}
+
+	void Entity::GetWorldTransform(Vec3& outTranslation, Vec3& outRotation, Vec3& outScale) const
+	{
+		const Mat4 worldTransform = GetWorldTransform();
+		Math::DecomposeTransform(worldTransform, outTranslation, outRotation, outScale);
+	}
+
 	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
 	{
 		PatchComponent<TransformComponent>([&translation, &rotation, &scale](TransformComponent& transformComp)
@@ -34,6 +67,13 @@ namespace ZeoEngine {
 			transformComp.Rotation = glm::degrees(rotation);
 			transformComp.Scale = scale;
 		});
+	}
+
+	void Entity::SetTransform(const Mat4& transform)
+	{
+		Vec3 translation, rotation, scale;
+		Math::DecomposeTransform(transform, translation, rotation, scale);
+		SetTransform(translation, rotation, scale);
 	}
 
 	const Vec3& Entity::GetTranslation() const
@@ -103,8 +143,8 @@ namespace ZeoEngine {
 
 	BoxSphereBounds Entity::GetDefaultBounds() const
 	{
-		const auto& transformComp = GetComponent<TransformComponent>();
-		return { transformComp.Translation, { 1.0f, 1.0f, 1.0f }, 1.0f };
+		const auto worldTransform = GetWorldTransform();
+		return { Math::GetTranslationFromTransform(worldTransform), { 1.0f, 1.0f, 1.0f }, 1.0f };
 	}
 
 	const BoxSphereBounds& Entity::GetBounds() const

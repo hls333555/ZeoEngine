@@ -234,8 +234,7 @@ namespace ZeoEngine {
 			Mat4 cameraView = editorCamera.GetViewMatrix();
 
 			// Selected entity
-			const auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
-			Mat4 entityTransform = transformComp.GetTransform();
+			Mat4 worldTransform = selectedEntity.GetWorldTransform();
 
 			// Snapping
 			bool bSnap = Input::IsKeyPressed(Key::LeftControl);
@@ -246,21 +245,29 @@ namespace ZeoEngine {
 			{
 				snapValue = 45.0f;
 			}
-			float snapValues[3] = { snapValue, snapValue, snapValue };
+			const float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
 				m_GizmoType, m_GizmoMode,
-				glm::value_ptr(entityTransform),
+				glm::value_ptr(worldTransform),
 				nullptr, bSnap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
-				Vec3 outTranslation, outRotation, outScale;
-				Math::DecomposeTransform(entityTransform, outTranslation, outRotation, outScale);
+				Mat4 localTransform = worldTransform;
+				if (const Entity parent = selectedEntity.GetParentEntity())
+				{
+					const Mat4 parentWorldTransform = parent.GetWorldTransform();
+					localTransform = glm::inverse(parentWorldTransform) * worldTransform;
+				}
+
+				Vec3 translation, rotation, scale;
+				Math::DecomposeTransform(localTransform, translation, rotation, scale);
 
 				// This delta rotation prevents gimbal lock situation
-				Vec3 deltaRotation = outRotation - transformComp.GetRotationInRadians();
-				selectedEntity.SetTransform(outTranslation, transformComp.GetRotationInRadians() + deltaRotation, outScale);
+				const auto& transformComp = selectedEntity.GetComponent<TransformComponent>();
+				const Vec3 deltaRotation = rotation - transformComp.GetRotationInRadians();
+				selectedEntity.SetTransform(translation, transformComp.GetRotationInRadians() + deltaRotation, scale);
 			}
 		}
 	}

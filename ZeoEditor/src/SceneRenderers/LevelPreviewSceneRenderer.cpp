@@ -48,7 +48,7 @@ namespace ZeoEngine {
 				}
 
 				const SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-				const Mat4& cameraTransform = cameraEntity.GetTransform();
+				const Mat4& cameraTransform = cameraEntity.GetWorldTransform();
 				BeginScene(camera, cameraTransform);
 			}
 			RenderRuntime();
