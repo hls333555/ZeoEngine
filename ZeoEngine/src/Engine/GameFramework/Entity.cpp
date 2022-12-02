@@ -59,6 +59,22 @@ namespace ZeoEngine {
 		Math::DecomposeTransform(worldTransform, outTranslation, outRotation, outScale);
 	}
 
+	void Entity::SetTransform(const Mat4& transform)
+	{
+		Vec3 translation, rotation, scale;
+		Math::DecomposeTransform(transform, translation, rotation, scale);
+		SetTransform(translation, rotation, scale);
+	}
+
+	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation)
+	{
+		PatchComponent<TransformComponent>([&translation, &rotation](TransformComponent& transformComp)
+		{
+			transformComp.Translation = translation;
+			transformComp.Rotation = glm::degrees(rotation);
+		});
+	}
+
 	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
 	{
 		PatchComponent<TransformComponent>([&translation, &rotation, &scale](TransformComponent& transformComp)
@@ -69,11 +85,52 @@ namespace ZeoEngine {
 		});
 	}
 
-	void Entity::SetTransform(const Mat4& transform)
+	void Entity::SetWorldTransform(const Mat4& transform)
 	{
-		Vec3 translation, rotation, scale;
-		Math::DecomposeTransform(transform, translation, rotation, scale);
-		SetTransform(translation, rotation, scale);
+		const Entity parent = GetParentEntity();
+		if (!parent)
+		{
+			SetTransform(transform);
+			return;
+		}
+
+		const Mat4 parentTransform = parent.GetWorldTransform();
+		const Mat4 localTransform = glm::inverse(parentTransform) * transform;
+		Vec3 localTranslation, localRotation, localScale;
+		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
+		SetTransform(localTranslation, localRotation, localScale);
+	}
+
+	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation)
+	{
+		const Entity parent = GetParentEntity();
+		if (!parent)
+		{
+			SetTransform(translation, rotation);
+			return;
+		}
+
+		const Mat4 parentTransform = parent.GetWorldTransform();
+		const Mat4 localTransform = glm::inverse(parentTransform) * Math::ComposeTransform(translation, rotation, Vec3(1.0f));
+		Vec3 localTranslation, localRotation, localScale;
+		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
+		SetTransform(localTranslation, localRotation);
+	}
+
+	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		const Entity parent = GetParentEntity();
+		if (!parent)
+		{
+			SetTransform(translation, rotation, scale);
+			return;
+		}
+
+		const Mat4 parentTransform = parent.GetWorldTransform();
+		const Mat4 localTransform = glm::inverse(parentTransform) * Math::ComposeTransform(translation, rotation, scale);
+		Vec3 localTranslation, localRotation, localScale;
+		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
+		SetTransform(localTranslation, localRotation, localScale);
 	}
 
 	const Vec3& Entity::GetTranslation() const

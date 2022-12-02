@@ -13,6 +13,7 @@ namespace ZeoEngine::Math {
 	Vec3 GetRightVector(const Vec3& rotation);
 	Vec3 GetUpVector(const Vec3& rotation);
 
+	Mat4 ComposeTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
 	bool DecomposeTransform(const Mat4& transform, Vec3& outTranslation, Vec3& outRotation, Vec3& outScale);
 	Vec3 GetTranslationFromTransform(const Mat4& transform);
 

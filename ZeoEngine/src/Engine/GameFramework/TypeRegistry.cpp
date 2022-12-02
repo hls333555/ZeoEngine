@@ -84,7 +84,9 @@ namespace ZeoEngine {
 		RegisterComponent<CoreComponent>("Core", Inherent, HideComponentHeader)
 			.Field<&CoreComponent::Name>("Name");
 
-		RegisterComponent<RelationshipComponent>("Relationship", Inherent);
+		RegisterComponent<RelationshipComponent>("Relationship", Inherent, HideComponentHeader)
+			.Field<&RelationshipComponent::ParentEntity>("ParentEntity", HiddenInEditor)
+			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor);
 
 		RegisterComponent<TransformComponent>("Transform", Inherent)
 			.Field<&TransformComponent::Translation>("Translation")

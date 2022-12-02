@@ -194,6 +194,8 @@ namespace ZeoEngine {
 
 	void PhysicsDebugRenderSystem::DrawColliders(bool bDraw)
 	{
+		if (!bDraw) return;
+
 		// The debug drawing should be in sync with PhysXColliderShapeBase's geometry
 		const auto scene = GetScene();
 		auto boxView = scene->GetComponentView<BoxColliderComponent>();
@@ -201,12 +203,9 @@ namespace ZeoEngine {
 		{
 			auto [boxComp] = boxView.get(e);
 			const Entity entity{ e, scene };
-			if (bDraw)
-			{
-				Vec3 translation, rotation, scale;
-				entity.GetWorldTransform(translation, rotation, scale);
-				DebugDrawUtils::DrawBox(*scene, translation + boxComp.Offset, boxComp.Size * entity.GetScale(), s_DebugDrawColor, rotation);
-			}
+			Mat4 transform = entity.GetWorldTransform();
+			Mat4 boxTransform = glm::translate(glm::mat4(1.0), boxComp.Offset) * glm::scale(glm::mat4(1.0f), boxComp.Size);
+			DebugDrawUtils::DrawBox(*scene, transform * boxTransform, s_DebugDrawColor);
 		}
 
 		auto sphereView = scene->GetComponentView<SphereColliderComponent>();
@@ -214,13 +213,13 @@ namespace ZeoEngine {
 		{
 			auto [sphereComp] = sphereView.get(e);
 			const Entity entity{ e, scene };
-			if (bDraw)
-			{
-				Vec3 translation, rotation, scale;
-				entity.GetWorldTransform(translation, rotation, scale);
-				float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
-				DebugDrawUtils::DrawSphereBounds(*scene, translation + sphereComp.Offset, s_DebugDrawColor, sphereComp.Radius * largestScale);
-			}
+			Mat4 transform = entity.GetWorldTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(transform, translation, rotation, scale);
+			Mat4 sphereTransform = glm::translate(glm::mat4(1.0), sphereComp.Offset);
+			float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
+			sphereTransform = transform * sphereTransform;
+			DebugDrawUtils::DrawSphereBounds(*scene, Math::GetTranslationFromTransform(sphereTransform), s_DebugDrawColor, sphereComp.Radius * largestScale, rotation);
 		}
 
 		auto capsuleView = scene->GetComponentView<CapsuleColliderComponent>();
@@ -228,13 +227,13 @@ namespace ZeoEngine {
 		{
 			auto [capsuleComp] = capsuleView.get(e);
 			const Entity entity{ e, scene };
-			if (bDraw)
-			{
-				Vec3 translation, rotation, scale;
-				entity.GetWorldTransform(translation, rotation, scale);
-				float radiusScale = glm::max(scale.x, scale.z);
-				DebugDrawUtils::DrawCapsule(*scene, translation + capsuleComp.Offset, s_DebugDrawColor, capsuleComp.Radius * radiusScale, capsuleComp.Height * scale.y, rotation);
-			}
+			Mat4 transform = entity.GetWorldTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(transform, translation, rotation, scale);
+			Mat4 capsuleTransform = glm::translate(glm::mat4(1.0), capsuleComp.Offset);
+			float radiusScale = glm::max(scale.x, scale.z);
+			capsuleTransform = transform * capsuleTransform;
+			DebugDrawUtils::DrawCapsule(*scene, Math::GetTranslationFromTransform(capsuleTransform), s_DebugDrawColor, capsuleComp.Radius * radiusScale, capsuleComp.Height * scale.y, rotation);
 		}
 
 		auto controllerView = scene->GetComponentView<CharacterControllerComponent>();
@@ -242,13 +241,13 @@ namespace ZeoEngine {
 		{
 			auto [controllerComp] = controllerView.get(e);
 			const Entity entity{ e, scene };
-			if (bDraw)
-			{
-				Vec3 translation, rotation, scale;
-				entity.GetWorldTransform(translation, rotation, scale);
-				float radiusScale = glm::max(scale.x, scale.z);
-				DebugDrawUtils::DrawCapsule(*scene, translation + controllerComp.Offset, s_DebugDrawColor, controllerComp.Radius * radiusScale + controllerComp.SkinThickness, controllerComp.Height * scale.y, rotation);
-			}
+			Mat4 transform = entity.GetWorldTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(transform, translation, rotation, scale);
+			Mat4 capsuleTransform = glm::translate(glm::mat4(1.0), controllerComp.Offset);
+			float radiusScale = glm::max(scale.x, scale.z);
+			capsuleTransform = transform * capsuleTransform;
+			DebugDrawUtils::DrawCapsule(*scene, Math::GetTranslationFromTransform(capsuleTransform), s_DebugDrawColor, controllerComp.Radius * radiusScale + controllerComp.SkinThickness, controllerComp.Height * scale.y, rotation);
 		}
 	}
 

@@ -138,11 +138,11 @@ namespace ZeoEngine {
 
 		Mat4 GetTransform() const
 		{
-			return glm::translate(Mat4(1.0f), Translation) *
-				glm::toMat4(Quat(GetRotationInRadians())) *
-				glm::scale(Mat4(1.0f), Scale);
+			return Math::ComposeTransform(Translation, GetRotationInRadians(), Scale);
 		}
 	};
+
+	struct IgnoreSyncTransformComponent {};
 
 	struct BoundsComponent : public IComponent
 	{
@@ -472,6 +472,8 @@ namespace ZeoEngine {
 		float& GetDynamicFriction() const { return LoadedPhysicsMaterial->m_DynamicFriction; }
 		float& GetBounciness() const { return LoadedPhysicsMaterial->m_Bounciness; }
 	};
+
+	struct ChildColliderComponent {};
 
 	struct ColliderComponentBase : public IComponent
 	{

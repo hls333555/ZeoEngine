@@ -29,8 +29,13 @@ namespace ZeoEngine {
 
 	void DebugDrawUtils::DrawBox(const Scene& scene, const Vec3& center, const Vec3& extent, const Vec3& color, const Vec3& rotation, float duration)
 	{
+		const Mat4 transform = glm::translate(Mat4(1.0f), center) * glm::toMat4(Quat(rotation)) * glm::scale(Mat4(1.0f), Vec3(extent.x, extent.y, extent.z));
+		DrawBox(scene, transform, color, duration);
+	}
+
+	void DebugDrawUtils::DrawBox(const Scene& scene, const Mat4& transform, const Vec3& color, float duration)
+	{
 		ddVec3 points[8];
-		Mat4 transform = glm::translate(Mat4(1.0f), center) * glm::toMat4(Quat(rotation)) * glm::scale(Mat4(1.0f), Vec3(extent.x, extent.y, extent.z));
 		auto point = transform * Vec4(-0.5f, 0.5f, 0.5f, 1);
 		points[0][0] = point.x; points[0][1] = point.y; points[0][2] = point.z;
 		point = transform * Vec4(-0.5f, 0.5f, -0.5f, 1);
@@ -55,11 +60,15 @@ namespace ZeoEngine {
 		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
 	}
 
-	void DebugDrawUtils::DrawSphereBounds(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float segaments, float duration)
+	void DebugDrawUtils::DrawSphereBounds(const Scene& scene, const Vec3& center, const Vec3& color, float radius, const Vec3& rotation, float segaments, float duration)
 	{
-		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 1.0f, 0.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
-		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 1.0f, 0.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
-		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(Vec3{ 0.0f, 0.0f, 1.0f }), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		const Mat4 rotationMatrix = glm::toMat4(Quat(rotation));
+		const Vec4 up = rotationMatrix * Vec4{ 0.0f, 1.0f, 0.0f, 0.0f };
+		const Vec4 right = rotationMatrix * Vec4{ 1.0f, 0.0f, 0.0f, 0.0f };
+		const Vec4 front = rotationMatrix * Vec4{ 0.0f, 0.0f, -1.0f, 0.0f };
+		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(right), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(up), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
+		dd::circle(scene.GetContextShared()->DebugDrawContext, glm::value_ptr(center), glm::value_ptr(front), glm::value_ptr(color), radius, segaments, static_cast<I32>(duration * 1000.0f));
 	}
 
 	void DebugDrawUtils::DrawSphere(const Scene& scene, const Vec3& center, const Vec3& color, float radius, float duration)

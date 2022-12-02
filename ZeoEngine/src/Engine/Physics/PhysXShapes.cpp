@@ -10,10 +10,12 @@
 
 namespace ZeoEngine {
 
-	void PhysXColliderShapeBase::CreateShape(const PhysXActor& actor, const physx::PxGeometry& geometry, const ColliderComponentBase& colliderComp, const RigidBodyComponent& rigidBodyComp, const Vec3& translation, const Vec3& rotation)
+	void PhysXColliderShapeBase::CreateShape(Entity entity, const PhysXActor& actor, const physx::PxGeometry& geometry, const ColliderComponentBase& colliderComp, U32 collisionDetectionType, const Mat4& transform)
 	{
+		m_Entity = entity;
+
 		m_Shape = physx::PxRigidActorExt::createExclusiveShape(actor.GetRigidActor(), geometry, *PhysXUtils::ToPhysXMaterial(colliderComp.PhysicsMaterialAsset));
-		m_Shape->setLocalPose(PhysXUtils::ToPhysXTransform(translation, rotation));
+		SetTransform(transform);
 		if (colliderComp.bIsTrigger)
 		{
 			m_Shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, false);
@@ -30,7 +32,7 @@ namespace ZeoEngine {
 		physx::PxFilterData simulationFilterData;
 		simulationFilterData.word0 = collisionLayerBit;
 		simulationFilterData.word1 = collisionGroupBits;
-		simulationFilterData.word2 = static_cast<U32>(rigidBodyComp.CollisionDetection);
+		simulationFilterData.word2 = collisionDetectionType;
 		m_Shape->setSimulationFilterData(simulationFilterData);
 		physx::PxFilterData queryFilterData;
 		queryFilterData.word0 = collisionLayerBit;
@@ -64,36 +66,61 @@ namespace ZeoEngine {
 		actor->detachShape(*m_Shape);
 	}
 
-	PhysXBoxColliderShape::PhysXBoxColliderShape(Entity entity, const PhysXActor& actor)
+	void PhysXColliderShapeBase::SetTransform(const Mat4& transform) const
+	{
+		const auto pose = PhysXUtils::ToPhysXTransform(GetOffsetTransform(transform));
+		m_Shape->setLocalPose(pose);
+	}
+
+	PhysXBoxColliderShape::PhysXBoxColliderShape(Entity entity, const PhysXActor& actor, U32 collisionDetectionType, const Mat4& transform)
 	{
 		const auto& boxComp = entity.GetComponent<BoxColliderComponent>();
-		const auto& rigidBodyComp = entity.GetComponent<RigidBodyComponent>();
 
-		const Vec3 scaledSize = entity.GetScale() * boxComp.Size;
+		Vec3 translation, rotation, scale;
+		entity.GetWorldTransform(translation, rotation, scale);
+		const Vec3 scaledSize = scale * boxComp.Size;
 		const auto box = physx::PxBoxGeometry(scaledSize.x * 0.5f, scaledSize.y * 0.5f, scaledSize.z * 0.5f);
-		CreateShape(actor, box, boxComp, rigidBodyComp, boxComp.Offset);
+		CreateShape(entity, actor, box, boxComp, collisionDetectionType, transform);
 	}
 
-	PhysXSphereColliderShape::PhysXSphereColliderShape(Entity entity, const PhysXActor& actor)
+	Mat4 PhysXBoxColliderShape::GetOffsetTransform(const Mat4& transform) const
+	{
+		const auto& boxComp = GetEntity().GetComponent<BoxColliderComponent>();
+		return glm::translate(transform, boxComp.Offset);
+	}
+
+	PhysXSphereColliderShape::PhysXSphereColliderShape(Entity entity, const PhysXActor& actor, U32 collisionDetectionType, const Mat4& transform)
 	{
 		const auto& sphereComp = entity.GetComponent<SphereColliderComponent>();
-		const auto& rigidBodyComp = entity.GetComponent<RigidBodyComponent>();
 
-		const auto& scale = entity.GetScale();
+		Vec3 translation, rotation, scale;
+		entity.GetWorldTransform(translation, rotation, scale);
 		const float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
 		const auto sphere = physx::PxSphereGeometry(sphereComp.Radius * largestScale);
-		CreateShape(actor, sphere, sphereComp, rigidBodyComp, sphereComp.Offset);
+		CreateShape(entity, actor, sphere, sphereComp, collisionDetectionType, transform);
 	}
 
-	PhysXCapsuleColliderShape::PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor)
+	Mat4 PhysXSphereColliderShape::GetOffsetTransform(const Mat4& transform) const
+	{
+		const auto& sphereComp = GetEntity().GetComponent<SphereColliderComponent>();
+		return glm::translate(transform, sphereComp.Offset);
+	}
+
+	PhysXCapsuleColliderShape::PhysXCapsuleColliderShape(Entity entity, const PhysXActor& actor, U32 collisionDetectionType, const Mat4& transform)
 	{
 		const auto& capsuleComp = entity.GetComponent<CapsuleColliderComponent>();
-		const auto& rigidBodyComp = entity.GetComponent<RigidBodyComponent>();
 
-		const auto& scale = entity.GetScale();
+		Vec3 translation, rotation, scale;
+		entity.GetWorldTransform(translation, rotation, scale);
 		const float radiusScale = glm::max(scale.x, scale.z);
 		const auto capsule = physx::PxCapsuleGeometry(capsuleComp.Radius * radiusScale, (capsuleComp.Height * 0.5f) * scale.y);
-		CreateShape(actor, capsule, capsuleComp, rigidBodyComp, capsuleComp.Offset, Vec3(0.0f, 0.0f, physx::PxHalfPi/* PhysX's capsule is horizontal */));
+		CreateShape(entity, actor, capsule, capsuleComp, collisionDetectionType, transform);
+	}
+
+	Mat4 PhysXCapsuleColliderShape::GetOffsetTransform(const Mat4& transform) const
+	{
+		const auto& capsuleComp = GetEntity().GetComponent<CapsuleColliderComponent>();
+		return glm::translate(transform, capsuleComp.Offset) * glm::toMat4(Quat(Vec3(0.0f, 0.0f, physx::PxHalfPi/* PhysX's capsule is horizontal */)));
 	}
 
 }

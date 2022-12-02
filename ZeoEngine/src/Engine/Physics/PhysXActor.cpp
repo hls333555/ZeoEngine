@@ -22,14 +22,36 @@ namespace ZeoEngine {
 
 	PhysXActor::~PhysXActor()
 	{
-		for (const auto& collider : m_Colliders)
+		for (const auto& [entityID, colliders] : m_Colliders)
 		{
-			collider->DetachFromActor(m_RigidActor);
+			for (const auto& collider : colliders)
+			{
+				collider->DetachFromActor(m_RigidActor);
+			}
 		}
 		m_Colliders.clear();
 
 		m_RigidActor->release();
 		m_RigidActor = nullptr;
+	}
+
+	Vec3 PhysXActor::GetTranslation() const
+	{
+		const auto actorPose = m_RigidActor->getGlobalPose();
+		return PhysXUtils::FromPhysXVector(actorPose.p);
+	}
+
+	Vec3 PhysXActor::GetRotation() const
+	{
+		const auto actorPose = m_RigidActor->getGlobalPose();
+		return glm::eulerAngles(PhysXUtils::FromPhysXQuat(actorPose.q));
+	}
+
+	void PhysXActor::GetTransform(Vec3& outTranslation, Vec3& outRotation) const
+	{
+		const auto actorPose = m_RigidActor->getGlobalPose();
+		outTranslation = PhysXUtils::FromPhysXVector(actorPose.p);
+		outRotation = glm::eulerAngles(PhysXUtils::FromPhysXQuat(actorPose.q));
 	}
 
 	void PhysXActor::SetTranslation(const Vec3& translation, bool bAutoWake) const
@@ -58,7 +80,7 @@ namespace ZeoEngine {
 		m_RigidActor->setGlobalPose(transform, bAutoWake);
 	}
 
-	void PhysXActor::SetTransform(const Mat4& transform, bool bAutoWake) const
+	void PhysXActor::SetTransform(const Vec3& translation, const Vec3& rotation, bool bAutoWake) const
 	{
 		if (!IsDynamic())
 		{
@@ -66,7 +88,8 @@ namespace ZeoEngine {
 			return;
 		}
 
-		m_RigidActor->setGlobalPose(PhysXUtils::ToPhysXTransform(transform), bAutoWake);
+		const physx::PxTransform transform(PhysXUtils::ToPhysXVector(translation), PhysXUtils::ToPhysXQuat(Quat(rotation)));
+		m_RigidActor->setGlobalPose(transform, bAutoWake);
 	}
 
 	void PhysXActor::SetKinematicTarget(const Vec3& targetPosition, const Vec3& targetRotation) const
@@ -364,13 +387,21 @@ namespace ZeoEngine {
 		rigidDynamic->addTorque(PhysXUtils::ToPhysXVector(torque), static_cast<physx::PxForceMode::Enum>(forceMode));
 	}
 
+	const std::vector<Scope<PhysXColliderShapeBase>>* PhysXActor::GetCollidersByEntity(Entity entity) const
+	{
+		const auto it = m_Colliders.find(entity.GetUUID());
+		if (it == m_Colliders.end()) return nullptr;
+
+		return &it->second;
+	}
+
 	void PhysXActor::CreateRigidActor()
 	{
 		auto& physics = PhysXEngine::GetPhysics();
 		const auto& rigidBodyComp = m_Entity.GetComponent<RigidBodyComponent>();
-		// TODO: Entity hierarchy
-		const auto& transform = PhysXUtils::ToPhysXTransform(m_Entity.GetTransform());
-		if (rigidBodyComp.Type == RigidBodyComponent::BodyType::Static)
+		const auto& transform = PhysXUtils::ToPhysXTransform(m_Entity.GetWorldTransform());
+		bool bIsStatic = rigidBodyComp.Type == RigidBodyComponent::BodyType::Static;
+		if (bIsStatic)
 		{
 			m_RigidActor = physics.createRigidStatic(transform);
 		}
@@ -381,7 +412,6 @@ namespace ZeoEngine {
 			m_RigidActor->setActorFlag(physx::PxActorFlag::eDISABLE_SIMULATION, rigidBodyComp.bDisableSimulation);
 
 			SetKinematic(rigidBodyComp.bIsKinematic);
-			SetMass(rigidBodyComp.Mass);
 			SetGravityEnabled(rigidBodyComp.bEnableGravity);
 			SetLinearDamping(rigidBodyComp.LinearDamping);
 			SetAngularDamping(rigidBodyComp.AngularDamping);
@@ -400,17 +430,16 @@ namespace ZeoEngine {
 			rigidDynamic->setSolverIterationCounts(settings.SolverPositionIterations, settings.SolverVelocityIterations);
 		}
 
-		if (m_Entity.HasComponent<BoxColliderComponent>())
+		Vec3 translation, rotation, scale;
+		m_Entity.GetWorldTransform(translation, rotation, scale);
+		const Mat4 scaleTransform = glm::scale(Mat4(1.0f), scale);
+		AddColliders(m_Entity, static_cast<U32>(rigidBodyComp.CollisionDetection), scaleTransform);
+		AddChildColliders(m_Entity, static_cast<U32>(rigidBodyComp.CollisionDetection), scaleTransform);
+
+		if (!bIsStatic)
 		{
-			AddCollider(ColliderType::Box);
-		}
-		if (m_Entity.HasComponent<SphereColliderComponent>())
-		{
-			AddCollider(ColliderType::Sphere);
-		}
-		if (m_Entity.HasComponent<CapsuleColliderComponent>())
-		{
-			AddCollider(ColliderType::Capsule);
+			// Mass related properties must be updated after all colliders being added
+			SetMass(rigidBodyComp.Mass);
 		}
 
 		m_RigidActor->userData = this;
@@ -421,34 +450,46 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void PhysXActor::AddCollider(ColliderType type)
+	void PhysXActor::AddChildColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform)
 	{
-		switch (type)
+		for (const UUID childID : entity.GetChildren())
 		{
-			case ColliderType::Box:
-				m_Colliders.emplace_back(CreateScope<PhysXBoxColliderShape>(m_Entity, *this));
-				break;
-			case ColliderType::Sphere:
-				m_Colliders.emplace_back(CreateScope<PhysXSphereColliderShape>(m_Entity, *this));
-				break;
-			case ColliderType::Capsule:
-				m_Colliders.emplace_back(CreateScope<PhysXCapsuleColliderShape>(m_Entity, *this));
-				break;
+			Entity child = entity.GetScene().GetEntityByUUID(childID);
+			if (child.HasComponent<RigidBodyComponent>()) continue;
+
+			const Mat4 childLocalTransform = localTransform * child.GetTransform();
+			AddColliders(child, collisionDetectionType, childLocalTransform);
+			child.AddTagComponent<ChildColliderComponent>(); // This tag is added at runtime, so it will get cleared on end play
+			AddChildColliders(child, collisionDetectionType, childLocalTransform);
+		}
+	}
+
+	void PhysXActor::AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform)
+	{
+		const UUID entityID = entity.GetUUID();
+		if (entity.HasComponent<BoxColliderComponent>())
+		{
+			m_Colliders[entityID].emplace_back(CreateScope<PhysXBoxColliderShape>(entity, *this, collisionDetectionType, localTransform));
+		}
+		if (entity.HasComponent<SphereColliderComponent>())
+		{
+			m_Colliders[entityID].emplace_back(CreateScope<PhysXSphereColliderShape>(entity, *this, collisionDetectionType, localTransform));
+		}
+		if (entity.HasComponent<CapsuleColliderComponent>())
+		{
+			m_Colliders[entityID].emplace_back(CreateScope<PhysXCapsuleColliderShape>(entity, *this, collisionDetectionType, localTransform));
 		}
 	}
 
 	void PhysXActor::SynchronizeTransform()
 	{
-		const auto actorPose = m_RigidActor->getGlobalPose();
-		const Vec3 translation = PhysXUtils::FromPhysXVector(actorPose.p);
-		const Vec3 rotation = glm::eulerAngles(PhysXUtils::FromPhysXQuat(actorPose.q));
-		auto& transformComp = m_Entity.GetComponent<TransformComponent>();
-		transformComp.Translation = translation;
-		transformComp.Rotation = glm::degrees(rotation);
-		// Queue an update for bounds calculation as we do not call patch on TransformComponent
-		// In fact, we do not need to set transform back to physics actor as synchronization is just done
-		// See PhysicsObserver in LevelObserverSystem
-		m_Entity.PatchComponent<BoundsComponent>();
+		Vec3 translation, rotation;
+		GetTransform(translation, rotation);
+		// Physics actor's transform does not have scale property
+		m_Entity.SetWorldTransform(translation, rotation);
+		// We do not need to set transform back to physics actor through observer as synchronization is already done here
+		// See m_PhysicsActorObserver in LevelObserverSystem::OnUpdate
+		m_Entity.AddTagComponent<IgnoreSyncTransformComponent>();
 	}
 
 }

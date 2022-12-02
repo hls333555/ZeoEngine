@@ -18,6 +18,9 @@ namespace ZeoEngine {
 			const Mat4 parentTransform = parent.GetWorldTransform();
 			const Mat4 localTransform = glm::inverse(parentTransform) * entity.GetTransform();
 			Vec3 translation, rotation, scale;
+			// NOTE: If we attach an entity with rotation to a parent entity with non-uniform scale, that child entity will become skewed
+			// This is because parent scale is not applied in child local space and matrix decomposing will produce a shear matrix in addition to translation, rotation and scale
+			// See TTransform<T>::GetRelativeTransform in Unreal Engine
 			Math::DecomposeTransform(localTransform, translation, rotation, scale);
 			entity.SetTransform(translation, rotation, scale);
 		}
@@ -204,9 +207,9 @@ namespace ZeoEngine {
 			}
 		}
 
-		for (const UUID child : entity.GetChildren())
+		for (const UUID childID : entity.GetChildren())
 		{
-			UnparentEntity(GetEntityByUUID(child));
+			UnparentEntity(GetEntityByUUID(childID));
 		}
 
 		const auto uuid = entity.GetUUID();

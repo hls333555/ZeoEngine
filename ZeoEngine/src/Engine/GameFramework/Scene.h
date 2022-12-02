@@ -66,6 +66,18 @@ namespace ZeoEngine {
 
 		Entity GetMainCameraEntity();
 
+		template<typename T>
+		void ClearTagComponents()
+		{
+			return ClearComponents<T>();
+		}
+
+		template<typename T>
+		void ClearComponents()
+		{
+			return clear<T>();
+		}
+
 		template<typename T, typename... Args>
 		T& AddContext(Args&&... args)
 		{

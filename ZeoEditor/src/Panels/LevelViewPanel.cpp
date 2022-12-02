@@ -13,6 +13,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Application.h"
 #include "Engine/ImGui/EditorConsole.h"
+#include "Engine/Physics/PhysXScene.h"
 #include "Worlds/LevelPreviewWorld.h"
 #include "Engine/Renderer/SceneRenderer.h"
 
@@ -214,6 +215,22 @@ namespace ZeoEngine {
 		}
 	}
 
+	static void PutPhysicsActorsToSleep(const Scene& scene, const PhysXScene* physicsScene, const Entity& entity)
+	{
+		if (const auto* actor = physicsScene->GetActor(entity))
+		{
+			actor->PutToSleep();
+
+			for (const UUID childID : entity.GetChildren())
+			{
+				if (const Entity child = scene.GetEntityByUUID(childID))
+				{
+					PutPhysicsActorsToSleep(scene, physicsScene, child);
+				}
+			}
+		}
+	}
+
 	void LevelViewPanel::RenderGizmo()
 	{
 		auto* levelWorld = static_cast<LevelPreviewWorld*>(GetEditorWorld());
@@ -254,6 +271,15 @@ namespace ZeoEngine {
 
 			if (ImGuizmo::IsUsing())
 			{
+				// When manipulating gizmo at runtime, we temporarily "disable" physics on relevant physics actors so that moving entities will not be affected by physics simulation
+				// As transforms are sent to physics system and physics actors are woken up every frame during manipulation, those sleeping entities will eventually wake up when manipulation ends
+				// See UpdatePhysicsActorsTransform in LevelObserverSystem::OnUpdate
+				//const auto scene = levelWorld->GetActiveScene();
+				//if (const auto* physicsScene = scene->GetPhysicsScene())
+				//{
+				//	PutPhysicsActorsToSleep(*scene, physicsScene, selectedEntity);
+				//}
+
 				Mat4 localTransform = worldTransform;
 				if (const Entity parent = selectedEntity.GetParentEntity())
 				{

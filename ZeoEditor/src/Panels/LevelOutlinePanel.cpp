@@ -124,11 +124,11 @@ namespace ZeoEngine {
 		
 		auto doesAnyChildrenPassFilter = [&]()
 		{
-			for (const UUID child : entity.GetChildren())
+			for (const UUID childID : entity.GetChildren())
 			{
 				const auto scene = m_EditorWorld->GetActiveScene();
-				Entity childEntity = scene->GetEntityByUUID(child);
-				if (m_Filter.PassFilter(childEntity.GetName().c_str()))
+				Entity child = scene->GetEntityByUUID(childID);
+				if (m_Filter.PassFilter(child.GetName().c_str()))
 				{
 					return true;
 				}
@@ -201,9 +201,9 @@ namespace ZeoEngine {
 				if (bHasAnyChildren)
 				{
 					// Display child entities
-					for (const UUID child : entity.GetChildren())
+					for (const UUID childID : entity.GetChildren())
 					{
-						DrawEntityNode(m_EditorWorld->GetActiveScene()->GetEntityByUUID(child));
+						DrawEntityNode(m_EditorWorld->GetActiveScene()->GetEntityByUUID(childID));
 					}
 				}
 

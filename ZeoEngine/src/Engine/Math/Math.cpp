@@ -22,6 +22,13 @@ namespace ZeoEngine::Math {
 		return glm::rotate(glm::quat(rotation), { 0.0f, 1.0f, 0.0f });
 	}
 
+	Mat4 ComposeTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		return glm::translate(Mat4(1.0f), translation) *
+			glm::toMat4(Quat(rotation)) *
+			glm::scale(Mat4(1.0f), scale);
+	}
+
 	bool DecomposeTransform(const Mat4& transform, Vec3& outTranslation, Vec3& outRotation, Vec3& outScale)
 	{
 		// From glm::decompose in matrix_decompose.inl

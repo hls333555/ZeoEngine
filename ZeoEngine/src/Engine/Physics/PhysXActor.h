@@ -25,9 +25,12 @@ namespace ZeoEngine {
 
 		physx::PxRigidActor& GetRigidActor() const { return *m_RigidActor; }
 
+		Vec3 GetTranslation() const;
+		Vec3 GetRotation() const;
+		void GetTransform(Vec3& outTranslation, Vec3& outRotation) const;
 		void SetTranslation(const Vec3& translation, bool bAutoWake = true) const;
 		void SetRotation(const Vec3& rotation, bool bAutoWake = true) const;
-		void SetTransform(const Mat4& transform, bool bAutoWake = true) const;
+		void SetTransform(const Vec3& translation, const Vec3& rotation, bool bAutoWake = true) const;
 
 		void SetKinematicTarget(const Vec3& targetPosition, const Vec3& targetRotation) const;
 
@@ -68,16 +71,19 @@ namespace ZeoEngine {
 		void AddForce(const Vec3& force, ForceMode forceMode) const;
 		void AddTorque(const glm::vec3& torque, ForceMode forceMode) const;
 
+		const std::vector<Scope<PhysXColliderShapeBase>>* GetCollidersByEntity(Entity entity) const;
+
 	private:
 		void CreateRigidActor();
-		void AddCollider(ColliderType type);
+		void AddChildColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform);
+		void AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform);
 		void SynchronizeTransform();
 
 	private:
 		Entity m_Entity;
 
 		physx::PxRigidActor* m_RigidActor = nullptr;
-		std::vector<Scope<PhysXColliderShapeBase>> m_Colliders;
+		std::unordered_map<UUID, std::vector<Scope<PhysXColliderShapeBase>>> m_Colliders;
 
 		U8 m_LockFlags = 0;
 	};

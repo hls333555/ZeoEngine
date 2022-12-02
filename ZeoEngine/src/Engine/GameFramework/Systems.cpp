@@ -8,7 +8,6 @@
 #include <box2d/b2_circle_shape.h>
 
 #include "Engine/Core/Console.h"
-#include "Engine/Core/ConsoleVariables.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
@@ -16,6 +15,7 @@
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXCharacterController.h"
 #include "Engine/Physics/PhysXScene.h"
+#include "Engine/Physics/PhysXShapes.h"
 #include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
@@ -332,7 +332,8 @@ namespace ZeoEngine {
 
 		m_CameraObserver = CreateObserver(entt::collector.update<CameraComponent>());
 		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
-		m_PhysicsActorObserver = CreateObserver(entt::collector.update<TransformComponent>().where<RigidBodyComponent>());
+		m_PhysicsActorObserver = CreateObserver(entt::collector.update<TransformComponent>().where<RigidBodyComponent>(ExcludeComponents<IgnoreSyncTransformComponent>));
+		m_PhysicsShapeObserver = CreateObserver(entt::collector.update<TransformComponent>().where<ChildColliderComponent>());
 		m_PhysicsControllerObserver = CreateObserver(entt::collector.update<TransformComponent>().where<CharacterControllerComponent>());
 	}
 
@@ -363,7 +364,26 @@ namespace ZeoEngine {
 		m_CameraObserver->disconnect();
 		m_BoundsObserver->disconnect();
 		m_PhysicsActorObserver->disconnect();
+		m_PhysicsShapeObserver->disconnect();
 		m_PhysicsControllerObserver->disconnect();
+	}
+
+	static void UpdatePhysicsActorsTransform(const Scene& scene, const PhysXScene* physicsScene, const Entity& entity)
+	{
+		if (const auto* actor = physicsScene->GetActor(entity))
+		{
+			Vec3 translation, rotation, scale;
+			entity.GetWorldTransform(translation, rotation, scale);
+			actor->SetTransform(translation, rotation);
+
+			for (const UUID childID : entity.GetChildren())
+			{
+				if (const Entity child = scene.GetEntityByUUID(childID))
+				{
+					UpdatePhysicsActorsTransform(scene, physicsScene, child);
+				}
+			}
+		}
 	}
 
 	void LevelObserverSystem::OnUpdate(Scene& scene)
@@ -386,12 +406,44 @@ namespace ZeoEngine {
 			if (const auto* physicsScene = scene.GetPhysicsScene())
 			{
 				const Entity entity{ e, scene.shared_from_this() };
-				if (const auto* actor = physicsScene->GetActor(entity))
+				UpdatePhysicsActorsTransform(scene, physicsScene, entity);
+			}
+		});
+		// Clear tag component added in PhysXActor::SynchronizeTransform
+		scene.ClearTagComponents<IgnoreSyncTransformComponent>();
+
+		m_PhysicsShapeObserver->each([&scene](const auto e)
+		{
+			if (const auto* physicsScene = scene.GetPhysicsScene())
+			{
+				const Entity entity{ e, scene.shared_from_this() };
+				Entity current = entity;
+				Entity parent;
+				Mat4 transform = entity.GetTransform();
+				while ((parent = current.GetParentEntity()))
 				{
-					// Set transform back to physics actor
-					actor->SetTransform(entity.GetTransform());
+					if (parent.HasComponent<RigidBodyComponent>())
+					{
+						break;
+					}
+
+					current = parent;
+					transform = parent.GetTransform() * transform;
+				}
+
+				if (const auto* actor = physicsScene->GetActor(parent))
+				{
+					const auto* colliders = actor->GetCollidersByEntity(entity);
+					if (colliders)
+					{
+						for (const auto& collider : *colliders)
+						{
+							collider->SetTransform(transform);
+						}
+					}
 				}
 			}
+
 		});
 
 		m_PhysicsControllerObserver->each([&scene](const auto e)
@@ -575,6 +627,8 @@ namespace ZeoEngine {
 			physicsScene->CreateActor(entity);
 		}
 
+		ValidateColliders();
+
 		auto characterControllerView = scene->GetComponentView<CharacterControllerComponent>();
 		for (const auto e : characterControllerView)
 		{
@@ -597,6 +651,42 @@ namespace ZeoEngine {
 			}
 		}
 #endif
+	}
+
+	void PhysicsSystem::ValidateColliders()
+	{
+		const auto scene = GetScene();
+		auto boxView = scene->GetComponentView<BoxColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : boxView)
+		{
+			const Entity entity{ e, scene };
+			if (!entity.HasComponent<ChildColliderComponent>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has BoxColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
+
+		auto sphereView = scene->GetComponentView<SphereColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : sphereView)
+		{
+			const Entity entity{ e, scene };
+
+			if (!entity.HasComponent<ChildColliderComponent>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has SphereColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
+
+		auto capsuleView = scene->GetComponentView<CapsuleColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : capsuleView)
+		{
+			const Entity entity{ e, scene };
+
+			if (!entity.HasComponent<ChildColliderComponent>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has CapsuleColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
 	}
 
 	void PhysicsSystem::OnPlayStop()

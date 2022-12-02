@@ -117,6 +117,7 @@ namespace ZeoEngine {
 		Scope<entt::observer> m_CameraObserver;
 		Scope<entt::observer> m_BoundsObserver;
 		Scope<entt::observer> m_PhysicsActorObserver;
+		Scope<entt::observer> m_PhysicsShapeObserver;
 		Scope<entt::observer> m_PhysicsControllerObserver;
 	};
 
@@ -195,6 +196,9 @@ namespace ZeoEngine {
 		virtual void OnPlayStop() override;
 		virtual void OnSimulationStart() override;
 		virtual void OnSimulationStop() override;
+
+	private:
+		void ValidateColliders();
 	};
 
 	class PhysicsSystem2D : public PhysicsSystem

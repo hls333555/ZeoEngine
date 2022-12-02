@@ -15,6 +15,35 @@ namespace ZeoEngine {
 		Entity(entt::entity handle, const Ref<Scene>& scene);
 		Entity(const Entity&) = default;
 
+		template<typename T>
+		void AddTagComponent() const
+		{
+			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
+			m_Scene.lock()->emplace<T>(m_EntityHandle);
+		}
+
+		template<typename T>
+		auto RemoveTagComponentIfExist() const
+		{
+			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+			return m_Scene.lock()->remove<T>(m_EntityHandle);
+		}
+
+		template<typename T>
+		auto RemoveTagComponent() const
+		{
+			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
+			return m_Scene.lock()->erase<T>(m_EntityHandle);
+		}
+
+		template<typename T>
+		bool HasTagComponent() const
+		{
+			return HasComponent<T>();
+		}
+
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{
@@ -43,12 +72,12 @@ namespace ZeoEngine {
 		}
 
 		template<typename T>
-		auto RemoveComponent()
+		void RemoveComponent()
 		{
 			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
 			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			RemoveComponentID(entt::type_hash<T>::value());
-			return m_Scene.lock()->erase<T>(m_EntityHandle);
+			m_Scene.lock()->erase<T>(m_EntityHandle);
 		}
 
 		template<typename T>
@@ -103,8 +132,12 @@ namespace ZeoEngine {
 		Mat4 GetTransform() const;
 		Mat4 GetWorldTransform() const;
 		void GetWorldTransform(Vec3& outTranslation, Vec3& outRotation, Vec3& outScale) const;
-		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
 		void SetTransform(const Mat4& transform);
+		void SetTransform(const Vec3& translation, const Vec3& rotation);
+		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
+		void SetWorldTransform(const Mat4& transform);
+		void SetWorldTransform(const Vec3& translation, const Vec3& rotation);
+		void SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
 		const Vec3& GetTranslation() const;
 		void SetTranslation(const Vec3& translation);
 		Vec3 GetRotation() const;
