@@ -11,20 +11,23 @@
 
 namespace ZeoEngine {
 
-	class LevelPreviewObserverSystem : public LevelObserverSystem
+	class LevelViewCameraSystem : public CameraSystem
 	{
 	public:
-		virtual void OnBind() override;
+		using CameraSystem::CameraSystem;
+	private:
+		virtual void OnCameraComponentAdded(Scene& scene, entt::entity e) const override;
 	};
 
-	void LevelPreviewObserverSystem::OnBind()
+	void LevelViewCameraSystem::OnCameraComponentAdded(Scene& scene, entt::entity e) const
 	{
-		LevelObserverSystem::OnBind();
+		CameraSystem::OnCameraComponentAdded(scene, e);
 
 		// Level View Panel is not created yet when the very first scene creates
 		if (const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW))
 		{
-			BindOnComponentAdded<CameraComponent, &ViewPanelBase::OnCameraComponentAdded>(*levelView);
+			const Entity entity{ e, scene.shared_from_this() };
+			levelView->UpdateViewportSizeOnSceneCamera(entity.GetComponent<CameraComponent>());
 		}
 	}
 
@@ -32,10 +35,17 @@ namespace ZeoEngine {
 	{
 		EditorPreviewWorldBase::OnAttach();
 
-		RegisterSystem<ParticleUpdateSystem>(this);
-		RegisterSystem<PhysicsSystem>(this);
 		RegisterSystem<CommandSystem>(this);
+		RegisterSystem<BoundsSystem>(this);
+		RegisterSystem<LevelViewCameraSystem>(this);
+		RegisterSystem<MeshSystem>(this);
+		RegisterSystem<DirectionalLightSystem>(this);
+		RegisterSystem<PointLightSystem>(this);
+		RegisterSystem<SpotLightSystem>(this);
+		RegisterSystem<ParticleUpdateSystem>(this);
+
 		RegisterSystem<ScriptSystem>(this);
+		RegisterSystem<PhysicsSystem>(this);
 
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
 	}
@@ -48,18 +58,18 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelPreviewWorld::PostSceneCreate(const Ref<Scene>& scene)
-	{
-		m_SceneForEdit = scene;
-		SetContextEntity({});
-	}
-
 	Ref<Scene> LevelPreviewWorld::CreateScene()
 	{
 		SceneSpec spec;
-		spec.SceneObserverSystem = CreateScope<LevelPreviewObserverSystem>();
 		spec.bIsPhysicalScene = true;
-		return CreateRef<Scene>(std::move(spec));
+		return CreateRef<Scene>(spec);
+	}
+
+	void LevelPreviewWorld::PostSceneCreate()
+	{
+		m_SceneForEdit = GetActiveScene();
+		// Clear last scene's selected entity so that component inspector will not reference an invalid entity
+		SetContextEntity({});
 	}
 
 	Ref<SceneRenderer> LevelPreviewWorld::CreateSceneRenderer()

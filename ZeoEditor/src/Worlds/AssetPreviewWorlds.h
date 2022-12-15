@@ -21,15 +21,14 @@ namespace ZeoEngine {
 		virtual ~AssetPreviewWorldBase();
 
 		virtual void OnAttach() override;
+		virtual void PostAttach() override;
 
 		virtual AssetView* GetAssetView() const override { return m_AssetView.get(); }
 
 		void SaveCurrentAsset() const;
 
 	private:
-		virtual void PostSceneCreate(const Ref<Scene>& scene) override;
-
-		virtual Entity CreatePreviewEntity(Scene& scene) = 0;
+		virtual Entity CreatePreviewEntity() = 0;
 		virtual Scope<AssetView> CreateAssetView() = 0;
 
 	private:
@@ -41,10 +40,11 @@ namespace ZeoEngine {
 	public:
 		using AssetPreviewWorldBase::AssetPreviewWorldBase;
 
+		virtual void OnAttach() override;
+
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
-		virtual Entity CreatePreviewEntity(Scene& scene) override;
+		virtual Entity CreatePreviewEntity() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 
@@ -60,9 +60,8 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
-		virtual Entity CreatePreviewEntity(Scene& scene) override;
+		virtual Entity CreatePreviewEntity() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 
@@ -75,10 +74,11 @@ namespace ZeoEngine {
 	public:
 		using AssetPreviewWorldBase::AssetPreviewWorldBase;
 
+		virtual void OnAttach() override;
+
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
-		virtual Entity CreatePreviewEntity(Scene& scene) override;
+		virtual Entity CreatePreviewEntity() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 
@@ -94,9 +94,8 @@ namespace ZeoEngine {
 		virtual void OnAttach() override;
 
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
-		virtual Entity CreatePreviewEntity(Scene& scene) override;
+		virtual Entity CreatePreviewEntity() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 
@@ -110,9 +109,8 @@ namespace ZeoEngine {
 		using AssetPreviewWorldBase::AssetPreviewWorldBase;
 
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
-		virtual Entity CreatePreviewEntity(Scene& scene) override;
+		virtual Entity CreatePreviewEntity() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
 

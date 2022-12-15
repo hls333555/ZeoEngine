@@ -135,12 +135,6 @@ namespace ZeoEngine {
 		return { mx, my };
 	}
 
-	void ViewPanelBase::OnCameraComponentAdded(Scene& scene, entt::entity e) const
-	{
-		const Entity entity{ e, scene.shared_from_this() };
-		UpdateViewportSizeOnSceneCamera(entity.GetComponent<CameraComponent>());
-	}
-
 	void ViewPanelBase::OnViewportResize(const Vec2& size) const
 	{
 		// Broadcast changes

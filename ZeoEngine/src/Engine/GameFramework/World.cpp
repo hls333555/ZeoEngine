@@ -14,7 +14,13 @@ namespace ZeoEngine {
 	{
 	}
 
-	WorldBase::~WorldBase() = default;
+	WorldBase::~WorldBase()
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnDestroy();
+		}
+	}
 
 	void WorldBase::OnAttach()
 	{
@@ -50,12 +56,6 @@ namespace ZeoEngine {
 			}
 		}
 
-		{
-			ZE_PROFILE_FUNC("Scene: OnUpdate");
-
-			m_ActiveScene->OnUpdate();
-		}
-
 		if (m_SceneRenderer)
 		{
 			ZE_PROFILE_FUNC("SceneRenderer: OnRender");
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 		const Ref<Scene> scene = CreateScene();
 		ScriptEngine::SetSceneContext(scene);
 		SetActiveScene(scene);
-		PostSceneCreate(scene); // TODO:
+		PostSceneCreate();
 	}
 
 	void WorldBase::SetActiveScene(Ref<Scene> scene)

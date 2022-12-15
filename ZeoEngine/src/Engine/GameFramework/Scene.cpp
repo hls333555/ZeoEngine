@@ -38,46 +38,17 @@ namespace ZeoEngine {
 
 	}
 
-	SceneSpec SceneSpec::Clone()
-	{
-		SceneSpec spec;
-		spec.SceneObserverSystem = SceneObserverSystem->Clone();
-		spec.bIsPhysicalScene = bIsPhysicalScene;
-		return spec;
-	}
-
 	Scene::Scene(SceneSpec spec)
-		: m_Spec(std::move(spec))
+		: m_Spec(spec)
 		, m_ContextShared(CreateRef<SceneContext>())
 	{
-		if (m_Spec.SceneObserverSystem)
-		{
-			m_Spec.SceneObserverSystem->SetScene(this);
-			m_Spec.SceneObserverSystem->OnBind();
-		}
 	}
 
-	Scene::~Scene()
-	{
-		if (m_Spec.SceneObserverSystem)
-		{
-			m_Spec.SceneObserverSystem->OnUnbind();
-		}
-	}
-
-	void Scene::OnUpdate()
-	{
-		if (m_Spec.SceneObserverSystem)
-		{
-			ZE_PROFILE_FUNC("SceneObserverSystem: OnUpdate");
-
-			m_Spec.SceneObserverSystem->OnUpdate(*this);
-		}
-	}
+	Scene::~Scene() = default;
 
 	Ref<Scene> Scene::Copy()
 	{
-		auto newScene = CreateRef<Scene>(m_Spec.Clone());
+		auto newScene = CreateRef<Scene>(m_Spec);
 		newScene->m_ContextShared = m_ContextShared;
 		const auto coreView = GetComponentView<CoreComponent>();
 		for (const auto e : coreView)

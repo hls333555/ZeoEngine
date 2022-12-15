@@ -34,7 +34,8 @@ namespace ZeoEngine {
 
 		std::pair<float, float> GetMouseViewportPosition() const;
 
-		void OnCameraComponentAdded(Scene& scene, entt::entity e) const;
+		/** Resize non-FixedAspectRatio camera. */
+		void UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const;
 
 	protected:
 		virtual void ProcessRender() override;
@@ -53,9 +54,6 @@ namespace ZeoEngine {
 		bool OnKeyPressed(KeyPressedEvent& e) const;
 
 		void OnViewportResize(const Vec2& size) const;
-
-		/** Resize non-FixedAspectRatio camera. */
-		void UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const;
 
 	public:
 		entt::sink<entt::sigh<void(U32, U32)>> m_OnViewportResize{ m_OnViewportResizeDel };

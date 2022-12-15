@@ -40,7 +40,7 @@ namespace ZeoEngine {
 
 	private:
 		virtual Ref<Scene> CreateScene() override;
-		virtual void PostSceneCreate(const Ref<Scene>& scene) override;
+		virtual void PostSceneCreate() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;

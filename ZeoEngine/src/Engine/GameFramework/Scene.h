@@ -26,22 +26,16 @@ namespace ZeoEngine {
 
 	struct SceneSpec
 	{
-		Scope<class SceneObserverSystemBase> SceneObserverSystem;
 		bool bIsPhysicalScene = false;
-
-		SceneSpec Clone();
 	};
 
 	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
-		friend class SceneObserverSystemBase;
 
 	public:
-		explicit Scene(SceneSpec spec);
+		explicit Scene(SceneSpec spec = SceneSpec());
 		~Scene();
-
-		void OnUpdate();
 
 		// We cannot copy Scene through copy constructor as it is a deleted function
 		// So we construct a new scene and do the copy ourselves
@@ -141,9 +135,6 @@ namespace ZeoEngine {
 		using entt::registry::get;
 		using entt::registry::all_of;
 		using entt::registry::patch;
-		using entt::registry::on_construct;
-		using entt::registry::on_update;
-		using entt::registry::on_destroy;
 
 		void SortEntities();
 
