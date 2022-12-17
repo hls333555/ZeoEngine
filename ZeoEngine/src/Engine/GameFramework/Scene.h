@@ -26,7 +26,7 @@ namespace ZeoEngine {
 
 	struct SceneSpec
 	{
-		bool bIsPhysicalScene = false;
+		
 	};
 
 	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>

@@ -177,6 +177,7 @@ namespace ZeoEngine {
 	{
 		const auto& controllerComp = m_Entity.GetComponent<CharacterControllerComponent>();
 		const Vec3 translation = PhysXUtils::FromPhysXExtendedVector(m_Controller->getPosition()) - controllerComp.Offset;
+		// TODO: Change to SetWorldTranslation
 		auto& transformComp = m_Entity.GetComponent<TransformComponent>();
 		transformComp.Translation = translation;
 		// Queue an update for bounds calculation as we do not call patch on TransformComponent

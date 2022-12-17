@@ -58,13 +58,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<Scene> LevelPreviewWorld::CreateScene()
-	{
-		SceneSpec spec;
-		spec.bIsPhysicalScene = true;
-		return CreateRef<Scene>(spec);
-	}
-
 	void LevelPreviewWorld::PostSceneCreate()
 	{
 		m_SceneForEdit = GetActiveScene();

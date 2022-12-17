@@ -64,11 +64,7 @@ namespace ZeoEngine {
 
 	PhysXScene* Scene::CreatePhysicsScene()
 	{
-		if (m_Spec.bIsPhysicalScene)
-		{
-			return &AddContext<PhysXScene>(this);
-		}
-		return nullptr;
+		return &AddContext<PhysXScene>(this);
 	}
 
 	PhysXScene* Scene::GetPhysicsScene()

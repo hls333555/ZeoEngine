@@ -459,7 +459,7 @@ namespace ZeoEngine {
 
 			const Mat4 childLocalTransform = localTransform * child.GetTransform();
 			AddColliders(child, collisionDetectionType, childLocalTransform);
-			child.AddTagComponent<ChildColliderComponent>(); // This tag is added at runtime, so it will get cleared on end play
+			child.AddTagComponent<ChildColliderComponent>(); // This tag is added at runtime, so it will get cleared automatically on runtime ends
 			AddChildColliders(child, collisionDetectionType, childLocalTransform);
 		}
 	}
@@ -488,7 +488,7 @@ namespace ZeoEngine {
 		// Physics actor's transform does not have scale property
 		m_Entity.SetWorldTransform(translation, rotation);
 		// We do not need to set transform back to physics actor through observer as synchronization is already done here
-		// See m_PhysicsActorObserver in LevelObserverSystem::OnUpdate
+		// See UpdatePhysicsActorsTransform in PhysicsSystem
 		m_Entity.AddTagComponent<IgnoreSyncTransformComponent>();
 	}
 

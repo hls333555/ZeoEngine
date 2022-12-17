@@ -39,7 +39,6 @@ namespace ZeoEngine {
 		void OnDeleteEntity();
 
 	private:
-		virtual Ref<Scene> CreateScene() override;
 		virtual void PostSceneCreate() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 

@@ -583,15 +583,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	// TODO:
 	static void OnCharacterControllerObserverUpdate(Scene& scene, Entity entity)
 	{
 		if (const auto* physicsScene = scene.GetPhysicsScene())
 		{
 			if (const auto* controller = physicsScene->GetCharacterController(entity))
 			{
-				// Set transform back to physics character controller
 				const auto& controllerComp = entity.GetComponent<CharacterControllerComponent>();
+				// TODO: Change to GetWorldTranslation
 				controller->SetTranslation(entity.GetTranslation() + controllerComp.Offset);
 			}
 		}
