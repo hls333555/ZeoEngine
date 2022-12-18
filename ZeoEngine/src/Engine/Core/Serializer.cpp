@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/Tags.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Engine/Utils/ReflectionUtils.h"
@@ -428,6 +429,7 @@ namespace ZeoEngine {
 	{
 		const UUID uuid = entityNode["Entity"].as<UUID>();
 		Entity deserializedEntity = scene.CreateEntityWithUUID(uuid);
+		deserializedEntity.AddTag<Tag::IsDeserializing>();
 
 		if (auto components = entityNode["Components"])
 		{
@@ -448,6 +450,8 @@ namespace ZeoEngine {
 				}
 			}
 		}
+
+		deserializedEntity.RemoveTag<Tag::IsDeserializing>();
 	}
 
 }

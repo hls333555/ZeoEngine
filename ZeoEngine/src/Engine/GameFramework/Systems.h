@@ -148,8 +148,7 @@ namespace ZeoEngine {
 		using ISystem::ISystem;
 
 		virtual void OnCreate();
-		virtual void OnUpdateEditor(DeltaTime dt);
-		virtual void OnUpdateRuntime(DeltaTime dt);
+		virtual void OnUpdate(DeltaTime dt);
 		virtual void OnDestroy();
 
 		virtual void OnPlayStart() {}
@@ -183,6 +182,26 @@ namespace ZeoEngine {
 	private:
 		std::vector<Scope<IComponentEventBinder>> m_ComponentEventBinders;
 		std::vector<Scope<IComponentObserver>> m_ComponentObservers;
+	};
+
+	class TransformSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnCreate() override;
+		virtual void OnUpdate(DeltaTime dt) override;
+
+	private:
+		void OnTransformComponentUpdated(Scene& scene, entt::entity e) const;
+	};
+
+	class PostPhysicsTransformSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnUpdate(DeltaTime dt) override;
 	};
 
 	class CameraSystem : public SystemBase
@@ -298,8 +317,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnUpdateEditor(DeltaTime dt) override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 	};
 
 	class ParticlePreviewUpdateSystem : public ParticleUpdateSystem
@@ -307,8 +325,7 @@ namespace ZeoEngine {
 	public:
 		using ParticleUpdateSystem::ParticleUpdateSystem;
 
-		virtual void OnUpdateEditor(DeltaTime dt) override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 	};
 
 	class ScriptSystem : public SystemBase
@@ -317,7 +334,7 @@ namespace ZeoEngine {
 		using SystemBase::SystemBase;
 
 		virtual void OnCreate() override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnPlayStart() override;
 		virtual void OnPlayStop() override;
@@ -332,8 +349,7 @@ namespace ZeoEngine {
 	public:
 		using SystemBase::SystemBase;
 
-		virtual void OnCreate() override;
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnPlayStart() override;
 		virtual void OnPlayStop() override;
@@ -349,7 +365,7 @@ namespace ZeoEngine {
 	public:
 		using PhysicsSystem::PhysicsSystem;
 
-		virtual void OnUpdateRuntime(DeltaTime dt) override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual void OnPlayStart() override;
 		virtual void OnPlayStop() override;

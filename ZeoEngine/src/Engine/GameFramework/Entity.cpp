@@ -3,6 +3,7 @@
 
 #include "Engine/Utils/ReflectionUtils.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/Tags.h"
 
 namespace ZeoEngine {
 	
@@ -42,28 +43,12 @@ namespace ZeoEngine {
 		return GetComponent<TransformComponent>().GetTransform();
 	}
 
-	Mat4 Entity::GetWorldTransform() const
-	{
-		Mat4 parentTransform{ 1.0f };
-		if (const Entity parent = GetParentEntity())
-		{
-			parentTransform = parent.GetWorldTransform();
-		}
-
-		return parentTransform * GetTransform();
-	}
-
-	void Entity::GetWorldTransform(Vec3& outTranslation, Vec3& outRotation, Vec3& outScale) const
-	{
-		const Mat4 worldTransform = GetWorldTransform();
-		Math::DecomposeTransform(worldTransform, outTranslation, outRotation, outScale);
-	}
-
 	void Entity::SetTransform(const Mat4& transform)
 	{
-		Vec3 translation, rotation, scale;
-		Math::DecomposeTransform(transform, translation, rotation, scale);
-		SetTransform(translation, rotation, scale);
+		PatchComponent<TransformComponent>([&transform](TransformComponent& transformComp)
+		{
+			transformComp.SetTransform(transform);
+		});
 	}
 
 	void Entity::SetTransform(const Vec3& translation, const Vec3& rotation)
@@ -83,54 +68,6 @@ namespace ZeoEngine {
 			transformComp.Rotation = glm::degrees(rotation);
 			transformComp.Scale = scale;
 		});
-	}
-
-	void Entity::SetWorldTransform(const Mat4& transform)
-	{
-		const Entity parent = GetParentEntity();
-		if (!parent)
-		{
-			SetTransform(transform);
-			return;
-		}
-
-		const Mat4 parentTransform = parent.GetWorldTransform();
-		const Mat4 localTransform = glm::inverse(parentTransform) * transform;
-		Vec3 localTranslation, localRotation, localScale;
-		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
-		SetTransform(localTranslation, localRotation, localScale);
-	}
-
-	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation)
-	{
-		const Entity parent = GetParentEntity();
-		if (!parent)
-		{
-			SetTransform(translation, rotation);
-			return;
-		}
-
-		const Mat4 parentTransform = parent.GetWorldTransform();
-		const Mat4 localTransform = glm::inverse(parentTransform) * Math::ComposeTransform(translation, rotation, Vec3(1.0f));
-		Vec3 localTranslation, localRotation, localScale;
-		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
-		SetTransform(localTranslation, localRotation);
-	}
-
-	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
-	{
-		const Entity parent = GetParentEntity();
-		if (!parent)
-		{
-			SetTransform(translation, rotation, scale);
-			return;
-		}
-
-		const Mat4 parentTransform = parent.GetWorldTransform();
-		const Mat4 localTransform = glm::inverse(parentTransform) * Math::ComposeTransform(translation, rotation, scale);
-		Vec3 localTranslation, localRotation, localScale;
-		Math::DecomposeTransform(localTransform, localTranslation, localRotation, localScale);
-		SetTransform(localTranslation, localRotation, localScale);
 	}
 
 	const Vec3& Entity::GetTranslation() const
@@ -172,6 +109,145 @@ namespace ZeoEngine {
 		});
 	}
 
+	Mat4 Entity::GetWorldTransform() const
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			return GetComponent<WorldTransformComponent>().GetTransform();
+		}
+
+		return GetTransform();
+	}
+
+	void Entity::SetWorldTransform(const Mat4& transform)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&transform](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.SetTransform(transform);
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetTransform(transform);
+		}
+	}
+
+	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&translation, &rotation](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.Translation = translation;
+				worldTransformComp.Rotation = rotation;
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetTransform(translation, rotation);
+		}
+	}
+
+	void Entity::SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&translation, &rotation, &scale](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.Translation = translation;
+				worldTransformComp.Rotation = rotation;
+				worldTransformComp.Scale = scale;
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetTransform(translation, rotation, scale);
+		}
+	}
+
+	const Vec3& Entity::GetWorldTranslation() const
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			return GetComponent<WorldTransformComponent>().Translation;
+		}
+
+		return GetTranslation();
+	}
+
+	void Entity::SetWorldTranslation(const Vec3& translation)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&translation](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.Translation = translation;
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetTranslation(translation);
+		}
+	}
+
+	Vec3 Entity::GetWorldRotation() const
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			return GetComponent<WorldTransformComponent>().Rotation;
+		}
+
+		return GetRotation();
+	}
+
+	void Entity::SetWorldRotation(const Vec3& rotation)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&rotation](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.Rotation = rotation;
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetRotation(rotation);
+		}
+	}
+
+	const Vec3& Entity::GetWorldScale() const
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			return GetComponent<WorldTransformComponent>().Scale;
+		}
+
+		return GetScale();
+	}
+
+	void Entity::SetWorldScale(const Vec3& scale)
+	{
+		if (HasComponent<WorldTransformComponent>())
+		{
+			PatchComponent<WorldTransformComponent>([&scale](WorldTransformComponent& worldTransformComp)
+			{
+				worldTransformComp.Scale = scale;
+			});
+			MarkTransformDirty();
+		}
+		else
+		{
+			SetScale(scale);
+		}
+	}
+
 	Vec3 Entity::GetForwardVector() const
 	{
 		return Math::GetForwardVector(GetRotation());
@@ -200,8 +276,33 @@ namespace ZeoEngine {
 
 	BoxSphereBounds Entity::GetDefaultBounds() const
 	{
-		const auto worldTransform = GetWorldTransform();
-		return { Math::GetTranslationFromTransform(worldTransform), { 1.0f, 1.0f, 1.0f }, 1.0f };
+		return { GetWorldTranslation(), { 1.0f, 1.0f, 1.0f }, 1.0f };
+	}
+
+	// See TransformSystem::OnUpdate
+	void Entity::MarkWorldTransformDirty() const
+	{
+		AddTag<Tag::AnyTransformDirty>();
+		RemoveTagIfExist<Tag::LocalTransformDirty>();
+		MarkTransformDirtyRecursively(*this);
+	}
+
+	void Entity::MarkTransformDirty() const
+	{
+		AddTag<Tag::AnyTransformDirty>();
+		AddTag<Tag::LocalTransformDirty>();
+		MarkTransformDirtyRecursively(*this);
+	}
+
+	void Entity::MarkTransformDirtyRecursively(const Entity& entity) const
+	{
+		for (const UUID childID : entity.GetChildren())
+		{
+			Entity child = GetScene().GetEntityByUUID(childID);
+			child.AddTag<Tag::AnyTransformDirty>();
+
+			MarkTransformDirtyRecursively(child);
+		}
 	}
 
 	const BoxSphereBounds& Entity::GetBounds() const

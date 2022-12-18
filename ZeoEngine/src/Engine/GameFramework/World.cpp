@@ -34,25 +34,12 @@ namespace ZeoEngine {
 
 		if (!m_bActive) return;
 
-		if (IsRuntime())
 		{
-			if (IsRunning())
-			{
-				ZE_PROFILE_FUNC("Systems: OnUpdateRuntime");
-
-				for (const auto& system : m_Systems)
-				{
-					system->OnUpdateRuntime(dt);
-				}
-			}
-		}
-		else
-		{
-			ZE_PROFILE_FUNC("Systems: OnUpdateEditor");
+			ZE_PROFILE_FUNC("Systems: OnUpdate");
 
 			for (const auto& system : m_Systems)
 			{
-				system->OnUpdateEditor(dt);
+				system->OnUpdate(dt);
 			}
 		}
 

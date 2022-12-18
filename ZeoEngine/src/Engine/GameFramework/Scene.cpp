@@ -128,6 +128,9 @@ namespace ZeoEngine {
 		auto& parentComp = parent.GetComponent<RelationshipComponent>();
 		parentComp.ChildEntities.emplace_back(entity.GetUUID());
 
+		auto& transformComp = entity.GetComponent<TransformComponent>();
+		entity.AddComponent<WorldTransformComponent>(transformComp.Translation, transformComp.GetRotationInRadians(), transformComp.Scale);
+
 		Utils::ToLocalSpaceTransform(entity);
 	}
 
@@ -145,6 +148,8 @@ namespace ZeoEngine {
 
 		auto& childComp = entity.GetComponent<RelationshipComponent>();
 		childComp.ParentEntity = 0;
+
+		entity.RemoveComponent<WorldTransformComponent>();
 	}
 
 	// TODO: Should duplicate submesh entities

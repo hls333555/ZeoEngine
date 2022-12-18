@@ -76,8 +76,7 @@ namespace ZeoEngine {
 	{
 		const auto& boxComp = entity.GetComponent<BoxColliderComponent>();
 
-		Vec3 translation, rotation, scale;
-		entity.GetWorldTransform(translation, rotation, scale);
+		const Vec3& scale = entity.GetWorldScale();
 		const Vec3 scaledSize = scale * boxComp.Size;
 		const auto box = physx::PxBoxGeometry(scaledSize.x * 0.5f, scaledSize.y * 0.5f, scaledSize.z * 0.5f);
 		CreateShape(entity, actor, box, boxComp, collisionDetectionType, transform);
@@ -93,8 +92,7 @@ namespace ZeoEngine {
 	{
 		const auto& sphereComp = entity.GetComponent<SphereColliderComponent>();
 
-		Vec3 translation, rotation, scale;
-		entity.GetWorldTransform(translation, rotation, scale);
+		const Vec3& scale = entity.GetWorldScale();
 		const float largestScale = glm::max(scale.x, glm::max(scale.y, scale.z));
 		const auto sphere = physx::PxSphereGeometry(sphereComp.Radius * largestScale);
 		CreateShape(entity, actor, sphere, sphereComp, collisionDetectionType, transform);
@@ -110,8 +108,7 @@ namespace ZeoEngine {
 	{
 		const auto& capsuleComp = entity.GetComponent<CapsuleColliderComponent>();
 
-		Vec3 translation, rotation, scale;
-		entity.GetWorldTransform(translation, rotation, scale);
+		const Vec3& scale = entity.GetWorldScale();
 		const float radiusScale = glm::max(scale.x, scale.z);
 		const auto capsule = physx::PxCapsuleGeometry(capsuleComp.Radius * radiusScale, (capsuleComp.Height * 0.5f) * scale.y);
 		CreateShape(entity, actor, capsule, capsuleComp, collisionDetectionType, transform);

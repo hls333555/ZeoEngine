@@ -41,8 +41,7 @@ namespace ZeoEngine {
 				{
 					tintColor = entity.GetComponent<SpotLightComponent>().Color;
 				}
-				const auto worldTransform = entity.GetWorldTransform();
-				GetSceneRenderer()->DrawBillboard(Math::GetTranslationFromTransform(worldTransform), billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
+				GetSceneRenderer()->DrawBillboard(entity.GetWorldTranslation(), billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
 			}
 		}
 	}
@@ -87,8 +86,8 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = directionalLightView.get(e);
 			Entity entity{ e, GetScene() };
-			Vec3 translation, rotation, scale;
-			entity.GetWorldTransform(translation, rotation, scale);
+			const Vec3& translation = entity.GetWorldTranslation();
+			const Vec3 rotation = entity.GetWorldRotation();
 			GetSceneRenderer()->SetupDirectionalLight(rotation, lightComp);
 
 			// Draw arrow visualizer when selected
@@ -108,8 +107,7 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = directionalLightView.get(e);
 			Entity entity{ e, GetScene() };
-			Vec3 translation, rotation, scale;
-			entity.GetWorldTransform(translation, rotation, scale);
+			const Vec3 rotation = entity.GetWorldRotation();
 			GetSceneRenderer()->SetupDirectionalLight(rotation, lightComp);
 		}
 	}
@@ -121,8 +119,7 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = pointLightView.get(e);
 			Entity entity{ e, GetScene() };
-			const Mat4 worldTransform = entity.GetWorldTransform();
-			const Vec3 translation = Math::GetTranslationFromTransform(worldTransform);
+			const Vec3 translation = entity.GetWorldTranslation();
 			GetSceneRenderer()->AddPointLight(translation, lightComp);
 
 			// Draw sphere visualizer when selected
@@ -140,9 +137,7 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = pointLightView.get(e);
 			Entity entity{ e, GetScene() };
-			const Mat4 worldTransform = entity.GetWorldTransform();
-			const Vec3 translation = Math::GetTranslationFromTransform(worldTransform);
-			GetSceneRenderer()->AddPointLight(translation, lightComp);
+			GetSceneRenderer()->AddPointLight(entity.GetWorldTranslation(), lightComp);
 		}
 	}
 
@@ -153,8 +148,8 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = spotLightView.get(e);
 			Entity entity{ e, GetScene() };
-			Vec3 translation, rotation, scale;
-			entity.GetWorldTransform(translation, rotation, scale);
+			const Vec3& translation = entity.GetWorldTranslation();
+			const Vec3 rotation = entity.GetWorldRotation();
 			GetSceneRenderer()->AddSpotLight(translation, rotation, lightComp);
 
 			// Draw cone visualizer when selected
@@ -174,8 +169,8 @@ namespace ZeoEngine {
 		{
 			auto [lightComp] = spotLightView.get(e);
 			Entity entity{ e, GetScene() };
-			Vec3 translation, rotation, scale;
-			entity.GetWorldTransform(translation, rotation, scale);
+			const Vec3& translation = entity.GetWorldTranslation();
+			const Vec3 rotation = entity.GetWorldRotation();
 			GetSceneRenderer()->AddSpotLight(translation, rotation, lightComp);
 		}
 	}

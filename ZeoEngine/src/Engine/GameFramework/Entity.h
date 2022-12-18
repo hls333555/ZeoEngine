@@ -15,33 +15,34 @@ namespace ZeoEngine {
 		Entity(entt::entity handle, const Ref<Scene>& scene);
 		Entity(const Entity&) = default;
 
-		template<typename T>
-		void AddTagComponent() const
+		template<U32 TagHash>
+		void AddTag() const
 		{
 			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
-			ZE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
-			m_Scene.lock()->emplace<T>(m_EntityHandle);
+			if (HasTag<TagHash>()) return;
+
+			m_Scene.lock()->emplace<entt::tag<TagHash>>(m_EntityHandle);
 		}
 
-		template<typename T>
-		auto RemoveTagComponentIfExist() const
+		template<U32 TagHash>
+		bool HasTag() const
 		{
 			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
-			return m_Scene.lock()->remove<T>(m_EntityHandle);
+			return m_Scene.lock()->all_of<entt::tag<TagHash>>(m_EntityHandle);
 		}
 
-		template<typename T>
-		auto RemoveTagComponent() const
+		template<U32 TagHash>
+		void RemoveTag() const
 		{
 			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
-			ZE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			return m_Scene.lock()->erase<T>(m_EntityHandle);
+			m_Scene.lock()->erase<entt::tag<TagHash>>(m_EntityHandle);
 		}
 
-		template<typename T>
-		bool HasTagComponent() const
+		template<U32 TagHash>
+		auto RemoveTagIfExist() const
 		{
-			return HasComponent<T>();
+			ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+			return m_Scene.lock()->remove<entt::tag<TagHash>>(m_EntityHandle);
 		}
 
 		template<typename T, typename... Args>
@@ -129,21 +130,29 @@ namespace ZeoEngine {
 		const std::vector<UUID>& GetChildren() const;
 		bool HasAnyChildren() const;
 		const std::string& GetName() const;
+
 		Mat4 GetTransform() const;
-		Mat4 GetWorldTransform() const;
-		void GetWorldTransform(Vec3& outTranslation, Vec3& outRotation, Vec3& outScale) const;
 		void SetTransform(const Mat4& transform);
 		void SetTransform(const Vec3& translation, const Vec3& rotation);
 		void SetTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
-		void SetWorldTransform(const Mat4& transform);
-		void SetWorldTransform(const Vec3& translation, const Vec3& rotation);
-		void SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
 		const Vec3& GetTranslation() const;
 		void SetTranslation(const Vec3& translation);
 		Vec3 GetRotation() const;
 		void SetRotation(const Vec3& rotation);
 		const Vec3& GetScale() const;
 		void SetScale(const Vec3& scale);
+
+		Mat4 GetWorldTransform() const;
+		void SetWorldTransform(const Mat4& transform);
+		void SetWorldTransform(const Vec3& translation, const Vec3& rotation);
+		void SetWorldTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale);
+		const Vec3& GetWorldTranslation() const;
+		void SetWorldTranslation(const Vec3& translation);
+		Vec3 GetWorldRotation() const;
+		void SetWorldRotation(const Vec3& rotation);
+		const Vec3& GetWorldScale() const;
+		void SetWorldScale(const Vec3& scale);
+
 		Vec3 GetForwardVector() const;
 		Vec3 GetRightVector() const;
 		Vec3 GetUpVector() const;
@@ -199,8 +208,13 @@ namespace ZeoEngine {
 		void AddComponentID(U32 compID);
 		void RemoveComponentID(U32 compID);
 
+		void MarkWorldTransformDirty() const;
+
 	private:
 		BoxSphereBounds GetDefaultBounds() const;
+
+		void MarkTransformDirty() const;
+		void MarkTransformDirtyRecursively(const Entity& entity) const;
 
 	private:
 		entt::entity m_EntityHandle{ entt::null };

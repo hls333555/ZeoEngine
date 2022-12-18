@@ -1,9 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Asset/AssetLibrary.h"
@@ -140,9 +137,34 @@ namespace ZeoEngine {
 		{
 			return Math::ComposeTransform(Translation, GetRotationInRadians(), Scale);
 		}
+		void SetTransform(const Mat4& transform)
+		{
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+			Rotation = glm::degrees(Rotation);
+		}
 	};
 
-	struct IgnoreSyncTransformComponent {};
+	// Stores world transform
+	// Only present on child entities
+	struct WorldTransformComponent : public IComponent
+	{
+		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
+		Vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
+		Vec3 Scale = { 1.0f, 1.0f, 1.0f };
+
+		WorldTransformComponent() = default;
+		WorldTransformComponent(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+			: Translation(translation), Rotation(rotation), Scale(scale) {}
+
+		Mat4 GetTransform() const
+		{
+			return Math::ComposeTransform(Translation, Rotation, Scale);
+		}
+		void SetTransform(const Mat4& transform)
+		{
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+		}
+	};
 
 	struct BoundsComponent : public IComponent
 	{
@@ -472,8 +494,6 @@ namespace ZeoEngine {
 		float& GetDynamicFriction() const { return LoadedPhysicsMaterial->m_DynamicFriction; }
 		float& GetBounciness() const { return LoadedPhysicsMaterial->m_Bounciness; }
 	};
-
-	struct ChildColliderComponent {};
 
 	struct ColliderComponentBase : public IComponent
 	{

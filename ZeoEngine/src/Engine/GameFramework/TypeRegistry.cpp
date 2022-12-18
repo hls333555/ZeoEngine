@@ -92,6 +92,11 @@ namespace ZeoEngine {
 			.Field<&TransformComponent::Translation>("Translation")
 			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)
 			.Field<&TransformComponent::Scale>("Scale", std::make_pair(DragSensitivity, 0.1f));
+
+		RegisterComponent<WorldTransformComponent>("WorldTransform", Inherent, HideComponentHeader)
+			.Field<&WorldTransformComponent::Translation>("Translation", HiddenInEditor)
+			.Field<&WorldTransformComponent::Rotation>("Rotation", HiddenInEditor)
+			.Field<&WorldTransformComponent::Scale>("Scale", HiddenInEditor);
 #pragma endregion
 
 #pragma region Rendering

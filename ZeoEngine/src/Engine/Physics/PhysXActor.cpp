@@ -7,6 +7,7 @@
 #include <extensions/PxRigidBodyExt.h>
 
 #include "Engine/GameFramework/Components.h"
+#include "Engine/GameFramework/Tags.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Physics/PhysXUtils.h"
@@ -430,8 +431,7 @@ namespace ZeoEngine {
 			rigidDynamic->setSolverIterationCounts(settings.SolverPositionIterations, settings.SolverVelocityIterations);
 		}
 
-		Vec3 translation, rotation, scale;
-		m_Entity.GetWorldTransform(translation, rotation, scale);
+		const Vec3& scale = m_Entity.GetWorldScale();
 		const Mat4 scaleTransform = glm::scale(Mat4(1.0f), scale);
 		AddColliders(m_Entity, static_cast<U32>(rigidBodyComp.CollisionDetection), scaleTransform);
 		AddChildColliders(m_Entity, static_cast<U32>(rigidBodyComp.CollisionDetection), scaleTransform);
@@ -459,7 +459,7 @@ namespace ZeoEngine {
 
 			const Mat4 childLocalTransform = localTransform * child.GetTransform();
 			AddColliders(child, collisionDetectionType, childLocalTransform);
-			child.AddTagComponent<ChildColliderComponent>(); // This tag is added at runtime, so it will get cleared automatically on runtime ends
+			child.AddTag<Tag::ChildCollider>(); // This tag is added at runtime, so it will get removed automatically on runtime ends
 			AddChildColliders(child, collisionDetectionType, childLocalTransform);
 		}
 	}
@@ -487,9 +487,6 @@ namespace ZeoEngine {
 		GetTransform(translation, rotation);
 		// Physics actor's transform does not have scale property
 		m_Entity.SetWorldTransform(translation, rotation);
-		// We do not need to set transform back to physics actor through observer as synchronization is already done here
-		// See UpdatePhysicsActorsTransform in PhysicsSystem
-		m_Entity.AddTagComponent<IgnoreSyncTransformComponent>();
 	}
 
 }

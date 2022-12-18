@@ -60,10 +60,10 @@ namespace ZeoEngine {
 
 		Entity GetMainCameraEntity();
 
-		template<typename T>
-		void ClearTagComponents()
+		template<U32 TagHash>
+		void ClearTags()
 		{
-			return ClearComponents<T>();
+			return clear<entt::tag<TagHash>>();
 		}
 
 		template<typename T>
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 		}
 
 		template<typename... Owned, typename... Exclude>
-		void GetComponentGroup(entt::exclude_t<Exclude...> exclude = {})
+		auto GetComponentGroup(entt::exclude_t<Exclude...> exclude = {})
 		{
 			return group<Owned...>(exclude);
 		}

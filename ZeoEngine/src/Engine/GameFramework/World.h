@@ -43,6 +43,7 @@ namespace ZeoEngine {
 		virtual Entity GetContextEntity() const { return {}; }
 
 		virtual bool IsRuntime() const { return false; }
+		virtual bool IsRunning() { return false; }
 		virtual bool IsSimulation() const { return false; }
 
 	protected:
@@ -62,9 +63,6 @@ namespace ZeoEngine {
 		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
 
 		void NewSceneRenderer();
-
-		// For internal use purpose
-		virtual bool IsRunning() { return false; }
 
 	public:
 		entt::sink<entt::sigh<void(Scene*, Scene*)>> m_OnActiveSceneChanged{ m_OnActiveSceneChangedDel };

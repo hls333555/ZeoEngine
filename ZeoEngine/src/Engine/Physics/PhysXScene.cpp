@@ -356,13 +356,6 @@ namespace ZeoEngine {
 		{
 			U32 numActiveActors;
 			auto** activeActors = m_PhysicsScene->getActiveActors(numActiveActors);
-			// Sort active actors to ensure parent ones are updated before their children as child transforms rely on its parent's
-			std::sort(activeActors, activeActors + numActiveActors, [](physx::PxActor* lhs, physx::PxActor* rhs)
-			{
-				const auto* lActor = static_cast<PhysXActor*>(lhs->userData);
-				const auto* rActor = static_cast<PhysXActor*>(rhs->userData);
-				return lActor->GetEntity() == rActor->GetEntity().GetParentEntity();
-			});
 			for (uint32_t i = 0; i < numActiveActors; ++i)
 			{
 				auto* actor = static_cast<PhysXActor*>(activeActors[i]->userData);
