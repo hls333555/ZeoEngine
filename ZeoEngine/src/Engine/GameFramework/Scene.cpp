@@ -157,7 +157,13 @@ namespace ZeoEngine {
 	{
 		Entity newEntity = CreateEntity(entity.GetName());
 		const Mat4 worldTransform = entity.GetWorldTransform();
-		newEntity.CopyAllRegisteredComponents(entity, { entt::type_hash<IDComponent>::value(), entt::type_hash<RelationshipComponent>::value() });
+		newEntity.CopyAllRegisteredComponents(entity,
+		{
+			entt::type_hash<CoreComponent>::value(),
+			entt::type_hash<IDComponent>::value(),
+			entt::type_hash<RelationshipComponent>::value(),
+			entt::type_hash<WorldTransformComponent>::value()
+		});
 		newEntity.SetTransform(worldTransform);
 		return newEntity;
 	}

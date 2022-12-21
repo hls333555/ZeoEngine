@@ -315,7 +315,7 @@ namespace ZeoEngine {
 		return m_Scene.expired() ? false : m_Scene.lock()->valid(m_EntityHandle);
 	}
 
-	entt::meta_any Entity::AddComponentByID(U32 compID, bool bIsDeserialize) // TODO: bIsDeserialized
+	entt::meta_any Entity::AddComponentByID(U32 compID, bool bIsDeserialize) const // TODO: bIsDeserialized
 	{
 		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
 		const auto compType = entt::resolve(compID);
@@ -340,9 +340,10 @@ namespace ZeoEngine {
 		return compInstance;
 	}
 
-	void Entity::RemoveComponentByID(U32 compID)
+	void Entity::RemoveComponentByID(U32 compID) const
 	{
 		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		ZE_CORE_ASSERT(HasComponentByID(compID), "Entity does not have component!");
 		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
@@ -357,6 +358,7 @@ namespace ZeoEngine {
 	entt::meta_any Entity::GetComponentByID(U32 compID) const
 	{
 		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
+		ZE_CORE_ASSERT(HasComponentByID(compID), "Entity does not have component!");
 		const auto compType = entt::resolve(compID);
 		if (!compType)
 		{
@@ -402,7 +404,7 @@ namespace ZeoEngine {
 		RemoveComponent<FieldChangeComponent>();
 	}
 
-	void Entity::CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs)
+	void Entity::CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs) const
 	{
 		for (const auto compID : srcEntity.GetRegisteredComponentIDs())
 		{
@@ -413,7 +415,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void Entity::CopyComponentByID(U32 compID, Entity srcEntity)
+	void Entity::CopyComponentByID(U32 compID, Entity srcEntity) const
 	{
 		ZE_CORE_ASSERT(IsValid(), "Entity is not valid!");
 		const auto compType = entt::resolve(compID);
@@ -428,6 +430,7 @@ namespace ZeoEngine {
 		auto* comp = compInstance.try_cast<IComponent>();
 		ZE_CORE_ASSERT(comp);
 		comp->OwnerEntity = *this;
+		AddComponentID(compID);
 	}
 
 	const std::vector<U32>& Entity::GetRegisteredComponentIDs() const
@@ -435,15 +438,19 @@ namespace ZeoEngine {
 		return GetComponent<CoreComponent>().OrderedComponents;
 	}
 
-	void Entity::AddComponentID(U32 compID)
+	void Entity::AddComponentID(U32 compID) const
 	{
 		if (!ReflectionUtils::IsComponentRegistered(compID)) return;
 
 		auto& coreComp = GetComponent<CoreComponent>();
-		coreComp.OrderedComponents.push_back(compID);
+		auto& registeredComps = coreComp.OrderedComponents;
+		if (std::find(registeredComps.begin(), registeredComps.end(), compID) == registeredComps.end())
+		{
+			registeredComps.push_back(compID);
+		}
 	}
 
-	void Entity::RemoveComponentID(U32 compID)
+	void Entity::RemoveComponentID(U32 compID) const
 	{
 		if (!HasComponent<CoreComponent>()) return;
 

@@ -195,18 +195,18 @@ namespace ZeoEngine {
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene.lock() == other.m_Scene.lock(); }
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
-		entt::meta_any AddComponentByID(U32 compID, bool bIsDeserialize = false);
-		void RemoveComponentByID(U32 compID);
+		entt::meta_any AddComponentByID(U32 compID, bool bIsDeserialize = false) const;
+		void RemoveComponentByID(U32 compID) const;
 		entt::meta_any GetComponentByID(U32 compID) const;
 		bool HasComponentByID(U32 compID) const;
 		entt::meta_any GetOrAddComponentByID(U32 compID, bool bIsDeserialize = false);
 		void PatchComponentByID(U32 compID, U32 fieldID);
-		void CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs = {});
-		void CopyComponentByID(U32 compID, Entity srcEntity);
+		void CopyAllRegisteredComponents(Entity srcEntity, const std::vector<U32>& ignoredCompIDs = {}) const;
+		void CopyComponentByID(U32 compID, Entity srcEntity) const;
 
 		const std::vector<U32>& GetRegisteredComponentIDs() const;
-		void AddComponentID(U32 compID);
-		void RemoveComponentID(U32 compID);
+		void AddComponentID(U32 compID) const;
+		void RemoveComponentID(U32 compID) const;
 
 		void MarkWorldTransformDirty() const;
 
