@@ -9,17 +9,17 @@ namespace ZeoEngine::Math {
 
 	Vec3 GetForwardVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 0.0f, 0.0f, -1.0f });
+		return glm::rotate(Quat(rotation), { 0.0f, 0.0f, -1.0f });
 	}
 
 	Vec3 GetRightVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 1.0f, 0.0f, 0.0f });
+		return glm::rotate(Quat(rotation), { 1.0f, 0.0f, 0.0f });
 	}
 
 	Vec3 GetUpVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 0.0f, 1.0f, 0.0f });
+		return glm::rotate(Quat(rotation), { 0.0f, 1.0f, 0.0f });
 	}
 
 	Mat4 ComposeTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
@@ -156,7 +156,7 @@ namespace ZeoEngine::Math {
 		return current + deltaMove;
 	}
 
-	Vec3 InterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
+	Vec3 VInterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
 	{
 		const Vec3 delta = target - current;
 		const float deltaM = glm::length(delta);
@@ -185,7 +185,19 @@ namespace ZeoEngine::Math {
 
 	bool IsNearlyEqual(double x, double y, double errorTolerance)
 	{
-		return  glm::abs(x - y) <= errorTolerance;
+		return glm::abs(x - y) <= errorTolerance;
+	}
+
+	bool IsNearlyEqual(const Vec3& x, const Vec3& y, float errorTolerance)
+	{
+		return glm::abs(x.x - y.x) <= errorTolerance && glm::abs(x.y - y.y) <= errorTolerance && glm::abs(x.z - y.z) <= errorTolerance;
+	}
+
+	Vec3 FindLookAtRotation(const Vec3& from, const Vec3& to, const Vec3& up)
+	{
+		const Vec3 direction = glm::normalize(to - from);
+		const Quat rotation = glm::quatLookAt(direction, up);
+		return glm::eulerAngles(rotation);
 	}
 
 }

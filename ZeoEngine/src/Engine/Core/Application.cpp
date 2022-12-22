@@ -131,8 +131,8 @@ namespace ZeoEngine {
 			if (!m_bMinimized)
 			{
 				{
-					ZE_PROFILE_FUNC("Application Layer::OnUpdate");
-					ZE_SCOPE_PERF("Application Layer::OnUpdate");
+					ZE_PROFILE_FUNC("Application::UpdateLayers");
+					ZE_SCOPE_PERF("Application::UpdateLayers");
 
 					for (auto* layer : m_LayerStack)
 					{
@@ -143,8 +143,8 @@ namespace ZeoEngine {
 				// TODO: This will eventually be in render thread
 				// Render ImGui
 				{
-					ZE_PROFILE_FUNC("Application Layer::OnImGuiRender");
-					ZE_SCOPE_PERF("Application Layer::OnImGuiRender");
+					ZE_PROFILE_FUNC("Application::ImGuiRenderLayers");
+					ZE_SCOPE_PERF("Application::ImGuiRenderLayers");
 
 					m_ImGuiLayer->Begin();
 					{

@@ -24,7 +24,7 @@ namespace ZeoEngine
             set => InternalCalls.TransformComponent_SetTranslation(ID, ref value);
         }
 
-        public Vector3 Rotation
+        public Vector3 Rotation // In radians
         {
             get
             {
@@ -42,6 +42,36 @@ namespace ZeoEngine
                 return scale;
             }
             set => InternalCalls.TransformComponent_SetScale(ID, ref value);
+        }
+
+        public Vector3 WorldTranslation
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetTranslation(ID, out Vector3 translation);
+                return translation;
+            }
+            set => InternalCalls.WorldTransformComponent_SetTranslation(ID, ref value);
+        }
+
+        public Vector3 WorldRotation // In radians
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetRotation(ID, out Vector3 rotation);
+                return rotation;
+            }
+            set => InternalCalls.WorldTransformComponent_SetRotation(ID, ref value);
+        }
+
+        public Vector3 WorldScale
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetScale(ID, out Vector3 scale);
+                return scale;
+            }
+            set => InternalCalls.WorldTransformComponent_SetScale(ID, ref value);
         }
 
         public Vector3 GetForwardVector()

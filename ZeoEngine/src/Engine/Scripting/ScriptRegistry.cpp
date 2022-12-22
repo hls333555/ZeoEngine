@@ -105,6 +105,36 @@ namespace ZeoEngine {
 		ScriptEngine::GetEntityByID(entityID).SetScale(*scale);
 	}
 
+	static void WorldTransformComponent_GetTranslation(UUID entityID, Vec3* outTranslation)
+	{
+		*outTranslation = ScriptEngine::GetEntityByID(entityID).GetWorldTranslation();
+	}
+
+	static void WorldTransformComponent_SetTranslation(UUID entityID, Vec3* translation)
+	{
+		ScriptEngine::GetEntityByID(entityID).SetWorldTranslation(*translation);
+	}
+
+	static void WorldTransformComponent_GetRotation(UUID entityID, Vec3* outRotation)
+	{
+		*outRotation = ScriptEngine::GetEntityByID(entityID).GetWorldRotation();
+	}
+
+	static void WorldTransformComponent_SetRotation(UUID entityID, Vec3* rotation)
+	{
+		ScriptEngine::GetEntityByID(entityID).SetWorldRotation(*rotation);
+	}
+
+	static void WorldTransformComponent_GetScale(UUID entityID, Vec3* outScale)
+	{
+		*outScale = ScriptEngine::GetEntityByID(entityID).GetWorldScale();
+	}
+
+	static void WorldTransformComponent_SetScale(UUID entityID, Vec3* scale)
+	{
+		ScriptEngine::GetEntityByID(entityID).SetWorldScale(*scale);
+	}
+
 	static void MeshRendererComponent_GetMeshAsset(UUID entityID, AssetHandle* outMeshAsset)
 	{
 		*outMeshAsset = ScriptEngine::GetEntityByID(entityID).GetComponent<MeshRendererComponent>().MeshAsset;
@@ -136,6 +166,16 @@ namespace ZeoEngine {
 		meshComp.MaterialAssets[index] = materialAsset;
 	}
 
+	static void RigidBodyComponent_SetKinematicTarget(UUID entityID, Vec3* targetPosition, Vec3* targetRotation)
+	{
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
+		ZE_CORE_ASSERT(physicsScene);
+		const auto* actor = physicsScene->GetActor(entity);
+		ZE_CORE_ASSERT(actor);
+		actor->SetKinematicTarget(*targetPosition, *targetRotation);
+	}
+
 	static bool CharacterControllerComponent_IsGrounded(UUID entityID)
 	{
 		Entity entity = ScriptEngine::GetEntityByID(entityID);
@@ -154,6 +194,26 @@ namespace ZeoEngine {
 		auto* controller = physicsScene->GetCharacterController(entity);
 		ZE_CORE_ASSERT(controller);
 		controller->Move(*displacement);
+	}
+
+	static float Math_FInterpTo(float current, float target, float dt, float interpSpeed)
+	{
+		return Math::FInterpTo(current, target, dt, interpSpeed);
+	}
+
+	static void Math_VInterpTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
+	{
+		*outResult = Math::VInterpTo(*current, *target, dt, interpSpeed);
+	}
+
+	static void Math_VInterpConstantTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
+	{
+		*outResult = Math::VInterpConstantTo(*current, *target, dt, interpSpeed);
+	}
+	
+	static void Math_FindLookAtRotation(Vec3* from, Vec3* to, Vec3* up, Vec3* outRotation)
+	{
+		*outRotation = Math::FindLookAtRotation(*from, *to, *up);
 	}
 
 	static bool Input_IsKeyPressed(KeyCode keycode)
@@ -262,6 +322,15 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(TransformComponent_SetScale);
 #pragma endregion
 
+#pragma region WorldTransformComponent
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_GetTranslation);
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_SetTranslation);
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_GetRotation);
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_SetRotation);
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_GetScale);
+		ZE_ADD_INTERNAL_CALL(WorldTransformComponent_SetScale);
+#pragma endregion
+
 #pragma region MeshComponent
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_GetMeshAsset);
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMeshAsset);
@@ -270,9 +339,20 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(MeshRendererComponent_SetMaterialAsset);
 #pragma endregion
 
+#pragma region RigidBodyComponent
+		ZE_ADD_INTERNAL_CALL(RigidBodyComponent_SetKinematicTarget);
+#pragma endregion
+
 #pragma region CharacterControllerComponent
 		ZE_ADD_INTERNAL_CALL(CharacterControllerComponent_IsGrounded);
 		ZE_ADD_INTERNAL_CALL(CharacterControllerComponent_Move);
+#pragma endregion
+
+#pragma region Math
+		ZE_ADD_INTERNAL_CALL(Math_FInterpTo);
+		ZE_ADD_INTERNAL_CALL(Math_VInterpTo);
+		ZE_ADD_INTERNAL_CALL(Math_VInterpConstantTo);
+		ZE_ADD_INTERNAL_CALL(Math_FindLookAtRotation);
 #pragma endregion
 
 #pragma region Input

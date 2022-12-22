@@ -368,9 +368,10 @@ namespace ZeoEngine {
 
 	void ScriptEngine::OnScriptClassChanged(Entity entity)
 	{
-		s_Data->EntityInstances.clear();
-		s_Data->EntityScriptFields.clear();
-		s_Data->EntityScriptFieldStringBuffer.clear();
+		const UUID entityID = entity.GetUUID();
+		s_Data->EntityInstances[entityID].reset();
+		s_Data->EntityScriptFields[entityID].clear();
+		s_Data->EntityScriptFieldStringBuffer[entityID].clear();
 
 		InitScriptEntity(entity);
 	}

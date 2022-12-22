@@ -89,8 +89,8 @@ namespace ZeoEngine {
 			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor);
 
 		RegisterComponent<TransformComponent>("Transform", Inherent)
-			.Field<&TransformComponent::Translation>("Translation")
-			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)
+			.Field<&TransformComponent::Translation>("Translation", std::make_pair(DragSensitivity, 0.5f))
+			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(DragSensitivity, 0.5f), std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)
 			.Field<&TransformComponent::Scale>("Scale", std::make_pair(DragSensitivity, 0.1f));
 
 		RegisterComponent<WorldTransformComponent>("WorldTransform", Inherent, HideComponentHeader)

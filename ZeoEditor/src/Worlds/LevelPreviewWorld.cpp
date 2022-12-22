@@ -96,9 +96,7 @@ namespace ZeoEngine {
 	{
 		m_SceneState = SceneState::Run;
 		m_bIsSimulation = false;
-		Input::SetCursorMode(CursorMode::Locked);
-		ImGui::SetMouseEnabled(false);
-		ImGui::SetKeyboardNavEnabled(false);
+		TogglePlayMode(true);
 		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
@@ -108,9 +106,7 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
-		Input::SetCursorMode(CursorMode::Normal);
-		ImGui::SetMouseEnabled(true);
-		ImGui::SetKeyboardNavEnabled(true);
+		TogglePlayMode(false);
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
 		OnPlayStop();
@@ -137,11 +133,21 @@ namespace ZeoEngine {
 	void LevelPreviewWorld::OnScenePause()
 	{
 		m_SceneState = SceneState::Pause;
+		if (!m_bIsSimulation)
+		{
+			TogglePlayMode(false);
+		}
 	}
 
 	void LevelPreviewWorld::OnSceneResume()
 	{
 		m_SceneState = SceneState::Run;
+		if (!m_bIsSimulation)
+		{
+			TogglePlayMode(true);
+			// TODO: We may want to hide gizmo but continue show entity inspector in some way
+			SetContextEntity({});
+		}
 	}
 
 	void LevelPreviewWorld::OnDuplicateEntity()
@@ -198,6 +204,13 @@ namespace ZeoEngine {
 		{
 			system->OnSimulationStop();
 		}
+	}
+
+	void LevelPreviewWorld::TogglePlayMode(bool bEnable) const
+	{
+		Input::SetCursorMode(bEnable ? CursorMode::Locked : CursorMode::Normal);
+		ImGui::SetMouseEnabled(!bEnable);
+		ImGui::SetKeyboardNavEnabled(!bEnable);
 	}
 
 }

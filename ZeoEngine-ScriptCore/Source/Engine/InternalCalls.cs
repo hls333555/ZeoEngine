@@ -54,6 +54,28 @@ namespace ZeoEngine
 
         #endregion
 
+        #region WorldTransformComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetTranslation(ulong entityID, out Vector3 translation);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetRotation(ulong entityID, out Vector3 rotation);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetRotation(ulong entityID, ref Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetScale(ulong entityID, out Vector3 scale);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetScale(ulong entityID, ref Vector3 scale);
+
+        #endregion
+
         #region MeshRendererComponent
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -73,13 +95,36 @@ namespace ZeoEngine
 
         #endregion
 
-        #region CharacterControllerComponent
+        #region RigidBodyComponent
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool CharacterControllerComponent_IsGrounded(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void CharacterControllerComponent_Move(ulong entityID, ref Vector3 displacement);
+
+        #endregion
+
+        #region CharacterControllerComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void RigidBodyComponent_SetKinematicTarget(ulong entityID, ref Vector3 targetPosition, ref Vector3 targetRotation);
+
+        #endregion
+
+        #region Math
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern float Math_FInterpTo(float current, float target, float dt, float interpSpeed);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_VInterpTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_VInterpConstantTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_FindLookAtRotation(ref Vector3 from, ref Vector3 to, ref Vector3 up, out Vector3 result);
 
         #endregion
 

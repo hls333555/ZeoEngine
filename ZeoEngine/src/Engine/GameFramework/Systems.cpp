@@ -98,12 +98,15 @@ namespace ZeoEngine {
 		const auto scene = GetScene();
 		auto transformGroup = scene->GetComponentGroup<TransformComponent, WorldTransformComponent, entt::tag<Tag::AnyTransformDirty>>();
 		// Sort entities to ensure parent ones are updated before their children as child transforms rely on its parent's
-		transformGroup.sort([&scene](const auto lhs, const auto rhs)
 		{
-			const Entity lEntity{ lhs, scene };
-			const Entity rEntity{ rhs, scene };
-			return lEntity == rEntity.GetParentEntity();
-		});
+			ZE_PROFILE_FUNC("TansformSystem::SortTransformDirtyEntities")
+			transformGroup.sort([&scene](const auto lhs, const auto rhs)
+		   {
+			   const Entity lEntity{ lhs, scene };
+			   const Entity rEntity{ rhs, scene };
+			   return lEntity.IsAncestorOf(rEntity);
+		   });
+		}
 		for (const auto e : transformGroup)
 		{
 			Entity entity{ e, scene };

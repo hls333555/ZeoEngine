@@ -21,9 +21,12 @@ namespace ZeoEngine::Math {
 	float FInterpTo(float current, float target, DeltaTime dt, float interpSpeed);
 	/** Interpolate vector from current to target. Scaled by distance to Target, so it has a strong start speed and ease out. */
 	Vec3 VInterpTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed);
-	Vec3 InterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed);
+	Vec3 VInterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed);
 
 	bool IsNearlyEqual(float x, float y, float errorTolerance = SMALL_NUMBER);
 	bool IsNearlyEqual(double x, double y, double errorTolerance = DOUBLE_SMALL_NUMBER);
+	bool IsNearlyEqual(const Vec3& x, const Vec3& y, float errorTolerance = KINDA_SMALL_NUMBER);
+
+	Vec3 FindLookAtRotation(const Vec3& from, const Vec3& to, const Vec3& up);
 
 }

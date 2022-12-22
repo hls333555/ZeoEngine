@@ -54,6 +54,8 @@ namespace ZeoEngine {
 		void OnSimulationStart() const;
 		void OnSimulationStop() const;
 
+		void TogglePlayMode(bool bEnable) const;
+
 	private:
 		SceneState m_SceneState = SceneState::Edit;
 		bool m_bIsSimulation = false;
