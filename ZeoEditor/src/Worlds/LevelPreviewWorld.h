@@ -17,9 +17,10 @@ namespace ZeoEngine {
 		using EditorPreviewWorldBase::EditorPreviewWorldBase;
 
 		virtual void OnAttach() override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual bool IsRuntime() const override { return m_SceneState != SceneState::Edit; }
-		virtual bool IsRunning() override { return m_SceneState == SceneState::Run || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
+		virtual bool IsRunning() override { return m_SceneState == SceneState::Run || (m_SceneState == SceneState::Pause && m_StepFrames > 0); }
 		/** Returns true if current runtime is simulation. Calling it when SceneState == Edit is meaningless. */
 		virtual bool IsSimulation() const override { return m_bIsSimulation; }
 

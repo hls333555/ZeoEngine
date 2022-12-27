@@ -53,6 +53,16 @@ namespace ZeoEngine {
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
 	}
 
+	void LevelPreviewWorld::OnUpdate(DeltaTime dt)
+	{
+		EditorPreviewWorldBase::OnUpdate(dt);
+
+		if (m_SceneState == SceneState::Pause)
+		{
+			--m_StepFrames;
+		}
+	}
+
 	void LevelPreviewWorld::StopScene()
 	{
 		if (IsRuntime())

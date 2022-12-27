@@ -755,8 +755,6 @@ namespace ZeoEngine {
 				const auto* controller = physicsScene->GetCharacterController(entity);
 				controller->SetTranslation(translation + controllerComp.Offset);
 			}
-
-			// We do not remove AnyTransformDirty tag here as 
 		}
 
 		// Physics simulation
