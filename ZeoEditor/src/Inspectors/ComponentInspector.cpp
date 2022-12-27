@@ -18,6 +18,8 @@ namespace ZeoEngine {
 
 	void ComponentInspector::Draw(Entity entity)
 	{
+		if (!entity.HasComponentByID(m_ComponentID)) return;
+
 		m_bWillRemove = false;
 
 		const auto compType = entt::resolve(m_ComponentID);
