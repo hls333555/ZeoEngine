@@ -92,6 +92,16 @@ namespace ZeoEngine
             return upVector;
         }
 
+        public void LookAt(Vector3 worldPosition)
+        {
+            InternalCalls.Entity_LookAt(ID, ref worldPosition, ref Vector3.Up);
+        }
+
+        public void LookAt(Vector3 worldPosition, Vector3 upVector)
+        {
+            InternalCalls.Entity_LookAt(ID, ref worldPosition, ref upVector);
+        }
+
         public bool HasComponent<T>() where T : IComponent, new()
         {
             Type compType = typeof(T);

@@ -25,27 +25,39 @@ namespace ZeoEngine
             return (float)Math.Cos(value);
         }
 
-        public static float FInterpTo(float current, float target, float dt, float interpSpeed)
+        public static float InterpTo(float current, float target, float dt, float interpSpeed)
         {
-            return InternalCalls.Math_FInterpTo(current, target, dt, interpSpeed);
+            return InternalCalls.Math_FloatInterpTo(current, target, dt, interpSpeed);
         }
 
-        public static Vector3 VInterpTo(Vector3 current, Vector3 target, float dt, float interpSpeed)
+        public static Vector2 InterpTo(Vector2 current, Vector2 target, float dt, float interpSpeed)
         {
-            InternalCalls.Math_VInterpTo(ref current, ref target, dt, interpSpeed, out Vector3 result);
+            InternalCalls.Math_Vector2InterpTo(ref current, ref target, dt, interpSpeed, out Vector2 result);
             return result;
         }
 
-        public static Vector3 VInterpConstantTo(Vector3 current, Vector3 target, float dt, float interpSpeed)
+        public static Vector3 InterpTo(Vector3 current, Vector3 target, float dt, float interpSpeed)
         {
-            InternalCalls.Math_VInterpConstantTo(ref current, ref target, dt, interpSpeed, out Vector3 result);
+            InternalCalls.Math_Vector3InterpTo(ref current, ref target, dt, interpSpeed, out Vector3 result);
             return result;
         }
 
-        public static Vector3 FindLookAtRotation(Vector3 from, Vector3 to, Vector3 up)
+        public static float InterpConstantTo(float current, float target, float dt, float interpSpeed)
         {
-            InternalCalls.Math_FindLookAtRotation(ref from, ref to, ref up, out Vector3 result);
+            return InternalCalls.Math_FloatInterpConstantTo(current, target, dt, interpSpeed);
+        }
+
+        public static Vector2 InterpConstantTo(Vector2 current, Vector2 target, float dt, float interpSpeed)
+        {
+            InternalCalls.Math_Vector2InterpConstantTo(ref current, ref target, dt, interpSpeed, out Vector2 result);
             return result;
         }
+
+        public static Vector3 InterpConstantTo(Vector3 current, Vector3 target, float dt, float interpSpeed)
+        {
+            InternalCalls.Math_Vector3InterpConstantTo(ref current, ref target, dt, interpSpeed, out Vector3 result);
+            return result;
+        }
+
     }
 }

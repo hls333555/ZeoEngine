@@ -179,8 +179,14 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Scripts
+		RegisterEnum<ScriptUpdateStage>()
+			.Field<ScriptUpdateStage::Default>("Default")
+			.Field<ScriptUpdateStage::PrePhysics>("PrePhysics")
+			.Field<ScriptUpdateStage::PostPhysics>("PostPhysics");
+
 		RegisterComponent<ScriptComponent>("Script", std::make_pair(Category, "Scripts"))
-			.Field<&ScriptComponent::ClassName>("ClassName");
+			.Field<&ScriptComponent::ClassName>("ClassName")
+			.Field<&ScriptComponent::UpdateStage>("UpdateStage");
 
 		RegisterComponent<NativeScriptComponent>("Native Script", std::make_pair(Category, "Scripts"));
 #pragma endregion

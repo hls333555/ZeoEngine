@@ -30,6 +30,9 @@ namespace ZeoEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_GetUpVector(ulong entityID, out Vector3 upVector);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_LookAt(ulong entityID, ref Vector3 worldPosition, ref Vector3 upVector);
+
         #endregion
 
         #region TransformComponent
@@ -115,16 +118,22 @@ namespace ZeoEngine
         #region Math
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern float Math_FInterpTo(float current, float target, float dt, float interpSpeed);
+        internal static extern float Math_FloatInterpTo(float current, float target, float dt, float interpSpeed);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void Math_VInterpTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
+        internal static extern void Math_Vector2InterpTo(ref Vector2 current, ref Vector2 target, float dt, float interpSpeed, out Vector2 result);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void Math_VInterpConstantTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
+        internal static extern void Math_Vector3InterpTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void Math_FindLookAtRotation(ref Vector3 from, ref Vector3 to, ref Vector3 up, out Vector3 result);
+        internal static extern float Math_FloatInterpConstantTo(float current, float target, float dt, float interpSpeed);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector2InterpConstantTo(ref Vector2 current, ref Vector2 target, float dt, float interpSpeed, out Vector2 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector3InterpConstantTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
 
         #endregion
 
@@ -147,10 +156,10 @@ namespace ZeoEngine
         #region Asset
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(string path, bool bForceLoad);
+        internal static extern IntPtr AssetLibrary_LoadAssetByPath(string path, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(AssetHandle handle, bool bForceLoad);
+        internal static extern IntPtr AssetLibrary_LoadAssetByHandle(AssetHandle handle, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern string Asset_GetName(AssetHandle handle);

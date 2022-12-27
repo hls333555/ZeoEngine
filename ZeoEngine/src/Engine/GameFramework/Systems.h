@@ -344,6 +344,22 @@ namespace ZeoEngine {
 		void OnScriptComponentDestroy(Scene& scene, entt::entity e) const;
 	};
 
+	class PrePhysicsScriptSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnUpdate(DeltaTime dt) override;
+	};
+
+	class PostPhysicsScriptSystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnUpdate(DeltaTime dt) override;
+	};
+
 	class PhysicsSystem : public SystemBase
 	{
 	public:

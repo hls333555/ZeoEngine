@@ -76,7 +76,7 @@ namespace ZeoEngine {
 	private:
 		void CreateRigidActor();
 		void AddChildColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform);
-		void AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform);
+		bool AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform);
 		void SynchronizeTransform();
 
 	private:

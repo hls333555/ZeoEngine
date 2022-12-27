@@ -280,6 +280,7 @@ namespace ZeoEngine {
 	}
 
 	// See TransformSystem::OnUpdate
+	// PostPhysicsTransformSystem::OnUpdate
 	void Entity::MarkWorldTransformDirty() const
 	{
 		AddTag<Tag::AnyTransformDirty>();

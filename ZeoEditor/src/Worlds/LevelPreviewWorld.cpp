@@ -45,8 +45,10 @@ namespace ZeoEngine {
 		RegisterSystem<ParticleUpdateSystem>(this);
 		RegisterSystem<ScriptSystem>(this);
 		RegisterSystem<TransformSystem>(this);
+		RegisterSystem<PrePhysicsScriptSystem>(this);
 		RegisterSystem<PhysicsSystem>(this);
 		RegisterSystem<PostPhysicsTransformSystem>(this);
+		RegisterSystem<PostPhysicsScriptSystem>(this);
 
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
 	}

@@ -291,9 +291,15 @@ namespace ZeoEngine {
 		}
 	};
 
+	enum class ScriptUpdateStage
+	{
+		Default, PrePhysics, PostPhysics
+	};
+
 	struct ScriptComponent : public IComponent
 	{
 		std::string ClassName;
+		ScriptUpdateStage UpdateStage = ScriptUpdateStage::Default;
 
 		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
 	};

@@ -458,27 +458,35 @@ namespace ZeoEngine {
 			if (child.HasComponent<RigidBodyComponent>()) continue;
 
 			const Mat4 childLocalTransform = localTransform * child.GetTransform();
-			AddColliders(child, collisionDetectionType, childLocalTransform);
-			child.AddTag<Tag::ChildCollider>(); // This tag is added at runtime, so it will get removed automatically on runtime ends
+			if (AddColliders(child, collisionDetectionType, childLocalTransform))
+			{
+				child.AddTag<Tag::ChildCollider>(); // This tag is added at runtime, so it will get removed automatically on runtime ends
+			}
 			AddChildColliders(child, collisionDetectionType, childLocalTransform);
 		}
 	}
 
-	void PhysXActor::AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform)
+	bool PhysXActor::AddColliders(Entity entity, U32 collisionDetectionType, const Mat4& localTransform)
 	{
 		const UUID entityID = entity.GetUUID();
+		bool bAnyColliderAdded = false;
 		if (entity.HasComponent<BoxColliderComponent>())
 		{
 			m_Colliders[entityID].emplace_back(CreateScope<PhysXBoxColliderShape>(entity, *this, collisionDetectionType, localTransform));
+			bAnyColliderAdded = true;
 		}
 		if (entity.HasComponent<SphereColliderComponent>())
 		{
 			m_Colliders[entityID].emplace_back(CreateScope<PhysXSphereColliderShape>(entity, *this, collisionDetectionType, localTransform));
+			bAnyColliderAdded = true;
 		}
 		if (entity.HasComponent<CapsuleColliderComponent>())
 		{
 			m_Colliders[entityID].emplace_back(CreateScope<PhysXCapsuleColliderShape>(entity, *this, collisionDetectionType, localTransform));
+			bAnyColliderAdded = true;
 		}
+
+		return bAnyColliderAdded;
 	}
 
 	void PhysXActor::SynchronizeTransform()

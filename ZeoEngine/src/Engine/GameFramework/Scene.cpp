@@ -21,6 +21,7 @@ namespace ZeoEngine {
 			// NOTE: If we attach an entity with rotation to a parent entity with non-uniform scale, that child entity will become skewed
 			// This is because parent scale is not applied in child local space and matrix decomposing will produce a shear matrix in addition to translation, rotation and scale
 			// See TTransform<T>::GetRelativeTransform in Unreal Engine
+			// https://gabormakesgames.com/blog_transforms_matrix_getters.html
 			Math::DecomposeTransform(localTransform, translation, rotation, scale);
 			entity.SetTransform(translation, rotation, scale);
 		}

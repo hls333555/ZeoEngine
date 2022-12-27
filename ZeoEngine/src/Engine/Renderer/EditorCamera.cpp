@@ -29,8 +29,8 @@ namespace ZeoEngine {
 		if (m_bStartLerpToFocus)
 		{
 			static constexpr float focusSpeed = 13.0f;
-			m_FocalPoint = Math::VInterpTo(m_FocalPoint, m_FocusTargetFocalPoint, dt, focusSpeed);
-			m_LastDistance = m_Distance = Math::FInterpTo(m_Distance, m_FocusTargetDistance, dt, focusSpeed);
+			m_FocalPoint = Math::InterpTo(m_FocalPoint, m_FocusTargetFocalPoint, dt, focusSpeed);
+			m_LastDistance = m_Distance = Math::InterpTo(m_Distance, m_FocusTargetDistance, dt, focusSpeed);
 			if (m_FocalPoint == m_FocusTargetFocalPoint && Math::IsNearlyEqual(m_Distance, m_FocusTargetDistance))
 			{
 				m_bStartLerpToFocus = false;

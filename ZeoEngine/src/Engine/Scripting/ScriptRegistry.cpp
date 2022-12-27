@@ -29,9 +29,9 @@ namespace ZeoEngine {
 /**
  * @param Name - C# method name
  * @param OverloadName - C++ function name
- * @param ... - Overload params with no space between
- *				Correct: int,bool,float
- *				Wrong: int, bool, float
+ * @param ... - Overload params from C# with no space between
+ *				Correct: ulong,bool,float
+ *				Wrong: ulong, bool, float
  */
 #define ZE_ADD_INTERNAL_CALL_OVERLOAD(Name, OverloadName, ...) mono_add_internal_call("ZeoEngine.InternalCalls::" #Name EXPAND_PARAM_TYPE(__VA_ARGS__), OverloadName)
 
@@ -73,6 +73,13 @@ namespace ZeoEngine {
 	static void Entity_GetUpVector(UUID entityID, Vec3* outUpVector)
 	{
 		*outUpVector = ScriptEngine::GetEntityByID(entityID).GetUpVector();
+	}
+
+	static void Entity_LookAt(UUID entityID, Vec3* worldPosition, Vec3* upVector)
+	{
+		Entity entity = ScriptEngine::GetEntityByID(entityID);
+		const Vec3 rotation = Math::FindLookAtRotation(entity.GetWorldTranslation(), *worldPosition, *upVector);
+		entity.SetWorldRotation(rotation);
 	}
 
 	static void TransformComponent_GetTranslation(UUID entityID, Vec3* outTranslation)
@@ -196,24 +203,34 @@ namespace ZeoEngine {
 		controller->Move(*displacement);
 	}
 
-	static float Math_FInterpTo(float current, float target, float dt, float interpSpeed)
+	static float Math_FloatInterpTo(float current, float target, float dt, float interpSpeed)
 	{
-		return Math::FInterpTo(current, target, dt, interpSpeed);
+		return Math::InterpTo(current, target, dt, interpSpeed);
 	}
 
-	static void Math_VInterpTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
+	static void Math_Vector2InterpTo(Vec2* current, Vec2* target, float dt, float interpSpeed, Vec2* outResult)
 	{
-		*outResult = Math::VInterpTo(*current, *target, dt, interpSpeed);
+		*outResult = Math::InterpTo(*current, *target, dt, interpSpeed);
 	}
 
-	static void Math_VInterpConstantTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
+	static void Math_Vector3InterpTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
 	{
-		*outResult = Math::VInterpConstantTo(*current, *target, dt, interpSpeed);
+		*outResult = Math::InterpTo(*current, *target, dt, interpSpeed);
 	}
-	
-	static void Math_FindLookAtRotation(Vec3* from, Vec3* to, Vec3* up, Vec3* outRotation)
+
+	static float Math_FloatInterpConstantTo(float current, float target, float dt, float interpSpeed)
 	{
-		*outRotation = Math::FindLookAtRotation(*from, *to, *up);
+		return Math::InterpConstantTo(current, target, dt, interpSpeed);
+	}
+
+	static void Math_Vector2InterpConstantTo(Vec2* current, Vec2* target, float dt, float interpSpeed, Vec2* outResult)
+	{
+		*outResult = Math::InterpConstantTo(*current, *target, dt, interpSpeed);
+	}
+
+	static void Math_Vector3InterpConstantTo(Vec3* current, Vec3* target, float dt, float interpSpeed, Vec3* outResult)
+	{
+		*outResult = Math::InterpConstantTo(*current, *target, dt, interpSpeed);
 	}
 
 	static bool Input_IsKeyPressed(KeyCode keycode)
@@ -311,6 +328,7 @@ namespace ZeoEngine {
 		ZE_ADD_INTERNAL_CALL(Entity_GetForwardVector);
 		ZE_ADD_INTERNAL_CALL(Entity_GetRightVector);
 		ZE_ADD_INTERNAL_CALL(Entity_GetUpVector);
+		ZE_ADD_INTERNAL_CALL(Entity_LookAt);
 #pragma endregion
 
 #pragma region TransformComponent
@@ -349,10 +367,12 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Math
-		ZE_ADD_INTERNAL_CALL(Math_FInterpTo);
-		ZE_ADD_INTERNAL_CALL(Math_VInterpTo);
-		ZE_ADD_INTERNAL_CALL(Math_VInterpConstantTo);
-		ZE_ADD_INTERNAL_CALL(Math_FindLookAtRotation);
+		ZE_ADD_INTERNAL_CALL(Math_FloatInterpTo);
+		ZE_ADD_INTERNAL_CALL(Math_Vector2InterpTo);
+		ZE_ADD_INTERNAL_CALL(Math_Vector3InterpTo);
+		ZE_ADD_INTERNAL_CALL(Math_FloatInterpConstantTo);
+		ZE_ADD_INTERNAL_CALL(Math_Vector2InterpConstantTo);
+		ZE_ADD_INTERNAL_CALL(Math_Vector3InterpConstantTo);
 #pragma endregion
 
 #pragma region Input
@@ -363,8 +383,8 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Asset
-		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByPath, string,bool);
-		ZE_ADD_INTERNAL_CALL_OVERLOAD(AssetLibrary_LoadAsset, AssetLibrary_LoadAssetByHandle, ulong,bool);
+		ZE_ADD_INTERNAL_CALL(AssetLibrary_LoadAssetByPath);
+		ZE_ADD_INTERNAL_CALL(AssetLibrary_LoadAssetByHandle);
 		ZE_ADD_INTERNAL_CALL(Asset_GetName);
 		ZE_ADD_INTERNAL_CALL(Asset_GetHandle);
 #pragma endregion

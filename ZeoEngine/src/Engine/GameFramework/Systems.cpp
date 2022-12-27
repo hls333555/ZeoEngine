@@ -101,11 +101,13 @@ namespace ZeoEngine {
 		{
 			ZE_PROFILE_FUNC("TansformSystem::SortTransformDirtyEntities")
 			transformGroup.sort([&scene](const auto lhs, const auto rhs)
-		   {
-			   const Entity lEntity{ lhs, scene };
-			   const Entity rEntity{ rhs, scene };
-			   return lEntity.IsAncestorOf(rEntity);
-		   });
+			{
+				const Entity lEntity{ lhs, scene };
+				const Entity rEntity{ rhs, scene };
+				if (lEntity.IsAncestorOf(rEntity)) return true;
+				if (lEntity.IsDescendantOf(rEntity)) return false;
+				return lhs < rhs;
+			});
 		}
 		for (const auto e : transformGroup)
 		{
@@ -149,7 +151,18 @@ namespace ZeoEngine {
 
 		const auto scene = GetScene();
 		auto transformGroup = scene->GetComponentGroup<TransformComponent, WorldTransformComponent, entt::tag<Tag::AnyTransformDirty>>();
-		// We do not sort here based on an assumption that no entities will be added or removed during physics update
+		// Sort entities to ensure parent ones are updated before their children as child transforms rely on its parent's
+		{
+			ZE_PROFILE_FUNC("PostPhysicsTransformSystem::SortTransformDirtyEntities")
+			transformGroup.sort([&scene](const auto lhs, const auto rhs)
+			{
+				const Entity lEntity{ lhs, scene };
+				const Entity rEntity{ rhs, scene };
+				if (lEntity.IsAncestorOf(rEntity)) return true;
+				if (lEntity.IsDescendantOf(rEntity)) return false;
+				return lhs < rhs;
+			});
+		}
 		for (const auto e : transformGroup)
 		{
 			Entity entity{ e, scene };
@@ -560,6 +573,9 @@ namespace ZeoEngine {
 		RegisterComponentEventBinder<ComponentDestroyBinder<ScriptComponent, &ScriptSystem::OnScriptComponentDestroy, ScriptSystem>>(this);
 	}
 
+	// At this stage, you can read and write local transforms arbitrarily
+	// Physics simulation is not processed yet
+	// World transforms may not be up to date
 	void ScriptSystem::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNC();
@@ -569,10 +585,14 @@ namespace ZeoEngine {
 		if (!GetWorld()->IsRunning()) return;
 		if (GetWorld()->IsSimulation()) return;
 
-		auto scriptView = GetScene()->GetComponentView<ScriptComponent>();
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
 		for (const auto e : scriptView)
 		{
-			const Entity entity{ e, GetScene() };
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::Default) continue;
+
+			const Entity entity{ e, scene };
 			ScriptEngine::OnUpdateEntity(entity, dt);
 		}
 	}
@@ -581,11 +601,12 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNC();
 
-		ScriptEngine::SetSceneContext(GetScene());
-		auto scriptView = GetScene()->GetComponentView<ScriptComponent>();
+		const auto scene = GetScene();
+		ScriptEngine::SetSceneContext(scene);
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
 		for (const auto e : scriptView)
 		{
-			const Entity entity{ e, GetScene() };
+			const Entity entity{ e, scene };
 			ScriptEngine::InstantiateEntityClass(entity);
 			ScriptEngine::OnCreateEntity(entity);
 		}
@@ -614,6 +635,52 @@ namespace ZeoEngine {
 		ScriptEngine::OnDestroyEntity(entity);
 	}
 
+	// At this stage, all transforms have been updated
+	// Physics simulation is not processed yet
+	// You can read and write world transforms here but be aware that local transforms may be out of sync until PostPhysicsTransformSystem
+	void PrePhysicsScriptSystem::OnUpdate(DeltaTime dt)
+	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+		if (GetWorld()->IsSimulation()) return;
+
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
+		{
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::PrePhysics) continue;
+
+			const Entity entity{ e, scene };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		}
+	}
+
+	// At this stage, physics simulation is done and all transform changes have been applied
+	void PostPhysicsScriptSystem::OnUpdate(DeltaTime dt)
+	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+		if (GetWorld()->IsSimulation()) return;
+
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
+		{
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::PostPhysics) continue;
+
+			const Entity entity{ e, scene };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		}
+	}
+
 	void PhysicsSystem::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNC();
@@ -635,7 +702,7 @@ namespace ZeoEngine {
 		auto transformGroup = scene->GetComponentGroup<TransformComponent, entt::tag<Tag::AnyTransformDirty>>();
 		for (const auto e : transformGroup)
 		{
-			Entity entity{ e, GetScene() };
+			Entity entity{ e, scene };
 			const Vec3& translation = entity.GetWorldTranslation();
 			const Vec3 rotation = entity.GetWorldRotation();
 
@@ -643,7 +710,14 @@ namespace ZeoEngine {
 			if (entity.HasComponent<RigidBodyComponent>())
 			{
 				const auto* actor = physicsScene->GetActor(entity);
-				actor->SetTransform(translation, rotation);
+				if (actor->IsKinematic())
+				{
+					actor->SetKinematicTarget(translation, rotation);
+				}
+				else
+				{
+					actor->SetTransform(translation, rotation);
+				}
 			}
 			// Physics collider
 			else if (entity.HasTag<Tag::ChildCollider>())
@@ -682,7 +756,7 @@ namespace ZeoEngine {
 				controller->SetTranslation(translation + controllerComp.Offset);
 			}
 
-			entity.RemoveTag<Tag::AnyTransformDirty>();
+			// We do not remove AnyTransformDirty tag here as 
 		}
 
 		// Physics simulation
