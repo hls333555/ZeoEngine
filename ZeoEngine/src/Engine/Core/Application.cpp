@@ -121,8 +121,13 @@ namespace ZeoEngine {
 			ZE_PROFILE_FRAME("MainThread");
 
 			// Platform::GetTime();
-			float time = m_Window->GetTimeInSeconds();
+			const float time = m_Window->GetTimeInSeconds();
 			DeltaTime dt = time - m_LastFrameTime;
+			if (dt > 0.1f)
+			{
+				dt = 0.1f;
+			}
+			ZE_CORE_ASSERT(dt >= 0.0f);
 			m_LastFrameTime = time;
 
 			ExecuteMainThreadQueue();
