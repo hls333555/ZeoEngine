@@ -6,6 +6,7 @@
 
 #include "Engine/Core/UUID.h"
 #include "Engine/Utils/SceneUtils.h"
+#include "Engine/Core/Buffer.h"
 
 namespace ZeoEngine {
 
@@ -66,7 +67,7 @@ namespace ZeoEngine {
 				GetRuntimeValueInternal(value);
 				return value;
 			}
-			return *reinterpret_cast<std::string*>(Buffer);
+			return *m_Buffer.As<std::string>();
 		}
 
 		template<typename T>
@@ -91,7 +92,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				(*reinterpret_cast<std::string*>(Buffer)).assign(value);
+				(*m_Buffer.As<std::string>()).assign(value);
 			}
 		}
 
@@ -112,12 +113,12 @@ namespace ZeoEngine {
 		//void SetRuntimeValueInternal(const AssetHandle* value) const;
 
 	private:
-		ScriptField* Field = nullptr;
-		UUID EntityID;
+		ScriptField* m_Field = nullptr;
+		UUID m_EntityID;
 
-		U8* Buffer = nullptr;
+		Buffer m_Buffer;
 		/** Buffer dedicated for retrieving runtime raw value */
-		U8* RuntimeBuffer = nullptr;
+		Buffer m_RuntimeBuffer;
 	};
 	
 }

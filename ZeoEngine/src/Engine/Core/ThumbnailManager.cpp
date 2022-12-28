@@ -1,7 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Core/ThumbnailManager.h"
 
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetRegistry.h"
@@ -35,9 +35,9 @@ namespace ZeoEngine {
 		static void CreateCacheDirectoryIfNeeded()
 		{
 			const std::string cacheDirectory = GetThumbnailCacheDirectory();
-			if (!PathUtils::Exists(cacheDirectory))
+			if (!FileSystemUtils::Exists(cacheDirectory))
 			{
-				PathUtils::CreateDirectory(cacheDirectory);
+				FileSystemUtils::CreateDirectory(cacheDirectory);
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace ZeoEngine {
 		AssetManager::Get().ForEachAssetType([this](AssetTypeID typeID)
 		{
 			std::string thumbnailPath = Utils::GetAssetTypeIconPath(typeID);
-			ZE_CORE_ASSERT(PathUtils::Exists(thumbnailPath));
+			ZE_CORE_ASSERT(FileSystemUtils::Exists(thumbnailPath));
 
 			m_AssetTypeIcons[typeID] = Texture2D::Create(std::move(thumbnailPath));
 		});
@@ -66,7 +66,7 @@ namespace ZeoEngine {
 	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const Ref<AssetMetadata>& metadata)
 	{
 		std::string thumbnailPath = GetAssetThumbnailPath(metadata);
-		return PathUtils::Exists(thumbnailPath) ? Texture2D::Create(std::move(thumbnailPath)) : m_AssetTypeIcons[metadata->TypeID];
+		return FileSystemUtils::Exists(thumbnailPath) ? Texture2D::Create(std::move(thumbnailPath)) : m_AssetTypeIcons[metadata->TypeID];
 	}
 
 	std::string ThumbnailManager::GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const

@@ -34,7 +34,7 @@ namespace ZeoEngine {
 		static void SerializeEmptyAsset(const std::string& path, AssetTypeID typeID, AssetHandle handle, bool bOverwrite, Func func)
 		{
 			YAML::Node node;
-			const std::string filepath = PathUtils::GetFileSystemPath(path);
+			const std::string filepath = FileSystemUtils::GetFileSystemPath(path);
 			const auto f = [&]()
 			{
 				node["AssetType"] = typeID;

@@ -8,6 +8,7 @@
 #include <mono/metadata/mono-debug.h>
 #include <mono/metadata/threads.h>
 
+#include "Engine/Core/Buffer.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptRegistry.h"
 #include "Engine/Utils/EngineUtils.h"
@@ -40,43 +41,13 @@ namespace ZeoEngine {
 
 	namespace Utils {
 
-		// TODO: Move to utils library
-		static char* ReadBytes(const std::string& filepath, U32* outSize)
-		{
-		    std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		    
-		    if (!stream)
-		    {
-		        // Failed to open the file
-		        return nullptr;
-		    }
-
-		    std::streampos end = stream.tellg();
-		    stream.seekg(0, std::ios::beg);
-		    U32 size = static_cast<U32>(end - stream.tellg());
-		    
-		    if (size == 0)
-		    {
-		        // File is empty
-		        return nullptr;
-		    }
-
-		    char* buffer = new char[size];
-		    stream.read(buffer, size);
-		    stream.close();
-
-		    *outSize = size;
-		    return buffer;
-		}
-
 		static MonoAssembly* LoadMonoAssembly(const std::string& assemblyPath, bool bLoadPDB = false)
 		{
-		    U32 fileSize = 0;
-		    char* fileData = ReadBytes(assemblyPath, &fileSize);
+		    ScopedBuffer fileData = FileSystemUtils::ReadFileBinary(assemblyPath);
 
 		    // NOTE: We can't use this image for anything other than loading the assembly because this image doesn't have a reference to the assembly
 		    MonoImageOpenStatus status;
-		    MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+		    MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), static_cast<U32>(fileData.Size()), 1, &status, 0);
 
 		    if (status != MONO_IMAGE_OK)
 		    {
@@ -92,20 +63,15 @@ namespace ZeoEngine {
 				pdbPath.replace_extension(".pdb");
 				if (std::filesystem::exists(pdbPath))
 				{
-					U32 pdbFileSize = 0;
-					const char* pdbFileData = ReadBytes(pdbPath.string(), &pdbFileSize);
-					mono_debug_open_image_from_memory(image, reinterpret_cast<const mono_byte*>(pdbFileData), pdbFileSize);
+					ScopedBuffer pdbFileData = FileSystemUtils::ReadFileBinary(pdbPath.string());
+					mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), static_cast<int>(pdbFileData.Size()));
 					ZE_CORE_INFO("Loaded PDB {}", pdbPath);
-					delete[] pdbFileData;
 				}
 			}
 #endif
 
 		    MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.c_str(), &status, 0);
 		    mono_image_close(image);
-		    
-		    // Don't forget to free the file data
-		    delete[] fileData;
 
 		    return assembly;
 		}
@@ -296,8 +262,8 @@ namespace ZeoEngine {
 
 	void ScriptEngine::OnFileModified(const std::string& path)
 	{
-		if (PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->CoreAssemblyPath) ||
-			PathUtils::GetCanonicalPath(path) == PathUtils::GetCanonicalPath(s_Data->AppAssemblyPath))
+		if (FileSystemUtils::GetCanonicalPath(path) == FileSystemUtils::GetCanonicalPath(s_Data->CoreAssemblyPath) ||
+			FileSystemUtils::GetCanonicalPath(path) == FileSystemUtils::GetCanonicalPath(s_Data->AppAssemblyPath))
 		{
 			Application::Get().SubmitToMainThread([]()
 			{
@@ -390,6 +356,7 @@ namespace ZeoEngine {
 
 		auto& scriptFields = s_Data->EntityScriptFields[entityID];
 		// Save old fields so that reloading does not break modified values
+		// TODO: Should overwrite non-modified values
 		std::unordered_map<std::string, Ref<ScriptFieldInstance>> oldFieldInstances;
 		for (auto& [name, fieldInstance] : scriptFields)
 		{
@@ -407,7 +374,7 @@ namespace ZeoEngine {
 			if (it != oldFieldInstances.end() && field.Type == it->second->GetFieldType())
 			{
 				fieldInstance = std::move(it->second);
-				fieldInstance->Field = fieldPtr;
+				fieldInstance->m_Field = fieldPtr;
 				continue;
 			}
 
@@ -607,50 +574,56 @@ namespace ZeoEngine {
 
 	ScriptFieldInstance::ScriptFieldInstance(ScriptField* field, UUID entityID)
 		: FieldInstanceBase(field->Type)
-		, Field(field)
-		, EntityID(entityID)
+		, m_Field(field)
+		, m_EntityID(entityID)
 	{
-		ZE_CORE_ASSERT(Field, "Failed to create a script field instance from an emtpy field!");
+		ZE_CORE_ASSERT(m_Field, "Failed to create a script field instance from an emtpy field!");
 
 		// For string, we have a global buffer to store them, so our buffer just points to that global buffer
 		if (GetFieldType() != FieldType::String)
 		{
-			Buffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
-			RuntimeBuffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
+			const U32 fieldSize = GetFieldSize();
+			m_Buffer = Buffer(fieldSize);
+			m_RuntimeBuffer = Buffer(fieldSize);
 		}
 	}
 
 	ScriptFieldInstance::ScriptFieldInstance(const ScriptFieldInstance& other)
 		: FieldInstanceBase(other)
-		, Field(other.Field)
-		, EntityID(other.EntityID)
+		, m_Field(other.m_Field)
+		, m_EntityID(other.m_EntityID)
 	{
 		if (GetFieldType() != FieldType::String)
 		{
-			Buffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
-			memcpy(Buffer, other.Buffer, EngineUtils::GetFieldSize(GetFieldType()));
-			RuntimeBuffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
-			memcpy(RuntimeBuffer, other.RuntimeBuffer, EngineUtils::GetFieldSize(GetFieldType()));
+			m_Buffer = Buffer::Copy(other.m_Buffer);
+			m_RuntimeBuffer = Buffer::Copy(other.m_RuntimeBuffer);
 		}
 		else
 		{
-			Buffer = other.Buffer;
-			RuntimeBuffer = other.RuntimeBuffer;
+			m_Buffer = other.m_Buffer;
+			m_RuntimeBuffer = other.m_RuntimeBuffer;
 		}
 	}
 
 	ScriptFieldInstance::ScriptFieldInstance(ScriptFieldInstance&& other) noexcept
 		: FieldInstanceBase(std::move(other))
-		, Field(other.Field)
-		, EntityID(other.EntityID)
-		, Buffer(other.Buffer)
-		, RuntimeBuffer(other.RuntimeBuffer)
+		, m_Field(other.m_Field)
+		, m_EntityID(other.m_EntityID)
 	{
-		other.Field = nullptr;
-		if (GetFieldType() != FieldType::String)
+		other.m_Field = nullptr;
+		other.m_EntityID = 0;
+
+		if (GetFieldType() == FieldType::String)
 		{
-			other.Buffer = nullptr;
-			other.RuntimeBuffer = nullptr;
+			m_Buffer = other.m_Buffer;
+			m_RuntimeBuffer = other.m_RuntimeBuffer;
+			other.m_Buffer = {};
+			other.m_RuntimeBuffer = {};
+		}
+		else
+		{
+			m_Buffer = std::move(other.m_Buffer);
+			m_RuntimeBuffer = std::move(other.m_RuntimeBuffer);
 		}
 	}
 
@@ -658,8 +631,8 @@ namespace ZeoEngine {
 	{
 		if (GetFieldType() != FieldType::String)
 		{
-			EngineUtils::FreeFieldBuffer(Buffer);
-			EngineUtils::FreeFieldBuffer(RuntimeBuffer);
+			m_Buffer.Release();
+			m_RuntimeBuffer.Release();
 		}
 	}
 
@@ -671,23 +644,21 @@ namespace ZeoEngine {
 		{
 			if (GetFieldType() != FieldType::String)
 			{
-				EngineUtils::FreeFieldBuffer(Buffer);
-				EngineUtils::FreeFieldBuffer(RuntimeBuffer);
+				m_Buffer.Release();
+				m_RuntimeBuffer.Release();
 			}
 
-			Field = other.Field;
-			EntityID = other.EntityID;
+			m_Field = other.m_Field;
+			m_EntityID = other.m_EntityID;
 			if (GetFieldType() != FieldType::String)
 			{
-				Buffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
-				memcpy(Buffer, other.Buffer, EngineUtils::GetFieldSize(GetFieldType()));
-				RuntimeBuffer = EngineUtils::AllocateFieldBuffer(GetFieldType());
-				memcpy(RuntimeBuffer, other.RuntimeBuffer, EngineUtils::GetFieldSize(GetFieldType()));
+				m_Buffer = Buffer::Copy(other.m_Buffer);
+				m_RuntimeBuffer = Buffer::Copy(other.m_RuntimeBuffer);
 			}
 			else
 			{
-				Buffer = other.Buffer;
-				RuntimeBuffer = other.RuntimeBuffer;
+				m_Buffer = other.m_Buffer;
+				m_RuntimeBuffer = other.m_RuntimeBuffer;
 			}
 		}
 
@@ -700,22 +671,23 @@ namespace ZeoEngine {
 
 		if (&other != this)
 		{
-			if (GetFieldType() != FieldType::String)
+			m_Field = other.m_Field;
+			m_EntityID = other.m_EntityID;
+
+			other.m_Field = nullptr;
+			other.m_EntityID = 0;
+
+			if (GetFieldType() == FieldType::String)
 			{
-				EngineUtils::FreeFieldBuffer(Buffer);
-				EngineUtils::FreeFieldBuffer(RuntimeBuffer);
+				m_Buffer = other.m_Buffer;
+				m_RuntimeBuffer = other.m_RuntimeBuffer;
+				other.m_Buffer = {};
+				other.m_RuntimeBuffer = {};
 			}
-
-			Field = other.Field;
-			EntityID = other.EntityID;
-			Buffer = other.Buffer;
-			RuntimeBuffer = other.RuntimeBuffer;
-
-			other.Field = nullptr;
-			if (GetFieldType() != FieldType::String)
+			else
 			{
-				other.Buffer = nullptr;
-				other.RuntimeBuffer = nullptr;
+				m_Buffer = std::move(other.m_Buffer);
+				m_RuntimeBuffer = std::move(other.m_RuntimeBuffer);
 			}
 		}
 
@@ -724,17 +696,17 @@ namespace ZeoEngine {
 
 	const char* ScriptFieldInstance::GetFieldName() const
 	{
-		return Field->Name.c_str();
+		return m_Field->Name.c_str();
 	}
 
 	void* ScriptFieldInstance::GetValueRaw() const
 	{
 		if (SceneUtils::IsLevelRuntime())
 		{
-			GetRuntimeValueInternal(RuntimeBuffer);
-			return RuntimeBuffer;
+			GetRuntimeValueInternal(m_RuntimeBuffer.Data);
+			return m_RuntimeBuffer.Data;
 		}
-		return Buffer;
+		return m_Buffer.Data;
 	}
 
 	void ScriptFieldInstance::SetValueRaw(const void* value) const
@@ -745,8 +717,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			const U32 size = EngineUtils::GetFieldSize(GetFieldType());
-			memcpy(Buffer, value, size);
+			memcpy(m_Buffer.Data, value, GetFieldSize());
 		}
 	}
 
@@ -756,9 +727,9 @@ namespace ZeoEngine {
 		{
 			std::string outStr;
 			GetRuntimeValueInternal(outStr);
-			auto& stringBuffer = s_Data->EntityScriptFieldStringBuffer[EntityID][Field->Name];
+			auto& stringBuffer = s_Data->EntityScriptFieldStringBuffer[m_EntityID][m_Field->Name];
 			stringBuffer = std::move(outStr);
-			Buffer = reinterpret_cast<U8*>(&stringBuffer);
+			m_Buffer.Data = reinterpret_cast<U8*>(&stringBuffer);
 		}
 		//else if (GetFieldType() == FieldType::Asset)
 		//{
@@ -766,7 +737,7 @@ namespace ZeoEngine {
 		//}
 		else
 		{
-			GetRuntimeValueInternal(Buffer);
+			GetRuntimeValueInternal(m_Buffer.Data);
 		}
 	}
 
@@ -774,7 +745,7 @@ namespace ZeoEngine {
 	{
 		if (GetFieldType() == FieldType::String)
 		{
-			SetRuntimeValueInternal(*reinterpret_cast<std::string*>(Buffer));
+			SetRuntimeValueInternal(*m_Buffer.As<std::string>());
 		}
 		//else if (GetFieldType() == FieldType::Asset)
 		//{
@@ -782,33 +753,31 @@ namespace ZeoEngine {
 		//}
 		else
 		{
-			SetRuntimeValueInternal(Buffer);
+			SetRuntimeValueInternal(m_Buffer.Data);
 		}
 	}
 
 	void ScriptFieldInstance::GetValue_Internal(void* outValue) const
 	{
-		const U32 size = EngineUtils::GetFieldSize(GetFieldType());
-		memcpy(outValue, Buffer, size);
+		memcpy(outValue, m_Buffer.Data, GetFieldSize());
 	}
 
 	void ScriptFieldInstance::SetValue_Internal(const void* value) const
 	{
-		const U32 size = EngineUtils::GetFieldSize(GetFieldType());
-		memcpy(Buffer, value, size);
+		memcpy(m_Buffer.Data, value, GetFieldSize());
 	}
 
 	void ScriptFieldInstance::GetRuntimeValueInternal(void* outValue) const
 	{
-		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-		mono_field_get_value(scriptInstance->GetMonoInstance(), Field->ClassField, outValue);
+		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
+		mono_field_get_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, outValue);
 	}
 
 	void ScriptFieldInstance::GetRuntimeValueInternal(std::string& outValue) const
 	{
-		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
+		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
 		MonoString* monoStr;
-		mono_field_get_value(scriptInstance->GetMonoInstance(), Field->ClassField, &monoStr);
+		mono_field_get_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, &monoStr);
 		char* str = mono_string_to_utf8(monoStr);
 		outValue = monoStr != nullptr ? str : "";
 		mono_free(str);
@@ -828,15 +797,15 @@ namespace ZeoEngine {
 
 	void ScriptFieldInstance::SetRuntimeValueInternal(const void* value) const
 	{
-		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-		mono_field_set_value(scriptInstance->GetMonoInstance(), Field->ClassField, const_cast<void*>(value));
+		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
+		mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, const_cast<void*>(value));
 	}
 
 	void ScriptFieldInstance::SetRuntimeValueInternal(const std::string& value) const
 	{
-		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
+		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
 		MonoString* monoStr = mono_string_new(ScriptEngine::GetAppDomain(), value.c_str());
-		mono_field_set_value(scriptInstance->GetMonoInstance(), Field->ClassField, monoStr);
+		mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, monoStr);
 	}
 
 	//void ScriptFieldInstance::SetRuntimeValueInternal(const AssetHandle* value) const

@@ -47,8 +47,7 @@ namespace ZeoEngine {
 	void ComponentFieldInstance::SetValueRaw(const void* value) const
 	{
 		// For this to work, the meta data must be registered by entt::as_ref_t
-		const U32 size = EngineUtils::GetFieldSize(GetFieldType());
-		memcpy(GetValueRaw(), value, size);
+		memcpy(GetValueRaw(), value, GetFieldSize());
 	}
 
 	void ComponentFieldInstance::OnFieldValueChanged(U32 fieldID)

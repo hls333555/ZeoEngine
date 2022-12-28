@@ -198,19 +198,6 @@ namespace ZeoEngine {
 			return max;
 		}
 
-		[[nodiscard]] static U8* AllocateFieldBuffer(FieldType type)
-		{
-			U32 size = GetFieldSize(type);
-			U8* buffer = new U8[size];
-			memset(buffer, 0, size);
-			return buffer;
-		}
-
-		static void FreeFieldBuffer(U8* buffer)
-		{
-			delete[] buffer;
-		}
-
 		static SceneRenderer* GetSceneRendererFromContext(const SceneContext* sceneContext);
 
 		template<typename T>

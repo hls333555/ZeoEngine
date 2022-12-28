@@ -5,7 +5,7 @@
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/TextFilter.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		const auto& GetSelectedDirectory() const { return m_SelectedDirectory; }
 		void SetSelectedDirectory(std::string directory) { m_SelectedDirectory = std::move(directory); }
 		const auto& GetSelectedPath() const { return m_SelectedPath; }
-		void SetSelectedPath(const std::string& path) { m_SelectedPath = path; SetSelectedDirectory(PathUtils::GetParentPath(path)); m_bFocusSelectedPath = true; }
+		void SetSelectedPath(const std::string& path) { m_SelectedPath = path; SetSelectedDirectory(FileSystemUtils::GetParentPath(path)); m_bFocusSelectedPath = true; }
 
 	protected:
 		constexpr float GetSelectableThumbnailWidth() const { return 32.0f; }

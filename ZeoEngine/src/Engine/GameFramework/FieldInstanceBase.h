@@ -2,6 +2,7 @@
 
 #include "Engine/Asset/Asset.h"
 #include "Engine/Core/EngineTypes.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -18,6 +19,7 @@ namespace ZeoEngine {
 		FieldInstanceBase& operator=(FieldInstanceBase&&) noexcept = default;
 
 		FieldType GetFieldType() const { return m_Type; }
+		U32 GetFieldSize() const { return EngineUtils::GetFieldSize(m_Type); }
 
 		virtual const char* GetFieldName() const = 0;
 		virtual U32 GetFieldID() const = 0;

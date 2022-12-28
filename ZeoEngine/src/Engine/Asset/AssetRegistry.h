@@ -5,7 +5,7 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Asset/Asset.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 	struct PathMetadata
 	{
 		explicit PathMetadata(std::string path)
-			: Path(std::move(path)), PathName(PathUtils::GetPathName(Path)) {}
+			: Path(std::move(path)), PathName(FileSystemUtils::GetPathName(Path)) {}
 		virtual ~PathMetadata() = default;
 
 		virtual bool IsAsset() const = 0;
@@ -57,7 +57,7 @@ namespace ZeoEngine {
 		bool IsResourceAsset() const { return Flags & PathFlag_HasResource; }
 		bool IsImportableAsset() const { return Flags & PathFlag_Importable; }
 		bool IsTemplateAsset() const { return Flags & PathFlag_Template; }
-		std::string GetResourceFileSystemPath() const { return IsResourceAsset() ? fmt::format("{}/{}", PathUtils::GetParentPath(PathUtils::GetFileSystemPath(Path)), PathName) : ""; }
+		std::string GetResourceFileSystemPath() const { return IsResourceAsset() ? fmt::format("{}/{}", FileSystemUtils::GetParentPath(FileSystemUtils::GetFileSystemPath(Path)), PathName) : ""; }
 
 		void UpdateThumbnail();
 

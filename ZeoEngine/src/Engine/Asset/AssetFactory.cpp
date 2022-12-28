@@ -1,7 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Asset/AssetFactory.h"
 
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 #include "Engine/Utils/EngineUtils.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Asset/AssetSerializer.h"
@@ -16,9 +16,9 @@ namespace ZeoEngine {
 	void AssetFactoryBase::CreateAssetFile(const std::string& path) const
 	{
 		const std::string templatePath = GetAssetTemplatePath();
-		if (PathUtils::Exists(templatePath))
+		if (FileSystemUtils::Exists(templatePath))
 		{
-			PathUtils::CopyFile(templatePath, path, true);
+			FileSystemUtils::CopyFile(templatePath, path, true);
 		}
 		else
 		{
@@ -41,9 +41,9 @@ namespace ZeoEngine {
 	void ImportableAssetFactoryBase::CreateAsset(const std::string& path, const std::string& resourcePath) const
 	{
 		const std::string templatePath = GetAssetTemplatePath();
-		if (PathUtils::Exists(templatePath))
+		if (FileSystemUtils::Exists(templatePath))
 		{
-			PathUtils::CopyFile(templatePath, path, true);
+			FileSystemUtils::CopyFile(templatePath, path, true);
 		}
 		else
 		{
@@ -57,7 +57,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(!srcPath.empty());
 
 		// Copy resource file
-		const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
+		const bool bSuccess = FileSystemUtils::CopyFile(srcPath, destPath, true);
 		if (!bSuccess)
 		{
 			ZE_CORE_ERROR("Failed to import asset!");
@@ -65,7 +65,7 @@ namespace ZeoEngine {
 		}
 
 		const std::string assetPath = destPath + AssetRegistry::GetEngineAssetExtension();
-		if (!PathUtils::Exists(assetPath))
+		if (!FileSystemUtils::Exists(assetPath))
 		{
 			// Create zasset file if not exists
 			CreateAsset(assetPath, srcPath);
@@ -93,13 +93,13 @@ namespace ZeoEngine {
 		const std::string templatePath = GetAssetTemplatePath();
 		const auto templateMetadata = AssetRegistry::Get().GetAssetMetadata(templatePath);
 		const auto templateResourcePath = templateMetadata->GetResourceFileSystemPath();
-		ZE_CORE_ASSERT(PathUtils::Exists(templatePath) && PathUtils::Exists(templateResourcePath));
+		ZE_CORE_ASSERT(FileSystemUtils::Exists(templatePath) && FileSystemUtils::Exists(templateResourcePath));
 
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		metadata->Flags |= PathFlag_HasResource;
 		// Copy resource template file
 		const auto resourcePath = metadata->GetResourceFileSystemPath();
-		PathUtils::CopyFile(templateResourcePath, resourcePath, true);
+		FileSystemUtils::CopyFile(templateResourcePath, resourcePath, true);
 		// Create zasset file
 		AssetFactoryBase::CreateAssetFile(path);
 	}
@@ -137,8 +137,8 @@ namespace ZeoEngine {
 		const auto& materialNames = mesh->GetMaterialNames();
 		for (SizeT i = 0; i < materialNames.size(); ++i)
 		{
-			const auto materialPath = fmt::format("{}/Mat_{}{}", PathUtils::GetParentPath(destPath), materialNames[i], AssetRegistry::GetEngineAssetExtension());
-			if (!PathUtils::Exists(materialPath))
+			const auto materialPath = fmt::format("{}/Mat_{}{}", FileSystemUtils::GetParentPath(destPath), materialNames[i], AssetRegistry::GetEngineAssetExtension());
+			if (!FileSystemUtils::Exists(materialPath))
 			{
 				if (AssetManager::Get().CreateAssetFile(Material::TypeID(), materialPath))
 				{

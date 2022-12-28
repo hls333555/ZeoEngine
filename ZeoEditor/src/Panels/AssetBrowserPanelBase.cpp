@@ -765,7 +765,7 @@ namespace ZeoEngine {
 
 			if (ImGui::MenuItem("Show In Explorer"))
 			{
-				PlatformUtils::ShowInExplorer(PathUtils::GetFileSystemPath(path));
+				PlatformUtils::ShowInExplorer(FileSystemUtils::GetFileSystemPath(path));
 			}
 			if (ImGui::IsItemHovered())
 			{
@@ -787,7 +787,7 @@ namespace ZeoEngine {
 				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetEngineAssetExtension());
 			}
 			const auto& path = metadata->Path;
-			const auto parentPath = PathUtils::GetParentPath(path);
+			const auto parentPath = FileSystemUtils::GetParentPath(path);
 			auto newPath = fmt::format("{}/{}", parentPath, renameBuffer);
 			if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
 			{
@@ -811,7 +811,7 @@ namespace ZeoEngine {
 		while (currentDirectory != AssetRegistry::GetProjectPathPrefix())
 		{
 			storage->SetInt(ar.GetPathMetadata<DirectoryMetadata>(currentDirectory)->TreeNodeId, true);
-			currentDirectory = PathUtils::GetParentPath(currentDirectory);
+			currentDirectory = FileSystemUtils::GetParentPath(currentDirectory);
 		}
 		storage->SetInt(ar.GetPathMetadata<DirectoryMetadata>(currentDirectory)->TreeNodeId, true);
 
@@ -839,7 +839,7 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::RequestPathCreationForResourceAsset(const std::string& srcPath, const std::string& destPath)
 	{
-		PathUtils::CopyAsset(srcPath, destPath);
+		FileSystemUtils::CopyAsset(srcPath, destPath);
 		AssetRegistry::Get().OnPathCreated(destPath, true);
 		ClearAllFilters(); // Keep filters active during path creation is meaningless
 	}
@@ -891,7 +891,7 @@ namespace ZeoEngine {
 				if (!metadata->IsAsset())
 				{
 					// Delete a directory
-					PathUtils::DeletePath(path);
+					FileSystemUtils::DeletePath(path);
 					AssetRegistry::Get().OnPathRemoved(path);
 				}
 				else
@@ -935,7 +935,7 @@ namespace ZeoEngine {
 				}
 				else
 				{
-					PathUtils::RenamePath(oldPath, newPath);
+					FileSystemUtils::RenamePath(oldPath, newPath);
 				}
 			}
 		}
@@ -948,7 +948,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				PathUtils::CreateDirectory(newPath);
+				FileSystemUtils::CreateDirectory(newPath);
 			}
 			m_PathToCreate.clear();
 		}

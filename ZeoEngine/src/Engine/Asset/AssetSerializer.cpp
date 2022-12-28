@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		YAML::Node node;
 		try
 		{
-			node = YAML::LoadFile(PathUtils::GetFileSystemPath(path));
+			node = YAML::LoadFile(FileSystemUtils::GetFileSystemPath(path));
 		}
 		catch (YAML::BadFile&)
 		{

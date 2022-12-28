@@ -79,7 +79,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::ConstructPathTree(const std::filesystem::path& rootDirectory)
 	{
-		std::string rootPath = PathUtils::GetStandardPath(rootDirectory);
+		std::string rootPath = FileSystemUtils::GetStandardPath(rootDirectory);
 		m_PathTree.emplace_back(std::make_pair(rootPath, std::vector<std::string>{}));
 		m_PathMetadatas[std::move(rootPath)] = CreateRef<DirectoryMetadata>(rootPath);
 
@@ -95,14 +95,14 @@ namespace ZeoEngine {
 			switch (it.status().type())
 			{
 				case std::filesystem::file_type::directory:
-					AddDirectoryToTree(PathUtils::GetStandardPath(baseDirectory), PathUtils::GetStandardPath(it.path()));
+					AddDirectoryToTree(FileSystemUtils::GetStandardPath(baseDirectory), FileSystemUtils::GetStandardPath(it.path()));
 
 					ConstructPathTreeRecursively(it.path());
 					break;
 				case std::filesystem::file_type::regular:
 					if (it.path().extension().string() == GetEngineAssetExtension())
 					{
-						AddAssetToTree(PathUtils::GetStandardPath(baseDirectory), PathUtils::GetStandardPath(it.path()));
+						AddAssetToTree(FileSystemUtils::GetStandardPath(baseDirectory), FileSystemUtils::GetStandardPath(it.path()));
 					}
 					break;
 				default:
@@ -233,7 +233,7 @@ namespace ZeoEngine {
 			m_PathTree.erase(currentPathIt);
 		}
 
-		const auto parentPath = PathUtils::GetParentPath(path);
+		const auto parentPath = FileSystemUtils::GetParentPath(path);
 		const auto parentPathIt = std::find_if(m_PathTree.begin(), m_PathTree.end(), [&parentPath](const auto& pair)
 		{
 			return pair.first == parentPath;
@@ -255,7 +255,7 @@ namespace ZeoEngine {
 			}
 		}
 
-		const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path));
+		const auto it = m_PathMetadatas.find(FileSystemUtils::GetStandardPath(path));
 		ZE_CORE_ASSERT(it != m_PathMetadatas.end());
 		m_PathMetadatas.erase(it);
 
@@ -284,7 +284,7 @@ namespace ZeoEngine {
 		}
 
 		m_PathMetadatas[oldPath]->Path = newPath;
-		m_PathMetadatas[oldPath]->PathName = PathUtils::GetPathName(newPath);
+		m_PathMetadatas[oldPath]->PathName = FileSystemUtils::GetPathName(newPath);
 		// C++17 way of modifying key of a map
 		auto node = m_PathMetadatas.extract(oldPath);
 		node.key() = newPath;
@@ -319,7 +319,7 @@ namespace ZeoEngine {
 
 	Ref<AssetMetadata> AssetRegistry::GetAssetMetadata(const std::string& path) const
 	{
-		if (const auto it = m_PathMetadatas.find(PathUtils::GetStandardPath(path)); it != m_PathMetadatas.cend())
+		if (const auto it = m_PathMetadatas.find(FileSystemUtils::GetStandardPath(path)); it != m_PathMetadatas.cend())
 		{
 			return std::dynamic_pointer_cast<AssetMetadata>(it->second);
 		}
@@ -345,7 +345,7 @@ namespace ZeoEngine {
 
 	Ref<PathMetadata> AssetRegistry::OnPathCreated(const std::string& path, bool bIsAsset)
 	{
-		const auto parentPath = PathUtils::GetParentPath(path);
+		const auto parentPath = FileSystemUtils::GetParentPath(path);
 		Ref<PathMetadata> metadata;
 		if (bIsAsset)
 		{
@@ -361,7 +361,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnTempPathCreated(const std::string& path, AssetTypeID typeID)
 	{
-		const auto parentPath = PathUtils::GetParentPath(path);
+		const auto parentPath = FileSystemUtils::GetParentPath(path);
 		Ref<PathMetadata> metadata;
 		if (typeID)
 		{
@@ -385,7 +385,7 @@ namespace ZeoEngine {
 
 	void AssetRegistry::OnPathRenamed(const std::string oldPath, const std::string newPath)
 	{
-		RenamePathInTree(PathUtils::GetParentPath(oldPath), oldPath, newPath);
+		RenamePathInTree(FileSystemUtils::GetParentPath(oldPath), oldPath, newPath);
 		SortPathTree();
 	}
 

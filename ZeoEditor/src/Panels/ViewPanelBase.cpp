@@ -9,7 +9,7 @@
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Renderer/SceneRenderer.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 #include "Worlds/EditorPreviewWorldBase.h"
 
 namespace ZeoEngine {
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 	{
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle());
 		const auto thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(metadata);
-		if (!bOverwriteThumbnail && PathUtils::Exists(thumbnailPath)) return;
+		if (!bOverwriteThumbnail && FileSystemUtils::Exists(thumbnailPath)) return;
 
 		m_FrameBuffer->Snapshot(thumbnailPath, imageWidth);
 		metadata->UpdateThumbnail();

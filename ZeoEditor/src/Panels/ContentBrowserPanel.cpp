@@ -237,9 +237,9 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::ImportAsset(const std::string& path)
 	{
-		const auto destPath = fmt::format("{}/{}", GetSelectedDirectory(), PathUtils::GetPathFileName(path));
+		const auto destPath = fmt::format("{}/{}", GetSelectedDirectory(), FileSystemUtils::GetPathFileName(path));
 		const auto& am = AssetManager::Get();
-		if (const auto typeID = am.GetAssetTypeFromFileExtension(PathUtils::GetPathExtension(path)))
+		if (const auto typeID = am.GetAssetTypeFromFileExtension(FileSystemUtils::GetPathExtension(path)))
 		{
 			am.ImportAsset(typeID, path, destPath);
 			SetForceUpdateFilterCache(true);

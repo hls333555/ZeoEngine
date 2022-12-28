@@ -4,7 +4,7 @@
 #include "Engine/Core/Console.h"
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Utils/EngineUtils.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -19,9 +19,9 @@ namespace ZeoEngine {
 	{
 		OPTICK_STOP_CAPTURE();
 		std::string outputPath = AssetRegistry::GetCPUProfileOutputDirectory();
-		if (!PathUtils::Exists(outputPath))
+		if (!FileSystemUtils::Exists(outputPath))
 		{
-			PathUtils::CreateDirectory(outputPath);
+			FileSystemUtils::CreateDirectory(outputPath);
 		}
 		outputPath += m_CaptureName;
 		OPTICK_SAVE_CAPTURE(outputPath.c_str());

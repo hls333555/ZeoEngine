@@ -638,6 +638,7 @@ namespace ZeoEngine {
 	// At this stage, all transforms have been updated
 	// Physics simulation is not processed yet
 	// You can read and write world transforms here but be aware that local transforms may be out of sync until PostPhysicsTransformSystem
+	// You'd better not write local transforms here as the changes will not submit to the physics simulation
 	void PrePhysicsScriptSystem::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNC();

@@ -10,7 +10,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Asset/AssetManager.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -98,13 +98,13 @@ namespace ZeoEngine {
 	void PlatformUtils::ShowInExplorer(const std::string& filepath)
 	{
 		std::wstringstream params;
-		params << "/select," << PathUtils::GetCanonicalPath(filepath).c_str(); // Use canonical path here, path separator must be "\\"
+		params << "/select," << FileSystemUtils::GetCanonicalPath(filepath).c_str(); // Use canonical path here, path separator must be "\\"
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 
 	void PlatformUtils::OpenFile(const std::string& filepath)
 	{
-		std::string path = PathUtils::GetCanonicalPath(filepath); // Use canonical path here, path separator must be "\\"
+		std::string path = FileSystemUtils::GetCanonicalPath(filepath); // Use canonical path here, path separator must be "\\"
 		ShellExecute(0, 0, std::wstring(path.begin(), path.end()).c_str(), 0, 0, SW_SHOW);
 	}
 

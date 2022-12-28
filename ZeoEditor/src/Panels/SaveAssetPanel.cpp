@@ -20,14 +20,14 @@ namespace ZeoEngine {
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
-		SetSelectedDirectory(metadata->IsTemplateAsset() ? AssetRegistry::GetProjectPathPrefix() : PathUtils::GetParentPath(metadata->Path));
+		SetSelectedDirectory(metadata->IsTemplateAsset() ? AssetRegistry::GetProjectPathPrefix() : FileSystemUtils::GetParentPath(metadata->Path));
 	}
 
 	void SaveAssetPanel::OnPathSelected(const std::string& path)
 	{
 		if (AssetRegistry::Get().GetAssetMetadata(path))
 		{
-			strcpy_s(m_NameBuffer, PathUtils::GetPathName(path).c_str());
+			strcpy_s(m_NameBuffer, FileSystemUtils::GetPathName(path).c_str());
 		}
 	}
 
@@ -59,8 +59,8 @@ namespace ZeoEngine {
 				const AssetHandle handle = m_World->GetAsset()->GetHandle();
 				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 				std::string name = m_NameBuffer;
-				const std::string extension = PathUtils::GetPathExtension(name);
-				const std::string originalExtension = PathUtils::GetPathExtension(metadata->PathName);
+				const std::string extension = FileSystemUtils::GetPathExtension(name);
+				const std::string originalExtension = FileSystemUtils::GetPathExtension(metadata->PathName);
 				if (extension != originalExtension)
 				{
 					// Force add resource extension if not exist

@@ -336,7 +336,7 @@ namespace ZeoEngine {
 		Application::Get().SubmitToMainThread([assetPath]()
 		{
 			// FileWatcher uses absolute path
-			AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(assetPath));
+			AssetLibrary::ReloadAsset(FileSystemUtils::GetStandardPath(assetPath));
 		});
 	}
 
