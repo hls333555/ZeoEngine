@@ -38,9 +38,11 @@ namespace ZeoEngine {
 		std::vector<std::filesystem::path> directoriesToWatch;
 		directoriesToWatch.emplace_back(AssetRegistry::GetEngineAssetDirectory());
 		directoriesToWatch.emplace_back(AssetRegistry::GetProjectAssetDirectory());
+		directoriesToWatch.emplace_back(AssetRegistry::GetCoreAssemblyDirectory());
 		m_FileWatcher = CreateScope<FileWatcher>(std::move(directoriesToWatch), std::chrono::duration<I32, std::milli>(1000));
 		m_FileWatcher->m_OnFileModified.connect<&Editor::OnFileModified>(this);
-		m_FileWatcher->m_OnFileModified.connect<&ScriptEngine::OnFileModified>();
+		m_FileWatcher->m_OnFileModified.connect<&ScriptEngine::OnAssemblyChanged>();
+		m_FileWatcher->m_OnFileAdded.connect<&ScriptEngine::OnAssemblyChanged>();
 
 		NewLevel();
 

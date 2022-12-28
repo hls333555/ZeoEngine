@@ -88,6 +88,7 @@ namespace ZeoEngine {
 		static std::string GetProjectPathPrefix() { return "Game"; }
 		static std::string GetEngineAssetDirectory() { return "assets"; } // TODO:
 		static std::string GetProjectDirectory() { return "SandboxProject"; } // TODO:
+		static std::string GetCoreAssemblyDirectory() { return "resources/scripts"; } // TODO:
 		static std::string GetProjectAssetDirectory() { return "SandboxProject/Assets"; } // TODO:
 
 		static std::string GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }

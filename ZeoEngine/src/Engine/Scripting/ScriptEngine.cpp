@@ -118,6 +118,7 @@ namespace ZeoEngine {
 		std::string AppAssemblyPath;
 		entt::sink<entt::sigh<void()>> OnScriptReloaded{ OnScriptReloadedDel };
 		entt::sigh<void()> OnScriptReloadedDel;
+		bool bReloadSubmitted = false;
 
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
@@ -125,8 +126,11 @@ namespace ZeoEngine {
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
 
-		// TODO: Configuable
+#ifdef ZE_DEBUG
 		bool bEnableDebugging = true;
+#else
+		bool bEnableDebugging = false;
+#endif
 
 		Ref<Scene> SceneContext;
 
@@ -147,45 +151,16 @@ namespace ZeoEngine {
 		s_Data = new ScriptEngineData();
 
 		InitMono();
-		LoadCoreAssembly("resources/scripts/ZeoEngine-ScriptCore.dll");
-		const std::string path = fmt::format("{}/Scripts/Binaries/Sandbox.dll", AssetRegistry::GetProjectAssetDirectory());
-		LoadAppAssembly(path);
-		LoadAssemblyClasses();
 		ScriptRegistry::RegisterFunctions();
+
+		const std::string appAssemblyPath = fmt::format("{}/Scripts/Binaries/Sandbox.dll", AssetRegistry::GetProjectAssetDirectory());
+		const bool bLoaded = LoadAssemblies("resources/scripts/ZeoEngine-ScriptCore.dll", appAssemblyPath);
+		if (!bLoaded) return;
+
+		LoadAssemblyClasses();
 		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
 
 		ZE_CORE_TRACE("Script engine intialized");
-
-#if Test
-		Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
-
-		// Create an object and call ctor
-		MonoObject* instance = s_Data->EntityClass.Instantiate();
-
-		// Call method
-		MonoMethod* printMsgFunc = s_Data->EntityClass.GetMethod("PrintMsg", 0);
-		s_Data->EntityClass.InvokeMethod(instance, printMsgFunc);
-
-		// Call method with parameters
-		MonoMethod* printIntFunc = s_Data->EntityClass.GetMethod("PrintInt", 1);
-		int value = 3;
-		void* param = &value;
-		s_Data->EntityClass.InvokeMethod(instance, printIntFunc, &param);
-
-		MonoMethod* printIntsFunc = s_Data->EntityClass.GetMethod("PrintInts", 2);
-		int value2 = 5;
-		void* params[2] =
-		{
-			&value,
-			&value2
-		};
-		s_Data->EntityClass.InvokeMethod(instance, printIntsFunc, params);
-
-		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello World from C++!");
-		MonoMethod* printStringFunc =s_Data->EntityClass.GetMethod("PrintString", 1);
-		void* stringParam = monoString;
-		s_Data->EntityClass.InvokeMethod(instance, printStringFunc, &stringParam);
-#endif
 	}
 
 	void ScriptEngine::Shutdown()
@@ -200,7 +175,6 @@ namespace ZeoEngine {
 	{
 		mono_set_assemblies_path("mono/lib");
 
-#ifdef ZE_DEBUG // TODO: Enable debugging will crash in release build, don't know why...
 		// Init debugger before jit init
 		if (s_Data->bEnableDebugging)
 		{
@@ -212,7 +186,6 @@ namespace ZeoEngine {
 			mono_jit_parse_options(argc, const_cast<char**>(argv));
 			mono_debug_init(MONO_DEBUG_FORMAT_MONO);
 		}
-#endif
 
 		MonoDomain* rootDomain = mono_jit_init("ZeoEngineJitRuntime");
 	    ZE_CORE_ASSERT(rootDomain);
@@ -220,12 +193,10 @@ namespace ZeoEngine {
 	    // Store the root domain pointer
 	    s_Data->RootDomain = rootDomain;
 
-#ifdef ZE_DEBUG
 		if (s_Data->bEnableDebugging)
 		{
 			mono_debug_domain_create(s_Data->RootDomain);
 		}
-#endif
 
 		mono_thread_set_main(mono_thread_current());
 	}
@@ -242,7 +213,22 @@ namespace ZeoEngine {
 		ClearEntityCacheData();
 	}
 
-	void ScriptEngine::LoadCoreAssembly(const std::string& path)
+	bool ScriptEngine::LoadAssemblies(const std::string& coreAssemblyPath, const std::string& appAssemblyPath)
+	{
+		const bool bCoreLoaded = LoadCoreAssembly(coreAssemblyPath);
+		if (!bCoreLoaded)
+		{
+			ZE_CORE_ERROR("Could not load ZeoEngine-ScriptCore assembly! Please make sure C# core dll is built correctly.");
+		}
+		const bool bAppLoaded = LoadAppAssembly(appAssemblyPath);
+		if (!bAppLoaded)
+		{
+			ZE_CORE_ERROR("Could not load app assembly! Please make sure C# app dll is built correctly.");
+		}
+		return bCoreLoaded && bAppLoaded;
+	}
+
+	bool ScriptEngine::LoadCoreAssembly(const std::string& path)
 	{
 		// Create an App Domain
 	    s_Data->AppDomain = mono_domain_create_appdomain("ZeoEngineScriptRuntime", nullptr);
@@ -250,37 +236,49 @@ namespace ZeoEngine {
 
 		s_Data->CoreAssemblyPath = path;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
+		if (!s_Data->CoreAssembly) return false;
+
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		return true;
 	}
 
-	void ScriptEngine::LoadAppAssembly(const std::string& path)
+	bool ScriptEngine::LoadAppAssembly(const std::string& path)
 	{
 		s_Data->AppAssemblyPath = path;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
+		if (!s_Data->AppAssembly) return false;
+
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+		return true;
 	}
 
-	void ScriptEngine::OnFileModified(const std::string& path)
+	void ScriptEngine::OnAssemblyChanged(const std::string& path)
 	{
 		if (FileSystemUtils::GetCanonicalPath(path) == FileSystemUtils::GetCanonicalPath(s_Data->CoreAssemblyPath) ||
 			FileSystemUtils::GetCanonicalPath(path) == FileSystemUtils::GetCanonicalPath(s_Data->AppAssemblyPath))
 		{
-			Application::Get().SubmitToMainThread([]()
+			if (!s_Data->bReloadSubmitted)
 			{
-				ReloadAssembly();
-			});
+				Application::Get().SubmitToMainThread([]()
+				{
+					ReloadAssembly();
+				});
+				s_Data->bReloadSubmitted = true;
+			}
 		}
 	}
 
 	void ScriptEngine::ReloadAssembly()
 	{
+		s_Data->bReloadSubmitted = false;
+
 		Timer timer;
 		{
 			mono_domain_set(mono_get_root_domain(), false);
 			mono_domain_unload(s_Data->AppDomain);
 
-			LoadCoreAssembly(s_Data->CoreAssemblyPath);
-			LoadAppAssembly(s_Data->AppAssemblyPath);
+			const bool bLoaded = LoadAssemblies(s_Data->CoreAssemblyPath, s_Data->AppAssemblyPath);
+			if (!bLoaded) return;
 
 			ScriptRegistry::ReloadMonoComponents();
 
@@ -388,7 +386,11 @@ namespace ZeoEngine {
 	{
 		const auto& scriptComp = entity.GetComponent<ScriptComponent>();
 		const auto& className = scriptComp.ClassName;
-		if (!EntityClassExists(className)) return;
+		if (!EntityClassExists(className))
+		{
+			ZE_CORE_ERROR("Could not find script class: '{}' to instantiate!", className);
+			return;
+		}
 
 		const UUID entityID = entity.GetUUID();
 		const auto entityClass = GetEntityClass(className);
