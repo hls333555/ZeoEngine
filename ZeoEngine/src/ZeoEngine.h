@@ -1,6 +1,6 @@
 #pragma once
 
-// For use by ZeoEngine applicaions
+// TODO: For use by ZeoEngine applications
 
 #include "Engine/Core/Core.h"
 
@@ -14,7 +14,6 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Core/KeyCodes.h"
 #include "Engine/Core/MouseCodes.h"
-#include "Engine/Renderer/OrthographicCameraController.h"
 #include "Engine/Core/RandomEngine.h"
 
 #include "Engine/GameFramework/Scene.h"
@@ -35,5 +34,4 @@
 #include "Engine/Renderer/SubTexture2D.h"
 #include "Engine/Renderer/VertexArray.h"
 
-#include "Engine/Renderer/OrthographicCamera.h"
 // ----------------------------------------------

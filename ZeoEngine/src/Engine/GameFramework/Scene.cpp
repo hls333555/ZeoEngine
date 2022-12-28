@@ -4,37 +4,82 @@
 #include "Engine/GameFramework/Systems.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/GameFramework/Components.h"
+#include "Engine/Physics/PhysXScene.h"
 
 namespace ZeoEngine {
 
-	Scene::Scene(Scope<SceneObserverSystemBase> sceneObserverSystem)
-		: m_SceneObserverSystem(std::move(sceneObserverSystem))
-	{
-		m_SceneObserverSystem->SetScene(this);
-		m_SceneObserverSystem->OnBind();
-	}
+	namespace Utils {
 
-	Scene::~Scene()
-	{
-		m_SceneObserverSystem->OnUnbind();
-	}
-
-	void Scene::OnUpdate()
-	{
-		m_SceneObserverSystem->OnUpdate(*this);
-	}
-
-	void Scene::Copy(const Ref<Scene>& other)
-	{
-		m_Context = other->m_Context;
-		other->ForEachComponentView<CoreComponent>([this, &other](auto entityID, auto& coreComp)
+		static void ToLocalSpaceTransform(Entity entity)
 		{
-			const Entity entity{ entityID, other };
+			const Entity parent = entity.GetParentEntity();
+			if (!parent) return;
+
+			const Mat4 parentTransform = parent.GetWorldTransform();
+			const Mat4 localTransform = glm::inverse(parentTransform) * entity.GetTransform();
+			Vec3 translation, rotation, scale;
+			// NOTE: If we attach an entity with rotation to a parent entity with non-uniform scale, that child entity will become skewed
+			// This is because parent scale is not applied in child local space and matrix decomposing will produce a shear matrix in addition to translation, rotation and scale
+			// See TTransform<T>::GetRelativeTransform in Unreal Engine
+			// https://gabormakesgames.com/blog_transforms_matrix_getters.html
+			Math::DecomposeTransform(localTransform, translation, rotation, scale);
+			entity.SetTransform(translation, rotation, scale);
+		}
+
+		static void ToWorldSpaceTransform(Entity entity)
+		{
+			const Entity parent = entity.GetParentEntity();
+			if (!parent) return;
+
+			const Mat4 worldTransform = entity.GetWorldTransform();
+			Vec3 translation, rotation, scale;
+			Math::DecomposeTransform(worldTransform, translation, rotation, scale);
+			entity.SetTransform(translation, rotation, scale);
+		}
+
+	}
+
+	Scene::Scene(SceneSpec spec)
+		: m_Spec(spec)
+		, m_ContextShared(CreateRef<SceneContext>())
+	{
+	}
+
+	Scene::~Scene() = default;
+
+	Ref<Scene> Scene::Copy()
+	{
+		auto newScene = CreateRef<Scene>(m_Spec);
+		newScene->m_ContextShared = m_ContextShared;
+		const auto coreView = GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
+		{
+			const Entity entity{ e, shared_from_this() };
 			// Clone a new "empty" entity
-			auto newEntity = CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
+			auto newEntity = newScene->CreateEntityWithUUID(entity.GetUUID(), entity.GetName());
 			// Copy components to that entity
 			newEntity.CopyAllRegisteredComponents(entity);
-		});
+		}
+		return newScene;
+	}
+
+	PhysXScene* Scene::CreatePhysicsScene()
+	{
+		return &AddContext<PhysXScene>(this);
+	}
+
+	PhysXScene* Scene::GetPhysicsScene()
+	{
+		if (!HasContext<PhysXScene>()) return nullptr;
+		return &GetContext<PhysXScene>();
+	}
+
+	void Scene::DestroyPhysicsScene()
+	{
+		if (HasContext<PhysXScene>())
+		{
+			RemoveContext<PhysXScene>();
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name, const Vec3& translation)
@@ -52,6 +97,7 @@ namespace ZeoEngine {
 			coreComp.EntityIndex = m_CurrentEntityIndex++;
 		}
 		entity.AddComponent<IDComponent>(uuid);
+		entity.AddComponent<RelationshipComponent>();
 		entity.AddComponent<TransformComponent>(translation);
 		entity.AddComponent<BoundsComponent>();
 
@@ -64,16 +110,87 @@ namespace ZeoEngine {
 		return entity;
 	}
 
+	// TODO: Rule: KeepRelative, KeepWorld, SnapTo
+	void Scene::ParentEntity(Entity entity, Entity parent)
+	{
+		if (parent.IsDescendantOf(entity))
+		{
+			ZE_CORE_WARN("Parent entity {0} cannot become the child of its descendant entity {1}", entity.GetName(), parent.GetName());
+			return;
+		}
+
+		if (Entity previousParent = entity.GetParentEntity())
+		{
+			UnparentEntity(entity);
+		}
+
+		auto& childComp = entity.GetComponent<RelationshipComponent>();
+		childComp.ParentEntity = parent.GetUUID();
+		auto& parentComp = parent.GetComponent<RelationshipComponent>();
+		parentComp.ChildEntities.emplace_back(entity.GetUUID());
+
+		auto& transformComp = entity.GetComponent<TransformComponent>();
+		entity.AddComponent<WorldTransformComponent>(transformComp.Translation, transformComp.GetRotationInRadians(), transformComp.Scale);
+
+		Utils::ToLocalSpaceTransform(entity);
+	}
+
+	// TODO: Rule: KeepRelative, KeepWorld
+	void Scene::UnparentEntity(Entity entity)
+	{
+		const Entity parent = entity.GetParentEntity();
+		if (!parent) return;
+
+		auto& parentComp = parent.GetComponent<RelationshipComponent>();
+		auto& parentChildren = parentComp.ChildEntities;
+		parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), entity.GetUUID()), parentChildren.end());
+
+		Utils::ToWorldSpaceTransform(entity);
+
+		auto& childComp = entity.GetComponent<RelationshipComponent>();
+		childComp.ParentEntity = 0;
+
+		entity.RemoveComponent<WorldTransformComponent>();
+	}
+
+	// TODO: Should duplicate submesh entities
 	Entity Scene::DuplicateEntity(Entity entity)
 	{
 		Entity newEntity = CreateEntity(entity.GetName());
-		// Copy all components but IDComponent(UUID)
-		newEntity.CopyAllRegisteredComponents(entity, { entt::type_hash<IDComponent>::value() });
+		const Mat4 worldTransform = entity.GetWorldTransform();
+		newEntity.CopyAllRegisteredComponents(entity,
+		{
+			entt::type_hash<CoreComponent>::value(),
+			entt::type_hash<IDComponent>::value(),
+			entt::type_hash<RelationshipComponent>::value(),
+			entt::type_hash<WorldTransformComponent>::value()
+		});
+		newEntity.SetTransform(worldTransform);
 		return newEntity;
 	}
 
+	// TODO: Should destroy submesh entities
 	void Scene::DestroyEntity(Entity entity)
 	{
+		auto* physicsScene = GetPhysicsScene();
+		if (physicsScene)
+		{
+			if (entity.HasComponent<RigidBodyComponent>())
+			{
+				physicsScene->DestroyActor(entity);
+			}
+
+			if (entity.HasComponent<CharacterControllerComponent>())
+			{
+				physicsScene->DestroyCharacterController(entity);
+			}
+		}
+
+		for (const UUID childID : entity.GetChildren())
+		{
+			UnparentEntity(GetEntityByUUID(childID));
+		}
+
 		const auto uuid = entity.GetUUID();
 		destroy(entity);
 		m_Entities.erase(uuid);
@@ -91,35 +208,39 @@ namespace ZeoEngine {
 
 	Entity Scene::GetEntityByName(std::string_view name)
 	{
-		Entity entity;
-		ForEachComponentView<CoreComponent>([&](auto e, auto& coreComp)
+		const auto coreView = GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
 		{
+			auto [coreComp] = coreView.get(e);
 			if (coreComp.Name == name)
 			{
-				entity = { e, shared_from_this() };
+				Entity entity{ e, shared_from_this() };
+				return entity;
 			}
-		});
-		return entity;
+		}
+		return {};
 	}
 
 	Entity Scene::GetMainCameraEntity()
 	{
-		Entity entity;
-		ForEachComponentView<CameraComponent>([&](auto e, auto& cameraComp)
+		const auto cameraView = GetComponentView<CameraComponent>();
+		for (const auto e : cameraView)
 		{
+			auto [cameraComp] = cameraView.get(e);
 			if (cameraComp.bIsPrimary)
 			{
-				entity = { e, shared_from_this() };
+				Entity entity{ e, shared_from_this() };
+				return entity;
 			}
-		});
-		return entity;
+		}
+		return {};
 	}
 
 	void Scene::SortEntities()
 	{
 		// Sort entities by creation index
 		// We assume that every entity has the CoreComponent which will never get removed
-		sort<CoreComponent>([](const auto& lhs, const auto& rhs)
+		sort<CoreComponent>([](const CoreComponent& lhs, const CoreComponent& rhs)
 		{
 			return lhs.EntityIndex < rhs.EntityIndex;
 		});

@@ -23,7 +23,7 @@ namespace ZeoEngine {
 	void MenuItemBase::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(MenuItemBase::OnKeyPressed));
+		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) { return OnKeyPressed(e); });
 	}
 
 	bool MenuItemBase::OnKeyPressed(KeyPressedEvent& e)

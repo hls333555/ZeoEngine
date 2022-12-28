@@ -30,6 +30,9 @@ namespace ZeoEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_GetUpVector(ulong entityID, out Vector3 upVector);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_LookAt(ulong entityID, ref Vector3 worldPosition, ref Vector3 upVector);
+
         #endregion
 
         #region TransformComponent
@@ -54,6 +57,28 @@ namespace ZeoEngine
 
         #endregion
 
+        #region WorldTransformComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetTranslation(ulong entityID, out Vector3 translation);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetRotation(ulong entityID, out Vector3 rotation);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetRotation(ulong entityID, ref Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_GetScale(ulong entityID, out Vector3 scale);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void WorldTransformComponent_SetScale(ulong entityID, ref Vector3 scale);
+
+        #endregion
+
         #region MeshRendererComponent
 
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -70,6 +95,45 @@ namespace ZeoEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void MeshRendererComponent_SetMaterialAsset(ulong entityID, uint index, AssetHandle materialAsset);
+
+        #endregion
+
+        #region RigidBodyComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool CharacterControllerComponent_IsGrounded(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void CharacterControllerComponent_Move(ulong entityID, ref Vector3 displacement);
+
+        #endregion
+
+        #region CharacterControllerComponent
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void RigidBodyComponent_SetKinematicTarget(ulong entityID, ref Vector3 targetPosition, ref Vector3 targetRotation);
+
+        #endregion
+
+        #region Math
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern float Math_FloatInterpTo(float current, float target, float dt, float interpSpeed);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector2InterpTo(ref Vector2 current, ref Vector2 target, float dt, float interpSpeed, out Vector2 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector3InterpTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern float Math_FloatInterpConstantTo(float current, float target, float dt, float interpSpeed);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector2InterpConstantTo(ref Vector2 current, ref Vector2 target, float dt, float interpSpeed, out Vector2 result);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Math_Vector3InterpConstantTo(ref Vector3 current, ref Vector3 target, float dt, float interpSpeed, out Vector3 result);
 
         #endregion
 
@@ -92,10 +156,10 @@ namespace ZeoEngine
         #region Asset
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(string path, bool bForceLoad);
+        internal static extern IntPtr AssetLibrary_LoadAssetByPath(string path, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern IntPtr AssetLibrary_LoadAsset(AssetHandle handle, bool bForceLoad);
+        internal static extern IntPtr AssetLibrary_LoadAssetByHandle(AssetHandle handle, bool bForceLoad);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern string Asset_GetName(AssetHandle handle);
@@ -108,6 +172,16 @@ namespace ZeoEngine
         #region Mesh
 
 
+
+        #endregion
+
+        #region Physics
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Physics_GetGravity(out Vector3 gravity);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Physics_SetGravity(ref Vector3 gravity);
 
         #endregion
 

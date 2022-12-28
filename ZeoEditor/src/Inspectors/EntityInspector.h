@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/ImGui/TextFilter.h"
 #include "Inspectors/InspectorBase.h"
 
 namespace ZeoEngine {
@@ -25,7 +26,10 @@ namespace ZeoEngine {
 	private:
 		std::vector<Scope<ComponentInspector>> m_ComponentInspectors;
 
-		/** Map from category to list of component ids, used to draw categorized components in AddComponent popup */
+		TextFilter m_Filter;
+		bool m_bHasComponentFilterKeyboardFocused = false;
+
+		/** Map from category to list of component IDs, used to draw categorized components in AddComponent popup */
 		std::map<std::string, std::vector<U32>> m_CategorizedComponents;
 
 		Entity m_LastEntity;

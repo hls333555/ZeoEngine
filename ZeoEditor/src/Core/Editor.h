@@ -51,6 +51,7 @@ namespace ZeoEngine {
 			auto* world = worldPtr.get();
 			m_Worlds.emplace(std::move(worldName), std::move(worldPtr));
 			world->OnAttach();
+			world->PostAttach();
 			return world;
 		}
 

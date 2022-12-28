@@ -7,6 +7,13 @@
 
 namespace ZeoEngine {
 
+	enum class CursorMode
+	{
+		Normal = 0,
+		Hidden = 1,
+		Locked = 2
+	};
+
 	class Input
 	{
 	public:
@@ -18,7 +25,9 @@ namespace ZeoEngine {
 		static Vec2 GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
-	
+		static CursorMode GetCursorMode();
+		static void SetCursorMode(CursorMode mode);
+
 	};
 
 }

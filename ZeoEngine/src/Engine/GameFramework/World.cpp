@@ -14,7 +14,13 @@ namespace ZeoEngine {
 	{
 	}
 
-	WorldBase::~WorldBase() = default;
+	WorldBase::~WorldBase()
+	{
+		for (const auto& system : m_Systems)
+		{
+			system->OnDestroy();
+		}
+	}
 
 	void WorldBase::OnAttach()
 	{
@@ -28,38 +34,29 @@ namespace ZeoEngine {
 
 		if (!m_bActive) return;
 
-		if (IsRuntime())
 		{
-			if (IsRunning())
-			{
-				for (const auto& system : m_Systems)
-				{
-					system->OnUpdateRuntime(dt);
-				}
-			}
-		}
-		else
-		{
+			ZE_PROFILE_FUNC("Systems: OnUpdate");
+
 			for (const auto& system : m_Systems)
 			{
-				system->OnUpdateEditor(dt);
+				system->OnUpdate(dt);
 			}
 		}
-
-		m_ActiveScene->OnUpdate();
 
 		if (m_SceneRenderer)
 		{
+			ZE_PROFILE_FUNC("SceneRenderer: OnRender");
+
 			m_SceneRenderer->OnRender();
 		}
 	}
 
 	void WorldBase::NewScene()
 	{
-		const Ref<Scene> scene = CreateRef<Scene>(CreateSceneObserverSystem());
+		const Ref<Scene> scene = CreateScene();
 		ScriptEngine::SetSceneContext(scene);
 		SetActiveScene(scene);
-		PostSceneCreate(scene); // TODO:
+		PostSceneCreate();
 	}
 
 	void WorldBase::SetActiveScene(Ref<Scene> scene)

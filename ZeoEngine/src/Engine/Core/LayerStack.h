@@ -8,7 +8,6 @@ namespace ZeoEngine {
 	{
 	public:
 		LayerStack() = default;
-		~LayerStack();
 
 		/** Layers are pushed to the first half of stack. */
 		void PushLayer(Layer* layer);

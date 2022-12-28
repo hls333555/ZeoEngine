@@ -12,6 +12,14 @@ namespace ZeoEngine {
 	{
 		SceneRenderer::OnAttach(world);
 
+		RegisterRenderSystem<BillboardRenderSystem>(world);
+		RegisterRenderSystem<CameraVisualizerRenderSystem>(world);
+		RegisterRenderSystem<PhysicsDebugRenderSystem>(world);
+		RegisterRenderSystem<MeshRenderSystem>(world);
+		RegisterRenderSystem<DirectionalLightRenderSystem>(world);
+		RegisterRenderSystem<PointLightRenderSystem>(world);
+		RegisterRenderSystem<SpotLightRenderSystem>(world);
+
 		m_LevelWorld = dynamic_cast<LevelPreviewWorld*>(world);
 	}
 
@@ -20,29 +28,36 @@ namespace ZeoEngine {
 		return CreateScope<ForwardRenderGraph>();
 	}
 
-	Scope<RenderSystemBase> LevelPreviewSceneRenderer::CreateRenderSystem(WorldBase* world)
-	{
-		return CreateScope<RenderSystem>(world);
-	}
-
-	void LevelPreviewSceneRenderer::OnRenderScene()
+	void LevelPreviewSceneRenderer::RenderScene()
 	{
 		if (m_LevelWorld->IsRuntime())
 		{
-			if (const Entity cameraEntity = m_LevelWorld->GetActiveScene()->GetMainCameraEntity())
-			{
-				const SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-				const Mat4& cameraTransform = cameraEntity.GetTransform();
-				BeginScene(camera, cameraTransform);
-				GetRenderSystem()->OnRenderRuntime();
-			}
 			GetRenderGraph().ToggleRenderPassActive("Grid", false);
+			if (m_LevelWorld->IsSimulation())
+			{
+				BeginScene(m_LevelWorld->GetEditorCamera());
+			}
+			else
+			{
+				const Entity cameraEntity = m_LevelWorld->GetActiveScene()->GetMainCameraEntity();
+				if (!cameraEntity)
+				{
+					EndScene();
+					ZE_CORE_ERROR("No active camera for rendering!");
+					return;
+				}
+
+				const SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+				const Mat4& cameraTransform = cameraEntity.GetWorldTransform();
+				BeginScene(camera, cameraTransform);
+			}
+			RenderRuntime();
 			EndScene();
 		}
 		else
 		{
 			BeginScene(m_LevelWorld->GetEditorCamera());
-			GetRenderSystem()->OnRenderEditor();
+			RenderEditor(false);
 			GetRenderGraph().ToggleRenderPassActive("Grid", true);
 			EndScene();
 		}

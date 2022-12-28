@@ -6,6 +6,7 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Core/Console.h"
 #include "Engine/Utils/EngineUtils.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -329,14 +330,17 @@ namespace ZeoEngine {
 		const char* bufEnd = CommandCallbackData.CommandBuffer.end();
 
 		CommandFilter.Draw("##CommandTextFilter", "Input Console Command", 0, CommandInputCallback, &CommandCallbackData);
+		ConsoleInputItemID = ImGui::GetItemID();
 		// Restore focus to the input box if we just clicked an item
-		if (CommandCallbackData.ClickedIdx > -1)
+		if (CommandCallbackData.ClickedIdx > -1 || bRequestKeyboardFocus)
 		{
 			// NOTE: We do not reset the 'clickedIdx' here because
 			// we want to let the callback handle it in order to
 			// modify the buffer, therefore we simply restore keyboard input instead
 			// so that callback will be invoked next frame
 			ImGui::SetKeyboardFocusHere(-1);
+
+			bRequestKeyboardFocus = false;
 		}
 		if (ImGui::IsItemDeactivated() && ImGui::IsKeyPressed(ImGuiKey_Enter))
 		{
@@ -411,6 +415,8 @@ namespace ZeoEngine {
 			CommandCallbackData.ActiveIdx = -1;
 		}
 
+		bool bIsRuntime = SceneUtils::IsLevelRuntime();
+
 		// Prefilter when input changes
 		if (CommandFilter.bIsInputBufferChanged)
 		{
@@ -426,7 +432,9 @@ namespace ZeoEngine {
 			{
 				const char* lineStart = buf + CommandCallbackData.CommandLineOffsets[lineNum];
 				const char* lineEnd = (lineNum + 1 < CommandCallbackData.CommandLineOffsets.Size) ? (buf + CommandCallbackData.CommandLineOffsets[lineNum + 1] - 1) : bufEnd;
-				if (CommandFilter.IsActive() && CommandFilter.PassFilter(lineStart, lineEnd))
+				CommandType type = Console::Get().GetCommandType({ lineStart, lineEnd });
+				bool bPassCommandTypeFilter = type == CommandType::Default || bIsRuntime && type == CommandType::RuntimeOnly || !bIsRuntime && type == CommandType::EditOnly;
+				if (CommandFilter.IsActive() && bPassCommandTypeFilter && CommandFilter.PassFilter(lineStart, lineEnd))
 				{
 					CommandCallbackData.FilteredCommandLines.push_back(lineNum);
 					MaxCommandLineWidth = glm::max(MaxCommandLineWidth, ImGui::CalcTextSize(lineStart, lineEnd).x);

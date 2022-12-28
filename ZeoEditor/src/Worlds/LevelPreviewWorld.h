@@ -7,7 +7,8 @@ namespace ZeoEngine {
 	enum class SceneState
 	{
 		Edit = 0,
-		Play = 1, Pause = 2
+		Run = 1, // Can be play or simulate
+		Pause = 2 // Can be play or simulate
 	};
 
 	class LevelPreviewWorld : public EditorPreviewWorldBase
@@ -16,8 +17,12 @@ namespace ZeoEngine {
 		using EditorPreviewWorldBase::EditorPreviewWorldBase;
 
 		virtual void OnAttach() override;
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		virtual bool IsRuntime() const override { return m_SceneState != SceneState::Edit; }
+		virtual bool IsRunning() override { return m_SceneState == SceneState::Run || (m_SceneState == SceneState::Pause && m_StepFrames > 0); }
+		/** Returns true if current runtime is simulation. Calling it when SceneState == Edit is meaningless. */
+		virtual bool IsSimulation() const override { return m_bIsSimulation; }
 
 		void StopScene();
 
@@ -25,6 +30,8 @@ namespace ZeoEngine {
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void OnSceneStartSimulation();
+		void OnSceneStopSimulation();
 		void OnScenePause();
 		void OnSceneResume();
 
@@ -34,8 +41,7 @@ namespace ZeoEngine {
 		void OnDeleteEntity();
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() override;
-		virtual void PostSceneCreate(const Ref<Scene>& scene) override;
+		virtual void PostSceneCreate() override;
 		virtual Ref<SceneRenderer> CreateSceneRenderer() override;
 
 		virtual Ref<IAsset> LoadAssetImpl(const std::string& path, bool bForce) override;
@@ -44,13 +50,16 @@ namespace ZeoEngine {
 
 		void ActivateEntityInspector(Entity entity, Entity lastEntity);
 
-		void OnRuntimeStart() const;
-		void OnRuntimeStop() const;
+		void OnPlayStart() const;
+		void OnPlayStop() const;
+		void OnSimulationStart() const;
+		void OnSimulationStop() const;
 
-		virtual bool IsRunning() override { return m_SceneState == SceneState::Play || (m_SceneState == SceneState::Pause && m_StepFrames-- > 0); }
+		void TogglePlayMode(bool bEnable) const;
 
 	private:
 		SceneState m_SceneState = SceneState::Edit;
+		bool m_bIsSimulation = false;
 
 		Ref<Scene> m_SceneForEdit;
 

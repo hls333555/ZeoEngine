@@ -6,6 +6,7 @@
 #include <entt.hpp>
 
 #include "Engine/Core/Core.h"
+#include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
 
@@ -62,6 +63,8 @@ namespace ZeoEngine {
 		/** Monitor "m_DirectoryToWatch" for changes and in case of a change execute the delegate. */
 		void Execute()
 		{
+			ZE_PROFILE_THREAD("FileWatcher");
+
 			while (WaitFor(m_Interval))
 			{
 				auto it = m_WatchedFiles.begin();

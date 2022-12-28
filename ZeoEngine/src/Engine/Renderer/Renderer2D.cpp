@@ -114,13 +114,6 @@ namespace ZeoEngine {
 		StartBatch();
 	}
 
-	void Renderer2D::BeginScene(const OrthographicCamera& camera)
-	{
-		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
-		StartBatch();
-	}
-
 	void Renderer2D::EndScene()
 	{
 		Flush();

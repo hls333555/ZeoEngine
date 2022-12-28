@@ -45,7 +45,6 @@ namespace ZeoEngine {
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 
 		static void SetIcon(GLFWwindow* window);
-		static void LockMouse(GLFWwindow* window, bool bLock);
 	
 	};
 

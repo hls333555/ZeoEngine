@@ -24,7 +24,7 @@ namespace ZeoEngine
             set => InternalCalls.TransformComponent_SetTranslation(ID, ref value);
         }
 
-        public Vector3 Rotation
+        public Vector3 Rotation // In radians
         {
             get
             {
@@ -44,6 +44,36 @@ namespace ZeoEngine
             set => InternalCalls.TransformComponent_SetScale(ID, ref value);
         }
 
+        public Vector3 WorldTranslation
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetTranslation(ID, out Vector3 translation);
+                return translation;
+            }
+            set => InternalCalls.WorldTransformComponent_SetTranslation(ID, ref value);
+        }
+
+        public Vector3 WorldRotation // In radians
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetRotation(ID, out Vector3 rotation);
+                return rotation;
+            }
+            set => InternalCalls.WorldTransformComponent_SetRotation(ID, ref value);
+        }
+
+        public Vector3 WorldScale
+        {
+            get
+            {
+                InternalCalls.WorldTransformComponent_GetScale(ID, out Vector3 scale);
+                return scale;
+            }
+            set => InternalCalls.WorldTransformComponent_SetScale(ID, ref value);
+        }
+
         public Vector3 GetForwardVector()
         {
             InternalCalls.Entity_GetForwardVector(ID, out Vector3 forwardVector);
@@ -60,6 +90,16 @@ namespace ZeoEngine
         {
             InternalCalls.Entity_GetUpVector(ID, out Vector3 upVector);
             return upVector;
+        }
+
+        public void LookAt(Vector3 worldPosition)
+        {
+            InternalCalls.Entity_LookAt(ID, ref worldPosition, ref Vector3.Up);
+        }
+
+        public void LookAt(Vector3 worldPosition, Vector3 upVector)
+        {
+            InternalCalls.Entity_LookAt(ID, ref worldPosition, ref upVector);
         }
 
         public bool HasComponent<T>() where T : IComponent, new()

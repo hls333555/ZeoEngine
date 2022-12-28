@@ -24,7 +24,11 @@ namespace ZeoEngine {
 
 	void EditorPreviewWorldBase::OnUpdate(DeltaTime dt)
 	{
-		m_EditorCamera.OnUpdate(dt);
+		if (!IsRuntime() || IsSimulation())
+		{
+			// Do not update editor camera when game is running
+			m_EditorCamera.OnUpdate(dt);
+		}
 
 		WorldBase::OnUpdate(dt);
 	}

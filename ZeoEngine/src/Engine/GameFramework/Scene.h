@@ -10,6 +10,8 @@
 
 namespace ZeoEngine {
 
+	class PhysXScene;
+
 	/** A scene context which shares among copied scenes. */
 	struct SceneContext
 	{
@@ -22,34 +24,34 @@ namespace ZeoEngine {
 	template<typename... Component>
 	inline constexpr entt::exclude_t<Component...> ExcludeComponents{};
 
+	struct SceneSpec
+	{
+		
+	};
+
 	class Scene final : public entt::registry, public std::enable_shared_from_this<Scene>
 	{
 		friend class Entity;
-		friend class SceneObserverSystemBase;
 
 	public:
-		explicit Scene(Scope<SceneObserverSystemBase> sceneObserverSystem = nullptr);
+		explicit Scene(SceneSpec spec = SceneSpec());
 		~Scene();
 
-		void OnUpdate();
-
-		/** Copy function which processes member copy. */
-		void Copy(const Ref<Scene>& other);
-
 		// We cannot copy Scene through copy constructor as it is a deleted function
-		// So we construct a new scene and call our "copy" function instead
-		template<typename T, typename ... Args>
-		Ref<T> Copy(Args&& ... args)
-		{
-			Ref<T> newScene = CreateRef<T>(std::forward<Args>(args)...);
-			newScene->Copy(shared_from_this());
-			return newScene;
-		}
+		// So we construct a new scene and do the copy ourselves
+		Ref<Scene> Copy();
 
-		SceneContext* GetContext() const { return m_Context.get(); }
+		SceneContext* GetContextShared() const { return m_ContextShared.get(); }
+
+		PhysXScene* CreatePhysicsScene();
+		/** PhyXScene only exists at runtime when bIsPhysicalScene is true. */
+		PhysXScene* GetPhysicsScene();
+		void DestroyPhysicsScene();
 
 		Entity CreateEntity(const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Entity", const Vec3& translation = Vec3(0.0f));
+		void ParentEntity(Entity entity, Entity parent);
+		void UnparentEntity(Entity entity);
 		Entity DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 		Entity GetEntityByUUID(UUID uuid) const;
@@ -58,44 +60,65 @@ namespace ZeoEngine {
 
 		Entity GetMainCameraEntity();
 
-		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {}) const
+		template<U32 TagHash>
+		void ClearTags()
 		{
-			view<Component...>(exclude).each(std::forward<Func>(func));
-		}
-		template<typename... Component, typename... Exclude, typename Func>
-		void ForEachComponentView(Func&& func, entt::exclude_t<Exclude...> exclude = {})
-		{
-			view<Component...>(exclude).each(std::forward<Func>(func));
+			return clear<entt::tag<TagHash>>();
 		}
 
-		struct DefaultCompare
+		template<typename T>
+		void ClearComponents()
 		{
-			template<typename... Component>
-			constexpr auto operator()(std::tuple<Component&...>, std::tuple<Component&...>) const { return true; }
-		};
-
-		// TODO:
-		template<typename... Owned, typename... Include, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(entt::get_t<Include...> include, Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
-		{
-			auto compGroup = group<Owned...>(include, exclude);
-			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
-			{
-				compGroup.sort<Owned..., Include...>(std::move(compareFunc));
-			}
-			compGroup.each(std::forward<Func>(func));
+			return clear<T>();
 		}
 
-		template<typename... Owned, typename... Exclude, typename Func, typename CompareFunc = DefaultCompare>
-		void ForEachComponentGroup(Func&& func, entt::exclude_t<Exclude...> exclude = {}, CompareFunc compareFunc = CompareFunc{})
+		template<typename T, typename... Args>
+		T& AddContext(Args&&... args)
 		{
-			auto compGroup = group<Owned...>(exclude);
-			if constexpr (!std::is_same_v<CompareFunc, DefaultCompare>)
-			{
-				compGroup.sort<Owned...>(std::move(compareFunc));
-			}
-			compGroup.each(std::forward<Func>(func));
+			ZE_CORE_ASSERT(!HasContext<T>(), "Scene already has context!");
+			return ctx().emplace<T>(std::forward<Args>(args)...);
+		}
+
+		template<typename T>
+		bool RemoveContext()
+		{
+			return ctx().erase<T>();
+		}
+
+		template<typename T>
+		T& GetContext()
+		{
+			ZE_CORE_ASSERT(HasContext<T>(), "Scene does not have context!");
+			return ctx().at<T>();
+		}
+
+		template<typename T>
+		bool HasContext() const
+		{
+			return ctx().contains<T>();
+		}
+
+		template<typename... Component, typename... Exclude>
+		auto GetComponentView(entt::exclude_t<Exclude...> exclude = {}) const
+		{
+			return view<Component...>(exclude);
+		}
+		template<typename... Component, typename... Exclude>
+		auto GetComponentView(entt::exclude_t<Exclude...> exclude = {})
+		{
+			return view<Component...>(exclude);
+		}
+
+		template<typename... Owned, typename... Include, typename... Exclude>
+		auto GetComponentGroup(entt::get_t<Include...> include, entt::exclude_t<Exclude...> exclude = {})
+		{
+			return group<Owned...>(include, exclude);
+		}
+
+		template<typename... Owned, typename... Exclude>
+		auto GetComponentGroup(entt::exclude_t<Exclude...> exclude = {})
+		{
+			return group<Owned...>(exclude);
 		}
 
 	private:
@@ -112,15 +135,12 @@ namespace ZeoEngine {
 		using entt::registry::get;
 		using entt::registry::all_of;
 		using entt::registry::patch;
-		using entt::registry::on_construct;
-		using entt::registry::on_update;
-		using entt::registry::on_destroy;
 
 		void SortEntities();
 
 	private:
-		Scope<SceneObserverSystemBase> m_SceneObserverSystem;
-		Ref<SceneContext> m_Context = CreateRef<SceneContext>();
+		SceneSpec m_Spec;
+		Ref<SceneContext> m_ContextShared;
 
 		std::unordered_map<UUID, Entity> m_Entities;
 		U32 m_CurrentEntityIndex = 0;

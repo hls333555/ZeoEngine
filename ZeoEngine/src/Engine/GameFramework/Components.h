@@ -1,9 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Asset/AssetLibrary.h"
@@ -15,11 +12,13 @@
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Math/BoxSphereBounds.h"
+#include "Engine/Physics/PhysicsMaterial.h"
 
 namespace ZeoEngine {
 
 	class Texture2D;
 	class ScriptableEntity;
+	class PhysicsMaterial;
 
 	struct IComponent
 	{
@@ -113,6 +112,13 @@ namespace ZeoEngine {
 			: ID(uuid) {}
 	};
 
+	struct RelationshipComponent : public IComponent
+	{
+		UUID ParentEntity = 0;
+		std::vector<UUID> ChildEntities;
+	};
+
+	// Stores local transform
 	struct TransformComponent : public IComponent
 	{
 		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
@@ -129,10 +135,34 @@ namespace ZeoEngine {
 
 		Mat4 GetTransform() const
 		{
-			const Mat4 rotation = glm::toMat4(glm::quat(GetRotationInRadians()));
-			return glm::translate(Mat4(1.0f), Translation) *
-				rotation *
-				glm::scale(Mat4(1.0f), Scale);
+			return Math::ComposeTransform(Translation, GetRotationInRadians(), Scale);
+		}
+		void SetTransform(const Mat4& transform)
+		{
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
+			Rotation = glm::degrees(Rotation);
+		}
+	};
+
+	// Stores world transform
+	// Only present on child entities
+	struct WorldTransformComponent : public IComponent
+	{
+		Vec3 Translation = { 0.0f, 0.0f, 0.0f };
+		Vec3 Rotation = { 0.0f, 0.0f, 0.0f }; // Stored in radians
+		Vec3 Scale = { 1.0f, 1.0f, 1.0f };
+
+		WorldTransformComponent() = default;
+		WorldTransformComponent(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+			: Translation(translation), Rotation(rotation), Scale(scale) {}
+
+		Mat4 GetTransform() const
+		{
+			return Math::ComposeTransform(Translation, Rotation, Scale);
+		}
+		void SetTransform(const Mat4& transform)
+		{
+			Math::DecomposeTransform(transform, Translation, Rotation, Scale);
 		}
 	};
 
@@ -182,7 +212,7 @@ namespace ZeoEngine {
 		static const char* GetIcon() { return ICON_FA_CIRCLE; }
 	};
 
-	struct Rigidbody2DComponent : public IComponent
+	struct RigidBody2DComponent : public IComponent
 	{
 		enum class BodyType
 		{
@@ -261,9 +291,15 @@ namespace ZeoEngine {
 		}
 	};
 
+	enum class ScriptUpdateStage
+	{
+		Default, PrePhysics, PostPhysics
+	};
+
 	struct ScriptComponent : public IComponent
 	{
 		std::string ClassName;
+		ScriptUpdateStage UpdateStage = ScriptUpdateStage::Default;
 
 		static const char* GetIcon() { return ICON_FA_FILE_CODE; }
 	};
@@ -419,6 +455,93 @@ namespace ZeoEngine {
 		float GetCutoffInRadians() const { return glm::radians(CutoffAngle); }
 
 		static const char* GetIcon() { return ICON_FA_LIGHTBULB; }
+	};
+
+	struct RigidBodyComponent : public IComponent
+	{
+		enum class BodyType
+		{
+			Static = 0, Dynamic
+		};
+
+		enum class CollisionDetectionType
+		{
+			Discrete, Continuous, ContinuousSpeculative
+		};
+
+		BodyType Type = BodyType::Static;
+		bool bIsKinematic = false;
+		CollisionDetectionType CollisionDetection = CollisionDetectionType::Discrete;
+		float Mass = 1.0f;
+		float LinearDamping = 0.01f;
+		float AngularDamping = 0.05f;
+		bool bEnableGravity = true;
+
+		bool bLockPositionX = false;
+		bool bLockPositionY = false;
+		bool bLockPositionZ = false;
+		bool bLockRotationX = false;
+		bool bLockRotationY = false;
+		bool bLockRotationZ = false;
+
+		bool bReceiveSleepEvents = false;
+		bool bDisableSimulation = false;
+	};
+
+	struct PhysicsMaterialDetailComponent : public IComponent
+	{
+		Ref<PhysicsMaterial> LoadedPhysicsMaterial;
+
+		PhysicsMaterialDetailComponent() = default;
+		PhysicsMaterialDetailComponent(const Ref<PhysicsMaterial>& physicsMaterial)
+			: LoadedPhysicsMaterial(physicsMaterial) {}
+
+		float& GetStaticFriction() const { return LoadedPhysicsMaterial->m_StaticFriction; }
+		float& GetDynamicFriction() const { return LoadedPhysicsMaterial->m_DynamicFriction; }
+		float& GetBounciness() const { return LoadedPhysicsMaterial->m_Bounciness; }
+	};
+
+	struct ColliderComponentBase : public IComponent
+	{
+		AssetHandle PhysicsMaterialAsset;
+		bool bEnableSimulation = true;
+		bool bEnableQuery = true;
+		bool bIsTrigger = false;
+		U32 CollisionLayer = 0;
+		U32 CollidesWithGroup = 0;
+	};
+
+	struct BoxColliderComponent : public ColliderComponentBase
+	{
+		Vec3 Size{ 1.0f };
+		Vec3 Offset{ 0.0f };
+	};
+
+	struct SphereColliderComponent : public ColliderComponentBase
+	{
+		float Radius = 0.5f;
+		Vec3 Offset{ 0.0f };
+	};
+
+	struct CapsuleColliderComponent : public ColliderComponentBase
+	{
+		float Radius = 0.5f;
+		float Height = 1.0f;
+		Vec3 Offset{ 0.0f };
+	};
+
+	struct CharacterControllerComponent : public IComponent
+	{
+		AssetHandle PhysicsMaterialAsset;
+		U32 CollisionLayer = 0;
+		U32 CollidesWithGroup = 0;
+		float Radius = 0.5f;
+		float Height = 1.0f;
+		Vec3 Offset{ 0.0f };
+
+		float SlopeLimitAngle = 45.0f; // In degrees
+		float SkinThickness = 0.05f;
+		float StepOffset = 0.3f;
 	};
 
 }

@@ -1,2 +1,42 @@
 AssetType: 2599622547
 AssetHandle: 2614808694582215822
+Entities:
+  - Entity: 5018554486986787364
+    Components:
+      - Component: 3590015414
+        Name: Camera
+      - Component: 4079556375
+        Translation: [0, 0, 3]
+        Rotation: [0, 0, 0]
+        Scale: [1, 1, 1]
+      - Component: 2487124838
+        IsPrimary: true
+        FixedAspectRatio: false
+        ProjectionType: Perspective
+        VerticalFOV: 90
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        Size: 6
+        OrthographicNear: -1
+        OrthographicFar: 1
+  - Entity: 14316040898711268885
+    Components:
+      - Component: 3590015414
+        Name: Directional Light
+      - Component: 4079556375
+        Translation: [0, 1, 0]
+        Rotation: [-50, 30, 0]
+        Scale: [1, 1, 1]
+      - Component: 2499860363
+        Color: [1, 1, 1, 1]
+        Intensity: 1
+        CastShadow: true
+        ShadowType: PCSS
+        DepthBias: 0.00200000009
+        NormalBias: 30
+        FilterSize: 20
+        LightSize: 150
+        CascadeCount: 4
+        CascadeBlendThreshold: 0.5
+        MaxShadowDistance: 100
+        CascadeSplitLambda: 0.850000024

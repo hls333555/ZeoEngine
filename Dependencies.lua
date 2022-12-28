@@ -18,6 +18,7 @@ IncludeDir["ImGuizmo"] = "%{wks.location}/ZeoEngine/vendor/ImGuizmo"
 IncludeDir["magic_enum"] = "%{wks.location}/ZeoEngine/vendor/magic_enum/include"
 IncludeDir["mono"] = "%{wks.location}/ZeoEngine/vendor/mono/include"
 IncludeDir["optick"] = "%{wks.location}/ZeoEngine/vendor/optick/src"
+IncludeDir["PhysX"] = "%{wks.location}/ZeoEngine/vendor/PhysX/include"
 IncludeDir["renderdoc"] = "%{wks.location}/ZeoEngine/vendor/renderdoc"
 IncludeDir["shaderc"] = "%{wks.location}/ZeoEngine/vendor/shaderc/include"
 IncludeDir["spdlog"] = "%{wks.location}/ZeoEngine/vendor/spdlog/include"
@@ -28,10 +29,20 @@ IncludeDir["yaml_cpp"] = "%{wks.location}/ZeoEngine/vendor/yaml-cpp/include"
 
 LibraryDir = {}
 LibraryDir["mono"] = "%{wks.location}/ZeoEngine/vendor/mono/lib/%{cfg.buildcfg}"
+LibraryDir["PhysX"] = "%{wks.location}/ZeoEngine/vendor/PhysX/lib/%{cfg.buildcfg}"
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 
 Library = {}
 Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
+
+Library["PhysX"] = "%{LibraryDir.PhysX}/PhysX_static_64.lib"
+Library["PhysXCharacterKinematic"] = "%{LibraryDir.PhysX}/PhysXCharacterKinematic_static_64.lib"
+Library["PhysXCommon"] = "%{LibraryDir.PhysX}/PhysXCommon_static_64.lib"
+Library["PhysXCooking"] = "%{LibraryDir.PhysX}/PhysXCooking_static_64.lib"
+Library["PhysXExtensions"] = "%{LibraryDir.PhysX}/PhysXExtensions_static_64.lib"
+Library["PhysXFoundation"] = "%{LibraryDir.PhysX}/PhysXFoundation_static_64.lib"
+Library["PhysXPvd"] = "%{LibraryDir.PhysX}/PhysXPvdSDK_static_64.lib"
+Library["PhysXVehicle"] = "%{LibraryDir.PhysX}/PhysXVehicle_static_64.lib"
 
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 Library["VulkanUtils"] = "%{LibraryDir.VulkanSDK}/VkLayer_utils.lib"

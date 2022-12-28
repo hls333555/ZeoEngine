@@ -8,6 +8,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static bool IsLevelRuntime();
+		static bool IsLevelPlaying();
 		static Scene& GetActiveGameScene();
 		static void OpenLevel(const std::string& path);
 	};

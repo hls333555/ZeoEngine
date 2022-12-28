@@ -33,6 +33,11 @@
             return new Vector2(vector.X * scalar, vector.Y * scalar);
         }
 
+        public override string ToString()
+        {
+            return "Vector2[" + X + ", " + Y + "]";
+        }
+
     }
 
     public struct Vector3
@@ -90,6 +95,21 @@
             return new Vector3(vector.X * scalar, vector.Y * scalar, vector.Z * scalar);
         }
 
+        public override bool Equals(object obj) => obj is Vector3 other && this.Equals(other);
+
+        public bool Equals(Vector3 vector, float tolerance = 1.0e-4f) => MathLib.Abs(X - vector.X) <= tolerance && MathLib.Abs(Y - vector.Y) <= tolerance && MathLib.Abs(Z - vector.Z) <= tolerance;
+
+        public override int GetHashCode() => (X, Y, Z).GetHashCode();
+
+        public static bool operator ==(Vector3 lhs, Vector3 rhs) => lhs.Equals(rhs);
+
+        public static bool operator !=(Vector3 lhs, Vector3 rhs) => !(lhs == rhs);
+
+        public override string ToString()
+        {
+            return "Vector3[" + X + ", " + Y + ", " + Z + "]";
+        }
+
     }
 
     public struct Vector4
@@ -133,6 +153,11 @@
         public static Vector4 operator*(Vector4 vector, float scalar)
         {
             return new Vector4(vector.X * scalar, vector.Y * scalar, vector.Z * scalar, vector.W * scalar);
+        }
+
+        public override string ToString()
+        {
+            return "Vector4[" + X + ", " + Y + ", " + Z + ", " + W + "]";
         }
 
     }

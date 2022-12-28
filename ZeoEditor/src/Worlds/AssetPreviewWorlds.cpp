@@ -17,17 +17,19 @@ namespace ZeoEngine {
 
 	AssetPreviewWorldBase::~AssetPreviewWorldBase() = default;
 
-	void AssetPreviewWorldBase::PostSceneCreate(const Ref<Scene>& scene)
-	{
-		const Entity entity = CreatePreviewEntity(*scene);
-		SetContextEntity(entity);
-	}
-
 	void AssetPreviewWorldBase::OnAttach()
 	{
 		EditorPreviewWorldBase::OnAttach();
 
 		m_AssetView = CreateAssetView();
+	}
+
+	void AssetPreviewWorldBase::PostAttach()
+	{
+		// Create preview entity and add various components after systems all begin registered
+		// so that component added event can be triggered properly
+		const Entity entity = CreatePreviewEntity();
+		SetContextEntity(entity);
 	}
 
 	void AssetPreviewWorldBase::SaveCurrentAsset() const
@@ -39,9 +41,14 @@ namespace ZeoEngine {
 	}
 
 #pragma region MaterialPreviewWorld
-	Scope<SceneObserverSystemBase> MaterialPreviewWorld::CreateSceneObserverSystem()
+	void MaterialPreviewWorld::OnAttach()
 	{
-		return CreateScope<MaterialPreviewObserverSystem>();
+		AssetPreviewWorldBase::OnAttach();
+
+		RegisterSystem<BoundsSystem>(this);
+		RegisterSystem<MaterialPreviewSystem>(this);
+		RegisterSystem<MeshSystem>(this);
+		RegisterSystem<DirectionalLightSystem>(this);
 	}
 
 	Ref<SceneRenderer> MaterialPreviewWorld::CreateSceneRenderer()
@@ -49,9 +56,9 @@ namespace ZeoEngine {
 		return CreateRef<MaterialPreviewSceneRenderer>();
 	}
 
-	Entity MaterialPreviewWorld::CreatePreviewEntity(Scene& scene)
+	Entity MaterialPreviewWorld::CreatePreviewEntity()
 	{
-		Entity previewMaterialEntity = scene.CreateEntity("Preview Material");
+		Entity previewMaterialEntity = GetActiveScene()->CreateEntity("Preview Material");
 		previewMaterialEntity.AddComponent<MaterialDetailComponent>();
 		previewMaterialEntity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
 		previewMaterialEntity.AddComponent<DirectionalLightComponent>();
@@ -61,10 +68,10 @@ namespace ZeoEngine {
 	Ref<IAsset> MaterialPreviewWorld::LoadAssetImpl(const std::string& path, bool bForce)
 	{
 		auto& materialComp = GetContextEntity().GetComponent<MaterialDetailComponent>();
-		Ref<IAsset> material = materialComp.LoadedMaterial = AssetLibrary::LoadAsset<Material>(path, bForce);
+		materialComp.LoadedMaterial = AssetLibrary::LoadAsset<Material>(path, bForce);
 		auto& meshComp = GetContextEntity().GetComponent<MeshRendererComponent>();
-		meshComp.MaterialAssets[0] = material->GetHandle();
-		return material;
+		meshComp.MaterialAssets[0] = materialComp.LoadedMaterial->GetHandle();
+		return materialComp.LoadedMaterial;
 	}
 
 	Scope<InspectorBase> MaterialPreviewWorld::CreateInspector()
@@ -84,11 +91,10 @@ namespace ZeoEngine {
 		AssetPreviewWorldBase::OnAttach();
 
 		GetEditorCamera().SetFarClip(10000.0f);
-	}
 
-	Scope<SceneObserverSystemBase> MeshPreviewWorld::CreateSceneObserverSystem()
-	{
-		return CreateScope<MeshPreviewObserverSystem>();
+		RegisterSystem<BoundsSystem>(this);
+		RegisterSystem<MeshPreviewSystem>(this);
+		RegisterSystem<DirectionalLightSystem>(this);
 	}
 
 	Ref<SceneRenderer> MeshPreviewWorld::CreateSceneRenderer()
@@ -96,9 +102,9 @@ namespace ZeoEngine {
 		return CreateRef<MeshPreviewSceneRenderer>();
 	}
 
-	Entity MeshPreviewWorld::CreatePreviewEntity(Scene& scene)
+	Entity MeshPreviewWorld::CreatePreviewEntity()
 	{
-		Entity previewMeshEntity = scene.CreateEntity("Preview Mesh");
+		Entity previewMeshEntity = GetActiveScene()->CreateEntity("Preview Mesh");
 		previewMeshEntity.AddComponent<MeshDetailComponent>();
 		previewMeshEntity.AddComponent<DirectionalLightComponent>();
 		return previewMeshEntity;
@@ -126,9 +132,11 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region TexturePreviewWorld
-	Scope<SceneObserverSystemBase> TexturePreviewWorld::CreateSceneObserverSystem()
+	void TexturePreviewWorld::OnAttach()
 	{
-		return CreateScope<TexturePreviewObserverSystem>();
+		AssetPreviewWorldBase::OnAttach();
+
+		RegisterSystem<TexturePreviewSystem>(this);
 	}
 
 	Ref<SceneRenderer> TexturePreviewWorld::CreateSceneRenderer()
@@ -136,9 +144,9 @@ namespace ZeoEngine {
 		return nullptr;
 	}
 
-	Entity TexturePreviewWorld::CreatePreviewEntity(Scene& scene)
+	Entity TexturePreviewWorld::CreatePreviewEntity()
 	{
-		Entity previewTextureEntity = scene.CreateEntity("Preview Texture");
+		Entity previewTextureEntity = GetActiveScene()->CreateEntity("Preview Texture");
 		previewTextureEntity.AddComponent<TextureDetailComponent>();
 		return previewTextureEntity;
 	}
@@ -164,15 +172,9 @@ namespace ZeoEngine {
 #pragma region ParticlePreviewWorld
 	void ParticlePreviewWorld::OnAttach()
 	{
-		RegisterSystem<ParticlePreviewUpdateSystem>(this);
-
 		AssetPreviewWorldBase::OnAttach();
-	}
 
-	Scope<SceneObserverSystemBase> ParticlePreviewWorld::CreateSceneObserverSystem()
-	{
-		ZE_CORE_ASSERT(false);
-		return {};
+		RegisterSystem<ParticlePreviewUpdateSystem>(this);
 	}
 
 	Ref<SceneRenderer> ParticlePreviewWorld::CreateSceneRenderer()
@@ -180,9 +182,9 @@ namespace ZeoEngine {
 		return CreateRef<ParticlePreviewSceneRenderer>();
 	}
 
-	Entity ParticlePreviewWorld::CreatePreviewEntity(Scene& scene)
+	Entity ParticlePreviewWorld::CreatePreviewEntity()
 	{
-		Entity previewParticleEntity = scene.CreateEntity("Preview Particle");
+		Entity previewParticleEntity = GetActiveScene()->CreateEntity("Preview Particle");
 		auto& particlePreviewComp = previewParticleEntity.AddComponent<ParticleSystemDetailComponent>();
 		// TODO:
 		// For loading phase, instance will be created in ParticleScene::PostLoad
@@ -208,6 +210,37 @@ namespace ZeoEngine {
 	Scope<AssetView> ParticlePreviewWorld::CreateAssetView()
 	{
 		return CreateScope<AssetView>();
+	}
+#pragma endregion
+
+#pragma region PhysicsMaterialPreviewWorld
+	Ref<SceneRenderer> PhysicsMaterialPreviewWorld::CreateSceneRenderer()
+	{
+		return nullptr;
+	}
+
+	Entity PhysicsMaterialPreviewWorld::CreatePreviewEntity()
+	{
+		Entity previewPhysicsMaterialEntity = GetActiveScene()->CreateEntity("Preview Physics Material");
+		previewPhysicsMaterialEntity.AddComponent<PhysicsMaterialDetailComponent>();
+		return previewPhysicsMaterialEntity;
+	}
+
+	Ref<IAsset> PhysicsMaterialPreviewWorld::LoadAssetImpl(const std::string& path, bool bForce)
+	{
+		auto& physicsMaterialComp = GetContextEntity().GetComponent<PhysicsMaterialDetailComponent>();
+		physicsMaterialComp.LoadedPhysicsMaterial = AssetLibrary::LoadAsset<PhysicsMaterial>(path, bForce);
+		return physicsMaterialComp.LoadedPhysicsMaterial;
+	}
+
+	Scope<InspectorBase> PhysicsMaterialPreviewWorld::CreateInspector()
+	{
+		return CreateScope<AssetInspector>(this, entt::type_hash<PhysicsMaterialDetailComponent>::value());
+	}
+
+	Scope<AssetView> PhysicsMaterialPreviewWorld::CreateAssetView()
+	{
+		return nullptr;
 	}
 #pragma endregion
 

@@ -353,7 +353,7 @@ namespace ZeoEngine {
 			Vec4 OriginAxisXColor{ 1.0f, 0.0f, 0.0f, 0.5f };
 			Vec4 OriginAxisZColor{ 0.0f, 0.0f, 1.0f, 0.5f };
 			float Extent = 101.0f;
-			float CellSize = 0.025f;
+			float CellSize = 0.1f; // This is the size of the minimum cell, 10 of these add up to 1m
 		};
 		GridData gridBuffer;
 		auto gridUniformBuffer = UniformBuffer::Create(sizeof(GridData), static_cast<U32>(UniformBufferBinding::Grid));

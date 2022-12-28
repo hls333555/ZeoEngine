@@ -23,6 +23,7 @@ namespace ZeoEngine {
 		WorldBase& operator=(WorldBase&&) = default;
 
 		virtual void OnAttach();
+		virtual void PostAttach() {}
 		virtual void OnUpdate(DeltaTime dt);
 
 		bool IsActive() const { return m_bActive; }
@@ -42,6 +43,8 @@ namespace ZeoEngine {
 		virtual Entity GetContextEntity() const { return {}; }
 
 		virtual bool IsRuntime() const { return false; }
+		virtual bool IsRunning() { return false; }
+		virtual bool IsSimulation() const { return false; }
 
 	protected:
 		template<typename T, typename ... Args>
@@ -55,14 +58,11 @@ namespace ZeoEngine {
 		}
 
 	private:
-		virtual Scope<SceneObserverSystemBase> CreateSceneObserverSystem() = 0;
-		virtual void PostSceneCreate(const Ref<Scene>& scene) {}
+		virtual Ref<Scene> CreateScene() { return CreateRef<Scene>(); }
+		virtual void PostSceneCreate() {}
 		virtual Ref<SceneRenderer> CreateSceneRenderer() = 0;
 
 		void NewSceneRenderer();
-
-		// For internal use purpose
-		virtual bool IsRunning() { return false; }
 
 	public:
 		entt::sink<entt::sigh<void(Scene*, Scene*)>> m_OnActiveSceneChanged{ m_OnActiveSceneChangedDel };

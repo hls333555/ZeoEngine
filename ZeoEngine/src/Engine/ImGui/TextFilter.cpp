@@ -36,10 +36,7 @@ namespace ZeoEngine {
 
 	void TextFilter::Draw(const char* label, const char* hint, float width, ImGuiInputTextCallback inputCallback, void* callbackData)
 	{
-		if (width <= 0.0f)
-		{
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-		}
+		ImGui::SetNextItemWidth(width <= 0.0f ? ImGui::GetContentRegionAvail().x : width);
 		ImGuiInputTextFlags flags = inputCallback
 			? ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory
 			: 0;

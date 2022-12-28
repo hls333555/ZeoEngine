@@ -51,7 +51,7 @@ layout(location = 0) out vec4 o_Color;
 #define USE_RECEIVER_PLANE_DEPTH_BIAS 1
 #define VISUALIZE_CASCADES 0
 #define BLEND_CASCADES 1
-#define USE_OPTIMIZED_PCF 0
+#define USE_OPTIMIZED_PCF 1
 
 #define POISSON_SAMPLE_COUNT 64
 const vec2 Poisson64[] = {

@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
-		SetSelectedDirectory(PathUtils::GetParentPath(metadata->Path));
+		SetSelectedDirectory(metadata->IsTemplateAsset() ? AssetRegistry::GetProjectPathPrefix() : PathUtils::GetParentPath(metadata->Path));
 	}
 
 	void SaveAssetPanel::OnPathSelected(const std::string& path)

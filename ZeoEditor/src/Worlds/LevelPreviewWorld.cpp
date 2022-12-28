@@ -2,6 +2,7 @@
 
 #include "Core/Editor.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Core/Input.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/Systems.h"
 #include "Inspectors/EntityInspector.h"
@@ -10,31 +11,56 @@
 
 namespace ZeoEngine {
 
-	class LevelPreviewObserverSystem : public LevelObserverSystem
+	class LevelViewCameraSystem : public CameraSystem
 	{
 	public:
-		virtual void OnBind() override;
+		using CameraSystem::CameraSystem;
+	private:
+		virtual void OnCameraComponentAdded(Scene& scene, entt::entity e) const override;
 	};
 
-	void LevelPreviewObserverSystem::OnBind()
+	void LevelViewCameraSystem::OnCameraComponentAdded(Scene& scene, entt::entity e) const
 	{
-		LevelObserverSystem::OnBind();
+		CameraSystem::OnCameraComponentAdded(scene, e);
 
-		const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW);
-		BindOnComponentAdded<CameraComponent, &ViewPanelBase::OnCameraComponentAdded>(*levelView);
+		// Level View Panel is not created yet when the very first scene creates
+		if (const auto* levelView = g_Editor->GetPanel<LevelViewPanel>(LEVEL_VIEW))
+		{
+			const Entity entity{ e, scene.shared_from_this() };
+			levelView->UpdateViewportSizeOnSceneCamera(entity.GetComponent<CameraComponent>());
+		}
 	}
 
 	void LevelPreviewWorld::OnAttach()
 	{
-		// Register systems before scene construction to receive the first OnActiveSceneChanged delegate call
-		RegisterSystem<ParticleUpdateSystem>(this);
-		RegisterSystem<PhysicsSystem>(this);
-
-		RegisterSystem<ScriptSystem>(this);
-
 		EditorPreviewWorldBase::OnAttach();
 
+		RegisterSystem<CommandSystem>(this);
+		RegisterSystem<BoundsSystem>(this);
+		RegisterSystem<LevelViewCameraSystem>(this);
+		RegisterSystem<MeshSystem>(this);
+		RegisterSystem<DirectionalLightSystem>(this);
+		RegisterSystem<PointLightSystem>(this);
+		RegisterSystem<SpotLightSystem>(this);
+		RegisterSystem<ParticleUpdateSystem>(this);
+		RegisterSystem<ScriptSystem>(this);
+		RegisterSystem<TransformSystem>(this);
+		RegisterSystem<PrePhysicsScriptSystem>(this);
+		RegisterSystem<PhysicsSystem>(this);
+		RegisterSystem<PostPhysicsTransformSystem>(this);
+		RegisterSystem<PostPhysicsScriptSystem>(this);
+
 		m_OnContextEntityChanged.connect<&LevelPreviewWorld::ActivateEntityInspector>(this);
+	}
+
+	void LevelPreviewWorld::OnUpdate(DeltaTime dt)
+	{
+		EditorPreviewWorldBase::OnUpdate(dt);
+
+		if (m_SceneState == SceneState::Pause)
+		{
+			--m_StepFrames;
+		}
 	}
 
 	void LevelPreviewWorld::StopScene()
@@ -45,15 +71,11 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelPreviewWorld::PostSceneCreate(const Ref<Scene>& scene)
+	void LevelPreviewWorld::PostSceneCreate()
 	{
-		m_SceneForEdit = scene;
+		m_SceneForEdit = GetActiveScene();
+		// Clear last scene's selected entity so that component inspector will not reference an invalid entity
 		SetContextEntity({});
-	}
-
-	Scope<SceneObserverSystemBase> LevelPreviewWorld::CreateSceneObserverSystem()
-	{
-		return CreateScope<LevelPreviewObserverSystem>();
 	}
 
 	Ref<SceneRenderer> LevelPreviewWorld::CreateSceneRenderer()
@@ -84,31 +106,60 @@ namespace ZeoEngine {
 
 	void LevelPreviewWorld::OnScenePlay()
 	{
-		m_SceneState = SceneState::Play;
-		auto sceneForPlay = m_SceneForEdit->Copy<Scene>(CreateScope<LevelObserverSystem>());
+		m_SceneState = SceneState::Run;
+		m_bIsSimulation = false;
+		TogglePlayMode(true);
+		auto sceneForPlay = m_SceneForEdit->Copy();
 		SetContextEntity({});
 		SetActiveScene(std::move(sceneForPlay));
-		OnRuntimeStart();
-		GetEditorCamera().SetEnableUpdate(false);
+		OnPlayStart();
 	}
 
 	void LevelPreviewWorld::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+		TogglePlayMode(false);
 		SetContextEntity({});
 		SetActiveScene(m_SceneForEdit);
-		OnRuntimeStop();
-		GetEditorCamera().SetEnableUpdate(true);
+		OnPlayStop();
+	}
+
+	void LevelPreviewWorld::OnSceneStartSimulation()
+	{
+		m_SceneState = SceneState::Run;
+		m_bIsSimulation = true;
+		auto sceneForSimulate = m_SceneForEdit->Copy();
+		SetContextEntity({});
+		SetActiveScene(std::move(sceneForSimulate));
+		OnSimulationStart();
+	}
+
+	void LevelPreviewWorld::OnSceneStopSimulation()
+	{
+		m_SceneState = SceneState::Edit;
+		SetContextEntity({});
+		SetActiveScene(m_SceneForEdit);
+		OnSimulationStop();
 	}
 
 	void LevelPreviewWorld::OnScenePause()
 	{
 		m_SceneState = SceneState::Pause;
+		if (!m_bIsSimulation)
+		{
+			TogglePlayMode(false);
+		}
 	}
 
 	void LevelPreviewWorld::OnSceneResume()
 	{
-		m_SceneState = SceneState::Play;
+		m_SceneState = SceneState::Run;
+		if (!m_bIsSimulation)
+		{
+			TogglePlayMode(true);
+			// TODO: We may want to hide gizmo but continue show entity inspector in some way
+			SetContextEntity({});
+		}
 	}
 
 	void LevelPreviewWorld::OnDuplicateEntity()
@@ -135,20 +186,43 @@ namespace ZeoEngine {
 		}
 	}
 
-	void LevelPreviewWorld::OnRuntimeStart() const
+	void LevelPreviewWorld::OnPlayStart() const
 	{
 		for (const auto& system : GetSystems())
 		{
-			system->OnRuntimeStart();
+			system->OnPlayStart();
 		}
 	}
 
-	void LevelPreviewWorld::OnRuntimeStop() const
+	void LevelPreviewWorld::OnPlayStop() const
 	{
 		for (const auto& system : GetSystems())
 		{
-			system->OnRuntimeStop();
+			system->OnPlayStop();
 		}
+	}
+
+	void LevelPreviewWorld::OnSimulationStart() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnSimulationStart();
+		}
+	}
+
+	void LevelPreviewWorld::OnSimulationStop() const
+	{
+		for (const auto& system : GetSystems())
+		{
+			system->OnSimulationStop();
+		}
+	}
+
+	void LevelPreviewWorld::TogglePlayMode(bool bEnable) const
+	{
+		Input::SetCursorMode(bEnable ? CursorMode::Locked : CursorMode::Normal);
+		ImGui::SetMouseEnabled(!bEnable);
+		ImGui::SetKeyboardNavEnabled(!bEnable);
 	}
 
 }

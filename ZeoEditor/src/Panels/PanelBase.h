@@ -5,6 +5,8 @@
 #include "Engine/Core/DeltaTime.h"
 #include "Engine/Events/Event.h"
 
+struct ImGuiWindow;
+
 namespace ZeoEngine {
 
 	class PanelBase
@@ -29,17 +31,15 @@ namespace ZeoEngine {
 		void SetInitialSize(const Vec2& size) { m_PanelSpec.InitialSize = size; }
 
 		bool* GetShowPtr() { return &m_bShow; }
+		ImGuiWindow* GetImGuiWindow() const { return m_ImGuiWindow; }
 		bool IsPanelFocused() const { return m_bIsPanelFocused; }
+		/** Try using ImGui::IsMouseHoveringRect() when this result is incorrect. */
 		bool IsPanelHovered() const { return m_bIsPanelHovered; }
-
-		void FocusPanel();
 
 		void Toggle(bool bShow);
 
-
 	private:
 		virtual void ProcessUpdate(DeltaTime dt) {}
-		virtual void ProcessDockspaceRender() {}
 		virtual void ProcessRender() = 0;
 		virtual void ProcessEvent(Event& e) {}
 
@@ -52,8 +52,8 @@ namespace ZeoEngine {
 		PanelSpec m_PanelSpec;
 
 		bool m_bShow = true;
+		ImGuiWindow* m_ImGuiWindow = nullptr;
 		bool m_bIsPanelFocused = false, m_bIsPanelHovered = false;
-		bool m_bShouldFocusPanel = false;
 	};
 
 }

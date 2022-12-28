@@ -24,6 +24,7 @@ namespace ImGui {
 	/** Version that only renders text by default. */
 	IMGUI_API bool TransparentSmallButton(const char* label);
 	IMGUI_API bool TransparentButton(const char* label, const ImVec2& size = ImVec2(0, 0));
+	IMGUI_API bool ActiveTransparentButton(const char* label, bool bActive, const ImVec2& size = ImVec2(0, 0));
 	/** This button does not contain label text, but it reserves space for 2 lines of wrapped text */
 	IMGUI_API bool TileImageButton(ImTextureID user_texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), int frame_padding = -1, const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 	IMGUI_API bool TileImageButtonEx(ImGuiID id, ImTextureID texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& tint_col);
@@ -40,4 +41,8 @@ namespace ImGui {
 
 	/** Version that modifies the hightlight style for drop target. */
 	IMGUI_API const ImGuiPayload* MyAcceptDragDropPayload(const char* type, float highlightRounding = 0.0f, ImGuiDragDropFlags flags = 0);
+
+	IMGUI_API void SetMouseEnabled(bool bEnable);
+	IMGUI_API void SetKeyboardNavEnabled(bool bEnable);
+
 }

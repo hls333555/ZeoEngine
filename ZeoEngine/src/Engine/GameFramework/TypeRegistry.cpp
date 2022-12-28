@@ -7,6 +7,44 @@ namespace ZeoEngine {
 
 	using namespace Reflection;
 
+#ifndef DOCTEST_CONFIG_DISABLE
+	bool NotShowSequenceContainers(IComponent* comp)
+	{
+		const auto* testComp = static_cast<TestComponent*>(comp);
+		return !testComp->ShowSequenceContainers;
+	}
+#endif
+
+	bool IsPerspectiveProjection(IComponent* comp)
+	{
+		auto* cameraComp = static_cast<CameraComponent*>(comp);
+		return cameraComp->GetProjectionType() == SceneCamera::ProjectionType::Perspective;
+	}
+
+	bool IsOrthographicProjection(IComponent* comp)
+	{
+		auto* cameraComp = static_cast<CameraComponent*>(comp);
+		return cameraComp->GetProjectionType() == SceneCamera::ProjectionType::Orthographic;
+	}
+
+	bool NotCastShadow(IComponent* comp)
+	{
+		const auto* lightComp = static_cast<LightComponentBase*>(comp);
+		return !lightComp->bCastShadow;
+	}
+
+	bool NotCastShadowPCSS(IComponent* comp)
+	{
+		const auto* lightComp = static_cast<LightComponentBase*>(comp);
+		return !lightComp->bCastShadow || lightComp->ShadowType != ShadowType::PCSS;
+	}
+
+	bool IsStaticRigidBody(IComponent* comp)
+	{
+		const auto* rigidBodyComp = static_cast<RigidBodyComponent*>(comp);
+		return rigidBodyComp->Type == RigidBodyComponent::BodyType::Static;
+	}
+
 	std::string GetMeshRendererComponentSequenceContainerElementName(IComponent* comp, U32 fieldID, U32 index)
 	{
 		if (fieldID == "MaterialSlots"_hs)
@@ -46,10 +84,19 @@ namespace ZeoEngine {
 		RegisterComponent<CoreComponent>("Core", Inherent, HideComponentHeader)
 			.Field<&CoreComponent::Name>("Name");
 
+		RegisterComponent<RelationshipComponent>("Relationship", Inherent, HideComponentHeader)
+			.Field<&RelationshipComponent::ParentEntity>("ParentEntity", HiddenInEditor)
+			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor);
+
 		RegisterComponent<TransformComponent>("Transform", Inherent)
-			.Field<&TransformComponent::Translation>("Translation")
-			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)
+			.Field<&TransformComponent::Translation>("Translation", std::make_pair(DragSensitivity, 0.5f))
+			.Field<&TransformComponent::Rotation>("Rotation", std::make_pair(DragSensitivity, 0.5f), std::make_pair(ClampMin, -360.0f), std::make_pair(ClampMax, 360.0f), ClampOnlyDuringDragging)
 			.Field<&TransformComponent::Scale>("Scale", std::make_pair(DragSensitivity, 0.1f));
+
+		RegisterComponent<WorldTransformComponent>("WorldTransform", Inherent, HideComponentHeader)
+			.Field<&WorldTransformComponent::Translation>("Translation", HiddenInEditor)
+			.Field<&WorldTransformComponent::Rotation>("Rotation", HiddenInEditor)
+			.Field<&WorldTransformComponent::Scale>("Scale", HiddenInEditor);
 #pragma endregion
 
 #pragma region Rendering
@@ -61,12 +108,12 @@ namespace ZeoEngine {
 			.Field<&CameraComponent::bIsPrimary>("IsPrimary")
 			.Field<&CameraComponent::bFixedAspectRatio>("FixedAspectRatio")
 			.Field<true, &CameraComponent::GetProjectionType>("ProjectionType")
-			.Field<true, &CameraComponent::GetPerspectiveVerticalFOV>("VerticalFOV", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, "ProjectionType != Perspective"))
-			.Field<true, &CameraComponent::GetPerspectiveNearClip>("PerspectiveNear", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, "ProjectionType != Perspective"))
-			.Field<true, &CameraComponent::GetPerspectiveFarClip>("PerspectiveFar", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, "ProjectionType != Perspective"))
-			.Field<true, &CameraComponent::GetOrthographicSize>("Size", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, "ProjectionType != Orthographic"))
-			.Field<true, &CameraComponent::GetOrthographicNearClip>("OrthographicNear", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, "ProjectionType != Orthographic"))
-			.Field<true, &CameraComponent::GetOrthographicFarClip>("OrthographicFar", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, "ProjectionType != Orthographic"));
+			.Field<true, &CameraComponent::GetPerspectiveVerticalFOV>("VerticalFOV", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, &IsOrthographicProjection))
+			.Field<true, &CameraComponent::GetPerspectiveNearClip>("PerspectiveNear", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, &IsOrthographicProjection))
+			.Field<true, &CameraComponent::GetPerspectiveFarClip>("PerspectiveFar", std::make_pair(Category, "Perspective"), std::make_pair(HideCondition, &IsOrthographicProjection))
+			.Field<true, &CameraComponent::GetOrthographicSize>("Size", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, &IsPerspectiveProjection))
+			.Field<true, &CameraComponent::GetOrthographicNearClip>("OrthographicNear", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, &IsPerspectiveProjection))
+			.Field<true, &CameraComponent::GetOrthographicFarClip>("OrthographicFar", std::make_pair(Category, "Orthographic"), std::make_pair(HideCondition, &IsPerspectiveProjection));
 
 		RegisterComponent<SpriteRendererComponent>("Sprite Renderer", std::make_pair(Category, "Rendering"))
 			.Field<&SpriteRendererComponent::TintColor>("TintColor")
@@ -107,33 +154,39 @@ namespace ZeoEngine {
 			.Field<ShadowType::PCF>("PCF")
 			.Field<ShadowType::PCSS>("PCSS");
 
-		RegisterComponent<LightComponentBase>("LightComponentBase", Inherent)
+		RegisterComponent<LightComponentBase>("Light Base", Inherent)
 			.Field<&LightComponentBase::Color>("Color")
 			.Field<&LightComponentBase::Intensity>("Intensity", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f))
 			.Field<&LightComponentBase::bCastShadow>("CastShadow")
-			.Field<&LightComponentBase::ShadowType>("ShadowType", std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&LightComponentBase::DepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&LightComponentBase::NormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&LightComponentBase::FilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"))
-			.Field<&LightComponentBase::LightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false || ShadowType != PCSS"));
+			.Field<&LightComponentBase::ShadowType>("ShadowType", std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&LightComponentBase::DepthBias>("DepthBias", std::make_pair(DragSensitivity, 0.001f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&LightComponentBase::NormalBias>("NormalBias", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&LightComponentBase::FilterSize>("FilterSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, &NotCastShadowPCSS))
+			.Field<&LightComponentBase::LightSize>("LightSize", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, &NotCastShadowPCSS));
 
-		RegisterComponent<DirectionalLightComponent, LightComponentBase>("DirectionalLight", std::make_pair(Category, "Rendering"))
-			.Field<&DirectionalLightComponent::CascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&DirectionalLightComponent::CascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&DirectionalLightComponent::MaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, "CastShadow == false"))
-			.Field<&DirectionalLightComponent::CascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, "CastShadow == false"));
+		RegisterComponent<DirectionalLightComponent, LightComponentBase>("Directional Light", std::make_pair(Category, "Rendering"))
+			.Field<&DirectionalLightComponent::CascadeCount>("CascadeCount", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 1), std::make_pair(ClampMax, 4), std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&DirectionalLightComponent::CascadeBlendThreshold>("CascadeBlendThreshold", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&DirectionalLightComponent::MaxShadowDistance>("MaxShadowDistance", std::make_pair(DragSensitivity, 1.0f), std::make_pair(ClampMin, 0.0f), std::make_pair(HideCondition, &NotCastShadow))
+			.Field<&DirectionalLightComponent::CascadeSplitLambda>("CascadeSplitLambda", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f), std::make_pair(HideCondition, &NotCastShadow));
 
-		RegisterComponent<PointLightComponent, LightComponentBase>("PointLight", std::make_pair(Category, "Rendering"))
+		RegisterComponent<PointLightComponent, LightComponentBase>("Point Light", std::make_pair(Category, "Rendering"))
 			.Field<&PointLightComponent::Range>("Range", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f));
 
-		RegisterComponent<SpotLightComponent, PointLightComponent>("SpotLight", std::make_pair(Category, "Rendering"))
+		RegisterComponent<SpotLightComponent, PointLightComponent>("Spot Light", std::make_pair(Category, "Rendering"))
 			.Field<&SpotLightComponent::CutoffAngle>("CutoffAngle", std::make_pair(DragSensitivity, 0.1f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 89.0f));
 
 #pragma endregion
 
 #pragma region Scripts
+		RegisterEnum<ScriptUpdateStage>()
+			.Field<ScriptUpdateStage::Default>("Default")
+			.Field<ScriptUpdateStage::PrePhysics>("PrePhysics")
+			.Field<ScriptUpdateStage::PostPhysics>("PostPhysics");
+
 		RegisterComponent<ScriptComponent>("Script", std::make_pair(Category, "Scripts"))
-			.Field<&ScriptComponent::ClassName>("ClassName");
+			.Field<&ScriptComponent::ClassName>("ClassName")
+			.Field<&ScriptComponent::UpdateStage>("UpdateStage");
 
 		RegisterComponent<NativeScriptComponent>("Native Script", std::make_pair(Category, "Scripts"));
 #pragma endregion
@@ -152,7 +205,7 @@ namespace ZeoEngine {
 		RegisterStruct<s>(ZE_STRINGIFY(s))				\
 			.Field<&s::VariationType>("VariationType")	\
 			.Field<&s::Val1>("Value")					\
-			.Field<&s::Val2>("ValueHigh", std::make_pair(HideCondition, "VariationType == Constant"))
+			.Field<&s::Val2>("ValueHigh", std::make_pair(HideCondition, "VariationType == Constant")) // TODO: Change to free function
 
 		REGISTER_PARTICLE_VARIATION_TYPE(ParticleInt);
 		REGISTER_PARTICLE_VARIATION_TYPE(ParticleFloat);
@@ -186,14 +239,14 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Physics
-		RegisterEnum<Rigidbody2DComponent::BodyType>()
-			.Field<Rigidbody2DComponent::BodyType::Static>("Static")
-			.Field<Rigidbody2DComponent::BodyType::Dynamic>("Dynamic")
-			.Field<Rigidbody2DComponent::BodyType::Kinematic>("Kinematic");
+		RegisterEnum<RigidBody2DComponent::BodyType>()
+			.Field<RigidBody2DComponent::BodyType::Static>("Static")
+			.Field<RigidBody2DComponent::BodyType::Dynamic>("Dynamic")
+			.Field<RigidBody2DComponent::BodyType::Kinematic>("Kinematic");
 
-		RegisterComponent<Rigidbody2DComponent>("Rigidbody 2D", std::make_pair(Category, "Physics"))
-			.Field<&Rigidbody2DComponent::Type>("Type")
-			.Field<&Rigidbody2DComponent::bFixedRotation>("FixedRotation");
+		RegisterComponent<RigidBody2DComponent>("RigidBody 2D", std::make_pair(Category, "Physics"))
+			.Field<&RigidBody2DComponent::Type>("Type")
+			.Field<&RigidBody2DComponent::bFixedRotation>("FixedRotation");
 
 		RegisterComponent<BoxCollider2DComponent>("Box Collider 2D", std::make_pair(Category, "Physics"))
 			.Field<&BoxCollider2DComponent::Offset>("Offset")
@@ -210,6 +263,69 @@ namespace ZeoEngine {
 			.Field<&CircleCollider2DComponent::Friction>("Friction", std::make_pair(Category, "Physics Material"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
 			.Field<&CircleCollider2DComponent::Restitution>("Restitution", std::make_pair(Category, "Physics Material"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f))
 			.Field<&CircleCollider2DComponent::RestitutionThreshold>("RestitutionThreshold", std::make_pair(Category, "Physics Material"), std::make_pair(Tooltip, u8"弹力阈值，速度高于该值时的碰撞将会反弹"), std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f));
+
+		RegisterEnum<RigidBodyComponent::BodyType>()
+			.Field<RigidBodyComponent::BodyType::Static>("Static")
+			.Field<RigidBodyComponent::BodyType::Dynamic>("Dynamic");
+
+		RegisterEnum<RigidBodyComponent::CollisionDetectionType>()
+			.Field<RigidBodyComponent::CollisionDetectionType::Discrete>("Discrete")
+			.Field<RigidBodyComponent::CollisionDetectionType::Continuous>("Continuous")
+			.Field<RigidBodyComponent::CollisionDetectionType::ContinuousSpeculative>("ContinuousSpeculative");
+
+		RegisterComponent<RigidBodyComponent>("RigidBody", std::make_pair(Category, "Physics"))
+			.Field<&RigidBodyComponent::Type>("Type")
+			.Field<&RigidBodyComponent::bIsKinematic>("IsKinematic", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::bDisableSimulation>("DisableSimulation")
+			.Field<&RigidBodyComponent::CollisionDetection>("CollisionDetection")
+			.Field<&RigidBodyComponent::Mass>("Mass", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity", std::make_pair(HideCondition, &IsStaticRigidBody))
+			.Field<&RigidBodyComponent::bLockPositionX>("LockPositionX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bLockPositionY>("LockPositionY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bLockPositionZ>("LockPositionZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bLockRotationX>("LockRotationX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bLockRotationY>("LockRotationY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bLockRotationZ>("LockRotationZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::bReceiveSleepEvents>("ReceiveSleepEvents", std::make_pair(HideCondition, &IsStaticRigidBody));
+
+		RegisterComponent<PhysicsMaterialDetailComponent>("Physics Material Detail", Inherent, HideComponentHeader)
+			.Field<true, &PhysicsMaterialDetailComponent::GetStaticFriction>("StaticFriction")
+			.Field<true, &PhysicsMaterialDetailComponent::GetDynamicFriction>("DynamicFriction")
+			.Field<true, &PhysicsMaterialDetailComponent::GetBounciness>("Bounciness", std::make_pair(DragSensitivity, 0.01f), std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 1.0f));
+
+		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
+			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer")
+			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&ColliderComponentBase::bEnableSimulation>("EnableSimulation")
+			.Field<&ColliderComponentBase::bEnableQuery>("EnableQuery")
+			.Field<&ColliderComponentBase::bIsTrigger>("IsTrigger");
+
+		RegisterComponent<BoxColliderComponent, ColliderComponentBase>("Box Collider", std::make_pair(Category, "Physics"))
+			.Field<&BoxColliderComponent::Size>("Size")
+			.Field<&BoxColliderComponent::Offset>("Offset");
+
+		RegisterComponent<SphereColliderComponent, ColliderComponentBase>("Sphere Collider", std::make_pair(Category, "Physics"))
+			.Field<&SphereColliderComponent::Radius>("Radius")
+			.Field<&SphereColliderComponent::Offset>("Offset");
+
+		RegisterComponent<CapsuleColliderComponent, ColliderComponentBase>("Capsule Collider", std::make_pair(Category, "Physics"))
+			.Field<&CapsuleColliderComponent::Radius>("Radius")
+			.Field<&CapsuleColliderComponent::Height>("Height")
+			.Field<&CapsuleColliderComponent::Offset>("Offset");
+
+		RegisterComponent<CharacterControllerComponent>("Character Controller", std::make_pair(Category, "Physics"))
+			.Field<&CharacterControllerComponent::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
+			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer")
+			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&CharacterControllerComponent::Radius>("Radius")
+			.Field<&CharacterControllerComponent::Height>("Height")
+			.Field<&CharacterControllerComponent::Offset>("Offset")
+			.Field<&CharacterControllerComponent::SlopeLimitAngle>("SlopeLimitAngle", std::make_pair(ClampMin, 0.0f), std::make_pair(ClampMax, 180.0f))
+			.Field<&CharacterControllerComponent::SkinThickness>("SkinThickness", std::make_pair(ClampMin, 0.0001f))
+			.Field<&CharacterControllerComponent::StepOffset>("StepOffset", std::make_pair(ClampMin, 0.0f));
 #pragma endregion
 
 #ifndef DOCTEST_CONFIG_DISABLE
@@ -244,25 +360,25 @@ namespace ZeoEngine {
 			.Field<&TestComponent::TextureAssetVar>("TextureAssetVar", std::make_pair(Category, "Basic"), std::make_pair(AssetType, Texture2D::TypeID()))
 			.Field<&TestComponent::MeshAssetVar>("MeshAssetVar", std::make_pair(Category, "Basic"), std::make_pair(AssetType, Mesh::TypeID()))
 			.Field<true, &TestComponent::ShowSequenceContainers>("ShowSequenceContainers", std::make_pair(Category, "Basic"))
-			.Field<&TestComponent::BoolVecVar>("BoolVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::U8VecVar>("U8VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::U16VecVar>("U16VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::U32VecVar>("U32VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::U64VecVar>("U64VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::I8VecVar>("I8VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::I16VecVar>("I16VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::I32VecVar>("I32VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::I64VecVar>("I64VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::FloatVecVar>("FloatVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::DoubleVecVar>("DoubleVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::EnumVecVar>("EnumVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::EnumClassVecVar>("EnumClassVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::StringVecVar>("StringVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::Vec2VecVar>("Vec2VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::Vec3VecVar>("Vec3VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::ColorVecVar>("ColorVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::TextureAssetVecVar>("TextureAssetVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(AssetType, Texture2D::TypeID()), std::make_pair(HideCondition, "ShowSequenceContainers == false"))
-			.Field<&TestComponent::MeshAssetVecVar>("MeshAssetVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(AssetType, Mesh::TypeID()), std::make_pair(HideCondition, "ShowSequenceContainers == false"));
+			.Field<&TestComponent::BoolVecVar>("BoolVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::U8VecVar>("U8VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::U16VecVar>("U16VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::U32VecVar>("U32VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::U64VecVar>("U64VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::I8VecVar>("I8VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::I16VecVar>("I16VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::I32VecVar>("I32VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::I64VecVar>("I64VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::FloatVecVar>("FloatVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::DoubleVecVar>("DoubleVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::EnumVecVar>("EnumVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::EnumClassVecVar>("EnumClassVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::StringVecVar>("StringVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::Vec2VecVar>("Vec2VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::Vec3VecVar>("Vec3VecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::ColorVecVar>("ColorVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::TextureAssetVecVar>("TextureAssetVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(AssetType, Texture2D::TypeID()), std::make_pair(HideCondition, &NotShowSequenceContainers))
+			.Field<&TestComponent::MeshAssetVecVar>("MeshAssetVecVar", std::make_pair(Category, "Sequence Container"), std::make_pair(AssetType, Mesh::TypeID()), std::make_pair(HideCondition, &NotShowSequenceContainers));
 #endif
 
 	}

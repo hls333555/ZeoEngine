@@ -5,20 +5,20 @@
 
 namespace ZeoEngine {
 
-	void Console::RegisterVariable(std::string key, float defaultValue, std::string tooltip)
+	void Console::RegisterVariable(std::string key, float defaultValue, std::string tooltip, CommandType type)
 	{
 		if (m_Commands.find(key) != m_Commands.end()) return;
 
 		EditorConsole::s_Instance.AddCommand("%s\n", key.c_str());
-		m_Commands[std::move(key)] = { defaultValue, defaultValue, {}, std::move(tooltip) };
+		m_Commands[std::move(key)] = { type, defaultValue, defaultValue, {}, std::move(tooltip) };
 	}
 
-	void Console::RegisterCommand(std::string key, CommandFuncType command, std::string tooltip)
+	void Console::RegisterCommand(std::string key, CommandFuncType command, std::string tooltip, CommandType type)
 	{
 		if (m_Commands.find(key) != m_Commands.end()) return;
 
 		EditorConsole::s_Instance.AddCommand("%s\n", key.c_str());
-		m_Commands[std::move(key)] = { 0.0f, 0.0f, std::move(command), std::move(tooltip)};
+		m_Commands[std::move(key)] = { type, 0.0f, 0.0f, std::move(command), std::move(tooltip)};
 	}
 
 	std::optional<float> Console::GetVariableValue(const std::string& key)
@@ -81,4 +81,21 @@ namespace ZeoEngine {
 	{
 		return m_Commands.find(key) != m_Commands.end() && m_Commands[key].IsVariable();
 	}
+
+	CommandType Console::GetCommandType(const std::string& key)
+	{
+		return m_Commands.find(key) != m_Commands.end() ? m_Commands[key].Type : CommandType::Default;
+	}
+
+	void Console::ResetAllVariableValues()
+	{
+		for (auto& [key, command] : m_Commands)
+		{
+			if (command.IsVariable())
+			{
+				command.CurrentValue = command.DefaultValue;
+			}
+		}
+	}
+
 }

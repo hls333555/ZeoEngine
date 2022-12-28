@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		AssetBrowserPanelBase::ProcessEvent(e);
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowFileDroppedEvent>(ZE_BIND_EVENT_FUNC(ContentBrowserPanel::OnFileDropped));
+		dispatcher.Dispatch<WindowFileDroppedEvent>([this](WindowFileDroppedEvent& e) { return OnFileDropped(e); });
 	}
 
 	bool ContentBrowserPanel::OnFileDropped(WindowFileDroppedEvent& e)

@@ -2,7 +2,7 @@
 
 #include <imgui_internal.h>
 
-#include "Engine/Core/Input.h"
+#include "Engine/Events/MouseEvent.h"
 
 namespace ZeoEngine {
 
@@ -30,24 +30,13 @@ namespace ZeoEngine {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, m_PanelSpec.Padding);
 		if (ImGui::Begin(GetPanelTitle().c_str(), m_PanelSpec.bDisableClose ? nullptr : &m_bShow, m_PanelSpec.WindowFlags))
 		{
+			m_ImGuiWindow = ImGui::GetCurrentWindowRead();
 			m_bIsPanelFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
-			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+			m_bIsPanelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByPopup);
 
 			ProcessRender();
 		}
 		ImGui::PopStyleVar();
-
-		// WORKAROUND: Click middle mouse button or right mouse button to focus panel
-		if (m_bIsPanelHovered && (Input::IsMouseButtonPressed(Mouse::ButtonMiddle) || Input::IsMouseButtonPressed(Mouse::ButtonRight)))
-		{
-			FocusPanel();
-		}
-
-		if (m_bShouldFocusPanel)
-		{
-			ImGui::FocusWindow(ImGui::GetCurrentWindow());
-			m_bShouldFocusPanel = false;
-		}
 
 		ImGui::End();
 	}
@@ -56,12 +45,25 @@ namespace ZeoEngine {
 	{
 		if (!m_bShow) return;
 
-		ProcessEvent(e);
-	}
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& e)
+		{
+			// WORKAROUND: Click middle mouse button or right mouse button to focus panel
+			if (e.GetMouseButton() == Mouse::ButtonMiddle || e.GetMouseButton() == Mouse::ButtonRight)
+			{
+				const auto min = m_ImGuiWindow->Pos;
+				const auto size = m_ImGuiWindow->Size;
+				const ImVec2 max = { min.x + size.x, min.y + size.y };
+				if (ImGui::IsMouseHoveringRect(min, max, false))
+				{
+					ImGui::FocusWindow(m_ImGuiWindow);
+				}
+				return true;
+			}
+			return false;
+		});
 
-	void PanelBase::FocusPanel()
-	{
-		m_bShouldFocusPanel = true;
+		ProcessEvent(e);
 	}
 
 	void PanelBase::Toggle(bool bShow)

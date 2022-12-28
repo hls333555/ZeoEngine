@@ -8,6 +8,7 @@
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/TypeRegistry.h"
 #include "Engine/ImGui/ImGuiLayer.h"
+#include "Engine/Physics/PhysicsEngine.h"
 #include "Engine/Profile/Profiler.h"
 
 extern "C"
@@ -34,13 +35,14 @@ namespace ZeoEngine {
 		m_Profiler = new Profiler();
 
 		m_Window = Window::Create(WindowProps(spec.Name));
-		m_Window->SetEventCallback(ZE_BIND_EVENT_FUNC(Application::OnEvent));
+		m_Window->SetEventCallback([this](Event& e) {return OnEvent(e); });
 		m_ActiveWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
 
 		// TODO:
 		RandomEngine::Init();
 		Renderer::Init();
 		ScriptEngine::Init();
+		PhysicsEngine::Init();
 		TypeRegistry::Init();
 		
 		// m_ImGuiLayer does not need to be unique pointer
@@ -52,7 +54,18 @@ namespace ZeoEngine {
 
 	Application::~Application()
 	{
+		for (auto* layer : m_LayerStack)
+		{
+			layer->OnDetach();
+			delete layer;
+		}
+
+		// Clear scene references (so that physics scene can be destroyed) before physics engine shutdown
+		// This fixes a crash when closing application during physics simulation
 		ScriptEngine::Shutdown();
+		// Clear assets especially PhysicsMaterial, so that releasing it won't crash
+		AssetLibrary::Clear();
+		PhysicsEngine::Shutdown();
 		Renderer::Shutdown();
 
 		delete m_Profiler;
@@ -62,9 +75,9 @@ namespace ZeoEngine {
 	void Application::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<WindowCloseEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowResize));
-		dispatcher.Dispatch<WindowFocusChangedEvent>(ZE_BIND_EVENT_FUNC(Application::OnWindowFocusChanged));
+		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e){ return OnWindowClose(e); });
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
+		dispatcher.Dispatch<WindowFocusChangedEvent>([this](WindowFocusChangedEvent& e) { return OnWindowFocusChanged(e); });
 
 		PropagateEvent(e);
 	}
@@ -108,8 +121,13 @@ namespace ZeoEngine {
 			ZE_PROFILE_FRAME("MainThread");
 
 			// Platform::GetTime();
-			float time = m_Window->GetTimeInSeconds();
+			const float time = m_Window->GetTimeInSeconds();
 			DeltaTime dt = time - m_LastFrameTime;
+			if (dt > 0.1f)
+			{
+				dt = 0.1f;
+			}
+			ZE_CORE_ASSERT(dt >= 0.0f);
 			m_LastFrameTime = time;
 
 			ExecuteMainThreadQueue();
@@ -118,8 +136,8 @@ namespace ZeoEngine {
 			if (!m_bMinimized)
 			{
 				{
-					ZE_PROFILE_FUNC("Application Layer::OnUpdate");
-					ZE_SCOPE_PERF("Application Layer::OnUpdate");
+					ZE_PROFILE_FUNC("Application::UpdateLayers");
+					ZE_SCOPE_PERF("Application::UpdateLayers");
 
 					for (auto* layer : m_LayerStack)
 					{
@@ -130,8 +148,8 @@ namespace ZeoEngine {
 				// TODO: This will eventually be in render thread
 				// Render ImGui
 				{
-					ZE_PROFILE_FUNC("Application Layer::OnImGuiRender");
-					ZE_SCOPE_PERF("Application Layer::OnImGuiRender");
+					ZE_PROFILE_FUNC("Application::ImGuiRenderLayers");
+					ZE_SCOPE_PERF("Application::ImGuiRenderLayers");
 
 					m_ImGuiLayer->Begin();
 					{

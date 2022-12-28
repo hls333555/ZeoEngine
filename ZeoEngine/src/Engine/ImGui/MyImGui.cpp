@@ -170,6 +170,15 @@ namespace ImGui {
 		return pressed;
 	}
 
+	bool ActiveTransparentButton(const char* label, bool bActive, const ImVec2& size_arg)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 0.0f)));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImGuiCol_ButtonHovered));
+		bool pressed = ImGui::ButtonEx(label, size_arg);
+		ImGui::PopStyleColor(2);
+		return pressed;
+	}
+
 	bool TileImageButton(ImTextureID user_texture_id, bool bDrawImageBackground, bool bIsDisabled, bool bIsSelected, const ImVec2& size, float rounding, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const ImVec4& tint_col)
 	{
 		ImGuiContext& g = *GImGui;
@@ -381,6 +390,30 @@ namespace ImGui {
 			return NULL;
 
 		return &payload;
+	}
+
+	void SetMouseEnabled(bool bEnable)
+	{
+		if (bEnable)
+		{
+			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		}
+		else
+		{
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		}
+	}
+
+	void SetKeyboardNavEnabled(bool bEnable)
+	{
+		if (bEnable)
+		{
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		}
+		else
+		{
+			ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+		}
 	}
 
 }

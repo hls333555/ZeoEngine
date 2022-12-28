@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		const std::string outputPathTemplate = AssetRegistry::GetGPUProfileOutputDirectory() + EngineUtils::GetCurrentTimeAndDate();
 		m_API->SetCaptureFilePathTemplate(outputPathTemplate.c_str());
 
-		Console::Get().RegisterCommand("p.StartGPUCapture", [this](const std::vector<std::string>&)
+		Console::Get().RegisterCommand("profile.StartGPUCapture", [this](const std::vector<std::string>&)
 		{
 			m_bEnableCapture = true;
 			m_bCaptureOneFrameOnly = true;

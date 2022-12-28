@@ -1,6 +1,7 @@
 #include "Panels/ViewPanelBase.h"
 
 #include <imgui.h>
+#include <ImGuizmo.h>
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Core/KeyCodes.h"
@@ -29,14 +30,16 @@ namespace ZeoEngine {
 		// This solution will render the 'old' sized framebuffer onto the 'new' sized ImGuiPanel and store the 'new' size in m_LastViewportSize
 		// The next frame will first resize the framebuffer as m_LastViewportSize differs from framebuffer's width/height before updating and rendering
 		// This results in never rendering an empty (black) framebuffer
-		if (FrameBufferSpec spec = m_FrameBuffer->GetSpec();
+		if (const auto& spec = m_FrameBuffer->GetSpec();
 			m_LastViewportSize.x > 0.0f && m_LastViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_LastViewportSize.x || spec.Height != m_LastViewportSize.y))
 		{
 			OnViewportResize(m_LastViewportSize);
 		}
 
-		m_EditorWorld->GetEditorCamera().SetViewportHovered(IsPanelHovered());
+		// All camera manipulation will cause panel focusing, but when manipulation starts, IsPanelFocused() will always return false due to disabling ImGui mouse
+		auto& editorCamera = m_EditorWorld->GetEditorCamera();
+		editorCamera.SetEnableManipulation(!ImGuizmo::IsUsing() && IsPanelFocused() || editorCamera.IsManipulating());
 	}
 
 	void ViewPanelBase::ProcessRender()
@@ -59,14 +62,6 @@ namespace ZeoEngine {
 				{ 0, 1 }, { 1, 0 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 },
 				ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 		}
-
-	#if EditorCameraDebug
-		ImGui::Begin("Editor Camera Debug");
-		ImGui::Checkbox("IsLastViewportHovered", &m_EditorCamera.m_bLastIsViewportHovered);
-		ImGui::Checkbox("IsFirstPress", &m_EditorCamera.m_bIsFirstPress);
-		ImGui::Text("Mode: %d", m_EditorCamera.m_CameraControlModes);
-		ImGui::End();
-	#endif
 	}
 
 	void ViewPanelBase::ProcessEvent(Event& e)
@@ -74,8 +69,8 @@ namespace ZeoEngine {
 		if (!IsPanelHovered()) return;
 
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<MouseScrolledEvent>(ZE_BIND_EVENT_FUNC(ViewPanelBase::OnMouseScroll));
-		dispatcher.Dispatch<KeyPressedEvent>(ZE_BIND_EVENT_FUNC(ViewPanelBase::OnKeyPressed));
+		dispatcher.Dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& e) { return OnMouseScroll(e); });
+		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) { return OnKeyPressed(e); });
 	}
 
 	bool ViewPanelBase::OnMouseScroll(MouseScrolledEvent& e) const
@@ -140,12 +135,6 @@ namespace ZeoEngine {
 		return { mx, my };
 	}
 
-	void ViewPanelBase::OnCameraComponentAdded(Scene& scene, entt::entity e) const
-	{
-		const Entity entity{ e, scene.shared_from_this() };
-		UpdateViewportSizeOnSceneCamera(entity.GetComponent<CameraComponent>());
-	}
-
 	void ViewPanelBase::OnViewportResize(const Vec2& size) const
 	{
 		// Broadcast changes
@@ -154,10 +143,12 @@ namespace ZeoEngine {
 		// Resize editor camera
 		m_EditorWorld->GetEditorCamera().SetViewportSize(size.x, size.y);
 
-		m_EditorWorld->GetActiveScene()->ForEachComponentView<CameraComponent>([this](auto e, auto& cameraComp)
+		const auto cameraView = m_EditorWorld->GetActiveScene()->GetComponentView<CameraComponent>();
+		for (const auto e : cameraView)
 		{
+			auto [cameraComp] = cameraView.get(e);
 			UpdateViewportSizeOnSceneCamera(cameraComp);
-		});
+		}
 	}
 
 	void ViewPanelBase::UpdateViewportSizeOnSceneCamera(CameraComponent& cameraComp) const

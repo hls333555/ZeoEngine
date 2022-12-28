@@ -105,6 +105,7 @@ namespace entt {
 
 namespace ZeoEngine {
 
+    using HideConditionFunc = bool(*)(struct IComponent* component);
     using CustomSequenceContainerElementNameFunc = std::string(*)(struct IComponent* component, U32 fieldID, U32 elementIndex);
 
     namespace Reflection {
@@ -119,7 +120,7 @@ namespace ZeoEngine {
             HideComponentHeader,		// [key_only] This component will not display the collapsing header.
             Category,					// [value_type: const char*] Category of component or field.
             HiddenInEditor,				// [key_only] Should hide this field in the editor?
-            HideCondition,				// [value_type: const char*] Hide this field if provided expression yields true. Supported types: bool and enum. Supported operators: == and !=.
+            HideCondition,				// [value_type: HideConditionFunc] Hide this field if provided function returns true.
             Transient,					// [key_only] If set, this component or data will not get serialized.
 
             DragSensitivity,			// [value_type: float] Speed of dragging.

@@ -33,6 +33,9 @@ namespace ZeoEngine {
 			ImVector<int> FilteredCommandLines; // Stores line number of filtered command
 		}					CommandCallbackData;
 
+		bool				bRequestKeyboardFocus = false;
+		ImGuiID				ConsoleInputItemID;
+
 		EditorConsole();
 
 		void ClearLog();

@@ -150,7 +150,7 @@ namespace ZeoEngine {
 
 			Vec3 translation, rotation, scale;
 			Math::DecomposeTransform(transform, translation, rotation, scale);
-			Mat4 rotationMatrix = glm::toMat4(glm::quat(rotation));
+			Mat4 rotationMatrix = glm::toMat4(Quat(rotation));
 			Mat4 scaleMatrix = glm::scale(Mat4(1.0f), scale);
 
 			result.Origin = transform * Vec4(Origin, 1.0f);

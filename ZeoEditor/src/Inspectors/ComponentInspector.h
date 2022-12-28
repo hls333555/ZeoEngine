@@ -4,7 +4,6 @@
 #include <deque>
 
 #include "Inspectors/InspectorBase.h"
-#include "Inspectors/FieldParser.h"
 
 namespace ZeoEngine {
 
@@ -27,6 +26,7 @@ namespace ZeoEngine {
 		/** Iterate all datas on this component, reverse their order and categorize them. */
 		void PreprocessComponent();
 		void PreprocessField(entt::meta_data data);
+		bool ShouldHideField(entt::meta_data data, entt::meta_any& instance) const;
 
 		void DrawFieldWidget(entt::meta_data data, Entity entity);
 		virtual void DrawExtraFieldWidgets(Entity entity) {}
@@ -40,8 +40,6 @@ namespace ZeoEngine {
 
 		/** Map from aggregated field ID to field widget */
 		std::unordered_map<U32, Scope<IFieldWidget>> m_FieldWidgets;
-		
-		FieldParser m_FieldParser;
 
 		/** Map from category to list of field IDs in order */
 		std::map <std::string, std::deque<U32>> m_PreprocessedFields;

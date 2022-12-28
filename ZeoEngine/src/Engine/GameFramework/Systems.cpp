@@ -7,10 +7,16 @@
 #include <box2d/b2_polygon_shape.h>
 #include <box2d/b2_circle_shape.h>
 
+#include "Engine/GameFramework/Tags.h"
+#include "Engine/Core/Console.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/GameFramework/World.h"
+#include "Engine/Physics/PhysicsEngine.h"
+#include "Engine/Physics/PhysXCharacterController.h"
+#include "Engine/Physics/PhysXScene.h"
+#include "Engine/Physics/PhysXShapes.h"
 #include "Engine/Renderer/RenderPass.h"
 
 namespace ZeoEngine {
@@ -20,21 +26,206 @@ namespace ZeoEngine {
 	{
 	}
 
-	// TODO: Move to class static functions
-	static void OnCameraComponentAdded(Scene& scene, entt::entity e)
+	void SystemBase::OnCreate()
+	{
+		GetWorld()->m_OnActiveSceneChanged.connect<&SystemBase::OnActiveSceneChanged>(this);
+	}
+
+	void SystemBase::OnUpdate(DeltaTime dt)
+	{
+		OnUpdateComponentObservers();
+	}
+
+	void SystemBase::OnDestroy()
+	{
+		GetWorld()->m_OnActiveSceneChanged.disconnect(this);
+
+		for (const auto& binder : m_ComponentEventBinders)
+		{
+			binder->OnUnbind(GetScene().get());
+		}
+
+		for (const auto& observer : m_ComponentObservers)
+		{
+			observer->OnUnbind();
+		}
+	}
+
+	void SystemBase::OnActiveSceneChanged(Scene* scene, Scene* lastScene) const
+	{
+		for (const auto& binder : m_ComponentEventBinders)
+		{
+			binder->OnUnbind(lastScene);
+			binder->OnBind(scene);
+		}
+
+		for (const auto& observer : m_ComponentObservers)
+		{
+			observer->OnUnbind();
+			observer->OnBind(*scene);
+		}
+	}
+
+	void SystemBase::OnUpdateComponentObservers() const
+	{
+		ZE_PROFILE_FUNC();
+
+		for (const auto& observer : m_ComponentObservers)
+		{
+			observer->OnUpdate(*GetScene());
+		}
+	}
+
+	void TransformSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentUpdatedBinder<TransformComponent, &TransformSystem::OnTransformComponentUpdated, TransformSystem>>(this);
+	}
+
+	// Sync transforms between world and local for all child entities
+	// If world transform is changed, LocalTransformDirty tag is added so that local transform will be calculated based on the world transform
+	// If local transform is changed, LocalTransformDirty tag is removed so that world transform will be calculated based on the local transform
+	// In this case, only the most recent transform change will be taken into account which means if we change local transform first and then change world transform, the previous change will be ignored
+	// Changes to any transform will add the AnyTransformDirty tag which will be removed in physics update
+	// We do not update root parent entities here by referencing WorldTransformComponent which is only added to child entities, because their local transforms are also the world ones
+	void TransformSystem::OnUpdate(DeltaTime dt)
+	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		const auto scene = GetScene();
+		auto transformGroup = scene->GetComponentGroup<TransformComponent, WorldTransformComponent, entt::tag<Tag::AnyTransformDirty>>();
+		// Sort entities to ensure parent ones are updated before their children as child transforms rely on its parent's
+		{
+			ZE_PROFILE_FUNC("TansformSystem::SortTransformDirtyEntities")
+			transformGroup.sort([&scene](const auto lhs, const auto rhs)
+			{
+				const Entity lEntity{ lhs, scene };
+				const Entity rEntity{ rhs, scene };
+				if (lEntity.IsAncestorOf(rEntity)) return true;
+				if (lEntity.IsDescendantOf(rEntity)) return false;
+				return lhs < rhs;
+			});
+		}
+		for (const auto e : transformGroup)
+		{
+			Entity entity{ e, scene };
+			auto [transformComp, worldTransformComp] = transformGroup.get<TransformComponent, WorldTransformComponent>(e);
+			if (entity.HasTag<Tag::LocalTransformDirty>())
+			{
+				const Entity parent = entity.GetParentEntity();
+				const Mat4 parentTransform = parent.GetWorldTransform();
+				const Mat4 localTransform = glm::inverse(parentTransform) * worldTransformComp.GetTransform();
+				transformComp.SetTransform(localTransform);
+
+				entity.RemoveTag<Tag::LocalTransformDirty>();
+			}
+			else
+			{
+				const Entity parent = entity.GetParentEntity();
+				const Mat4 parentTransform = parent.GetWorldTransform();
+				const Mat4 worldTransform = parentTransform * transformComp.GetTransform();
+				worldTransformComp.SetTransform(worldTransform);
+			}
+		}
+	}
+
+	void TransformSystem::OnTransformComponentUpdated(Scene& scene, entt::entity e) const
+	{
+		const Entity entity{ e, scene.shared_from_this() };
+		// WorldTransformComponent is restored and all transforms are properly deserialized so that we do not need to queue a pending update on scene deserialization
+		if (entity.HasTag<Tag::IsDeserializing>()) return;
+
+		// We need mark dirty here as local transform can be edited in inspector which will directly modify TRS values instead of calling our setters
+		entity.MarkWorldTransformDirty();
+	}
+
+	// Sync changed transforms back to child entities after physics simulation
+	void PostPhysicsTransformSystem::OnUpdate(DeltaTime dt)
+	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		const auto scene = GetScene();
+		auto transformGroup = scene->GetComponentGroup<TransformComponent, WorldTransformComponent, entt::tag<Tag::AnyTransformDirty>>();
+		// Sort entities to ensure parent ones are updated before their children as child transforms rely on its parent's
+		{
+			ZE_PROFILE_FUNC("PostPhysicsTransformSystem::SortTransformDirtyEntities")
+			transformGroup.sort([&scene](const auto lhs, const auto rhs)
+			{
+				const Entity lEntity{ lhs, scene };
+				const Entity rEntity{ rhs, scene };
+				if (lEntity.IsAncestorOf(rEntity)) return true;
+				if (lEntity.IsDescendantOf(rEntity)) return false;
+				return lhs < rhs;
+			});
+		}
+		for (const auto e : transformGroup)
+		{
+			Entity entity{ e, scene };
+			auto [transformComp, worldTransformComp] = transformGroup.get<TransformComponent, WorldTransformComponent>(e);
+			if (entity.HasTag<Tag::LocalTransformDirty>())
+			{
+				const Entity parent = entity.GetParentEntity();
+				const Mat4 parentTransform = parent.GetWorldTransform();
+				const Mat4 localTransform = glm::inverse(parentTransform) * worldTransformComp.GetTransform();
+				transformComp.SetTransform(localTransform);
+
+				entity.RemoveTag<Tag::LocalTransformDirty>();
+			}
+			else // Certain child entities attached to physics entities need update their world transforms accordingly
+			{
+				const Entity parent = entity.GetParentEntity();
+				const Mat4 parentTransform = parent.GetWorldTransform();
+				const Mat4 worldTransform = parentTransform * transformComp.GetTransform();
+				worldTransformComp.SetTransform(worldTransform);
+			}
+		}
+
+		GetScene()->ClearTags<Tag::AnyTransformDirty>();
+	}
+
+	static void OnCameraObserverUpdate(Scene& scene, Entity entity)
+	{
+		auto& cameraComp = entity.GetComponent<CameraComponent>();
+		cameraComp.Camera.RecalculateProjection();
+	}
+
+	void CameraSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<CameraComponent, &CameraSystem::OnCameraComponentAdded, CameraSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<CameraComponent, &CameraSystem::OnCameraComponentDestroy, CameraSystem>>(this);
+		RegisterComponentObserver(&OnCameraObserverUpdate, entt::collector.update<CameraComponent>());
+	}
+
+	void CameraSystem::OnCameraComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& billboardComp = entity.AddComponent<BillboardComponent>();
 		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
 	}
 
-	static void OnCameraComponentDestroy(Scene& scene, entt::entity e)
+	void CameraSystem::OnCameraComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		entity.RemoveComponentIfExist<BillboardComponent>();
 	}
 
-	static void OnMeshRendererComponentAdded(Scene& scene, entt::entity e)
+	void MeshSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<MeshRendererComponent, &MeshSystem::OnMeshRendererComponentAdded, MeshSystem>>(this);
+		RegisterComponentEventBinder<ComponentUpdatedBinder<MeshRendererComponent, &MeshSystem::OnMeshRendererComponentUpdated, MeshSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<MeshRendererComponent, &MeshSystem::OnMeshRendererComponentDestroy, MeshSystem>>(this);
+	}
+
+	void MeshSystem::OnMeshRendererComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		const auto& meshComp = entity.GetComponent<MeshRendererComponent>();
@@ -46,14 +237,13 @@ namespace ZeoEngine {
 		auto& boundsComp = entity.GetComponent<BoundsComponent>();
 		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshRendererComponent>::value()] = [](Entity entity)
 		{
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
 			const auto& meshComp = entity.GetComponent<MeshRendererComponent>();
 			const auto mesh = AssetLibrary::LoadAsset<Mesh>(meshComp.MeshAsset);
-			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+			return mesh ? mesh->GetBounds().TransformBy(entity.GetWorldTransform()) : BoxSphereBounds{};
 		};
 	}
 
-	static void OnMeshRendererComponentFieldChanged(Scene& scene, entt::entity e)
+	void MeshSystem::OnMeshRendererComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		auto& meshComp = entity.GetComponent<MeshRendererComponent>();
@@ -79,7 +269,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnMeshRendererComponentDestroy(Scene& scene, entt::entity e)
+	void MeshSystem::OnMeshRendererComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		if (entity.HasComponent<BoundsComponent>())
@@ -91,20 +281,28 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnMeshDetailComponentAdded(Scene& scene, entt::entity e)
+	void MeshPreviewSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<MeshDetailComponent, &MeshPreviewSystem::OnMeshDetailComponentAdded, MeshPreviewSystem>>(this);
+		RegisterComponentEventBinder<ComponentUpdatedBinder<MeshDetailComponent, &MeshPreviewSystem::OnMeshDetailComponentUpdated, MeshPreviewSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<MeshDetailComponent, &MeshPreviewSystem::OnMeshDetailComponentDestroy, MeshPreviewSystem>>(this);
+	}
+
+	void MeshPreviewSystem::OnMeshDetailComponentAdded(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		auto& boundsComp = entity.GetComponent<BoundsComponent>();
 		boundsComp.BoundsCalculationFuncs[entt::type_hash<MeshDetailComponent>::value()] = [](Entity entity)
 		{
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
 			const auto& meshComp = entity.GetComponent<MeshDetailComponent>();
 			const auto& mesh = meshComp.LoadedMesh;
-			return mesh ? mesh->GetBounds().TransformBy(transformComp.GetTransform()) : BoxSphereBounds{};
+			return mesh ? mesh->GetBounds().TransformBy(entity.GetWorldTransform()) : BoxSphereBounds{};
 		};
 	}
 
-	static void OnMeshDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	void MeshPreviewSystem::OnMeshDetailComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		auto& meshComp = entity.GetComponent<MeshDetailComponent>();
@@ -117,7 +315,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnMeshDetailComponentDestroy(Scene& scene, entt::entity e)
+	void MeshPreviewSystem::OnMeshDetailComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		if (entity.HasComponent<BoundsComponent>())
@@ -129,7 +327,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnMaterialDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	void MaterialPreviewSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentUpdatedBinder<MaterialDetailComponent, &MaterialPreviewSystem::OnMaterialDetailComponentUpdated, MaterialPreviewSystem>>(this);
+	}
+
+	void MaterialPreviewSystem::OnMaterialDetailComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		const auto& materialComp = entity.GetComponent<MaterialDetailComponent>();
@@ -140,7 +345,14 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnTextureDetailComponentFieldChanged(Scene& scene, entt::entity e)
+	void TexturePreviewSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentUpdatedBinder<TextureDetailComponent, &TexturePreviewSystem::OnTextureDetailComponentUpdated, TexturePreviewSystem>>(this);
+	}
+
+	void TexturePreviewSystem::OnTextureDetailComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		const auto& textureComp = entity.GetComponent<TextureDetailComponent>();
@@ -155,52 +367,44 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnScriptComponentFieldChanged(Scene& scene, entt::entity e)
+	void DirectionalLightSystem::OnCreate()
 	{
-		const Entity entity{ e, scene.shared_from_this() };
-		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
-		if (changeComp.FieldID == "ClassName"_hs)
-		{
-			ScriptEngine::OnScriptClassChanged(entity);
-		}
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<DirectionalLightComponent, &DirectionalLightSystem::OnDirectionalLightComponentAdded, DirectionalLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentUpdatedBinder<DirectionalLightComponent, &DirectionalLightSystem::OnDirectionalLightComponentUpdated, DirectionalLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<DirectionalLightComponent, &DirectionalLightSystem::OnDirectionalLightComponentDestroy, DirectionalLightSystem>>(this);
 	}
 
-	static void OnScriptComponentDestroy(Scene& scene, entt::entity e)
-	{
-		const Entity entity{ e, scene.shared_from_this() };
-		ScriptEngine::OnDestroyEntity(entity);
-	}
-
-	static void OnDirectionalLightComponentAdded(Scene& scene, entt::entity e)
+	void DirectionalLightSystem::OnDirectionalLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& billboardComp = entity.AddComponent<BillboardComponent>();
 		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
-		entity.PatchComponent<BoundsComponent>([](BoundsComponent boundsComp)
+		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<DirectionalLightComponent>::value()] = [](Entity entity)
 			{
-				const auto& transformComp = entity.GetComponent<TransformComponent>();
-				const Sphere sphere{ transformComp.Translation, 0.0f };
+				const Sphere sphere{ entity.GetWorldTranslation(), 0.0f };
 				return sphere;
 			};
 		});
 	}
 
-	static void OnDirectionalLightComponentFieldChanged(Scene& scene, entt::entity e)
+	void DirectionalLightSystem::OnDirectionalLightComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		const Entity entity{ e, scene.shared_from_this() };
 		auto& lightComp = entity.GetComponent<DirectionalLightComponent>();
 		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
 		if (changeComp.FieldID == "ShadowType"_hs)
 		{
-			const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(scene.GetContext(), "ScreenSpaceShadow");
+			const auto* shadowPass = EngineUtils::GetRenderPassFromContext<ScreenSpaceShadowPass>(scene.GetContextShared(), "ScreenSpaceShadow");
 			const auto shadowShader = shadowPass->GetShadowShader();
 			shadowShader->SetShaderVariantByMacro("SHADOW_TYPE", static_cast<U32>(lightComp.ShadowType));
 		}
 	}
 
-	static void OnDirectionalLightComponentDestroy(Scene& scene, entt::entity e)
+	void DirectionalLightSystem::OnDirectionalLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		entity.RemoveComponentIfExist<BillboardComponent>();
@@ -213,7 +417,16 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnPointLightComponentAdded(Scene& scene, entt::entity e)
+	void PointLightSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<PointLightComponent, &PointLightSystem::OnPointLightComponentAdded, PointLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentUpdatedBinder<PointLightComponent, &PointLightSystem::OnPointLightComponentUpdated, PointLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<PointLightComponent, &PointLightSystem::OnPointLightComponentDestroy, PointLightSystem>>(this);
+	}
+
+	void PointLightSystem::OnPointLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& billboardComp = entity.AddComponent<BillboardComponent>();
@@ -222,15 +435,14 @@ namespace ZeoEngine {
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<PointLightComponent>::value()] = [](Entity entity)
 			{
-				const auto& transformComp = entity.GetComponent<TransformComponent>();
 				const auto& lightComp = entity.GetComponent<PointLightComponent>();
-				const Sphere sphere{ transformComp.Translation, lightComp.Range };
+				const Sphere sphere{ entity.GetWorldTranslation(), lightComp.Range };
 				return sphere;
 			};
-		});		
+		});
 	}
 
-	static void OnPointLightComponentFieldChanged(Scene& scene, entt::entity e)
+	void PointLightSystem::OnPointLightComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& lightComp = entity.GetComponent<PointLightComponent>();
@@ -245,7 +457,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnPointLightComponentDestroy(Scene& scene, entt::entity e)
+	void PointLightSystem::OnPointLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		entity.RemoveComponentIfExist<BillboardComponent>();
@@ -258,7 +470,16 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnSpotLightComponentAdded(Scene& scene, entt::entity e)
+	void SpotLightSystem::OnCreate()
+	{
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentAddedBinder<SpotLightComponent, &SpotLightSystem::OnSpotLightComponentAdded, SpotLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentUpdatedBinder<SpotLightComponent, &SpotLightSystem::OnSpotLightComponentUpdated, SpotLightSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<SpotLightComponent, &SpotLightSystem::OnSpotLightComponentDestroy, SpotLightSystem>>(this);
+	}
+
+	void SpotLightSystem::OnSpotLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& billboardComp = entity.AddComponent<BillboardComponent>();
@@ -267,15 +488,14 @@ namespace ZeoEngine {
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<SpotLightComponent>::value()] = [](Entity entity)
 			{
-			   const auto& transformComp = entity.GetComponent<TransformComponent>();
 			   const auto& lightComp = entity.GetComponent<SpotLightComponent>();
-			   const Sphere sphere{ transformComp.Translation, lightComp.Range * 0.5f };
+			   const Sphere sphere{ entity.GetWorldTranslation(), lightComp.Range * 0.5f };
 			   return sphere;
 			};
 		});
 	}
 
-	static void OnSpotLightComponentFieldChanged(Scene& scene, entt::entity e)
+	void SpotLightSystem::OnSpotLightComponentUpdated(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		auto& lightComp = entity.GetComponent<SpotLightComponent>();
@@ -290,7 +510,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	static void OnSpotLightComponentDestroy(Scene& scene, entt::entity e)
+	void SpotLightSystem::OnSpotLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
 		entity.RemoveComponentIfExist<BillboardComponent>();
@@ -300,281 +520,386 @@ namespace ZeoEngine {
 			{
 				boundsComp.BoundsCalculationFuncs.erase(entt::type_hash<SpotLightComponent>::value());
 			});
-		}	
+		}
 	}
 
-	void LevelObserverSystem::OnBind()
+	static void OnBoundsObserverUpdate(Scene& scene, Entity entity)
 	{
-		BindOnComponentAdded<CameraComponent, &OnCameraComponentAdded>();
-		BindOnComponentDestroy<CameraComponent, &OnCameraComponentDestroy>();
-
-		BindOnComponentAdded<MeshRendererComponent, &OnMeshRendererComponentAdded>();
-		BindOnComponentUpdated<MeshRendererComponent, &OnMeshRendererComponentFieldChanged>();
-		BindOnComponentDestroy<MeshRendererComponent, &OnMeshRendererComponentDestroy>();
-
-		BindOnComponentUpdated<ScriptComponent, &OnScriptComponentFieldChanged>();
-		BindOnComponentDestroy<ScriptComponent, &OnScriptComponentDestroy>();
-
-		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
-		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
-		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
-
-		BindOnComponentAdded<PointLightComponent, &OnPointLightComponentAdded>();
-		BindOnComponentUpdated<PointLightComponent, &OnPointLightComponentFieldChanged>();
-		BindOnComponentDestroy<PointLightComponent, &OnPointLightComponentDestroy>();
-
-		BindOnComponentAdded<SpotLightComponent, &OnSpotLightComponentAdded>();
-		BindOnComponentUpdated<SpotLightComponent, &OnSpotLightComponentFieldChanged>();
-		BindOnComponentDestroy<SpotLightComponent, &OnSpotLightComponentDestroy>();
-
-		m_CameraObserver = CreateObserver(entt::collector.update<CameraComponent>());
-		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
+		entity.UpdateBounds();
 	}
 
-	void LevelObserverSystem::OnUnbind()
+	void BoundsSystem::OnCreate()
 	{
-		UnbindOnComponentAdded<CameraComponent>();
-		UnbindOnComponentDestroy<CameraComponent>();
+		SystemBase::OnCreate();
 
-		UnbindOnComponentAdded<MeshRendererComponent>();
-		UnbindOnComponentUpdated<MeshRendererComponent>();
-		UnbindOnComponentDestroy<MeshRendererComponent>();
-
-		UnbindOnComponentUpdated<ScriptComponent>();
-		UnbindOnComponentDestroy<ScriptComponent>();
-
-		UnbindOnComponentAdded<DirectionalLightComponent>();
-		UnbindOnComponentUpdated<DirectionalLightComponent>();
-		UnbindOnComponentDestroy<DirectionalLightComponent>();
-
-		UnbindOnComponentAdded<PointLightComponent>();
-		UnbindOnComponentUpdated<PointLightComponent>();
-		UnbindOnComponentDestroy<PointLightComponent>();
-
-		UnbindOnComponentAdded<SpotLightComponent>();
-		UnbindOnComponentUpdated<SpotLightComponent>();
-		UnbindOnComponentDestroy<SpotLightComponent>();
-
-		m_CameraObserver->disconnect();
-		m_BoundsObserver->disconnect();
+		RegisterComponentObserver(&OnBoundsObserverUpdate, entt::collector.update<BoundsComponent>().update<TransformComponent>().update<WorldTransformComponent>());
 	}
 
-	void LevelObserverSystem::OnUpdate(Scene& scene)
+	void ParticleUpdateSystem::OnUpdate(DeltaTime dt)
 	{
-		m_CameraObserver->each([&scene](const entt::entity e)
+		SystemBase::OnUpdate(dt);
+
+		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
+		for (const auto e : particleView)
 		{
-			const Entity entity{ e, scene.shared_from_this() };
-			auto& cameraComp = entity.GetComponent<CameraComponent>();
-			cameraComp.Camera.RecalculateProjection();
-		});
-
-		m_BoundsObserver->each([&scene](const auto e)
-		{
-			const Entity entity{ e, scene.shared_from_this() };
-			entity.UpdateBounds();
-		});
-	}
-
-	void MeshPreviewObserverSystem::OnBind()
-	{
-		BindOnComponentAdded<MeshDetailComponent, &OnMeshDetailComponentAdded>();
-		BindOnComponentUpdated<MeshDetailComponent, &OnMeshDetailComponentFieldChanged>();
-		BindOnComponentDestroy<MeshDetailComponent, &OnMeshDetailComponentDestroy>();
-
-		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
-		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
-		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
-
-		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
-	}
-
-	void MeshPreviewObserverSystem::OnUnbind()
-	{
-		UnbindOnComponentAdded<MeshDetailComponent>();
-		UnbindOnComponentUpdated<MeshDetailComponent>();
-		UnbindOnComponentDestroy<MeshDetailComponent>();
-
-		UnbindOnComponentAdded<DirectionalLightComponent>();
-		UnbindOnComponentUpdated<DirectionalLightComponent>();
-		UnbindOnComponentDestroy<DirectionalLightComponent>();
-
-		m_BoundsObserver->disconnect();
-	}
-
-	void MeshPreviewObserverSystem::OnUpdate(Scene& scene)
-	{
-		m_BoundsObserver->each([&scene](const auto e)
-		{
-			const Entity entity{ e, scene.shared_from_this() };
-			entity.UpdateBounds();
-		});
-	}
-
-		void MaterialPreviewObserverSystem::OnBind()
-	{
-		BindOnComponentUpdated<MaterialDetailComponent, &OnMaterialDetailComponentFieldChanged>();
-
-		BindOnComponentAdded<MeshRendererComponent, &OnMeshRendererComponentAdded>();
-		BindOnComponentUpdated<MeshRendererComponent, &OnMeshRendererComponentFieldChanged>();
-		BindOnComponentDestroy<MeshRendererComponent, &OnMeshRendererComponentDestroy>();
-
-		BindOnComponentAdded<DirectionalLightComponent, &OnDirectionalLightComponentAdded>();
-		BindOnComponentUpdated<DirectionalLightComponent, &OnDirectionalLightComponentFieldChanged>();
-		BindOnComponentDestroy<DirectionalLightComponent, &OnDirectionalLightComponentDestroy>();
-
-		m_BoundsObserver = CreateObserver(entt::collector.update<BoundsComponent>().update<TransformComponent>());
-	}
-
-	void MaterialPreviewObserverSystem::OnUnbind()
-	{
-		UnbindOnComponentUpdated<MaterialDetailComponent>();
-
-		UnbindOnComponentAdded<MeshRendererComponent>();
-		UnbindOnComponentUpdated<MeshRendererComponent>();
-		UnbindOnComponentDestroy<MeshRendererComponent>();
-
-		UnbindOnComponentAdded<DirectionalLightComponent>();
-		UnbindOnComponentUpdated<DirectionalLightComponent>();
-		UnbindOnComponentDestroy<DirectionalLightComponent>();
-
-		m_BoundsObserver->disconnect();
-	}
-
-	void MaterialPreviewObserverSystem::OnUpdate(Scene& scene)
-	{
-		m_BoundsObserver->each([&scene](const auto e)
-		{
-			const Entity entity{ e, scene.shared_from_this() };
-			entity.UpdateBounds();
-		});
-	}
-
-	void TexturePreviewObserverSystem::OnBind()
-	{
-		BindOnComponentUpdated<TextureDetailComponent, &OnTextureDetailComponentFieldChanged>();
-	}
-
-	void TexturePreviewObserverSystem::OnUnbind()
-	{
-		UnbindOnComponentUpdated<TextureDetailComponent>();
-	}
-
-	void ParticleUpdateSystem::OnUpdateEditor(DeltaTime dt)
-	{
-		GetScene()->ForEachComponentView<ParticleSystemComponent>([dt](auto e, auto& particleComp)
-		{
+			auto [particleComp] = particleView.get(e);
 			if (particleComp.Instance)
 			{
 				particleComp.Instance->OnUpdate(dt);
 			}
-		});
+		}
 	}
 
-	void ParticleUpdateSystem::OnUpdateRuntime(DeltaTime dt)
+	void ParticlePreviewUpdateSystem::OnUpdate(DeltaTime dt)
 	{
-		OnUpdateEditor(dt);
-	}
+		ParticleUpdateSystem::OnUpdate(dt);
 
-	void ParticlePreviewUpdateSystem::OnUpdateEditor(DeltaTime dt)
-	{
-		GetScene()->ForEachComponentView<ParticleSystemDetailComponent>([dt](auto e, auto& particlePreviewComp)
+		auto particleView = GetScene()->GetComponentView<ParticleSystemDetailComponent>();
+		for (const auto e : particleView)
 		{
-			if (particlePreviewComp.Instance)
+			auto [particleComp] = particleView.get(e);
+			if (particleComp.Instance)
 			{
-				particlePreviewComp.Instance->OnUpdate(dt);
+				particleComp.Instance->OnUpdate(dt);
 			}
-		});
+		}
 	}
 
-	void ParticlePreviewUpdateSystem::OnUpdateRuntime(DeltaTime dt)
+	void ScriptSystem::OnCreate()
 	{
-		OnUpdateEditor(dt);		
+		SystemBase::OnCreate();
+
+		RegisterComponentEventBinder<ComponentUpdatedBinder<ScriptComponent, &ScriptSystem::OnScriptComponentUpdated, ScriptSystem>>(this);
+		RegisterComponentEventBinder<ComponentDestroyBinder<ScriptComponent, &ScriptSystem::OnScriptComponentDestroy, ScriptSystem>>(this);
 	}
 
-	void ScriptSystem::OnUpdateRuntime(DeltaTime dt)
+	// At this stage, you can read and write local transforms arbitrarily
+	// Physics simulation is not processed yet
+	// World transforms may not be up to date
+	void ScriptSystem::OnUpdate(DeltaTime dt)
 	{
-		GetScene()->ForEachComponentView<ScriptComponent>([this, dt](auto e, auto& scriptComp)
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+		if (GetWorld()->IsSimulation()) return;
+
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
 		{
-			const Entity entity{ e, GetScene() };
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::Default) continue;
+
+			const Entity entity{ e, scene };
 			ScriptEngine::OnUpdateEntity(entity, dt);
-		});
+		}
 	}
 
-	void ScriptSystem::OnRuntimeStart()
+	void ScriptSystem::OnPlayStart()
 	{
-		ScriptEngine::SetSceneContext(GetScene());
-		GetScene()->ForEachComponentView<ScriptComponent>([this](auto e, auto& scriptComp)
+		ZE_PROFILE_FUNC();
+
+		const auto scene = GetScene();
+		ScriptEngine::SetSceneContext(scene);
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
 		{
-			const Entity entity{ e, GetScene() };
+			const Entity entity{ e, scene };
 			ScriptEngine::InstantiateEntityClass(entity);
 			ScriptEngine::OnCreateEntity(entity);
-		});
+		}
 	}
 
-	void ScriptSystem::OnRuntimeStop()
+	void ScriptSystem::OnPlayStop()
 	{
+		ZE_PROFILE_FUNC();
+
 		ScriptEngine::SetSceneContext(GetScene());
 	}
 
-	void PhysicsSystem::OnUpdateRuntime(DeltaTime dt)
+	void ScriptSystem::OnScriptComponentUpdated(Scene& scene, entt::entity e) const
 	{
-		
+		const Entity entity{ e, scene.shared_from_this() };
+		const auto& changeComp = entity.GetComponent<FieldChangeComponent>();
+		if (changeComp.FieldID == "ClassName"_hs)
+		{
+			ScriptEngine::OnScriptClassChanged(entity);
+		}
 	}
 
-	void PhysicsSystem::OnRuntimeStart()
+	void ScriptSystem::OnScriptComponentDestroy(Scene& scene, entt::entity e) const
 	{
-
+		const Entity entity{ e, scene.shared_from_this() };
+		ScriptEngine::OnDestroyEntity(entity);
 	}
 
-	void PhysicsSystem::OnRuntimeStop()
+	// At this stage, all transforms have been updated
+	// Physics simulation is not processed yet
+	// You can read and write world transforms here but be aware that local transforms may be out of sync until PostPhysicsTransformSystem
+	void PrePhysicsScriptSystem::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
 
+		SystemBase::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+		if (GetWorld()->IsSimulation()) return;
+
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
+		{
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::PrePhysics) continue;
+
+			const Entity entity{ e, scene };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		}
 	}
 
-	void PhysicsSystem2D::OnUpdateRuntime(DeltaTime dt)
+	// At this stage, physics simulation is done and all transform changes have been applied
+	void PostPhysicsScriptSystem::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+		if (GetWorld()->IsSimulation()) return;
+
+		const auto scene = GetScene();
+		auto scriptView = scene->GetComponentView<ScriptComponent>();
+		for (const auto e : scriptView)
+		{
+			auto [scriptComp] = scriptView.get(e);
+			if (scriptComp.UpdateStage != ScriptUpdateStage::PostPhysics) continue;
+
+			const Entity entity{ e, scene };
+			ScriptEngine::OnUpdateEntity(entity, dt);
+		}
+	}
+
+	void PhysicsSystem::OnUpdate(DeltaTime dt)
+	{
+		ZE_PROFILE_FUNC();
+
+		SystemBase::OnUpdate(dt);
+
+		const auto scene = GetScene();
+		if (!GetWorld()->IsRunning())
+		{
+			// Physics does not exist yet, remove the tag and return
+			scene->ClearTags<Tag::AnyTransformDirty>();
+			return;
+		}
+
+		auto* physicsScene = scene->GetPhysicsScene();
+		if (!physicsScene) return;
+
+		// Sync changed transforms to physics
+		auto transformGroup = scene->GetComponentGroup<TransformComponent, entt::tag<Tag::AnyTransformDirty>>();
+		for (const auto e : transformGroup)
+		{
+			Entity entity{ e, scene };
+			const Vec3& translation = entity.GetWorldTranslation();
+			const Vec3 rotation = entity.GetWorldRotation();
+
+			// Physics actor
+			if (entity.HasComponent<RigidBodyComponent>())
+			{
+				const auto* actor = physicsScene->GetActor(entity);
+				if (actor->IsKinematic())
+				{
+					actor->SetKinematicTarget(translation, rotation);
+				}
+				else
+				{
+					actor->SetTransform(translation, rotation);
+				}
+			}
+			// Physics collider
+			else if (entity.HasTag<Tag::ChildCollider>())
+			{
+				Entity current = entity;
+				Entity parent;
+				Mat4 transform = entity.GetTransform();
+				while ((parent = current.GetParentEntity()))
+				{
+					if (parent.HasComponent<RigidBodyComponent>())
+					{
+						break;
+					}
+
+					current = parent;
+					transform = parent.GetTransform() * transform;
+				}
+
+				if (const auto* actor = physicsScene->GetActor(parent))
+				{
+					const auto* colliders = actor->GetCollidersByEntity(entity);
+					if (colliders)
+					{
+						for (const auto& collider : *colliders)
+						{
+							collider->SetTransform(transform);
+						}
+					}
+				}
+			}
+			// Physics character controller
+			if (entity.HasComponent<CharacterControllerComponent>())
+			{
+				const auto& controllerComp = entity.GetComponent<CharacterControllerComponent>();
+				const auto* controller = physicsScene->GetCharacterController(entity);
+				controller->SetTranslation(translation + controllerComp.Offset);
+			}
+		}
+
+		// Physics simulation
+		physicsScene->Simulate(dt);
+	}
+
+	void PhysicsSystem::OnPlayStart()
+	{
+		const auto scene = GetScene();
+		auto* physicsScene = scene->CreatePhysicsScene();
+
+		auto rigidBodyView = scene->GetComponentView<RigidBodyComponent>();
+		for (const auto e : rigidBodyView)
+		{
+			const Entity entity{ e, scene };
+			physicsScene->CreateActor(entity);
+		}
+
+		ValidateColliders();
+
+		auto characterControllerView = scene->GetComponentView<CharacterControllerComponent>();
+		for (const auto e : characterControllerView)
+		{
+			const Entity entity{ e, scene };
+			physicsScene->CreateCharacterController(entity);
+		}
+
+#ifdef ZE_DEBUG
+		const auto& settings = PhysicsEngine::GetSettings();
+		if (settings.bDebugOnPlay)
+		{
+			if (settings.DebugType == PhysXDebugType::LiveDebug)
+			{
+				PhysXDebugger::StartDebugging();
+			}
+			else
+			{
+				// TODO: PhysX debugger output path
+				PhysXDebugger::StartDebugging(AssetRegistry::GetProjectDirectory());
+			}
+		}
+#endif
+	}
+
+	void PhysicsSystem::ValidateColliders()
+	{
+		const auto scene = GetScene();
+		auto boxView = scene->GetComponentView<BoxColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : boxView)
+		{
+			const Entity entity{ e, scene };
+			if (!entity.HasTag<Tag::ChildCollider>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has BoxColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
+
+		auto sphereView = scene->GetComponentView<SphereColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : sphereView)
+		{
+			const Entity entity{ e, scene };
+			if (!entity.HasTag<Tag::ChildCollider>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has SphereColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
+
+		auto capsuleView = scene->GetComponentView<CapsuleColliderComponent>(ExcludeComponents<RigidBodyComponent>);
+		for (const auto e : capsuleView)
+		{
+			const Entity entity{ e, scene };
+			if (!entity.HasTag<Tag::ChildCollider>())
+			{
+				ZE_CORE_WARN("Entity '{0}' has CapsuleColliderComponent but no RigidBodyComponent, so it will not participate in any physics interaction", entity.GetName());
+			}
+		}
+	}
+
+	void PhysicsSystem::OnPlayStop()
+	{
+#ifdef ZE_DEBUG
+		if (PhysicsEngine::GetSettings().bDebugOnPlay)
+		{
+			PhysXDebugger::StopDebugging();
+		}
+		GetScene()->DestroyPhysicsScene();
+#endif
+	}
+
+	void PhysicsSystem::OnSimulationStart()
+	{
+		OnPlayStart();
+	}
+
+	void PhysicsSystem::OnSimulationStop()
+	{
+		OnPlayStop();
+	}
+
+	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
+	{
+		PhysicsSystem::OnUpdate(dt);
+
+		if (!GetWorld()->IsRunning()) return;
+
 		const I32 velocityIterations = 6;
 		const I32 positionIterations = 2;
 		m_PhysicsWorld->Step(dt, velocityIterations, positionIterations);
 
-		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		auto rb2dGroup = GetScene()->GetComponentGroup<RigidBody2DComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : rb2dGroup)
 		{
-			const Entity entity = { e, GetScene() };
-			auto& transformComp = entity.GetComponent<TransformComponent>();
-
+			auto [rb2dComp, transformComp] = rb2dGroup.get(e);
 			// Retrieve transform from Box2D
 			const b2Body* body = static_cast<b2Body*>(rb2dComp.RuntimeBody);
 			const auto& position = body->GetPosition();
 			transformComp.Translation.x = position.x;
 			transformComp.Translation.y = position.y;
 			transformComp.Rotation.z = glm::degrees(body->GetAngle());
-		});
+		}
 	}
 
-	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
+	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType bodyType)
 	{
 		switch (bodyType)
 		{
-			case Rigidbody2DComponent::BodyType::Static:	return b2_staticBody;
-			case Rigidbody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
-			case Rigidbody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
+			case RigidBody2DComponent::BodyType::Static:	return b2_staticBody;
+			case RigidBody2DComponent::BodyType::Dynamic:	return b2_dynamicBody;
+			case RigidBody2DComponent::BodyType::Kinematic:	return b2_kinematicBody;
 		}
 
 		ZE_CORE_ASSERT(false, "Unknown body type!");
 		return b2_staticBody;
 	}
 
-	void PhysicsSystem2D::OnRuntimeStart()
+	void PhysicsSystem2D::OnPlayStart()
 	{
 		const b2Vec2 gravity = { 0.0f, -9.8f };
 		m_PhysicsWorld = new b2World(gravity);
-		GetScene()->ForEachComponentView<Rigidbody2DComponent>([this](auto e, auto& rb2dComp)
+		auto rb2dGroup = GetScene()->GetComponentGroup<RigidBody2DComponent>(IncludeComponents<TransformComponent>);
+		for (const auto e : rb2dGroup)
 		{
-			const Entity entity{ e, GetScene() };
-			const auto& transformComp = entity.GetComponent<TransformComponent>();
-
+			auto [rb2dComp, transformComp] = rb2dGroup.get(e);
 			b2BodyDef bodyDef;
-			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2dComp.Type);
+			bodyDef.type = RigidBody2DTypeToBox2DBody(rb2dComp.Type);
 			bodyDef.position.Set(transformComp.Translation.x, transformComp.Translation.y);
 			bodyDef.angle = glm::radians(transformComp.Rotation.z);
 
@@ -582,6 +907,7 @@ namespace ZeoEngine {
 			body->SetFixedRotation(rb2dComp.bFixedRotation);
 			rb2dComp.RuntimeBody = body;
 
+			const Entity entity{ e, GetScene() };
 			if (entity.HasComponent<BoxCollider2DComponent>())
 			{
 				const auto& bc2dComp = entity.GetComponent<BoxCollider2DComponent>();
@@ -614,13 +940,43 @@ namespace ZeoEngine {
 				fixtureDef.restitutionThreshold = cc2dComp.RestitutionThreshold;
 				body->CreateFixture(&fixtureDef);
 			}
-		});
+		}
 	}
 
-	void PhysicsSystem2D::OnRuntimeStop()
+	void PhysicsSystem2D::OnPlayStop()
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
+	}
+
+	void PhysicsSystem2D::OnSimulationStart()
+	{
+		OnPlayStart();
+	}
+
+	void PhysicsSystem2D::OnSimulationStop()
+	{
+		OnPlayStop();
+	}
+
+	void CommandSystem::OnPlayStart()
+	{
+		Console::Get().ResetAllVariableValues();
+	}
+
+	void CommandSystem::OnPlayStop()
+	{
+		Console::Get().ResetAllVariableValues();
+	}
+
+	void CommandSystem::OnSimulationStart()
+	{
+		OnPlayStart();
+	}
+
+	void CommandSystem::OnSimulationStop()
+	{
+		OnPlayStop();
 	}
 
 }

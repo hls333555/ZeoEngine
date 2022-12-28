@@ -6,6 +6,7 @@
 #include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/GameFramework/Tags.h"
 #include "Engine/Scripting/ScriptEngine.h"
 #include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Engine/Utils/ReflectionUtils.h"
@@ -369,15 +370,16 @@ namespace ZeoEngine {
 	
 	void SceneSerializer::Serialize(YAML::Node& node, Scene& scene)
 	{
-		scene.ForEachComponentView<CoreComponent>([&](auto entityID, auto& coreComp)
+		const auto coreView = scene.GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
 		{
-			const Entity entity{ entityID, scene.shared_from_this() };
+			const Entity entity{ e, scene.shared_from_this() };
 			if (!entity) return;
 
 			YAML::Node entityNode;
 			SerializeEntity(entityNode, entity);
 			node["Entities"].push_back(entityNode);
-		});
+		}
 	}
 
 	void SceneSerializer::SerializeRuntime()
@@ -427,6 +429,7 @@ namespace ZeoEngine {
 	{
 		const UUID uuid = entityNode["Entity"].as<UUID>();
 		Entity deserializedEntity = scene.CreateEntityWithUUID(uuid);
+		deserializedEntity.AddTag<Tag::IsDeserializing>();
 
 		if (auto components = entityNode["Components"])
 		{
@@ -447,6 +450,8 @@ namespace ZeoEngine {
 				}
 			}
 		}
+
+		deserializedEntity.RemoveTag<Tag::IsDeserializing>();
 	}
 
 }

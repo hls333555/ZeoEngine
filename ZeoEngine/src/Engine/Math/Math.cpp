@@ -9,17 +9,24 @@ namespace ZeoEngine::Math {
 
 	Vec3 GetForwardVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 0.0f, 0.0f, -1.0f });
+		return glm::rotate(Quat(rotation), { 0.0f, 0.0f, -1.0f });
 	}
 
 	Vec3 GetRightVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 1.0f, 0.0f, 0.0f });
+		return glm::rotate(Quat(rotation), { 1.0f, 0.0f, 0.0f });
 	}
 
 	Vec3 GetUpVector(const Vec3& rotation)
 	{
-		return glm::rotate(glm::quat(rotation), { 0.0f, 1.0f, 0.0f });
+		return glm::rotate(Quat(rotation), { 0.0f, 1.0f, 0.0f });
+	}
+
+	Mat4 ComposeTransform(const Vec3& translation, const Vec3& rotation, const Vec3& scale)
+	{
+		return glm::translate(Mat4(1.0f), translation) *
+			glm::toMat4(Quat(rotation)) *
+			glm::scale(Mat4(1.0f), scale);
 	}
 
 	bool DecomposeTransform(const Mat4& transform, Vec3& outTranslation, Vec3& outRotation, Vec3& outScale)
@@ -100,13 +107,13 @@ namespace ZeoEngine::Math {
 
 	Vec3 GetTranslationFromTransform(const Mat4& transform)
 	{
-		return Vec3(transform[3]);
+		return { transform[3] };
 	}
 
-	float FInterpTo(float current, float target, DeltaTime dt, float interpSpeed)
+	float InterpTo(float current, float target, DeltaTime dt, float interpSpeed)
 	{
 		// If no interp speed, jump to target value
-		if (interpSpeed <= 0.f)
+		if (interpSpeed <= 0.0f)
 		{
 			return target;
 		}
@@ -120,55 +127,51 @@ namespace ZeoEngine::Math {
 			return target;
 		}
 
-		// Delta Move, Clamp so we do not over shoot.
+		// Delta Move, clamp so we do not over shoot
 		const float deltaMove = dist * glm::clamp<float>(dt * interpSpeed, 0.0f, 1.0f);
 
 		return current + deltaMove;
 	}
 
-	Vec3 VInterpTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
+	float InterpConstantTo(float current, float target, DeltaTime dt, float interpSpeed)
 	{
-		// If no interp speed, jump to target value
-		if (interpSpeed <= 0.0f)
-		{
-			return target;
-		}
-
-		// Distance to reach
-		const Vec3 dist = target - current;
+		const float dist = target - current;
 
 		// If distance is too small, just set the desired location
-		if (glm::length(dist) < KINDA_SMALL_NUMBER)
+		if (dist * dist < SMALL_NUMBER)
 		{
 			return target;
 		}
 
-		// Delta Move, clamp so we do not over shoot
-		const Vec3 deltaMove = dist * glm::clamp<float>(dt * interpSpeed, 0.0f, 1.0f);
-
-		return current + deltaMove;
+		const float step = interpSpeed * dt;
+		return current + glm::clamp(dist, -step, step);
 	}
 
-	Vec3 InterpConstantTo(const Vec3& current, const Vec3& target, DeltaTime dt, float interpSpeed)
+	bool IsNearlyEqual(float x, float y, float errorTolerance)
 	{
-		const Vec3 delta = target - current;
-		const float deltaM = glm::length(delta);
-		const float maxStep = interpSpeed * dt;
+		return glm::abs(x - y) <= errorTolerance;
+	}
 
-		if (deltaM > maxStep)
-		{
-			if (maxStep > 0.f)
-			{
-				const Vec3 deltaN = delta / deltaM;
-				return current + deltaN * maxStep;
-			}
-			else
-			{
-				return current;
-			}
-		}
+	bool IsNearlyEqual(double x, double y, double errorTolerance)
+	{
+		return glm::abs(x - y) <= errorTolerance;
+	}
 
-		return target;
+	bool IsNearlyEqual(const Vec2& x, const Vec2& y, float errorTolerance)
+	{
+		return glm::abs(x.x - y.x) <= errorTolerance && glm::abs(x.y - y.y) <= errorTolerance;
+	}
+
+	bool IsNearlyEqual(const Vec3& x, const Vec3& y, float errorTolerance)
+	{
+		return glm::abs(x.x - y.x) <= errorTolerance && glm::abs(x.y - y.y) <= errorTolerance && glm::abs(x.z - y.z) <= errorTolerance;
+	}
+
+	Vec3 FindLookAtRotation(const Vec3& from, const Vec3& to, const Vec3& up)
+	{
+		const Vec3 direction = glm::normalize(to - from);
+		const Quat rotation = glm::quatLookAt(direction, up);
+		return glm::eulerAngles(rotation);
 	}
 
 }

@@ -14,9 +14,8 @@ namespace ZeoEngine {
 
 	private:
 		virtual Scope<RenderGraph> CreateRenderGraph() override;
-		virtual Scope<RenderSystemBase> CreateRenderSystem(WorldBase* world) override;
 
-		virtual void OnRenderScene() override;
+		virtual void RenderScene() override;
 
 	private:
 		LevelPreviewWorld* m_LevelWorld = nullptr;

@@ -11,7 +11,13 @@ namespace ZeoEngine {
 
 	bool SceneUtils::IsLevelRuntime()
 	{
-		return g_Editor->GetLevelWorld()->GetSceneState() != SceneState::Edit;
+		return g_Editor->GetLevelWorld()->IsRuntime();
+	}
+
+	bool SceneUtils::IsLevelPlaying()
+	{
+		const auto levelWorld = g_Editor->GetLevelWorld();
+		return levelWorld->IsRuntime() && !levelWorld->IsSimulation();
 	}
 
 	Scene& SceneUtils::GetActiveGameScene()
@@ -47,6 +53,13 @@ namespace ZeoEngine {
 	{
 		Entity entity = CreateAndPlaceEntity(scene, "Sphere");
 		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultSphereMesh()->GetHandle());
+		return entity;
+	}
+
+	Entity EditorSceneUtils::CreateAndPlaceCapsule(Scene& scene)
+	{
+		Entity entity = CreateAndPlaceEntity(scene, "Capsule");
+		entity.AddComponent<MeshRendererComponent>(Mesh::GetDefaultCapsuleMesh()->GetHandle());
 		return entity;
 	}
 

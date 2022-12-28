@@ -18,6 +18,8 @@ namespace ZeoEngine {
 	class ScriptInstance;
 	class Scene;
 	struct IComponent;
+	struct CollisionInfo;
+	struct CharacterControllerHit;
 
 	using ScriptFieldMap = std::unordered_map<std::string, Ref<class ScriptFieldInstance>>; // Map from field name to script field instance
 
@@ -49,7 +51,13 @@ namespace ZeoEngine {
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity, DeltaTime dt);
 		static void OnDestroyEntity(Entity entity);
+		static void OnCollisionBegin(Entity entity, const CollisionInfo& collisionInfo);
+		static void OnCollisionEnd(Entity entity, const CollisionInfo& collisionInfo);
+		static void OnTriggerBegin(Entity entity, Entity otherEntity);
+		static void OnTriggerEnd(Entity entity, Entity otherEntity);
+		static void OnCharacterControllerCollide(Entity entity, const CharacterControllerHit& collisionInfo);
 
+		static bool IsEntityScriptClassValid(Entity entity);
 		static bool EntityClassExists(const std::string& fullClassName);
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityID);
 		static Ref<ScriptClass> GetEntityClass(const std::string& fullClassName);
@@ -114,6 +122,11 @@ namespace ZeoEngine {
 
 		void InvokeOnCreate() const;
 		void InvokeOnUpdate(float dt) const;
+		void InvokeOnCollisionBegin(const CollisionInfo& collisionInfo) const;
+		void InvokeOnCollisionEnd(const CollisionInfo& collisionInfo) const;
+		void InvokeOnTriggerBegin(Entity otherEntity) const;
+		void InvokeOnTriggerEnd(Entity otherEntity) const;
+		void InvokeOnCharacterControllerCollide(const CharacterControllerHit& collisionInfo) const;
 
 	private:
 		Ref<ScriptClass> m_ScriptClass;
@@ -122,6 +135,11 @@ namespace ZeoEngine {
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
+		MonoMethod* m_OnCollisionBeginMethod = nullptr;
+		MonoMethod* m_OnCollisionEndMethod = nullptr;
+		MonoMethod* m_OnTriggerBeginMethod = nullptr;
+		MonoMethod* m_OnTriggerEndMethod = nullptr;
+		MonoMethod* m_OnCharacterControllerCollideMethod = nullptr;
 	};
 	
 }
