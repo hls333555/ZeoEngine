@@ -68,7 +68,6 @@ namespace ZeoEngine {
 
 	class AssetRegistry
 	{
-		friend class EditorLayer;
 		friend class ThumbnailManager;
 
 	public:
@@ -81,18 +80,9 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		// TODO: Move to other file
-		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
+		void Register();
 
-		static std::string GetEnginePathPrefix() { return "Engine"; }
-		static std::string GetProjectPathPrefix() { return "Game"; }
-		static std::string GetEngineAssetDirectory() { return "assets"; } // TODO:
-		static std::string GetProjectDirectory() { return "SandboxProject"; } // TODO:
-		static std::string GetCoreAssemblyDirectory() { return "resources/scripts"; } // TODO:
-		static std::string GetProjectAssetDirectory() { return "SandboxProject/Assets"; } // TODO:
-
-		static std::string GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
-		static std::string GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
+		static constexpr const char* GetAssetExtension() { return ".zasset"; }
 
 		/** Get directory/asset metadata of the specific path. The path should be relative. */
 		template<typename MetadataClass = PathMetadata>
@@ -181,6 +171,7 @@ namespace ZeoEngine {
 
 	private:
 		void Init();
+		void Shutdown();
 
 		void ConstructPathTree(const std::filesystem::path& rootDirectory);
 		void ConstructPathTreeRecursively(const std::filesystem::path& baseDirectory);

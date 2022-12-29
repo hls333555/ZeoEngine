@@ -109,6 +109,16 @@ namespace ZeoEngine {
 		virtual void OnMenuItemActivated() override;
 	};
 
+	class MenuItem_OpenProject : public MenuItemBase
+	{
+	public:
+		using MenuItemBase::MenuItemBase;
+
+	private:
+		virtual bool OnKeyPressedImpl(KeyPressedEvent& e) override;
+		virtual void OnMenuItemActivated() override;
+	};
+
 	class MenuItem_Undo : public MenuItemBase
 	{
 	public:

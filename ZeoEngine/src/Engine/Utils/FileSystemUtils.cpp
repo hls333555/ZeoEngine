@@ -3,7 +3,7 @@
 
 #include <filesystem>
 
-#include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Asset/AssetSerializer.h"
 
 namespace ZeoEngine {
@@ -45,41 +45,45 @@ namespace ZeoEngine {
 
 	std::string FileSystemUtils::GetStandardPath(const std::filesystem::path& path)
 	{
-		std::string outPath = path.is_absolute() ? std::filesystem::relative(path).generic_string() : path.generic_string();
-		const std::string projectDir = AssetRegistry::GetProjectAssetDirectory();
-		auto it = outPath.find(projectDir);
-		if (it == 0)
+		const std::string projectRelativeDir = std::filesystem::relative(path, CommonPaths::GetProjectAssetDirectory()).generic_string();
+		if (!projectRelativeDir.empty() && projectRelativeDir[0] != '.') // Is sub-path of the project asset directory
 		{
-			outPath.replace(it, projectDir.size(), AssetRegistry::GetProjectPathPrefix());
+			return fmt::format("{}/{}", CommonPaths::GetProjectAssetDirectoryStandard(), projectRelativeDir);
 		}
-		else
+		if (projectRelativeDir.size() == 1) // Equals to the project asset directory
 		{
-			const auto engineDir = AssetRegistry::GetEngineAssetDirectory();
-			it = outPath.find(engineDir);
-			if (it == 0)
-			{
-				outPath.replace(it, engineDir.size(), AssetRegistry::GetEnginePathPrefix());
-			}
+			return CommonPaths::GetProjectAssetDirectoryStandard();
 		}
-		return outPath;
+
+		const std::string engineRelativeDir = std::filesystem::relative(path, CommonPaths::GetEngineAssetDirectory()).generic_string();
+		if (!engineRelativeDir.empty() && engineRelativeDir[0] != '.') // Is sub-path of the engine asset directory
+		{
+			return fmt::format("{}/{}", CommonPaths::GetEngineAssetDirectoryStandard(), engineRelativeDir);
+		}
+		if (engineRelativeDir.size() == 1) // Equals to the engine asset directory
+		{
+			return CommonPaths::GetEngineAssetDirectoryStandard();
+		}
+
+		return path.string(); // Already a standard path or anything else
 	}
 
 	std::string FileSystemUtils::GetFileSystemPath(const std::string& path)
 	{
 		std::string outPath = path;
-		const std::string projectPrefix = AssetRegistry::GetProjectPathPrefix();
+		const std::string projectPrefix = CommonPaths::GetProjectAssetDirectoryStandard();
 		auto it = outPath.find(projectPrefix);
 		if (it == 0)
 		{
-			outPath.replace(it, projectPrefix.size(), AssetRegistry::GetProjectAssetDirectory());
+			outPath.replace(it, projectPrefix.size(), CommonPaths::GetProjectAssetDirectory());
 		}
 		else
 		{
-			const auto enginePrefix = AssetRegistry::GetEnginePathPrefix();
+			const auto enginePrefix = CommonPaths::GetEngineAssetDirectoryStandard();
 			it = outPath.find(enginePrefix);
 			if (it == 0)
 			{
-				outPath.replace(it, enginePrefix.size(), AssetRegistry::GetEngineAssetDirectory());
+				outPath.replace(it, enginePrefix.size(), CommonPaths::GetEngineAssetDirectory());
 			}
 		}
 		return outPath;

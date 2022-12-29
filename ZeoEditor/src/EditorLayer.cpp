@@ -20,11 +20,18 @@ namespace ZeoEngine {
 		// TODO:
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
-		AssetRegistry::Get().Init();
+		AssetRegistry::Get().Register();
 
 		m_Editor = CreateScope<Editor>();
 		m_Editor->OnAttach();
-		
+	}
+
+	void EditorLayer::OnDetach()
+	{
+		m_Editor->OnDetach();
+
+		AssetManager::Get().Shutdown();
+		ThumbnailManager::Get().Shutdown();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)

@@ -3,7 +3,6 @@
 #include <yaml-cpp/yaml.h>
 #include <deque>
 
-#include "Serializer.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Material.h"
@@ -126,6 +125,7 @@ namespace YAML {
 namespace ZeoEngine {
 
 	class ScriptFieldInstance;
+	class Project;
 
 	class ComponentSerializerExtenderRegistry
 	{
@@ -317,8 +317,15 @@ namespace ZeoEngine {
 		static void DeserializeRuntime();
 
 	private:
-		static void SerializeEntity(YAML::Node& entityNode, const Entity entity);
+		static void SerializeEntity(YAML::Node& entityNode, Entity entity);
 		static void DeserializeEntity(const YAML::Node& entityNode, Scene& scene);
+	};
+
+	class ProjectSerializer
+	{
+	public:
+		static void Serialize(const std::string& path, const Project& project);
+		static bool Deserialize(const std::string& path, Project& project);
 	};
 
 }

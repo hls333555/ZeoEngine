@@ -14,7 +14,7 @@
 
 namespace ZeoEngine {
 
-	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect)
+	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect, const char* filter)
 	{
 		std::vector<std::string> outPaths;
 
@@ -25,8 +25,15 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		const std::string filterStr = GetSupportedFileFilter();
-		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
+		if (filter)
+		{
+			ofn.lpstrFilter = filter;
+		}
+		else
+		{
+			const std::string filterStr = GetSupportedFileFilter();
+			ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must store the returned string first to extend its lifetime
+		}
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER | (bAllowMultiSelect ? OFN_ALLOWMULTISELECT : 0);
 		if (GetOpenFileNameA(&ofn) == TRUE)
@@ -53,7 +60,7 @@ namespace ZeoEngine {
 		return outPaths;
 	}
 
-	std::optional<std::string> FileDialogs::Save()
+	std::optional<std::string> FileDialogs::Save(const char* filter)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -62,8 +69,15 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedFileFilter();
-		ofn.lpstrFilter = filterStr.c_str();
+		if (filter)
+		{
+			ofn.lpstrFilter = filter;
+		}
+		else
+		{
+			const std::string filterStr = GetSupportedFileFilter();
+			ofn.lpstrFilter = filterStr.c_str();
+		}
 		ofn.nFilterIndex = 1;
 		// Sets the default extension by extracting it from the filter
 		ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;

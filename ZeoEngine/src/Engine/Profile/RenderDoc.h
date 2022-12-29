@@ -16,6 +16,9 @@ namespace ZeoEngine {
 		void StopFrameCapture();
 
 	private:
+		void SetCapturePath() const;
+
+	private:
 		dylib m_Lib;
 		RENDERDOC_API_1_5_0* m_API = nullptr;
 		bool m_bEnableCapture = false;

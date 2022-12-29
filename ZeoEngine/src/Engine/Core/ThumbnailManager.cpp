@@ -50,6 +50,12 @@ namespace ZeoEngine {
 		LoadAssetTypeIcons();
 	}
 
+	void ThumbnailManager::Shutdown()
+	{
+		m_AssetTypeIcons.clear();
+		m_DirectoryIcon.reset();
+	}
+
 	void ThumbnailManager::LoadAssetTypeIcons()
 	{
 		AssetManager::Get().ForEachAssetType([this](AssetTypeID typeID)

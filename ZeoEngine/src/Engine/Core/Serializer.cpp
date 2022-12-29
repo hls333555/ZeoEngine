@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
+#include "Project.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/Shader.h"
@@ -405,7 +406,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	void SceneSerializer::SerializeEntity(YAML::Node& entityNode, const Entity entity)
+	void SceneSerializer::SerializeEntity(YAML::Node& entityNode, Entity entity)
 	{
 		entityNode["Entity"] = entity.GetUUID();
 		// Do not call entt::registry::visit() as the order is reversed
@@ -452,6 +453,49 @@ namespace ZeoEngine {
 		}
 
 		deserializedEntity.RemoveTag<Tag::IsDeserializing>();
+	}
+
+	void ProjectSerializer::Serialize(const std::string& path, const Project& project)
+	{
+		YAML::Node node;
+		{
+			const auto& config = project.GetConfig();
+
+			YAML::Node projectNode;
+			projectNode["Name"] = config.Name;
+			projectNode["AssetDirectory"] = config.AssetDirectory;
+			projectNode["ScriptAssemblyDirectory"] = config.ScriptAssemblyDirectory;
+			projectNode["DefaultLevelAsset"] = config.DefaultLevelAsset;
+			node["Project"] = projectNode;
+		}
+
+		std::ofstream fout(path);
+		fout << node;
+	}
+
+	bool ProjectSerializer::Deserialize(const std::string& path, Project& project)
+	{
+		YAML::Node node;
+		try
+		{
+			node = YAML::LoadFile(path);
+		}
+		catch (YAML::BadFile&)
+		{
+			ZE_CORE_ERROR("Failed to load project: {0}!", path);
+			return false;
+		}
+
+		{
+			auto& config = project.GetConfig();
+			auto projectNode = node["Project"];
+			config.Name = projectNode["Name"].as<std::string>();
+			config.AssetDirectory = projectNode["AssetDirectory"].as<std::string>();
+			config.ScriptAssemblyDirectory = projectNode["ScriptAssemblyDirectory"].as<std::string>();
+			config.DefaultLevelAsset = projectNode["DefaultLevelAsset"].as<AssetHandle>();
+		}
+
+		return true;
 	}
 
 }

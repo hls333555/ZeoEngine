@@ -47,8 +47,13 @@ namespace ZeoEngine {
 		Window& GetWindow() { return *m_Window; }
 		GLFWwindow* GetActiveNativeWindow() const { return m_ActiveWindow; }
 
-		RenderDoc& GetRenderDoc() const { return m_Profiler->GetRenderDoc(); }
-		PerformanceProfiler& GetPerformanceProfiler() const { return m_Profiler->GetPerformanceProfiler(); }
+#ifndef ZE_DIST
+		RenderDoc* GetRenderDoc() { return m_Profiler.GetRenderDoc(); }
+		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler.GetPerformanceProfiler(); }
+#else
+		RenderDoc* GetRenderDoc() { return nullptr; }
+		PerformanceProfiler* GetPerformanceProfiler() { return nullptr; }
+#endif
 
 		void AddViewportWindow(GLFWwindow* window) { m_ViewportWindows.emplace_back(window); }
 		void RemoveViewportWindow(GLFWwindow* window) { m_ViewportWindows.erase(std::find(m_ViewportWindows.begin(), m_ViewportWindows.end(), window)); }
@@ -93,8 +98,9 @@ namespace ZeoEngine {
 		bool m_bMinimized = false;
 		float m_LastFrameTime = 0.0f;
 
-		// TODO: Should be null in Dist
-		Profiler* m_Profiler = nullptr;
+#ifndef ZE_DIST
+		Profiler m_Profiler;
+#endif
 
 		static Application* s_Instance;
 

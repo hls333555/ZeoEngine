@@ -8,8 +8,8 @@ namespace ZeoEngine {
 	class FileDialogs
 	{
 	public:
-		static std::vector<std::string> Open(bool bAllowMultiSelect);
-		static std::optional<std::string> Save();
+		static std::vector<std::string> Open(bool bAllowMultiSelect, const char* filter = nullptr);
+		static std::optional<std::string> Save(const char* filter = nullptr);
 
 	private:
 		static std::string GetSupportedFileFilter();

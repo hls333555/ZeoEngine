@@ -64,7 +64,7 @@ namespace ZeoEngine {
 			return;
 		}
 
-		const std::string assetPath = destPath + AssetRegistry::GetEngineAssetExtension();
+		const std::string assetPath = destPath + AssetRegistry::GetAssetExtension();
 		if (!FileSystemUtils::Exists(assetPath))
 		{
 			// Create zasset file if not exists
@@ -129,7 +129,7 @@ namespace ZeoEngine {
 		ImportableAssetFactoryBase::ImportAsset(srcPath, destPath);
 
 		auto assetPath = destPath;
-		assetPath += AssetRegistry::GetEngineAssetExtension();
+		assetPath += AssetRegistry::GetAssetExtension();
 		const auto mesh = AssetLibrary::LoadAsset<Mesh>(assetPath);
 		if (!mesh) return;
 
@@ -137,7 +137,7 @@ namespace ZeoEngine {
 		const auto& materialNames = mesh->GetMaterialNames();
 		for (SizeT i = 0; i < materialNames.size(); ++i)
 		{
-			const auto materialPath = fmt::format("{}/Mat_{}{}", FileSystemUtils::GetParentPath(destPath), materialNames[i], AssetRegistry::GetEngineAssetExtension());
+			const auto materialPath = fmt::format("{}/Mat_{}{}", FileSystemUtils::GetParentPath(destPath), materialNames[i], AssetRegistry::GetAssetExtension());
 			if (!FileSystemUtils::Exists(materialPath))
 			{
 				if (AssetManager::Get().CreateAssetFile(Material::TypeID(), materialPath))

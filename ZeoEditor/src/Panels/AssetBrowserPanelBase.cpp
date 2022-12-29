@@ -7,6 +7,7 @@
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetFactory.h"
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Profile/BenchmarkTimer.h"
@@ -18,7 +19,7 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::OnAttach()
 	{
-		m_SelectedDirectory = AssetRegistry::GetProjectPathPrefix();
+		m_SelectedDirectory = CommonPaths::GetProjectAssetDirectoryStandard();
 	}
 
 	void AssetBrowserPanelBase::ProcessRender()
@@ -116,7 +117,7 @@ namespace ZeoEngine {
 	{
 		m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
 
-		const std::string projectAssetDir = AssetRegistry::GetProjectPathPrefix();
+		const std::string projectAssetDir = CommonPaths::GetProjectAssetDirectoryStandard();
 		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == projectAssetDir ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 		const auto directoryMetadata = AssetRegistry::Get().GetPathMetadata<DirectoryMetadata>(projectAssetDir);
@@ -485,7 +486,7 @@ namespace ZeoEngine {
 		strcpy_s(newName, baseName);
 		if (bIsAsset)
 		{
-			strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+			strcat_s(newName, AssetRegistry::GetAssetExtension());
 		}
 		auto newPath = fmt::format("{}/{}", m_SelectedDirectory, newName);
 		while (AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
@@ -495,7 +496,7 @@ namespace ZeoEngine {
 			strcat_s(newName, suffix);
 			if (bIsAsset)
 			{
-				strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+				strcat_s(newName, AssetRegistry::GetAssetExtension());
 			}
 			newPath = fmt::format("{}/{}", m_SelectedDirectory, newName);
 		}
@@ -784,7 +785,7 @@ namespace ZeoEngine {
 			if (metadata->IsAsset())
 			{
 				// Add engine file extension automatically
-				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetEngineAssetExtension());
+				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetAssetExtension());
 			}
 			const auto& path = metadata->Path;
 			const auto parentPath = FileSystemUtils::GetParentPath(path);
@@ -808,7 +809,7 @@ namespace ZeoEngine {
 		// Manually toggle upper-level tree node open iteratively
 		auto currentDirectory = directory;
 		const auto& ar = AssetRegistry::Get();
-		while (currentDirectory != AssetRegistry::GetProjectPathPrefix())
+		while (currentDirectory != CommonPaths::GetProjectAssetDirectoryStandard())
 		{
 			storage->SetInt(ar.GetPathMetadata<DirectoryMetadata>(currentDirectory)->TreeNodeId, true);
 			currentDirectory = FileSystemUtils::GetParentPath(currentDirectory);

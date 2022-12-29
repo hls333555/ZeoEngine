@@ -15,9 +15,6 @@
 
 namespace ZeoEngine {
 
-	std::unordered_map<AssetHandle, Ref<IAsset>> AssetLibrary::s_LoadedAssets;
-	std::unordered_map<AssetHandle, Ref<IAsset>> AssetLibrary::s_MemoryAssets;
-
 	// https://stackoverflow.com/questions/28386185/cant-use-stdunique-ptrt-with-t-being-a-forward-declaration
 	AssetManager::AssetManager() = default;
 	AssetManager::~AssetManager() = default;
@@ -49,6 +46,14 @@ namespace ZeoEngine {
 		RegisterAssetSerializer(PhysicsMaterial::TypeID(), CreateScope<PhysicsMaterialAssetSerializer>());
 
 		InitSupportedFileExtensions();
+	}
+
+	void AssetManager::Shutdown()
+	{
+		m_AssetFactories.clear();
+		m_AssetActions.clear();
+		m_AssetSerializers.clear();
+		m_SupportedFileExtensions.clear();
 	}
 
 	bool AssetManager::RegisterAssetFactory(AssetTypeID typeID, Scope<AssetFactoryBase> factory)

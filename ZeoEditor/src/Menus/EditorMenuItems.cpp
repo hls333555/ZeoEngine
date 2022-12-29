@@ -80,7 +80,8 @@ namespace ZeoEngine {
 		if (m_ShortcutName != "CTRL+O") return false;
 
 		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
-		if (e.GetKeyCode() == Key::O && bIsCtrlPressed)
+		const bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		if (e.GetKeyCode() == Key::O && bIsCtrlPressed && !bIsAltPressed)
 		{
 			g_Editor->LoadLevel();
 			return true;
@@ -132,6 +133,26 @@ namespace ZeoEngine {
 	void MenuItem_SaveLevelAs::OnMenuItemActivated()
 	{
 		g_Editor->SaveLevelAs();
+	}
+
+	bool MenuItem_OpenProject::OnKeyPressedImpl(KeyPressedEvent& e)
+	{
+		if (m_ShortcutName != "CTRL+ALT+O") return false;
+
+		const bool bIsCtrlPressed = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		const bool bIsAltPressed = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		if (e.GetKeyCode() == Key::O && bIsCtrlPressed && bIsAltPressed)
+		{
+			g_Editor->OpenProject();
+			return true;
+		}
+
+		return false;
+	}
+
+	void MenuItem_OpenProject::OnMenuItemActivated()
+	{
+		g_Editor->OpenProject();
 	}
 
 	void MenuItem_Undo::OnMenuItemActivated()

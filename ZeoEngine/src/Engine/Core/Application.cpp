@@ -23,6 +23,8 @@ namespace ZeoEngine {
 	Application::Application(const ApplicationSpecification& spec)
 		: m_Spec(spec)
 	{
+		Log::Init();
+
 		ZE_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
@@ -31,8 +33,6 @@ namespace ZeoEngine {
 		{
 			std::filesystem::current_path(m_Spec.WorkingDirectory);
 		}
-
-		m_Profiler = new Profiler();
 
 		m_Window = Window::Create(WindowProps(spec.Name));
 		m_Window->SetEventCallback([this](Event& e) {return OnEvent(e); });
@@ -67,9 +67,7 @@ namespace ZeoEngine {
 		AssetLibrary::Clear();
 		PhysicsEngine::Shutdown();
 		Renderer::Shutdown();
-
-		delete m_Profiler;
-		m_Profiler = nullptr;
+		TypeRegistry::Shutdown();
 	}
 
 	void Application::OnEvent(Event& e)

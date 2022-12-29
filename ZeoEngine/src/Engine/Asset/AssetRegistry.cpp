@@ -7,6 +7,8 @@
 #include "Engine/Asset/AssetActions.h"
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetLibrary.h"
+#include "Engine/Core/CommonPaths.h"
+#include "Engine/Core/Project.h"
 #include "Engine/Profile/Profiler.h"
 
 namespace ZeoEngine {
@@ -59,7 +61,7 @@ namespace ZeoEngine {
 		/** Returns true if provided path is in the engine directory. */
 		static bool IsEnginePath(const std::string& path)
 		{
-			return path.find(AssetRegistry::GetEnginePathPrefix()) == 0;
+			return path.find(CommonPaths::GetEngineAssetDirectoryStandard()) == 0;
 		}
 
 	}
@@ -69,18 +71,40 @@ namespace ZeoEngine {
 		ThumbnailTexture = ThumbnailManager::Get().GetAssetThumbnail(shared_from_this());
 	}
 
+	void AssetRegistry::Register()
+	{
+		Project::GetProjectLoadedDelegate().connect<&AssetRegistry::Init>(this);
+		Project::GetProjectUnloadedDelegate().connect<&AssetRegistry::Shutdown>(this);
+	}
+
 	void AssetRegistry::Init()
 	{
 		Timer timer;
-		ConstructPathTree(GetEngineAssetDirectory());
-		ConstructPathTree(GetProjectAssetDirectory());
+		ConstructPathTree(CommonPaths::GetEngineAssetDirectory());
+		ConstructPathTree(CommonPaths::GetProjectAssetDirectory());
 		ZE_CORE_WARN("Path tree construction took {0} ms", timer.ElapsedMillis());
+	}
+
+	void AssetRegistry::Shutdown()
+	{
+		// Unload project assets
+		for (const auto& [path, metadata] : m_PathMetadatas)
+		{
+			if (const auto assetMetadata = std::dynamic_pointer_cast<AssetMetadata>(metadata))
+			{
+				AssetLibrary::UnloadAsset(assetMetadata->Handle);
+			}
+		}
+
+		m_PathTree.clear();
+		m_PathMetadatas.clear();
+		m_AssetMetadatasByID.clear();
 	}
 
 	void AssetRegistry::ConstructPathTree(const std::filesystem::path& rootDirectory)
 	{
 		std::string rootPath = FileSystemUtils::GetStandardPath(rootDirectory);
-		m_PathTree.emplace_back(std::make_pair(rootPath, std::vector<std::string>{}));
+		m_PathTree.emplace_back(rootPath, std::vector<std::string>{});
 		m_PathMetadatas[std::move(rootPath)] = CreateRef<DirectoryMetadata>(rootPath);
 
 		ConstructPathTreeRecursively(rootDirectory);
@@ -100,7 +124,7 @@ namespace ZeoEngine {
 					ConstructPathTreeRecursively(it.path());
 					break;
 				case std::filesystem::file_type::regular:
-					if (it.path().extension().string() == GetEngineAssetExtension())
+					if (it.path().extension().string() == GetAssetExtension())
 					{
 						AddAssetToTree(FileSystemUtils::GetStandardPath(baseDirectory), FileSystemUtils::GetStandardPath(it.path()));
 					}

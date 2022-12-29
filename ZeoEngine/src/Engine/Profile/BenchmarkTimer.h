@@ -71,18 +71,17 @@ namespace ZeoEngine {
 	class ScopePerfTimer
 	{
 	public:
-		ScopePerfTimer(const char* name, PerformanceProfiler& profiler)
+		ScopePerfTimer(const char* name, PerformanceProfiler* profiler)
 			: m_Name(name), m_Profiler(profiler) {}
 
 		~ScopePerfTimer()
 		{
-			float time = m_Timer.ElapsedMillis();
-			m_Profiler.SetPerFrameTiming(m_Name, time);
+			m_Profiler->SetPerFrameTiming(m_Name, m_Timer.ElapsedMillis());
 		}
 
 	private:
 		const char* m_Name;
-		PerformanceProfiler& m_Profiler;
+		PerformanceProfiler* m_Profiler;
 		Timer m_Timer;
 	};
 

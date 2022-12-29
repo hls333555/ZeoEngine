@@ -119,6 +119,7 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Init();
+		static void Shutdown();
 
 	private:
 		static void RegisterBasicTypes();

@@ -33,6 +33,7 @@ namespace ZeoEngine {
 
 		static bool LoadCoreAssembly(const std::string& path);
 		static bool LoadAppAssembly(const std::string& path);
+		static void LoadAssemblyClasses();
 		static void OnAssemblyChanged(const std::string& path);
 		static void ReloadAssembly();
 		static entt::sink<entt::sigh<void()>>* GetScriptReloadedDelegate();
@@ -71,8 +72,7 @@ namespace ZeoEngine {
 		static void InitMono();
 		static void ShutdownMono();
 
-		static bool LoadAssemblies(const std::string& coreAssemblyPath, const std::string& appAssemblyPath);
-		static void LoadAssemblyClasses();
+		static void LoadProjectAssembly();
 		static U32 InstantiateClass(MonoClass* monoClass);
 		static void DestroyClass(U32 handle);
 		static void ClearEntityCacheData();

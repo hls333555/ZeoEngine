@@ -7,6 +7,7 @@
 #include <box2d/b2_polygon_shape.h>
 #include <box2d/b2_circle_shape.h>
 
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/GameFramework/Tags.h"
 #include "Engine/Core/Console.h"
 #include "Engine/GameFramework/Components.h"
@@ -787,15 +788,7 @@ namespace ZeoEngine {
 		const auto& settings = PhysicsEngine::GetSettings();
 		if (settings.bDebugOnPlay)
 		{
-			if (settings.DebugType == PhysXDebugType::LiveDebug)
-			{
-				PhysXDebugger::StartDebugging();
-			}
-			else
-			{
-				// TODO: PhysX debugger output path
-				PhysXDebugger::StartDebugging(AssetRegistry::GetProjectDirectory());
-			}
+			PhysXDebugger::StartDebugging(settings.DebugType);
 		}
 #endif
 	}

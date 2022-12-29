@@ -3,6 +3,7 @@
 #include "Core/Editor.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Worlds/AssetPreviewWorlds.h"
 
@@ -20,7 +21,7 @@ namespace ZeoEngine {
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
 		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
-		SetSelectedDirectory(metadata->IsTemplateAsset() ? AssetRegistry::GetProjectPathPrefix() : FileSystemUtils::GetParentPath(metadata->Path));
+		SetSelectedDirectory(metadata->IsTemplateAsset() ? CommonPaths::GetProjectAssetDirectoryStandard() : FileSystemUtils::GetParentPath(metadata->Path));
 	}
 
 	void SaveAssetPanel::OnPathSelected(const std::string& path)
@@ -67,7 +68,7 @@ namespace ZeoEngine {
 					// For non-resource asset, this should never happen
 					name += originalExtension;
 				}
-				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetEngineAssetExtension());
+				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetAssetExtension());
 				if (AssetRegistry::Get().ContainsPathInDirectory(GetSelectedDirectory(), newPath))
 				{
 					if (AssetRegistry::Get().GetAssetMetadata(newPath)->TypeID == metadata->TypeID)

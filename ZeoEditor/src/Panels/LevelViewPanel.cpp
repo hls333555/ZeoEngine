@@ -365,8 +365,10 @@ namespace ZeoEngine {
 				}
 				case Key::F9:
 				{
-					// TODO:
-					Application::Get().GetRenderDoc().ToggleEnableCapture();
+					if (auto* renderDoc = Application::Get().GetRenderDoc())
+					{
+						renderDoc->ToggleEnableCapture();
+					}
 					break;
 				}
 				// Toggle console command input

@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		context.run();
 	}
 
-	TEST_CASE("Test field widget reflection")
+	TEST_CASE("Test")
 	{
 
 	}

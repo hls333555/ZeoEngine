@@ -1,0 +1,5 @@
+Project:
+  Name: $PROJECT_NAME$
+  AssetDirectory: "Assets"
+  ScriptAssemblyDirectory: "Scripts/Binaries"
+  DefaultLevelAsset: 1633408999904686051

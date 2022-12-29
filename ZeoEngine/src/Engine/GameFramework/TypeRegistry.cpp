@@ -73,6 +73,11 @@ namespace ZeoEngine {
 		RegisterComponentSerializerExtenders();
 	}
 
+	void TypeRegistry::Shutdown()
+	{
+		entt::meta_reset();
+	}
+
 	void TypeRegistry::RegisterBasicTypes()
 	{
 		entt::meta<typename std::vector<bool>::reference>().conv<bool>();

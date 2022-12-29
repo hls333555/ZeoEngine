@@ -8,8 +8,6 @@ extern ZeoEngine::Application* ZeoEngine::CreateApplication(ApplicationCommandLi
 
 int main(int argc, char** argv)
 {
-	ZeoEngine::Log::Init();
-
 	auto app = ZeoEngine::CreateApplication({ argc, argv });
 	app->Run();
 	delete app;

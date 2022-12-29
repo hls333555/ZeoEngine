@@ -14,7 +14,6 @@ namespace ZeoEngine {
 
 	class AssetManager
 	{
-		friend class EditorLayer;
 		friend class FileDialogs;
 
 	public:
@@ -27,6 +26,9 @@ namespace ZeoEngine {
 			static AssetManager instance;
 			return instance;
 		}
+
+		void Init();
+		void Shutdown();
 
 		/** Register asset factory. Returns true if the registration succeeded, false otherwise. */
 		bool RegisterAssetFactory(AssetTypeID typeID, Scope<AssetFactoryBase> factory);
@@ -96,7 +98,6 @@ namespace ZeoEngine {
 		AssetTypeID GetAssetTypeFromFileExtension(const std::string& extension) const;
 
 	private:
-		void Init();
 		void InitSupportedFileExtensions();
 
 	protected:

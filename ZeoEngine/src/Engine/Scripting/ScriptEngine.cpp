@@ -9,6 +9,8 @@
 #include <mono/metadata/threads.h>
 
 #include "Engine/Core/Buffer.h"
+#include "Engine/Core/CommonPaths.h"
+#include "Engine/Core/Project.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptRegistry.h"
 #include "Engine/Utils/EngineUtils.h"
@@ -63,9 +65,10 @@ namespace ZeoEngine {
 				pdbPath.replace_extension(".pdb");
 				if (std::filesystem::exists(pdbPath))
 				{
-					ScopedBuffer pdbFileData = FileSystemUtils::ReadFileBinary(pdbPath.string());
+					const std::string pdbPathStr = pdbPath.generic_string();
+					ScopedBuffer pdbFileData = FileSystemUtils::ReadFileBinary(pdbPathStr);
 					mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), static_cast<int>(pdbFileData.Size()));
-					ZE_CORE_INFO("Loaded PDB {}", pdbPath);
+					//ZE_CORE_INFO("Loaded debug symbol file '{}'", pdbPathStr);
 				}
 			}
 #endif
@@ -150,15 +153,10 @@ namespace ZeoEngine {
 	{
 		s_Data = new ScriptEngineData();
 
+		Project::GetProjectLoadedDelegate().connect<&ScriptEngine::LoadProjectAssembly>();
 		InitMono();
 		ScriptRegistry::RegisterFunctions();
-
-		const std::string appAssemblyPath = fmt::format("{}/Scripts/Binaries/Sandbox.dll", AssetRegistry::GetProjectAssetDirectory());
-		const bool bLoaded = LoadAssemblies("resources/scripts/ZeoEngine-ScriptCore.dll", appAssemblyPath);
-		if (!bLoaded) return;
-
-		LoadAssemblyClasses();
-		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
+		if (!LoadCoreAssembly(CommonPaths::GetCoreAssemblyPath())) return;
 
 		ZE_CORE_TRACE("Script engine intialized");
 	}
@@ -213,19 +211,12 @@ namespace ZeoEngine {
 		ClearEntityCacheData();
 	}
 
-	bool ScriptEngine::LoadAssemblies(const std::string& coreAssemblyPath, const std::string& appAssemblyPath)
+	void ScriptEngine::LoadProjectAssembly()
 	{
-		const bool bCoreLoaded = LoadCoreAssembly(coreAssemblyPath);
-		if (!bCoreLoaded)
+		if (LoadAppAssembly(CommonPaths::GetAppAssemblyPath()))
 		{
-			ZE_CORE_ERROR("Could not load ZeoEngine-ScriptCore assembly! Please make sure C# core dll is built correctly.");
+			LoadAssemblyClasses();
 		}
-		const bool bAppLoaded = LoadAppAssembly(appAssemblyPath);
-		if (!bAppLoaded)
-		{
-			ZE_CORE_ERROR("Could not load app assembly! Please make sure C# app dll is built correctly.");
-		}
-		return bCoreLoaded && bAppLoaded;
 	}
 
 	bool ScriptEngine::LoadCoreAssembly(const std::string& path)
@@ -236,7 +227,11 @@ namespace ZeoEngine {
 
 		s_Data->CoreAssemblyPath = path;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
-		if (!s_Data->CoreAssembly) return false;
+		if (!s_Data->CoreAssembly)
+		{
+			ZE_CORE_ERROR("Could not load ZeoEngine-ScriptCore assembly! Please make sure C# core dll is built correctly.");
+			return false;
+		}
 
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 		return true;
@@ -246,10 +241,49 @@ namespace ZeoEngine {
 	{
 		s_Data->AppAssemblyPath = path;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(path, s_Data->bEnableDebugging);
-		if (!s_Data->AppAssembly) return false;
+		if (!s_Data->AppAssembly)
+		{
+			ZE_CORE_ERROR("Could not load app assembly! Please make sure C# app dll is built correctly.");
+			return false;
+		}
 
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 		return true;
+	}
+
+	void ScriptEngine::LoadAssemblyClasses()
+	{
+		if (!s_Data->CoreAssemblyImage || !s_Data->AppAssemblyImage)
+		{
+			ZE_CORE_ERROR("Failed to load assembly classes!");
+			return;
+		}
+
+		s_Data->EntityClasses.clear();
+
+		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
+		I32 numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "ZeoEngine", "Entity");
+
+		for (I32 i = 0; i < numTypes; i++)
+		{
+			U32 cols[MONO_TYPEDEF_SIZE];
+			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
+
+			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
+			std::string fullName = strlen(nameSpace) ? fmt::format("{}.{}", nameSpace, name) : name;
+
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
+			if (monoClass == entityClass) continue;
+
+			bool bIsEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
+			if (!bIsEntity) continue;
+
+			s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace, name);
+		}
+
+		s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
 	}
 
 	void ScriptEngine::OnAssemblyChanged(const std::string& path)
@@ -277,13 +311,13 @@ namespace ZeoEngine {
 			mono_domain_set(mono_get_root_domain(), false);
 			mono_domain_unload(s_Data->AppDomain);
 
-			const bool bLoaded = LoadAssemblies(s_Data->CoreAssemblyPath, s_Data->AppAssemblyPath);
-			if (!bLoaded) return;
-
-			ScriptRegistry::ReloadMonoComponents();
+			const bool bCoreLoaded = LoadCoreAssembly(s_Data->CoreAssemblyPath);
+			const bool bAppLoaded = LoadAppAssembly(s_Data->AppAssemblyPath);
+			if (!bCoreLoaded || !bAppLoaded) return;
 
 			LoadAssemblyClasses();
-			s_Data->EntityClass = ScriptClass("ZeoEngine", "Entity", true);
+
+			ScriptRegistry::ReloadMonoComponents();
 
 			std::vector<UUID> entities;
 			for (const auto& pair : s_Data->EntityInstances)
@@ -526,33 +560,6 @@ namespace ZeoEngine {
 	Entity ScriptEngine::GetEntityByName(std::string_view name)
 	{
 		return GetSceneContext().GetEntityByName(name);
-	}
-
-	void ScriptEngine::LoadAssemblyClasses()
-	{
-		s_Data->EntityClasses.clear();
-
-		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
-		I32 numTypes = mono_table_info_get_rows(typeDefinitionsTable);
-		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "ZeoEngine", "Entity");
-
-		for (I32 i = 0; i < numTypes; i++)
-		{
-			U32 cols[MONO_TYPEDEF_SIZE];
-			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
-
-			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
-			std::string fullName = strlen(nameSpace) ? fmt::format("{}.{}", nameSpace, name) : name;
-
-			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
-			if (monoClass == entityClass) continue;
-
-			bool bIsEntity = mono_class_is_subclass_of(monoClass, entityClass, false);
-			if (!bIsEntity) continue;
-
-			s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace, name);
-		}
 	}
 
 	U32 ScriptEngine::InstantiateClass(MonoClass* monoClass)

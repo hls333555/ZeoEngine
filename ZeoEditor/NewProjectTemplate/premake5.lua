@@ -1,6 +1,8 @@
-workspace "Sandbox"
+ProjectName = "$PROJECT_NAME$"
+
+workspace "%{ProjectName}"
 	architecture "x86_64"
-	startproject "Sandbox"
+	startproject "%{ProjectName}"
 
 	configurations
 	{
@@ -17,12 +19,13 @@ workspace "Sandbox"
 -- Debug-Windows-x64
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-project "Sandbox"
+project "%{ProjectName}"
 	location "Assets/Scripts"
 	kind "SharedLib"
 	language "C#"
 	dotnetframework "4.7.2"
 
+	targetname "%{ProjectName}"
 	targetdir("%{prj.location}/Binaries")
 	objdir("%{prj.location}/Intermediates")
 
@@ -49,5 +52,5 @@ project "Sandbox"
 		symbols "Off"
 
 group "ZeoEngine"
-	include "../../ZeoEngine-ScriptCore"
+	include "$ENGINE_ROOT$/ZeoEngine-ScriptCore"
 group ""

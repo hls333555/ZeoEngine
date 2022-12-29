@@ -21,8 +21,7 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void StartDebugging();
-		static void StartDebugging(const std::string& filepath);
+		static void StartDebugging(PhysXDebugType debugType);
 		static void StopDebugging();
 
 	private:

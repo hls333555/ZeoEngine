@@ -1,6 +1,8 @@
 import sys
 import os
 import winreg
+import win32con
+import win32gui
 
 import requests
 import time
@@ -21,6 +23,18 @@ def GetUserEnvironmentVariable(name):
         return winreg.QueryValueEx(key, name)[0]
     except:
         return None
+
+def SetUserEnvironmentVariable(name, value):
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Environment', 0, winreg.KEY_SET_VALUE)
+    if '%' in value:
+        type = winreg.REG_EXPAND_SZ
+    else:
+        type = winreg.REG_SZ
+    with key:
+        winreg.SetValueEx(key, name, 0, type, value)
+
+    # notify about environment change
+    win32gui.SendMessageTimeout(win32con.HWND_BROADCAST, win32con.WM_SETTINGCHANGE, 0, 'Environment', win32con.SMTO_ABORTIFHUNG, 1000)
 
 def DownloadFile(url, filepath):
     path = filepath
