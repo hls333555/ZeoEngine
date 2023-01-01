@@ -268,7 +268,7 @@ namespace ZeoEngine {
 
 	static MonoString* Asset_GetName(AssetHandle handle)
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		return Utils::StringToMonoString(metadata ? metadata->PathName : "Invalid name");
 	}
 

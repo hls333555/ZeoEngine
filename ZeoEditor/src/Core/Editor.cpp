@@ -164,7 +164,7 @@ namespace ZeoEngine {
 			CreateWorld<LevelPreviewWorld>("Level");
 		}
 
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(Project::GetActive()->GetConfig().DefaultLevelAsset);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(Project::GetActive()->GetConfig().DefaultLevelAsset);
 		if (metadata)
 		{
 			LoadLevel(metadata->Path);
@@ -211,7 +211,7 @@ namespace ZeoEngine {
 	void Editor::SaveLevel() const
 	{
 		const AssetHandle levelHandle = GetLevelWorld()->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(levelHandle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(levelHandle);
 		const auto& assetPath = metadata->Path;
 		if (assetPath.empty() || metadata->IsTemplateAsset())
 		{
@@ -265,7 +265,7 @@ namespace ZeoEngine {
 		}
 		else if (!bFromHistory)
 		{
-			const auto metadata = AssetRegistry::Get().GetAssetMetadata(inspectorWorld->GetAsset()->GetHandle());
+			const auto* metadata = AssetRegistry::Get().GetAssetMetadata(inspectorWorld->GetAsset()->GetHandle());
 			inspectorPanel->AddInspectHistory({ inspectorWorld, metadata->Path });
 		}
 

@@ -48,7 +48,7 @@ namespace ZeoEngine {
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		const auto& ar = AssetRegistry::Get();
-		const auto metadata = ar.GetAssetMetadata(path);
+		auto* metadata = ar.GetAssetMetadata(path);
 		auto srcPath = metadata->SourcePath;
 		if (srcPath.empty() || !FileSystemUtils::Exists(srcPath))
 		{

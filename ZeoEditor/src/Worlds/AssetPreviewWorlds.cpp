@@ -35,7 +35,7 @@ namespace ZeoEngine {
 	void AssetPreviewWorldBase::SaveCurrentAsset() const
 	{
 		const AssetHandle handle = GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		const auto& assetPath = metadata->Path;
 		SaveAsset(assetPath);
 	}

@@ -114,7 +114,7 @@ namespace ZeoEngine {
 
 	void ViewPanelBase::Snapshot(U32 imageWidth, bool bOverwriteThumbnail) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle());
+		auto* metadata = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle());
 		const auto thumbnailPath = ThumbnailManager::Get().GetAssetThumbnailPath(metadata);
 		if (!bOverwriteThumbnail && FileSystemUtils::Exists(thumbnailPath)) return;
 

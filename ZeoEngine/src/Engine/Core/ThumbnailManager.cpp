@@ -69,13 +69,13 @@ namespace ZeoEngine {
 		m_DirectoryIcon = Texture2D::Create(Utils::GetDirectoryIconPath());
 	}
 
-	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const Ref<AssetMetadata>& metadata)
+	Ref<Texture2D> ThumbnailManager::GetAssetThumbnail(const AssetMetadata* metadata)
 	{
 		std::string thumbnailPath = GetAssetThumbnailPath(metadata);
 		return FileSystemUtils::Exists(thumbnailPath) ? Texture2D::Create(std::move(thumbnailPath)) : m_AssetTypeIcons[metadata->TypeID];
 	}
 
-	std::string ThumbnailManager::GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const
+	std::string ThumbnailManager::GetAssetThumbnailPath(const AssetMetadata* metadata) const
 	{
 		if (metadata->TypeID == Texture2D::TypeID())
 		{

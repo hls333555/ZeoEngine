@@ -95,7 +95,7 @@ namespace ZeoEngine {
 		AssetBrowserPanelBase::DrawTopBar();
 	}
 
-	bool ContentBrowserPanel::PassFilter(const Ref<PathMetadata>& metadata) const
+	bool ContentBrowserPanel::PassFilter(const PathMetadata* metadata) const
 	{
 		if (m_bIsAnyTypeFilterActive)
 		{
@@ -199,7 +199,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const AssetMetadata* metadata)
 	{
 		const auto& am = AssetManager::Get();
 
@@ -246,7 +246,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding)
+	void ContentBrowserPanel::ProcessAssetDragging(const PathMetadata* metadata, float thumbnailRounding)
 	{
 		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
 		if (metadata->IsAsset() && ImGui::BeginDragDropSource())

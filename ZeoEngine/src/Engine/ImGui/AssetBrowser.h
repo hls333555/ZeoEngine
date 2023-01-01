@@ -34,7 +34,7 @@ namespace ZeoEngine {
 		bool Draw(AssetHandle& outHandle, float rightPadding, AssetRightClickFunc rightClickFunc, bool bAllowClear = true)
 		{
 			bool bIsValueChanged = false;
-			auto metadata = AssetRegistry::Get().GetAssetMetadata(outHandle);
+			auto* metadata = AssetRegistry::Get().GetAssetMetadata(outHandle);
 
 			ImGui::PushID(TypeID);
 			{
@@ -81,7 +81,7 @@ namespace ZeoEngine {
 						_itoa_s(TypeID, typeStr, 10);
 						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(typeStr, previewRounding))
 						{
-							const auto md = *(const Ref<AssetMetadata>*)payload->Data;
+							auto* md = *static_cast<AssetMetadata**>(payload->Data);
 							bIsValueChanged = metadata != md;
 							metadata = md;
 							outHandle = metadata->Handle;
@@ -116,7 +116,7 @@ namespace ZeoEngine {
 
 					bool bIsListEmpty = true;
 					// List all registered assets from AssetRegistry
-					AssetRegistry::Get().ForEachAssetByTypeID(TypeID, [&](const Ref<AssetMetadata>& md)
+					AssetRegistry::Get().ForEachAssetByTypeID(TypeID, [&](AssetMetadata* md)
 					{
 						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(md->PathName.c_str()))
 						{

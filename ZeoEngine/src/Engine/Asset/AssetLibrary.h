@@ -22,7 +22,7 @@ namespace ZeoEngine {
 				return std::dynamic_pointer_cast<T>(s_MemoryAssets[handle]);
 			}
 
-			const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+			auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 			if (!metadata) return nullptr;
 
 			Ref<IAsset> asset = nullptr;
@@ -79,7 +79,7 @@ namespace ZeoEngine {
 		{
 			if (!HasAsset(handle)) return false;
 
-			const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+			auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 			if (!metadata) return false;
 
 			const auto& asset = s_LoadedAssets[handle];

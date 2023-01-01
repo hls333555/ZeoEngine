@@ -147,7 +147,7 @@ namespace ZeoEngine {
 		// No need to copy self
 		if (Exists(destPath) && srcPath == destPath) return false;
 
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(srcPath);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(srcPath);
 		if (!metadata) return false;
 
 		if (metadata->IsResourceAsset())
@@ -170,7 +170,7 @@ namespace ZeoEngine {
 		}
 
 		// Assign new asset handle to the copied asset
-		AssetSerializerBase::SerializeEmptyAsset(destPath, metadata->TypeID, AssetHandle(), false);
+		AssetSerializerBase::SerializeEmptyAsset(destPath, metadata->TypeID, AssetHandle(), metadata->Flags, false);
 
 		return true;
 	}

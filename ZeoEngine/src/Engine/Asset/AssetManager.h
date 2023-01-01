@@ -42,7 +42,7 @@ namespace ZeoEngine {
 		/** Import a new resource from file dialog or dragging by copying it from srcPath to destPath. */
 		bool ImportAsset(AssetTypeID typeID, const std::string& srcPath, const std::string& destPath) const;
 		/** Construct a new asset. */
-		Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const;
+		Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const;
 		/** Rename an existing asset. */

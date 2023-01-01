@@ -19,7 +19,7 @@ namespace ZeoEngine {
 	{
 		m_bHasKeyboardFocused = false;
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
 		SetSelectedDirectory(metadata->IsTemplateAsset() ? CommonPaths::GetProjectAssetDirectoryStandard() : FileSystemUtils::GetParentPath(metadata->Path));
 	}
@@ -58,7 +58,7 @@ namespace ZeoEngine {
 			if (ImGui::Button("Save"))
 			{
 				const AssetHandle handle = m_World->GetAsset()->GetHandle();
-				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+				const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 				std::string name = m_NameBuffer;
 				const std::string extension = FileSystemUtils::GetPathExtension(name);
 				const std::string originalExtension = FileSystemUtils::GetPathExtension(metadata->PathName);
@@ -167,7 +167,7 @@ namespace ZeoEngine {
 	{
 		m_World->SaveAsset(path);
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		if (path != metadata->Path)
 		{
 			m_World->OnAssetSaveAs(path);

@@ -24,8 +24,7 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_WARN("Failed to find the template when creating a new asset!");
 		}
-		const auto& ar = AssetRegistry::Get();
-		const auto metadata = ar.GetAssetMetadata(path);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		AssetHandle handle = AssetHandle();
 		// In most cases, asset metadata is generated after asset creation
 		// The only exception is when a new asset is created via right clicking in the Content Browser Panel, metadata is generated before renaming request
@@ -35,10 +34,10 @@ namespace ZeoEngine {
 		{
 			handle = metadata->Handle;
 		}
-		AssetSerializerBase::SerializeEmptyAsset(path, m_TypeID, handle, false);
+		AssetSerializerBase::SerializeEmptyAsset(path, m_TypeID, handle, metadata->Flags, false);
 	}
 
-	void ImportableAssetFactoryBase::CreateAsset(const std::string& path, const std::string& resourcePath) const
+	void ImportableAssetFactoryBase::CreateAssetFile(const std::string& path, const std::string& resourcePath, U8 flags) const
 	{
 		const std::string templatePath = GetAssetTemplatePath();
 		if (FileSystemUtils::Exists(templatePath))
@@ -49,7 +48,7 @@ namespace ZeoEngine {
 		{
 			ZE_CORE_WARN("Failed to find the template when creating a new asset!");
 		}
-		ImportableAssetSerializerBase::SerializeEmptyAsset(path, resourcePath, m_TypeID, AssetHandle(), false);
+		ImportableAssetSerializerBase::SerializeEmptyAsset(path, resourcePath, m_TypeID, AssetHandle(), flags, false);
 	}
 
 	void ImportableAssetFactoryBase::ImportAsset(const std::string& srcPath, const std::string& destPath) const
@@ -67,19 +66,19 @@ namespace ZeoEngine {
 		const std::string assetPath = destPath + AssetRegistry::GetAssetExtension();
 		if (!FileSystemUtils::Exists(assetPath))
 		{
+			U8 flags = PathFlag_Importable | PathFlag_HasResource;
 			// Create zasset file if not exists
-			CreateAsset(assetPath, srcPath);
-			const auto metadata = AssetRegistry::Get().OnPathCreated(assetPath, true);
-			metadata->Flags |= PathFlag_Importable | PathFlag_HasResource;
-			// Record source path
-			std::static_pointer_cast<AssetMetadata>(metadata)->SourcePath = srcPath;
+			CreateAssetFile(assetPath, srcPath, flags);
+			auto* metadata = static_cast<AssetMetadata*>(AssetRegistry::Get().OnPathCreated(assetPath, true));
+			metadata->Flags = flags;
+			metadata->SourcePath = srcPath;
 		}
 		else // Asset already exist, just reload and update
 		{
 			// TODO: Should be marked modified instead of saving directly
 			//SaveAsset(path);
 			AssetLibrary::ReloadAsset(assetPath);
-			const auto metadata = AssetRegistry::Get().GetAssetMetadata(assetPath);
+			auto* metadata = AssetRegistry::Get().GetAssetMetadata(assetPath);
 			// Update asset metadata after reloading
 			metadata->UpdateThumbnail();
 			metadata->SourcePath = srcPath;
@@ -95,7 +94,7 @@ namespace ZeoEngine {
 		const auto templateResourcePath = templateMetadata->GetResourceFileSystemPath();
 		ZE_CORE_ASSERT(FileSystemUtils::Exists(templatePath) && FileSystemUtils::Exists(templateResourcePath));
 
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
+		auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		metadata->Flags |= PathFlag_HasResource;
 		// Copy resource template file
 		const auto resourcePath = metadata->GetResourceFileSystemPath();
@@ -109,17 +108,17 @@ namespace ZeoEngine {
 		return Level::GetTemplatePath();
 	}
 
-	Ref<IAsset> LevelAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> LevelAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return CreateRef<Level>();
 	}
 
-	Ref<IAsset> ParticleTemplateAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> ParticleTemplateAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return CreateRef<ParticleTemplate>();
 	}
 
-	Ref<IAsset> Texture2DAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> Texture2DAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return Texture2D::Create(metadata->GetResourceFileSystemPath());
 	}
@@ -150,7 +149,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	Ref<IAsset> MeshAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> MeshAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return CreateRef<Mesh>(metadata->GetResourceFileSystemPath());
 	}
@@ -160,7 +159,7 @@ namespace ZeoEngine {
 		return  Material::GetTemplatePath();
 	}
 
-	Ref<IAsset> MaterialAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> MaterialAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return CreateRef<Material>();
 	}
@@ -175,12 +174,12 @@ namespace ZeoEngine {
 		return  Shader::GetResourceTemplatePath();
 	}
 
-	Ref<IAsset> ShaderAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> ShaderAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return Shader::Create(metadata->GetResourceFileSystemPath());
 	}
 
-	Ref<IAsset> PhysicsMaterialAssetFactory::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> PhysicsMaterialAssetFactory::CreateAsset(const AssetMetadata* metadata) const
 	{
 		return CreateRef<PhysicsMaterial>();
 	}

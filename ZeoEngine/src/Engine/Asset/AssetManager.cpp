@@ -101,7 +101,7 @@ namespace ZeoEngine {
 		return false;
 	}
 
-	Ref<IAsset> AssetManager::CreateAsset(const Ref<AssetMetadata>& metadata) const
+	Ref<IAsset> AssetManager::CreateAsset(const AssetMetadata* metadata) const
 	{
 		if (const auto* factory = GetAssetFactoryByAssetType(metadata->TypeID))
 		{
@@ -114,7 +114,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
@@ -130,7 +130,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(oldPath);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(oldPath);
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
@@ -146,7 +146,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::DeleteAsset(const std::string& path) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
@@ -162,7 +162,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::SaveAsset(const std::string& path, const Ref<IAsset>& asset) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;
@@ -178,7 +178,7 @@ namespace ZeoEngine {
 
 	bool AssetManager::ReimportAsset(const std::string& path) const
 	{
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(path);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(path);
 		if (!metadata) return false;
 
 		const auto typeID = metadata->TypeID;

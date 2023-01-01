@@ -219,7 +219,7 @@ namespace ZeoEngine {
 		InitMaterialData();
 		auto* serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
 		const auto* materialSerializer = dynamic_cast<MaterialAssetSerializer*>(serializer);
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
 		const U32 lastShaderVariant = GetShaderVariant();
 		// Deserialize data and possibly apply macro value
 		materialSerializer->DeserializeShaderData(metadata, SharedFromThis());
