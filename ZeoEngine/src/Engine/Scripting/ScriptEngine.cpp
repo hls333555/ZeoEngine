@@ -740,10 +740,6 @@ namespace ZeoEngine {
 			stringBuffer = std::move(outStr);
 			m_Buffer.Data = reinterpret_cast<U8*>(&stringBuffer);
 		}
-		//else if (GetFieldType() == FieldType::Asset)
-		//{
-		//	GetRuntimeValueInternal(reinterpret_cast<AssetHandle*>(Buffer));
-		//}
 		else
 		{
 			GetRuntimeValueInternal(m_Buffer.Data);
@@ -756,10 +752,6 @@ namespace ZeoEngine {
 		{
 			SetRuntimeValueInternal(*m_Buffer.As<std::string>());
 		}
-		//else if (GetFieldType() == FieldType::Asset)
-		//{
-		//	SetRuntimeValueInternal(reinterpret_cast<AssetHandle*>(Buffer));
-		//}
 		else
 		{
 			SetRuntimeValueInternal(m_Buffer.Data);
@@ -779,7 +771,22 @@ namespace ZeoEngine {
 	void ScriptFieldInstance::GetRuntimeValueInternal(void* outValue) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
-		mono_field_get_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, outValue);
+		if (GetFieldType() == FieldType::Entity)
+		{
+			// Get managed object (C# class)
+			MonoObject* object = nullptr;
+			mono_field_get_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, &object);
+			if (object) // Entity may have not been assigned (not newed yet)
+			{
+				// Get ID field
+				const auto* idField = s_Data->EntityClass.GetField("ID");
+				mono_field_get_value(object, idField->ClassField, outValue);
+			}
+		}
+		else
+		{
+			mono_field_get_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, outValue);
+		}
 	}
 
 	void ScriptFieldInstance::GetRuntimeValueInternal(std::string& outValue) const
@@ -792,22 +799,24 @@ namespace ZeoEngine {
 		mono_free(str);
 	}
 
-	//void ScriptFieldInstance::GetRuntimeValueInternal(AssetHandle* outValue) const
-	//{
-	//	const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-	//	// Get managed object (C# class)
-	//	MonoObject* object = nullptr;
-	//	mono_field_get_value(scriptInstance->GetMonoInstance(), Field->ClassField, &object);
-	//	const auto clazz = ScriptClass("ZeoEngine", "AssetHandle", true);
-	//	// Get ID field
-	//	const auto* idField = clazz.GetField("ID");
-	//	mono_field_get_value(object, idField->ClassField, outValue);
-	//}
-
 	void ScriptFieldInstance::SetRuntimeValueInternal(const void* value) const
 	{
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
-		mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, const_cast<void*>(value));
+		if (GetFieldType() == FieldType::Entity)
+		{
+			// Create Managed Object
+			const U32 objectHandle = s_Data->EntityClass.Instantiate();
+			auto* object = ScriptEngine::GetMonoInstanceFromHandle(objectHandle);
+			auto* ctor = s_Data->EntityClass.GetMethod(".ctor", 1);
+			void* params[] = { const_cast<void*>(value) };
+			s_Data->EntityClass.InvokeMethod(object, ctor, params);
+
+			mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, object);
+		}
+		else
+		{
+			mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, const_cast<void*>(value));
+		}
 	}
 
 	void ScriptFieldInstance::SetRuntimeValueInternal(const std::string& value) const
@@ -816,20 +825,6 @@ namespace ZeoEngine {
 		MonoString* monoStr = mono_string_new(ScriptEngine::GetAppDomain(), value.c_str());
 		mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, monoStr);
 	}
-
-	//void ScriptFieldInstance::SetRuntimeValueInternal(const AssetHandle* value) const
-	//{
-	//	// Create Managed Object
-	//	const auto clazz = ScriptClass("ZeoEngine", "AssetHandle", true);
-	//	const U32 objectHandle = clazz.Instantiate();
-	//	auto* object = ScriptEngine::GetMonoInstanceFromHandle(objectHandle);
-	//	auto* ctor = clazz.GetMethod(".ctor", 1);
-	//	void* params[] = { const_cast<AssetHandle*>(value) };
-	//	clazz.InvokeMethod(object, ctor, params);
-
-	//	const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(EntityID);
-	//	mono_field_set_value(scriptInstance->GetMonoInstance(), Field->ClassField, object);
-	//}
 
 	ScriptClass::ScriptClass(std::string nameSpace, std::string className, bool bIsCore)
 		: m_Namespace(std::move(nameSpace)), m_ClassName(std::move(className))

@@ -91,6 +91,7 @@ namespace ZeoEngine {
 			case FieldType::Vec4:	SerializeField<Vec4>(node, fieldInstance, bIsSeqElement); break;
 			case FieldType::String:	SerializeField<std::string>(node, fieldInstance, bIsSeqElement); break;
 			case FieldType::Asset:	SerializeField<AssetHandle>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Entity:	SerializeField<UUID>(node, fieldInstance, bIsSeqElement); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}
@@ -117,6 +118,7 @@ namespace ZeoEngine {
 			case FieldType::Vec4:	DeserializeField<Vec4>(fieldNode, fieldInstance); break;
 			case FieldType::String:	DeserializeField<std::string>(fieldNode, fieldInstance); break;
 			case FieldType::Asset:	DeserializeField<AssetHandle>(fieldNode, fieldInstance); break;
+			case FieldType::Entity:	DeserializeField<UUID>(fieldNode, fieldInstance); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}

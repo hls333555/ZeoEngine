@@ -10,6 +10,7 @@
 #include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Inspectors/ComponentFieldInstance.h"
 #include "Engine/ImGui/AssetBrowser.h"
+#include "Engine/ImGui/EntityBrowser.h"
 #include "Engine/Renderer/Shader.h"
 
 namespace ZeoEngine {
@@ -62,6 +63,8 @@ namespace ZeoEngine {
 					return CreateScope<SequenceContainerFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
 				case FieldType::Asset:
 					return CreateScope<AssetFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
+				case FieldType::Entity:
+					return CreateScope<EntityFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
 			}
 
 			ZE_CORE_ASSERT(false);
@@ -495,6 +498,38 @@ namespace ZeoEngine {
 	};
 
 	template<typename FieldInstance>
+	class EntityFieldWidget : public FieldWidgetBase<FieldInstance>
+	{
+	public:
+		using FieldWidgetBase<FieldInstance>::FieldWidgetBase;
+
+	private:
+		virtual void ProcessDraw() override
+		{
+			const auto fieldInstance = this->GetFieldInstance();
+			auto value = fieldInstance->GetValue<UUID>();
+			float rightPadding = 0.0f;
+			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			{
+				rightPadding = Utils::GetContainerDropdownWidth();
+			}
+			if (m_Browser.Draw(value, rightPadding))
+			{
+				this->ApplyValueToInstance(&value);
+			}
+		}
+
+		virtual void SetValue(const void* value) override
+		{
+			auto handle = *static_cast<const UUID*>(value);
+			this->GetFieldInstance()->SetValue(handle);
+		}
+
+	private:
+		EntityBrowser m_Browser;
+	};
+
+	template<typename FieldInstance>
 	class ContainerFieldWidget : public FieldWidgetBase<FieldInstance>
 	{
 	public:
@@ -592,10 +627,10 @@ namespace ZeoEngine {
 						ImGui::SetTooltipWithPadding("[%d] Drag to re-arrange elements", i);
 					}
 
-					const char* dragType = std::to_string(this->GetWidgetID()).c_str();
+					const char* widgetIDStr = std::to_string(this->GetWidgetID()).c_str();
 					if (ImGui::BeginDragDropSource())
 					{
-						ImGui::SetDragDropPayload(dragType, &i, sizeof(U32));
+						ImGui::SetDragDropPayload(widgetIDStr, &i, sizeof(U32));
 						ImGui::Text("Place it here");
 
 						ImGui::EndDragDropSource();
@@ -603,7 +638,7 @@ namespace ZeoEngine {
 
 					if (ImGui::BeginDragDropTarget())
 					{
-						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(dragType))
+						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(widgetIDStr))
 						{
 							ZE_CORE_ASSERT(payload->DataSize == sizeof(U32));
 

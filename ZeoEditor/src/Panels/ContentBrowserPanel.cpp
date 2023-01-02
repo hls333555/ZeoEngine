@@ -251,9 +251,9 @@ namespace ZeoEngine {
 		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
 		if (metadata->IsAsset() && ImGui::BeginDragDropSource())
 		{
-			char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
-			_itoa_s(metadata->GetAssetTypeID(), typeStr, 10);
-			ImGui::SetDragDropPayload(typeStr, &metadata, sizeof(metadata));
+			char assetTypeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
+			_itoa_s(metadata->GetAssetTypeID(), assetTypeStr, 10);
+			ImGui::SetDragDropPayload(assetTypeStr, &metadata, sizeof(metadata));
 
 			// Draw tooltip thumbnail
 			ImGui::AssetThumbnail(metadata->ThumbnailTexture->GetTextureID(),

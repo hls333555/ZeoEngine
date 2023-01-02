@@ -28,7 +28,7 @@ namespace ZeoEngine {
 
 		const auto availRegion = ImGui::GetContentRegionAvail();
 		const ImVec2 entityListSize = { availRegion.x, availRegion.y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetFramePadding().y * 2 /* separator */ };
-		if (ImGui::BeginChild("SceneOutlineEntityList", entityListSize))
+		if (ImGui::BeginChild("LevelOutlineEntityList", entityListSize))
 		{
 			// Display entities in creation order, the order is updated when a new entity is created or destroyed
 			const auto coreView = scene.GetComponentView<CoreComponent>();
@@ -162,15 +162,15 @@ namespace ZeoEngine {
 			// Drag an entity to attach
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
-				ImGui::Text(entity.GetComponent<CoreComponent>().Name.c_str());
-				ImGui::SetDragDropPayload("DragDropLevelEntity", &entity, sizeof(Entity));
+				ImGui::Text(entity.GetName().c_str());
+				ImGui::SetDragDropPayload("LevelOutlineEntity", &entity, sizeof(Entity));
 				ImGui::EndDragDropSource();
 			}
 
 			// Drop to attach the dragged entity
 			if (ImGui::BeginDragDropTarget())
 			{
-				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragDropLevelEntity", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+				const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload("LevelOutlineEntity", 0.5f, ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
 				if (payload)
 				{
 					const auto scene = m_EditorWorld->GetActiveScene();
