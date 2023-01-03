@@ -39,7 +39,7 @@ namespace ZeoEngine {
 			{
 				node["AssetType"] = typeID;
 				node["AssetHandle"] = handle;
-				node["Flags"] = flags;
+				node["Flags"] = static_cast<U32>(flags); // WORKAROUND: to fix U8 not being serialized as numbers
 				func(node);
 				std::ofstream fout(filepath);
 				fout << node;
