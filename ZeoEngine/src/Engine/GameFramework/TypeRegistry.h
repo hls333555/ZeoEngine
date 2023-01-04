@@ -128,5 +128,6 @@ namespace ZeoEngine {
 	};
 
 	Scope<class IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
+	Scope<class IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
 
 }

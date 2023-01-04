@@ -476,12 +476,7 @@ namespace ZeoEngine {
 		float AngularDamping = 0.05f;
 		bool bEnableGravity = true;
 
-		bool bLockPositionX = false;
-		bool bLockPositionY = false;
-		bool bLockPositionZ = false;
-		bool bLockRotationX = false;
-		bool bLockRotationY = false;
-		bool bLockRotationZ = false;
+		U8 LockFlags = 0;
 
 		bool bReceiveSleepEvents = false;
 		bool bDisableSimulation = false;

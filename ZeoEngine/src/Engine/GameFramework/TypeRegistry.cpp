@@ -287,12 +287,7 @@ namespace ZeoEngine {
 			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity", std::make_pair(HideCondition, &IsStaticRigidBody))
-			.Field<&RigidBodyComponent::bLockPositionX>("LockPositionX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockPositionY>("LockPositionY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockPositionZ>("LockPositionZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationX>("LockRotationX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationY>("LockRotationY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationZ>("LockRotationZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::LockFlags>("LockFlags", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(CustomWidget, &ConstructLockFlagsFieldWidget))
 			.Field<&RigidBodyComponent::bReceiveSleepEvents>("ReceiveSleepEvents", std::make_pair(HideCondition, &IsStaticRigidBody));
 
 		RegisterComponent<PhysicsMaterialDetailComponent>("Physics Material Detail", Inherent, HideComponentHeader)
