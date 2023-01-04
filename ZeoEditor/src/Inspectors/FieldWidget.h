@@ -12,6 +12,7 @@
 #include "Engine/ImGui/AssetBrowser.h"
 #include "Engine/ImGui/EntityBrowser.h"
 #include "Engine/Renderer/Shader.h"
+#include "Engine/Utils/ReflectionUtils.h"
 
 namespace ZeoEngine {
 
@@ -25,6 +26,15 @@ namespace ZeoEngine {
 		template<typename FieldInstance>
 		Scope<class IFieldWidget> ConstructFieldWidget(FieldType type, U32 widgetID, Ref<FieldInstance> fieldInstance)
 		{
+			if constexpr (std::is_same_v<FieldInstance, ComponentFieldInstance>)
+			{
+				auto customWidget = ReflectionUtils::GetPropertyValue<CustomWidgetConstructFunc>(Reflection::CustomWidget, fieldInstance->GetFieldData());
+				if (customWidget)
+				{
+					return (*customWidget)(widgetID, std::move(fieldInstance));
+				}
+			}
+
 			switch (type)
 			{
 				case FieldType::Bool:
@@ -439,7 +449,7 @@ namespace ZeoEngine {
 		{
 			const auto fieldInstance = this->GetFieldInstance();
 			const auto oldValueStr = fieldInstance->GetValue<std::string>(); // Copy string
-			const auto& valueStr = *static_cast<std::string*>(this->GetBufferData());
+			const auto& valueStr = *static_cast<const std::string*>(value);
 			if (valueStr == oldValueStr) return;
 
 			fieldInstance->SetValue(valueStr);

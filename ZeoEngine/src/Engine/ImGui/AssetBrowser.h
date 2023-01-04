@@ -93,7 +93,7 @@ namespace ZeoEngine {
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
-				if (ImGui::BeginCombo("", metadata ? metadata->PathName.c_str() : nullptr, ImGuiComboFlags_HeightLarge))
+				if (ImGui::BeginCombo("", metadata ? metadata->PathName.c_str() : "", ImGuiComboFlags_HeightLarge))
 				{
 					// Clear current selection
 					if (bAllowClear && ImGui::Selectable("Clear"))

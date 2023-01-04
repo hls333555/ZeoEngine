@@ -53,7 +53,7 @@ namespace ZeoEngine {
 			{
 				Entity newEntity;
 
-				if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
+				if (ImGui::MenuItem(ICON_FA_DICE_D6 "  Create Empty Entity"))
 				{
 					newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
 				}

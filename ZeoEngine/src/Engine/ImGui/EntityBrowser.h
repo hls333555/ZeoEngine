@@ -1,9 +1,11 @@
 #pragma once
 
 #include <imgui.h>
+#include <IconsFontAwesome5.h>
 
 #include "Engine/ImGui/TextFilter.h"
 #include "Engine/ImGui/MyImGui.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -31,7 +33,8 @@ namespace ZeoEngine {
 			{
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
-				if (ImGui::BeginCombo("", curEntity ? curEntity.GetName().c_str() : nullptr, ImGuiComboFlags_HeightLarge))
+				const std::string curEntityName = fmt::format("{} {}", ICON_FA_DICE_D6, curEntity.GetName());
+				if (ImGui::BeginCombo("", curEntity ? curEntityName.c_str() : "", ImGuiComboFlags_HeightLarge))
 				{
 					// Clear current selection
 					if (ImGui::Selectable("Clear"))
@@ -58,7 +61,8 @@ namespace ZeoEngine {
 					for (const auto e : coreView)
 					{
 						Entity entity{ e, scene.shared_from_this() };
-						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(entity.GetName().c_str()))
+						const char* entityNameStr = entity.GetName().c_str();
+						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(entityNameStr))
 						{
 							bIsListEmpty = false;
 
@@ -76,7 +80,7 @@ namespace ZeoEngine {
 									// Make two lines of text more compact
 									ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
 									// Display entity name
-									ImGui::Text(entity.GetName().c_str());
+									ImGui::Text("%s %s", ICON_FA_DICE_D6, entityNameStr);
 									// Display entity ID
 									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, "UUID: %llu", entityID);
 									ImGui::PopStyleVar();

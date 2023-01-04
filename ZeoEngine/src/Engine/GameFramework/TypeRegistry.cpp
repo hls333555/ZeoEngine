@@ -190,7 +190,7 @@ namespace ZeoEngine {
 			.Field<ScriptUpdateStage::PostPhysics>("PostPhysics");
 
 		RegisterComponent<ScriptComponent>("Script", std::make_pair(Category, "Scripts"))
-			.Field<&ScriptComponent::ClassName>("ClassName")
+			.Field<&ScriptComponent::ClassName>("ClassName", std::make_pair(CustomWidget, &ConstructScriptClassFieldWidget))
 			.Field<&ScriptComponent::UpdateStage>("UpdateStage");
 
 		RegisterComponent<NativeScriptComponent>("Native Script", std::make_pair(Category, "Scripts"));

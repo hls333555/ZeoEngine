@@ -107,6 +107,7 @@ namespace ZeoEngine {
 
     using HideConditionFunc = bool(*)(struct IComponent* component);
     using CustomSequenceContainerElementNameFunc = std::string(*)(struct IComponent* component, U32 fieldID, U32 elementIndex);
+    using CustomWidgetConstructFunc = Scope<class IFieldWidget> (*)(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
 
     namespace Reflection {
 
@@ -129,6 +130,7 @@ namespace ZeoEngine {
             ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, input value will not get clamped.
             FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
             CustomElementName,			// [value_type: CustomSequenceContainerElementNameFunc] Container's element name are retrieved from a free function.
+            CustomWidget,			    // [value_type: CustomWidgetConstructFunc] Custom field widget construction function. The returned widget class should be derived from FieldWidgetBase or FieldWidgetBufferBase. This property only applies to component fields.
             AssetType,					// [value_type: AssetTypeID] Type ID of asset.
 
         };
