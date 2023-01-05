@@ -174,7 +174,11 @@ namespace ZeoEngine {
 	struct BillboardComponent : public IComponent
 	{
 		Ref<Texture2D> TextureAsset;
-		Vec2 Size{ 0.5f, 0.5f };
+	};
+
+	struct BillboardStackComponent : public IComponent
+	{
+		std::vector<Ref<Texture2D>> TextureAssets;
 	};
 
 	struct FieldChangeComponent : public IComponent

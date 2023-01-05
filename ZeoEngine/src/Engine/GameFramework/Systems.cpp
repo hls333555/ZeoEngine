@@ -207,14 +207,13 @@ namespace ZeoEngine {
 	void CameraSystem::OnCameraComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraSystem::OnCameraComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/Camera.png.zasset");
 	}
 
 	void MeshSystem::OnCreate()
@@ -380,8 +379,7 @@ namespace ZeoEngine {
 	void DirectionalLightSystem::OnDirectionalLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/DirectionalLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<DirectionalLightComponent>::value()] = [](Entity entity)
@@ -408,7 +406,7 @@ namespace ZeoEngine {
 	void DirectionalLightSystem::OnDirectionalLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/DirectionalLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
@@ -430,8 +428,7 @@ namespace ZeoEngine {
 	void PointLightSystem::OnPointLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/PointLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<PointLightComponent>::value()] = [](Entity entity)
@@ -461,7 +458,7 @@ namespace ZeoEngine {
 	void PointLightSystem::OnPointLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/PointLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
@@ -483,8 +480,7 @@ namespace ZeoEngine {
 	void SpotLightSystem::OnSpotLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/SpotLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<SpotLightComponent>::value()] = [](Entity entity)
@@ -514,7 +510,7 @@ namespace ZeoEngine {
 	void SpotLightSystem::OnSpotLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/SpotLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)

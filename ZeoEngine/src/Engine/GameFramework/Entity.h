@@ -208,6 +208,9 @@ namespace ZeoEngine {
 		void AddComponentID(U32 compID) const;
 		void RemoveComponentID(U32 compID) const;
 
+		void AddBillboardTexture(const std::string& texturePath);
+		void RemoveBillboardTexture(const std::string& texturePath);
+
 		void MarkWorldTransformDirty() const;
 
 	private:

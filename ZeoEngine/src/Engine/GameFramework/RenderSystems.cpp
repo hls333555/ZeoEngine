@@ -41,7 +41,7 @@ namespace ZeoEngine {
 				{
 					tintColor = entity.GetComponent<SpotLightComponent>().Color;
 				}
-				GetSceneRenderer()->DrawBillboard(entity.GetWorldTranslation(), billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
+				GetSceneRenderer()->DrawBillboard(entity.GetWorldTranslation(), { 0.5f, 0.5f }, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
 			}
 		}
 	}
