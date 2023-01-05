@@ -50,40 +50,45 @@ namespace ZeoEngine {
 					}
 					Filter.Draw("##ScriptClassFilter", "Search scripts");
 
-					bool bIsListEmpty = true;
-					// List all entities
-					const auto& entityClasses = ScriptEngine::GetEntityClasses();
-					for (const auto& [name, entityClass] : entityClasses)
+					if (ImGui::BeginChild("ScriptClassBrowserList", ImVec2(0, 300)))
 					{
-						const char* nameStr = name.c_str();
-						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(nameStr))
+						bool bIsListEmpty = true;
+						// List all script classes
+						const auto& entityClasses = ScriptEngine::GetEntityClasses();
+						for (const auto& [name, entityClass] : entityClasses)
 						{
-							bIsListEmpty = false;
-
-							// Push class name as ID
-							ImGui::PushID(nameStr);
+							const char* nameStr = name.c_str();
+							if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(nameStr))
 							{
-								bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing()));
+								bIsListEmpty = false;
 
-								ImGui::SameLine();
-
-								// Display entity name
-								ImGui::Text("%s %s", ICON_FA_FILE_CODE, nameStr);
-
-								if (bIsSelected)
+								// Push class name as ID
+								ImGui::PushID(nameStr);
 								{
-									bIsValueChanged = name != outClassName;
-									outClassName = name;
+									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing()));
+
+									ImGui::SameLine();
+
+									// Display script class name
+									ImGui::Text("%s %s", ICON_FA_FILE_CODE, nameStr);
+
+									if (bIsSelected)
+									{
+										bIsValueChanged = name != outClassName;
+										outClassName = name;
+									}
 								}
+								ImGui::PopID();
 							}
-							ImGui::PopID();
+						}
+
+						if (bIsListEmpty)
+						{
+							Filter.DrawEmptyText();
 						}
 					}
 
-					if (bIsListEmpty)
-					{
-						Filter.DrawEmptyText();
-					}
+					ImGui::EndChild();
 
 					ImGui::EndCombo();
 				}

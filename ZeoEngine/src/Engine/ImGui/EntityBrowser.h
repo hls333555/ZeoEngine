@@ -55,53 +55,59 @@ namespace ZeoEngine {
 					}
 					Filter.Draw("##EntityFilter", "Search entities");
 
-					bool bIsListEmpty = true;
-					// List all entities
-					auto coreView = scene.GetComponentView<CoreComponent>();
-					for (const auto e : coreView)
+
+					if (ImGui::BeginChild("EntityBrowserList", ImVec2(0, 300)))
 					{
-						Entity entity{ e, scene.shared_from_this() };
-						const char* entityNameStr = entity.GetName().c_str();
-						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(entityNameStr))
+						bool bIsListEmpty = true;
+						// List all entities
+						auto coreView = scene.GetComponentView<CoreComponent>();
+						for (const auto e : coreView)
 						{
-							bIsListEmpty = false;
-
-							// Push entity ID
-							const auto entityID = entity.GetUUID();
-							ImGui::PushID(static_cast<int>(entityID));
+							Entity entity{ e, scene.shared_from_this() };
+							const char* entityNameStr = entity.GetName().c_str();
+							if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(entityNameStr))
 							{
-								bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, ImGui::GetTextLineHeight() * 2));
+								bIsListEmpty = false;
 
-								ImGui::SameLine();
-
-								// Align text
-								ImGui::BeginGroup();
+								// Push entity ID
+								const auto entityID = entity.GetUUID();
+								ImGui::PushID(static_cast<int>(entityID));
 								{
-									// Make two lines of text more compact
-									ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
-									// Display entity name
-									ImGui::Text("%s %s", ICON_FA_DICE_D6, entityNameStr);
-									// Display entity ID
-									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, "UUID: %llu", entityID);
-									ImGui::PopStyleVar();
-								}
-								ImGui::EndGroup();
+									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, ImGui::GetTextLineHeight() * 2));
 
-								if (bIsSelected)
-								{
-									bIsValueChanged = entity != curEntity;
-									curEntity = entity;
-									outEntityID = entityID;
+									ImGui::SameLine();
+
+									// Align text
+									ImGui::BeginGroup();
+									{
+										// Make two lines of text more compact
+										ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+										// Display entity name
+										ImGui::Text("%s %s", ICON_FA_DICE_D6, entityNameStr);
+										// Display entity ID
+										ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, "UUID: %llu", entityID);
+										ImGui::PopStyleVar();
+									}
+									ImGui::EndGroup();
+
+									if (bIsSelected)
+									{
+										bIsValueChanged = entity != curEntity;
+										curEntity = entity;
+										outEntityID = entityID;
+									}
 								}
+								ImGui::PopID();
 							}
-							ImGui::PopID();
+						}
+
+						if (bIsListEmpty)
+						{
+							Filter.DrawEmptyText();
 						}
 					}
 
-					if (bIsListEmpty)
-					{
-						Filter.DrawEmptyText();
-					}
+					ImGui::EndChild();
 
 					ImGui::EndCombo();
 				}

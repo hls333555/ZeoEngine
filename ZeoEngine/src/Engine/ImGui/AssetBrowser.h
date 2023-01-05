@@ -114,61 +114,66 @@ namespace ZeoEngine {
 					}
 					Filter.Draw("##AssetFilter", "Search assets");
 
-					bool bIsListEmpty = true;
-					// List all registered assets from AssetRegistry
-					AssetRegistry::Get().ForEachAssetByTypeID(TypeID, [&](AssetMetadata* md)
+					if (ImGui::BeginChild("AssetBrowserList", ImVec2(0, 300)))
 					{
-						if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(md->PathName.c_str()))
+						bool bIsListEmpty = true;
+						// List all registered assets from AssetRegistry
+						AssetRegistry::Get().ForEachAssetByTypeID(TypeID, [&](AssetMetadata* md)
 						{
-							bIsListEmpty = false;
-
-							// Push asset path as id
-							ImGui::PushID(md->Path.c_str());
+							if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(md->PathName.c_str()))
 							{
-								static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
-								static const float thumbnailRounding = 4.0f;
+								bIsListEmpty = false;
 
-								bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, assetThumbnailWidth));
-								// Display asset path tooltip for drop-down asset
-								if (ImGui::IsItemHovered())
+								// Push asset path as id
+								ImGui::PushID(md->Path.c_str());
 								{
-									ImGui::SetTooltipWithPadding("%s", md->Path.c_str());
+									static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
+									static const float thumbnailRounding = 4.0f;
+
+									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, assetThumbnailWidth));
+									// Display asset path tooltip for drop-down asset
+									if (ImGui::IsItemHovered())
+									{
+										ImGui::SetTooltipWithPadding("%s", md->Path.c_str());
+									}
+
+									ImGui::SameLine();
+
+									ImGui::AssetThumbnail(md->ThumbnailTexture->GetTextureID(), assetThumbnailWidth, thumbnailRounding, false);
+
+									ImGui::SameLine();
+
+									// Align text
+									ImGui::BeginGroup();
+									{
+										// Make two lines of text more compact
+										ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
+										// Display asset name
+										ImGui::Text(md->PathName.c_str());
+										// Display asset type name
+										ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(md->TypeID)->GetAssetTypeName());
+										ImGui::PopStyleVar();
+									}
+									ImGui::EndGroup();
+
+									if (bIsSelected)
+									{
+										bIsValueChanged = md != metadata;
+										metadata = md;
+										outHandle = metadata->Handle;
+									}
 								}
-
-								ImGui::SameLine();
-
-								ImGui::AssetThumbnail(md->ThumbnailTexture->GetTextureID(), assetThumbnailWidth, thumbnailRounding, false);
-
-								ImGui::SameLine();
-
-								// Align text
-								ImGui::BeginGroup();
-								{
-									// Make two lines of text more compact
-									ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f });
-									// Display asset name
-									ImGui::Text(md->PathName.c_str());
-									// Display asset type name
-									ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.0f }, AssetManager::Get().GetAssetFactoryByAssetType(md->TypeID)->GetAssetTypeName());
-									ImGui::PopStyleVar();
-								}
-								ImGui::EndGroup();
-
-								if (bIsSelected)
-								{
-									bIsValueChanged = md != metadata;
-									metadata = md;
-									outHandle = metadata->Handle;
-								}
+								ImGui::PopID();
 							}
-							ImGui::PopID();
-						}
-					});
+						});
 
-					if (bIsListEmpty)
-					{
-						Filter.DrawEmptyText();
+						if (bIsListEmpty)
+						{
+							Filter.DrawEmptyText();
+						}
 					}
+
+					ImGui::EndChild();
 
 					ImGui::EndCombo();
 				}
