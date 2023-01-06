@@ -438,6 +438,8 @@ namespace ZeoEngine {
 
 	void ScriptEngine::OnCreateEntity(Entity entity)
 	{
+		ZE_PROFILE_FUNC();
+
 		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
 		{
 			instance->InvokeOnCreate();
@@ -446,6 +448,8 @@ namespace ZeoEngine {
 
 	void ScriptEngine::OnUpdateEntity(Entity entity, DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		if (const auto instance = GetEntityScriptInstance(entity.GetUUID()))
 		{
 			instance->InvokeOnUpdate(dt);
@@ -454,6 +458,8 @@ namespace ZeoEngine {
 
 	void ScriptEngine::OnDestroyEntity(Entity entity)
 	{
+		ZE_PROFILE_FUNC();
+
 		const UUID entityID = entity.GetUUID();
 		const auto it = s_Data->EntityInstances.find(entityID);
 		if (it != s_Data->EntityInstances.end())

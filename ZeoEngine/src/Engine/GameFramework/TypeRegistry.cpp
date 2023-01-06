@@ -91,7 +91,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<RelationshipComponent>("Relationship", Inherent, HideComponentHeader)
 			.Field<&RelationshipComponent::ParentEntity>("ParentEntity", HiddenInEditor)
-			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor);
+			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor)
+			.Field<&RelationshipComponent::HierarchyDepth>("HierarchyDepth", HiddenInEditor);
 
 		RegisterComponent<TransformComponent>("Transform", Inherent)
 			.Field<&TransformComponent::Translation>("Translation", std::make_pair(DragSensitivity, 0.5f))

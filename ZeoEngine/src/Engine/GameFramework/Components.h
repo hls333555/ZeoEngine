@@ -115,6 +115,7 @@ namespace ZeoEngine {
 	{
 		UUID ParentEntity = 0;
 		std::vector<UUID> ChildEntities;
+		U32 HierarchyDepth = 0;
 	};
 
 	// Stores local transform

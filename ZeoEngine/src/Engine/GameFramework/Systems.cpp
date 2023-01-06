@@ -105,9 +105,7 @@ namespace ZeoEngine {
 			{
 				const Entity lEntity{ lhs, scene };
 				const Entity rEntity{ rhs, scene };
-				if (lEntity.IsAncestorOf(rEntity)) return true;
-				if (lEntity.IsDescendantOf(rEntity)) return false;
-				return lhs < rhs;
+				return lEntity.GetComponent<RelationshipComponent>().HierarchyDepth < rEntity.GetComponent<RelationshipComponent>().HierarchyDepth;
 			});
 		}
 		for (const auto e : transformGroup)
@@ -159,9 +157,7 @@ namespace ZeoEngine {
 			{
 				const Entity lEntity{ lhs, scene };
 				const Entity rEntity{ rhs, scene };
-				if (lEntity.IsAncestorOf(rEntity)) return true;
-				if (lEntity.IsDescendantOf(rEntity)) return false;
-				return lhs < rhs;
+				return lEntity.GetComponent<RelationshipComponent>().HierarchyDepth < rEntity.GetComponent<RelationshipComponent>().HierarchyDepth;
 			});
 		}
 		for (const auto e : transformGroup)
@@ -534,6 +530,8 @@ namespace ZeoEngine {
 
 	void ParticleUpdateSystem::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		SystemBase::OnUpdate(dt);
 
 		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
@@ -846,6 +844,8 @@ namespace ZeoEngine {
 
 	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		PhysicsSystem::OnUpdate(dt);
 
 		if (!GetWorld()->IsRunning()) return;
