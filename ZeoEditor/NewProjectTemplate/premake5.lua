@@ -1,4 +1,5 @@
 ProjectName = "$PROJECT_NAME$"
+engineDir = os.getenv("ZEOENGINE_DIR")
 
 workspace "%{ProjectName}"
 	architecture "x86_64"
@@ -52,5 +53,5 @@ project "%{ProjectName}"
 		symbols "Off"
 
 group "ZeoEngine"
-	include "$ENGINE_ROOT$/ZeoEngine-ScriptCore"
+	include (engineDir .. "/ZeoEngine-ScriptCore")
 group ""
