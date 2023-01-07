@@ -16,6 +16,7 @@ namespace ZeoEngine {
 		/** If 0, all assets, without any type filtering, will be displayed */
 		AssetTypeID TypeID = 0;
 		TextFilter Filter;
+		U32 LastFilteredCount = 0;
 
 		AssetBrowser() = default;
 		AssetBrowser(AssetTypeID typeID)
@@ -40,8 +41,8 @@ namespace ZeoEngine {
 			{
 				// Asset preview
 				{
-					static const float assetPreviewWidth = ImGui::GetStyle().Alpha * 64.0f;
-					static const float previewRounding = 5.0f;
+					static constexpr float assetPreviewWidth = 64.0f;
+					static constexpr float previewRounding = 5.0f;
 
 					// Draw asset thumbnail or default background
 					const auto textureID = Texture2D::GetAssetBackgroundTexture()->GetTextureID();
@@ -93,7 +94,11 @@ namespace ZeoEngine {
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
-				if (ImGui::BeginCombo("", metadata ? metadata->PathName.c_str() : "", ImGuiComboFlags_HeightLarge))
+				static constexpr int maxCount = 10;
+				const int assetCount = glm::clamp(static_cast<int>(LastFilteredCount), 1, maxCount);
+				const float fontSize = ImGui::GetFontSize();
+				const float itemHeight = LastFilteredCount > 0 ? 32.0f : fontSize;
+				if (ImGui::BeginComboFilterWithPadding("", metadata ? metadata->PathName.c_str() : "", assetCount, itemHeight, fontSize + ImGui::GetFramePadding().y * 4/* Clear button and separator */))
 				{
 					// Clear current selection
 					if (bAllowClear && ImGui::Selectable("Clear"))
@@ -114,23 +119,27 @@ namespace ZeoEngine {
 					}
 					Filter.Draw("##AssetFilter", "Search assets");
 
-					if (ImGui::BeginChild("AssetBrowserList", ImVec2(0, 300)))
+					const float spacing = GImGui->Style.ItemSpacing.y;
+					const ImVec2 size = { -FLT_MIN, (itemHeight + spacing) * assetCount - spacing + ImGui::GetFramePadding().y * 2 };
+					if (ImGui::BeginListBox("##AssetBrowserList", size))
 					{
 						bool bIsListEmpty = true;
+						LastFilteredCount = 0;
+
 						// List all registered assets from AssetRegistry
 						AssetRegistry::Get().ForEachAssetByTypeID(TypeID, [&](AssetMetadata* md)
 						{
 							if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(md->PathName.c_str()))
 							{
 								bIsListEmpty = false;
+								++LastFilteredCount;
 
-								// Push asset path as id
-								ImGui::PushID(md->Path.c_str());
+								// Push asset handle as id
+								ImGui::PushID(static_cast<int>(md->Handle));
 								{
-									static const float assetThumbnailWidth = ImGui::GetStyle().Alpha * 32.0f;
-									static const float thumbnailRounding = 4.0f;
+									static constexpr float thumbnailRounding = 4.0f;
 
-									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, assetThumbnailWidth));
+									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, itemHeight));
 									// Display asset path tooltip for drop-down asset
 									if (ImGui::IsItemHovered())
 									{
@@ -139,7 +148,7 @@ namespace ZeoEngine {
 
 									ImGui::SameLine();
 
-									ImGui::AssetThumbnail(md->ThumbnailTexture->GetTextureID(), assetThumbnailWidth, thumbnailRounding, false);
+									ImGui::AssetThumbnail(md->ThumbnailTexture->GetTextureID(), itemHeight, thumbnailRounding, false);
 
 									ImGui::SameLine();
 
@@ -161,6 +170,8 @@ namespace ZeoEngine {
 										bIsValueChanged = md != metadata;
 										metadata = md;
 										outHandle = metadata->Handle;
+
+										ImGui::CloseCurrentPopup();
 									}
 								}
 								ImGui::PopID();
@@ -171,9 +182,9 @@ namespace ZeoEngine {
 						{
 							Filter.DrawEmptyText();
 						}
-					}
 
-					ImGui::EndChild();
+						ImGui::EndListBox();
+					}
 
 					ImGui::EndCombo();
 				}

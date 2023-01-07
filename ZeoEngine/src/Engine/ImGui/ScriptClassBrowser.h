@@ -11,6 +11,7 @@ namespace ZeoEngine {
 	struct ScriptClassBrowser
 	{
 		TextFilter Filter;
+		U32 LastFilteredCount = 0;
 
 		ScriptClassBrowser() = default;
 
@@ -29,8 +30,11 @@ namespace ZeoEngine {
 			{
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - rightPadding);
 
+				static constexpr int maxCount = 10;
+				const int classCount = glm::clamp(static_cast<int>(LastFilteredCount), 1, maxCount);
 				const std::string curClassName = fmt::format("{} {}", ICON_FA_FILE_CODE, outClassName);
-				if (ImGui::BeginCombo("", outClassName.empty() ? "" : curClassName.c_str(), ImGuiComboFlags_HeightLarge))
+				const float fontSize = ImGui::GetFontSize();
+				if (ImGui::BeginComboFilterWithPadding("", outClassName.empty() ? "" : curClassName.c_str(), classCount, fontSize, fontSize + ImGui::GetFramePadding().y * 4/* Clear button and separator */))
 				{
 					// Clear current selection
 					if (ImGui::Selectable("Clear"))
@@ -50,9 +54,13 @@ namespace ZeoEngine {
 					}
 					Filter.Draw("##ScriptClassFilter", "Search scripts");
 
-					if (ImGui::BeginChild("ScriptClassBrowserList", ImVec2(0, 300)))
+					const float spacing = GImGui->Style.ItemSpacing.y;
+					const ImVec2 size = { -FLT_MIN, ( fontSize + spacing) * classCount - spacing + ImGui::GetFramePadding().y * 2 };
+					if (ImGui::BeginListBox("##ScriptClassBrowserList", size))
 					{
 						bool bIsListEmpty = true;
+						LastFilteredCount = 0;
+
 						// List all script classes
 						const auto& entityClasses = ScriptEngine::GetEntityClasses();
 						for (const auto& [name, entityClass] : entityClasses)
@@ -61,21 +69,18 @@ namespace ZeoEngine {
 							if (!Filter.IsActive() || Filter.IsActive() && Filter.PassFilter(nameStr))
 							{
 								bIsListEmpty = false;
+								++LastFilteredCount;
 
 								// Push class name as ID
 								ImGui::PushID(nameStr);
 								{
-									bool bIsSelected = ImGui::Selectable("", false, 0, ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing()));
-
-									ImGui::SameLine();
-
-									// Display script class name
-									ImGui::Text("%s %s", ICON_FA_FILE_CODE, nameStr);
-
-									if (bIsSelected)
+									const std::string displayName = fmt::format("{} {}", ICON_FA_FILE_CODE, nameStr);
+									if (ImGui::Selectable(displayName.c_str()))
 									{
 										bIsValueChanged = name != outClassName;
 										outClassName = name;
+
+										ImGui::CloseCurrentPopup();
 									}
 								}
 								ImGui::PopID();
@@ -86,9 +91,9 @@ namespace ZeoEngine {
 						{
 							Filter.DrawEmptyText();
 						}
-					}
 
-					ImGui::EndChild();
+						ImGui::EndListBox();
+					}
 
 					ImGui::EndCombo();
 				}

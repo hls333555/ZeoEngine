@@ -1,6 +1,7 @@
 #include "Inspectors/FieldWidget.h"
 #include "Engine/ImGui/ScriptClassBrowser.h"
 #include "Engine/Physics/PhysicsTypes.h"
+#include "Engine/ImGui/CollisionLayerBrowser.h"
 
 namespace ZeoEngine {
 
@@ -162,19 +163,61 @@ namespace ZeoEngine {
 
 		virtual void SetValue(const void* value) override
 		{
-			U8 bValue = *static_cast<const U8*>(value);
-			this->GetFieldInstance()->SetValue(bValue);
+			auto v = *static_cast<const U8*>(value);
+			this->GetFieldInstance()->SetValue(v);
 		}
 	};
 
-	Scope<class IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	template<typename FieldInstance, typename Browser>
+	class CollisionLayerFieldWidget : public FieldWidgetBase<FieldInstance>
+	{
+	public:
+		using FieldWidgetBase<FieldInstance>::FieldWidgetBase;
+
+	private:
+		virtual void ProcessDraw() override
+		{
+			const auto fieldInstance = this->GetFieldInstance();
+			auto value = fieldInstance->GetValue<U32>();
+			float rightPadding = 0.0f;
+			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			{
+				rightPadding = Utils::GetContainerDropdownWidth();
+			}
+			if (m_Browser.Draw(value, rightPadding))
+			{
+				this->ApplyValueToInstance(&value);
+			}
+		}
+
+		virtual void SetValue(const void* value) override
+		{
+			auto v = *static_cast<const U32*>(value);
+			this->GetFieldInstance()->SetValue(v);
+		}
+
+	private:
+		Browser m_Browser;
+	};
+
+	Scope<IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<ScriptClassFieldWidget<ComponentFieldInstance>>(widgetID, std::move(fieldInstance));
 	}
 
-	Scope<class IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<LockFlagsFieldWidget<ComponentFieldInstance>>(widgetID, std::move(fieldInstance));
+	}
+
+	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	{
+		return CreateScope<CollisionLayerFieldWidget<ComponentFieldInstance, CollisionLayerBrowser>>(widgetID, std::move(fieldInstance));
+	}
+
+	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	{
+		return CreateScope<CollisionLayerFieldWidget<ComponentFieldInstance, CollisionGroupBrowser>>(widgetID, std::move(fieldInstance));
 	}
 	
 }

@@ -127,7 +127,9 @@ namespace ZeoEngine {
 		static void RegisterComponentSerializerExtenders();
 	};
 
-	Scope<class IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
-	Scope<class IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
 
 }

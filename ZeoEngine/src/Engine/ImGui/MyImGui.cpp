@@ -63,6 +63,22 @@ namespace ImGui {
 		return is_open;
 	}
 
+	bool BeginComboFilterWithPadding(const char* label, const char* preview_value, int itemCount, float itemSize, float otherSize, ImGuiComboFlags flags)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+		if (!(GImGui->NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+		{
+			const float popupHeight = otherSize +
+			ImGui::GetFontSize() + ImGui::GetFramePadding().y * 2 + // = Search box height
+				(itemSize + GImGui->Style.ItemSpacing.y) * itemCount - GImGui->Style.ItemSpacing.y + ImGui::GetFramePadding().y * 5 + // > List box height
+				GImGui->Style.WindowPadding.y * 2;
+			ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, popupHeight));
+		}
+		bool res = BeginCombo(label, preview_value, flags);
+		ImGui::PopStyleVar();
+		return res;
+	}
+
 	static const ImGuiDataTypeInfo GDataTypeInfo[] =
 	{
 		{ sizeof(char),             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8

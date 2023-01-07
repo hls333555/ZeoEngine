@@ -298,8 +298,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
 			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
-			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer")
-			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer", std::make_pair(CustomWidget, &ConstructCollisionLayerFieldWidget))
+			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup", std::make_pair(CustomWidget, &ConstructCollisionGroupFieldWidget))
 			.Field<&ColliderComponentBase::bEnableSimulation>("EnableSimulation")
 			.Field<&ColliderComponentBase::bEnableQuery>("EnableQuery")
 			.Field<&ColliderComponentBase::bIsTrigger>("IsTrigger");
@@ -319,8 +319,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<CharacterControllerComponent>("Character Controller", std::make_pair(Category, "Physics"))
 			.Field<&CharacterControllerComponent::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
-			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer")
-			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer", std::make_pair(CustomWidget, &ConstructCollisionLayerFieldWidget))
+			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup", std::make_pair(CustomWidget, &ConstructCollisionGroupFieldWidget))
 			.Field<&CharacterControllerComponent::Radius>("Radius")
 			.Field<&CharacterControllerComponent::Height>("Height")
 			.Field<&CharacterControllerComponent::Offset>("Offset")

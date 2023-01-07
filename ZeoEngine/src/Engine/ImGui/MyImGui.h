@@ -16,6 +16,7 @@ namespace ImGui {
 	IMGUI_API bool BeginPopupWithPadding(const char* str_id, ImGuiWindowFlags flags = 0);
 	IMGUI_API bool BeginPopupContextWindowWithPadding(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
 	IMGUI_API bool BeginPopupContextItemWithPadding(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
+	IMGUI_API bool BeginComboFilterWithPadding(const char* label, const char* preview_value, int itemCount, float itemSize, float otherSize = 0.0f, ImGuiComboFlags flags = 0);
 
 	IMGUI_API void PushMultiItemsWidthsWithLabels(int components, float label_width, float w_full);
 	/** Version that displays (x,y,z) labels before each component (components > 1). */
