@@ -14,7 +14,7 @@
 
 namespace ZeoEngine {
 
-	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect, const char* filter)
+	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect, const char* filter, const char* title)
 	{
 		std::vector<std::string> outPaths;
 
@@ -25,13 +25,18 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
+		if (title)
+		{
+			ofn.lpstrTitle = title;
+		}
+		std::string filterStr;
 		if (filter)
 		{
 			ofn.lpstrFilter = filter;
 		}
 		else
 		{
-			const std::string filterStr = GetSupportedFileFilter();
+			filterStr = GetSupportedFileFilter();
 			ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must store the returned string first to extend its lifetime
 		}
 		ofn.nFilterIndex = 1;
@@ -60,7 +65,7 @@ namespace ZeoEngine {
 		return outPaths;
 	}
 
-	std::optional<std::string> FileDialogs::Save(const char* filter)
+	std::optional<std::string> FileDialogs::Save(const char* filter, const char* title)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -69,13 +74,18 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
+		if (title)
+		{
+			ofn.lpstrTitle = title;
+		}
+		std::string filterStr;
 		if (filter)
 		{
 			ofn.lpstrFilter = filter;
 		}
 		else
 		{
-			const std::string filterStr = GetSupportedFileFilter();
+			filterStr = GetSupportedFileFilter();
 			ofn.lpstrFilter = filterStr.c_str();
 		}
 		ofn.nFilterIndex = 1;

@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		// Import assets via file dialog
 		if (ImGui::Button(ICON_FA_FILE_IMPORT " Import"))
 		{
-			const auto filePaths = FileDialogs::Open(true);
+			const auto filePaths = FileDialogs::Open(true, nullptr, "Import Assets");
 			for (const auto& filePath : filePaths)
 			{
 				ImportAsset(filePath);

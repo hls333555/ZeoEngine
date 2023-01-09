@@ -142,7 +142,7 @@ namespace ZeoEngine {
 
 	bool Editor::OpenProject()
 	{
-		const auto path = FileDialogs::Open(false, "ZeoEngine Project (*.zproject)\0*.zproject\0");
+		const auto path = FileDialogs::Open(false, "ZeoEngine Project (*.zproject)\0*.zproject\0", "Open Project");
 		if (path.empty()) return false;
 
 		OpenProject(path[0]);

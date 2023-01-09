@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		if (srcPath.empty() || !FileSystemUtils::Exists(srcPath))
 		{
 			// Open file dialog to select another source to reimport
-			const auto filePaths = FileDialogs::Open(false);
+			const auto filePaths = FileDialogs::Open(false, nullptr, "Reimport Asset");
 			if (filePaths.size() != 1) return;
 
 			srcPath = filePaths[0];
