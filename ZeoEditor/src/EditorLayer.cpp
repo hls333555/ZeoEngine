@@ -47,11 +47,6 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNC();
 
-#if ZE_SHOW_IMGUI_DEMO
-		static bool bShow = false;
-		ImGui::ShowDemoWindow(&bShow);
-#endif
-
 		m_Editor->OnImGuiRender();
 	}
 

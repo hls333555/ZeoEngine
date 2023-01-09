@@ -51,14 +51,6 @@ namespace ZeoEngine {
 			ImGui::TreePop();
 		}
 
-		if (ImGui::TreeNodeEx("ImGui", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-		{
-			const auto* focusedWindow = ImGui::GetCurrentContext()->NavWindow;
-			ImGui::Text("Focused Window: %s", focusedWindow ? focusedWindow->Name : "None");
-
-			ImGui::TreePop();
-		}
-
 	}
 
 }

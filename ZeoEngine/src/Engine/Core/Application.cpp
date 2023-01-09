@@ -155,6 +155,11 @@ namespace ZeoEngine {
 						{
 							layer->OnImGuiRender();
 						}
+
+						if (m_ImGuiLayer->m_bShowImGuiStats)
+						{
+							ImGui::ShowMetricsWindow(&m_ImGuiLayer->m_bShowImGuiStats);
+						}
 					}
 					m_ImGuiLayer->End();
 				}

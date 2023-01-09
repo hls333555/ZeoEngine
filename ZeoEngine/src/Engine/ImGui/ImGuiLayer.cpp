@@ -14,6 +14,10 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+#include "Engine/Core/Console.h"
+#include "Engine/Events/KeyEvent.h"
+#include "Engine/Events/MouseEvent.h"
+
 const char* glsl_version = "#version 410";
 
 namespace ZeoEngine {
@@ -261,6 +265,11 @@ namespace ZeoEngine {
 			ImGui_ImplGlfw_InitPlatformInterface();
 			ImGui_ImplOpenGL3_InitPlatformInterface();
 		}
+		
+		Console::Get().RegisterCommand("ui.ShowStats", [this](const std::vector<std::string>&)
+		{
+			m_bShowImGuiStats = true;
+		}, "Show ImGui debugger.");
 	}
 
 	void ImGuiLayer::OnDetach()
