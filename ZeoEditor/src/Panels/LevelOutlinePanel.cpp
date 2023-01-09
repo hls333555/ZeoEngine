@@ -191,7 +191,7 @@ namespace ZeoEngine {
 			bool bIsCurrentEntitySelected = selectedEntity == entity;
 			bool bWillDestroyEntity = false;
 			// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
-			if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
+			if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(ImGuiKey_Delete))
 			{
 				bWillDestroyEntity = true;
 			}
