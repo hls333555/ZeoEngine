@@ -318,6 +318,7 @@ namespace ZeoEngine {
 			LoadAssemblyClasses();
 
 			ScriptRegistry::ReloadMonoComponents();
+			ScriptRegistry::ReloadMonoAssets();
 
 			std::vector<UUID> entities;
 			for (const auto& pair : s_Data->EntityInstances)
@@ -714,6 +715,59 @@ namespace ZeoEngine {
 		return m_Field->Name.c_str();
 	}
 
+	std::string ScriptFieldInstance::GetFieldTooltip() const
+	{
+		return m_Field->GetAttributeValue<std::string>("Tooltip").value_or("");
+	}
+
+	float ScriptFieldInstance::GetDragSpeed() const
+	{
+		return m_Field->GetAttributeValue<float>("DragSensitivity").value_or(1.0f);
+	}
+
+	bool ScriptFieldInstance::IsClampOnlyDuringDragging() const
+	{
+		return m_Field->HasAttribute("ClampOnlyDuringDragging");
+	}
+
+	AssetTypeID ScriptFieldInstance::GetAssetTypeID() const
+	{
+		const auto value = m_Field->GetAttributeValue<MonoReflectionType*>("AssetType");
+		if (!value) return 0;
+		auto* assetType = *value;
+		return ScriptRegistry::GetAssetTypeIDFromType(assetType);
+	}
+
+	bool ScriptFieldInstance::IsHidden() const
+	{
+		return m_Field->HasAttribute("HiddenInEditor");
+
+		// NOTE: "HideCondition" works depends on the changes made in editor to be synchronized to the script instance in real time
+		//bool bHiddenInEditor = m_Field->HasAttribute("HiddenInEditor");
+		//if (bHiddenInEditor) return true;
+
+		//auto hideConditionMethodName = m_Field->GetAttributeValue<std::string>("HideCondition");
+		//if (hideConditionMethodName.empty()) return false;
+
+		//const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
+		//const auto scriptClass = scriptInstance->GetScriptClass();
+		//auto* hideConditionMethod = scriptClass->GetMethod(hideConditionMethodName, 0);
+		//if (!hideConditionMethod) return false;
+
+		//auto* res = scriptClass->InvokeMethod(scriptInstance->GetMonoInstance(), hideConditionMethod);
+		//return *static_cast<bool*>(mono_object_unbox(res));
+	}
+
+	bool ScriptFieldInstance::IsTransient() const
+	{
+		return m_Field->HasAttribute("Transient");
+	}
+
+	std::string ScriptFieldInstance::GetCategory() const
+	{
+		return m_Field->GetAttributeValue<std::string>("Category").value_or("");
+	}
+
 	void* ScriptFieldInstance::GetValueRaw() const
 	{
 		if (SceneUtils::IsLevelRuntime())
@@ -732,7 +786,7 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			memcpy(m_Buffer.Data, value, GetFieldSize());
+			SetValue_Internal(value);
 		}
 	}
 
@@ -769,9 +823,21 @@ namespace ZeoEngine {
 		memcpy(outValue, m_Buffer.Data, GetFieldSize());
 	}
 
+	void ScriptFieldInstance::GetValue_Internal(std::string& outValue) const
+	{
+		outValue = *m_Buffer.As<std::string>();
+	}
+
 	void ScriptFieldInstance::SetValue_Internal(const void* value) const
 	{
 		memcpy(m_Buffer.Data, value, GetFieldSize());
+		//CopyValueToRuntime();
+	}
+
+	void ScriptFieldInstance::SetValue_Internal(const std::string& value) const
+	{
+		(*m_Buffer.As<std::string>()).assign(value);
+		//CopyValueToRuntime();
 	}
 
 	void ScriptFieldInstance::GetRuntimeValueInternal(void* outValue) const
@@ -830,6 +896,49 @@ namespace ZeoEngine {
 		const auto scriptInstance = ScriptEngine::GetEntityScriptInstance(m_EntityID);
 		MonoString* monoStr = mono_string_new(ScriptEngine::GetAppDomain(), value.c_str());
 		mono_field_set_value(scriptInstance->GetMonoInstance(), m_Field->ClassField, monoStr);
+	}
+
+	bool ScriptField::HasAttribute(const std::string& name) const
+	{
+		auto* parentClass = mono_field_get_parent(ClassField);
+		auto* attrInfo = mono_custom_attrs_from_field(parentClass, ClassField);
+		if (!attrInfo) return false;
+
+		auto* attrClass = mono_class_from_name(s_Data->CoreAssemblyImage, "ZeoEngine.Attributes", name.c_str());
+		if (!attrClass) return false;
+
+		return mono_custom_attrs_has_attr(attrInfo, attrClass);
+	}
+
+	bool ScriptField::GetAttributeValueInternal(const std::string& name, void* outValue) const
+	{
+		auto* parentClass = mono_field_get_parent(ClassField);
+		auto* attrInfo = mono_custom_attrs_from_field(parentClass, ClassField);
+		if (!attrInfo) return false;
+
+		auto* attrClass = mono_class_from_name(s_Data->CoreAssemblyImage, "ZeoEngine.Attributes", name.c_str());
+		if (!attrClass) return false;
+
+		if (!mono_custom_attrs_has_attr(attrInfo, attrClass)) return false;
+
+		auto* attrObj = mono_custom_attrs_get_attr(attrInfo, attrClass);
+		auto* valueField = mono_class_get_field_from_name(attrClass, "m_Value");
+		ZE_CORE_ASSERT(valueField, "Attribute class {} does not have field: 'm_Value'!", name);
+		mono_field_get_value(attrObj, valueField, outValue);
+		mono_custom_attrs_free(attrInfo);
+		return true;
+	}
+
+	bool ScriptField::GetAttributeValueInternal(const std::string& name, std::string& outValue) const
+	{
+		MonoString* monoStr = nullptr;
+		const bool res = GetAttributeValueInternal(name, &monoStr);
+		if (!res) return false;
+
+		char* str = mono_string_to_utf8(monoStr);
+		outValue = monoStr != nullptr ? str : "";
+		mono_free(str);
+		return true;
 	}
 
 	ScriptClass::ScriptClass(std::string nameSpace, std::string className, bool bIsCore)

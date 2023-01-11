@@ -30,13 +30,13 @@ namespace ZeoEngine {
 
 	AssetTypeID ComponentFieldInstance::GetAssetTypeID() const
 	{
-		return ReflectionUtils::GetPropertyValue<AssetTypeID>(Reflection::AssetType, m_Data).value_or(0.0f);
+		return ReflectionUtils::GetPropertyValue<AssetTypeID>(Reflection::AssetType, m_Data).value_or(0);
 	}
 
-	const char* ComponentFieldInstance::GetFieldTooltip() const
+	std::string ComponentFieldInstance::GetFieldTooltip() const
 	{
 		const auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, m_Data);
-		return tooltip ? *tooltip : nullptr;
+		return tooltip ? *tooltip : "";
 	}
 
 	void* ComponentFieldInstance::GetValueRaw() const

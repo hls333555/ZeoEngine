@@ -41,7 +41,9 @@ namespace ZeoEngine {
 			auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
 			for (const auto& [name, field] : entityFields)
 			{
-				// TODO: Do not serialize transient data
+				// Do not serialize transient data
+				auto bDiscardSerialize = field->IsTransient();
+				if (bDiscardSerialize) continue;
 
 				EvaluateSerializeField(compNode, field, false);
 			}

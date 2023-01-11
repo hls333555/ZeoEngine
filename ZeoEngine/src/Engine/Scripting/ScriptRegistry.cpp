@@ -278,6 +278,11 @@ namespace ZeoEngine {
 		*handle = asset ? asset->GetHandle() : 0;
 	}
 
+	static U32 Mesh_GetTypeID()
+	{
+		return Mesh::TypeID();
+	}
+
 	static void Physics_GetGravity(Vec3* outGravity)
 	{
 		const auto* physicsScene = ScriptEngine::GetSceneContext().GetPhysicsScene();
@@ -314,9 +319,6 @@ namespace ZeoEngine {
 		}
 		mono_free(msg);
 	}
-
-	std::unordered_map<MonoType*, U32> ScriptRegistry::s_RegisteredMonoComponents;
-	std::unordered_map<std::string, U32> ScriptRegistry::s_RegisteredMonoComponentNames;
 
 	void ScriptRegistry::RegisterFunctions()
 	{
@@ -390,7 +392,7 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Mesh
-
+		ZE_ADD_INTERNAL_CALL(Mesh_GetTypeID);
 #pragma endregion
 
 #pragma region Physics
@@ -422,11 +424,36 @@ namespace ZeoEngine {
 		}
 	}
 
+	void ScriptRegistry::RegisterMonoAsset(char* monoAssetName, U32 typeID)
+	{
+		if (auto* monoType = mono_reflection_type_from_name(monoAssetName, ScriptEngine::GetCoreAssemblyImage()))
+		{
+			s_RegisteredMonoAssets[monoType] = typeID;
+			s_RegisteredMonoAssetNames[monoAssetName] = typeID;
+		}
+	}
+
+	void ScriptRegistry::ReloadMonoAssets()
+	{
+		s_RegisteredMonoAssets.clear();
+		for (const auto& [name, typeID] : s_RegisteredMonoAssetNames)
+		{
+			RegisterMonoAsset(const_cast<char*>(name.c_str()), typeID);
+		}
+	}
+
 	U32 ScriptRegistry::GetComponentIDFromType(MonoReflectionType* compType)
 	{
 		MonoType* monoCompType = mono_reflection_type_get_type(compType);
-		ZE_CORE_ASSERT(ScriptRegistry::s_RegisteredMonoComponents.find(monoCompType) != ScriptRegistry::s_RegisteredMonoComponents.end());
+		ZE_CORE_ASSERT(s_RegisteredMonoComponents.find(monoCompType) != s_RegisteredMonoComponents.end());
 		return s_RegisteredMonoComponents[monoCompType];
+	}
+
+	U32 ScriptRegistry::GetAssetTypeIDFromType(MonoReflectionType* assetType)
+	{
+		MonoType* monoAssetType = mono_reflection_type_get_type(assetType);
+		ZE_CORE_ASSERT(s_RegisteredMonoAssets.find(monoAssetType) != s_RegisteredMonoAssets.end());
+		return s_RegisteredMonoAssets[monoAssetType];
 	}
 
 }

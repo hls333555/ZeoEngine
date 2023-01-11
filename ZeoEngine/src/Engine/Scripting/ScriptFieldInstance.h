@@ -25,23 +25,26 @@ namespace ZeoEngine {
 		ScriptFieldInstance& operator=(const ScriptFieldInstance& other);
 		ScriptFieldInstance& operator=(ScriptFieldInstance&& other) noexcept;
 
-		const char* GetFieldName() const override;
-		U32 GetFieldID() const override { return entt::hashed_string(GetFieldName()); }
-		const char* GetFieldTooltip() const override { return nullptr; } // TODO:
-		float GetDragSpeed() const override { return 1.0f; } // TODO:
-		bool IsClampOnlyDuringDragging() const override { return false; } // TODO:
-		virtual AssetTypeID GetAssetTypeID() const override { return 0; } // TODO:
+		virtual const char* GetFieldName() const override;
+		virtual U32 GetFieldID() const override { return entt::hashed_string(GetFieldName()); }
+		virtual std::string GetFieldTooltip() const override;
+		virtual float GetDragSpeed() const override;
+		virtual bool IsClampOnlyDuringDragging() const override;
+		virtual AssetTypeID GetAssetTypeID() const override;
+		template<typename Type>
+		Type GetDragMin() const
+		{
+			return m_Field->GetAttributeValue<Type>("ClampMin").value_or(EngineUtils::GetDefaultMin<Type>());
+		}
+		template<typename Type>
+		Type GetDragMax() const
+		{
+			return m_Field->GetAttributeValue<Type>("ClampMax").value_or(EngineUtils::GetDefaultMax<Type>());
+		}
 
-		template<typename Type>
-		Type GetDragMin() const // TODO:
-		{
-			return Type();
-		}
-		template<typename Type>
-		Type GetDragMax() const // TODO:
-		{
-			return Type();
-		}
+		bool IsHidden() const;
+		bool IsTransient() const;
+		std::string GetCategory() const;
 
 		template<typename T>
 		T GetValue() const
@@ -61,13 +64,16 @@ namespace ZeoEngine {
 		template<>
 		std::string GetValue() const
 		{
+			std::string value;
 			if (SceneUtils::IsLevelRuntime())
 			{
-				std::string value;
 				GetRuntimeValueInternal(value);
-				return value;
 			}
-			return *m_Buffer.As<std::string>();
+			else
+			{
+				GetValue_Internal(value);
+			}
+			return value;
 		}
 
 		template<typename T>
@@ -92,7 +98,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				(*m_Buffer.As<std::string>()).assign(value);
+				SetValue_Internal(value);
 			}
 		}
 
@@ -104,7 +110,9 @@ namespace ZeoEngine {
 
 	private:
 		void GetValue_Internal(void* outValue) const;
+		void GetValue_Internal(std::string& outValue) const;
 		void SetValue_Internal(const void* value) const;
+		void SetValue_Internal(const std::string& value) const;
 		void GetRuntimeValueInternal(void* outValue) const;
 		void GetRuntimeValueInternal(std::string& outValue) const;
 		void SetRuntimeValueInternal(const void* value) const;

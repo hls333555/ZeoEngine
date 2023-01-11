@@ -125,6 +125,8 @@ namespace ZeoEngine {
 		static void RegisterBasicTypes();
 		static void RegisterComponents();
 		static void RegisterComponentSerializerExtenders();
+		static void RegisterAssets();
+
 	};
 
 	Scope<IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);

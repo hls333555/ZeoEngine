@@ -29,7 +29,7 @@ namespace ZeoEngine {
 		bool ShouldHideField(entt::meta_data data, entt::meta_any& instance) const;
 
 		void DrawFieldWidget(entt::meta_data data, Entity entity);
-		virtual void DrawExtraFieldWidgets(Entity entity) {}
+		virtual void DrawExtraFieldWidgets(Entity entity, U32 backupItemID) {}
 
 	private:
 		U32 m_ComponentID;

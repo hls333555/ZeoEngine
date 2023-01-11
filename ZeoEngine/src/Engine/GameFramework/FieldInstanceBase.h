@@ -23,7 +23,7 @@ namespace ZeoEngine {
 
 		virtual const char* GetFieldName() const = 0;
 		virtual U32 GetFieldID() const = 0;
-		virtual const char* GetFieldTooltip() const = 0;
+		virtual std::string GetFieldTooltip() const = 0;
 		virtual float GetDragSpeed() const = 0;
 		virtual bool IsClampOnlyDuringDragging() const = 0;
 		virtual AssetTypeID GetAssetTypeID() const = 0;

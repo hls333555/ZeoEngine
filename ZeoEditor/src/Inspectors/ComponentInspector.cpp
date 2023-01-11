@@ -73,8 +73,9 @@ namespace ZeoEngine {
 				for (const auto& [category, fieldIDs] : m_PreprocessedFields)
 				{
 					bool bShouldDisplayCategoryTree = false;
+
 					std::vector<entt::meta_data> visibleFields;
-					// Do not show TreeNode if none of these fields will show or category is not set
+					// Do not draw TreeNode if none of these fields will show or category is not set
 					for (const auto fieldID : fieldIDs)
 					{
 						entt::meta_data data = compType.data(fieldID);
@@ -84,6 +85,7 @@ namespace ZeoEngine {
 							visibleFields.push_back(data);
 						}
 					}
+
 					bool bIsCategoryTreeExpanded = true;
 					if (bShouldDisplayCategoryTree)
 					{
@@ -96,7 +98,7 @@ namespace ZeoEngine {
 						const auto backupID = ImGui::GetItemID();
 						// Sync table column separator
 						ImGui::PushOverrideID(GetTableID());
-						if (ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
+						if (!visibleFields.empty() && ImGui::BeginTable("", 2, ImGuiTableFlags_Resizable))
 						{
 							ImGui::TableNextColumn();
 
@@ -113,12 +115,12 @@ namespace ZeoEngine {
 									}
 									ImGui::PopID();
 								}
-
-								DrawExtraFieldWidgets(entity);
 							}
 							ImGui::PopID();
 
 							ImGui::EndTable();
+
+							DrawExtraFieldWidgets(entity, backupID);
 						}
 						ImGui::PopID();
 					}
@@ -139,8 +141,7 @@ namespace ZeoEngine {
 
 	void ComponentInspector::PreprocessField(entt::meta_data data)
 	{
-		const auto categoryName = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Category, data);
-		const char* category = categoryName ? *categoryName : "";
+		const char* category = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Category, data).value_or("");
 		// Reverse data display order and categorize them
 		m_PreprocessedFields[category].push_front(data.id());
 	}
@@ -169,7 +170,6 @@ namespace ZeoEngine {
 		}
 		else
 		{
-			const char* name = ReflectionUtils::GetMetaObjectName(data);
 			const auto type = ReflectionUtils::MetaTypeToFieldType(data.type());
 			auto fieldInstance = CreateRef<ComponentFieldInstance>(type, data, entity, m_ComponentID);
 			m_FieldWidgets[aggregatedID] = Utils::ConstructFieldWidget<ComponentFieldInstance>(type, aggregatedID, std::move(fieldInstance));

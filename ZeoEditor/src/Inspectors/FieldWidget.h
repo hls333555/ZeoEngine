@@ -124,9 +124,12 @@ namespace ZeoEngine {
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_SpanAvailWidth;
 			ImGui::TreeNodeEx(fieldInstance->GetFieldName(), flags);
 			// Field tooltip
-			if (const char* tooltip = fieldInstance->GetFieldTooltip())
+			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding(tooltip);
+				if (const std::string tooltip = fieldInstance->GetFieldTooltip(); !tooltip.empty())
+				{
+					ImGui::SetTooltipWithPadding(tooltip.c_str());
+				}
 			}
 			// Switch to the right column
 			ImGui::TableNextColumn();
@@ -553,9 +556,12 @@ namespace ZeoEngine {
 			ImGuiTreeNodeFlags flags = size > 0 ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
 			bool bIsTreeExpanded = ImGui::TreeNodeEx(fieldInstance->GetFieldName(), flags);
 			// Field tooltip
-			if (const char* tooltip = fieldInstance->GetFieldTooltip())
+			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltipWithPadding(tooltip);
+				if (const std::string tooltip = fieldInstance->GetFieldTooltip(); !tooltip.empty())
+				{
+					ImGui::SetTooltipWithPadding(tooltip.c_str());
+				}
 			}
 			// Switch to the right column
 			ImGui::TableNextColumn();

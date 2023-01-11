@@ -71,6 +71,7 @@ namespace ZeoEngine {
 		RegisterBasicTypes();
 		RegisterComponents();
 		RegisterComponentSerializerExtenders();
+		RegisterAssets();
 	}
 
 	void TypeRegistry::Shutdown()
@@ -387,6 +388,17 @@ namespace ZeoEngine {
 	void TypeRegistry::RegisterComponentSerializerExtenders()
 	{
 		ComponentSerializerExtenderRegistry::RegisterComponentSerializerExtender<ScriptComponentSerializerExtender, ScriptComponent>();
+	}
+
+	void TypeRegistry::RegisterAssets()
+	{
+		ScriptRegistry::RegisterMonoAsset(Level::GetMonoAssetName().data(), Level::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Material::GetMonoAssetName().data(), Material::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Mesh::GetMonoAssetName().data(), Mesh::TypeID());
+		ScriptRegistry::RegisterMonoAsset(ParticleTemplate::GetMonoAssetName().data(), ParticleTemplate::TypeID());
+		ScriptRegistry::RegisterMonoAsset(PhysicsMaterial::GetMonoAssetName().data(), PhysicsMaterial::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Shader::GetMonoAssetName().data(), Shader::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Texture2D::GetMonoAssetName().data(), Texture2D::TypeID());
 	}
 
 }

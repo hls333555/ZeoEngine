@@ -18,7 +18,7 @@ namespace ZeoEngine {
 
 		virtual const char* GetFieldName() const override;
 		virtual U32 GetFieldID() const override { return m_Data.id(); }
-		virtual const char* GetFieldTooltip() const override;
+		virtual std::string GetFieldTooltip() const override;
 		virtual float GetDragSpeed() const override;
 		virtual bool IsClampOnlyDuringDragging() const override;
 		virtual AssetTypeID GetAssetTypeID() const override;
