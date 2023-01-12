@@ -3,7 +3,7 @@
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Utils/ReflectionUtils.h"
-#include "Inspectors/FieldWidget.h"
+#include "Widgets/FieldWidget.h"
 #include "Inspectors/ComponentFieldInstance.h"
 
 namespace ZeoEngine {

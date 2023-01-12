@@ -1,7 +1,7 @@
-#include "Inspectors/FieldWidget.h"
-#include "Engine/ImGui/ScriptClassBrowser.h"
+#include "Widgets/FieldWidget.h"
+#include "Widgets/ScriptClassBrowser.h"
 #include "Engine/Physics/PhysicsTypes.h"
-#include "Engine/ImGui/CollisionLayerBrowser.h"
+#include "Widgets/CollisionLayerBrowser.h"
 
 namespace ZeoEngine {
 

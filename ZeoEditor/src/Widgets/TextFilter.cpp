@@ -1,8 +1,8 @@
-#include "ZEpch.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Widgets/TextFilter.h"
 
 #include <imgui_internal.h>
 
+#include "Engine/Core/EngineTypes.h"
 #include "Engine/ImGui/MyImGui.h"
 
 namespace ZeoEngine {

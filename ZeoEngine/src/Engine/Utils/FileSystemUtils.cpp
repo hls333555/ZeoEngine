@@ -3,6 +3,7 @@
 
 #include <filesystem>
 
+#include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Core/CommonPaths.h"
 #include "Engine/Asset/AssetSerializer.h"
 

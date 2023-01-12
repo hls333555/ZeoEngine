@@ -4,7 +4,7 @@
 
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Scripting/ScriptEngine.h"
-#include "Inspectors/FieldWidget.h"
+#include "Widgets/FieldWidget.h"
 
 namespace ZeoEngine {
 
@@ -21,7 +21,7 @@ namespace ZeoEngine {
 	{
 		if (auto* reloadDel = ScriptEngine::GetScriptReloadedDelegate())
 		{
-			reloadDel->disconnect<&ScriptInspector::ClearFieldsAndWidgets>(this);
+			reloadDel->disconnect(this);
 		}
 	}
 

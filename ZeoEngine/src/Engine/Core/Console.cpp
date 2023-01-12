@@ -1,15 +1,14 @@
 #include "ZEpch.h"
 #include "Engine/Core/Console.h"
 
-#include "Engine/ImGui/EditorConsole.h"
-
 namespace ZeoEngine {
 
 	void Console::RegisterVariable(std::string key, float defaultValue, std::string tooltip, CommandType type)
 	{
 		if (m_Commands.find(key) != m_Commands.end()) return;
 
-		EditorConsole::s_Instance.AddCommand("%s\n", key.c_str());
+		std::string str = fmt::format("{}\n", key);
+		m_OnCommandRegisteredDel.publish(str.c_str());
 		m_Commands[std::move(key)] = { type, defaultValue, defaultValue, {}, std::move(tooltip) };
 	}
 
@@ -17,7 +16,8 @@ namespace ZeoEngine {
 	{
 		if (m_Commands.find(key) != m_Commands.end()) return;
 
-		EditorConsole::s_Instance.AddCommand("%s\n", key.c_str());
+		std::string str = fmt::format("{}\n", key);
+		m_OnCommandRegisteredDel.publish(str.c_str());
 		m_Commands[std::move(key)] = { type, 0.0f, 0.0f, std::move(command), std::move(tooltip)};
 	}
 

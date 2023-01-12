@@ -12,7 +12,7 @@
 #include "Engine/Core/MouseCodes.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Core/Application.h"
-#include "Engine/ImGui/EditorConsole.h"
+#include "Widgets/EditorConsole.h"
 #include "Engine/Physics/PhysXScene.h"
 #include "Worlds/LevelPreviewWorld.h"
 #include "Engine/Renderer/SceneRenderer.h"

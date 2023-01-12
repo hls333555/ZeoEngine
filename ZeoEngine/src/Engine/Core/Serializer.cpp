@@ -317,13 +317,15 @@ namespace ZeoEngine {
 	{
 		switch (field->GetFieldType())
 		{
-			case ShaderReflectionFieldType::Bool:		SerializeField<bool>(node, field); break;
-			case ShaderReflectionFieldType::Int:		SerializeField<I32>(node, field); break;
-			case ShaderReflectionFieldType::Float:		SerializeField<float>(node, field); break;
-			case ShaderReflectionFieldType::Vec2:		SerializeField<Vec2>(node, field); break;
-			case ShaderReflectionFieldType::Vec3:		SerializeField<Vec3>(node, field); break;
-			case ShaderReflectionFieldType::Vec4:		SerializeField<Vec4>(node, field); break;
-			case ShaderReflectionFieldType::Texture2D:	SerializeField<AssetHandle>(node, field); break;
+			case DynamicUniformFieldType::Bool:
+			case DynamicUniformFieldType::BoolMacro:	SerializeField<bool>(node, field); break;
+			case DynamicUniformFieldType::Int:
+			case DynamicUniformFieldType::IntMacro:		SerializeField<I32>(node, field); break;
+			case DynamicUniformFieldType::Float:		SerializeField<float>(node, field); break;
+			case DynamicUniformFieldType::Vec2:			SerializeField<Vec2>(node, field); break;
+			case DynamicUniformFieldType::Vec3:			SerializeField<Vec3>(node, field); break;
+			case DynamicUniformFieldType::Color:		SerializeField<Vec4>(node, field); break;
+			case DynamicUniformFieldType::Texture2D:	SerializeField<AssetHandle>(node, field); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}
@@ -358,13 +360,15 @@ namespace ZeoEngine {
 	{
 		switch (field->GetFieldType())
 		{
-			case ShaderReflectionFieldType::Bool:		DeserializeField<bool>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Int:		DeserializeField<I32>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Float:		DeserializeField<float>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec2:		DeserializeField<Vec2>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec3:		DeserializeField<Vec3>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec4:		DeserializeField<Vec4>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Texture2D:	DeserializeField<AssetHandle>(fieldNode, field); break;
+			case DynamicUniformFieldType::Bool:
+			case DynamicUniformFieldType::BoolMacro:	DeserializeField<bool>(fieldNode, field); break;
+			case DynamicUniformFieldType::Int:
+			case DynamicUniformFieldType::IntMacro:		DeserializeField<I32>(fieldNode, field); break;
+			case DynamicUniformFieldType::Float:		DeserializeField<float>(fieldNode, field); break;
+			case DynamicUniformFieldType::Vec2:			DeserializeField<Vec2>(fieldNode, field); break;
+			case DynamicUniformFieldType::Vec3:			DeserializeField<Vec3>(fieldNode, field); break;
+			case DynamicUniformFieldType::Color:		DeserializeField<Vec4>(fieldNode, field); break;
+			case DynamicUniformFieldType::Texture2D:	DeserializeField<AssetHandle>(fieldNode, field); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}

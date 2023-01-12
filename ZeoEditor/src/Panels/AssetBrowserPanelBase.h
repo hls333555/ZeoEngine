@@ -4,7 +4,7 @@
 #include "Panels/PanelBase.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Widgets/TextFilter.h"
 #include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {

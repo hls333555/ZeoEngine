@@ -9,8 +9,8 @@
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Scripting/ScriptFieldInstance.h"
 #include "Inspectors/ComponentFieldInstance.h"
-#include "Engine/ImGui/AssetBrowser.h"
-#include "Engine/ImGui/EntityBrowser.h"
+#include "Widgets/AssetBrowser.h"
+#include "Widgets/EntityBrowser.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Utils/ReflectionUtils.h"
 
@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		const char* GetOutputFormatByFieldType(FieldType type);
 
 		template<typename FieldInstance>
-		Scope<class IFieldWidget> ConstructFieldWidget(FieldType type, U32 widgetID, Ref<FieldInstance> fieldInstance)
+		Scope<IFieldWidget> ConstructFieldWidget(FieldType type, U32 widgetID, Ref<FieldInstance> fieldInstance)
 		{
 			if constexpr (std::is_same_v<FieldInstance, ComponentFieldInstance>)
 			{

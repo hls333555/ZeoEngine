@@ -1,4 +1,4 @@
-#include "Inspectors/FieldWidget.h"
+#include "Widgets/FieldWidget.h"
 
 namespace ZeoEngine {
 

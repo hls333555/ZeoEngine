@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/ImGui/TextFilter.h"
+#include "Widgets/TextFilter.h"
 #include "Inspectors/InspectorBase.h"
 
 namespace ZeoEngine {

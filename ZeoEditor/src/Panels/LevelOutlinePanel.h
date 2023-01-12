@@ -3,7 +3,7 @@
 #include "Panels/PanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Widgets/TextFilter.h"
 
 namespace ZeoEngine {
 

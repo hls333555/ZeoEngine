@@ -1,5 +1,6 @@
 #pragma once
 
+#include <entt.hpp>
 #include <optional>
 
 namespace ZeoEngine {
@@ -40,6 +41,9 @@ namespace ZeoEngine {
 
 		void ResetAllVariableValues();
 
+	public:
+		entt::sink<entt::sigh<void(const char*)>> m_OnCommandRegistered{ m_OnCommandRegisteredDel };
+
 	private:
 		struct CommandData
 		{
@@ -53,6 +57,8 @@ namespace ZeoEngine {
 		};
 
 		std::unordered_map<std::string, CommandData> m_Commands;
+
+		entt::sigh<void(const char*)> m_OnCommandRegisteredDel;
 	};
 
 }

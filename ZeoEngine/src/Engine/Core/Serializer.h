@@ -124,6 +124,7 @@ namespace YAML {
 
 namespace ZeoEngine {
 
+	class AssetSerializerBase;
 	class ScriptFieldInstance;
 	class Project;
 
