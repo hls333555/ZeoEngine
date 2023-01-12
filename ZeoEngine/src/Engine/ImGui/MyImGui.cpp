@@ -311,12 +311,15 @@ namespace ImGui {
 	void VSplitter(const char* str_id, ImVec2* size)
 	{
 		ImVec2 screen_pos = GetCursorScreenPos();
-		InvisibleButton(str_id, ImVec2(3, size->y == 0 ? -1 : size->y));
-		ImVec2 end_pos = screen_pos + GetItemRectSize();
+		float interactWidth = 5.0f;
+		float visualWidth = 1.0f;
+		InvisibleButton(str_id, ImVec2(interactWidth, size->y == 0 ? -1 : size->y));
+		ImVec2 begin_pos = screen_pos + ImVec2(interactWidth / 2 - 0.5f, 0);
+		ImVec2 end_pos = begin_pos + ImVec2(visualWidth, GetItemRectSize().y);
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;
 		ImU32 color = GetColorU32(IsItemActive() ? colors[ImGuiCol_SeparatorActive] : (IsItemHovered() ? colors[ImGuiCol_SeparatorHovered] : colors[ImGuiCol_Separator]));
-		window->DrawList->AddRectFilled(screen_pos, end_pos, color);
+		window->DrawList->AddRectFilled(begin_pos, end_pos, color);
 		if (IsItemHovered())
 		{
 			SetMouseCursor(ImGuiMouseCursor_ResizeEW);

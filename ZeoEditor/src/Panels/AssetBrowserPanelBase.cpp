@@ -40,7 +40,11 @@ namespace ZeoEngine {
 
 			ImGui::SameLine(0.0f, spacing);
 
-			DrawColumnSplitter(contentWidth);
+			// WORKAROUND: Fix incorrect width returned from GetContentRegionAvail() the first frame
+			if (!m_bFirstFrame)
+			{
+				DrawColumnSplitter(contentWidth);
+			}
 
 			ImGui::SameLine(0.0f, spacing);
 
@@ -55,6 +59,8 @@ namespace ZeoEngine {
 
 			DrawBottom();
 		}
+
+		m_bFirstFrame = false;
 	}
 
 	void AssetBrowserPanelBase::ProcessEvent(Event& e)
@@ -115,7 +121,7 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::DrawDirectoryTree()
 	{
-		m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
+		m_LeftColumnWindowID = ImGui::GetCurrentWindow()->ID;
 
 		const std::string projectAssetDir = CommonPaths::GetProjectAssetDirectoryStandard();
 		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == projectAssetDir ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -805,7 +811,7 @@ namespace ZeoEngine {
 	{
 		m_SelectedDirectory = directory;
 
-		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowId)->DC.StateStorage;
+		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowID)->DC.StateStorage;
 		// Manually toggle upper-level tree node open iteratively
 		auto currentDirectory = directory;
 		const auto& ar = AssetRegistry::Get();

@@ -91,8 +91,9 @@ namespace ZeoEngine {
 		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeID typeID);
 
 	private:
+		bool m_bFirstFrame = true;
 		float m_LeftColumnWidth = 200.0f;
-		U32 m_LeftColumnWindowId;
+		U32 m_LeftColumnWindowID;
 
 		enum class AssetBrowserViewType
 		{
