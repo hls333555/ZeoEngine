@@ -106,8 +106,8 @@ namespace entt {
 namespace ZeoEngine {
 
     using HideConditionFunc = bool(*)(struct IComponent* component);
-    using CustomSequenceContainerElementNameFunc = std::string(*)(struct IComponent* component, U32 fieldID, U32 elementIndex);
-    using CustomWidgetConstructFunc = Scope<class IFieldWidget> (*)(U32 widgetID, Ref<class ComponentFieldInstance> fieldInstance);
+    using CustomSequenceContainerElementNameFunc = std::string(*)(IComponent* component, U32 fieldID, U32 elementIndex);
+    using CustomWidgetConstructFunc = Scope<class IFieldWidget> (*)(UUID widgetID, Ref<class ComponentFieldInstance> fieldInstance);
 
     namespace Reflection {
 

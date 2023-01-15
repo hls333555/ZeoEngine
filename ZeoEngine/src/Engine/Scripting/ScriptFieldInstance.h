@@ -7,6 +7,13 @@
 #include "Engine/Core/UUID.h"
 #include "Engine/Utils/SceneUtils.h"
 #include "Engine/Core/Buffer.h"
+#include "Engine/Scripting/ScriptField.h"
+
+extern "C" {
+	typedef struct _MonoArray MonoArray;
+	typedef struct _MonoClass MonoClass;
+	typedef struct _MonoObject MonoObject;
+}
 
 namespace ZeoEngine {
 
@@ -14,8 +21,6 @@ namespace ZeoEngine {
 
 	class ScriptFieldInstance : public FieldInstanceBase
 	{
-		friend class ScriptEngine;
-
 	public:
 		ScriptFieldInstance(ScriptField* field, UUID entityID);
 		ScriptFieldInstance(const ScriptFieldInstance& other);
@@ -31,6 +36,7 @@ namespace ZeoEngine {
 		virtual float GetDragSpeed() const override;
 		virtual bool IsClampOnlyDuringDragging() const override;
 		virtual AssetTypeID GetAssetTypeID() const override;
+
 		template<typename Type>
 		Type GetDragMin() const
 		{
@@ -47,7 +53,7 @@ namespace ZeoEngine {
 		std::string GetCategory() const;
 
 		template<typename T>
-		T GetValue() const
+		T GetValue()
 		{
 			T value;
 			if (SceneUtils::IsLevelRuntime())
@@ -56,13 +62,13 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				GetValue_Internal(&value);
+				GetValueInternal(&value);
 			}
 			return value;
 		}
 
 		template<>
-		std::string GetValue() const
+		std::string GetValue()
 		{
 			std::string value;
 			if (SceneUtils::IsLevelRuntime())
@@ -71,7 +77,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				GetValue_Internal(value);
+				GetValueInternal(value);
 			}
 			return value;
 		}
@@ -85,7 +91,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				SetValue_Internal(&value);
+				SetValueInternal(&value);
 			}
 		}
 
@@ -98,33 +104,108 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				SetValue_Internal(value);
+				SetValueInternal(value);
 			}
 		}
 
-		virtual void* GetValueRaw() const override;
-		virtual void SetValueRaw(const void* value) const override;
+		virtual void* GetValueRaw() override;
+		virtual void SetValueRaw(const void* value) override;
+		virtual void OnFieldValueChanged() override;
 
-		void CopyValueFromRuntime();
-		void CopyValueToRuntime() const;
+		virtual void CopyValueFromRuntime();
+		virtual void CopyValueToRuntime();
 
-	private:
-		void GetValue_Internal(void* outValue) const;
-		void GetValue_Internal(std::string& outValue) const;
-		void SetValue_Internal(const void* value) const;
-		void SetValue_Internal(const std::string& value) const;
-		void GetRuntimeValueInternal(void* outValue) const;
-		void GetRuntimeValueInternal(std::string& outValue) const;
-		void SetRuntimeValueInternal(const void* value) const;
-		void SetRuntimeValueInternal(const std::string& value) const;
+		virtual void OnReload(ScriptField* field) { m_Field = field; }
 
-	private:
+	protected:
+		virtual void GetValueInternal(void* outValue) const;
+		virtual void GetValueInternal(std::string& outValue) const;
+		virtual void SetValueInternal(const void* value) const;
+		virtual void SetValueInternal(const std::string& value) const;
+		virtual void GetRuntimeValueInternal(void* outValue) const;
+		virtual void GetRuntimeValueInternal(std::string& outValue) const;
+		virtual void SetRuntimeValueInternal(const void* value) const;
+		virtual void SetRuntimeValueInternal(const std::string& value) const;
+
+	protected:
+		Buffer m_Buffer;
+		/** Allocated buffer dedicated for retrieving runtime raw value */
+		Buffer m_RuntimeBuffer;
+		bool m_bIsBufferAllocated = false;
+
 		ScriptField* m_Field = nullptr;
 		UUID m_EntityID;
+	};
 
-		Buffer m_Buffer;
-		/** Buffer dedicated for retrieving runtime raw value */
-		Buffer m_RuntimeBuffer;
+	class ScriptSequenceContainerFieldInstance : public ScriptFieldInstance
+	{
+	public:
+		using ScriptFieldInstance::ScriptFieldInstance;
+
+		SizeT GetContainerSize() const;
+		FieldType GetElementType() const { return m_ElementType; }
+		U32 GetElementSize() const { return EngineUtils::GetFieldSize(m_ElementType); }
+		U32 GetIndex() const { return m_CurrentElementIndex; }
+		void SetIndex(U32 index) { m_CurrentElementIndex = index; }
+
+		bool InsertDefault(U32 index, bool bNeedsUpdateArray);
+		bool Erase(U32 index);
+		void Clear();
+		void MoveElement(U32 from, U32 to);
+
+		virtual void* GetValueRaw() override;
+
+		virtual void CopyValueFromRuntime() override;
+		virtual void CopyValueToRuntime() override;
+
+		virtual void OnReload(ScriptField* field) override;
+
+		void GetRuntimeArrayData();
+
+	private:
+		virtual void GetValueInternal(void* outValue) const override;
+		virtual void GetValueInternal(std::string& outValue) const override;
+		virtual void SetValueInternal(const void* value) const override;
+		virtual void SetValueInternal(const std::string& value) const override;
+		virtual void GetRuntimeValueInternal(void* outValue) const override;
+		virtual void GetRuntimeValueInternal(std::string& outValue) const override;
+		virtual void SetRuntimeValueInternal(const void* value) const override;
+		virtual void SetRuntimeValueInternal(const std::string& value) const override;
+
+		template<typename SetValueFunc>
+		void SetRuntimeArrayData(SetValueFunc func) const
+		{
+			if (auto* listObject = GetListObject())
+			{
+				auto* monoArray = GetListArray();
+				ZE_CORE_ASSERT(monoArray);
+
+				func(monoArray);
+
+				// Clear the list
+				auto* listClass = mono_object_get_class(listObject);
+				auto* clearMethod = mono_class_get_method_from_name(listClass, "Clear", 0);
+				MonoObject* exception = nullptr;
+				mono_runtime_invoke(clearMethod, listObject, nullptr, &exception);
+
+				// Add modified array to the list
+				auto* addRangeMethod = mono_class_get_method_from_name(listClass, "AddRange", 1);
+				void* params = monoArray; // NOTE how MonoArray* is passed as parameter
+				mono_runtime_invoke(addRangeMethod, listObject, &params, &exception);
+			}
+		}
+
+		MonoObject* GetListObject() const;
+		MonoArray* GetListArray() const;
+
+	private:
+		/** Container size only used outside runtime, see GetContainerSize() **/
+		SizeT m_ContainerSize = 0;
+		MonoClass* m_ElementClass = nullptr;
+		FieldType m_ElementType = FieldType::None;
+
+		U32 m_CurrentElementIndex = 0;
+		U32 m_ArrayHandle = 0;
 	};
 	
 }

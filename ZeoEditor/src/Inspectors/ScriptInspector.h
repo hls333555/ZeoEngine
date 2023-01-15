@@ -20,7 +20,7 @@ namespace ZeoEngine {
 		void CategorizeFields(Entity entity);
 
 	private:
-		/** Map from aggregated field ID to script field widget */
+		/** Map from field ID to script field widget */
 		std::unordered_map<U32, Scope<IFieldWidget>> m_ScriptFieldWidgets;
 		/** Map from category to list of fields */
 		std::map<std::string, std::vector<Ref<ScriptFieldInstance>>> m_CategorizedFields;

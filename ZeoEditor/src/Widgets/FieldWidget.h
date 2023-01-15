@@ -24,7 +24,7 @@ namespace ZeoEngine {
 		const char* GetOutputFormatByFieldType(FieldType type);
 
 		template<typename FieldInstance>
-		Scope<IFieldWidget> ConstructFieldWidget(FieldType type, U32 widgetID, Ref<FieldInstance> fieldInstance)
+		Scope<IFieldWidget> ConstructFieldWidget(FieldType type, UUID widgetID, Ref<FieldInstance> fieldInstance)
 		{
 			if constexpr (std::is_same_v<FieldInstance, ComponentFieldInstance>)
 			{
@@ -70,7 +70,11 @@ namespace ZeoEngine {
 				case FieldType::String:
 					return CreateScope<StringFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
 				case FieldType::SeqCon:
-					return CreateScope<SequenceContainerFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
+					if constexpr (!std::is_same_v<FieldInstance, ScriptFieldInstance>)
+					{
+						return CreateScope<SequenceContainerFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
+					}
+					break;
 				case FieldType::Asset:
 					return CreateScope<AssetFieldWidget<FieldInstance>>(widgetID, std::move(fieldInstance));
 				case FieldType::Entity:
@@ -84,10 +88,9 @@ namespace ZeoEngine {
 		bool IsFieldTypeBufferBased(FieldType type);
 
 		template<typename FieldInstance>
-		constexpr bool IsFieldSequenceContainer()
+		constexpr bool IsFieldSequenceContainerElement()
 		{
-			// TODO: Add for ScriptFieldInstance
-			return std::is_same_v<FieldInstance, ComponentSequenceContainerElementFieldInstance>;
+			return std::is_same_v<FieldInstance, ComponentSequenceContainerElementFieldInstance> || std::is_same_v<FieldInstance, ScriptSequenceContainerFieldInstance>;
 		}
 
 		float GetContainerDropdownWidth();
@@ -107,26 +110,49 @@ namespace ZeoEngine {
 	class FieldWidgetBase : public IFieldWidget
 	{
 	public:
-		FieldWidgetBase(U32 widgetID, Ref<FieldInstance> fieldInstance)
+		FieldWidgetBase(UUID widgetID, Ref<FieldInstance> fieldInstance)
 			: m_WidgetID(widgetID)
 			, m_Instance(std::move(fieldInstance))
 		{
 		}
 
+		UUID GetWidgetID() const { return m_WidgetID; }
 		Ref<FieldInstance> GetFieldInstance() const { return m_Instance; }
-		U32 GetWidgetID() const { return m_WidgetID; }
+
+		U32 GetFieldSize() const
+		{
+			if constexpr (std::is_same_v<FieldInstance, ScriptSequenceContainerFieldInstance>)
+			{
+				return m_Instance->GetElementSize();
+			}
+			else
+			{
+				return m_Instance->GetFieldSize();
+			}
+		}
+
+		FieldType GetFieldType() const
+		{
+			if constexpr (std::is_same_v<FieldInstance, ScriptSequenceContainerFieldInstance>)
+			{
+				return m_Instance->GetElementType();
+			}
+			else
+			{
+				return m_Instance->GetFieldType();
+			}
+		}
 
 		virtual void Draw() override
 		{
 			ImGui::AlignTextToFramePadding();
-			const auto fieldInstance = GetFieldInstance();
 			// Field name
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_SpanAvailWidth;
-			ImGui::TreeNodeEx(fieldInstance->GetFieldName(), flags);
+			ImGui::TreeNodeEx(m_Instance->GetFieldName(), flags);
 			// Field tooltip
 			if (ImGui::IsItemHovered())
 			{
-				if (const std::string tooltip = fieldInstance->GetFieldTooltip(); !tooltip.empty())
+				if (const std::string tooltip = m_Instance->GetFieldTooltip(); !tooltip.empty())
 				{
 					ImGui::SetTooltipWithPadding(tooltip.c_str());
 				}
@@ -142,44 +168,36 @@ namespace ZeoEngine {
 			ImGui::TableNextColumn();
 		}
 
+		virtual void ProcessDraw() = 0;
+
+	protected:
 		virtual void DrawElement(U32 index) override final
 		{
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
-				// Update index as container may insert/erase element so that index is not correct
 				GetFieldInstance()->SetIndex(index);
 				ProcessDraw();
 			}
 		}
 
-	protected:
-		virtual void ProcessDraw() = 0;
-
-		virtual void ApplyValueToInstance(const void* value)
+		void ApplyValueToInstance(const void* value)
 		{
-			const auto fieldInstance = GetFieldInstance();
-
-			const void* oldValue = fieldInstance->GetValueRaw();
-			const auto bIsEqual = memcmp(value, oldValue, fieldInstance->GetFieldSize());
-			if (bIsEqual == 0) return;
+			if (!IsValueChanged(value)) return;
 			
 			SetValue(value);
+			m_Instance->OnFieldValueChanged();
+		}
 
-			const U32 fieldID = fieldInstance->GetFieldID();
-			if constexpr (std::is_same_v<FieldInstance, ScriptFieldInstance>)
-			{
-				// TODO: ScriptComponent field callbacks
-			}
-			else
-			{
-				fieldInstance->OnFieldValueChanged(fieldID);
-			}
+	private:
+		virtual bool IsValueChanged(const void* value)
+		{
+			return memcmp(value, m_Instance->GetValueRaw(), GetFieldSize()) != 0;
 		}
 
 		virtual void SetValue(const void* value) {}
 
 	private:
-		U32 m_WidgetID = 0;
+		UUID m_WidgetID = 0;
 		Ref<FieldInstance> m_Instance;
 	};
 
@@ -192,19 +210,21 @@ namespace ZeoEngine {
 	protected:
 		void* GetBufferData() const { return m_Buffer.Data; }
 		void SetBufferData(U8* data) { m_Buffer.Data = data; }
+
 		void AllocateBuffer()
 		{
-			m_Buffer = Buffer(this->GetFieldInstance()->GetFieldSize());
+			m_Buffer = Buffer(this->GetFieldSize());
 		}
+
 		void FreeBuffer()
 		{
 			m_Buffer.Release();
 		}
+
 		void UpdateBufferFromInstance()
 		{
-			const auto fieldInstance = this->GetFieldInstance();
-			const void* value = fieldInstance->GetValueRaw();
-			memcpy(m_Buffer.Data, value, fieldInstance->GetFieldSize());
+			const void* value = this->GetFieldInstance()->GetValueRaw();
+			memcpy(m_Buffer.Data, value, this->GetFieldSize());
 		}
 
 		bool IsEditActive() const { return m_bIsEditActive; }
@@ -231,7 +251,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			bool value = fieldInstance->GetValue<bool>();
+			bool value = fieldInstance->template GetValue<bool>();
 			if (ImGui::Checkbox("", &value))
 			{
 				this->ApplyValueToInstance(&value);
@@ -249,7 +269,7 @@ namespace ZeoEngine {
 	class ScalarNFieldWidget : public FieldWidgetBufferBase<FieldInstance>
 	{
 	public:
-		ScalarNFieldWidget(U32 widgetID, Ref<FieldInstance> fieldInstance)
+		ScalarNFieldWidget(UUID widgetID, Ref<FieldInstance> fieldInstance)
 			: FieldWidgetBufferBase<FieldInstance>(widgetID, std::move(fieldInstance))
 		{
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
@@ -266,12 +286,12 @@ namespace ZeoEngine {
 		{
 			const auto fieldInstance = this->GetFieldInstance();
 			const float dragSpeed = fieldInstance->GetDragSpeed();
-			const auto min = fieldInstance->GetDragMin<BaseType>();
-			const auto max = fieldInstance->GetDragMax<BaseType>();
+			const auto min = fieldInstance->template GetDragMin<BaseType>();
+			const auto max = fieldInstance->template GetDragMax<BaseType>();
 			const ImGuiSliderFlags clampMode = fieldInstance->IsClampOnlyDuringDragging() ? 0 : ImGuiSliderFlags_AlwaysClamp;
 
 			void* buffer = this->IsEditActive() ? this->GetBufferData() : fieldInstance->GetValueRaw();
-			const auto fieldType = fieldInstance->GetFieldType();
+			const FieldType fieldType = this->GetFieldType();
 			bool bChanged = ImGui::DragScalarNEx("", Utils::FieldTypeToImGuiDataType(fieldType), buffer, N, dragSpeed, &min, &max, Utils::GetOutputFormatByFieldType(fieldType), clampMode);
 			if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
 			{
@@ -294,7 +314,7 @@ namespace ZeoEngine {
 	class ColorFieldWidget : public FieldWidgetBufferBase<FieldInstance>
 	{
 	public:
-		ColorFieldWidget(U32 widgetID, Ref<FieldInstance> fieldInstance)
+		ColorFieldWidget(UUID widgetID, Ref<FieldInstance> fieldInstance)
 			: FieldWidgetBufferBase<FieldInstance>(widgetID, std::move(fieldInstance))
 		{
 			this->AllocateBuffer();
@@ -330,7 +350,7 @@ namespace ZeoEngine {
 	class EnumFieldWidget : public FieldWidgetBase<FieldInstance>
 	{
 	public:
-		EnumFieldWidget(U32 widgetID, Ref<FieldInstance> fieldInstance)
+		EnumFieldWidget(UUID widgetID, Ref<FieldInstance> fieldInstance)
 			: FieldWidgetBase<FieldInstance>(widgetID, std::move(fieldInstance))
 		{
 			InitEnumEntries();
@@ -350,8 +370,7 @@ namespace ZeoEngine {
 					bool bIsSelected = ImGui::Selectable(enumEntryName);
 					if (ImGui::IsItemHovered())
 					{
-						auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, enumEntry);
-						if (tooltip)
+						if (auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, enumEntry))
 						{
 							ImGui::SetTooltipWithPadding(*tooltip);
 						}
@@ -390,7 +409,7 @@ namespace ZeoEngine {
 	class EnumFieldWidget<ScriptFieldInstance> : public FieldWidgetBase<ScriptFieldInstance>
 	{
 	public:
-		using FieldWidgetBase<ScriptFieldInstance>::FieldWidgetBase;
+		using FieldWidgetBase::FieldWidgetBase;
 
 	private:
 		virtual void ProcessDraw() override
@@ -404,14 +423,33 @@ namespace ZeoEngine {
 		}
 	};
 
-	/** Map from widget ID to string buffer */
-	extern std::unordered_map<U32, std::string> s_FieldStringBuffer;
+	template<>
+	class EnumFieldWidget<ScriptSequenceContainerFieldInstance> : public EnumFieldWidget<ScriptFieldInstance>
+	{
+	public:
+		using EnumFieldWidget<ScriptFieldInstance>::EnumFieldWidget;
+
+	private:
+		virtual void ProcessDraw() override
+		{
+			ZE_CORE_ASSERT(false);
+		}
+
+		virtual void SetValue(const void* value) override
+		{
+			ZE_CORE_ASSERT(false);
+		}
+	};
+
+	/** Map from widget ID to cached string. */
+	extern std::unordered_map<UUID, std::string> s_FieldStringBuffer;
 
 	template<typename FieldInstance>
 	class StringFieldWidget : public FieldWidgetBufferBase<FieldInstance>
 	{
 	public:
 		using FieldWidgetBufferBase<FieldInstance>::FieldWidgetBufferBase;
+
 		~StringFieldWidget()
 		{
 			const auto it = s_FieldStringBuffer.find(this->GetWidgetID());
@@ -424,13 +462,32 @@ namespace ZeoEngine {
 	private:
 		virtual void ProcessDraw() override
 		{
-			auto value = this->GetFieldInstance()->GetValue<std::string>();
-			std::string* buffer = this->IsEditActive() ? static_cast<std::string*>(this->GetBufferData()) : &value;
-			ImGui::InputText("", buffer, ImGuiInputTextFlags_AutoSelectAll);
-			if (ImGui::IsItemDeactivatedAfterEdit())
+			if (SceneUtils::IsLevelRuntime())
+			{
+				if (this->IsEditActive())
+				{
+					auto* value = static_cast<std::string*>(this->GetBufferData());
+					ImGui::InputText("", value, ImGuiInputTextFlags_AutoSelectAll);
+				}
+				else
+				{
+					// Store the value first to prevent being destroyed
+					std::string value = this->GetFieldInstance()->template GetValue<std::string>();
+					ImGui::InputText("", &value, ImGuiInputTextFlags_AutoSelectAll);
+				}
+			}
+			else
+			{
+				std::string* buffer = this->IsEditActive() ? static_cast<std::string*>(this->GetBufferData()) : static_cast<std::string*>(this->GetFieldInstance()->GetValueRaw())/* Use string buffer pointer directly to prevent an unnecessary copy */;
+				ImGui::InputText("", buffer, ImGuiInputTextFlags_AutoSelectAll);
+			}
+			if (ImGui::IsItemDeactivated())
 			{
 				this->SetEditActive(false);
-				ApplyValueToInstance(this->GetBufferData());
+			}
+			if (ImGui::IsItemDeactivatedAfterEdit())
+			{
+				this->ApplyValueToInstance(this->GetBufferData());
 			}
 			if (ImGui::IsItemActivated())
 			{
@@ -441,31 +498,22 @@ namespace ZeoEngine {
 
 		void UpdateStringBufferFromInstance()
 		{
-			const auto fieldInstance = this->GetFieldInstance();
 			auto& stringBuffer = s_FieldStringBuffer[this->GetWidgetID()];
-			auto value = fieldInstance->GetValue<std::string>(); // Copy string
+			auto value = this->GetFieldInstance()->template GetValue<std::string>(); // Copy string
 			stringBuffer = std::move(value);
 			this->SetBufferData(reinterpret_cast<U8*>(&stringBuffer));
 		}
 
-		virtual void ApplyValueToInstance(const void* value) override
+		virtual bool IsValueChanged(const void* value) override
 		{
-			const auto fieldInstance = this->GetFieldInstance();
-			const auto oldValueStr = fieldInstance->GetValue<std::string>(); // Copy string
 			const auto& valueStr = *static_cast<const std::string*>(value);
-			if (valueStr == oldValueStr) return;
+			const auto oldValueStr = this->GetFieldInstance()->template GetValue<std::string>();
+			return valueStr != oldValueStr;
+		}
 
-			fieldInstance->SetValue(valueStr);
-
-			const U32 fieldID = fieldInstance->GetFieldID();
-			if constexpr (std::is_same_v<FieldInstance, ScriptFieldInstance>)
-			{
-				// TODO: ScriptComponent field callbacks
-			}
-			else
-			{
-				fieldInstance->OnFieldValueChanged(fieldID);
-			}
+		virtual void SetValue(const void* value) override
+		{
+			this->GetFieldInstance()->SetValue(*static_cast<const std::string*>(value));
 		}
 	};
 
@@ -473,8 +521,8 @@ namespace ZeoEngine {
 	class AssetFieldWidget : public FieldWidgetBase<FieldInstance>
 	{
 	public:
-		AssetFieldWidget(U32 widgetID, Ref<FieldInstance> fieldInstance)
-			: FieldWidgetBase(widgetID, std::move(fieldInstance))
+		AssetFieldWidget(UUID widgetID, Ref<FieldInstance> fieldInstance)
+			: FieldWidgetBase<FieldInstance>(widgetID, std::move(fieldInstance))
 		{
 			m_Browser.TypeID = this->GetFieldInstance()->GetAssetTypeID();
 			if (!m_Browser.TypeID)
@@ -487,9 +535,9 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			AssetHandle value = fieldInstance->GetValue<AssetHandle>();
+			auto value = fieldInstance->template GetValue<AssetHandle>();
 			float rightPadding = 0.0f;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
 				rightPadding = Utils::GetContainerDropdownWidth();
 			}
@@ -520,9 +568,9 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			auto value = fieldInstance->GetValue<UUID>();
+			auto value = fieldInstance->template GetValue<UUID>();
 			float rightPadding = 0.0f;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
 				rightPadding = Utils::GetContainerDropdownWidth();
 			}
@@ -582,11 +630,12 @@ namespace ZeoEngine {
 		virtual void DrawContainerOperationWidget() = 0;
 	};
 
+	// TODO: Merge this with SequenceContainerFieldWidget<ScriptSequenceContainerFieldInstance>
 	template<typename FieldInstance>
 	class SequenceContainerFieldWidget : public ContainerFieldWidget<FieldInstance>
 	{
 	public:
-		SequenceContainerFieldWidget(U32 widgetID, Ref<FieldInstance> fieldInstance)
+		SequenceContainerFieldWidget(UUID widgetID, Ref<FieldInstance> fieldInstance)
 			: ContainerFieldWidget<FieldInstance>(widgetID, std::move(fieldInstance))
 		{
 			Init();
@@ -604,8 +653,8 @@ namespace ZeoEngine {
 			// as it uses template to draw each element
 			if (bIsElementBufferBased)
 			{
-				const auto seqSize = static_cast<U32>(seqView.size());
-				const auto widgetSize = static_cast<U32>(m_ElementFieldWidgets.size());
+				const auto seqSize = GetContainerSize();
+				const auto widgetSize = m_ElementFieldWidgets.size();
 				if (seqSize != widgetSize)
 				{
 					// Add or remove element widgets based on size change
@@ -643,10 +692,10 @@ namespace ZeoEngine {
 						ImGui::SetTooltipWithPadding("[%d] Drag to re-arrange elements", i);
 					}
 
-					const char* widgetIDStr = std::to_string(this->GetWidgetID()).c_str();
+					std::string widgetIDStr = std::to_string(this->GetWidgetID());
 					if (ImGui::BeginDragDropSource())
 					{
-						ImGui::SetDragDropPayload(widgetIDStr, &i, sizeof(U32));
+						ImGui::SetDragDropPayload(widgetIDStr.c_str(), &i, sizeof(U32));
 						ImGui::Text("Place it here");
 
 						ImGui::EndDragDropSource();
@@ -654,29 +703,25 @@ namespace ZeoEngine {
 
 					if (ImGui::BeginDragDropTarget())
 					{
-						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(widgetIDStr))
+						if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(widgetIDStr.c_str()))
 						{
 							ZE_CORE_ASSERT(payload->DataSize == sizeof(U32));
 
-							auto sourceIndex = *static_cast<U32*>(payload->Data);
-							auto targetIndex = i;
-							bool bMoveDownward = targetIndex >= sourceIndex;
+							const auto from = *static_cast<U32*>(payload->Data);
+							// Backup element
+							auto element = seqView[from];
+							auto copyElement = element;
 
-							// Insert to target location
-							{
-								auto sourceElement = seqView[sourceIndex];
-								auto targetIt = it;
-								auto retIt = seqView.insert(bMoveDownward ? ++targetIt : targetIt, sourceElement);
-								ZE_CORE_ASSERT(retIt);
-							}
+							// Remove element
+							auto fromIt = seqView.begin();
+							fromIt.operator++(from - 1);
+							auto retIt = seqView.erase(fromIt);
+							ZE_CORE_ASSERT(retIt);
 
-							// Erase from source location
-							{
-								auto sourceIt = seqView.begin();
-								sourceIt.operator++(sourceIndex - 1);
-								auto retIt = seqView.erase(bMoveDownward ? sourceIt : ++sourceIt);
-								ZE_CORE_ASSERT(retIt);
-							}
+							// Insert that element to the new location
+							auto toIt = it;
+							retIt = seqView.insert(toIt, copyElement);
+							ZE_CORE_ASSERT(retIt);
 						}
 
 						ImGui::EndDragDropTarget();
@@ -685,7 +730,7 @@ namespace ZeoEngine {
 
 				// Switch to the right column
 				ImGui::TableNextColumn();
-				// Push element index as id
+				// Push element index as ID
 				ImGui::PushID(i);
 				{
 					// Make sure element widget + dropdown button can reach desired size
@@ -778,7 +823,7 @@ namespace ZeoEngine {
 				for (SizeT i = 0; i < size; ++i)
 				{
 					// If element widget is buffer based, we have to create for each one
-					// as buffer is shared across elements, if one of them is being edited,
+					// otherwise buffer is shared across elements, if one of them is being edited,
 					// all others will display the same content
 					m_ElementFieldWidgets.emplace_back(NewElementWidget(type));
 				}
@@ -788,15 +833,16 @@ namespace ZeoEngine {
 			{
 				// If element widget is not buffer based, we do not need to create for each one,
 				// just having a widget template and updating element index is enough
+				// NOTE: In this case widget ID is also shared across elements!
 				m_ElementFieldWidgets.emplace_back(NewElementWidget(type));
 			}
 		}
 
-		void OnSequenceContainerSizeChanged(FieldType type, U32 seqSize, U32 widgetSize)
+		void OnSequenceContainerSizeChanged(FieldType type, SizeT seqSize, SizeT widgetSize)
 		{
 			if (seqSize > widgetSize)
 			{
-				for (U32 i = 0; i < seqSize - widgetSize; ++i)
+				for (SizeT i = 0; i < seqSize - widgetSize; ++i)
 				{
 					m_ElementFieldWidgets.emplace_back(NewElementWidget(type));
 				}
@@ -836,40 +882,36 @@ namespace ZeoEngine {
 		{
 			const auto elementType = seqView.value_type();
 			auto retIt = seqView.insert(it, elementType.construct()); // Construct the pre-registered type with default value
+			const auto fieldInstance = this->GetFieldInstance();
 			if (retIt)
 			{
 				const FieldType type = ReflectionUtils::MetaTypeToFieldType(seqView.value_type());
 				m_ElementFieldWidgets.insert(m_ElementFieldWidgets.begin() + index, NewElementWidget(type));
-				// TODO: Invoke value change callback?
+				fieldInstance->OnFieldValueChanged();
 			}
 			else
 			{
-				const char* fieldName = this->GetFieldInstance()->GetFieldName();
+				const char* fieldName = fieldInstance->GetFieldName();
 				ZE_CORE_ASSERT(false, "Failed to insert an element in '{0}'! Please check if its type is properly registered.", fieldName);
 			}
 			return retIt;
 		}
+
 		entt::meta_sequence_container::iterator EraseElement(entt::meta_sequence_container& seqView, entt::meta_sequence_container::iterator it, U32 index)
 		{
 			auto retIt = seqView.erase(it);
-			if (retIt)
-			{
-				m_ElementFieldWidgets.erase(m_ElementFieldWidgets.begin() + index);
-				// TODO: Invoke value change callback?
-			}
-			else
-			{
-				const char* fieldName = this->GetFieldInstance()->GetFieldName();
-				ZE_CORE_ERROR("Failed to erase an element in '{0}'!", fieldName);
-			}
+			ZE_CORE_ASSERT(retIt);
+			m_ElementFieldWidgets.erase(m_ElementFieldWidgets.begin() + index);
+			this->GetFieldInstance()->OnFieldValueChanged();
 			return retIt;
 		}
+
 		void ClearElements(entt::meta_sequence_container& seqView)
 		{
 			if (seqView.clear())
 			{
 				m_ElementFieldWidgets.clear();
-				// TODO: Invoke value change callback?
+				this->GetFieldInstance()->OnFieldValueChanged();
 			}
 		}
 
@@ -877,37 +919,256 @@ namespace ZeoEngine {
 		{
 			const auto fieldInstance = this->GetFieldInstance();
 			auto elementFieldInstance = CreateRef<ComponentSequenceContainerElementFieldInstance>(type, fieldInstance->GetFieldData(), fieldInstance->GetEntity(), fieldInstance->GetComponentID());
-			return Utils::ConstructFieldWidget<ComponentSequenceContainerElementFieldInstance>(type, this->GetWidgetID(), std::move(elementFieldInstance));
+			return Utils::ConstructFieldWidget(type, UUID(), std::move(elementFieldInstance));
 		}
 
 	private:
 		std::vector<Scope<IFieldWidget>> m_ElementFieldWidgets;
 		bool m_bFixedSize = false;
-
 	};
 
 	template<>
-	class SequenceContainerFieldWidget<ScriptFieldInstance> : public ContainerFieldWidget<ScriptFieldInstance>
+	class SequenceContainerFieldWidget<ScriptSequenceContainerFieldInstance> : public ContainerFieldWidget<ScriptSequenceContainerFieldInstance>
 	{
 	public:
-		using ContainerFieldWidget<ScriptFieldInstance>::ContainerFieldWidget;
+		SequenceContainerFieldWidget(UUID widgetID, Ref<ScriptSequenceContainerFieldInstance> fieldInstance)
+			: ContainerFieldWidget(widgetID, std::move(fieldInstance))
+		{
+			Init();
+		}
 
 	private:
 		virtual void ProcessDraw() override
 		{
-			ZE_CORE_ASSERT(false);
+			const auto fieldInstance = GetFieldInstance();
+			if (SceneUtils::IsLevelRuntime())
+			{
+				// Update array data every time before drawing each element widgets
+				fieldInstance->GetRuntimeArrayData();
+			}
+
+			const FieldType elementType = fieldInstance->GetElementType();
+			const bool bIsElementBufferBased = Utils::IsFieldTypeBufferBased(elementType);
+			// No need to detect size change for non-buffer-based type
+			// as it uses template to draw each element
+			if (bIsElementBufferBased)
+			{
+				const auto seqSize = GetContainerSize();
+				const auto widgetSize = m_ElementFieldWidgets.size();
+				if (seqSize != widgetSize)
+				{
+					// Add or remove element widgets based on size change
+					OnSequenceContainerSizeChanged(seqSize, widgetSize);
+				}
+			}
+
+			for (U32 i = 0; i < GetContainerSize(); ++i)
+			{
+				ImGui::AlignTextToFramePadding();
+
+				const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_SpanAvailWidth;
+				// Element name
+				std::string elementName = std::to_string(i);
+				ImGui::TreeNodeEx(elementName.c_str(), flags);
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("[%d]", i);
+				}
+				// Drag to re-arrange sequence container elements
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("[%d] Drag to re-arrange elements", i);
+				}
+
+				std::string widgetIDStr = std::to_string(GetWidgetID());
+				if (ImGui::BeginDragDropSource())
+				{
+					ImGui::SetDragDropPayload(widgetIDStr.c_str(), &i, sizeof(U32));
+					ImGui::Text("Place it here");
+
+					ImGui::EndDragDropSource();
+				}
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload(widgetIDStr.c_str()))
+					{
+						ZE_CORE_ASSERT(payload->DataSize == sizeof(U32));
+
+						const auto sourceIndex = *static_cast<U32*>(payload->Data);
+						const auto targetIndex = i;
+						fieldInstance->MoveElement(sourceIndex, targetIndex);
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+				// Switch to the right column
+				ImGui::TableNextColumn();
+				// Push element index as ID
+				ImGui::PushID(i);
+				{
+					// Make sure element widget + dropdown button can reach desired size
+					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - Utils::GetContainerDropdownWidth());
+					// Draw element widgets
+					if (bIsElementBufferBased)
+					{
+						m_ElementFieldWidgets[i]->DrawElement(i);
+					}
+					else
+					{
+						m_ElementFieldWidgets[0]->DrawElement(i);
+					}
+
+					ImGui::SameLine();
+
+					// Insert and erase buttons
+					DrawContainerElementOperationWidget(i);
+					// Switch to the next row
+					ImGui::TableNextColumn();
+				}
+				ImGui::PopID();
+			}
 		}
 
 		virtual SizeT GetContainerSize() override
 		{
-			ZE_CORE_ASSERT(false);
-			return 0;
+			return GetFieldInstance()->GetContainerSize();
 		}
 
 		virtual void DrawContainerOperationWidget() override
 		{
-			ZE_CORE_ASSERT(false);
+			const auto size = GetContainerSize();
+			ImGui::Text("%d elements", size);
+
+			ImGui::SameLine();
+
+			{
+				if (ImGui::TransparentSmallButton(ICON_FA_PLUS))
+				{
+					InsertElement(static_cast<U32>(size), false);
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Add an element to the last");
+				}
+
+				ImGui::SameLine();
+
+				if (ImGui::TransparentSmallButton(ICON_FA_TRASH))
+				{
+					ClearElements();
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("Remove all elements");
+				}
+			}
 		}
+
+		void Init()
+		{
+			const FieldType elementType = GetFieldInstance()->GetElementType();
+			if (Utils::IsFieldTypeBufferBased(elementType))
+			{
+				const auto size = GetContainerSize();
+				m_ElementFieldWidgets.reserve(size);
+				for (SizeT i = 0; i < size; ++i)
+				{
+					// If element widget is buffer based, we have to create for each one
+					// otherwise buffer is shared across elements, if one of them is being edited,
+					// all others will display the same content
+					m_ElementFieldWidgets.emplace_back(NewElementWidget());
+				}
+
+			}
+			else
+			{
+				// If element widget is not buffer based, we do not need to create for each one,
+				// just having a widget template and updating element index is enough
+				// NOTE: In this case widget ID is also shared across elements!
+				m_ElementFieldWidgets.emplace_back(NewElementWidget());
+			}
+		}
+
+		void OnSequenceContainerSizeChanged(SizeT seqSize, SizeT widgetSize)
+		{
+			if (seqSize > widgetSize)
+			{
+				for (U32 i = 0; i < seqSize - widgetSize; ++i)
+				{
+					m_ElementFieldWidgets.emplace_back(NewElementWidget());
+				}
+			}
+			else
+			{
+				m_ElementFieldWidgets.erase(m_ElementFieldWidgets.begin() + seqSize, m_ElementFieldWidgets.end());
+			}
+		}
+
+		void DrawContainerElementOperationWidget(U32 index)
+		{
+			if (ImGui::BeginCombo("##SequenceContainerElementOperation", nullptr, ImGuiComboFlags_NoPreview))
+			{
+				if (ImGui::Selectable("Insert"))
+				{
+					InsertElement(index, true);
+				}
+				if (ImGui::Selectable("Erase"))
+				{
+					EraseElement(index);
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
+		void InsertElement(U32 index, bool bNeedsUpdateArray)
+		{
+			const auto fieldInstance = GetFieldInstance();
+			if (fieldInstance->InsertDefault(index, bNeedsUpdateArray))
+			{
+				m_ElementFieldWidgets.insert(m_ElementFieldWidgets.begin() + index, NewElementWidget());
+				fieldInstance->OnFieldValueChanged();
+			}
+			else
+			{
+				const char* fieldName = fieldInstance->GetFieldName();
+				ZE_CORE_ASSERT(false, "Failed to insert an element in '{0}'!", fieldName);
+			}
+		}
+
+		void EraseElement(U32 index)
+		{
+			const auto fieldInstance = GetFieldInstance();
+			if (fieldInstance->Erase(index))
+			{
+				m_ElementFieldWidgets.erase(m_ElementFieldWidgets.begin() + index);
+				fieldInstance->OnFieldValueChanged();
+			}
+			else
+			{
+				const char* fieldName = fieldInstance->GetFieldName();
+				ZE_CORE_ERROR("Failed to erase an element in '{0}'!", fieldName);
+			}
+		}
+
+		void ClearElements()
+		{
+			const auto fieldInstance = GetFieldInstance();
+			fieldInstance->Clear();
+			m_ElementFieldWidgets.clear();
+			fieldInstance->OnFieldValueChanged();
+		}
+
+		Scope<IFieldWidget> NewElementWidget() const
+		{
+			const auto fieldInstance = GetFieldInstance();
+			return Utils::ConstructFieldWidget(fieldInstance->GetElementType(), UUID(), fieldInstance);
+		}
+
+	private:
+		std::vector<Scope<IFieldWidget>> m_ElementFieldWidgets;
 	};
 	
 }

@@ -126,6 +126,7 @@ namespace ZeoEngine {
 
 	class AssetSerializerBase;
 	class ScriptFieldInstance;
+	class ScriptSequenceContainerFieldInstance;
 	class Project;
 
 	class ComponentSerializerExtenderRegistry
@@ -159,7 +160,9 @@ namespace ZeoEngine {
 
 	private:
 		void EvaluateSerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const;
-		void EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const;
+		void EvaluateSerializeSequenceContainerField(YAML::Node& node, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance, bool bIsSeqElement) const;
+		void EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const;
+		void EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance) const;
 
 	private:
 		template<typename T>
@@ -195,7 +198,7 @@ namespace ZeoEngine {
 		template<typename T>
 		void DeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const
 		{
-			const auto& value = fieldNode.as<T>();
+			const auto value = fieldNode.as<T>();
 			fieldInstance->SetValue(value);
 		}
 	};

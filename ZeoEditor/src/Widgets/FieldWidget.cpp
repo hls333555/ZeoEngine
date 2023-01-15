@@ -2,7 +2,7 @@
 
 namespace ZeoEngine {
 
-	std::unordered_map<U32, std::string> s_FieldStringBuffer;
+	std::unordered_map<UUID, std::string> s_FieldStringBuffer;
 
 	namespace Utils {
 

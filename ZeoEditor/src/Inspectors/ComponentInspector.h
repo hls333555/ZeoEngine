@@ -38,7 +38,7 @@ namespace ZeoEngine {
 		/** ImGui table ID used for column separator syncing */
 		U32 m_TableID;
 
-		/** Map from aggregated field ID to field widget */
+		/** Map from field ID to field widget */
 		std::unordered_map<U32, Scope<IFieldWidget>> m_FieldWidgets;
 
 		/** Map from category to list of field IDs in order */

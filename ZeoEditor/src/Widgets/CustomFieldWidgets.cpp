@@ -17,7 +17,7 @@ namespace ZeoEngine {
 			const auto fieldInstance = this->GetFieldInstance();
 			auto value = fieldInstance->GetValue<std::string>();
 			float rightPadding = 0.0f;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
 				rightPadding = Utils::GetContainerDropdownWidth();
 			}
@@ -27,17 +27,16 @@ namespace ZeoEngine {
 			}
 		}
 
-		virtual void ApplyValueToInstance(const void* value) override
+		virtual bool IsValueChanged(const void* value) override
 		{
-			const auto fieldInstance = this->GetFieldInstance();
-			const auto oldValueStr = fieldInstance->GetValue<std::string>(); // Copy string
 			const auto& valueStr = *static_cast<const std::string*>(value);
-			if (valueStr == oldValueStr) return;
+			const auto oldValueStr = this->GetFieldInstance()->GetValue<std::string>();
+			return valueStr != oldValueStr;
+		}
 
-			fieldInstance->SetValue(valueStr);
-
-			const U32 fieldID = fieldInstance->GetFieldID();
-			fieldInstance->OnFieldValueChanged(fieldID);
+		virtual void SetValue(const void* value) override
+		{
+			this->GetFieldInstance()->SetValue(*static_cast<const std::string*>(value));
 		}
 
 	private:
@@ -180,7 +179,7 @@ namespace ZeoEngine {
 			const auto fieldInstance = this->GetFieldInstance();
 			auto value = fieldInstance->GetValue<U32>();
 			float rightPadding = 0.0f;
-			if constexpr (Utils::IsFieldSequenceContainer<FieldInstance>())
+			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
 				rightPadding = Utils::GetContainerDropdownWidth();
 			}
@@ -200,22 +199,22 @@ namespace ZeoEngine {
 		Browser m_Browser;
 	};
 
-	Scope<IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	Scope<IFieldWidget> ConstructScriptClassFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<ScriptClassFieldWidget<ComponentFieldInstance>>(widgetID, std::move(fieldInstance));
 	}
 
-	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<LockFlagsFieldWidget<ComponentFieldInstance>>(widgetID, std::move(fieldInstance));
 	}
 
-	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<CollisionLayerFieldWidget<ComponentFieldInstance, CollisionLayerBrowser>>(widgetID, std::move(fieldInstance));
 	}
 
-	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance)
+	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance)
 	{
 		return CreateScope<CollisionLayerFieldWidget<ComponentFieldInstance, CollisionGroupBrowser>>(widgetID, std::move(fieldInstance));
 	}

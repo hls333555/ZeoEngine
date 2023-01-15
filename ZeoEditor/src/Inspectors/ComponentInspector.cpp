@@ -160,19 +160,19 @@ namespace ZeoEngine {
 
 	void ComponentInspector::DrawFieldWidget(entt::meta_data data, Entity entity)
 	{
-		const U32 aggregatedID = ImGui::GetCurrentWindow()->GetID(data.id());
-		if (m_FieldWidgets.find(aggregatedID) != m_FieldWidgets.cend())
+		const U32 fieldID = data.id();
+		if (m_FieldWidgets.find(fieldID) != m_FieldWidgets.cend())
 		{
-			if (m_FieldWidgets[aggregatedID])
+			if (m_FieldWidgets[fieldID])
 			{
-				m_FieldWidgets[aggregatedID]->Draw();
+				m_FieldWidgets[fieldID]->Draw();
 			}
 		}
 		else
 		{
 			const auto type = ReflectionUtils::MetaTypeToFieldType(data.type());
 			auto fieldInstance = CreateRef<ComponentFieldInstance>(type, data, entity, m_ComponentID);
-			m_FieldWidgets[aggregatedID] = Utils::ConstructFieldWidget<ComponentFieldInstance>(type, aggregatedID, std::move(fieldInstance));
+			m_FieldWidgets[fieldID] = Utils::ConstructFieldWidget(type, UUID(), std::move(fieldInstance));
 		}
 	}
 

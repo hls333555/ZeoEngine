@@ -39,25 +39,30 @@ namespace ZeoEngine {
 		return tooltip ? *tooltip : "";
 	}
 
-	void* ComponentFieldInstance::GetValueRaw() const
+	void* ComponentFieldInstance::GetValueRaw()
 	{
 		return GetValueInternal().data();
 	}
 
-	void ComponentFieldInstance::SetValueRaw(const void* value) const
+	void ComponentFieldInstance::SetValueRaw(const void* value)
 	{
 		// For this to work, the meta data must be registered by entt::as_ref_t
 		memcpy(GetValueRaw(), value, GetFieldSize());
 	}
 
-	void ComponentFieldInstance::OnFieldValueChanged(U32 fieldID)
+	void ComponentFieldInstance::OnFieldValueChanged()
 	{
-		m_Entity.PatchComponentByID(m_ComponentID, fieldID);
+		m_Entity.PatchComponentByID(m_ComponentID, GetFieldID());
 	}
 
 	entt::meta_any ComponentFieldInstance::GetValueInternal() const
 	{
 		return m_Data.get(m_Entity.GetComponentByID(m_ComponentID));
+	}
+
+	IComponent* ComponentFieldInstance::GetComponent() const
+	{
+		return m_Entity.GetComponentByID(m_ComponentID).try_cast<IComponent>();
 	}
 
 	entt::meta_type ComponentSequenceContainerElementFieldInstance::GetFieldValueType() const

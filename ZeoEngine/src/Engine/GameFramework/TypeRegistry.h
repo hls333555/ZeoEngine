@@ -129,9 +129,9 @@ namespace ZeoEngine {
 
 	};
 
-	Scope<IFieldWidget> ConstructScriptClassFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
-	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
-	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
-	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(U32 widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructScriptClassFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
 
 }

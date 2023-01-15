@@ -100,7 +100,7 @@ namespace ZeoEngine {
 				case FieldType::Asset:	return sizeof(AssetHandle);
 				case FieldType::Entity:	return sizeof(UUID);
 			}
-			ZE_CORE_ASSERT(false, "Unknown field type!");
+			ZE_CORE_ASSERT(false, "Unknown field size!");
 			return 0;
 		}
 

@@ -93,17 +93,26 @@ namespace ZeoEngine {
 
 	void ScriptInspector::DrawScriptFieldWidget(const Ref<ScriptFieldInstance>& fieldInstance)
 	{
-		const U32 aggregatedID = ImGui::GetCurrentWindow()->GetID(fieldInstance->GetFieldID());
-		if (m_ScriptFieldWidgets.find(aggregatedID) != m_ScriptFieldWidgets.cend())
+		const U32 fieldID = fieldInstance->GetFieldID();
+		if (m_ScriptFieldWidgets.find(fieldID) != m_ScriptFieldWidgets.cend())
 		{
-			if (m_ScriptFieldWidgets[aggregatedID])
+			if (m_ScriptFieldWidgets[fieldID])
 			{
-				m_ScriptFieldWidgets[aggregatedID]->Draw();
+				m_ScriptFieldWidgets[fieldID]->Draw();
 			}
 		}
 		else
 		{
-			m_ScriptFieldWidgets[aggregatedID] = Utils::ConstructFieldWidget<ScriptFieldInstance>(fieldInstance->GetFieldType(), aggregatedID, fieldInstance);
+			const FieldType type = fieldInstance->GetFieldType();
+			const auto widgetID = UUID();
+			if (type == FieldType::SeqCon)
+			{
+				m_ScriptFieldWidgets[fieldID] = Utils::ConstructFieldWidget(type, widgetID, std::static_pointer_cast<ScriptSequenceContainerFieldInstance>(fieldInstance));
+			}
+			else
+			{
+				m_ScriptFieldWidgets[fieldID] = Utils::ConstructFieldWidget(type, widgetID, fieldInstance);
+			}
 		}
 	}
 

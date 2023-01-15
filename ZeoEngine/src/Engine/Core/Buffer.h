@@ -49,6 +49,7 @@ namespace ZeoEngine {
 			Release();
 			Data = new U8[size];
 			Size = size;
+			memset(Data, 0, Size);
 		}
 
 		void Release()
