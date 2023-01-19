@@ -28,6 +28,7 @@ namespace ZeoEngine {
 		virtual float GetDragSpeed() const = 0;
 		virtual bool IsClampOnlyDuringDragging() const = 0;
 		virtual AssetTypeID GetAssetTypeID() const = 0;
+		virtual bool IsFieldDisabled() const = 0;
 
 		virtual void* GetValueRaw() = 0;
 		virtual void SetValueRaw(const void* value) = 0;

@@ -36,6 +36,7 @@ namespace ZeoEngine {
 		virtual float GetDragSpeed() const override;
 		virtual bool IsClampOnlyDuringDragging() const override;
 		virtual AssetTypeID GetAssetTypeID() const override;
+		virtual bool IsFieldDisabled() const override { return false; }
 
 		template<typename Type>
 		Type GetDragMin() const

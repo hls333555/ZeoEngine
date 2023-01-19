@@ -2,6 +2,7 @@
 #include "Engine/GameFramework/TypeRegistry.h"
 
 #include "Engine/Renderer/Sampler.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -64,6 +65,11 @@ namespace ZeoEngine {
 			return meshComp->LoadedMesh->GetMaterialNames()[index];
 		}
 		return {};
+	}
+
+	bool IsRuntime(IComponent* comp)
+	{
+		return SceneUtils::IsLevelRuntime();
 	}
 
 	void TypeRegistry::Init()
@@ -192,7 +198,7 @@ namespace ZeoEngine {
 			.Field<ScriptUpdateStage::PostPhysics>("PostPhysics");
 
 		RegisterComponent<ScriptComponent>("Script", std::make_pair(Category, "Scripts"))
-			.Field<&ScriptComponent::ClassName>("ClassName", std::make_pair(CustomWidget, &ConstructScriptClassFieldWidget))
+			.Field<&ScriptComponent::ClassName>("ClassName", std::make_pair(CustomWidget, &ConstructScriptClassFieldWidget), std::make_pair(DisableCondition, &IsRuntime))
 			.Field<&ScriptComponent::UpdateStage>("UpdateStage");
 
 		RegisterComponent<NativeScriptComponent>("Native Script", std::make_pair(Category, "Scripts"));

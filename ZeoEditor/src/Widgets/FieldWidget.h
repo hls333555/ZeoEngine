@@ -162,7 +162,10 @@ namespace ZeoEngine {
 			// Align widget width to the right side
 			ImGui::SetNextItemWidth(-1.0f);
 
-			ProcessDraw();
+			this->BeginDisabledDraw([this]()
+			{
+				ProcessDraw();
+			});
 
 			// Switch to the next row
 			ImGui::TableNextColumn();
@@ -186,6 +189,21 @@ namespace ZeoEngine {
 			
 			SetValue(value);
 			m_Instance->OnFieldValueChanged();
+		}
+
+		template<typename Func>
+		void BeginDisabledDraw(Func func)
+		{
+			const bool bDisabled = m_Instance->IsFieldDisabled();
+			if (bDisabled)
+			{
+				ImGui::BeginDisabled();
+			}
+			func();
+			if (bDisabled)
+			{
+				ImGui::EndDisabled();
+			}
 		}
 
 	private:
@@ -614,12 +632,18 @@ namespace ZeoEngine {
 			// Switch to the right column
 			ImGui::TableNextColumn();
 			// Add and clear buttons
-			DrawContainerOperationWidget();
+			this->BeginDisabledDraw([this]()
+			{
+				DrawContainerOperationWidget();
+			});
 			// Switch to the next row
 			ImGui::TableNextColumn();
 			if (bIsTreeExpanded)
 			{
-				this->ProcessDraw();
+				this->BeginDisabledDraw([this]()
+				{
+					this->ProcessDraw();
+				});
 
 				ImGui::TreePop();
 			}

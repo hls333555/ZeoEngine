@@ -151,7 +151,7 @@ namespace ZeoEngine {
 		auto bIsHiddenInEditor = ReflectionUtils::DoesPropertyExist(Reflection::HiddenInEditor, data);
 		if (bIsHiddenInEditor) return true;
 
-		auto hideCondition = ReflectionUtils::GetPropertyValue<HideConditionFunc>(Reflection::HideCondition, data);
+		const auto hideCondition = ReflectionUtils::GetPropertyValue<HideConditionFunc>(Reflection::HideCondition, data);
 		// HideCondition property is not set, show this data normally
 		if (!hideCondition) return false;
 

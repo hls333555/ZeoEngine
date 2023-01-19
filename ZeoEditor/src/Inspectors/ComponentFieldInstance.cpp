@@ -33,6 +33,15 @@ namespace ZeoEngine {
 		return ReflectionUtils::GetPropertyValue<AssetTypeID>(Reflection::AssetType, m_Data).value_or(0);
 	}
 
+	bool ComponentFieldInstance::IsFieldDisabled() const
+	{
+		const auto disableCondition = ReflectionUtils::GetPropertyValue<HideConditionFunc>(Reflection::DisableCondition, m_Data);
+		// DisableCondition property is not set, display this data normally
+		if (!disableCondition) return false;
+
+		return (*disableCondition)(GetValueInternal().try_cast<IComponent>());
+	}
+
 	std::string ComponentFieldInstance::GetFieldTooltip() const
 	{
 		const auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, m_Data);

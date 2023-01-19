@@ -22,6 +22,7 @@ namespace ZeoEngine {
 		virtual float GetDragSpeed() const override;
 		virtual bool IsClampOnlyDuringDragging() const override;
 		virtual AssetTypeID GetAssetTypeID() const override;
+		virtual bool IsFieldDisabled() const override;
 		virtual entt::meta_type GetFieldValueType() const { return m_Data.type(); }
 
 		entt::meta_data GetFieldData() const { return m_Data; }

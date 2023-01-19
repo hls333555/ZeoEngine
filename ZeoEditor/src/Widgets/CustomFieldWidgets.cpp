@@ -15,7 +15,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			auto value = fieldInstance->GetValue<std::string>();
+			auto value = fieldInstance->template GetValue<std::string>();
 			float rightPadding = 0.0f;
 			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
@@ -30,7 +30,7 @@ namespace ZeoEngine {
 		virtual bool IsValueChanged(const void* value) override
 		{
 			const auto& valueStr = *static_cast<const std::string*>(value);
-			const auto oldValueStr = this->GetFieldInstance()->GetValue<std::string>();
+			const auto oldValueStr = this->GetFieldInstance()->template GetValue<std::string>();
 			return valueStr != oldValueStr;
 		}
 
@@ -53,7 +53,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			U8 value = fieldInstance->GetValue<U8>();
+			U8 value = fieldInstance->template GetValue<U8>();
 			bool bIsTranslationXLocked = static_cast<U8>(ActorLockFlag::TranslationX) & value;
 			bool bIsTranslationYLocked = static_cast<U8>(ActorLockFlag::TranslationY) & value;
 			bool bIsTranslationZLocked = static_cast<U8>(ActorLockFlag::TranslationZ) & value;
@@ -177,7 +177,7 @@ namespace ZeoEngine {
 		virtual void ProcessDraw() override
 		{
 			const auto fieldInstance = this->GetFieldInstance();
-			auto value = fieldInstance->GetValue<U32>();
+			auto value = fieldInstance->template GetValue<U32>();
 			float rightPadding = 0.0f;
 			if constexpr (Utils::IsFieldSequenceContainerElement<FieldInstance>())
 			{
