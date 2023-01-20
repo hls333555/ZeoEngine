@@ -188,9 +188,9 @@ namespace ImGui {
 
 	bool ActiveTransparentButton(const char* label, bool bActive, const ImVec2& size_arg)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 0.0f)));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImGuiCol_ButtonHovered));
-		bool pressed = ImGui::ButtonEx(label, size_arg);
+		PushStyleColor(ImGuiCol_Button, bActive ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 0.0f)));
+		PushStyleColor(ImGuiCol_ButtonHovered, bActive ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(ImGuiCol_ButtonHovered));
+		bool pressed = ButtonEx(label, size_arg);
 		ImGui::PopStyleColor(2);
 		return pressed;
 	}

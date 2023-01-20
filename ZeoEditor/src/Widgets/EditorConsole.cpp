@@ -149,7 +149,7 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		LogFilter.Draw("##LogTextFilter", "Search log");
+		LogFilter.Draw("##LogTextFilter", ICON_FA_SEARCH " Search log");
 
 		ImGui::Separator();
 

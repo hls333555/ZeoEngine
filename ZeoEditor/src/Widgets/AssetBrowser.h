@@ -121,7 +121,7 @@ namespace ZeoEngine {
 							ImGui::SetKeyboardFocusHere();
 							ImGui::SetScrollHereY();
 						}
-						Filter.Draw("##AssetFilter", "Search assets");
+						Filter.Draw("##AssetFilter", ICON_FA_SEARCH " Search assets");
 
 						const float spacing = GImGui->Style.ItemSpacing.y;
 						const ImVec2 size = { -FLT_MIN, (itemHeight + spacing) * assetCount - spacing + ImGui::GetFramePadding().y * 2 };

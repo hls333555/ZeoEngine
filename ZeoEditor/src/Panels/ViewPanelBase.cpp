@@ -107,7 +107,7 @@ namespace ZeoEngine {
 
 	std::string ViewPanelBase::GetPanelTitle() const
 	{
-		std::string assetName = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle())->PathName;
+		const std::string& assetName = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle())->PathName;
 		ZE_CORE_ASSERT(!assetName.empty());
 		return fmt::format("{}###{}", assetName, GetPanelName());
 	}

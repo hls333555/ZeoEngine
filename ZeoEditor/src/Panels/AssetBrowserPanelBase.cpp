@@ -106,7 +106,7 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		m_Filter.Draw("##AssetBrowserFilter", "Search assets");
+		m_Filter.Draw("##AssetBrowserFilter", ICON_FA_SEARCH " Search assets");
 	}
 
 	void AssetBrowserPanelBase::DrawLeftColumn()

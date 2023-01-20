@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <IconsFontAwesome5.h>
 
 namespace ZeoEngine {
 
@@ -46,7 +47,7 @@ namespace ZeoEngine {
 		char                MinWordSize;    // Minimum number of characters before a word is used for matching, can help improve UX by avoiding mass matching against 1 or 2 characters
 
 		TextFilter(const char* default_filter = "", TextFilterMode default_filter_mode = TextFilterMode_And);
-		void Draw(const char* label = "Filter (inc -exc)", const char* hint = "Search", float width = 0.0f, ImGuiInputTextCallback inputCallback = 0, void* callbackData = nullptr);  // Helper calling InputText+Build
+		void Draw(const char* label = "Filter (inc -exc)", const char* hint = ICON_FA_SEARCH " Search", float width = 0.0f, ImGuiInputTextCallback inputCallback = 0, void* callbackData = nullptr);  // Helper calling InputText+Build
 		void DrawEmptyText();
 		bool PassFilter(const char* text, const char* text_end = NULL) const;
 		void Build();

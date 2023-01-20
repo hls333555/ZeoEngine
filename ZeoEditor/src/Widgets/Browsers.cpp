@@ -33,7 +33,7 @@ namespace ZeoEngine {
 					ImGui::SetKeyboardFocusHere();
 					ImGui::SetScrollHereY();
 				}
-				Filter.Draw("##CollisionLayerFilter", "Search collision layers");
+				Filter.Draw("##CollisionLayerFilter", ICON_FA_SEARCH " Search collision layers");
 
 				const ImVec2 size = { -FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * layerCount - GImGui->Style.ItemSpacing.y + ImGui::GetFramePadding().y * 2 };
 				if (ImGui::BeginListBox("##CollisionLayerBrowserList", size))
@@ -102,7 +102,7 @@ namespace ZeoEngine {
 					ImGui::SetKeyboardFocusHere();
 					ImGui::SetScrollHereY();
 				}
-				Filter.Draw("##CollisionGroupFilter", "Search collision groups");
+				Filter.Draw("##CollisionGroupFilter", ICON_FA_SEARCH " Search collision groups");
 
 				const ImVec2 size = { -FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * groupCount - GImGui->Style.ItemSpacing.y + ImGui::GetFramePadding().y * 2 };
 				if (ImGui::BeginListBox("##CollisionGroupBrowserList", size))
@@ -186,7 +186,7 @@ namespace ZeoEngine {
 					ImGui::SetKeyboardFocusHere();
 					ImGui::SetScrollHereY();
 				}
-				Filter.Draw("##EntityFilter", "Search entities");
+				Filter.Draw("##EntityFilter", ICON_FA_SEARCH " Search entities");
 
 				const float spacing = GImGui->Style.ItemSpacing.y;
 				const ImVec2 size = { -FLT_MIN, (itemHeight + spacing) * entityCount - spacing + ImGui::GetFramePadding().y * 2 };
@@ -304,7 +304,7 @@ namespace ZeoEngine {
 					ImGui::SetKeyboardFocusHere();
 					ImGui::SetScrollHereY();
 				}
-				Filter.Draw("##ScriptClassFilter", "Search scripts");
+				Filter.Draw("##ScriptClassFilter", ICON_FA_SEARCH " Search scripts");
 
 				const float spacing = GImGui->Style.ItemSpacing.y;
 				const ImVec2 size = { -FLT_MIN, (fontSize + spacing) * classCount - spacing + ImGui::GetFramePadding().y * 2 };

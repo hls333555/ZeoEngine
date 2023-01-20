@@ -403,4 +403,13 @@ namespace ZeoEngine {
 		virtual void OnSimulationStop() override;
 	};
 
+	class VisibilitySystem : public SystemBase
+	{
+	public:
+		using SystemBase::SystemBase;
+
+		virtual void OnPlayStart() override;
+		virtual void OnSimulationStart() override;
+	};
+
 }

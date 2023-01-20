@@ -36,6 +36,7 @@ namespace ZeoEngine {
 		EditorPreviewWorldBase::OnAttach();
 
 		RegisterSystem<CommandSystem>(this);
+		RegisterSystem<VisibilitySystem>(this);
 		RegisterSystem<BoundsSystem>(this);
 		RegisterSystem<LevelViewCameraSystem>(this);
 		RegisterSystem<MeshSystem>(this);

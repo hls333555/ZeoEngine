@@ -969,4 +969,14 @@ namespace ZeoEngine {
 		OnPlayStop();
 	}
 
+	void VisibilitySystem::OnPlayStart()
+	{
+		GetScene()->ClearTags<Tag::HideEntity>();
+	}
+
+	void VisibilitySystem::OnSimulationStart()
+	{
+		OnPlayStart();
+	}
+
 }
