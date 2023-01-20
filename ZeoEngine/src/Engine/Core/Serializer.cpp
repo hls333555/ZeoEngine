@@ -1,7 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
-#include "Project.h"
+#include "Engine/Core/Project.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/GameFramework/Components.h"
@@ -145,17 +145,12 @@ namespace ZeoEngine {
 	{
 		ZE_CORE_ASSERT(fieldInstance);
 
-		fieldInstance->Clear();
-		// TODO: Resize instead of insert every time
+		fieldInstance->ResizeWithDefault(seqNode.size());
 		U32 i = 0;
 		for (const auto& elementNode : seqNode)
 		{
-			bool res = fieldInstance->InsertDefault(i, true); // TODO: Can be false?
-			ZE_CORE_ASSERT(res, "Failed to insert sequence container elements during deserialization!");
-
 			fieldInstance->SetIndex(i);
 			EvaluateDeserializeField(elementNode, fieldInstance, true);
-
 			++i;
 		}
 	}

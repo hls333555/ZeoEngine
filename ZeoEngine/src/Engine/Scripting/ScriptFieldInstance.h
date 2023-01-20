@@ -152,6 +152,7 @@ namespace ZeoEngine {
 		bool InsertDefault(U32 index, bool bNeedsUpdateArray);
 		bool Erase(U32 index);
 		void Clear();
+		void ResizeWithDefault(SizeT size);
 		void MoveElement(U32 from, U32 to);
 
 		virtual void* GetValueRaw() override;

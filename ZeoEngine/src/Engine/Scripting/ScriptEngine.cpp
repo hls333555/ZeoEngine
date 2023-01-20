@@ -1052,7 +1052,7 @@ namespace ZeoEngine {
 			else
 			{
 				const U32 elementSize = GetElementSize();
-				// We do not call dtor here as we "construct" elements via memset
+				// We do not call dtor for that element as we "constructed" it via memset
 				for (U64 i = index + 1; i < m_ContainerSize; ++i)
 				{
 					memcpy(m_Buffer.Data + (i - 1) * elementSize, m_Buffer.Data + i * elementSize, elementSize);
@@ -1086,11 +1086,36 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				// We do not call dtor here as we "construct" elements via memset
+				// We do not call dtor for all elements as we "constructed" them via memset
 				m_Buffer.Release();
 			}
 			m_ContainerSize = 0;
 		}
+	}
+
+	void ScriptSequenceContainerFieldInstance::ResizeWithDefault(SizeT size)
+	{
+		ZE_CORE_ASSERT(!SceneUtils::IsLevelRuntime());
+
+		if (GetElementType() == FieldType::String)
+		{
+			auto* containerStringBuffer = m_Buffer.As<std::vector<std::string>>();
+			containerStringBuffer->resize(size);
+		}
+		else
+		{
+			const auto targetSize = size * GetElementSize();
+			if (targetSize > m_Buffer.Size)
+			{
+				m_Buffer = Buffer(targetSize);
+			}
+			else
+			{
+				// We do not call dtor for redundant elements as we "constructed" them via memset
+				memset(m_Buffer.Data, 0, targetSize);
+			}
+		}
+		m_ContainerSize = size;
 	}
 
 	void ScriptSequenceContainerFieldInstance::MoveElement(U32 from, U32 to)
