@@ -18,6 +18,7 @@ namespace ZeoEngine {
 		virtual void ProcessRender() override;
 
 		void DrawEntityNode(Entity entity) const;
+		bool DoesAnyChildPassFilter(const Entity& entity) const;
 
 	private:
 		EditorPreviewWorldBase* m_EditorWorld = nullptr;

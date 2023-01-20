@@ -120,23 +120,8 @@ namespace ZeoEngine {
 
 	void LevelOutlinePanel::DrawEntityNode(Entity entity) const
 	{
-		const char* entityName = entity.GetName().c_str();
-		
-		auto doesAnyChildrenPassFilter = [&]()
-		{
-			for (const UUID childID : entity.GetChildren())
-			{
-				const auto scene = m_EditorWorld->GetActiveScene();
-				Entity child = scene->GetEntityByUUID(childID);
-				if (m_Filter.PassFilter(child.GetName().c_str()))
-				{
-					return true;
-				}
-			}
-			return false;
-		};
-		
-		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName) || doesAnyChildrenPassFilter())
+		const char* entityName = entity.GetName().c_str();		
+		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName) || DoesAnyChildPassFilter(entity))
 		{
 			auto selectedEntity = m_EditorWorld->GetContextEntity();
 			bool bHasAnyChildren = entity.HasAnyChildren();
@@ -221,6 +206,20 @@ namespace ZeoEngine {
 			}
 		}
 		
+	}
+
+	bool LevelOutlinePanel::DoesAnyChildPassFilter(const Entity& entity) const
+	{
+		const auto scene = m_EditorWorld->GetActiveScene();
+		for (const UUID childID : entity.GetChildren())
+		{
+			const Entity child = scene->GetEntityByUUID(childID);
+			if (m_Filter.PassFilter(child.GetName().c_str()) || DoesAnyChildPassFilter(child))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
