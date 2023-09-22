@@ -4,8 +4,8 @@
 #include "Panels/PanelBase.h"
 #include "Engine/Events/KeyEvent.h"
 #include "Engine/Core/EngineTypes.h"
-#include "Engine/ImGui/TextFilter.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Widgets/TextFilter.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 		const auto& GetSelectedDirectory() const { return m_SelectedDirectory; }
 		void SetSelectedDirectory(std::string directory) { m_SelectedDirectory = std::move(directory); }
 		const auto& GetSelectedPath() const { return m_SelectedPath; }
-		void SetSelectedPath(const std::string& path) { m_SelectedPath = path; SetSelectedDirectory(PathUtils::GetParentPath(path)); m_bFocusSelectedPath = true; }
+		void SetSelectedPath(const std::string& path) { m_SelectedPath = path; SetSelectedDirectory(FileSystemUtils::GetParentPath(path)); m_bFocusSelectedPath = true; }
 
 	protected:
 		constexpr float GetSelectableThumbnailWidth() const { return 32.0f; }
@@ -32,7 +32,7 @@ namespace ZeoEngine {
 		void SetForceUpdateFilterCache(bool bValue) { m_bForceUpdateFilterCache = bValue; }
 		virtual bool IsAnyFilterActive() const { return m_Filter.IsActive(); }
 		virtual bool ShouldUpdateFilterCache() const { return m_Filter.bIsInputBufferChanged || m_bForceUpdateFilterCache; }
-		virtual bool PassFilter(const Ref<PathMetadata>& metadata) const { return true; }
+		virtual bool PassFilter(const PathMetadata* metadata) const { return true; }
 		/** Clear type filter and search filter. */
 		virtual void ClearAllFilters();
 
@@ -71,18 +71,18 @@ namespace ZeoEngine {
 		void DrawWindowContextMenu();
 		virtual void DrawWindowContextMenuImpl(float thumbnailWidth) {}
 
-		virtual bool ShouldDrawPath(const Ref<PathMetadata>& metadata) { return true; }
-		void DrawSelectablePath(const Ref<PathMetadata>& metadata);
-		void DrawTilePath(const Ref<PathMetadata>& metadata);
+		virtual bool ShouldDrawPath(const PathMetadata* metadata) { return true; }
+		void DrawSelectablePath(const PathMetadata* metadata);
+		void DrawTilePath(const PathMetadata* metadata);
 		virtual void OnPathSelected(const std::string& path) {}
 
-		void DrawPathTooltip(const Ref<PathMetadata>& metadata) const;
+		void DrawPathTooltip(const PathMetadata* metadata) const;
 		void DrawPathContextMenu(const std::string& path);
 		virtual void DrawPathContextMenuItem_Save(const std::string& path, bool bIsAsset) {}
-		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata) {}
+		virtual void DrawPathContextMenuItem_Asset(const std::string& path, const AssetMetadata* metadata) {}
 
-		virtual void ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding) {}
-		void SubmitPathRenaming(char* renameBuffer, const Ref<PathMetadata>& metadata, bool& bHasKeyboardFocused);
+		virtual void ProcessAssetDragging(const PathMetadata* metadata, float thumbnailRounding) {}
+		void SubmitPathRenaming(char* renameBuffer, const PathMetadata* metadata, bool& bHasKeyboardFocused);
 
 		void HandleRightColumnDirectoryOpen(const std::string& directory);
 		virtual void HandleRightColumnAssetOpen(const std::string& path) = 0;
@@ -91,8 +91,9 @@ namespace ZeoEngine {
 		void ProcessPathRenaming(const std::string& oldPath, const std::string& newPath, AssetTypeID typeID);
 
 	private:
+		bool m_bFirstFrame = true;
 		float m_LeftColumnWidth = 200.0f;
-		U32 m_LeftColumnWindowId;
+		U32 m_LeftColumnWindowID;
 
 		enum class AssetBrowserViewType
 		{

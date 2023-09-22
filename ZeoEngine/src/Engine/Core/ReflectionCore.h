@@ -106,29 +106,34 @@ namespace entt {
 namespace ZeoEngine {
 
     using HideConditionFunc = bool(*)(struct IComponent* component);
-    using CustomSequenceContainerElementNameFunc = std::string(*)(struct IComponent* component, U32 fieldID, U32 elementIndex);
+    using DisableConditionFunc = bool(*)(IComponent* component);
+    using CustomSequenceContainerElementNameFunc = std::string(*)(IComponent* component, U32 fieldID, U32 elementIndex);
+    using CustomWidgetConstructFunc = Scope<class IFieldWidget> (*)(UUID widgetID, Ref<class ComponentFieldInstance> fieldInstance);
 
     namespace Reflection {
 
         // Properties are bound to certain component and do not support inheritance
+        // For properties available for scripting, see Attributes in Script-Core
         enum PropertyType
         {
             Name,						// [value_type: const char*] Name of component or field.
             Inherent,					// [key_only] This component cannot be added or removed within the editor.
             Tooltip,					// [value_type: const char*] Tooltip of component or field.
-            Struct,						// [key_only] This field has sub-fields and will display a special TreeNode.
+            Struct,						// [key_only] This field has sub-fields and will display a special TreeNode. // TODO: Remove?
             HideComponentHeader,		// [key_only] This component will not display the collapsing header.
             Category,					// [value_type: const char*] Category of component or field.
             HiddenInEditor,				// [key_only] Should hide this field in the editor?
-            HideCondition,				// [value_type: HideConditionFunc] Hide this field if provided function returns true.
+            HideCondition,				// [value_type: HideConditionFunc] Hide this field if provided function yields true.
+            DisableCondition,			// [value_type: DisableConditionFunc] Disable this field if provided function yields true.
             Transient,					// [key_only] If set, this component or data will not get serialized.
 
             DragSensitivity,			// [value_type: float] Speed of dragging.
             ClampMin,					// [value_type: type_dependent] Min value.
             ClampMax,					// [value_type: type_dependent] Max value.
-            ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is not set, input value will not get clamped.
-            FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements are not allowed.
+            ClampOnlyDuringDragging,	// [key_only] Should value be clamped only during dragging? If this property is set, input value will not get clamped.
+            FixedSizeContainer,			// [key_only] Containers are fixed size so that adding or erasing elements in editor is not allowed.
             CustomElementName,			// [value_type: CustomSequenceContainerElementNameFunc] Container's element name are retrieved from a free function.
+            CustomWidget,			    // [value_type: CustomWidgetConstructFunc] Custom field widget construction function. The returned widget class should be derived from FieldWidgetBase or FieldWidgetBufferBase. This property only applies to component fields.
             AssetType,					// [value_type: AssetTypeID] Type ID of asset.
 
         };

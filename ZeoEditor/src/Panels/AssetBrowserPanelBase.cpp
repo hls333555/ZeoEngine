@@ -7,6 +7,7 @@
 #include "Engine/Asset/AssetManager.h"
 #include "Engine/Asset/AssetFactory.h"
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Core/ThumbnailManager.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Profile/BenchmarkTimer.h"
@@ -18,7 +19,7 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::OnAttach()
 	{
-		m_SelectedDirectory = AssetRegistry::GetProjectPathPrefix();
+		m_SelectedDirectory = CommonPaths::GetProjectAssetDirectoryStandard();
 	}
 
 	void AssetBrowserPanelBase::ProcessRender()
@@ -39,7 +40,11 @@ namespace ZeoEngine {
 
 			ImGui::SameLine(0.0f, spacing);
 
-			DrawColumnSplitter(contentWidth);
+			// WORKAROUND: Fix incorrect width returned from GetContentRegionAvail() the first frame
+			if (!m_bFirstFrame)
+			{
+				DrawColumnSplitter(contentWidth);
+			}
 
 			ImGui::SameLine(0.0f, spacing);
 
@@ -54,6 +59,8 @@ namespace ZeoEngine {
 
 			DrawBottom();
 		}
+
+		m_bFirstFrame = false;
 	}
 
 	void AssetBrowserPanelBase::ProcessEvent(Event& e)
@@ -99,7 +106,7 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		m_Filter.Draw("##AssetBrowserFilter", "Search assets");
+		m_Filter.Draw("##AssetBrowserFilter", ICON_FA_SEARCH " Search assets");
 	}
 
 	void AssetBrowserPanelBase::DrawLeftColumn()
@@ -114,12 +121,12 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::DrawDirectoryTree()
 	{
-		m_LeftColumnWindowId = ImGui::GetCurrentWindow()->ID;
+		m_LeftColumnWindowID = ImGui::GetCurrentWindow()->ID;
 
-		const std::string projectAssetDir = AssetRegistry::GetProjectPathPrefix();
+		const std::string projectAssetDir = CommonPaths::GetProjectAssetDirectoryStandard();
 		ImGuiTreeNodeFlags flags = (m_SelectedDirectory == projectAssetDir ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-		const auto directoryMetadata = AssetRegistry::Get().GetPathMetadata<DirectoryMetadata>(projectAssetDir);
+		auto* directoryMetadata = AssetRegistry::Get().GetPathMetadata<DirectoryMetadata>(projectAssetDir);
 		const char* rootDirectoryName = directoryMetadata->bIsTreeExpanded ? ICON_FA_FOLDER_OPEN " Assets###Assets" : ICON_FA_FOLDER " Assets###Assets";
 		directoryMetadata->bIsTreeExpanded = ImGui::TreeNodeEx(rootDirectoryName, flags);
 		directoryMetadata->TreeNodeId = ImGui::GetCurrentWindow()->GetID(rootDirectoryName);
@@ -140,7 +147,7 @@ namespace ZeoEngine {
 		AssetRegistry& ar = AssetRegistry::Get();
 		ar.ForEachPathInDirectory(baseDirectory, [this, &ar](const std::string& path)
 		{
-			const auto directoryMetadata = ar.GetPathMetadata<DirectoryMetadata>(path);
+			auto* directoryMetadata = ar.GetPathMetadata<DirectoryMetadata>(path);
 			if (!directoryMetadata) return;
 
 			char directoryName[MAX_PATH_SIZE] = ICON_FA_FOLDER " ";
@@ -276,7 +283,7 @@ namespace ZeoEngine {
 					ImGui::Indent(tableOffset);
 					for (const auto& path : paths)
 					{
-						const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+						const auto* metadata = AssetRegistry::Get().GetPathMetadata(path);
 						if (ShouldDrawPath(metadata))
 						{
 							ImGui::TableNextColumn();
@@ -312,7 +319,7 @@ namespace ZeoEngine {
 				{
 					for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
 					{
-						const auto metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
+						const auto* metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
 						if (ShouldDrawPath(metadata))
 						{
 							DrawSelectablePath(metadata);
@@ -344,7 +351,7 @@ namespace ZeoEngine {
 
 			AssetRegistry::Get().ForEachPathInDirectoryRecursively(m_SelectedDirectory, [this](const std::string& path)
 			{
-				const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+				const auto* metadata = AssetRegistry::Get().GetPathMetadata(path);
 				if (!metadata->IsAsset()) return;
 
 				if (m_Filter.PassFilter(metadata->PathName.c_str()))
@@ -376,7 +383,7 @@ namespace ZeoEngine {
 				ImGui::Indent(tableOffset);
 				for (const auto& filteredPath : m_FilteredPaths)
 				{
-					const auto metadata = AssetRegistry::Get().GetPathMetadata(filteredPath);
+					const auto* metadata = AssetRegistry::Get().GetPathMetadata(filteredPath);
 					if (ShouldDrawPath(metadata))
 					{
 						ImGui::TableNextColumn();
@@ -398,7 +405,7 @@ namespace ZeoEngine {
 			{
 				for (auto index = clipper.DisplayStart; index < clipper.DisplayEnd; ++index)
 				{
-					const auto metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
+					const auto* metadata = AssetRegistry::Get().GetPathMetadata(*(it + index));
 					if (ShouldDrawPath(metadata))
 					{
 						DrawSelectablePath(metadata);
@@ -485,7 +492,7 @@ namespace ZeoEngine {
 		strcpy_s(newName, baseName);
 		if (bIsAsset)
 		{
-			strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+			strcat_s(newName, AssetRegistry::GetAssetExtension());
 		}
 		auto newPath = fmt::format("{}/{}", m_SelectedDirectory, newName);
 		while (AssetRegistry::Get().ContainsPathInDirectory(m_SelectedDirectory, newPath))
@@ -495,14 +502,14 @@ namespace ZeoEngine {
 			strcat_s(newName, suffix);
 			if (bIsAsset)
 			{
-				strcat_s(newName, AssetRegistry::GetEngineAssetExtension());
+				strcat_s(newName, AssetRegistry::GetAssetExtension());
 			}
 			newPath = fmt::format("{}/{}", m_SelectedDirectory, newName);
 		}
 		return newPath;
 	}
 
-	void AssetBrowserPanelBase::DrawSelectablePath(const Ref<PathMetadata>& metadata)
+	void AssetBrowserPanelBase::DrawSelectablePath(const PathMetadata* metadata)
 	{
 		const auto& path = metadata->Path;
 		// Push path as id
@@ -599,7 +606,7 @@ namespace ZeoEngine {
 		ImGui::PopID();
 	}
 
-	void AssetBrowserPanelBase::DrawTilePath(const Ref<PathMetadata>& metadata)
+	void AssetBrowserPanelBase::DrawTilePath(const PathMetadata* metadata)
 	{
 		const auto& path = metadata->Path;
 		// Push path as id
@@ -707,7 +714,7 @@ namespace ZeoEngine {
 	}
 
 	// TODO: Add path tooltip implementation to AssetActions
-	void AssetBrowserPanelBase::DrawPathTooltip(const Ref<PathMetadata>& metadata) const
+	void AssetBrowserPanelBase::DrawPathTooltip(const PathMetadata* metadata) const
 	{
 		if (ImGui::IsItemHovered())
 		{
@@ -716,7 +723,7 @@ namespace ZeoEngine {
 			ImGui::Separator();
 			ImGui::Text("Type: %s", metadata->IsAsset() ? AssetManager::Get().GetAssetFactoryByAssetType(metadata->GetAssetTypeID())->GetAssetTypeName() : "Folder");
 			ImGui::Text("Path: %s", metadata->Path.c_str());
-			if (const auto assetMetadata = std::dynamic_pointer_cast<AssetMetadata>(metadata))
+			if (const auto* assetMetadata = dynamic_cast<const AssetMetadata*>(metadata))
 			{
 				if (assetMetadata->IsImportableAsset())
 				{
@@ -733,7 +740,7 @@ namespace ZeoEngine {
 		{
 			m_SelectedPath = path;
 
-			const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+			const auto* metadata = AssetRegistry::Get().GetPathMetadata(path);
 			const bool bIsAsset = metadata->IsAsset();
 
 			if (ImGui::MenuItem("Rename", "F2"))
@@ -760,12 +767,12 @@ namespace ZeoEngine {
 
 			if (bIsAsset)
 			{
-				DrawPathContextMenuItem_Asset(path, std::static_pointer_cast<AssetMetadata>(metadata));
+				DrawPathContextMenuItem_Asset(path, static_cast<const AssetMetadata*>(metadata));
 			}
 
 			if (ImGui::MenuItem("Show In Explorer"))
 			{
-				PlatformUtils::ShowInExplorer(PathUtils::GetFileSystemPath(path));
+				PlatformUtils::ShowInExplorer(FileSystemUtils::GetFileSystemPath(path));
 			}
 			if (ImGui::IsItemHovered())
 			{
@@ -776,7 +783,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void AssetBrowserPanelBase::SubmitPathRenaming(char* renameBuffer, const Ref<PathMetadata>& metadata, bool& bHasKeyboardFocused)
+	void AssetBrowserPanelBase::SubmitPathRenaming(char* renameBuffer, const PathMetadata* metadata, bool& bHasKeyboardFocused)
 	{
 		// ImGui::IsItemDeactivated() will not get called for right-click, so we add these specific check
 		if (ImGui::IsItemDeactivated() || (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !ImGui::IsItemHovered()))
@@ -784,10 +791,10 @@ namespace ZeoEngine {
 			if (metadata->IsAsset())
 			{
 				// Add engine file extension automatically
-				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetEngineAssetExtension());
+				strcat_s(renameBuffer, MAX_PATH_SIZE, AssetRegistry::GetAssetExtension());
 			}
 			const auto& path = metadata->Path;
-			const auto parentPath = PathUtils::GetParentPath(path);
+			const auto parentPath = FileSystemUtils::GetParentPath(path);
 			auto newPath = fmt::format("{}/{}", parentPath, renameBuffer);
 			if (newPath != path && AssetRegistry::Get().ContainsPathInDirectory(parentPath, newPath))
 			{
@@ -804,14 +811,14 @@ namespace ZeoEngine {
 	{
 		m_SelectedDirectory = directory;
 
-		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowId)->DC.StateStorage;
+		ImGuiStorage* storage = ImGui::FindWindowByID(m_LeftColumnWindowID)->DC.StateStorage;
 		// Manually toggle upper-level tree node open iteratively
 		auto currentDirectory = directory;
 		const auto& ar = AssetRegistry::Get();
-		while (currentDirectory != AssetRegistry::GetProjectPathPrefix())
+		while (currentDirectory != CommonPaths::GetProjectAssetDirectoryStandard())
 		{
 			storage->SetInt(ar.GetPathMetadata<DirectoryMetadata>(currentDirectory)->TreeNodeId, true);
-			currentDirectory = PathUtils::GetParentPath(currentDirectory);
+			currentDirectory = FileSystemUtils::GetParentPath(currentDirectory);
 		}
 		storage->SetInt(ar.GetPathMetadata<DirectoryMetadata>(currentDirectory)->TreeNodeId, true);
 
@@ -839,7 +846,7 @@ namespace ZeoEngine {
 
 	void AssetBrowserPanelBase::RequestPathCreationForResourceAsset(const std::string& srcPath, const std::string& destPath)
 	{
-		PathUtils::CopyAsset(srcPath, destPath);
+		FileSystemUtils::CopyAsset(srcPath, destPath);
 		AssetRegistry::Get().OnPathCreated(destPath, true);
 		ClearAllFilters(); // Keep filters active during path creation is meaningless
 	}
@@ -864,7 +871,7 @@ namespace ZeoEngine {
 	{
 		if (!path.empty())
 		{
-			const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+			const auto* metadata = AssetRegistry::Get().GetPathMetadata(path);
 			if (metadata->IsAsset())
 			{
 				HandleRightColumnAssetOpen(path);
@@ -887,11 +894,11 @@ namespace ZeoEngine {
 
 			if (ImGui::Button("OK", buttonSize))
 			{
-				const auto metadata = AssetRegistry::Get().GetPathMetadata(path);
+				const auto* metadata = AssetRegistry::Get().GetPathMetadata(path);
 				if (!metadata->IsAsset())
 				{
 					// Delete a directory
-					PathUtils::DeletePath(path);
+					FileSystemUtils::DeletePath(path);
 					AssetRegistry::Get().OnPathRemoved(path);
 				}
 				else
@@ -935,7 +942,7 @@ namespace ZeoEngine {
 				}
 				else
 				{
-					PathUtils::RenamePath(oldPath, newPath);
+					FileSystemUtils::RenamePath(oldPath, newPath);
 				}
 			}
 		}
@@ -948,7 +955,7 @@ namespace ZeoEngine {
 			}
 			else
 			{
-				PathUtils::CreateDirectory(newPath);
+				FileSystemUtils::CreateDirectory(newPath);
 			}
 			m_PathToCreate.clear();
 		}

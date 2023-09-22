@@ -128,6 +128,7 @@ namespace ZeoEngine {
 		childComp.ParentEntity = parent.GetUUID();
 		auto& parentComp = parent.GetComponent<RelationshipComponent>();
 		parentComp.ChildEntities.emplace_back(entity.GetUUID());
+		childComp.HierarchyDepth = parentComp.HierarchyDepth + 1;
 
 		auto& transformComp = entity.GetComponent<TransformComponent>();
 		entity.AddComponent<WorldTransformComponent>(transformComp.Translation, transformComp.GetRotationInRadians(), transformComp.Scale);
@@ -149,6 +150,7 @@ namespace ZeoEngine {
 
 		auto& childComp = entity.GetComponent<RelationshipComponent>();
 		childComp.ParentEntity = 0;
+		childComp.HierarchyDepth = 0;
 
 		entity.RemoveComponent<WorldTransformComponent>();
 	}
@@ -199,10 +201,8 @@ namespace ZeoEngine {
 
 	Entity Scene::GetEntityByUUID(UUID uuid) const
 	{
-		if (m_Entities.find(uuid) != m_Entities.end())
-		{
-			return m_Entities.at(uuid);
-		}
+		const auto it = m_Entities.find(uuid);
+		if (it != m_Entities.end()) return it->second;
 		return {};
 	}
 

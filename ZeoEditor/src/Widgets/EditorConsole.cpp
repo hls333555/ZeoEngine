@@ -1,5 +1,4 @@
-#include "ZEpch.h"
-#include "Engine/ImGui/EditorConsole.h"
+#include "Widgets/EditorConsole.h"
 
 #include <IconsFontAwesome5.h>
 
@@ -21,6 +20,7 @@ namespace ZeoEngine {
 		}
 		ClearLog();
 		ClearCommand();
+		Console::Get().m_OnCommandRegistered.connect<&EditorConsole::AddCommand>(this);
 	}
 
 	void EditorConsole::ClearLog()
@@ -149,7 +149,7 @@ namespace ZeoEngine {
 
 		ImGui::SameLine();
 
-		LogFilter.Draw("##LogTextFilter", "Search log");
+		LogFilter.Draw("##LogTextFilter", ICON_FA_SEARCH " Search log");
 
 		ImGui::Separator();
 

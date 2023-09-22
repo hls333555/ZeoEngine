@@ -5,8 +5,11 @@
 #include <thread>
 #include <entt.hpp>
 
+#include "Engine/Core/Project.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Core/Core.h"
 #include "Engine/Profile/Profiler.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -14,40 +17,40 @@ namespace ZeoEngine {
 	class FileWatcher
 	{
 	public:
-		FileWatcher(std::vector<std::filesystem::path> directoriesToWatch, std::chrono::duration<I32, std::milli> interval)
-			: m_DirectoriesToWatch(std::move(directoriesToWatch))
-			, m_Interval(interval)
+		explicit FileWatcher(std::chrono::duration<I32, std::milli> interval)
+			: m_Interval(interval)
 		{
-			for (auto& directoryToWatch : m_DirectoriesToWatch)
-			{
-				// Directory to watch must use absolute path!
-				directoryToWatch = std::filesystem::canonical(directoryToWatch);
-				for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryToWatch))
-				{
-					if (entry.is_directory()) continue;
-
-					m_WatchedFiles[entry.path()] = std::filesystem::last_write_time(entry);
-				}
-			}
-
-			ZE_CORE_TRACE("File watcher initialized");
-
-			Start();
+			Project::GetProjectLoadedDelegate().connect<&FileWatcher::Start>(this);
+			Project::GetProjectUnloadedDelegate().connect<&FileWatcher::Stop>(this);
 		}
 
 		~FileWatcher()
 		{
+			Stop();
+		}
+		
+		void Start()
+		{
+			AddDirectoryToWatch(CommonPaths::GetEngineAssetDirectory());
+			AddDirectoryToWatch(CommonPaths::GetProjectAssetDirectory());
+			AddDirectoryToWatch(FileSystemUtils::GetParentPath(CommonPaths::GetCoreAssemblyPath()));
+			m_FileWatcherThread = CreateScope<std::thread>(&FileWatcher::Execute, this);
+			m_bIsRunning = true;
+		}
+
+		void Stop()
+		{
+			if (!m_bIsRunning) return;
+
 			{
 				std::lock_guard<std::mutex> lock(m_Mutex);
 				m_bIsRunning = false;
 			}
 			m_CV.notify_one();
 			m_FileWatcherThread->join();
-		}
-		
-		void Start()
-		{
-			m_FileWatcherThread = CreateScope<std::thread>(&FileWatcher::Execute, this);
+
+			m_DirectoriesToWatch.clear();
+			m_WatchedFiles.clear();
 		}
 
 	private:
@@ -115,6 +118,19 @@ namespace ZeoEngine {
 			}
 		}
 
+		void AddDirectoryToWatch(const std::filesystem::path& directory)
+		{
+			// Directory to watch must use absolute path!
+			auto absoluteDirectory = std::filesystem::canonical(directory);
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(absoluteDirectory))
+			{
+				if (entry.is_directory()) continue;
+
+				m_WatchedFiles[entry.path()] = std::filesystem::last_write_time(entry);
+			}
+			m_DirectoriesToWatch.emplace_back(absoluteDirectory);
+		}
+
 	public:
 		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileAdded{ m_OnFileAddedDel };
 		entt::sink<entt::sigh<void(const std::string&)>> m_OnFileModified{ m_OnFileModifiedDel };
@@ -130,7 +146,7 @@ namespace ZeoEngine {
 
 		mutable std::mutex m_Mutex;
 		mutable std::condition_variable m_CV;
-		bool m_bIsRunning = true;
+		bool m_bIsRunning = false;
 		Scope<std::thread> m_FileWatcherThread;
 
 		entt::sigh<void(const std::string&)> m_OnFileAddedDel, m_OnFileModifiedDel, m_OnFileRemovedDel;

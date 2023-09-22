@@ -38,6 +38,8 @@ namespace ZeoEngine {
 		static U32 AddLayer(const std::string& name);
 		static void RemoveLayer(U32 layerID);
 		static I32 GetLayer(const std::string& layerName);
+		static std::string GetLayerName(U32 layerID);
+		static const auto& GetLayers() { return s_Layers; }
 		static bool IsValidLayer(U32 layerID);
 		static void SetLayerName(U32 layerID, const std::string& name);
 		static void ClearLayers();
@@ -45,6 +47,8 @@ namespace ZeoEngine {
 		static U32 AddGroup(const std::string& name);
 		static void RemoveGroup(U32 groupID);
 		static I32 GetGroup(const std::string& groupName);
+		static std::string GetGroupName(U32 groupID);
+		static const auto& GetGroups() { return s_Groups; }
 		static U32 GetGroupLayerMask(U32 groupID);
 		static bool IsValidGroup(U32 groupID);
 		static void SetGroupName(U32 groupID, const std::string& name);

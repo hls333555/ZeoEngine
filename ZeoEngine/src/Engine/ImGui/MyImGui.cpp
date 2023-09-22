@@ -63,6 +63,22 @@ namespace ImGui {
 		return is_open;
 	}
 
+	bool BeginComboFilterWithPadding(const char* label, const char* preview_value, int itemCount, float itemSize, float otherSize, ImGuiComboFlags flags)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+		if (!(GImGui->NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+		{
+			const float popupHeight = otherSize +
+			ImGui::GetFontSize() + ImGui::GetFramePadding().y * 2 + // = Search box height
+				(itemSize + GImGui->Style.ItemSpacing.y) * itemCount - GImGui->Style.ItemSpacing.y + ImGui::GetFramePadding().y * 5 + // > List box height
+				GImGui->Style.WindowPadding.y * 2;
+			ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, popupHeight));
+		}
+		bool res = BeginCombo(label, preview_value, flags);
+		ImGui::PopStyleVar();
+		return res;
+	}
+
 	static const ImGuiDataTypeInfo GDataTypeInfo[] =
 	{
 		{ sizeof(char),             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
@@ -172,9 +188,9 @@ namespace ImGui {
 
 	bool ActiveTransparentButton(const char* label, bool bActive, const ImVec2& size_arg)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 0.0f)));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, bActive ? ImGui::GetColorU32(ImGuiCol_ButtonActive) : ImGui::GetColorU32(ImGuiCol_ButtonHovered));
-		bool pressed = ImGui::ButtonEx(label, size_arg);
+		PushStyleColor(ImGuiCol_Button, bActive ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 0.0f)));
+		PushStyleColor(ImGuiCol_ButtonHovered, bActive ? GetColorU32(ImGuiCol_ButtonActive) : GetColorU32(ImGuiCol_ButtonHovered));
+		bool pressed = ButtonEx(label, size_arg);
 		ImGui::PopStyleColor(2);
 		return pressed;
 	}
@@ -295,12 +311,15 @@ namespace ImGui {
 	void VSplitter(const char* str_id, ImVec2* size)
 	{
 		ImVec2 screen_pos = GetCursorScreenPos();
-		InvisibleButton(str_id, ImVec2(3, size->y == 0 ? -1 : size->y));
-		ImVec2 end_pos = screen_pos + GetItemRectSize();
+		float interactWidth = 5.0f;
+		float visualWidth = 1.0f;
+		InvisibleButton(str_id, ImVec2(interactWidth, size->y == 0 ? -1 : size->y));
+		ImVec2 begin_pos = screen_pos + ImVec2(interactWidth / 2 - 0.5f, 0);
+		ImVec2 end_pos = begin_pos + ImVec2(visualWidth, GetItemRectSize().y);
 		ImGuiWindow* window = GetCurrentWindow();
 		ImVec4* colors = GetStyle().Colors;
 		ImU32 color = GetColorU32(IsItemActive() ? colors[ImGuiCol_SeparatorActive] : (IsItemHovered() ? colors[ImGuiCol_SeparatorHovered] : colors[ImGuiCol_Separator]));
-		window->DrawList->AddRectFilled(screen_pos, end_pos, color);
+		window->DrawList->AddRectFilled(begin_pos, end_pos, color);
 		if (IsItemHovered())
 		{
 			SetMouseCursor(ImGuiMouseCursor_ResizeEW);

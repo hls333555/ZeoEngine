@@ -37,8 +37,8 @@ namespace ZeoEngine {
 	public:
 		Profiler();
 
-		PerformanceProfiler& GetPerformanceProfiler() { return m_PerfProfiler; }
-		RenderDoc& GetRenderDoc() { return m_RenderDoc; }
+		PerformanceProfiler* GetPerformanceProfiler() { return &m_PerfProfiler; }
+		RenderDoc* GetRenderDoc() { return &m_RenderDoc; }
 
 	private:
 		PerformanceProfiler m_PerfProfiler;

@@ -22,6 +22,7 @@ namespace ZeoEngine {
 		virtual const entt::sigh<void()>& GetAssetReloadedDelegate() const = 0;
 	};
 
+	// NOTE: When adding a new asset type, don't forget to register it! See TypeRegistry::RegisterAssets and AssetManager::Init.
 	template<typename AssetClass>
 	class AssetBase : public IAsset, public std::enable_shared_from_this<AssetClass>
 	{
@@ -49,6 +50,14 @@ namespace ZeoEngine {
 			auto view = entt::type_name<AssetClass>::value();
 			auto separator = view.rfind("::");
 			return view.substr(separator + 2, view.size() - separator);
+		}
+
+		static std::string GetMonoAssetName()
+		{
+			auto view = entt::type_name<AssetClass>::value();
+			auto separator = view.find("::");
+			SizeT startPos = 6; // Excluding "class "
+			return fmt::format("{}.{}", view.substr(startPos, separator - startPos), view.substr(separator + 2, view.size() - separator));
 		}
 
 		virtual AssetTypeID GetTypeID() const override final { return TypeID(); }

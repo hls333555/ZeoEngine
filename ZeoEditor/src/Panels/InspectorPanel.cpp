@@ -59,7 +59,7 @@ namespace ZeoEngine {
 		{
 			return fmt::format("Entity: {}", lastData.LevelSelectedEntity.GetName());
 		}
-		return fmt::format("Asset: {}", PathUtils::GetPathName(lastData.AssetPath));
+		return fmt::format("Asset: {}", FileSystemUtils::GetPathName(lastData.AssetPath));
 	}
 
 	void InspectorPanel::ProcessUpdate(DeltaTime dt)

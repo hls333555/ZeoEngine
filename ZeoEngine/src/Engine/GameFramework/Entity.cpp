@@ -462,4 +462,45 @@ namespace ZeoEngine {
 			coreComp.OrderedComponents.end());
 	}
 
+	void Entity::AddBillboardTexture(const std::string& texturePath)
+	{
+		auto textureAsset = AssetLibrary::LoadAsset<Texture2D>(texturePath);
+		auto& billboardComp = GetOrAddComponent<BillboardComponent>();
+		// If billboard texture is already filled, we do not replace it
+		if (!billboardComp.TextureAsset)
+		{
+			billboardComp.TextureAsset = textureAsset;
+		}
+		auto& billboardStackComp = GetOrAddComponent<BillboardStackComponent>();
+		billboardStackComp.TextureAssets.emplace_back(std::move(textureAsset));
+	}
+
+	void Entity::RemoveBillboardTexture(const std::string& texturePath)
+	{
+		if (!HasComponent<BillboardComponent>() || !HasComponent<BillboardStackComponent>()) return; // When entity is destroyed, those components may have been destroyed
+
+		auto& billboardStackComp = GetComponent<BillboardStackComponent>();
+		ZE_CORE_ASSERT(!billboardStackComp.TextureAssets.empty());
+		const auto textureAsset = AssetLibrary::LoadAsset<Texture2D>(texturePath);
+		auto& textureAssets = billboardStackComp.TextureAssets;
+		const auto it = std::find(textureAssets.begin(), textureAssets.end(), textureAsset);
+		ZE_CORE_ASSERT(it != textureAssets.end());
+		if (it == textureAssets.begin())
+		{
+			if (textureAssets.size() > 1)
+			{
+				// If we have other components that have billboard textures, update current texture to the next one
+				auto& billboardComp = GetComponent<BillboardComponent>();
+				billboardComp.TextureAsset = textureAssets[1];
+			}
+			else
+			{
+				RemoveComponent<BillboardComponent>();
+				RemoveComponent<BillboardStackComponent>();
+				return;
+			}
+		}
+		textureAssets.erase(it);
+	}
+
 }

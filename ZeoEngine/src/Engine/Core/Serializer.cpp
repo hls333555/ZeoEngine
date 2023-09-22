@@ -1,9 +1,9 @@
 #include "ZEpch.h"
 #include "Engine/Core/Serializer.h"
 
+#include "Engine/Core/Project.h"
 #include "Engine/Renderer/Mesh.h"
 #include "Engine/Renderer/Material.h"
-#include "Engine/Renderer/Shader.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Asset/AssetLibrary.h"
 #include "Engine/GameFramework/Tags.h"
@@ -40,7 +40,9 @@ namespace ZeoEngine {
 			auto& entityFields = ScriptEngine::GetScriptFieldMap(entityID);
 			for (const auto& [name, field] : entityFields)
 			{
-				// TODO: Do not serialize transient data
+				// Do not serialize transient data
+				auto bDiscardSerialize = field->IsTransient();
+				if (bDiscardSerialize) continue;
 
 				EvaluateSerializeField(compNode, field, false);
 			}
@@ -62,16 +64,16 @@ namespace ZeoEngine {
 				// Evaluate serialized field only
 				if (fieldNode)
 				{
-					EvaluateDeserializeField(fieldNode, field);
+					EvaluateDeserializeField(fieldNode, field, false);
 				}
 			}
 		}
 	}
 
-	// TODO: Enum and containers...
+	// TODO: Enum
 	void ScriptComponentSerializerExtender::EvaluateSerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const
 	{
-		const auto type = fieldInstance->GetFieldType();
+		const auto type = bIsSeqElement ? std::static_pointer_cast<ScriptSequenceContainerFieldInstance>(fieldInstance)->GetElementType() : fieldInstance->GetFieldType();
 		switch (type)
 		{
 			case FieldType::Bool:	SerializeField<bool>(node, fieldInstance, bIsSeqElement); break;
@@ -89,15 +91,32 @@ namespace ZeoEngine {
 			case FieldType::Vec3:	SerializeField<Vec3>(node, fieldInstance, bIsSeqElement); break;
 			case FieldType::Vec4:	SerializeField<Vec4>(node, fieldInstance, bIsSeqElement); break;
 			case FieldType::String:	SerializeField<std::string>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::SeqCon:	EvaluateSerializeSequenceContainerField(node, std::static_pointer_cast<ScriptSequenceContainerFieldInstance>(fieldInstance), bIsSeqElement); break;
 			case FieldType::Asset:	SerializeField<AssetHandle>(node, fieldInstance, bIsSeqElement); break;
+			case FieldType::Entity:	SerializeField<UUID>(node, fieldInstance, bIsSeqElement); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}
 
-	// TODO: Enum and containers...
-	void ScriptComponentSerializerExtender::EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const
+	void ScriptComponentSerializerExtender::EvaluateSerializeSequenceContainerField(YAML::Node& node, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance, bool bIsSeqElement) const
 	{
-		const auto type = fieldInstance->GetFieldType();
+		ZE_CORE_ASSERT(!bIsSeqElement, "Nested sequence container is not supported!");
+		ZE_CORE_ASSERT(fieldInstance);
+
+		YAML::Node seqNode;
+		seqNode.SetStyle(YAML::EmitterStyle::Flow);
+		for (SizeT i = 0; i < fieldInstance->GetContainerSize(); ++i)
+		{
+			fieldInstance->SetIndex(static_cast<U32>(i));
+			EvaluateSerializeField(seqNode, fieldInstance, true);
+		}
+		node[fieldInstance->GetFieldName()] = seqNode;
+	}
+
+	// TODO: Enum
+	void ScriptComponentSerializerExtender::EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const
+	{
+		const auto type = bIsSeqElement ? std::static_pointer_cast<ScriptSequenceContainerFieldInstance>(fieldInstance)->GetElementType() : fieldInstance->GetFieldType();
 		switch (type)
 		{
 			case FieldType::Bool:	DeserializeField<bool>(fieldNode, fieldInstance); break;
@@ -115,8 +134,24 @@ namespace ZeoEngine {
 			case FieldType::Vec3:	DeserializeField<Vec3>(fieldNode, fieldInstance); break;
 			case FieldType::Vec4:	DeserializeField<Vec4>(fieldNode, fieldInstance); break;
 			case FieldType::String:	DeserializeField<std::string>(fieldNode, fieldInstance); break;
+			case FieldType::SeqCon:	EvaluateDeserializeSequenceContainerField(fieldNode, std::static_pointer_cast<ScriptSequenceContainerFieldInstance>(fieldInstance)); break;
 			case FieldType::Asset:	DeserializeField<AssetHandle>(fieldNode, fieldInstance); break;
+			case FieldType::Entity:	DeserializeField<UUID>(fieldNode, fieldInstance); break;
 			default: ZE_CORE_ASSERT(false);
+		}
+	}
+
+	void ScriptComponentSerializerExtender::EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance) const
+	{
+		ZE_CORE_ASSERT(fieldInstance);
+
+		fieldInstance->ResizeWithDefault(seqNode.size());
+		U32 i = 0;
+		for (const auto& elementNode : seqNode)
+		{
+			fieldInstance->SetIndex(i);
+			EvaluateDeserializeField(elementNode, fieldInstance, true);
+			++i;
 		}
 	}
 
@@ -187,7 +222,7 @@ namespace ZeoEngine {
 
 	void ComponentSerializer::EvaluateSerializeSequenceContainerField(YAML::Node& node, const entt::meta_any& seqInstance, const char* fieldName, bool bIsSeqElement)
 	{
-		ZE_CORE_ASSERT(!bIsSeqElement);
+		ZE_CORE_ASSERT(!bIsSeqElement, "Nested sequence container is not supported!");
 
 		auto seqView = seqInstance.as_sequence_container();
 		YAML::Node seqNode;
@@ -261,16 +296,14 @@ namespace ZeoEngine {
 	void ComponentSerializer::EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, entt::meta_any& seqInstance)
 	{
 		auto seqView = seqInstance.as_sequence_container();
-		// Clear elements first
 		seqView.clear();
-		// TODO: Resize instead of insert every time
+		seqView.resize(seqNode.size());
+		U32 i = 0;
 		for (const auto& elementNode : seqNode)
 		{
-			auto it = seqView.insert(seqView.end(), seqView.value_type().construct());
-			ZE_CORE_ASSERT(it, "Failed to insert sequence container elements during deserialization! Please check if its type is properly registered.");
-
-			auto elementInstance = *it;
+			auto elementInstance = seqView[i];
 			EvaluateDeserializeField(elementNode, elementInstance);
+			++i;
 		}
 	}
 
@@ -312,13 +345,15 @@ namespace ZeoEngine {
 	{
 		switch (field->GetFieldType())
 		{
-			case ShaderReflectionFieldType::Bool:		SerializeField<bool>(node, field); break;
-			case ShaderReflectionFieldType::Int:		SerializeField<I32>(node, field); break;
-			case ShaderReflectionFieldType::Float:		SerializeField<float>(node, field); break;
-			case ShaderReflectionFieldType::Vec2:		SerializeField<Vec2>(node, field); break;
-			case ShaderReflectionFieldType::Vec3:		SerializeField<Vec3>(node, field); break;
-			case ShaderReflectionFieldType::Vec4:		SerializeField<Vec4>(node, field); break;
-			case ShaderReflectionFieldType::Texture2D:	SerializeField<AssetHandle>(node, field); break;
+			case DynamicUniformFieldType::Bool:
+			case DynamicUniformFieldType::BoolMacro:	SerializeField<bool>(node, field); break;
+			case DynamicUniformFieldType::Int:
+			case DynamicUniformFieldType::IntMacro:		SerializeField<I32>(node, field); break;
+			case DynamicUniformFieldType::Float:		SerializeField<float>(node, field); break;
+			case DynamicUniformFieldType::Vec2:			SerializeField<Vec2>(node, field); break;
+			case DynamicUniformFieldType::Vec3:			SerializeField<Vec3>(node, field); break;
+			case DynamicUniformFieldType::Color:		SerializeField<Vec4>(node, field); break;
+			case DynamicUniformFieldType::Texture2D:	SerializeField<AssetHandle>(node, field); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}
@@ -353,13 +388,15 @@ namespace ZeoEngine {
 	{
 		switch (field->GetFieldType())
 		{
-			case ShaderReflectionFieldType::Bool:		DeserializeField<bool>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Int:		DeserializeField<I32>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Float:		DeserializeField<float>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec2:		DeserializeField<Vec2>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec3:		DeserializeField<Vec3>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Vec4:		DeserializeField<Vec4>(fieldNode, field); break;
-			case ShaderReflectionFieldType::Texture2D:	DeserializeField<AssetHandle>(fieldNode, field); break;
+			case DynamicUniformFieldType::Bool:
+			case DynamicUniformFieldType::BoolMacro:	DeserializeField<bool>(fieldNode, field); break;
+			case DynamicUniformFieldType::Int:
+			case DynamicUniformFieldType::IntMacro:		DeserializeField<I32>(fieldNode, field); break;
+			case DynamicUniformFieldType::Float:		DeserializeField<float>(fieldNode, field); break;
+			case DynamicUniformFieldType::Vec2:			DeserializeField<Vec2>(fieldNode, field); break;
+			case DynamicUniformFieldType::Vec3:			DeserializeField<Vec3>(fieldNode, field); break;
+			case DynamicUniformFieldType::Color:		DeserializeField<Vec4>(fieldNode, field); break;
+			case DynamicUniformFieldType::Texture2D:	DeserializeField<AssetHandle>(fieldNode, field); break;
 			default: ZE_CORE_ASSERT(false);
 		}
 	}
@@ -405,7 +442,7 @@ namespace ZeoEngine {
 		ZE_CORE_ASSERT(false);
 	}
 
-	void SceneSerializer::SerializeEntity(YAML::Node& entityNode, const Entity entity)
+	void SceneSerializer::SerializeEntity(YAML::Node& entityNode, Entity entity)
 	{
 		entityNode["Entity"] = entity.GetUUID();
 		// Do not call entt::registry::visit() as the order is reversed
@@ -452,6 +489,49 @@ namespace ZeoEngine {
 		}
 
 		deserializedEntity.RemoveTag<Tag::IsDeserializing>();
+	}
+
+	void ProjectSerializer::Serialize(const std::string& path, const Project& project)
+	{
+		YAML::Node node;
+		{
+			const auto& config = project.GetConfig();
+
+			YAML::Node projectNode;
+			projectNode["Name"] = config.Name;
+			projectNode["AssetDirectory"] = config.AssetDirectory;
+			projectNode["ScriptAssemblyDirectory"] = config.ScriptAssemblyDirectory;
+			projectNode["DefaultLevelAsset"] = config.DefaultLevelAsset;
+			node["Project"] = projectNode;
+		}
+
+		std::ofstream fout(path);
+		fout << node;
+	}
+
+	bool ProjectSerializer::Deserialize(const std::string& path, Project& project)
+	{
+		YAML::Node node;
+		try
+		{
+			node = YAML::LoadFile(path);
+		}
+		catch (YAML::BadFile&)
+		{
+			ZE_CORE_ERROR("Failed to load project: {0}!", path);
+			return false;
+		}
+
+		{
+			auto& config = project.GetConfig();
+			auto projectNode = node["Project"];
+			config.Name = projectNode["Name"].as<std::string>();
+			config.AssetDirectory = projectNode["AssetDirectory"].as<std::string>();
+			config.ScriptAssemblyDirectory = projectNode["ScriptAssemblyDirectory"].as<std::string>();
+			config.DefaultLevelAsset = projectNode["DefaultLevelAsset"].as<AssetHandle>();
+		}
+
+		return true;
 	}
 
 }

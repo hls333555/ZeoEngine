@@ -5,7 +5,6 @@
 
 #include "Engine/Core/Core.h"
 #include "Engine/Renderer/Shader.h"
-#include "Engine/ImGui/AssetBrowser.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/RenderTechnique.h"
@@ -14,6 +13,11 @@
 namespace ZeoEngine {
 
 	class Material;
+
+	enum class DynamicUniformFieldType
+	{
+		None, Bool, BoolMacro, Int, IntMacro, Float, Vec2, Vec3, Color, Texture2D
+	};
 
 	struct DynamicUniformFieldBase
 	{
@@ -28,8 +32,7 @@ namespace ZeoEngine {
 			, OwnerMaterial(material) {}
 		virtual ~DynamicUniformFieldBase() = default;
 
-		virtual ShaderReflectionFieldType GetFieldType() const { return ShaderReflectionFieldType::None; }
-		virtual void Draw() = 0;
+		virtual DynamicUniformFieldType GetFieldType() const { return DynamicUniformFieldType::None; }
 		virtual void* GetValueRaw() = 0;
 		/** Called during material initialization or when value is changed in the editor. */
 		virtual void Apply(bool bIsInit = false) = 0;
@@ -73,8 +76,6 @@ namespace ZeoEngine {
 
 		U32 Value = 0; // SpirV reflects bool as UInt
 
-		virtual ShaderReflectionFieldType GetFieldType() const override { return ShaderReflectionFieldType::Bool; }
-		virtual void Draw() override;
 		virtual void* GetValueRaw() override { return &Value; }
 	};
 
@@ -83,6 +84,7 @@ namespace ZeoEngine {
 		DynamicUniformBoolField(const ShaderReflectionNonMacroFieldBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformBoolFieldBase(reflectionData.Name, reflectionData.BufferName, material), DynamicUniformNonMacroFieldBase(reflectionData.Binding, reflectionData.Offset, reflectionData.Size) {}
 
+		virtual DynamicUniformFieldType GetFieldType() const override { return DynamicUniformFieldType::Bool; }
 		virtual void Apply(bool bIsInit = false) override;
 	};
 
@@ -91,6 +93,7 @@ namespace ZeoEngine {
 		DynamicUniformBoolMacroField(const ShaderReflectionMacroFieldBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformBoolFieldBase(reflectionData.Name, reflectionData.BufferName, material), DynamicUniformMacroFieldBase(reflectionData.MacroName) {}
 
+		virtual DynamicUniformFieldType GetFieldType() const override { return DynamicUniformFieldType::BoolMacro; }
 		virtual void Apply(bool bIsInit = false) override;
 	};
 
@@ -100,98 +103,18 @@ namespace ZeoEngine {
 		DynamicUniformScalarNFieldBase(std::string name, std::string category, const Ref<Material>& material)
 			: DynamicUniformFieldBufferBase(std::move(name), std::move(category), material) {}
 
-		virtual ShaderReflectionFieldType GetFieldType() const override
-		{
-			if constexpr (std::is_same_v<Type, I32>)
-			{
-				return ShaderReflectionFieldType::Int;
-			}
-			else if constexpr (std::is_same_v<Type, float>)
-			{
-				return ShaderReflectionFieldType::Float;
-			}
-			else if constexpr (std::is_same_v<Type, Vec2>)
-			{
-				return ShaderReflectionFieldType::Vec2;
-			}
-			else if constexpr (std::is_same_v<Type, Vec3>)
-			{
-				return ShaderReflectionFieldType::Vec3;
-			}
-
-			ZE_CORE_ASSERT(false);
-			return ShaderReflectionFieldType::None;
-		}
-
-		virtual void Draw() override
-		{
-			const auto min = EngineUtils::GetDefaultMin<BaseType>();
-			const auto max = EngineUtils::GetDefaultMax<BaseType>();
-			void* buffer = nullptr;
-			if constexpr (N == 1)
-			{
-				buffer =  bIsEditActive ? &Buffer : &Value;
-			}
-			else
-			{
-				buffer = bIsEditActive ? glm::value_ptr(Buffer) : glm::value_ptr(Value);
-			}
-			bool bChanged = ImGui::DragScalarNEx("", ShaderReflectionFieldTypeToImGuiDataType(), buffer, N, 0.5f, &min, &max, GetOutputFormatByShaderReflectionFieldType(), ImGuiSliderFlags_AlwaysClamp);
-			if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-			{
-				Apply();
-			}
-			if (ImGui::IsItemDeactivatedAfterEdit())
-			{
-				bIsEditActive = false;
-				if (Value != Buffer)
-				{
-					Apply();
-				}
-			}
-			if (ImGui::IsItemActivated())
-			{
-				bIsEditActive = true;
-				Buffer = Value;
-			}
-		}
-
 		virtual void* GetValueRaw() override
 		{
 			if constexpr (N == 1)
 			{
-				return &Value;
+				return &this->Value;
 			}
 			else
 			{
-				return glm::value_ptr(Value);
+				return glm::value_ptr(this->Value);
 			}
 		}
 
-	private:
-		ImGuiDataType ShaderReflectionFieldTypeToImGuiDataType() const
-		{
-			if constexpr (std::is_same_v<Type, I32>)
-			{
-				return ImGuiDataType_S32;
-			}
-			else
-			{
-				return ImGuiDataType_Float;
-			}
-		}
-
-		const char* GetOutputFormatByShaderReflectionFieldType() const
-		{
-			if constexpr (std::is_same_v<Type, I32>)
-			{
-				return "%d";
-			}
-			else
-			{
-				return "%.3f";
-			}
-		}
 	};
 
 	template<typename Type, U32 N = 1, typename BaseType = Type>
@@ -203,13 +126,36 @@ namespace ZeoEngine {
 			static_assert(N == 1 || N == 2 || N == 3, "N can only be 1, 2 or 3!");
 		}
 
+		virtual DynamicUniformFieldType GetFieldType() const override
+		{
+			if constexpr (std::is_same_v<Type, I32>)
+			{
+				return DynamicUniformFieldType::Int;
+			}
+			else if constexpr (std::is_same_v<Type, float>)
+			{
+				return DynamicUniformFieldType::Float;
+			}
+			else if constexpr (std::is_same_v<Type, Vec2>)
+			{
+				return DynamicUniformFieldType::Vec2;
+			}
+			else if constexpr (std::is_same_v<Type, Vec3>)
+			{
+				return DynamicUniformFieldType::Vec3;
+			}
+
+			ZE_CORE_ASSERT(false);
+			return DynamicUniformFieldType::None;
+		}
+
 		virtual void Apply(bool bIsInit = false) override
 		{
 			if (!bIsInit)
 			{
-				Value = Buffer;
+				this->Value = this->Buffer;
 			}
-			ApplyInternal(GetValueRaw(), OwnerMaterial);
+			ApplyInternal(this->GetValueRaw(), this->OwnerMaterial);
 		}
 	};
 
@@ -221,7 +167,7 @@ namespace ZeoEngine {
 			: DynamicUniformScalarNFieldBase(reflectionData.Name, reflectionData.BufferName, material), DynamicUniformMacroFieldBase(reflectionData.MacroName)
 			, ValueRange(valueRange) {}
 
-		virtual void Draw() override;
+		virtual DynamicUniformFieldType GetFieldType() const override { return DynamicUniformFieldType::IntMacro; }
 		virtual void Apply(bool bIsInit = false) override;
 	};
 
@@ -230,8 +176,7 @@ namespace ZeoEngine {
 		DynamicUniformColorField(const ShaderReflectionNonMacroFieldBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformFieldBufferBase(reflectionData.Name, reflectionData.BufferName, material), DynamicUniformNonMacroFieldBase(reflectionData.Binding, reflectionData.Offset, reflectionData.Size) {}
 
-		virtual ShaderReflectionFieldType GetFieldType() const override { return ShaderReflectionFieldType::Vec4; }
-		virtual void Draw() override;
+		virtual DynamicUniformFieldType GetFieldType() const override { return DynamicUniformFieldType::Color; }
 		virtual void* GetValueRaw() override { return glm::value_ptr(Value); }
 		virtual void Apply(bool bIsInit = false) override;
 	};
@@ -239,13 +184,11 @@ namespace ZeoEngine {
 	struct DynamicUniformTexture2DField : public DynamicUniformFieldBase, public DynamicUniformNonMacroFieldBase, public Bindable
 	{
 		AssetHandle Value;
-		AssetBrowser Browser{ Texture2D::TypeID() };
 
 		DynamicUniformTexture2DField(const ShaderReflectionNonMacroFieldBase& reflectionData, const Ref<Material>& material)
 			: DynamicUniformFieldBase(reflectionData.Name, reflectionData.BufferName, material), DynamicUniformNonMacroFieldBase(reflectionData.Binding, reflectionData.Offset, reflectionData.Size) {}
 
-		virtual ShaderReflectionFieldType GetFieldType() const override { return ShaderReflectionFieldType::Texture2D; }
-		virtual void Draw() override;
+		virtual DynamicUniformFieldType GetFieldType() const override { return DynamicUniformFieldType::Texture2D; }
 		virtual void* GetValueRaw() override { return &Value; }
 		virtual void Bind() const override; // Called from RenderStep::Bind()
 		virtual void Apply(bool bIsInit = false) override;

@@ -20,11 +20,18 @@ namespace ZeoEngine {
 		// TODO:
 		AssetManager::Get().Init();
 		ThumbnailManager::Get().Init();
-		AssetRegistry::Get().Init();
+		AssetRegistry::Get().Register();
 
 		m_Editor = CreateScope<Editor>();
 		m_Editor->OnAttach();
-		
+	}
+
+	void EditorLayer::OnDetach()
+	{
+		m_Editor->OnDetach();
+
+		AssetManager::Get().Shutdown();
+		ThumbnailManager::Get().Shutdown();
 	}
 
 	void EditorLayer::OnUpdate(DeltaTime dt)
@@ -39,11 +46,6 @@ namespace ZeoEngine {
 	void EditorLayer::OnImGuiRender()
 	{
 		ZE_PROFILE_FUNC();
-
-#if ZE_SHOW_IMGUI_DEMO
-		static bool bShow = false;
-		ImGui::ShowDemoWindow(&bShow);
-#endif
 
 		m_Editor->OnImGuiRender();
 	}

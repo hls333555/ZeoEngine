@@ -14,7 +14,6 @@ namespace ZeoEngine {
 
 	class AssetManager
 	{
-		friend class EditorLayer;
 		friend class FileDialogs;
 
 	public:
@@ -28,6 +27,9 @@ namespace ZeoEngine {
 			return instance;
 		}
 
+		void Init();
+		void Shutdown();
+
 		/** Register asset factory. Returns true if the registration succeeded, false otherwise. */
 		bool RegisterAssetFactory(AssetTypeID typeID, Scope<AssetFactoryBase> factory);
 		/** Register asset actions. Returns true if the registration succeeded, false otherwise. */
@@ -40,7 +42,7 @@ namespace ZeoEngine {
 		/** Import a new resource from file dialog or dragging by copying it from srcPath to destPath. */
 		bool ImportAsset(AssetTypeID typeID, const std::string& srcPath, const std::string& destPath) const;
 		/** Construct a new asset. */
-		Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const;
+		Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const;
 		/** Open an existing asset. */
 		bool OpenAsset(const std::string& path, bool bIsFromAssetBrowser) const;
 		/** Rename an existing asset. */
@@ -96,7 +98,6 @@ namespace ZeoEngine {
 		AssetTypeID GetAssetTypeFromFileExtension(const std::string& extension) const;
 
 	private:
-		void Init();
 		void InitSupportedFileExtensions();
 
 	protected:

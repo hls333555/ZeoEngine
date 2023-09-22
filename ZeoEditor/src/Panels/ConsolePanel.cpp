@@ -1,6 +1,6 @@
 #include "Panels/ConsolePanel.h"
 
-#include "Engine/ImGui/EditorConsole.h"
+#include "Widgets/EditorConsole.h"
 
 namespace ZeoEngine {
 

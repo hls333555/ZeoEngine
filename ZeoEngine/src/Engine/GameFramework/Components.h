@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <IconsFontAwesome5.h>
 
 #include "Engine/Asset/AssetLibrary.h"
@@ -116,6 +115,7 @@ namespace ZeoEngine {
 	{
 		UUID ParentEntity = 0;
 		std::vector<UUID> ChildEntities;
+		U32 HierarchyDepth = 0;
 	};
 
 	// Stores local transform
@@ -175,7 +175,11 @@ namespace ZeoEngine {
 	struct BillboardComponent : public IComponent
 	{
 		Ref<Texture2D> TextureAsset;
-		Vec2 Size{ 0.5f, 0.5f };
+	};
+
+	struct BillboardStackComponent : public IComponent
+	{
+		std::vector<Ref<Texture2D>> TextureAssets;
 	};
 
 	struct FieldChangeComponent : public IComponent
@@ -477,12 +481,7 @@ namespace ZeoEngine {
 		float AngularDamping = 0.05f;
 		bool bEnableGravity = true;
 
-		bool bLockPositionX = false;
-		bool bLockPositionY = false;
-		bool bLockPositionZ = false;
-		bool bLockRotationX = false;
-		bool bLockRotationY = false;
-		bool bLockRotationZ = false;
+		U8 LockFlags = 0;
 
 		bool bReceiveSleepEvents = false;
 		bool bDisableSimulation = false;

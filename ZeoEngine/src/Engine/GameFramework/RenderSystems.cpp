@@ -1,6 +1,7 @@
 #include "ZEpch.h"
 #include "Engine/GameFramework/RenderSystems.h"
 
+#include "Engine/GameFramework/Tags.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Engine/Utils/DebugDrawUtils.h"
@@ -21,7 +22,7 @@ namespace ZeoEngine {
 
 	void BillboardRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto billboardView = GetScene()->GetComponentView<BillboardComponent>();
+		auto billboardView = GetScene()->GetComponentView<BillboardComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : billboardView)
 		{
 			auto [billboardComp] = billboardView.get(e);
@@ -41,14 +42,14 @@ namespace ZeoEngine {
 				{
 					tintColor = entity.GetComponent<SpotLightComponent>().Color;
 				}
-				GetSceneRenderer()->DrawBillboard(entity.GetWorldTranslation(), billboardComp.Size, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
+				GetSceneRenderer()->DrawBillboard(entity.GetWorldTranslation(), { 0.5f, 0.5f }, billboardComp.TextureAsset, { 1.0f, 1.0f }, { 0.0f, 0.0f }, tintColor, static_cast<I32>(e));
 			}
 		}
 	}
 
 	void CameraVisualizerRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto cameraView = GetScene()->GetComponentView<CameraComponent>();
+		auto cameraView = GetScene()->GetComponentView<CameraComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : cameraView)
 		{
 			Entity entity{ e, GetScene() };
@@ -65,7 +66,7 @@ namespace ZeoEngine {
 
 	void MeshRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto meshView = GetScene()->GetComponentView<MeshRendererComponent>();
+		auto meshView = GetScene()->GetComponentView<MeshRendererComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : meshView)
 		{
 			auto [meshComp] = meshView.get(e);
@@ -81,7 +82,7 @@ namespace ZeoEngine {
 
 	void DirectionalLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto directionalLightView = GetScene()->GetComponentView<DirectionalLightComponent>();
+		auto directionalLightView = GetScene()->GetComponentView<DirectionalLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : directionalLightView)
 		{
 			auto [lightComp] = directionalLightView.get(e);
@@ -102,7 +103,7 @@ namespace ZeoEngine {
 
 	void DirectionalLightRenderSystem::OnRenderRuntime()
 	{
-		auto directionalLightView = GetScene()->GetComponentView<DirectionalLightComponent>();
+		auto directionalLightView = GetScene()->GetComponentView<DirectionalLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : directionalLightView)
 		{
 			auto [lightComp] = directionalLightView.get(e);
@@ -114,7 +115,7 @@ namespace ZeoEngine {
 
 	void PointLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto pointLightView = GetScene()->GetComponentView<PointLightComponent>();
+		auto pointLightView = GetScene()->GetComponentView<PointLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : pointLightView)
 		{
 			auto [lightComp] = pointLightView.get(e);
@@ -132,7 +133,7 @@ namespace ZeoEngine {
 
 	void PointLightRenderSystem::OnRenderRuntime()
 	{
-		auto pointLightView = GetScene()->GetComponentView<PointLightComponent>();
+		auto pointLightView = GetScene()->GetComponentView<PointLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : pointLightView)
 		{
 			auto [lightComp] = pointLightView.get(e);
@@ -143,7 +144,7 @@ namespace ZeoEngine {
 
 	void SpotLightRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto spotLightView = GetScene()->GetComponentView<SpotLightComponent>();
+		auto spotLightView = GetScene()->GetComponentView<SpotLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : spotLightView)
 		{
 			auto [lightComp] = spotLightView.get(e);
@@ -164,7 +165,7 @@ namespace ZeoEngine {
 
 	void SpotLightRenderSystem::OnRenderRuntime()
 	{
-		auto spotLightView = GetScene()->GetComponentView<SpotLightComponent>();
+		auto spotLightView = GetScene()->GetComponentView<SpotLightComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : spotLightView)
 		{
 			auto [lightComp] = spotLightView.get(e);
@@ -193,7 +194,7 @@ namespace ZeoEngine {
 
 		// The debug drawing should be in sync with PhysXColliderShapeBase's geometry
 		const auto scene = GetScene();
-		auto boxView = scene->GetComponentView<BoxColliderComponent>();
+		auto boxView = scene->GetComponentView<BoxColliderComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : boxView)
 		{
 			auto [boxComp] = boxView.get(e);
@@ -203,7 +204,7 @@ namespace ZeoEngine {
 			DebugDrawUtils::DrawBox(*scene, transform * boxTransform, s_DebugDrawColor);
 		}
 
-		auto sphereView = scene->GetComponentView<SphereColliderComponent>();
+		auto sphereView = scene->GetComponentView<SphereColliderComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : sphereView)
 		{
 			auto [sphereComp] = sphereView.get(e);
@@ -217,7 +218,7 @@ namespace ZeoEngine {
 			DebugDrawUtils::DrawSphereBounds(*scene, Math::GetTranslationFromTransform(sphereTransform), s_DebugDrawColor, sphereComp.Radius * largestScale, rotation);
 		}
 
-		auto capsuleView = scene->GetComponentView<CapsuleColliderComponent>();
+		auto capsuleView = scene->GetComponentView<CapsuleColliderComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : capsuleView)
 		{
 			auto [capsuleComp] = capsuleView.get(e);
@@ -231,7 +232,7 @@ namespace ZeoEngine {
 			DebugDrawUtils::DrawCapsule(*scene, Math::GetTranslationFromTransform(capsuleTransform), s_DebugDrawColor, capsuleComp.Radius * radiusScale, capsuleComp.Height * scale.y, rotation);
 		}
 
-		auto controllerView = scene->GetComponentView<CharacterControllerComponent>();
+		auto controllerView = scene->GetComponentView<CharacterControllerComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : controllerView)
 		{
 			auto [controllerComp] = controllerView.get(e);
@@ -257,7 +258,7 @@ namespace ZeoEngine {
 
 	void ParticleSystemRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
+		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : particleView)
 		{
 			auto [particleComp] = particleView.get(e);
@@ -275,7 +276,7 @@ namespace ZeoEngine {
 
 	void SpriteRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto spriteGroup = GetScene()->GetComponentGroup<SpriteRendererComponent>(IncludeComponents<TransformComponent>);
+		auto spriteGroup = GetScene()->GetComponentGroup<SpriteRendererComponent>(IncludeComponents<TransformComponent>, ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		spriteGroup.sort<SpriteRendererComponent, TransformComponent>([](std::tuple<SpriteRendererComponent&, TransformComponent&> lhs, std::tuple<SpriteRendererComponent&, TransformComponent&> rhs)
 		{
 			const auto& lSpriteComp = std::get<0>(lhs);
@@ -297,7 +298,7 @@ namespace ZeoEngine {
 
 	void CircleRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto circleView = GetScene()->GetComponentView<CircleRendererComponent>();
+		auto circleView = GetScene()->GetComponentView<CircleRendererComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : circleView)
 		{
 			auto [circleComp] = circleView.get(e);
@@ -313,7 +314,7 @@ namespace ZeoEngine {
 
 	void ParticlePreviewRenderSystem::OnRenderEditor(bool bIsAssetPreview)
 	{
-		auto particleView = GetScene()->GetComponentView<ParticleSystemDetailComponent>();
+		auto particleView = GetScene()->GetComponentView<ParticleSystemDetailComponent>(ExcludeComponents<entt::tag<Tag::HideEntity>>);
 		for (const auto e : particleView)
 		{
 			auto [particleComp] = particleView.get(e);

@@ -2,6 +2,7 @@
 #include "Engine/GameFramework/TypeRegistry.h"
 
 #include "Engine/Renderer/Sampler.h"
+#include "Engine/Utils/SceneUtils.h"
 
 namespace ZeoEngine {
 
@@ -66,11 +67,22 @@ namespace ZeoEngine {
 		return {};
 	}
 
+	bool IsRuntime(IComponent* comp)
+	{
+		return SceneUtils::IsLevelRuntime();
+	}
+
 	void TypeRegistry::Init()
 	{
 		RegisterBasicTypes();
 		RegisterComponents();
 		RegisterComponentSerializerExtenders();
+		RegisterAssets();
+	}
+
+	void TypeRegistry::Shutdown()
+	{
+		entt::meta_reset();
 	}
 
 	void TypeRegistry::RegisterBasicTypes()
@@ -86,7 +98,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<RelationshipComponent>("Relationship", Inherent, HideComponentHeader)
 			.Field<&RelationshipComponent::ParentEntity>("ParentEntity", HiddenInEditor)
-			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor);
+			.Field<&RelationshipComponent::ChildEntities>("ChildEntities", HiddenInEditor)
+			.Field<&RelationshipComponent::HierarchyDepth>("HierarchyDepth", HiddenInEditor);
 
 		RegisterComponent<TransformComponent>("Transform", Inherent)
 			.Field<&TransformComponent::Translation>("Translation", std::make_pair(DragSensitivity, 0.5f))
@@ -185,7 +198,7 @@ namespace ZeoEngine {
 			.Field<ScriptUpdateStage::PostPhysics>("PostPhysics");
 
 		RegisterComponent<ScriptComponent>("Script", std::make_pair(Category, "Scripts"))
-			.Field<&ScriptComponent::ClassName>("ClassName")
+			.Field<&ScriptComponent::ClassName>("ClassName", std::make_pair(CustomWidget, &ConstructScriptClassFieldWidget), std::make_pair(DisableCondition, &IsRuntime))
 			.Field<&ScriptComponent::UpdateStage>("UpdateStage");
 
 		RegisterComponent<NativeScriptComponent>("Native Script", std::make_pair(Category, "Scripts"));
@@ -282,12 +295,7 @@ namespace ZeoEngine {
 			.Field<&RigidBodyComponent::LinearDamping>("LinearDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::AngularDamping>("AngularDamping", std::make_pair(HideCondition, &IsStaticRigidBody))
 			.Field<&RigidBodyComponent::bEnableGravity>("EnableGravity", std::make_pair(HideCondition, &IsStaticRigidBody))
-			.Field<&RigidBodyComponent::bLockPositionX>("LockPositionX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockPositionY>("LockPositionY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockPositionZ>("LockPositionZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationX>("LockRotationX", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationY>("LockRotationY", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
-			.Field<&RigidBodyComponent::bLockRotationZ>("LockRotationZ", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(Category, "Constraints"))
+			.Field<&RigidBodyComponent::LockFlags>("LockFlags", std::make_pair(HideCondition, &IsStaticRigidBody), std::make_pair(CustomWidget, &ConstructLockFlagsFieldWidget))
 			.Field<&RigidBodyComponent::bReceiveSleepEvents>("ReceiveSleepEvents", std::make_pair(HideCondition, &IsStaticRigidBody));
 
 		RegisterComponent<PhysicsMaterialDetailComponent>("Physics Material Detail", Inherent, HideComponentHeader)
@@ -297,8 +305,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<ColliderComponentBase>("Collider Base", Inherent)
 			.Field<&ColliderComponentBase::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
-			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer")
-			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&ColliderComponentBase::CollisionLayer>("CollisionLayer", std::make_pair(CustomWidget, &ConstructCollisionLayerFieldWidget))
+			.Field<&ColliderComponentBase::CollidesWithGroup>("CollidesWithGroup", std::make_pair(CustomWidget, &ConstructCollisionGroupFieldWidget))
 			.Field<&ColliderComponentBase::bEnableSimulation>("EnableSimulation")
 			.Field<&ColliderComponentBase::bEnableQuery>("EnableQuery")
 			.Field<&ColliderComponentBase::bIsTrigger>("IsTrigger");
@@ -318,8 +326,8 @@ namespace ZeoEngine {
 
 		RegisterComponent<CharacterControllerComponent>("Character Controller", std::make_pair(Category, "Physics"))
 			.Field<&CharacterControllerComponent::PhysicsMaterialAsset>("PhysicsMaterialAsset", std::make_pair(AssetType, PhysicsMaterial::TypeID()))
-			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer")
-			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup")
+			.Field<&CharacterControllerComponent::CollisionLayer>("CollisionLayer", std::make_pair(CustomWidget, &ConstructCollisionLayerFieldWidget))
+			.Field<&CharacterControllerComponent::CollidesWithGroup>("CollidesWithGroup", std::make_pair(CustomWidget, &ConstructCollisionGroupFieldWidget))
 			.Field<&CharacterControllerComponent::Radius>("Radius")
 			.Field<&CharacterControllerComponent::Height>("Height")
 			.Field<&CharacterControllerComponent::Offset>("Offset")
@@ -386,6 +394,17 @@ namespace ZeoEngine {
 	void TypeRegistry::RegisterComponentSerializerExtenders()
 	{
 		ComponentSerializerExtenderRegistry::RegisterComponentSerializerExtender<ScriptComponentSerializerExtender, ScriptComponent>();
+	}
+
+	void TypeRegistry::RegisterAssets()
+	{
+		ScriptRegistry::RegisterMonoAsset(Level::GetMonoAssetName().data(), Level::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Material::GetMonoAssetName().data(), Material::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Mesh::GetMonoAssetName().data(), Mesh::TypeID());
+		ScriptRegistry::RegisterMonoAsset(ParticleTemplate::GetMonoAssetName().data(), ParticleTemplate::TypeID());
+		ScriptRegistry::RegisterMonoAsset(PhysicsMaterial::GetMonoAssetName().data(), PhysicsMaterial::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Shader::GetMonoAssetName().data(), Shader::TypeID());
+		ScriptRegistry::RegisterMonoAsset(Texture2D::GetMonoAssetName().data(), Texture2D::TypeID());
 	}
 
 }

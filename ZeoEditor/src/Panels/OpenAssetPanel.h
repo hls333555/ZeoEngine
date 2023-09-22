@@ -17,7 +17,7 @@ namespace ZeoEngine {
 		virtual bool WillDrawBottom() const override { return true; }
 		virtual void DrawBottom() override;
 
-		virtual bool ShouldDrawPath(const Ref<PathMetadata>& metadata) override;
+		virtual bool ShouldDrawPath(const PathMetadata* metadata) override;
 
 		virtual void HandleRightColumnAssetOpen(const std::string& path) override;
 

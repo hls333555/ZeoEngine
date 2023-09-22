@@ -16,7 +16,7 @@ namespace ZeoEngine {
 		virtual const char* GetAssetTemplatePath() const { return ""; }
 		virtual void CreateAssetFile(const std::string& path) const = 0;
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const {}
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const = 0;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const = 0;
 	};
 
 	class AssetFactoryBase : public IAssetFactory
@@ -37,7 +37,7 @@ namespace ZeoEngine {
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
 
 	private:
-		void CreateAsset(const std::string& path, const std::string& resourcePath) const;
+		void CreateAssetFile(const std::string& path, const std::string& resourcePath, U8 flags) const;
 	};
 
 	class LevelAssetFactory : public AssetFactoryBase
@@ -46,7 +46,7 @@ namespace ZeoEngine {
 		virtual const char* GetAssetTypeName() const override { return "Level"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
 		virtual const char* GetAssetTemplatePath() const override;
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class ParticleTemplateAssetFactory : public AssetFactoryBase
@@ -54,14 +54,14 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Particle Template"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class Texture2DAssetFactory : public ImportableAssetFactoryBase
 	{
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Texture2D"; }
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class MeshAssetFactory : public ImportableAssetFactoryBase
@@ -69,7 +69,7 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Mesh"; }
 		virtual void ImportAsset(const std::string& srcPath, const std::string& destPath) const override;
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class MaterialAssetFactory : public AssetFactoryBase
@@ -78,7 +78,7 @@ namespace ZeoEngine {
 		virtual const char* GetAssetTypeName() const override { return "Material"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
 		virtual const char* GetAssetTemplatePath() const override;
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class ResourceAssetFactoryBase : public AssetFactoryBase
@@ -96,7 +96,7 @@ namespace ZeoEngine {
 		virtual const char* GetResourceExtension() const override { return ".glsl"; }
 		virtual const char* GetAssetTemplatePath() const override;
 		virtual const char* GetResourceTemplatePath() const override;
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 	class PhysicsMaterialAssetFactory : public AssetFactoryBase
@@ -104,7 +104,7 @@ namespace ZeoEngine {
 	public:
 		virtual const char* GetAssetTypeName() const override { return "Physics Material"; }
 		virtual bool ShouldShowInContextMenu() const override { return true; }
-		virtual Ref<IAsset> CreateAsset(const Ref<AssetMetadata>& metadata) const override;
+		virtual Ref<IAsset> CreateAsset(const AssetMetadata* metadata) const override;
 	};
 
 }

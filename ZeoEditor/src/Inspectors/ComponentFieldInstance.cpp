@@ -30,35 +30,48 @@ namespace ZeoEngine {
 
 	AssetTypeID ComponentFieldInstance::GetAssetTypeID() const
 	{
-		return ReflectionUtils::GetPropertyValue<AssetTypeID>(Reflection::AssetType, m_Data).value_or(0.0f);
+		return ReflectionUtils::GetPropertyValue<AssetTypeID>(Reflection::AssetType, m_Data).value_or(0);
 	}
 
-	const char* ComponentFieldInstance::GetFieldTooltip() const
+	bool ComponentFieldInstance::IsFieldDisabled() const
+	{
+		const auto disableCondition = ReflectionUtils::GetPropertyValue<HideConditionFunc>(Reflection::DisableCondition, m_Data);
+		// DisableCondition property is not set, display this data normally
+		if (!disableCondition) return false;
+
+		return (*disableCondition)(GetValueInternal().try_cast<IComponent>());
+	}
+
+	std::string ComponentFieldInstance::GetFieldTooltip() const
 	{
 		const auto tooltip = ReflectionUtils::GetPropertyValue<const char*>(Reflection::Tooltip, m_Data);
-		return tooltip ? *tooltip : nullptr;
+		return tooltip ? *tooltip : "";
 	}
 
-	void* ComponentFieldInstance::GetValueRaw() const
+	void* ComponentFieldInstance::GetValueRaw()
 	{
 		return GetValueInternal().data();
 	}
 
-	void ComponentFieldInstance::SetValueRaw(const void* value) const
+	void ComponentFieldInstance::SetValueRaw(const void* value)
 	{
 		// For this to work, the meta data must be registered by entt::as_ref_t
-		const U32 size = EngineUtils::GetFieldSize(GetFieldType());
-		memcpy(GetValueRaw(), value, size);
+		memcpy(GetValueRaw(), value, GetFieldSize());
 	}
 
-	void ComponentFieldInstance::OnFieldValueChanged(U32 fieldID)
+	void ComponentFieldInstance::OnFieldValueChanged()
 	{
-		m_Entity.PatchComponentByID(m_ComponentID, fieldID);
+		m_Entity.PatchComponentByID(m_ComponentID, GetFieldID());
 	}
 
 	entt::meta_any ComponentFieldInstance::GetValueInternal() const
 	{
 		return m_Data.get(m_Entity.GetComponentByID(m_ComponentID));
+	}
+
+	IComponent* ComponentFieldInstance::GetComponent() const
+	{
+		return m_Entity.GetComponentByID(m_ComponentID).try_cast<IComponent>();
 	}
 
 	entt::meta_type ComponentSequenceContainerElementFieldInstance::GetFieldValueType() const

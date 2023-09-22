@@ -8,7 +8,7 @@
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/Texture.h"
 #include "Engine/Utils/EngineUtils.h"
@@ -67,9 +67,9 @@ namespace ZeoEngine {
 		static void CreateCacheDirectoryIfNeeded()
 		{
 			const std::string cacheDirectory = OpenGLShader::GetCacheDirectory();
-			if (!PathUtils::Exists(cacheDirectory))
+			if (!FileSystemUtils::Exists(cacheDirectory))
 			{
-				PathUtils::CreateDirectory(cacheDirectory);
+				FileSystemUtils::CreateDirectory(cacheDirectory);
 			}
 		}
 
@@ -229,9 +229,9 @@ namespace ZeoEngine {
 			for (const auto& variant : m_Variants)
 			{
 				const auto cachePath = GetCachePath(variant->ID, extension);
-				if (PathUtils::Exists(cachePath))
+				if (FileSystemUtils::Exists(cachePath))
 				{
-					PathUtils::DeletePath(cachePath);
+					FileSystemUtils::DeletePath(cachePath);
 				}
 			}
 		}
@@ -541,8 +541,8 @@ namespace ZeoEngine {
 	std::string OpenGLShader::GetCachePath(U32 variantID, const char* cacheExtension) const
 	{
 		return variantID == 0
-			? fmt::format("{}/{}{}", GetCacheDirectory(), PathUtils::GetPathFileName(m_ShaderResourcePath), cacheExtension)
-			: fmt::format("{}/{}-{}{}", GetCacheDirectory(), PathUtils::GetPathFileName(m_ShaderResourcePath), std::to_string(variantID), cacheExtension);
+			? fmt::format("{}/{}{}", GetCacheDirectory(), FileSystemUtils::GetPathFileName(m_ShaderResourcePath), cacheExtension)
+			: fmt::format("{}/{}-{}{}", GetCacheDirectory(), FileSystemUtils::GetPathFileName(m_ShaderResourcePath), std::to_string(variantID), cacheExtension);
 	}
 
 	bool OpenGLShader::CompileOrGetVulkanBinaries(const Ref<ShaderVariant>& variant)

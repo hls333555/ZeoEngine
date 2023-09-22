@@ -18,19 +18,18 @@ namespace ZeoEngine {
 
 		virtual const char* GetFieldName() const override;
 		virtual U32 GetFieldID() const override { return m_Data.id(); }
-		virtual const char* GetFieldTooltip() const override;
+		virtual std::string GetFieldTooltip() const override;
 		virtual float GetDragSpeed() const override;
 		virtual bool IsClampOnlyDuringDragging() const override;
 		virtual AssetTypeID GetAssetTypeID() const override;
-
-		virtual void* GetValueRaw() const override;
-		virtual void SetValueRaw(const void* value) const override;
+		virtual bool IsFieldDisabled() const override;
+		virtual entt::meta_type GetFieldValueType() const { return m_Data.type(); }
 
 		entt::meta_data GetFieldData() const { return m_Data; }
-		virtual entt::meta_type GetFieldValueType() const { return m_Data.type(); }
 		Entity GetEntity() const { return m_Entity; }
 		U32 GetComponentID() const { return m_ComponentID; }
-		IComponent* GetComponent() const { return m_Entity.GetComponentByID(m_ComponentID).try_cast<IComponent>(); }
+		IComponent* GetComponent() const;
+
 		template<typename Type>
 		Type GetDragMin() const
 		{
@@ -71,8 +70,9 @@ namespace ZeoEngine {
 			v.cast<std::decay_t<T>&>() = value;
 		}
 
-		void OnFieldValueChanged(U32 fieldID);
-
+		virtual void* GetValueRaw() override;
+		virtual void SetValueRaw(const void* value) override;
+		virtual void OnFieldValueChanged() override;
 		virtual entt::meta_any GetValueInternal() const;
 
 	private:

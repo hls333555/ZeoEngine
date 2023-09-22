@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Scripting/ScriptField.h"
 #include "Engine/GameFramework/Entity.h"
 
 extern "C" {
@@ -9,7 +10,8 @@ extern "C" {
 	typedef struct _MonoAssembly MonoAssembly;
 	typedef struct _MonoImage MonoImage;
 	typedef struct _MonoDomain MonoDomain;
-	typedef struct _MonoClassField MonoClassField;
+	typedef struct _MonoString MonoString;
+	typedef struct _MonoReflectionType MonoReflectionType;
 }
 
 namespace ZeoEngine {
@@ -31,9 +33,10 @@ namespace ZeoEngine {
 		static void Init();
 		static void Shutdown();
 
-		static void LoadCoreAssembly(const std::string& path);
-		static void LoadAppAssembly(const std::string& path);
-		static void OnFileModified(const std::string& path);
+		static bool LoadCoreAssembly(const std::string& path);
+		static bool LoadAppAssembly(const std::string& path);
+		static void LoadAssemblyClasses();
+		static void OnAssemblyChanged(const std::string& path);
 		static void ReloadAssembly();
 		static entt::sink<entt::sigh<void()>>* GetScriptReloadedDelegate();
 
@@ -71,17 +74,10 @@ namespace ZeoEngine {
 		static void InitMono();
 		static void ShutdownMono();
 
-		static void LoadAssemblyClasses();
+		static void LoadProjectAssembly();
 		static U32 InstantiateClass(MonoClass* monoClass);
 		static void DestroyClass(U32 handle);
 		static void ClearEntityCacheData();
-	};
-
-	struct ScriptField
-	{
-		std::string Name;
-		FieldType Type;
-		MonoClassField* ClassField = nullptr;
 	};
 
 	class ScriptClass

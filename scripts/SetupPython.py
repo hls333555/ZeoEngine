@@ -8,7 +8,7 @@ class PythonConfiguration:
         if not cls.__ValidatePython():
             return # cannot validate further
 
-        for packageName in ["requests"]:
+        for packageName in ["requests", "pywin32"]:
             if not cls.__ValidatePackage(packageName):
                 return # cannot validate further
 

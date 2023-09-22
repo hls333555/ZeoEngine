@@ -17,17 +17,19 @@ namespace ZeoEngine {
 
 	void StatsPanel::ProcessRender()
 	{
-		if (ImGui::TreeNodeEx("Performance", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
+		if (auto* profiler = Application::Get().GetPerformanceProfiler())
 		{
-			auto& profiler = Application::Get().GetPerformanceProfiler();
-			const auto& perFrameData = profiler.GetPerFrameData();
-			for (auto&& [name, time] : perFrameData)
+			if (ImGui::TreeNodeEx("Performance", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
 			{
-				ImGui::Text("%s: %.3fms\n", name, time);
-			}
-			profiler.Clear();
+				const auto& perFrameData = profiler->GetPerFrameData();
+				for (auto&& [name, time] : perFrameData)
+				{
+					ImGui::Text("%s: %.3fms\n", name, time);
+				}
+				profiler->Clear();
 
-			ImGui::TreePop();
+				ImGui::TreePop();
+			}
 		}
 
 		// TODO:
@@ -45,14 +47,6 @@ namespace ZeoEngine {
 		{
 			const std::string hoveredEntityName = Stats.HoveredEntity ? Stats.HoveredEntity.GetName() : "NA";
 			ImGui::Text("Hovered Entity: %s", hoveredEntityName.c_str());
-
-			ImGui::TreePop();
-		}
-
-		if (ImGui::TreeNodeEx("ImGui", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth))
-		{
-			const auto* focusedWindow = ImGui::GetCurrentContext()->NavWindow;
-			ImGui::Text("Focused Window: %s", focusedWindow ? focusedWindow->Name : "None");
 
 			ImGui::TreePop();
 		}

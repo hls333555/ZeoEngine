@@ -100,7 +100,7 @@ namespace ZeoEngine {
 				case FieldType::Asset:	return sizeof(AssetHandle);
 				case FieldType::Entity:	return sizeof(UUID);
 			}
-			ZE_CORE_ASSERT(false, "Unknown field type!");
+			ZE_CORE_ASSERT(false, "Unknown field size!");
 			return 0;
 		}
 
@@ -196,19 +196,6 @@ namespace ZeoEngine {
 				max = DBL_MAX;
 			}
 			return max;
-		}
-
-		[[nodiscard]] static U8* AllocateFieldBuffer(FieldType type)
-		{
-			U32 size = GetFieldSize(type);
-			U8* buffer = new U8[size];
-			memset(buffer, 0, size);
-			return buffer;
-		}
-
-		static void FreeFieldBuffer(U8* buffer)
-		{
-			delete[] buffer;
 		}
 
 		static SceneRenderer* GetSceneRendererFromContext(const SceneContext* sceneContext);

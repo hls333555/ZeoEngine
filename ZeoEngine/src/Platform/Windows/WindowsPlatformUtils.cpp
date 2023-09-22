@@ -10,11 +10,11 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Asset/AssetManager.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
-	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect)
+	std::vector<std::string> FileDialogs::Open(bool bAllowMultiSelect, const char* filter, const char* title)
 	{
 		std::vector<std::string> outPaths;
 
@@ -25,8 +25,20 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		const std::string filterStr = GetSupportedFileFilter();
-		ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must first store the returned string first to extend its lifetime
+		if (title)
+		{
+			ofn.lpstrTitle = title;
+		}
+		std::string filterStr;
+		if (filter)
+		{
+			ofn.lpstrFilter = filter;
+		}
+		else
+		{
+			filterStr = GetSupportedFileFilter();
+			ofn.lpstrFilter = filterStr.c_str(); // NOTE: We must store the returned string first to extend its lifetime
+		}
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER | (bAllowMultiSelect ? OFN_ALLOWMULTISELECT : 0);
 		if (GetOpenFileNameA(&ofn) == TRUE)
@@ -53,7 +65,7 @@ namespace ZeoEngine {
 		return outPaths;
 	}
 
-	std::optional<std::string> FileDialogs::Save()
+	std::optional<std::string> FileDialogs::Save(const char* filter, const char* title)
 	{
 		OPENFILENAMEA ofn;
 		CHAR szFile[260] = { 0 };
@@ -62,8 +74,20 @@ namespace ZeoEngine {
 		ofn.hwndOwner = glfwGetWin32Window(static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow()));
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		std::string filterStr = GetSupportedFileFilter();
-		ofn.lpstrFilter = filterStr.c_str();
+		if (title)
+		{
+			ofn.lpstrTitle = title;
+		}
+		std::string filterStr;
+		if (filter)
+		{
+			ofn.lpstrFilter = filter;
+		}
+		else
+		{
+			filterStr = GetSupportedFileFilter();
+			ofn.lpstrFilter = filterStr.c_str();
+		}
 		ofn.nFilterIndex = 1;
 		// Sets the default extension by extracting it from the filter
 		ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;
@@ -98,13 +122,13 @@ namespace ZeoEngine {
 	void PlatformUtils::ShowInExplorer(const std::string& filepath)
 	{
 		std::wstringstream params;
-		params << "/select," << PathUtils::GetCanonicalPath(filepath).c_str(); // Use canonical path here, path separator must be "\\"
+		params << "/select," << FileSystemUtils::GetCanonicalPath(filepath).c_str(); // Use canonical path here, path separator must be "\\"
 		ShellExecute(NULL, L"open", L"explorer.exe", params.str().c_str(), NULL, SW_SHOWDEFAULT);
 	}
 
 	void PlatformUtils::OpenFile(const std::string& filepath)
 	{
-		std::string path = PathUtils::GetCanonicalPath(filepath); // Use canonical path here, path separator must be "\\"
+		std::string path = FileSystemUtils::GetCanonicalPath(filepath); // Use canonical path here, path separator must be "\\"
 		ShellExecute(0, 0, std::wstring(path.begin(), path.end()).c_str(), 0, 0, SW_SHOW);
 	}
 

@@ -160,26 +160,22 @@ namespace ZeoEngine {
 		void UpdateBounds() const;
 		const BoxSphereBounds& GetBounds() const;
 
-		bool IsAncestorOf(Entity entity) const
+		bool IsAncestorOf(const Entity& entity) const
 		{
 			const auto& children = GetChildren();
 
 			if (children.empty()) return false;
 
-			for (const UUID child : children)
+			for (const UUID childID : children)
 			{
-				if (child == entity.GetUUID()) return true;
-			}
-
-			for (const UUID child : children)
-			{
-				if (GetScene().GetEntityByUUID(child).IsAncestorOf(entity)) return true;
+				if (childID == entity.GetUUID()) return true;
+				if (GetScene().GetEntityByUUID(childID).IsAncestorOf(entity)) return true;
 			}
 
 			return false;
 		}
 
-		bool IsDescendantOf(Entity entity) const
+		bool IsDescendantOf(const Entity& entity) const
 		{
 			return entity.IsAncestorOf(*this);
 		}
@@ -207,6 +203,9 @@ namespace ZeoEngine {
 		const std::vector<U32>& GetRegisteredComponentIDs() const;
 		void AddComponentID(U32 compID) const;
 		void RemoveComponentID(U32 compID) const;
+
+		void AddBillboardTexture(const std::string& texturePath);
+		void RemoveBillboardTexture(const std::string& texturePath);
 
 		void MarkWorldTransformDirty() const;
 

@@ -9,15 +9,15 @@
 
 namespace ZeoEngine {
 
-	void AssetSerializerBase::Serialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void AssetSerializerBase::Serialize(const AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
-		SerializeEmptyAsset(metadata->Path, metadata->TypeID, metadata->Handle, true, [&](YAML::Node& node)
+		SerializeEmptyAsset(metadata->Path, metadata->TypeID, metadata->Handle, metadata->Flags, true, [&](YAML::Node& node)
 		{
 			SerializeImpl(metadata, asset, node);
 		});
 	}
 
-	bool AssetSerializerBase::Deserialize(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, void* payload) const
+	bool AssetSerializerBase::Deserialize(AssetMetadata* metadata, const Ref<IAsset>& asset, void* payload) const
 	{
 		const auto res = DeserializeAsset(metadata->Path);
 		if (!res) return false;
@@ -35,7 +35,7 @@ namespace ZeoEngine {
 		YAML::Node node;
 		try
 		{
-			node = YAML::LoadFile(PathUtils::GetFileSystemPath(path));
+			node = YAML::LoadFile(FileSystemUtils::GetFileSystemPath(path));
 		}
 		catch (YAML::BadFile&)
 		{
@@ -53,12 +53,12 @@ namespace ZeoEngine {
 		return node;
 	}
 
-	void ImportableAssetSerializerBase::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void ImportableAssetSerializerBase::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		SerializeSourcePath(metadata->SourcePath, node);
 	}
 
-	bool ImportableAssetSerializerBase::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool ImportableAssetSerializerBase::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		if (const auto sourceData = node["SourcePath"])
 		{
@@ -73,14 +73,14 @@ namespace ZeoEngine {
 	}
 
 #pragma region LevelAssetSerializer
-	void LevelAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void LevelAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const Ref<Level> level = std::static_pointer_cast<Level>(asset);
 		Scene* scene = level->GetScene();
 		SceneSerializer::Serialize(node, *scene);
 	}
 
-	bool LevelAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool LevelAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const Ref<Level> level = std::static_pointer_cast<Level>(asset);
 		auto* scene = static_cast<Scene*>(payload);
@@ -89,21 +89,21 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void LevelAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void LevelAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 		SceneUtils::OpenLevel(metadata->Path);
 	}
 #pragma endregion
 
 #pragma region ParticleTemplateAssetSerializer
-	void ParticleTemplateAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void ParticleTemplateAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		ComponentSerializer cs;
 		cs.Serialize(node, ParticleSystemDetailComponent(particleTemplate));
 	}
 
-	bool ParticleTemplateAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool ParticleTemplateAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		ComponentSerializer cs;
@@ -111,7 +111,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void ParticleTemplateAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void ParticleTemplateAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 		const auto particleTemplate = std::static_pointer_cast<ParticleTemplate>(asset);
 		Deserialize(metadata, asset, nullptr);
@@ -120,7 +120,7 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region Texture2DAssetSerializer
-	void Texture2DAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void Texture2DAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
 
@@ -129,7 +129,7 @@ namespace ZeoEngine {
 		cs.Serialize(node, TextureDetailComponent(texture));
 	}
 
-	bool Texture2DAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool Texture2DAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		ImportableAssetSerializerBase::DeserializeImpl(metadata, asset, node, payload);
 
@@ -139,7 +139,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void Texture2DAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void Texture2DAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 		const auto texture = std::static_pointer_cast<Texture2D>(asset);
 		texture->Invalidate();
@@ -148,7 +148,7 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region MeshAssetSerializer
-	void MeshAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void MeshAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		ImportableAssetSerializerBase::SerializeImpl(metadata, asset, node);
 
@@ -157,7 +157,7 @@ namespace ZeoEngine {
 		cs.Serialize(node, MeshDetailComponent(mesh));
 	}
 
-	bool MeshAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool MeshAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		ImportableAssetSerializerBase::DeserializeImpl(metadata, asset, node, payload);
 
@@ -167,24 +167,24 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void MeshAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void MeshAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 
 	}
 #pragma endregion
 
 #pragma region ShaderAssetSerializer
-	void ShaderAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void ShaderAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		
 	}
 
-	bool ShaderAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool ShaderAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		return true;
 	}
 
-	void ShaderAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void ShaderAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 		const auto shader = std::static_pointer_cast<Shader>(asset);
 		shader->Reload();
@@ -192,7 +192,7 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region MaterialAssetSerializer
-	void MaterialAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void MaterialAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const auto material = std::static_pointer_cast<Material>(asset);
 		ComponentSerializer cs;
@@ -201,7 +201,7 @@ namespace ZeoEngine {
 		ms.Serialize(node, material);
 	}
 
-	bool MaterialAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool MaterialAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const auto material = std::static_pointer_cast<Material>(asset);
 		ComponentSerializer cs;
@@ -218,12 +218,12 @@ namespace ZeoEngine {
 		}
 	}
 
-	void MaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void MaterialAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 		Deserialize(metadata, asset, nullptr);
 	}
 
-	void MaterialAssetSerializer::DeserializeShaderData(const Ref<AssetMetadata>& metadata, const Ref<Material>& material) const
+	void MaterialAssetSerializer::DeserializeShaderData(const AssetMetadata* metadata, const Ref<Material>& material) const
 	{
 		const auto res = DeserializeAsset(metadata->Path);
 		if (!res) return;
@@ -236,14 +236,14 @@ namespace ZeoEngine {
 #pragma endregion
 
 #pragma region PhysicsMaterialAssetSerializer
-	void PhysicsMaterialAssetSerializer::SerializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, YAML::Node& node) const
+	void PhysicsMaterialAssetSerializer::SerializeImpl(const AssetMetadata* metadata, const Ref<IAsset>& asset, YAML::Node& node) const
 	{
 		const auto physicsMaterial = std::static_pointer_cast<PhysicsMaterial>(asset);
 		ComponentSerializer cs;
 		cs.Serialize(node, PhysicsMaterialDetailComponent(physicsMaterial));
 	}
 
-	bool PhysicsMaterialAssetSerializer::DeserializeImpl(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
+	bool PhysicsMaterialAssetSerializer::DeserializeImpl(AssetMetadata* metadata, const Ref<IAsset>& asset, const YAML::Node& node, void* payload) const
 	{
 		const auto physicsMaterial = std::static_pointer_cast<PhysicsMaterial>(asset);
 		ComponentSerializer cs;
@@ -251,7 +251,7 @@ namespace ZeoEngine {
 		return true;
 	}
 
-	void PhysicsMaterialAssetSerializer::ReloadData(const Ref<AssetMetadata>& metadata, const Ref<IAsset>& asset) const
+	void PhysicsMaterialAssetSerializer::ReloadData(AssetMetadata* metadata, const Ref<IAsset>& asset) const
 	{
 	}
 #pragma endregion

@@ -52,7 +52,7 @@ namespace ZeoEngine {
 		// Import assets via file dialog
 		if (ImGui::Button(ICON_FA_FILE_IMPORT " Import"))
 		{
-			const auto filePaths = FileDialogs::Open(true);
+			const auto filePaths = FileDialogs::Open(true, nullptr, "Import Assets");
 			for (const auto& filePath : filePaths)
 			{
 				ImportAsset(filePath);
@@ -95,7 +95,7 @@ namespace ZeoEngine {
 		AssetBrowserPanelBase::DrawTopBar();
 	}
 
-	bool ContentBrowserPanel::PassFilter(const Ref<PathMetadata>& metadata) const
+	bool ContentBrowserPanel::PassFilter(const PathMetadata* metadata) const
 	{
 		if (m_bIsAnyTypeFilterActive)
 		{
@@ -199,7 +199,7 @@ namespace ZeoEngine {
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const Ref<AssetMetadata>& metadata)
+	void ContentBrowserPanel::DrawPathContextMenuItem_Asset(const std::string& path, const AssetMetadata* metadata)
 	{
 		const auto& am = AssetManager::Get();
 
@@ -237,23 +237,23 @@ namespace ZeoEngine {
 
 	void ContentBrowserPanel::ImportAsset(const std::string& path)
 	{
-		const auto destPath = fmt::format("{}/{}", GetSelectedDirectory(), PathUtils::GetPathFileName(path));
+		const auto destPath = fmt::format("{}/{}", GetSelectedDirectory(), FileSystemUtils::GetPathFileName(path));
 		const auto& am = AssetManager::Get();
-		if (const auto typeID = am.GetAssetTypeFromFileExtension(PathUtils::GetPathExtension(path)))
+		if (const auto typeID = am.GetAssetTypeFromFileExtension(FileSystemUtils::GetPathExtension(path)))
 		{
 			am.ImportAsset(typeID, path, destPath);
 			SetForceUpdateFilterCache(true);
 		}
 	}
 
-	void ContentBrowserPanel::ProcessAssetDragging(const Ref<PathMetadata>& metadata, float thumbnailRounding)
+	void ContentBrowserPanel::ProcessAssetDragging(const PathMetadata* metadata, float thumbnailRounding)
 	{
 		ImGui::PushStyleColor(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
 		if (metadata->IsAsset() && ImGui::BeginDragDropSource())
 		{
-			char typeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
-			_itoa_s(metadata->GetAssetTypeID(), typeStr, 10);
-			ImGui::SetDragDropPayload(typeStr, &metadata, sizeof(metadata));
+			char assetTypeStr[DRAG_DROP_PAYLOAD_TYPE_SIZE];
+			_itoa_s(metadata->GetAssetTypeID(), assetTypeStr, 10);
+			ImGui::SetDragDropPayload(assetTypeStr, &metadata, sizeof(metadata));
 
 			// Draw tooltip thumbnail
 			ImGui::AssetThumbnail(metadata->ThumbnailTexture->GetTextureID(),

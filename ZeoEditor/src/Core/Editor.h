@@ -32,6 +32,7 @@ namespace ZeoEngine {
 		~Editor();
 
 		void OnAttach();
+		void OnDetach();
 		void OnUpdate(DeltaTime dt);
 		void OnImGuiRender();
 		void OnEvent(Event& e) const;
@@ -80,7 +81,11 @@ namespace ZeoEngine {
 
 		LevelPreviewWorld* GetLevelWorld() const;
 
-		void NewLevel();
+		bool OpenProject();
+		void OpenProject(const std::string& path);
+		void CloseProject();
+
+		void NewLevel() const;
 		void LoadLevel();
 		void LoadLevel(const std::string& path) const;
 		void SaveLevel() const;

@@ -3,7 +3,6 @@
 #include <yaml-cpp/yaml.h>
 #include <deque>
 
-#include "Serializer.h"
 #include "Engine/GameFramework/Entity.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Renderer/Material.h"
@@ -125,7 +124,10 @@ namespace YAML {
 
 namespace ZeoEngine {
 
+	class AssetSerializerBase;
 	class ScriptFieldInstance;
+	class ScriptSequenceContainerFieldInstance;
+	class Project;
 
 	class ComponentSerializerExtenderRegistry
 	{
@@ -158,7 +160,9 @@ namespace ZeoEngine {
 
 	private:
 		void EvaluateSerializeField(YAML::Node& node, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const;
-		void EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const;
+		void EvaluateSerializeSequenceContainerField(YAML::Node& node, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance, bool bIsSeqElement) const;
+		void EvaluateDeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance, bool bIsSeqElement) const;
+		void EvaluateDeserializeSequenceContainerField(const YAML::Node& seqNode, const Ref<ScriptSequenceContainerFieldInstance>& fieldInstance) const;
 
 	private:
 		template<typename T>
@@ -194,7 +198,7 @@ namespace ZeoEngine {
 		template<typename T>
 		void DeserializeField(const YAML::Node& fieldNode, const Ref<ScriptFieldInstance>& fieldInstance) const
 		{
-			const auto& value = fieldNode.as<T>();
+			const auto value = fieldNode.as<T>();
 			fieldInstance->SetValue(value);
 		}
 	};
@@ -317,8 +321,15 @@ namespace ZeoEngine {
 		static void DeserializeRuntime();
 
 	private:
-		static void SerializeEntity(YAML::Node& entityNode, const Entity entity);
+		static void SerializeEntity(YAML::Node& entityNode, Entity entity);
 		static void DeserializeEntity(const YAML::Node& entityNode, Scene& scene);
+	};
+
+	class ProjectSerializer
+	{
+	public:
+		static void Serialize(const std::string& path, const Project& project);
+		static bool Deserialize(const std::string& path, Project& project);
 	};
 
 }

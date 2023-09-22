@@ -6,21 +6,21 @@
 #include "Engine/Asset/AssetRegistry.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Material.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 #include "Worlds/AssetPreviewWorlds.h"
 
 namespace ZeoEngine {
 
 	void AssetActionsBase::RenameAsset(const std::string& oldPath, const std::string& newPath) const
 	{
-		PathUtils::RenamePath(oldPath, newPath);
+		FileSystemUtils::RenamePath(oldPath, newPath);
 		// TODO: Fixup references
 
 	}
 
 	void AssetActionsBase::DeleteAsset(const std::string& path) const
 	{
-		PathUtils::DeletePath(path);
+		FileSystemUtils::DeletePath(path);
 		AssetRegistry::Get().OnPathRemoved(path);
 		// TODO: Clear references, possibly clear inspector
 	}
@@ -31,7 +31,7 @@ namespace ZeoEngine {
 		const auto resourcePath = ar.GetAssetMetadata(oldPath)->GetResourceFileSystemPath();
 		const auto newResourcePath = ar.GetAssetMetadata(newPath)->GetResourceFileSystemPath();
 		// Rename resource
-		PathUtils::RenamePath(resourcePath, newResourcePath);
+		FileSystemUtils::RenamePath(resourcePath, newResourcePath);
 		// Rename asset
 		AssetActionsBase::RenameAsset(oldPath, newPath);
 	}
@@ -40,7 +40,7 @@ namespace ZeoEngine {
 	{
 		const auto resourcePath = AssetRegistry::Get().GetAssetMetadata(path)->GetResourceFileSystemPath();
 		// Delete resource
-		PathUtils::DeletePath(resourcePath);
+		FileSystemUtils::DeletePath(resourcePath);
 		// Delete asset
 		AssetActionsBase::DeleteAsset(path);
 	}
@@ -48,12 +48,12 @@ namespace ZeoEngine {
 	void ImportableAssetActionsBase::ReimportAsset(const std::string& path) const
 	{
 		const auto& ar = AssetRegistry::Get();
-		const auto metadata = ar.GetAssetMetadata(path);
+		auto* metadata = ar.GetAssetMetadata(path);
 		auto srcPath = metadata->SourcePath;
-		if (srcPath.empty() || !PathUtils::Exists(srcPath))
+		if (srcPath.empty() || !FileSystemUtils::Exists(srcPath))
 		{
 			// Open file dialog to select another source to reimport
-			const auto filePaths = FileDialogs::Open(false);
+			const auto filePaths = FileDialogs::Open(false, nullptr, "Reimport Asset");
 			if (filePaths.size() != 1) return;
 
 			srcPath = filePaths[0];
@@ -61,7 +61,7 @@ namespace ZeoEngine {
 
 		const std::string destPath = metadata->GetResourceFileSystemPath();
 		// Copy and overwrite existing resource
-		const bool bSuccess = PathUtils::CopyFile(srcPath, destPath, true);
+		const bool bSuccess = FileSystemUtils::CopyFile(srcPath, destPath, true);
 		if (!bSuccess)
 		{
 			ZE_CORE_ERROR("Failed to reimport asset!");

@@ -5,13 +5,13 @@
 #include "Engine/Core/Core.h"
 #include "Engine/Core/EngineTypes.h"
 #include "Engine/Asset/Asset.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
 	class Texture2D;
 
-	enum EPathFlag : U8
+	enum AssetFlag : U8
 	{
 		PathFlag_None = 0,
 		PathFlag_HasResource = ZE_BIT(0),
@@ -22,7 +22,7 @@ namespace ZeoEngine {
 	struct PathMetadata
 	{
 		explicit PathMetadata(std::string path)
-			: Path(std::move(path)), PathName(PathUtils::GetPathName(Path)) {}
+			: Path(std::move(path)), PathName(FileSystemUtils::GetPathName(Path)) {}
 		virtual ~PathMetadata() = default;
 
 		virtual bool IsAsset() const = 0;
@@ -30,7 +30,6 @@ namespace ZeoEngine {
 
 		std::string Path;
 		std::string PathName;
-		U8 Flags = 0;
 		Ref<Texture2D> ThumbnailTexture;
 	};
 
@@ -46,8 +45,7 @@ namespace ZeoEngine {
 		bool bHasAnySubDirectory = false;
 	};
 
-	// TODO: No shared_ptr
-	struct AssetMetadata : public PathMetadata, public std::enable_shared_from_this<AssetMetadata>
+	struct AssetMetadata : public PathMetadata
 	{
 		using PathMetadata::PathMetadata;
 
@@ -57,18 +55,18 @@ namespace ZeoEngine {
 		bool IsResourceAsset() const { return Flags & PathFlag_HasResource; }
 		bool IsImportableAsset() const { return Flags & PathFlag_Importable; }
 		bool IsTemplateAsset() const { return Flags & PathFlag_Template; }
-		std::string GetResourceFileSystemPath() const { return IsResourceAsset() ? fmt::format("{}/{}", PathUtils::GetParentPath(PathUtils::GetFileSystemPath(Path)), PathName) : ""; }
+		std::string GetResourceFileSystemPath() const { return IsResourceAsset() ? fmt::format("{}/{}", FileSystemUtils::GetParentPath(FileSystemUtils::GetFileSystemPath(Path)), PathName) : ""; }
 
 		void UpdateThumbnail();
 
 		AssetHandle Handle = 0;
 		AssetTypeID TypeID = {};
+		U8 Flags = 0;
 		std::string SourcePath; // Can be empty if this is not an imported asset
 	};
 
 	class AssetRegistry
 	{
-		friend class EditorLayer;
 		friend class ThumbnailManager;
 
 	public:
@@ -81,34 +79,26 @@ namespace ZeoEngine {
 			return instance;
 		}
 
-		// TODO: Move to other file
-		static constexpr const char* GetEngineAssetExtension() { return ".zasset"; }
+		void Register();
 
-		static std::string GetEnginePathPrefix() { return "Engine"; }
-		static std::string GetProjectPathPrefix() { return "Game"; }
-		static std::string GetEngineAssetDirectory() { return "assets"; } // TODO:
-		static std::string GetProjectDirectory() { return "SandboxProject"; } // TODO:
-		static std::string GetProjectAssetDirectory() { return "SandboxProject/Assets"; } // TODO:
-
-		static std::string GetCPUProfileOutputDirectory() { return "saved/profiling/CPU/"; }
-		static std::string GetGPUProfileOutputDirectory() { return "saved/profiling/GPU/"; }
+		static constexpr const char* GetAssetExtension() { return ".zasset"; }
 
 		/** Get directory/asset metadata of the specific path. The path should be relative. */
 		template<typename MetadataClass = PathMetadata>
-		Ref<MetadataClass> GetPathMetadata(const std::string& path) const
+		MetadataClass* GetPathMetadata(const std::string& path) const
 		{
 			static_assert(std::is_base_of_v<PathMetadata, MetadataClass>, "MetadataClass must be derived from 'PathMetadata'!");
 
 			if (const auto it = m_PathMetadatas.find(path); it != m_PathMetadatas.cend())
 			{
-				return std::dynamic_pointer_cast<MetadataClass>(it->second);
+				return dynamic_cast<MetadataClass*>(it->second.get());
 			}
 
 			return nullptr;
 		}
 
-		Ref<AssetMetadata> GetAssetMetadata(const std::string& path) const;
-		Ref<AssetMetadata> GetAssetMetadata(AssetHandle handle) const;
+		AssetMetadata* GetAssetMetadata(const std::string& path) const;
+		AssetMetadata* GetAssetMetadata(AssetHandle handle) const;
 
 		AssetHandle GetAssetHandleFromPath(const std::string& path) const;
 
@@ -156,7 +146,7 @@ namespace ZeoEngine {
 				{
 					for (const auto& metadata : it->second)
 					{
-						func(metadata);
+						func(metadata.get());
 					}
 				}
 			}
@@ -166,13 +156,13 @@ namespace ZeoEngine {
 				{
 					for (const auto& metadata : pair.second)
 					{
-						func(metadata);
+						func(metadata.get());
 					}
 				}
 			}
 		}
 
-		Ref<PathMetadata> OnPathCreated(const std::string& path, bool bIsAsset);
+		PathMetadata* OnPathCreated(const std::string& path, bool bIsAsset);
 		void OnTempPathCreated(const std::string& path, AssetTypeID typeID);
 		void OnPathRemoved(const std::string& path);
 		/** NOTE: Here we pass path by value because we will then modify values in container directly which will affect these paths if passed by reference. */
@@ -180,9 +170,10 @@ namespace ZeoEngine {
 
 	private:
 		void Init();
+		void Shutdown();
 
-		void ConstructPathTree(const std::filesystem::path& rootDirectory);
-		void ConstructPathTreeRecursively(const std::filesystem::path& baseDirectory);
+		void BuildPathTree(const std::filesystem::path& rootDirectory);
+		void BuildPathTreeRecursively(const std::filesystem::path& baseDirectory);
 
 		/**
 		 * Add a directory to the path tree.
@@ -191,7 +182,7 @@ namespace ZeoEngine {
 		 * @param path - Path to add
 		 * @return - Created directory metadata
 		 */
-		Ref<DirectoryMetadata> AddDirectoryToTree(const std::string& baseDirectory, const std::string& path);
+		DirectoryMetadata* AddDirectoryToTree(const std::string& baseDirectory, const std::string& path);
 		/**
 		 * Add an asset to the path tree.
 		 * 
@@ -200,7 +191,7 @@ namespace ZeoEngine {
 		 * @param typeID - If set, the asset is created in the Content Browser Panel
 		 * @return - Created asset metadata
 		 */
-		Ref<AssetMetadata> AddAssetToTree(const std::string& baseDirectory, const std::string& path, AssetTypeID typeID = {});
+		AssetMetadata* AddAssetToTree(const std::string& baseDirectory, const std::string& path, AssetTypeID typeID = {});
 		/**
 		 * Remove a path from the path tree.
 		 * If path is a directory, it will recursively remove its child paths.

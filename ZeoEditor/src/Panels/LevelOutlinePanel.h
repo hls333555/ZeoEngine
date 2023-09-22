@@ -3,7 +3,7 @@
 #include "Panels/PanelBase.h"
 
 #include "Engine/GameFramework/Entity.h"
-#include "Engine/ImGui/TextFilter.h"
+#include "Widgets/TextFilter.h"
 
 namespace ZeoEngine {
 
@@ -17,12 +17,17 @@ namespace ZeoEngine {
 	private:
 		virtual void ProcessRender() override;
 
-		void DrawEntityNode(Entity entity) const;
+		void DrawEntityNode(Entity entity);
+		bool DoesAnyChildPassFilter(const Entity& entity) const;
+		void ToggleEntityVisibilityRecursively(const Entity& entity, bool bHide) const;
+		void ToggleAllEntitiesVisibility(bool bHide) const;
 
 	private:
 		EditorPreviewWorldBase* m_EditorWorld = nullptr;
 
 		TextFilter m_Filter;
+
+		bool m_bAnyEntityVisible = true;
 
 	};
 

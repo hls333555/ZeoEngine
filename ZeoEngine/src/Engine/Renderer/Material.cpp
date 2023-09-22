@@ -25,16 +25,6 @@ namespace ZeoEngine {
 		}
 	}
 
-	void DynamicUniformBoolFieldBase::Draw()
-	{
-		bool bValue = Value;
-		if (ImGui::Checkbox("", &bValue))
-		{
-			Value = bValue;
-			Apply();
-		}
-	}
-
 	void DynamicUniformBoolField::Apply(bool bIsInit)
 	{
 		ApplyInternal(GetValueRaw(), OwnerMaterial);
@@ -43,28 +33,6 @@ namespace ZeoEngine {
 	void DynamicUniformBoolMacroField::Apply(bool bIsInit)
 	{
 		ApplyInternal(Value, OwnerMaterial, bIsInit);
-	}
-
-	void DynamicUniformScalarNMacroField::Draw()
-	{
-		const I32 min = 0;
-		const I32 max = ValueRange - 1;
-		void* buffer = bIsEditActive ? &Buffer : &Value;
-		// We do not apply during dragging as reloading and reconstructing widgets are not necessary during this operation
-		ImGui::DragScalarNEx("", ImGuiDataType_S32, buffer, 1, 0.5f, &min, &max, "%d", ImGuiSliderFlags_AlwaysClamp);
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			bIsEditActive = false;
-			if (Value != Buffer)
-			{
-				Apply();
-			}
-		}
-		if (ImGui::IsItemActivated())
-		{
-			bIsEditActive = true;
-			Buffer = Value;
-		}
 	}
 
 	void DynamicUniformScalarNMacroField::Apply(bool bIsInit)
@@ -76,29 +44,6 @@ namespace ZeoEngine {
 		ApplyInternal(Value, OwnerMaterial, bIsInit);
 	}
 
-	void DynamicUniformColorField::Draw()
-	{
-		float* buffer = bIsEditActive ? glm::value_ptr(Buffer) : glm::value_ptr(Value);
-		bool bChanged = ImGui::ColorEdit4("", buffer);
-		if (bChanged && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-		{
-			Apply();
-		}
-		if (ImGui::IsItemDeactivatedAfterEdit())
-		{
-			bIsEditActive = false;
-			if (Value != Buffer)
-			{
-				Apply();
-			}
-		}
-		if (ImGui::IsItemActivated())
-		{
-			bIsEditActive = true;
-			Buffer = Value;
-		}
-	}
-
 	void DynamicUniformColorField::Apply(bool bIsInit)
 	{
 		if (!bIsInit)
@@ -106,14 +51,6 @@ namespace ZeoEngine {
 			Value = Buffer;
 		}
 		ApplyInternal(GetValueRaw(), OwnerMaterial);
-	}
-
-	void DynamicUniformTexture2DField::Draw()
-	{
-		if (Browser.Draw(Value, 0.0f, []() {}))
-		{
-			Apply();
-		}
 	}
 
 	void DynamicUniformTexture2DField::Bind() const
@@ -219,7 +156,7 @@ namespace ZeoEngine {
 		InitMaterialData();
 		auto* serializer = AssetManager::Get().GetAssetSerializerByAssetType(TypeID());
 		const auto* materialSerializer = dynamic_cast<MaterialAssetSerializer*>(serializer);
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(GetHandle());
 		const U32 lastShaderVariant = GetShaderVariant();
 		// Deserialize data and possibly apply macro value
 		materialSerializer->DeserializeShaderData(metadata, SharedFromThis());

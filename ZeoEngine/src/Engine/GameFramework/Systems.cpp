@@ -7,6 +7,7 @@
 #include <box2d/b2_polygon_shape.h>
 #include <box2d/b2_circle_shape.h>
 
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/GameFramework/Tags.h"
 #include "Engine/Core/Console.h"
 #include "Engine/GameFramework/Components.h"
@@ -104,9 +105,7 @@ namespace ZeoEngine {
 			{
 				const Entity lEntity{ lhs, scene };
 				const Entity rEntity{ rhs, scene };
-				if (lEntity.IsAncestorOf(rEntity)) return true;
-				if (lEntity.IsDescendantOf(rEntity)) return false;
-				return lhs < rhs;
+				return lEntity.GetComponent<RelationshipComponent>().HierarchyDepth < rEntity.GetComponent<RelationshipComponent>().HierarchyDepth;
 			});
 		}
 		for (const auto e : transformGroup)
@@ -158,9 +157,7 @@ namespace ZeoEngine {
 			{
 				const Entity lEntity{ lhs, scene };
 				const Entity rEntity{ rhs, scene };
-				if (lEntity.IsAncestorOf(rEntity)) return true;
-				if (lEntity.IsDescendantOf(rEntity)) return false;
-				return lhs < rhs;
+				return lEntity.GetComponent<RelationshipComponent>().HierarchyDepth < rEntity.GetComponent<RelationshipComponent>().HierarchyDepth;
 			});
 		}
 		for (const auto e : transformGroup)
@@ -206,14 +203,13 @@ namespace ZeoEngine {
 	void CameraSystem::OnCameraComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/Camera.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/Camera.png.zasset");
 	}
 
 	void CameraSystem::OnCameraComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/Camera.png.zasset");
 	}
 
 	void MeshSystem::OnCreate()
@@ -379,8 +375,7 @@ namespace ZeoEngine {
 	void DirectionalLightSystem::OnDirectionalLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/DirectionalLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/DirectionalLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<DirectionalLightComponent>::value()] = [](Entity entity)
@@ -407,7 +402,7 @@ namespace ZeoEngine {
 	void DirectionalLightSystem::OnDirectionalLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/DirectionalLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
@@ -429,8 +424,7 @@ namespace ZeoEngine {
 	void PointLightSystem::OnPointLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/PointLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/PointLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<PointLightComponent>::value()] = [](Entity entity)
@@ -460,7 +454,7 @@ namespace ZeoEngine {
 	void PointLightSystem::OnPointLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/PointLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
@@ -482,8 +476,7 @@ namespace ZeoEngine {
 	void SpotLightSystem::OnSpotLightComponentAdded(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		auto& billboardComp = entity.AddComponent<BillboardComponent>();
-		billboardComp.TextureAsset = AssetLibrary::LoadAsset<Texture2D>("assets/textures/icons/SpotLight.png.zasset");
+		entity.AddBillboardTexture("Engine/textures/icons/SpotLight.png.zasset");
 		entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
 		{
 			boundsComp.BoundsCalculationFuncs[entt::type_hash<SpotLightComponent>::value()] = [](Entity entity)
@@ -513,7 +506,7 @@ namespace ZeoEngine {
 	void SpotLightSystem::OnSpotLightComponentDestroy(Scene& scene, entt::entity e) const
 	{
 		Entity entity{ e, scene.shared_from_this() };
-		entity.RemoveComponentIfExist<BillboardComponent>();
+		entity.RemoveBillboardTexture("Engine/textures/icons/SpotLight.png.zasset");
 		if (entity.HasComponent<BoundsComponent>())
 		{
 			entity.PatchComponent<BoundsComponent>([](BoundsComponent& boundsComp)
@@ -537,6 +530,8 @@ namespace ZeoEngine {
 
 	void ParticleUpdateSystem::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		SystemBase::OnUpdate(dt);
 
 		auto particleView = GetScene()->GetComponentView<ParticleSystemComponent>();
@@ -638,6 +633,7 @@ namespace ZeoEngine {
 	// At this stage, all transforms have been updated
 	// Physics simulation is not processed yet
 	// You can read and write world transforms here but be aware that local transforms may be out of sync until PostPhysicsTransformSystem
+	// You'd better not write local transforms here as the changes will not submit to the physics simulation
 	void PrePhysicsScriptSystem::OnUpdate(DeltaTime dt)
 	{
 		ZE_PROFILE_FUNC();
@@ -786,15 +782,7 @@ namespace ZeoEngine {
 		const auto& settings = PhysicsEngine::GetSettings();
 		if (settings.bDebugOnPlay)
 		{
-			if (settings.DebugType == PhysXDebugType::LiveDebug)
-			{
-				PhysXDebugger::StartDebugging();
-			}
-			else
-			{
-				// TODO: PhysX debugger output path
-				PhysXDebugger::StartDebugging(AssetRegistry::GetProjectDirectory());
-			}
+			PhysXDebugger::StartDebugging(settings.DebugType);
 		}
 #endif
 	}
@@ -856,6 +844,8 @@ namespace ZeoEngine {
 
 	void PhysicsSystem2D::OnUpdate(DeltaTime dt)
 	{
+		ZE_PROFILE_FUNC();
+
 		PhysicsSystem::OnUpdate(dt);
 
 		if (!GetWorld()->IsRunning()) return;
@@ -977,6 +967,16 @@ namespace ZeoEngine {
 	void CommandSystem::OnSimulationStop()
 	{
 		OnPlayStop();
+	}
+
+	void VisibilitySystem::OnPlayStart()
+	{
+		GetScene()->ClearTags<Tag::HideEntity>();
+	}
+
+	void VisibilitySystem::OnSimulationStart()
+	{
+		OnPlayStart();
 	}
 
 }

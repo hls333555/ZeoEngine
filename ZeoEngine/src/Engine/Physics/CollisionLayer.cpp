@@ -40,6 +40,13 @@ namespace ZeoEngine {
 		return -1;
 	}
 
+	std::string CollisionLayerManager::GetLayerName(U32 layerID)
+	{
+		if (!IsValidLayer(layerID)) return "";
+
+		return s_Layers[layerID].Name;
+	}
+
 	bool CollisionLayerManager::IsValidLayer(U32 layerID)
 	{
 		return layerID < s_Layers.size();
@@ -83,6 +90,13 @@ namespace ZeoEngine {
 		}
 
 		return -1;
+	}
+
+	std::string CollisionLayerManager::GetGroupName(U32 groupID)
+	{
+		if (!IsValidGroup(groupID)) return "";
+
+		return s_Groups[groupID].Name;
 	}
 
 	U32 CollisionLayerManager::GetGroupLayerMask(U32 groupID)

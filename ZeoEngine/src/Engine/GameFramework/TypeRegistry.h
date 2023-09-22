@@ -119,11 +119,19 @@ namespace ZeoEngine {
 	{
 	public:
 		static void Init();
+		static void Shutdown();
 
 	private:
 		static void RegisterBasicTypes();
 		static void RegisterComponents();
 		static void RegisterComponentSerializerExtenders();
+		static void RegisterAssets();
+
 	};
+
+	Scope<IFieldWidget> ConstructScriptClassFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructLockFlagsFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionLayerFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
+	Scope<IFieldWidget> ConstructCollisionGroupFieldWidget(UUID widgetID, Ref<ComponentFieldInstance> fieldInstance);
 
 }

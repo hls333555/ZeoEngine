@@ -3,8 +3,10 @@
 
 #include <pvd/PxPvdTransport.h>
 
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Physics/PhysXEngine.h"
 #include "Engine/Core/Console.h"
+#include "Engine/Utils/EngineUtils.h"
 
 namespace ZeoEngine {
 
@@ -26,7 +28,7 @@ namespace ZeoEngine {
 
 		Console::Get().RegisterCommand("physics.StartDebugger", [](const std::vector<std::string>&)
 		{
-			StartDebugging();
+			StartDebugging(PhysXDebugType::LiveDebug);
 		}, "Start Nvidia physics debugger.");
 		Console::Get().RegisterCommand("physics.StopDebugger", [](const std::vector<std::string>&)
 		{
@@ -46,22 +48,21 @@ namespace ZeoEngine {
 #endif
 	}
 
-	void PhysXDebugger::StartDebugging()
+	void PhysXDebugger::StartDebugging(PhysXDebugType debugType)
 	{
 #ifdef ZE_DEBUG
 		StopDebugging();
 
-		s_Data->Transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
-		s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
-#endif
-	}
-
-	void PhysXDebugger::StartDebugging(const std::string& filepath)
-	{
-#ifdef ZE_DEBUG
-		StopDebugging();
-
-		s_Data->Transport = physx::PxDefaultPvdFileTransportCreate((filepath + ".pxd2").c_str());
+		if (debugType == PhysXDebugType::LiveDebug)
+		{
+			s_Data->Transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 1000);
+		}
+		else
+		{
+			
+			const std::string path = fmt::format("{}/{}.pxd2", CommonPaths::GetPhysXDebuggerOutputDirectory(), EngineUtils::GetCurrentTimeAndDate());
+			s_Data->Transport = physx::PxDefaultPvdFileTransportCreate(path.c_str());
+		}
 		s_Data->Debugger->connect(*s_Data->Transport, physx::PxPvdInstrumentationFlag::eALL);
 #endif
 	}

@@ -3,13 +3,13 @@
 #include "Engine/Core/Layer.h"
 
 #include "Engine/Events/ApplicationEvent.h"
-#include "Engine/Events/KeyEvent.h"
-#include "Engine/Events/MouseEvent.h"
 
 namespace ZeoEngine {
 
 	class ImGuiLayer : public Layer
 	{
+		friend class Application;
+
 	public:
 		ImGuiLayer();
 		~ImGuiLayer() = default;
@@ -29,6 +29,7 @@ namespace ZeoEngine {
 
 	private:
 		bool m_bBlockEvents = false;
+		bool m_bShowImGuiStats = false;
 	};
 
 }

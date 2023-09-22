@@ -39,7 +39,7 @@ namespace ZeoEngine {
 		ImGui::EndDisabled();
 	}
 
-	bool OpenAssetPanel::ShouldDrawPath(const Ref<PathMetadata>& metadata)
+	bool OpenAssetPanel::ShouldDrawPath(const PathMetadata* metadata)
 	{
 		const auto assetTypeID = metadata->GetAssetTypeID();
 		// Directory or specific asset

@@ -362,6 +362,26 @@ namespace ZeoEngine {
 
 		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
 		rigidDynamic->setRigidDynamicLockFlags(static_cast<physx::PxRigidDynamicLockFlags>(m_LockFlags));
+
+		if (bForceWake)
+		{
+			rigidDynamic->wakeUp();
+		}
+	}
+
+	void PhysXActor::SetLockFlags(U8 value, bool bForceWake)
+	{
+		if (!IsDynamic()) return;
+
+		m_LockFlags = value;
+
+		auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
+		rigidDynamic->setRigidDynamicLockFlags(static_cast<physx::PxRigidDynamicLockFlags>(m_LockFlags));
+
+		if (bForceWake)
+		{
+			rigidDynamic->wakeUp();
+		}
 	}
 
 	void PhysXActor::AddForce(const Vec3& force, ForceMode forceMode) const
@@ -416,13 +436,7 @@ namespace ZeoEngine {
 			SetGravityEnabled(rigidBodyComp.bEnableGravity);
 			SetLinearDamping(rigidBodyComp.LinearDamping);
 			SetAngularDamping(rigidBodyComp.AngularDamping);
-
-			SetLockFlag(ActorLockFlag::TranslationX, rigidBodyComp.bLockPositionX);
-			SetLockFlag(ActorLockFlag::TranslationY, rigidBodyComp.bLockPositionY);
-			SetLockFlag(ActorLockFlag::TranslationZ, rigidBodyComp.bLockPositionZ);
-			SetLockFlag(ActorLockFlag::RotationX, rigidBodyComp.bLockRotationX);
-			SetLockFlag(ActorLockFlag::RotationY, rigidBodyComp.bLockRotationY);
-			SetLockFlag(ActorLockFlag::RotationZ, rigidBodyComp.bLockRotationZ);
+			SetLockFlags(rigidBodyComp.LockFlags);
 
 			auto* rigidDynamic = m_RigidActor->is<physx::PxRigidDynamic>();
 			rigidDynamic->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, rigidBodyComp.CollisionDetection == RigidBodyComponent::CollisionDetectionType::Continuous);

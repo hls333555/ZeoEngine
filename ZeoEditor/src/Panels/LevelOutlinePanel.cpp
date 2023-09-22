@@ -8,6 +8,7 @@
 #include "Utils/EditorSceneUtils.h"
 #include "Worlds/LevelPreviewWorld.h"
 #include "Core/Editor.h"
+#include "Engine/GameFramework/Tags.h"
 
 namespace ZeoEngine {
 
@@ -19,7 +20,7 @@ namespace ZeoEngine {
 
 	void LevelOutlinePanel::ProcessRender()
 	{
-		m_Filter.Draw("##LevelOutlineEntityFilter", "Search entities");
+		m_Filter.Draw("##LevelOutlineEntityFilter", ICON_FA_SEARCH " Search entities");
 		
 		ImGui::Separator();
 
@@ -28,18 +29,50 @@ namespace ZeoEngine {
 
 		const auto availRegion = ImGui::GetContentRegionAvail();
 		const ImVec2 entityListSize = { availRegion.x, availRegion.y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetFramePadding().y * 2 /* separator */ };
-		if (ImGui::BeginChild("SceneOutlineEntityList", entityListSize))
+		if (ImGui::BeginChild("LevelOutlineEntityList", entityListSize))
 		{
-			// Display entities in creation order, the order is updated when a new entity is created or destroyed
-			const auto coreView = scene.GetComponentView<CoreComponent>();
-			for (const auto e : coreView)
+			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4, 0));
+			if (ImGui::BeginTable("LevelOutlineTable", 2))
 			{
-				const Entity entity{ e, sceneRef };
-				if (!entity.GetParentEntity())
+				ImGui::TableSetupColumn("", ImGuiTableColumnFlags_IndentDisable | ImGuiTableColumnFlags_WidthFixed, ImGui::GetFontSize() + ImGui::GetFramePadding().x * 2);
+				ImGui::TableSetupColumn("", ImGuiTableColumnFlags_IndentEnable);
+				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 				{
-					DrawEntityNode(entity);
+					ImGui::TableSetColumnIndex(0);
+					ImGui::PushID(0);
+					const std::string visibilityIcon = fmt::format("{}###{}", m_bAnyEntityVisible ? ICON_FA_EYE : ICON_FA_EYE_SLASH, "AllVisibility");
+					if (ImGui::TransparentButton(visibilityIcon.c_str()))
+					{
+						ToggleAllEntitiesVisibility(m_bAnyEntityVisible);
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltipWithPadding("Visibility");
+					}
+					ImGui::PopID();
+
+					ImGui::TableSetColumnIndex(1);
+					ImGui::PushID(1);
+					const std::string& levelName = AssetRegistry::Get().GetAssetMetadata(m_EditorWorld->GetAsset()->GetHandle())->PathName;
+					ImGui::Text("%s  %s", ICON_FA_GLOBE_ASIA, levelName.c_str());
+					ImGui::PopID();
 				}
+
+				m_bAnyEntityVisible = false;
+				// Display entities in creation order, the order is updated when a new entity is created or destroyed
+				const auto coreView = scene.GetComponentView<CoreComponent>();
+				for (const auto e : coreView)
+				{
+					const Entity entity{ e, sceneRef };
+					if (!entity.GetParentEntity())
+					{
+						DrawEntityNode(entity);
+					}
+				}
+
+				ImGui::EndTable();
 			}
+			ImGui::PopStyleVar();
 
 			// Deselect entity when blank space is clicked
 			// NOTE: We cannot use IsPanelHovered() here or entities can never be selected on mouse click
@@ -53,7 +86,7 @@ namespace ZeoEngine {
 			{
 				Entity newEntity;
 
-				if (ImGui::MenuItem(ICON_FA_BULLSEYE "  Create Empty Entity"))
+				if (ImGui::MenuItem(ICON_FA_DICE_D6 "  Create Empty Entity"))
 				{
 					newEntity = EditorSceneUtils::CreateAndPlaceEntity(scene);
 				}
@@ -118,109 +151,186 @@ namespace ZeoEngine {
 		ImGui::Text(" %d entities", scene.GetEntityCount());
 	}
 
-	void LevelOutlinePanel::DrawEntityNode(Entity entity) const
+	void LevelOutlinePanel::DrawEntityNode(Entity entity)
 	{
 		const char* entityName = entity.GetName().c_str();
-		
-		auto doesAnyChildrenPassFilter = [&]()
+		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName) || DoesAnyChildPassFilter(entity))
 		{
-			for (const UUID childID : entity.GetChildren())
+			ImGui::TableNextColumn();
+
+			// Push entity ID
+			ImGui::PushID(static_cast<int>(entity.GetUUID()));
 			{
-				const auto scene = m_EditorWorld->GetActiveScene();
-				Entity child = scene->GetEntityByUUID(childID);
-				if (m_Filter.PassFilter(child.GetName().c_str()))
+				// Visibility button
 				{
-					return true;
+					const bool bIsEntityHidden = entity.HasTag<Tag::HideEntity>();
+					if (!bIsEntityHidden)
+					{
+						m_bAnyEntityVisible = true;
+					}
+					const std::string visibilityIcon = fmt::format("{}###{}", bIsEntityHidden ? ICON_FA_EYE_SLASH : ICON_FA_EYE, "Visibility");
+					const bool bShouldHideVisibilityButton = ImGui::GetHoveredID() != ImGui::GetCurrentWindow()->GetID(visibilityIcon.c_str()) && !bIsEntityHidden;
+					if (bShouldHideVisibilityButton)
+					{
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 0, 0, 0));
+					}
+					if (ImGui::TransparentButton(visibilityIcon.c_str()))
+					{
+						ToggleEntityVisibilityRecursively(entity, !bIsEntityHidden);
+					}
+					if (bShouldHideVisibilityButton)
+					{
+						ImGui::PopStyleColor();
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltipWithPadding("Visibility");
+					}
+				}
+
+				ImGui::TableNextColumn();
+
+				auto selectedEntity = m_EditorWorld->GetContextEntity();
+				bool bHasAnyChildren = entity.HasAnyChildren();
+				ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+				flags |= bHasAnyChildren ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Leaf;
+				flags |= ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding;
+				bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(U64)(U32)entity, flags, "%s %s", ICON_FA_DICE_D6, entityName);
+
+				// Display UUID when hovered
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltipWithPadding("UUID: %llu", entity.GetUUID());
+				}
+				if (ImGui::IsItemClicked())
+				{
+					m_EditorWorld->SetContextEntity(entity);
+				}
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
+				{
+					m_EditorWorld->FocusContextEntity();
+				}
+
+				// Drag an entity to attach
+				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+				{
+					ImGui::Text(entity.GetName().c_str());
+					ImGui::SetDragDropPayload("LevelOutlineEntity", &entity, sizeof(Entity));
+					ImGui::EndDragDropSource();
+				}
+
+				// Drop to attach the dragged entity
+				if (ImGui::BeginDragDropTarget())
+				{
+					const ImGuiPayload* payload = ImGui::MyAcceptDragDropPayload("LevelOutlineEntity", 0.5f, ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+					if (payload)
+					{
+						const auto scene = m_EditorWorld->GetActiveScene();
+						const Entity& droppedEntity = *static_cast<Entity*>(payload->Data);
+						if (entity == droppedEntity.GetParentEntity())
+						{
+							scene->UnparentEntity(droppedEntity);
+						}
+						else
+						{
+							scene->ParentEntity(droppedEntity, entity);
+						}
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+				bool bIsCurrentEntitySelected = selectedEntity == entity;
+				bool bWillDestroyEntity = false;
+				// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
+				if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(ImGuiKey_Delete))
+				{
+					bWillDestroyEntity = true;
+				}
+
+				if (bIsTreeExpanded)
+				{
+					if (bHasAnyChildren)
+					{
+						// Display child entities
+						for (const UUID childID : entity.GetChildren())
+						{
+							DrawEntityNode(m_EditorWorld->GetActiveScene()->GetEntityByUUID(childID));
+						}
+					}
+
+					ImGui::TreePop();
+				}
+
+				// Defer entity destruction
+				if (bWillDestroyEntity)
+				{
+					m_EditorWorld->GetActiveScene()->DestroyEntity(entity);
+					if (bIsCurrentEntitySelected)
+					{
+						m_EditorWorld->SetContextEntity({});
+					}
 				}
 			}
-			return false;
-		};
-		
-		if (!m_Filter.IsActive() || m_Filter.PassFilter(entityName) || doesAnyChildrenPassFilter())
+			ImGui::PopID();
+		}
+	}
+
+	bool LevelOutlinePanel::DoesAnyChildPassFilter(const Entity& entity) const
+	{
+		const auto scene = m_EditorWorld->GetActiveScene();
+		for (const UUID childID : entity.GetChildren())
 		{
-			auto selectedEntity = m_EditorWorld->GetContextEntity();
-			bool bHasAnyChildren = entity.HasAnyChildren();
-			ImGuiTreeNodeFlags flags = (selectedEntity == entity ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-			flags |= bHasAnyChildren ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_Bullet;
-			flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool bIsTreeExpanded = ImGui::TreeNodeEx((void*)(U64)(U32)entity, flags, entityName);
-
-			// Display UUID when hovered
-			if (ImGui::IsItemHovered())
+			const Entity child = scene->GetEntityByUUID(childID);
+			if (m_Filter.PassFilter(child.GetName().c_str()) || DoesAnyChildPassFilter(child))
 			{
-				ImGui::SetTooltipWithPadding("UUID: %llu", entity.GetUUID());
-			}
-			if (ImGui::IsItemClicked())
-			{
-				m_EditorWorld->SetContextEntity(entity);
-			}
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered())
-			{
-				m_EditorWorld->FocusContextEntity();
-			}
-
-			// Drag an entity to attach
-			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-			{
-				ImGui::Text(entity.GetComponent<CoreComponent>().Name.c_str());
-				ImGui::SetDragDropPayload("DragDropLevelEntity", &entity, sizeof(Entity));
-				ImGui::EndDragDropSource();
-			}
-
-			// Drop to attach the dragged entity
-			if (ImGui::BeginDragDropTarget())
-			{
-				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DragDropLevelEntity", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
-				if (payload)
-				{
-					const auto scene = m_EditorWorld->GetActiveScene();
-					const Entity& droppedEntity = *static_cast<Entity*>(payload->Data);
-					if (entity == droppedEntity.GetParentEntity())
-					{
-						scene->UnparentEntity(droppedEntity);
-					}
-					else
-					{
-						scene->ParentEntity(droppedEntity, entity);
-					}
-				}
-
-				ImGui::EndDragDropTarget();
-			}
-
-			bool bIsCurrentEntitySelected = selectedEntity == entity;
-			bool bWillDestroyEntity = false;
-			// NOTE: We cannot use Input::IsKeyReleased() here as it will return true even if key has not been pressed yet
-			if (IsPanelFocused() && bIsCurrentEntitySelected && ImGui::IsKeyReleased(Key::Delete))
-			{
-				bWillDestroyEntity = true;
-			}
-
-			if (bIsTreeExpanded)
-			{
-				if (bHasAnyChildren)
-				{
-					// Display child entities
-					for (const UUID childID : entity.GetChildren())
-					{
-						DrawEntityNode(m_EditorWorld->GetActiveScene()->GetEntityByUUID(childID));
-					}
-				}
-
-				ImGui::TreePop();
-			}
-
-			// Defer entity destruction
-			if (bWillDestroyEntity)
-			{
-				m_EditorWorld->GetActiveScene()->DestroyEntity(entity);
-				if (bIsCurrentEntitySelected)
-				{
-					m_EditorWorld->SetContextEntity({});
-				}
+				return true;
 			}
 		}
-		
+		return false;
+	}
+
+	void LevelOutlinePanel::ToggleEntityVisibilityRecursively(const Entity& entity, bool bHide) const
+	{
+		if (bHide)
+		{
+			if (!entity.HasTag<Tag::HideEntity>())
+			{
+				entity.AddTag<Tag::HideEntity>();
+			}
+		}
+		else
+		{
+			entity.RemoveTagIfExist<Tag::HideEntity>();
+		}
+
+		const auto scene = m_EditorWorld->GetActiveScene();
+		for (const UUID childID : entity.GetChildren())
+		{
+			const Entity child = scene->GetEntityByUUID(childID);
+			ToggleEntityVisibilityRecursively(child, bHide);
+		}
+	}
+
+	void LevelOutlinePanel::ToggleAllEntitiesVisibility(bool bHide) const
+	{
+		const auto scene = m_EditorWorld->GetActiveScene();
+		const auto coreView = scene->GetComponentView<CoreComponent>();
+		for (const auto e : coreView)
+		{
+			const Entity entity{ e, scene };
+			if (bHide)
+			{
+				if (!entity.HasTag<Tag::HideEntity>())
+				{
+					entity.AddTag<Tag::HideEntity>();
+				}
+			}
+			else
+			{
+				entity.RemoveTagIfExist<Tag::HideEntity>();
+			}
+		}
 	}
 
 }

@@ -2,11 +2,12 @@
 
 #include "Engine/Core/FileWatcher.h"
 #include "Engine/Asset/AssetLibrary.h"
-#include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/Project.h"
 #include "Engine/GameFramework/Components.h"
 #include "Engine/GameFramework/World.h"
 #include "Engine/Profile/BenchmarkTimer.h"
 #include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/Utils/PlatformUtils.h"
 #include "Panels/LevelViewPanel.h"
 #include "Panels/LevelOutlinePanel.h"
 #include "Panels/InspectorPanel.h"
@@ -35,14 +36,24 @@ namespace ZeoEngine {
 
 	void Editor::OnAttach()
 	{
-		std::vector<std::filesystem::path> directoriesToWatch;
-		directoriesToWatch.emplace_back(AssetRegistry::GetEngineAssetDirectory());
-		directoriesToWatch.emplace_back(AssetRegistry::GetProjectAssetDirectory());
-		m_FileWatcher = CreateScope<FileWatcher>(std::move(directoriesToWatch), std::chrono::duration<I32, std::milli>(1000));
+		m_FileWatcher = CreateScope<FileWatcher>(std::chrono::duration<I32, std::milli>(1000));
 		m_FileWatcher->m_OnFileModified.connect<&Editor::OnFileModified>(this);
-		m_FileWatcher->m_OnFileModified.connect<&ScriptEngine::OnFileModified>();
+		m_FileWatcher->m_OnFileModified.connect<&ScriptEngine::OnAssemblyChanged>();
+		m_FileWatcher->m_OnFileAdded.connect<&ScriptEngine::OnAssemblyChanged>();
 
-		NewLevel();
+		const auto args = Application::Get().GetSpecification().CommandLineArgs;
+		if (args.Count > 1)
+		{
+			OpenProject(args[1]);
+		}
+		else
+		{
+			if (!OpenProject())
+			{
+				Application::Get().Close();
+				return;
+			}
+		}
 
 		CreatePanel<LevelViewPanel>(LEVEL_VIEW);
 		CreatePanel<LevelOutlinePanel>(LEVEL_OUTLINE);
@@ -54,7 +65,9 @@ namespace ZeoEngine {
 			.MenuItem<MenuItem_NewLevel>(ICON_FA_FILE "  New level", "CTRL+N")
 			.MenuItem<MenuItem_LoadLevel>(ICON_FA_FILE_IMPORT "  Load level", "CTRL+O")
 			.MenuItem<MenuItem_SaveLevel>(ICON_FA_SAVE "  Save level", "CTRL+S")
-			.MenuItem<MenuItem_SaveLevelAs>(ICON_FA_SAVE "  Save level As", "CTRL+ALT+S");
+			.MenuItem<MenuItem_SaveLevelAs>(ICON_FA_SAVE "  Save level As", "CTRL+ALT+S")
+			.MenuItem<MenuItem_Separator>()
+			.MenuItem<MenuItem_OpenProject>(ICON_FA_FILE_IMPORT "  Open Project", "CTRL+ALT+O");
 
 		CreateMenu("Edit")
 			.MenuItem<MenuItem_Undo>(ICON_FA_UNDO "  Undo", "CTRL+Z")
@@ -78,6 +91,11 @@ namespace ZeoEngine {
 		CreateMenu("Help")
 			.MenuItem<MenuItem_TogglePanel<AboutPanel>>(ABOUT);
 
+	}
+
+	void Editor::OnDetach()
+	{
+		CloseProject();
 	}
 
 	void Editor::OnUpdate(DeltaTime dt)
@@ -122,47 +140,78 @@ namespace ZeoEngine {
 		return GetWorld<LevelPreviewWorld>("Level");
 	}
 
-	void Editor::NewLevel()
+	bool Editor::OpenProject()
 	{
-		auto* levelWorld = GetLevelWorld();
-		if (levelWorld)
+		const auto path = FileDialogs::Open(false, "ZeoEngine Project (*.zproject)\0*.zproject\0", "Open Project");
+		if (path.empty()) return false;
+
+		OpenProject(path[0]);
+		return true;
+	}
+
+	void Editor::OpenProject(const std::string& path)
+	{
+		if (Project::GetActive())
 		{
-			levelWorld->NewScene();
+			CloseProject();
+		}
+
+		const auto project = Project::Load(path);
+		ZE_CORE_ASSERT(project);
+
+		if (!GetLevelWorld())
+		{
+			CreateWorld<LevelPreviewWorld>("Level");
+		}
+
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(Project::GetActive()->GetConfig().DefaultLevelAsset);
+		if (metadata)
+		{
+			LoadLevel(metadata->Path);
 		}
 		else
 		{
-			levelWorld = CreateWorld<LevelPreviewWorld>("Level");
+			NewLevel();
 		}
-		Scene* scene = levelWorld->GetActiveScene().get();
-		Ref<Level> level = AssetLibrary::LoadAsset<Level>(Level::GetTemplatePath(), true, scene);
-		levelWorld->SetAsset(std::move(level));
+	}
+
+	void Editor::CloseProject()
+	{
+		Project::Unload();
+	}
+
+	void Editor::NewLevel() const
+	{
+		LoadLevel(Level::GetTemplatePath());
 	}
 
 	void Editor::LoadLevel()
 	{
-		auto* openAssetPanel = GetPanel<OpenAssetPanel>(OPEN_ASSET);
-		if (!openAssetPanel)
+		if (auto* openAssetPanel = GetPanel<OpenAssetPanel>(OPEN_ASSET))
 		{
-			openAssetPanel = CreatePanel<OpenAssetPanel>(OPEN_ASSET, Level::TypeID());
+			openAssetPanel->Toggle(true);
 		}
 		else
 		{
-			openAssetPanel->Toggle(true);
+			CreatePanel<OpenAssetPanel>(OPEN_ASSET, Level::TypeID());
 		}
 	}
 
 	void Editor::LoadLevel(const std::string& path) const
 	{
+		auto* levelWorld = GetLevelWorld();
+		ZE_CORE_ASSERT(levelWorld);
+
 		Timer timer;
 		// An empty scene is created every time, so we have to deserialize every time
-		GetLevelWorld()->LoadAsset(path, true);
+		levelWorld->LoadAsset(path, true);
 		ZE_CORE_WARN("Loading \"{0}\" took {1} ms", path, timer.ElapsedMillis());
 	}
 
 	void Editor::SaveLevel() const
 	{
 		const AssetHandle levelHandle = GetLevelWorld()->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(levelHandle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(levelHandle);
 		const auto& assetPath = metadata->Path;
 		if (assetPath.empty() || metadata->IsTemplateAsset())
 		{
@@ -216,7 +265,7 @@ namespace ZeoEngine {
 		}
 		else if (!bFromHistory)
 		{
-			const auto metadata = AssetRegistry::Get().GetAssetMetadata(inspectorWorld->GetAsset()->GetHandle());
+			const auto* metadata = AssetRegistry::Get().GetAssetMetadata(inspectorWorld->GetAsset()->GetHandle());
 			inspectorPanel->AddInspectHistory({ inspectorWorld, metadata->Path });
 		}
 
@@ -330,13 +379,13 @@ namespace ZeoEngine {
 	void Editor::OnFileModified(const std::string& path) const
 	{
 		// Only process resource asset hot-reloading
-		const std::string assetPath = path + AssetRegistry::GetEngineAssetExtension();
+		const std::string assetPath = path + AssetRegistry::GetAssetExtension();
 		if (!AssetRegistry::Get().GetAssetMetadata(assetPath)) return;
 
 		Application::Get().SubmitToMainThread([assetPath]()
 		{
 			// FileWatcher uses absolute path
-			AssetLibrary::ReloadAsset(PathUtils::GetStandardPath(assetPath));
+			AssetLibrary::ReloadAsset(FileSystemUtils::GetStandardPath(assetPath));
 		});
 	}
 

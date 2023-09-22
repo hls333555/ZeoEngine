@@ -21,7 +21,6 @@
 #endif
 
 #define ZE_WITH_EDITOR	1
-#define ZE_SHOW_IMGUI_DEMO 0
 
 namespace ZeoEngine {
 

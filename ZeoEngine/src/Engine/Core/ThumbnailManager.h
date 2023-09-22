@@ -9,8 +9,6 @@ namespace ZeoEngine {
 
 	class ThumbnailManager
 	{
-		friend class EditorLayer;
-
 	public:
 		static ThumbnailManager& Get()
 		{
@@ -18,15 +16,17 @@ namespace ZeoEngine {
 			return instance;
 		}
 
+		void Init();
+		void Shutdown();
+
 		/** Try to get asset thumbnail from disk or return the default type icon. */
-		Ref<Texture2D> GetAssetThumbnail(const Ref<AssetMetadata>& metadata);
-		std::string GetAssetThumbnailPath(const Ref<AssetMetadata>& metadata) const;
+		Ref<Texture2D> GetAssetThumbnail(const AssetMetadata* metadata);
+		std::string GetAssetThumbnailPath(const AssetMetadata* metadata) const;
 
 		Ref<Texture2D> GetAssetTypeIcon(AssetTypeID typeID) const;
 		const Ref<Texture2D>& GetDirectoryIcon() const { return m_DirectoryIcon; }
 
 	private:
-		void Init();
 		void LoadAssetTypeIcons();
 
 	protected:

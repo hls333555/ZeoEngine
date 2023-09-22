@@ -128,9 +128,8 @@ namespace ZeoEngine {
 				m_bHasComponentFilterKeyboardFocused = true;
 
 			}
-			const char* hint = "Search Component";
 			//static float width = ImGui::CalcTextSize(hint).x + ImGui::GetFramePadding().x * 2;
-			m_Filter.Draw("##EntityInspectorAddComponentFilter", hint, 150.0f);
+			m_Filter.Draw("##EntityInspectorAddComponentFilter", ICON_FA_SEARCH " Search Component", 150.0f);
 
 			for (const auto& [category, compIDs] : m_CategorizedComponents)
 			{

@@ -3,6 +3,7 @@
 #include "Core/Editor.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/ImGui/MyImGui.h"
 #include "Worlds/AssetPreviewWorlds.h"
 
@@ -18,16 +19,16 @@ namespace ZeoEngine {
 	{
 		m_bHasKeyboardFocused = false;
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		strcpy_s(m_NameBuffer, metadata->PathName.c_str());
-		SetSelectedDirectory(metadata->IsTemplateAsset() ? AssetRegistry::GetProjectPathPrefix() : PathUtils::GetParentPath(metadata->Path));
+		SetSelectedDirectory(metadata->IsTemplateAsset() ? CommonPaths::GetProjectAssetDirectoryStandard() : FileSystemUtils::GetParentPath(metadata->Path));
 	}
 
 	void SaveAssetPanel::OnPathSelected(const std::string& path)
 	{
 		if (AssetRegistry::Get().GetAssetMetadata(path))
 		{
-			strcpy_s(m_NameBuffer, PathUtils::GetPathName(path).c_str());
+			strcpy_s(m_NameBuffer, FileSystemUtils::GetPathName(path).c_str());
 		}
 	}
 
@@ -57,17 +58,17 @@ namespace ZeoEngine {
 			if (ImGui::Button("Save"))
 			{
 				const AssetHandle handle = m_World->GetAsset()->GetHandle();
-				const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+				const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 				std::string name = m_NameBuffer;
-				const std::string extension = PathUtils::GetPathExtension(name);
-				const std::string originalExtension = PathUtils::GetPathExtension(metadata->PathName);
+				const std::string extension = FileSystemUtils::GetPathExtension(name);
+				const std::string originalExtension = FileSystemUtils::GetPathExtension(metadata->PathName);
 				if (extension != originalExtension)
 				{
 					// Force add resource extension if not exist
 					// For non-resource asset, this should never happen
 					name += originalExtension;
 				}
-				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetEngineAssetExtension());
+				std::string newPath = fmt::format("{}/{}{}", GetSelectedDirectory(), std::move(name), AssetRegistry::GetAssetExtension());
 				if (AssetRegistry::Get().ContainsPathInDirectory(GetSelectedDirectory(), newPath))
 				{
 					if (AssetRegistry::Get().GetAssetMetadata(newPath)->TypeID == metadata->TypeID)
@@ -166,7 +167,7 @@ namespace ZeoEngine {
 	{
 		m_World->SaveAsset(path);
 		const AssetHandle handle = m_World->GetAsset()->GetHandle();
-		const auto metadata = AssetRegistry::Get().GetAssetMetadata(handle);
+		const auto* metadata = AssetRegistry::Get().GetAssetMetadata(handle);
 		if (path != metadata->Path)
 		{
 			m_World->OnAssetSaveAs(path);

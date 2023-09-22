@@ -14,6 +14,29 @@
 
 namespace ZeoEngine {
 
+	class ScopedRenderDocCapture
+	{
+	public:
+		ScopedRenderDocCapture()
+		{
+			m_RenderDoc = Application::Get().GetRenderDoc();
+			if (m_RenderDoc)
+			{
+				m_RenderDoc->StartFrameCapture();
+			}
+		}
+		~ScopedRenderDocCapture()
+		{
+			if (m_RenderDoc)
+			{
+				m_RenderDoc->StopFrameCapture();
+			}
+		}
+
+	private:
+		RenderDoc* m_RenderDoc = nullptr;
+	};
+
 	SceneRenderer::SceneRenderer() = default;
 
 	SceneRenderer::~SceneRenderer()
@@ -42,8 +65,8 @@ namespace ZeoEngine {
 	{
 		ZE_PROFILE_FUNC();
 
-		auto& renderDoc = Application::Get().GetRenderDoc();
-		renderDoc.StartFrameCapture();
+		ScopedRenderDocCapture renderDocCapture;
+
 		m_RenderGraph->Start();
 		{
 			{
@@ -60,7 +83,6 @@ namespace ZeoEngine {
 			m_PostSceneRenderDel.publish(*GetFrameBuffer());
 		}
 		m_RenderGraph->Stop();
-		renderDoc.StopFrameCapture();
 	}
 
 	void SceneRenderer::UpdateSceneContext(const Scene* scene)

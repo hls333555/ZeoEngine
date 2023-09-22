@@ -67,6 +67,7 @@ namespace ZeoEngine {
 
 		bool IsLockFlagSet(ActorLockFlag flag) const { return static_cast<U8>(flag) & m_LockFlags; }
 		void SetLockFlag(ActorLockFlag flag, bool bValue, bool bForceWake = false);
+		void SetLockFlags(U8 value, bool bForceWake = false);
 
 		void AddForce(const Vec3& force, ForceMode forceMode) const;
 		void AddTorque(const glm::vec3& torque, ForceMode forceMode) const;

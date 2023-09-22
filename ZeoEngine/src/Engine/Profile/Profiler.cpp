@@ -2,9 +2,9 @@
 #include "Engine/Profile/Profiler.h"
 
 #include "Engine/Core/Console.h"
-#include "Engine/Asset/AssetRegistry.h"
+#include "Engine/Core/CommonPaths.h"
 #include "Engine/Utils/EngineUtils.h"
-#include "Engine/Utils/PathUtils.h"
+#include "Engine/Utils/FileSystemUtils.h"
 
 namespace ZeoEngine {
 
@@ -18,12 +18,12 @@ namespace ZeoEngine {
 	void Optick::StopCapture() const
 	{
 		OPTICK_STOP_CAPTURE();
-		std::string outputPath = AssetRegistry::GetCPUProfileOutputDirectory();
-		if (!PathUtils::Exists(outputPath))
+		std::string outputPath = CommonPaths::GetCPUProfileOutputDirectory();
+		if (!FileSystemUtils::Exists(outputPath))
 		{
-			PathUtils::CreateDirectory(outputPath);
+			FileSystemUtils::CreateDirectory(outputPath);
 		}
-		outputPath += m_CaptureName;
+		outputPath = fmt::format("{}/{}", outputPath, m_CaptureName);
 		OPTICK_SAVE_CAPTURE(outputPath.c_str());
 		ZE_CORE_INFO("Stop capturing frames for Optick, captured files have been saved to: {0}", outputPath);
 	}
